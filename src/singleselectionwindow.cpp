@@ -364,9 +364,7 @@ static int update(message& msg);
 
 // E:\gamedcs\singleselectionwindow.cpp:164
 // DC keeps GetResourceBonusCaption and GetResourceBonusDescription in this
-// TU at lines 164/187. Mac retains them at +0x16d4f4/+0x16d5a4 and
-// ProcessRightSelect calls both; VC6 expands their shared bodies there.
-// ScenarioInfo calls the emitted Windows bodies across TUs.
+// TU at lines 164/187; ProcessRightSelect inlines both.
 VA(0x00576e00, 0x80)
 DC_ADDRESS(0x12f6d4, 0xbc)
 MAC_ADDRESS(0x16d4f4, 0xb0)
@@ -410,9 +408,9 @@ const char* getResourceBonusDescription(int townType)
 
 // Original: SavedGameExists; singleselectionwindow.cpp:209
 // DC retains the tempText[100] declaration and SaveValid's call at line249,
-// but its platform body returns false at line226. Complete expands the
-// desktop check in SaveValid 0x577360: format the extension, enter games,
-// open read-only, restore the parent directory, then close a found file.
+// but its platform body returns false at line226. Complete's desktop check,
+// inlined in SaveValid, formats the extension, enters games, opens
+// read-only, restores the parent directory, then closes a found file.
 DC_ADDRESS(0x12f84c, 0x20)
 MAC_ADDRESS(0x16dc00, 0x84)
 unsigned char savedGameExists(char* filename)
@@ -540,8 +538,7 @@ void startMouseThread()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:344
-// Retail keeps this helper out of line at SetupScenarioOptions and expands
-// it in GenerateRandomMap; retain its source boundary.
+// Out of line at SetupScenarioOptions, inlined in GenerateRandomMap.
 VA(0x00577810, 0x61)
 DC_ADDRESS(0x12fdd4, 0x1c)
 MAC_ADDRESS(0x16e358, 0x30)
@@ -558,13 +555,9 @@ void stopMouseThread()
     }
 }
 
-// DC preserves this source helper. Complete expands it into the selection
-// window constructor: the retail body has the same executable-path buffer,
-// TFileVersionInfo lifetime, ProductVersion query and empty-string fallback.
+// DC preserves this source helper; Complete inlines it into the selection
+// window constructor.
 // E:\gamedcs\singleselectionwindow.cpp:368
-// Global linkage is DC-proven; the former static inline came from the
-// reconstruction, not an original declaration. Ordinary auto-inlining and
-// the native bool query chain preserve the caller's bytes and EH metadata.
 // Original locals: file_version_info and product_version.
 DC_ADDRESS(0x12fdf0, 0x92)
 MAC_ADDRESS(0x16e388, 0x24)
@@ -602,8 +595,8 @@ static inline unsigned char hasRandomHero(int gamePos)
     return slot.m_hasRandomHero || slot.m_generateHero;
 }
 
-// Mac retains these row serializers at 0:0x16e420 and 0:0x16e520. Both
-// CGameHeaderInfoMsg wrappers call them; VC6 expands the same field order.
+// Mac retains these row serializers; both CGameHeaderInfoMsg wrappers inline
+// them.
 MAC_ADDRESS(0x16e420, 0x100)
 unsigned char GameSelectionHeadersStruct::read(TAbstractFile* infile)
 {
@@ -795,8 +788,7 @@ CScrollMsg::CScrollMsg(int map, int index)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:571. Dreamcast proves the
-// pointer-taking constructor and NewSMapHeader assignment; retail's 1028
-// dispatch and wire pair prove the Complete complex-message base.
+// pointer-taking constructor and NewSMapHeader assignment.
 DC_ADDRESS(0x147c28, 0x50)
 inline CNewMapHeaderInfoMsg::CNewMapHeaderInfoMsg(
     NewSMapHeader* mapHeader)
@@ -842,10 +834,8 @@ public:
     char m_paddingBeforeNumber[3];
     int m_number;          // +0x18
 
-    // Retail widened the DC (nbr) ctor with the list-select flag; both
-    // CheckMissingHeaders expansions fix the field order - and the
-    // STORE order: number lands before flag on every expansion (the
-    // CheckMissingHeaders pair and OnMapFileNameMsg's mismatch arm).
+    // Retail widened the DC (nbr) ctor with the list-select flag; number is
+    // stored before flag.
     // E:\gamedcs\singleselectionwindow.cpp:605
     DC_ADDRESS(0x147cec, 0x30)
     CMapHeaderRequestMsg(unsigned char flag, int number)
@@ -884,8 +874,7 @@ public:
     int m_how;        // +0x14
     int m_direction;  // +0x18
 
-    // SortMaps expands this ctor at its host-broadcast site (the
-    // CRequestHeroFaceReplyMsg pattern).
+    // Inlined at SortMaps's host-broadcast site.
     DC_ADDRESS(0x147d6c, 0x38)
     CSortMapsMsg(int how, int direction)
         : CNetMsg(RS_SORT_MAPS, sizeof(CSortMapsMsg))
@@ -998,9 +987,8 @@ public:
     }
 };
 
-// E:\gamedcs\singleselectionwindow.cpp:758. The ctor boundary is expanded
-// into SetupNewGameMode, but its CNetPlayerInfo member's default constructor
-// remains the public Complete COMDAT at 0x57f720.
+// E:\gamedcs\singleselectionwindow.cpp:758. Inlined into SetupNewGameMode;
+// its CNetPlayerInfo member's default constructor stays out of line.
 DC_ADDRESS(0x147f90, 0xa8)
 inline CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* playerInfo,
                                     char* version)
@@ -1111,7 +1099,7 @@ public:
     char m_errText[80];   // +0x28, format string
 
     // Both source builds construct the header, then copy the two bounded
-    // strings. The retail reply sites use the same 20/80-byte bounds.
+    // strings (20/80 bytes).
     // E:\gamedcs\singleselectionwindow.cpp:773
     DC_ADDRESS(0x148038, 0x54)
     CBadVersionMsg(const char* version, const char* errText)
@@ -1166,14 +1154,10 @@ bool initializeTurnDurationText()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1005
-// Dreamcast: the two seat-array
-// constructions, the four seat counters and the human-seat colour /
-// computer-seat name loop. DC1014 stores at this+i*120+112; DC1015
-// copies into the second array. Retail likewise stores the colour at
-// [computerName-0x370], i.e. humanPlayers[i].m_color, not computer colour.
-// Retail keeps no out-of-line copy - the 11.6 KB window constructor
-// expands it between its m_players and netMsgHandler member constructions
-// (0x579a2e..0x579a9a), which is where its statements sit in retail.
+// Dreamcast: the two seat-array constructions, the four seat counters and
+// the human-seat colour / computer-seat name loop. DC1014 stores at
+// this+i*120+112 (humanPlayers[i].m_color); DC1015 copies into the second
+// array. Inlined in the window constructor.
 DC_ADDRESS(0x1303fc, 0xac)
 MAC_ADDRESS(0x16ecc8, 0xd4)
 CNetPlayerHandler::CNetPlayerHandler()
@@ -1246,9 +1230,8 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayerInPos(int pos)
     return 0;
 }
 
-// DC GetCompPlayerInPos; DrawHeroAdvancedOption expands the null
-// fallback through it (lea into the computer bank). OnUpdatePlayerPosMsg
-// calls it at DC source line 7644; Mac retains that call at 0:0x183494.
+// DC GetCompPlayerInPos; OnUpdatePlayerPosMsg calls it at DC source line
+// 7644.
 // E:\gamedcs\singleselectionwindow.cpp:1089
 DC_ADDRESS(0x130654, 0x1a)
 MAC_ADDRESS(0x16ef6c, 0x14)
@@ -1293,10 +1276,8 @@ bool CNetPlayerHandler::deletePlayer(unsigned long dpid)
     return true;
 }
 
-// DC GetGamePos: the netPos local, an early `return -1`
-// on the not-found arm (DC B1 `mov #-1,r0; bra`) and the playerPos
-// load as the fall-through - the arm order UpdatePlayerPositions'
-// retail expansion keeps (found path in line, -1 jumps to the join).
+// DC GetGamePos: the netPos local, an early `return -1` on the not-found
+// arm and the playerPos load as the fall-through.
 // E:\gamedcs\singleselectionwindow.cpp:1138
 DC_ADDRESS(0x130778, 0x3c)
 MAC_ADDRESS(0x16f0b4, 0x48)
@@ -1309,8 +1290,7 @@ int CNetPlayerHandler::getGamePos(unsigned long dpid)
 }
 
 // Original: CNetPlayerHandler::PlayerExists; singleselectionwindow.cpp:1148
-// AddNewPlayer calls this
-// helper at DC1104; retail 0x577be0 expands its GetNetPos comparison.
+// AddNewPlayer calls this helper at DC1104; inlined in retail.
 DC_ADDRESS(0x1307b4, 0x26)
 MAC_ADDRESS(0x16f0fc, 0x34)
 // Native PlayerExists public: QAA_NK@Z (DC file 0x5f186b).
@@ -1364,7 +1344,6 @@ int CNetPlayerHandler::getNetPos(unsigned long dpid)
 
 // Original: CNetPlayerHandler::SetComputer; singleselectionwindow.cpp:1204
 // DC1205 obtains the human in this seat and DC1208 unassigns it.
-// No retained retail body/caller is claimed for this ordinary source API.
 DC_ADDRESS(0x1308d8, 0x2c)
 // Native SetComputer public: QAA_NH@Z (DC file 0x615eaf).
 bool CNetPlayerHandler::setComputer(int pos)
@@ -1375,8 +1354,6 @@ bool CNetPlayerHandler::setComputer(int pos)
     return 1;
 }
 
-// Mac 0x16f250..264 materializes the byte-valued isHuman result before
-// testing the unassigned seat. Preserve that existing predicate boundary.
 // E:\gamedcs\singleselectionwindow.cpp:1214
 DC_ADDRESS(0x130904, 0x64)
 MAC_ADDRESS(0x16f240, 0x58)
@@ -1390,8 +1367,7 @@ int CNetPlayerHandler::getUnassignedPlayerPos()
 }
 
 // Original: CNetPlayerHandler::GetPlayerCount; singleselectionwindow.cpp:1225
-// DC1226..1242 records count/i, IsHuman and the optional assigned-seat
-// test. Preserve the ordinary API without asserting a retained retail body.
+// DC1226..1242 records count/i, IsHuman and the optional assigned-seat test.
 DC_ADDRESS(0x130968, 0x88)
 MAC_ADDRESS(0x16f298, 0x68)
 // Native GetPlayerCount public: QAAH_N@Z (DC file 0x5681af).
@@ -1447,8 +1423,7 @@ void CNewPlayerUpdateProc::headerRequested(unsigned char flag, int number)
     m_requests.push_back(req);
 }
 
-// DC HeaderConfirmed, lines 1360/1362; retail 0x589270
-// expands the finished store followed by Complete's virtual Finish call.
+// DC HeaderConfirmed, lines 1360/1362.
 DC_ADDRESS(0x148384, 0x24)
 void CNewPlayerUpdateProc::headerConfirmed()
 {
@@ -1456,9 +1431,8 @@ void CNewPlayerUpdateProc::headerConfirmed()
     finish();
 }
 
-// DC keeps this source helper out of Tick. Complete VC6 /Ob2 expands its
-// base-Tick call sites; the separate 0x578010 HandleRequests body and derived
-// Tick consume the same boundary.
+// DC keeps this source helper out of Tick; inlined at the base-Tick call
+// sites.
 // E:\gamedcs\singleselectionwindow.cpp:1369
 DC_ADDRESS(0x1483a8, 0x50)
 inline void CNewPlayerUpdateProc::requestConfirmation()
@@ -1471,17 +1445,8 @@ inline void CNewPlayerUpdateProc::requestConfirmation()
 
 // Stream up to five header rows per throttle window at the joining
 // player. Complete adds this TransferHeaders override; the Dreamcast base
-// Tick (0x148130, singleselectionwindow.cpp:1283..1337) supplies the elapsed
-// helper, one initial count guard, bounded loop and request/confirmation
-// boundaries. Retail independently confirms that shape here: +0x155 loops
-// back to +0x5e (past the initial guard), and the exhausted-list arm at
-// +0x1c6 skips BOTH HandleRequests and RequestConfirmation when empty.
-
-// Binding the transfer row once gives retail's 0xa4 frame: the row pointer
-// stays live across strncpy and the FILETIME high word is spilled. Native Mac
-// tests the unsigned request count; size() > 0 gives retail's SAR 3 count
-// lowering. The shape is the coherent base-like if/for/else, including the
-// conditional final confirmation.
+// Tick (singleselectionwindow.cpp:1283..1337) supplies the elapsed helper,
+// one initial count guard, bounded loop and request/confirmation boundaries.
 VA(0x00577DE0, 0x228)
 MAC_ADDRESS(0x16f368, 0x49c)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; Complete-only override shaped from the Dreamcast base Tick at 0x148130
 void t_map_list_update::tick()
@@ -1579,14 +1544,8 @@ void CNewPlayerUpdateProc::go()
 // The original 1024 header stream. Dreamcast CodeView proves the i local,
 // the two block-scoped msg locals, ElapsedSince throttle, conditional
 // CGameHeaderInfoMsg/CMapFileNameMsg constructors, request-drain helper and
-// confirmation helper. Complete retail adds the list-select flag to both
-// message layouts but preserves that source control flow.
-// The unsigned positive request count restores retail's count lowering, as
-// in the transfer-list override. DC 1309 re-indexes the header row for each
-// CMapFileNameMsg argument (DC lists only i/msg/msg; no stack row local).
-// Complete binds the row once, as its copied t_map_list_update override
-// does: retail keeps that row pointer live across strncpy and spills the
-// FILETIME high word.
+// confirmation helper. The header row is bound once, as in the
+// t_map_list_update override.
 // E:\gamedcs\singleselectionwindow.cpp:1282
 VA(0x00578A90, 0x370)
 DC_ADDRESS(0x148130, 0x208)
@@ -1643,12 +1602,10 @@ CGameHeaderInfoMsg::CGameHeaderInfoMsg(
 VA_COMPGEN(0x005792C0, 0x2D1, IMPLICIT_COPY_ASSIGN, SavedGameHeader)
 MAC_COMPGEN_ADDRESS(0x17064c, 0x2c8, IMPLICIT_COPY_ASSIGN, SavedGameHeader)
 
-// Ticks every live transfer job and reaps the finished ones. Retail
-// keeps this out-of-line copy (not yet located among the 0x5892xx rows)
-// and expands it into WindowHandler's pump.
+// Ticks every live transfer job and reaps the finished ones; inlined into
+// WindowHandler's pump.
 // E:\gamedcs\singleselectionwindow.cpp:1443. The manager owns eight
-// CNewPlayerUpdateProc pointers; its body expands into
-// ~TSingleSelectionWindow in Complete retail.
+// CNewPlayerUpdateProc pointers.
 DC_ADDRESS(0x1486a8, 0x64)
 CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
 {
@@ -1673,7 +1630,7 @@ void CNewPlayerUpdateMan::tick()
     }
 }
 
-// DC IsSendingHeaders; Complete expands it into each sort-button arm.
+// DC IsSendingHeaders; inlined in each sort-button arm.
 // E:\gamedcs\singleselectionwindow.cpp:1517
 DC_ADDRESS(0x148928, 0x38)
 inline unsigned char CNewPlayerUpdateMan::isSendingHeaders()
@@ -1684,7 +1641,7 @@ inline unsigned char CNewPlayerUpdateMan::isSendingHeaders()
     return 0;
 }
 
-// DC GetFirstAvailable; HandleNetMsg's transfer-start arm expands it.
+// DC GetFirstAvailable; inlined in HandleNetMsg's transfer-start arm.
 // E:\gamedcs\singleselectionwindow.cpp:1533
 DC_ADDRESS(0x148960, 0x38)
 inline int CNewPlayerUpdateMan::getFirstAvailable()
@@ -1695,7 +1652,7 @@ inline int CNewPlayerUpdateMan::getFirstAvailable()
     return -1;
 }
 
-// DC GetProc (protected there); the HeaderConfirmed body expands it.
+// DC GetProc (protected there); inlined in HeaderConfirmed.
 // E:\gamedcs\singleselectionwindow.cpp:1544
 DC_ADDRESS(0x148998, 0x56)
 MAC_ADDRESS(0x1809b0, 0x40)
@@ -1739,7 +1696,6 @@ public:
         unsigned char m_saved;  // +0x38
 
         // DC1618 constructs the base; DC1621 assigns the flag in the body.
-        // Retail's expansion likewise writes the derived vptr before saved.
         DC_ADDRESS(0x148bec, 0x64)
         CChatSave(int w, int h) : Bitmap16Bit(w, h)
         {
@@ -1786,8 +1742,8 @@ public:
     }
 
     // Original: CChatWidget::RestoreBackground;
-    // singleselectionwindow.cpp:1693. DC1695 calls the
-    // bitmap-object Draw overload; Complete expands that forwarding call.
+    // singleselectionwindow.cpp:1693. DC1695 calls the bitmap-object Draw
+    // overload.
     DC_ADDRESS(0x148e98, 0x74)
     void restoreBackground() const
     {
@@ -1851,9 +1807,8 @@ public:
     int onEnter();
 };
 
-// The ordinary name-commit helper both CEnterNameEdit overrides expand.
-// DC singleselectionwindow.cpp1820..1833 records the hide/getText and
-// OnNameChange calls; Complete expands them in OnKeyPress and OnKillFocus.
+// The ordinary name-commit helper both CEnterNameEdit overrides inline (DC
+// singleselectionwindow.cpp1820..1833).
 // The committed name lands in three places: the lobby slot record, the
 // persisted prefs nickname, and the row's read-only name text widget
 // (id pos+345). player->sName on the not-found path is address arithmetic
@@ -2603,8 +2558,7 @@ VA_COMPGEN(0x0057ca80, 0x05, IMPLICIT_DTOR, CChatSlider)
 
 // Original: CChatWidget::Draw; singleselectionwindow.cpp:1675
 // DC1676..1681 calls IsSaved, SaveBackground/RestoreBackground, then
-// textWidget::Draw. Retail 0x57ca90 expands the three chat helpers and
-// Bitmap16Bit's forwarding overloads, retaining the raw Grab/Draw calls.
+// textWidget::Draw.
 VA(0x0057ca90, 0xA9)
 DC_ADDRESS(0x148df4, 0x54)
 MAC_ADDRESS(0x186874, 0xfc)
@@ -2655,10 +2609,8 @@ unsigned char CSingleSelectionChatEdit::ignoreKey(message* msg)
     }
 }
 
-// Slot zero of the lobby chat editor's vtable 0x641b28. Dreamcast's wrapper
-// calls the empty derived destructor then operator delete (dc 0x1490d0);
-// Complete folds the destructor call onto the identical CChatEdit-derived
-// teardown at 0x472890 but retains the same 33-byte wrapper shape.
+// Slot zero of the lobby chat editor's vtable; Dreamcast's wrapper calls the
+// empty derived destructor then operator delete (dc 0x1490d0).
 VA_COMPGEN(0x0057cd90, 0x21, SCALAR_DELETING_DTOR,
            CSingleSelectionChatEdit)
 
@@ -2735,20 +2687,11 @@ int CSaveGameEdit::onKeyPress(message* msg)
 
 VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 
-// constructor call at 0x57bad7 and the contiguous filter-widget id families
-// establish its no-argument member boundary. Dreamcast class record 0x246e
-// has neither the eight random-map options nor these button arrays; its
-// mapFilter/filterSize members describe the existing scenario-file filter.
-// These desktop random-map helpers retain provisional semantic names.
-// Windows's six button loops and Mac 0x175f88/0x175f94/0x175fe8 reload
-// the array entry for each operation. Keep the pointer conversion temporary,
-// but do not cache the button across the two frame writes.
-// Dreamcast button record 0x2474 declares every data member private, so an
-// outside writer such as this window needs a public member: set_disabled_frame
-// is that setter, and the later highlight frame takes the same form
-// (setHighlightFrame). The one-statement m_widgets.push_back(new ...) form is
-// the Dreamcast constructor's own (lines 2087-2105). Retail calls insert out of
-// line in loops A-C and expands it from loop D on.
+// Complete-only random-map option widgets; these desktop helpers retain
+// provisional semantic names. The one-statement m_widgets.push_back(new ...)
+// form is the Dreamcast constructor's own (lines 2087-2105);
+// set_disabled_frame is button's public setter (Dreamcast button record
+// 0x2474 declares every data member private).
 VA(0x0057D170, 0x1DF7)
 MAC_ADDRESS(0x1756bc, 0x1c50)
 void TSingleSelectionWindow::createRandomMapOptionWidgets()
@@ -2923,8 +2866,7 @@ void TSingleSelectionWindow::createRandomMapOptionWidgets()
 }
 
 // Complete-only model: the AI bound selects an operand reference; the
-// player/human bounds use value wrappers. Binding the selected player id
-// before widgetSetStatus preserves the retail argument homes.
+// player/human bounds use value wrappers.
 VA(0x0057ef70, 0x3B9)
 MAC_ADDRESS(0x17730c, 0x480)
 void TSingleSelectionWindow::updateRandomMapOptionWidgets()
@@ -3360,7 +3302,6 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         m_randomMapMode = randomMaps;
         if (randomMaps) {
             if (m_transferHeaders.size() == 0) {
-                // Mac 0x178c30 calls getHeaders before the request arm.
                 if (!g_remoteOn || isHost()) {
                     getHeaders(&m_transferHeaders);
                 } else {
@@ -3404,7 +3345,6 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
             123, 122, 184, 25, font::WHITE, 5, -1);
         this->update();
         m_inScenarioOptions = 1;
-        // Mac 0x178e84 places getHeaders before setupOrigData.
         if (isHost() || m_saveMode)
             getHeaders(&m_headersA);
         else
@@ -3662,7 +3602,6 @@ DC_ADDRESS(0x136e94, 0x368)
 MAC_ADDRESS(0x17980c, 0x29c)
 void TSingleSelectionWindow::turnOffAdvancedOptions()
 {
-    // Mac retains all three isMultiPlayer calls; VC6 expands the predicate.
     if (m_loadMode && !isMultiPlayer())
         return;
     if (m_saveMode)
@@ -3698,13 +3637,8 @@ void TSingleSelectionWindow::turnOffAdvancedOptions()
 }
 
 // Complete-only random-map pane teardown; the source name is provisional.
-// Retail SetupAdvancedOptions calls this member at 0x58136f, following
-// TurnOffScenarioOptions, and the constructor calls it at 0x57c5bd.
-// Dreamcast SetupAdvancedOptions instead proceeds from TurnOffScenarioOptions
-// (dc 0x13640e, line 2943) directly to the advanced control's show call
-// (dc 0x13641c, line 2946). Its class record 0x246e has only the advanced
-// and scenario pane flags, without Complete's random-map panel state.
-// The desktop widget-103/280..335 teardown and final +0x37e clear belong here.
+// SetupAdvancedOptions calls it after TurnOffScenarioOptions, and the
+// constructor calls it too; Dreamcast has no random-map panel state.
 VA(0x00581D80, 0x550)
 MAC_ADDRESS(0x179aa8, 0x5b4)  // anchor-callee SetupAdvancedOptions + ctor; Complete-only random-map pane
 void TSingleSelectionWindow::hideRandomMapOptions()
@@ -3993,8 +3927,7 @@ int TSingleSelectionWindow::getFileSpecNbr()
     return (m_loadMode || m_saveMode) + g_selectionCampaignMode;
 }
 
-// Mac retains this source choice at code 0:0x175674; VC6 expands its four
-// calls in getHeaders and onMapFileNameMsg.
+// Mac retains this source choice; inlined in getHeaders and onMapFileNameMsg.
 MAC_ADDRESS(0x175674, 0x48)
 char* TSingleSelectionWindow::getHeaderDirectory()
 {
@@ -4136,10 +4069,6 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
     if (dir[0])
         chdir(dir);
 #if defined(HOMM3_TARGET_MAC)
-    // Mac 0:0x17aec8 uses its native fork adapter and DateTimeRec.
-    // Native open passes the incoming eight-byte directory adapter in r4;
-    // its shared pathname declaration/chdir model above remains a platform
-    // comparison gap. Preserve the incoming pointer at this boundary.
     MacFileAdapter file;
     if (file.open(static_cast<const MacDirectoryAdapter*>(
                       static_cast<const void*>(dir)),
@@ -4214,8 +4143,8 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // 1000-unit floor here, so braces cannot stand in for it.
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
-// Mac retains this shared transfer at code 0:0x17b0b0. VC6 expands it in
-// rebuildRandomMapPlayerSetup, both updateGameVars arms and onBeginGame.
+// Inlined in rebuildRandomMapPlayerSetup, both updateGameVars arms and
+// onBeginGame.
 MAC_ADDRESS(0x17b0b0, 0x114)
 void TSingleSelectionWindow::applyHeaderToGame(
     GameSelectionHeadersStruct* header)
@@ -4381,12 +4310,8 @@ TSingleSelectionWindow::~TSingleSelectionWindow();
 
 // E:\gamedcs\singleselectionwindow.cpp:1553.
 // CodeView owns both the scalar deleting wrapper (dc 0x1489f0) and the
-// ordinary destructor (dc 0x148a28) in CNewPlayerUpdateProc. Complete's
-// wrapper calls 0x583ef0 at 0x583ec6; PlayerDropped calls that same teardown
-// directly at 0x5894a3 before deleting the allocation. It destroys only
-// m_requests, whose pointer triple is at +0x10/+0x14/+0x18 in Complete.
-// Both binaries omit a CNewPlayerUpdateProc vptr reset; VC6's implicit
-// destructor reproduces that body, while an authored empty destructor adds it.
+// ordinary destructor (dc 0x148a28) in CNewPlayerUpdateProc; the destructor
+// is implicit (it destroys only m_requests and resets no vptr).
 VA_COMPGEN(0x00583EC0, 0x21, SCALAR_DELETING_DTOR, CNewPlayerUpdateProc)  // dc 0x1489f0
 
 VA_COMPGEN(0x00583ef0, 0x26, IMPLICIT_DTOR, CNewPlayerUpdateProc)  // anchor-callee: 0x583ec6 and PlayerDropped 0x5894a3, dc 0x148a28
@@ -4435,11 +4360,8 @@ const char* TSingleSelectionWindow::getMapName(int which)
 }
 
 // Original: GetVCText; singleselectionwindow.cpp:4122
-// DC4123 copies the description before the conditional second write;
-// DC4127 calls operator[] for the "or" word. DrawBasicMapInfo DC4196
-// calls this ordinary helper; retail expands it inside 0x5840f0.
-// Complete retains the type and description across strcpy (retail +0x21c:
-// dl holds the type, [ebp-0xc] the description); cache them in this helper.
+// DC4123 copies the description before the conditional second write; DC4127
+// calls operator[] for the "or" word. Inlined in DrawBasicMapInfo.
 DC_ADDRESS(0x139c14, 0x90)
 MAC_ADDRESS(0x17bb54, 0xd0)
 void getVCText(VictoryConditionStruct* vc, char* text)
@@ -4457,8 +4379,7 @@ void getVCText(VictoryConditionStruct* vc, char* text)
 }
 
 // Original: GetLCText; singleselectionwindow.cpp:4136
-// DC4137 copies the indexed loss description; the source call at DC4197
-// follows GetVCText and precedes both text draws, as in retail 0x5840f0.
+// DC4137 copies the indexed loss description.
 DC_ADDRESS(0x139ca4, 0x28)
 MAC_ADDRESS(0x17bc24, 0x3c)
 void getLCText(LossConditionStruct* lc, char* text)
@@ -4543,8 +4464,6 @@ void TSingleSelectionWindow::drawBasicMapInfo()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4239
-// Mac 0x17c1dc..0x17c1ec derives each row coordinate from its index, as
-// Windows retail does.
 VA(0x00584550, 0x698)
 DC_ADDRESS(0x13a380, 0xd84)
 MAC_ADDRESS(0x17c0ac, 0x7b4)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls it no-arg after DrawWindow; owns the '%d/%d' literal; also tailed by SliderDuration 0x57c7f0 + WindowHandler, size 0.49x
@@ -4718,8 +4637,7 @@ DC_ADDRESS(0x13b104, 0x74)
 MAC_ADDRESS(0x17c860, 0x90)
 void TSingleSelectionWindow::doModal(bool fade)
 {
-    // DC4425 calls the ordinary IsMultiPlayer helper; its retail expansion
-    // is the two-global test, not a separate caller-owned predicate.
+    // DC4425 calls the ordinary IsMultiPlayer helper.
     if ((m_loadMode == 0 && m_saveMode == 0)
             || (m_loadMode != 0 && isMultiPlayer()))
         m_durationSlider->setState(11);
@@ -4859,7 +4777,7 @@ void TSingleSelectionWindow::setHumanSlot()
         player->m_playerPos = -1;
 }
 
-// Dreamcast preserves this helper. Complete expands it into the six sort
+// Dreamcast preserves this helper; Complete inlines it into the six sort
 // button arms: active header transfers suppress sorting, a repeated column
 // flips direction, and a new column resets it before sorting and reselection.
 DC_ADDRESS(0x13b704, 0x7c)
@@ -5192,7 +5110,6 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
     }
 }
 
-// Mac retains this choice at code 0:0x17db20 before the setFilter body.
 MAC_ADDRESS(0x17db20, 0x1c)
 std::vector<GameSelectionHeadersStruct>* TSingleSelectionWindow::getSourceHeaders()
 {
@@ -5406,7 +5323,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
     return 0;
 }
 
-// DC source call and local lifetimes recovered in HandleNetMsg.
+// Inlined in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:5085
 DC_ADDRESS(0x13c724, 0x78)
 MAC_ADDRESS(0x17de80, 0x60)
@@ -5420,9 +5337,7 @@ bool TSingleSelectionWindow::onClickMsg(CNetMsg* netMsg)
     return true;
 }
 
-// Mac +0x17e308 retains this three-call helper immediately before
-// OnWidgetDeselect and calls it in the filter arms. Windows expands the
-// same sequence at those sites.
+// Mac retains this three-call helper; Windows inlines it in the filter arms.
 MAC_ADDRESS(0x17e308, 0x5c)
 void TSingleSelectionWindow::refreshRandomMapOptionWidgets()
 {
@@ -5431,10 +5346,8 @@ void TSingleSelectionWindow::refreshRandomMapOptionWidgets()
     this->update();
 }
 
-// Mac 0x17e364/0x17e394 places these ordinary helpers between the
-// selection handlers, although Dreamcast kept them in newgame.cpp.
-// Windows expands both in onWidgetDeselect; retain their TU visibility.
-// Complete uses the nine-town alignment mask for both helpers.
+// Dreamcast kept these ordinary helpers in newgame.cpp; Windows inlines both
+// in onWidgetDeselect. Complete uses the nine-town alignment mask for both.
 // E:\gamedcs\newgame.cpp:355
 DC_ADDRESS(0x1037f8, 0x14)
 MAC_ADDRESS(0x17e364, 0x30)
@@ -5463,8 +5376,7 @@ TTownType pickNextAlignment(int legalAlignments, TTownType type)
     return type;
 }
 
-// Mac +0x17e3c4 retains this helper immediately before OnWidgetDeselect.
-// Its random-maps arm calls it; VC6 expands the three calls in that arm.
+// Inlined in the random-maps arm; Mac retains it.
 MAC_ADDRESS(0x17e3c4, 0x60)
 void TSingleSelectionWindow::toggleGeneratedMapList()
 {
@@ -5473,15 +5385,11 @@ void TSingleSelectionWindow::toggleGeneratedMapList()
     this->update();
 }
 
-// The retail jump-table arm layout and Dreamcast's line table independently
-// prove the shared arm order below.  It is source order, not numeric selector
-// order; keep msg->codeY direct because Dreamcast has no cached-id local.
+// The arms are in source order, not numeric selector order (Dreamcast's
+// line table); msg->codeY is read directly because Dreamcast has no
+// cached-id local.
 
-// Complete keeps both alignment helpers in this TU (ordinary expansion), with
-// the >= nine-town bound and the save arm's stored-index reread. The first
-// switch also broadcasts the teams label (306): retail's byte at
-// function+0x1217 is zero, selecting its broadcast arm, and Mac
-// 0x17e6ec..0x17e700 routes 306 there too.
+// The first switch also broadcasts the teams label (306).
 // E:\gamedcs\singleselectionwindow.cpp:5100
 VA(0x005865b0, 0x13EA)
 DC_ADDRESS(0x13c79c, 0x22d4)
@@ -5581,10 +5489,8 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         }
         break;
 
-    // Both town arms read the member BACK for UpdateTown: retail stores
-    // townType to pThisPlayer->townIndex and then re-loads +0x24
-    // (`mov esi,[esi+0x24]`) for the call, where passing the local kept it
-    // live in a register and duplicated the legalAlignments `test`.
+    // Both town arms read townIndex back from the player record for
+    // UpdateTown.
     case SSW_TOWN_PREV_FIRST:
     case SSW_TOWN_PREV_FIRST + 1:
     case SSW_TOWN_PREV_FIRST + 2:
@@ -5938,12 +5844,9 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILE_ROW_FIRST + 15:
     case SSW_FILE_ROW_FIRST + 16:
     case SSW_FILE_ROW_LAST: {
-        // Retail carries one computed map index; DC's CodeView locals are a
-        // lower bound.
         unsigned int map = msg->m_codeY - SSW_FILE_ROW_FIRST + m_currentIndex;
         if (m_saveMode) {
             m_textIndex = msg->m_codeY - SSW_FILE_ROW_FIRST;
-            // Mac 0x17f074 reloads both members; Windows adds after the store.
             setCurrentMap(m_textIndex + m_currentIndex, 1);
         } else if (map < m_selectionHeaders.size()) {
             unsigned long lastClick = m_clickTime;
@@ -5951,9 +5854,6 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                 *exitFlag = onBeginGame();
             } else {
                 m_clickTime = GameTime::get();
-                // Retail's second guard reads size() > map (`cmp edx,edi /
-                // jbe`), the first map < size() (`cmp edi,edx / jae`), and
-                // neither carries a separate size() != 0 test.
                 if (m_selectionHeaders.size() > map
                         && (!g_remoteOn || isHost()))
                     setCurrentMap(map, 1);
@@ -6047,15 +5947,12 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     return 0;
 }
 
-// Complete-only: no Dreamcast procedure is present for this helper. Retail
-// initializes both the slot counter and the advancing filename cursor before
-// clearing the timestamps; spelling out that cursor reproduces its instruction
-// schedule while retaining ordinary array indexing for the returned slot.
-// Hidden std::string result in ECX, no explicit stack args. Retail enumerates
-// random_maps/*.h3m and returns the generated filename: it builds the fifteen
-// canonical slot names, stamps each existing file's write time into the
-// matching slot (absent slots keep their zero), and returns the slot with the
-// smallest stamp - i.e. the free slot if there is one, otherwise the oldest.
+// Complete-only: no Dreamcast procedure is present for this helper. It
+// enumerates random_maps/*.h3m and returns the generated filename: it builds
+// the fifteen canonical slot names, stamps each existing file's write time
+// into the matching slot (absent slots keep their zero), and returns the slot
+// with the smallest stamp - i.e. the free slot if there is one, otherwise the
+// oldest.
 VA(0x005879A0, 0x219)
 MAC_ADDRESS(0x17e424, 0x220)
 std::string getRandomMapName()
@@ -6108,8 +6005,7 @@ std::string getRandomMapName()
 
 // On the way out of a network lobby: detach the net-message handler,
 // clear the chat pane, and dump the final seat map into the network
-// log (CLogFile::Log is retail's folded empty at 0x404df0 - the calls
-// survive, the bodies do nothing). The tail rewrites the message into
+// log (CLogFile::Log is empty in retail). The tail rewrites the message into
 // the shared end-dialog command exactly as the tradpost handlers do.
 // E:\gamedcs\singleselectionwindow.cpp:5933
 VA(0x00587bc0, 0x138)
@@ -6297,8 +6193,7 @@ int TSingleSelectionWindow::windowHandler(message& msg)
     return 1;
 }
 
-// Like GetThisPlayer above: retail keeps no out-of-line copy;
-// every caller expands the GetGamePos chain.
+// Like GetThisPlayer above: inlined at every caller.
 DC_ADDRESS(0x13f748, 0x28)
 MAC_ADDRESS(0x17fb78, 0x2c)
 inline int TSingleSelectionWindow::getThisPlayerGamePos()
@@ -6397,10 +6292,6 @@ void TSingleSelectionWindow::updatePlayerPositions(bool updateCurPlayer)
     g_completeDrawEnabled = g_game->isLocalHuman(g_netLocalGamePos);
 }
 
-// Retail expands CRequestHeroFaceReplyMsg's constructor inside
-// onRequestHeroFaceMsg and both CHostWaitDlg::wait bodies, then refuses the
-// three trailing ping/version handlers. That budget holds only with
-// onPlayerDroppedMsg's in-place removal and wait's do-while (see both).
 VA(0x005887a0, 0x9ED)
 DC_ADDRESS(0x13fd74, 0x6a0)
 MAC_ADDRESS(0x17fff0, 0x7e0)
@@ -6462,10 +6353,6 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
             return 1;
         }
     }
-        // Windows 0x588986..0x5889b9 shares normalDialog/shutDown with the
-        // lost-session arm. Mac 0x180284/0x18070c instead destroys the message,
-        // cleans up networking and sets cancel. Source-call correspondence
-        // for these conflicting exits remains unresolved.
         // fall through - a failed transfer is a lost session
     case RS_SESSION_LOST:
         normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
@@ -6634,9 +6521,8 @@ void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
 }
 
 // Original: TSingleSelectionWindow::OnPingMsg; singleselectionwindow.cpp:6649,
-// DC6651 constructs CPingResponseMsg, the distinct response
-// class with the same payload as CPingMsg; retail 0x5894f0 stores opcode
-// 0x418 and 0x5894e6 echoes the request's time into its 0x18-byte object.
+// DC6651 constructs CPingResponseMsg, the distinct response class with the
+// same payload as CPingMsg.
 VA(0x005894D0, 0x40)
 DC_ADDRESS(0x140414, 0x3c)
 MAC_ADDRESS(0x180844, 0x5c)
@@ -6648,10 +6534,8 @@ void TSingleSelectionWindow::onPingMsg(CNetMsg* netMsg)
 }
 
 // Original: TSingleSelectionWindow::OnPingResponseMsg;
-// singleselectionwindow.cpp:6655. DC's typed pMsg is
-// CPingResponseMsg*, and DC6659 calls TTextResource::operator[]. Retail
-// reads the same +0x14 time and +4 sender. Equal message layouts do not
-// establish a platform type difference or justify using CPingMsg here.
+// singleselectionwindow.cpp:6655. DC's typed pMsg is CPingResponseMsg*, and
+// DC6659 calls TTextResource::operator[].
 VA(0x00589510, 0xA3)
 DC_ADDRESS(0x140450, 0xb8)
 MAC_ADDRESS(0x1808a0, 0x8c)
@@ -6669,8 +6553,6 @@ DC_ADDRESS(0x140588, 0x82)
 MAC_ADDRESS(0x180a58, 0x14c)
 bool TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
 {
-    // Native _N return plus retail's unnormalized byte load supports a bool
-    // latch. DC primitive 0x20 alone does not distinguish bool from byte.
     bool missing = false;
     unsigned int i;
     for (i = 0; i < m_headersA.size(); ++i) {
@@ -6772,7 +6654,7 @@ bool TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
     }
 }
 
-// DC source call and local lifetimes recovered in HandleNetMsg.
+// Inlined in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:6664
 DC_ADDRESS(0x140508, 0x46)
 MAC_ADDRESS(0x18092c, 0x84)
@@ -6787,7 +6669,7 @@ bool TSingleSelectionWindow::onMapHeaderRequestMsg(CNetMsg* netMsg)
     return true;
 }
 
-// DC source call and local lifetimes recovered in HandleNetMsg.
+// Inlined in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:6677
 DC_ADDRESS(0x140550, 0x38)
 MAC_ADDRESS(0x1809f0, 0x68)
@@ -6799,7 +6681,7 @@ bool TSingleSelectionWindow::onHeaderConfirmMsg(CNetMsg* netMsg)
     return true;
 }
 
-// DC source call and local lifetimes recovered in HandleNetMsg.
+// Inlined in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:6709
 DC_ADDRESS(0x14060c, 0x56)
 MAC_ADDRESS(0x180ba4, 0x80)
@@ -6815,9 +6697,8 @@ bool TSingleSelectionWindow::onReqHeaderConfirmMsg(CNetMsg* netMsg)
     return true;
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:6773. The DC build retains this
-// helper out of line; Complete expands its sole operation at all three known
-// call sites and has no corresponding x86 function row.
+// E:\gamedcs\singleselectionwindow.cpp:6773; inlined at all three known call
+// sites.
 DC_ADDRESS(0x140670, 0x7c)
 MAC_ADDRESS(0x18128c, 0x50)
 static inline void updateTurnDuration()
@@ -6827,13 +6708,7 @@ static inline void updateTurnDuration()
 }
 
 // DC HandleNetMsg calls this ordinary bool helper; its pPlayer local is
-// CNetPlayerInfo*, not the derived handler record. Complete's expansion at
-// HandleNetMsg +0x21e recomputes the version after DeletePlayer and calls
-// no-argument Update: the older DC message junk local does not survive.
-// Mac 0x181944 calls removePlayer here. Windows deletes the player and
-// recomputes the version in place: removePlayer's charged inline cost
-// (cb 44) leaves CRequestHeroFaceReplyMsg's constructor called in
-// handleNetMsg, where retail expands it.
+// CNetPlayerInfo*, not the derived handler record. Inlined in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:6937
 DC_ADDRESS(0x140c88, 0xc6)
 MAC_ADDRESS(0x181910, 0x12c)
@@ -6853,9 +6728,7 @@ bool TSingleSelectionWindow::onPlayerDroppedMsg(CNetMsg* netMsg)
 }
 
 // DC line 6529 calls this ordinary helper; line 6968 owns its definition.
-// Complete adds the serialized receiver visible in HandleNetMsg +0x310:
-// base ctor 0x512c20, header at +0x18, vtable 0x641d30, read 0x512e00,
-// SetupOrigData, and header teardown. The receive result is not tested.
+// Complete adds the serialized receiver; the receive result is not tested.
 // E:\gamedcs\singleselectionwindow.cpp:6968
 DC_ADDRESS(0x140d50, 0x22)
 MAC_ADDRESS(0x181a3c, 0xac)
@@ -6867,11 +6740,8 @@ bool TSingleSelectionWindow::onNewMapHeaderInfo(CNetMsg* netMsg)
     return true;
 }
 
-// DC keeps these helpers out of line; retail VC6 expands them at the advanced-
-// options call sites. Keep the original cpp boundaries visible while allowing
-// the retail TU to reproduce that lowering.
-// The definition is ordinary, not inline: an explicit inline would expand it
-// into Mac onPlayerPosClick, which retains the call.
+// DC keeps these helpers out of line; inlined at the advanced-options call
+// sites.
 // E:\gamedcs\singleselectionwindow.cpp:6980
 DC_ADDRESS(0x140d74, 0x48)
 MAC_ADDRESS(0x181bac, 0xc4)
@@ -6884,11 +6754,8 @@ bool TSingleSelectionWindow::sendPlayerPositions(
     return 1;
 }
 
-// DC keeps this source helper out of line. Complete's larger setup message
-// adds the window's mode byte and eight filter dwords; VC6 expands this call
-// into Finish while retaining the CNewSetupInfoMsg constructor boundary.
-// That expansion needs no inline keyword: the ordinary definition after
-// Finish emits the same bytes in every caller.
+// DC keeps this source helper out of line; Complete's larger setup message
+// adds the window's mode byte and eight filter dwords. Inlined in Finish.
 // E:\gamedcs\singleselectionwindow.cpp:7009
 DC_ADDRESS(0x140ee4, 0x40)
 MAC_ADDRESS(0x181c70, 0x110)
@@ -6909,7 +6776,7 @@ unsigned char TSingleSelectionWindow::sendSetupInfo(
     return 1;
 }
 
-// DC source call and local lifetimes recovered in HandleNetMsg.
+// Inlined in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:7094
 DC_ADDRESS(0x1412fc, 0xc8)
 MAC_ADDRESS(0x1824f4, 0xd0)
@@ -6928,7 +6795,7 @@ bool TSingleSelectionWindow::onGameHeaderInfoEndMsg(CNetMsg* netMsg)
     return true;
 }
 
-// DC source call and local lifetimes recovered in HandleNetMsg.
+// Inlined in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:7118
 DC_ADDRESS(0x1413c4, 0x4a)
 MAC_ADDRESS(0x1825c4, 0x68)
@@ -6942,17 +6809,13 @@ bool TSingleSelectionWindow::onScrollMsg(CNetMsg* netMsg)
 }
 
 // Original: TSingleSelectionWindow::OnNameSlider; singleselectionwindow.cpp:7139
-// DC's entire body is parameter homes followed by return at7140; the
-// original callback performs no operation. No retail address is claimed.
+// DC's body only returns; the original callback performs no operation.
 DC_ADDRESS(0x141448, 0x8)
 void TSingleSelectionWindow::onNameSlider(int newIndex)
 {
 }
 
-// Retail restores monthTypeExtra before monthType (+0xea/+0xf0) and
-// allocates their saved copies in that order; DC 6807-6810/6818-6821 keeps
-// the older monthType-first order; both the save and the restore put the
-// extra first.
+// The extra month type is saved and restored before the month type.
 VA(0x00589b20, 0x13C)
 DC_ADDRESS(0x1406ec, 0x1ac)
 MAC_ADDRESS(0x1812dc, 0x168)
@@ -6981,9 +6844,9 @@ bool TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
     WeekType weekType = g_weekType;
     int weekTypeExtra = g_weekTypeExtra;
 
-    // Retail loads the received RMT%sRC.BIN file named in the preferences
-    // (push 0x6987f0 = g_config.m_rcFile), then saves the original-game
-    // snapshot as orig.dat, as advManager::loadRemote does.
+    // Loads the received RMT%sRC.BIN file named in the preferences, then
+    // saves the original-game snapshot as orig.dat, as
+    // advManager::loadRemote does.
     g_game->loadGame(g_config.m_rcFile, 0, 1);
     g_game->saveGame(
         DATA_COMPGEN(0x00660410, remoteOriginalSaveName, "orig.dat"),
@@ -7059,9 +6922,8 @@ bool TSingleSelectionWindow::isVersionCompatible(const char* otherVersion)
     return 0;
 }
 
-// Mac retains this seat assignment at 0:0x17c8f0. The newer helper name is
-// unknown; the single onNewPlayerMsg caller passes the joining DPID, while
-// VC6 expands the same search and assignment in the advanced-options arm.
+// Mac retains this seat assignment; the newer helper name is unknown.
+// Inlined in the advanced-options arm.
 MAC_ADDRESS(0x17c8f0, 0xc0)
 bool TSingleSelectionWindow::assignPlayerToOpenHumanSlot(unsigned long dpid)
 {
@@ -7127,8 +6989,6 @@ bool TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         sendPlayerPositions(0);
     }
 #if defined(HOMM3_TARGET_MAC)
-    // Mac 0x1818b4 refreshes the hero filter here; Windows 0x589fa0
-    // proceeds directly from the roster broadcast to the join message.
     makeHeroFilter();
 #endif
     g_chatMan.playerEnterMsg((*g_generalText)[GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT],
@@ -7247,8 +7107,8 @@ bool TSingleSelectionWindow::isHost()
     return g_dPlay->isHost();
 }
 
-// Dreamcast retains this member boundary; Complete expands it into the chat
-// slider wrapper below.
+// Dreamcast retains this member boundary; inlined in the chat slider wrapper
+// below.
 DC_ADDRESS(0x141450, 0x68)
 MAC_ADDRESS(0x18266c, 0x38)
 inline void TSingleSelectionWindow::onChatWindowSlider(int newIndex)
@@ -7257,8 +7117,8 @@ inline void TSingleSelectionWindow::onChatWindowSlider(int newIndex)
     displayChat();
 }
 
-// Dreamcast retains this member boundary. Complete expands it into the tiny
-// file-slider callback below, whose bytes prove the same store/call pair.
+// Dreamcast retains this member boundary; inlined in the file-slider
+// callback below.
 DC_ADDRESS(0x1414b8, 0x2a)
 MAC_ADDRESS(0x1826a4, 0x2c)
 inline void TSingleSelectionWindow::onFileMenuSlider(int newIndex)
@@ -7267,10 +7127,8 @@ inline void TSingleSelectionWindow::onFileMenuSlider(int newIndex)
     setCurrentMap(m_currentMap, 1);
 }
 
-// Complete expands this Dreamcast member boundary into SliderDuration.  Its
-// older `message` local disappeared in retail; the x86 body instead proves a
-// host setup broadcast followed by the full-window redraw and duration-clock
-// refresh.
+// Inlined into SliderDuration: a host setup broadcast followed by the
+// full-window redraw and duration-clock refresh.
 DC_ADDRESS(0x1414e4, 0xc4)
 MAC_ADDRESS(0x1826d0, 0xa0)
 inline void TSingleSelectionWindow::onDurationSlider(int newIndex)
@@ -7283,10 +7141,10 @@ inline void TSingleSelectionWindow::onDurationSlider(int newIndex)
     update();
 }
 
-// Dreamcast retains this source helper; Complete expands it
-// into CSingleSelectionChatEdit::SendChat below. Retail independently proves
-// the setup-ping special case, the local player's formatted chat line, the
-// repaint, and the final guaranteed chat broadcast in exactly this order.
+// Dreamcast retains this source helper; inlined into
+// CSingleSelectionChatEdit::SendChat: the setup-ping special case, the local
+// player's formatted chat line, the repaint, and the final guaranteed chat
+// broadcast.
 DC_ADDRESS(0x1415a8, 0xf4)
 MAC_ADDRESS(0x182770, 0x138)
 inline void TSingleSelectionWindow::sendChat(
@@ -7400,14 +7258,8 @@ void TSingleSelectionWindow::onRequestHeroFaceMsg(
     onRequestHeroFaceReplyMsg(&reply, inPopup);
 }
 
-// DC line 7324..7333 proves the pPlayer local (sp+0x10) and a separate
-// `return pPlayer` row (7333). The DC asm also proves the then-arm is an
-// EARLY RETURN: at 7326 it forms &humanPlayers[0] straight into r0 and
-// branches to the epilogue (0x141a4c), never storing pPlayer and never
-// executing the 7333 row; only the GetPlayer path (7329) stores pPlayer
-// and falls into 7333. An if/else-assign spelling with a shared return
-// lets VC6 jump-thread GetPlayer's NULL arm straight to the caller's exit;
-// the early-return form keeps retail's `xor eax,eax / test eax,eax` join.
+// DC line 7324..7333 proves the pPlayer local and the early return on the
+// then-arm (only the GetPlayer path stores pPlayer).
 DC_ADDRESS(0x141a14, 0x60)
 MAC_ADDRESS(0x182c14, 0x44)
 CNetPlayerHandlerPlayer* TSingleSelectionWindow::getThisPlayer()
@@ -7454,7 +7306,6 @@ void TSingleSelectionWindow::onSetAGRMsg(
         drawHeroAdvancedOption(msg->m_gamePos, 1, -1);
 }
 
-// Mac 0x182e84..0x182e98 expands isHuman before excluding our own DPID.
 VA(0x0058B120, 0x3E8)
 DC_ADDRESS(0x141b98, 0x1c4)
 MAC_ADDRESS(0x182d78, 0x218)
@@ -7478,8 +7329,7 @@ bool TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
                        != g_thisNetPlayerInfo.m_dpid)
             m_newPlayerUpdateMan->newPlayer(m_players.m_humanPlayers[i].m_dpid);
     }
-    // DC line 7408 names this helper. Complete expands it here while retaining
-    // the body at 0x57fb90.
+    // DC line 7408 names this helper; inlined here.
     updateMainWindow();
     drawWindow(1, 0xffff0001, 0xffff);
     update();
@@ -7547,12 +7397,8 @@ void TSingleSelectionWindow::onNameClick(int pos)
 }
 
 // DC proves the IsHost/IsMultiPlayer split, setup/header/player locals and
-// the helper sequence.  Complete expands the roster broadcast and face
-// helpers in the network arm, and uses the PC setup.playerPos byte array for
-// the local seat exchange.
-// Retail calls isFaceTaken inside the expanded checkFaces. Its DC body
-// (continue, a nested face test and a function-scope pPlayer) costs enough
-// to be refused there; with i also declared before the loop it expands.
+// the helper sequence; the local seat exchange uses the PC setup.playerPos
+// byte array.
 // E:\gamedcs\singleselectionwindow.cpp:7512
 VA(0x0058B790, 0x2A3)
 DC_ADDRESS(0x142028, 0x180)
@@ -7599,7 +7445,6 @@ void TSingleSelectionWindow::onPlayerPosClick(int pos)
 // The host's authoritative roster lands: clear every seat, merge each
 // live human record (creating seats for newcomers), take the computer
 // block wholesale, then retitle the handicap labels and redraw.
-// Mac 0x1833cc..0x1833e0 retains isHuman's byte-result boundary here.
 VA(0x0058BA40, 0x175)
 DC_ADDRESS(0x1421a8, 0x38c)
 MAC_ADDRESS(0x183374, 0x1c8)
@@ -7681,14 +7526,7 @@ void TSingleSelectionWindow::sendPlayerFaces()
 // two seated players in a network game - before the pointer/session/progress
 // preamble hands off to BeginSavedGame or BeginNewGame.
 
-// Native Mac 0x183764/0x183794 passes m_localHeader directly to both
-// canonical helpers, with no cached header pointer. Each version-message
-// template is named after its edition-name selection, preserving Mac
-// 0x183870's lookup phase.
 // E:\gamedcs\singleselectionwindow.cpp:7698
-// Mac retains ordinary text indexing at 0x183850..0x183b08: direct
-// branch-local lookups, with no table cached across the two
-// compatibility-message arms.
 VA(0x0058BCE0, 0x5AF)
 DC_ADDRESS(0x142674, 0x1fc)
 MAC_ADDRESS(0x183698, 0x51c)  // begin-button caller and DC source shape
@@ -7773,7 +7611,6 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         return 0;
     }
 
-    // Mac retains the shared IsMultiPlayer call at 0x183adc.
     if (isMultiPlayer()) {
         if (m_players.getPlayerCount(1) < 2) {
             normalDialog((*g_generalText)[GENERAL_TEXT_MULTIPLAYER_REQUIRES_TWO_PLAYERS], 1, -1, -1, -1, 0, -1, 0,
@@ -7901,8 +7738,8 @@ bool TSingleSelectionWindow::beginNewGame()
 
     if (g_remoteOn) {
         CNewMapHeaderInfoMsg mapHeaderMsg(&g_game->m_mapHeader);
-        // Retail 0x58c77d calls the player-recipient overload with toWho=0.
-        // Mac 0x183f80 calls the separate DPID overload with dpid=-1.
+        // The player-recipient overload with toWho=0 (Mac uses the DPID
+        // overload).
         int returnValue = mapHeaderMsg.send(0, 0, 1);
         if (!sendPlayerPositions(0))
             return 0;
@@ -7928,7 +7765,6 @@ bool TSingleSelectionWindow::isMultiPlayer()
     return 0;
 }
 
-// Both name-column loops expand isHuman (Mac 0x184100/0x18417c).
 VA(0x0058C960, 0x11C)
 DC_ADDRESS(0x142cc0, 0x17c)
 MAC_ADDRESS(0x1840cc, 0x128)
@@ -8133,13 +7969,10 @@ int TSingleSelectionWindow::getDisplayFace(int gamePos)
     return heroId;
 }
 
-// Dreamcast preserves this helper boundary and ProcessRightSelect calls it
-// in source. Complete expands it in getHeroName, selecting the hero without
-// the portrait remapping performed by DC getHeroName's GetDisplayFace call.
-// Keep DC's early-return order: generated/random hero first, then the fixed
-// hero and finally the selected available hero (lines 8151..8162).
-// In getHeroName these early returns let the nested getPlayerInPos scan
-// expand (an assignment/else chain leaves it a call).
+// Dreamcast preserves this helper boundary; Complete inlines it in
+// getHeroName. DC's early-return order: generated/random hero first, then
+// the fixed hero and finally the selected available hero (lines
+// 8151..8162).
 // E:\gamedcs\singleselectionwindow.cpp:8143
 DC_ADDRESS(0x143548, 0xb0)
 MAC_ADDRESS(0x184a1c, 0xc8)
@@ -8161,12 +7994,8 @@ inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
 }
 
 // The selected seat's town. Dreamcast falls back to pick_alignment when a
-// multi-town slot has no committed town; Complete's retail CanChooseHero
-// directly proves that its shared helper returns the -1 instead. The named
-// boundary and its HasMultipleTowns call remain common source facts.
+// multi-town slot has no committed town; Complete returns -1 instead.
 // E:\gamedcs\singleselectionwindow.cpp:8166
-// This ordinary TU helper auto-expands under VC6 /Ob2; it is not inline
-// (Mac retains the call at setNewPlayerSlot 0:0x1863b8).
 DC_ADDRESS(0x1435f8, 0xbc)
 MAC_ADDRESS(0x184ae4, 0xb0)
 TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
@@ -8225,12 +8054,10 @@ const char* TSingleSelectionWindow::getHeroName(int gamePos)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8230
-// Both CEnterNameEdit overrides expand this ordinary member; there is no
-// retained retail body to claim. DC line 8231 overrides gamePos from a
-// platform-specific field and line 8252 reads a stored icon position. Retail
-// instead preserves the supplied row and passes -1 to DrawHeroAdvancedOption,
-// so those two Complete semantics remain explicit below. The original w
-// local and all eight named/virtual source calls retain their order.
+// Inlined in both CEnterNameEdit overrides. DC line 8231 overrides gamePos
+// from a platform-specific field and line 8252 reads a stored icon
+// position; Complete keeps the supplied row and passes -1 to
+// DrawHeroAdvancedOption.
 DC_ADDRESS(0x143810, 0xa8)
 MAC_ADDRESS(0x184d94, 0xbc)
 void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
@@ -8250,7 +8077,7 @@ void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
 // Original: TSingleSelectionWindow::UpdateNames;
 // singleselectionwindow.cpp:8256. Update calls it at DC4340.
 // Each row resolves its seated player and name widget, then chooses the
-// computer label or player name. Complete expands this loop in 0x584550.
+// computer label or player name.
 DC_ADDRESS(0x1438b8, 0x9a)
 MAC_ADDRESS(0x184e50, 0xb0)
 void TSingleSelectionWindow::updateNames()
@@ -8290,19 +8117,11 @@ unsigned char TSingleSelectionWindow::highlightFile(char* filename)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8297
-// DC 8299/8434 recover CalcPosition/GetDisplayTown rather than pasted
-// caller bodies; 8504/8511 name HasRandomHero/HasNonRandomHero, and
-// 8603/8631 name IsHost/IsHuman/IsMultiPlayer. Keep these canonical calls
-// and the proven text operator[] calls. Retail's Complete GetDisplayTown
-// keeps -1 for an uncommitted multi-town seat. Keep DC's separate
-// townType/sprite and position-based coordinates; the resource-bonus arm
-// selects by townType, never the row position, with no pre-switch sprite
-// initializer, and DC's left/rite pair is reused across all three control
-// groups. GetTownTypeName and widget::show/hide are canonical proven header
-// helpers. DC 8560/8561 update both the player's bonus and local agr (bonus
-// here); retail +0x8a9 jumps straight to random-bonus text, so the resource
-// arm finishes its frame assignment and breaks rather than falling through
-// into the random case.
+// DC 8299/8434 recover CalcPosition/GetDisplayTown; 8504/8511 name
+// HasRandomHero/HasNonRandomHero, and 8603/8631 name
+// IsHost/IsHuman/IsMultiPlayer. Complete's GetDisplayTown keeps -1 for an
+// uncommitted multi-town seat. The resource-bonus arm selects by townType and
+// breaks rather than falling through into the random case.
 VA(0x0058d510, 0xA40)
 DC_ADDRESS(0x143a7c, 0x158a)
 MAC_ADDRESS(0x184ff0, 0xccc)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x
@@ -8491,11 +8310,6 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         unsigned char townChosen = 1;
         if (town == -1)
             townChosen = 0;
-        // The window-mode disjunct is OUTER, not part of the
-        // CanChooseTown/townChosen group, and the dpid test sits beside
-        // the host test rather than inside it: retail's `!IsHost` and
-        // `dpid != 0` arms both jump to the g_mpNetProtocol compare, not
-        // past it.
         if (getThisPlayerGamePos() == playerPos
                 || (isHost()
                     && !p->isHuman()
@@ -8524,7 +8338,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
 }
 
 // DC keeps this source helper separate (i/nextColor locals and the two
-// ordered eligibility tests).  Complete expands it into OnNameClick.  The
+// ordered eligibility tests); Complete inlines it into OnNameClick. The
 // first byte is setup.playerPos; the second PC-only veto is the game's
 // per-seat disabled byte when the network header mode is active.
 // E:\gamedcs\singleselectionwindow.cpp:8643
@@ -8593,11 +8407,8 @@ void TSingleSelectionWindow::onDeleteFile()
 }
 
 // Original: Update; singleselectionwindow.cpp:8749
-// DoModal takes this callback's address at retail 0x584c2d. Its eleven
-// bytes at 0x58e2d0 load the selection-window global and tail-jump to
-// TSingleSelectionWindow::update (0x584550), followed by five pad NOPs.
-// The DC message& parameter survives in the callback interface; Complete's
-// window update is nullary, so this forwarding body does not use it.
+// DoModal's update callback: forwards to TSingleSelectionWindow::update. The
+// DC message& parameter survives in the callback interface but is unused.
 VA(0x0058e2d0, 0xB)
 DC_ADDRESS(0x145128, 0x22)
 MAC_ADDRESS(0x186004, 0x24)  // anchor-address-take DoModal + tail target
@@ -8614,24 +8425,14 @@ inline CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
     m_wasCompressed = 0;
 }
 
-// The Complete-only implicit destructor wrapper occupies slot zero of the
-// unique CSingleSelectionNetMsgHandler vtable at 0x641ce8. Its call target
-// tail-jumps to CNetMsgHandler's destructor, followed by VC6's standard
-// flags&1 delete tail. That trivial derived destructor is ICF-shared with
-// CAdvMgrNetMsgHandler, not evidence that this class inherits from it.
-// Dreamcast proves the derived class/vtable and base
-// construction (dc 0x14514c), but emits no separate deleting wrapper here.
+// Slot zero of the CSingleSelectionNetMsgHandler vtable: the implicit
+// destructor wrapper. Dreamcast proves the derived class/vtable and base
+// construction (dc 0x14514c).
 VA_COMPGEN(0x0058e2e0, 0x21, SCALAR_DELETING_DTOR,
            CSingleSelectionNetMsgHandler)
 
-// COMDAT pairing: CRequestHeroFaceReplyMsg's two-argument constructor, the
-// out-of-line copy of the header inline. This one is settled by BYTES, not
-// by shape: the whole 49-byte extent is equal to this object's own COMDAT
-// to the digit, and the only place it could be confused - CScrollMsg's
-// identically shaped `(int, int)` constructor next door - differs in exactly
-// the message-id immediate (0x403 against this row's 0x40c,
-// RS_REQUEST_HERO_FACE_REPLY). The 0x1c size immediate is sizeof the class,
-// and the two arguments land at +0x14 and +0x18 as the class declares.
+// COMDAT pairing: CRequestHeroFaceReplyMsg's two-argument constructor
+// (message id 0x40c), the out-of-line copy of the header inline.
 // Canonical inline body and VA are above in this module.
 VA(0x0058e310, 0x21)
 DC_ADDRESS(0x1451a0, 0x48)
@@ -8695,9 +8496,8 @@ CNetMsg* CSingleSelectionNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 }
 
 // Dreamcast lines 4013..4071 recover the ownership phases and named helper
-// boundaries. Complete retail independently fixes the wider 164-entry hero
-// bank, its three retained random plates, the added VersionIcon, and the
-// saveHeader/game teardown below.
+// boundaries; Complete adds the 164-entry hero bank, three random plates,
+// the VersionIcon, and the saveHeader/game teardown below.
 // E:\gamedcs\singleselectionwindow.cpp:4012
 DC_ADDRESS(0x1396d8, 0x348)
 TSingleSelectionWindow::~TSingleSelectionWindow()
@@ -8836,8 +8636,7 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
     }
 }
 
-// Mac 0x18640c retains this helper between setNewPlayerSlot and
-// getCommonGameVersion; Mac onPlayerDroppedMsg calls it at 0x181944.
+// Mac retains this helper; its onPlayerDroppedMsg calls it.
 MAC_ADDRESS(0x18640c, 0x3c)
 void TSingleSelectionWindow::removePlayer(unsigned long dpid)
 {
@@ -8937,7 +8736,6 @@ bool TSortMapsByPlayers::operator()(const GameSelectionHeadersStruct& a,
     return rankA < rankB;
 }
 
-// derives from it (see the module-local declarations above). Retail proves the
 VA(0x00591190, 0x180)
 bool TSortMapsByVersion::operator()(const GameSelectionHeadersStruct& a,
                                     const GameSelectionHeadersStruct& b) const
@@ -8991,9 +8789,7 @@ bool TSortMapsByLoss::operator()(const GameSelectionHeadersStruct& a,
 
 // ---------------------------------------------------------------------------
 // The vector<GameSelectionHeadersStruct> machinery behind HeadersA /
-// TransferHeaders / SelectionHeaders (0x58ea70..0x58f480). Every row is
-// placed by its call-graph position and confirmed by the reloc sequence our
-// own COMDAT emits:
+// TransferHeaders / SelectionHeaders.
 VA_COMPGEN(0x0058ea70, 0x3B, VECTOR_DTOR, GameSelectionHeadersStruct)
 
 VA_COMPGEN(0x0058eab0, 0x21, VECTOR_SIZE, GameSelectionHeadersStruct)
@@ -9012,20 +8808,13 @@ VA_COMPGEN(0x0058f480, 0x2C3, STD_CONSTRUCT, GameSelectionHeadersStruct)
 
 VA_COMPGEN(0x005904f0, 0x31B, IMPLICIT_COPY_CTOR, GameSelectionHeadersStruct)
 
-//   0x58fa60  ??0NewSMapHeader(const&)        0x58fc10  ??0SCampaign(const&)
-//   0x58fe40  _Ucopy<CampaignScenarioInfo>    0x58fe80  ??0vector<HeroId>(const&)
-//   0x58fef0  ??0vector<hero>(const&)         0x58ff80  ??0_Tree(const&)
-//   0x58ffc0  _Tree::_Init                    0x590810  ??0CMapHeaderData(const&)
-//   0x593f50  ??0SavedGameHeader(const&)      0x5941b0  ??0vector<vector<hero>>
-//   0x594220  ??0vector<vector<type_artifact>>  0x594290  ??0vector<CampaignScenarioInfo>
 VA_COMPGEN(0x0058fc10, 0x222, IMPLICIT_COPY_CTOR, SCampaign)
 
 VA_COMPGEN(0x0058fe40, 0x3B, VECTOR_UCOPY, CampaignScenarioInfo)
 
 VA_COMPGEN(0x00593f50, 0x259, IMPLICIT_COPY_CTOR, SavedGameHeader)
 
-// The _Tree copy ctor NewSMapHeader's own copy calls for heroPlayerSetups
-// (slot 5 of that zip); its group holds this row alone.
+// The _Tree copy ctor NewSMapHeader's own copy calls for heroPlayerSetups.
 VA_COMPGEN(0x0058ff80, 0x31, IMPLICIT_COPY_CTOR, _Tree)
 
 VA_COMPGEN(0x0058f750, 0x30A, IMPLICIT_COPY_ASSIGN, playerData)
@@ -9033,32 +8822,10 @@ VA_COMPGEN(0x0058f750, 0x30A, IMPLICIT_COPY_ASSIGN, playerData)
 VA_COMPGEN(0x00591650, 0x318, STD_COPY_BACKWARD, gameselectionheadersstruct)
 
 // ---------------------------------------------------------------------------
-// SortMaps' six std::sort instantiations (0x590070..0x595e10).
-
-// `std::sort(first, last, Pred)` is a one-line inline wrapper, so the row
-// SortMaps CALLS is Dinkumware's `_Sort_0`; SortMaps' six-entry jump table
-// reaches them in source-switch order and the two isNet-computing arms
-// (0x590070, 0x590e50) are BY_NAME and BY_VERSION exactly as the switch
-// writes them, which fixes the functor of every family:
-
-//   0x590070 BY_NAME  0x590ad0 BY_PLAYERS  0x590e50 BY_VERSION
-//   0x591310 BY_SIZE  0x591970 BY_VICTORY  0x591cf0 BY_LOSS
-
-// Inside a family the member is read straight off the call graph, and every
-// one of the six agrees to the byte: the 334 B row is `_Sort` (it is the only
-// SELF-RECURSIVE row, matching <algorithm>'s two `_Sort(_M,_L,...)` /
-// `_Sort(_F,_M,...)` tail calls, and our own COMDAT is 334 B on the nose);
-// the two rows it calls after its three `_Ty(*it)` copy-ctor calls are, in
-// that order, `_Median` then `_Unguarded_partition`, matching the single
-// `_Unguarded_partition(_F, _L, _Median(...), _P)` statement; and the one
-// remaining row each `_Sort_0` calls is `_Unguarded_insert` (its inlined
-// `_Insertion_sort_1` is what reaches it - our compile inlines that member
-// too, and emits no COMDAT for it either).
-
-// The comparator bodies beside them are the functors' operator()s and the
-// shared 0x591650 is `std::copy_backward<GameSelectionHeadersStruct*>` (it
-// walks `sub esi,0xca4` backwards through the element stride and is reached
-// only from the three families whose _Insertion_sort_1 did not inline it).
+// SortMaps' six std::sort instantiations, one family per SortMaps arm
+// (BY_NAME, BY_PLAYERS, BY_VERSION, BY_SIZE, BY_VICTORY, BY_LOSS): _Sort_0,
+// _Sort, _Median, _Unguarded_partition and _Unguarded_insert, beside the
+// functors' operator()s.
 
 VA_COMPGEN(0x00590070, 0x331, STD_SORT_0,
            gameselectionheadersstruct_tsortmapsbyname)  // SortMaps arm 0
@@ -9074,7 +8841,7 @@ VA_COMPGEN(0x00591cf0, 0x332, STD_SORT_0,
            gameselectionheadersstruct_tsortmapsbyloss)  // SortMaps arm 5
 
 VA_COMPGEN(0x00592090, 0x14E, STD_SORT,
-           gameselectionheadersstruct_tsortmapsbyname)  // self-recursive, 1.00x
+           gameselectionheadersstruct_tsortmapsbyname)  // self-recursive
 VA_COMPGEN(0x005921e0, 0x38C, STD_UNGUARDED_INSERT,
            gameselectionheadersstruct_tsortmapsbyname)
 VA_COMPGEN(0x00592570, 0x14E, STD_SORT,

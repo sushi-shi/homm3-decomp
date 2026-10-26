@@ -416,8 +416,7 @@ const char* hero::getSpecificAbilityTextShort()
 
 // E:\gamedcs\hero.cpp:267
 // Source-private in the Dreamcast roster and called only as the successful
-// tail of initialize_ballistics_table. Complete keeps that helper boundary
-// in source but /Ob2 expands it into the caller and emits no separate body.
+// tail of initialize_ballistics_table; inlined there.
 DC_ADDRESS(0x0ca7e8, 0x19c)
 MAC_ADDRESS(0x0f1db4, 0x294)
 static unsigned char initializeMoveConstants()
@@ -458,10 +457,8 @@ static unsigned char initializeMoveConstants()
 VA(0x004d7240, 0x223)
 DC_ADDRESS(0x0ca984, 0x11c)
 MAC_ADDRESS(0x0f2048, 0x1cc)
-// DC public ?initialize_ballistics_table@@YA_NXZ is bool, but its
-// initialize_move_constants callee returns unsigned char. VC6 normalizes that
-// tail call for bool; Complete forwards the byte unchanged, proving the
-// Windows interface changed to unsigned char.
+// DC's public is bool, but Complete forwards initialize_move_constants'
+// unsigned char result unchanged.
 unsigned char initializeBallisticsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
@@ -564,7 +561,6 @@ bool type_obscuring_object::load(void* inputHandle)
 }
 
 // Dreamcast hero.cpp:445/449 calls get_location and game::get_cell.
-// Retail VC6 expands both header helpers at this site.
 VA(0x004d75d0, 0x10A)
 DC_ADDRESS(0x0cac58, 0xa4)
 MAC_ADDRESS(0x0f2474, 0x170)
@@ -586,7 +582,7 @@ void type_obscuring_object::obscureCell(TAdventureObjectType newType, long id)
     }
 }
 
-// Dreamcast hero.cpp:475 calls game::get_cell; retail expands it.
+// Dreamcast hero.cpp:475 calls game::get_cell.
 VA(0x004d76e0, 0xD0)
 DC_ADDRESS(0x0cacfc, 0x82)
 MAC_ADDRESS(0x0f25e4, 0x104)
@@ -648,8 +644,7 @@ void hero::hire(int playerId, type_point point)
     g_game->replaceRecruit(playerId, recruitSlot);
 }
 
-// Dreamcast hero.cpp:569 calls Hero.h's obscure_cell wrapper; retail
-// expands that wrapper to the base obscuring-object call.
+// Dreamcast hero.cpp:569 calls Hero.h's obscure_cell wrapper.
 VA(0x004d7900, 0x11B)
 DC_ADDRESS(0x0caedc, 0xbc)
 MAC_ADDRESS(0x0f2928, 0x18c)
@@ -688,16 +683,8 @@ void hero::placeInMap(int playerId, type_point point, bool resetFlags)
 //          hero::canEquipArtifactInEmptySlot refuses in a pre-SoD game - is cleared here
 //          by hand. Independent corroboration of that slot's identity;
 //   >= 32  the per-class artifact counts.
-// Unlike save, load takes `ret 8` for its two arguments; only
-// type_obscuring_object::load's result is checked and every scalar Read
-// is unchecked. EH-bearing: the name assignment owns a string temporary
-// and the bitset's inlined set() carries its range throw.
-
-// Mac 0xf3400 decodes six bytes into a packed-bit result and copies it
-// through a second temporary (0xf3478) before assigning the hero mask: the
-// ordinary readPackedBits return keeps that lifetime. Mac 0xf3468's leftover
-// bitset::set call places the decode loop in the inline reader (see
-// packed_bits.h). Typed scalar readers preserve every on-disk width.
+// Only type_obscuring_object::load's result is checked; every scalar Read
+// is unchecked.
 VA(0x004d7a20, 0x69F)
 DC_ADDRESS(0x0caf98, 0x700)
 MAC_ADDRESS(0x0f2ab4, 0xa04)  // linkorder
@@ -727,7 +714,6 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     m_dWalkSpellsCast = readValue<char>(infile);
     m_identifyLevel = static_cast<TSkillMastery>(
         static_cast<signed char>(readValue<char>(infile)));
-    // Both retails zero-extend the serialized id (Windows 0x4d7bc1, Mac 0xf2d18).
     m_id = static_cast<HeroId>(readValue<unsigned char>(infile));
     m_heroClass = static_cast<THeroClass>(
         static_cast<signed char>(readValue<char>(infile)));
@@ -778,8 +764,6 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 
     if (saveVersion <= 30) {
         infile->read(m_equipped, 18 * sizeof(type_artifact));
-        // Mac 0xf3340 constructs the default artifact in a temporary,
-        // then copies both words into the unsaved slot.
         m_equipped[EQUIPPED_SLOT_SOD_MISC] = type_artifact();
     } else {
         infile->read(m_equipped, sizeof(m_equipped));
@@ -795,20 +779,14 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 }
 
 // E:\gamedcs\hero.cpp:914
-// The record serialiser. Typed scratch locals carry every scalar into
-// the stream - retail copies each field into a stack temp and hands
-// Write() that temp's address, never the member's, which is what makes
-// the write widths independent of the member widths (the byte writes of
-// `sex`, `id`, `heroClass`, `disguiseLevel`, `flightLevel`,
-// `waterWalkLevel` and `field_129` are all truncating stores out of
-// four-byte members, emitted as plain `mov al, byte [this+off]`).
+// The record serialiser. Typed scratch locals carry every scalar into the
+// stream, so the write widths are independent of the member widths (the
+// byte writes of `sex`, `id`, `heroClass`, `disguiseLevel`, `flightLevel`,
+// `waterWalkLevel` and `field_129` truncate four-byte members).
 
 // Only the leading type_obscuring_object::save is checked; every
 // hero-level Write ignores its result and the body always returns 0.
-// The custom name goes out as its length followed by c_str()'s bytes -
-// the `test ecx,ecx / mov ecx, heroNameEmptyText` pair at +0x64 is
-// Dinkumware's c_str() null fallback inlined, the same expansion
-// hero::getBiography carries.
+// The custom name goes out as its length followed by c_str()'s bytes.
 VA(0x004d80c0, 0x526)
 DC_ADDRESS(0x0cb698, 0x720)
 MAC_ADDRESS(0x0f34b8, 0x974)
@@ -897,25 +875,12 @@ int hero::save(TAbstractFile* outfile)
 }
 
 // E:\gamedcs\hero.cpp:1208
-// The first half of the body is entirely implicit: the base and the
-// four constructed members run in declaration order and are all visible
-// in the bytes - type_obscuring_object::initialize() inlined at +0
-// (three -1 words, then valid / obscuredType / was_trigger /
-// extra_info), a CALL to armyGroup::armyGroup at +0x91, the bitset's
-// own descending two-word _Tidy at +0x121/+0x125, the nineteen and
-// sixty-four stride-8 type_artifact() loops at +0x12d / +0x1d4, and the
-// Dinkumware string at +0x3da (the `mov al,[ebp-1]` is the empty
-// allocator temp being copied, which is what identifies this as a
-// constructor and not a reset method).
-// The body then re-clears the identity band. Retail really does write
-// the two hero-SCREEN globals from here: 0x698a78 is the window pointer
-// HeroView news up and 0x697738 the selected army slot, and this is the
-// only reference to either outside the hero-screen block.
+// The base and the four constructed members run in declaration order; the
+// body then re-clears the identity band and also writes the two hero-SCREEN
+// globals (the window pointer HeroView news up and the selected army slot).
 
-// Mac 0xf3f08/0xf3f70 constructs an artifact inside each counted fill from
-// an enum loaded through the TOC. Passing ARTIFACT_NONE to std::fill_n
-// preserves that per-element conversion; passing a prebuilt type_artifact
-// changes its lifetime. Identity fields are assigned before coordinates.
+// Identity fields are assigned before coordinates; the artifact fills pass
+// ARTIFACT_NONE to std::fill_n.
 VA(0x004d85f0, 0x12E)
 DC_ADDRESS(0x0cbdb8, 0xc8)
 MAC_ADDRESS(0x0f3e2c, 0x1b8)  // anchor-bracket
@@ -1055,38 +1020,19 @@ void hero::initialize(short index)
     m_luckBonus = 0;
 }
 
-// RETAIL-ONLY x3. The DC roster runs hero::initialize (0xcbe80)
-// straight into belongs_to_human (0xcc0bc) with nothing between them,
-// but retail carves THREE bodies into that gap. All three are hero
-// members (ecx is used as a hero and every displacement lands inside
-// the modelled 0x492 record) and none of them can be named from the
-// Dreamcast build, so the names below are ORDINAL PLACEHOLDERS flagged
-// unattested (hero::getIdentifyLevel / WIDGET_RETURN_32 precedent). The HD
-// crossbuild map has no row for any of them either.
+// Three Complete-only hero members sit between initialize and
+// belongs_to_human; the Dreamcast build cannot name them, so the names below
+// are ordinal placeholders.
 
-// 0x004d8b30 `ret 4`: copies one map/scenario setup record into the
-// hero. Its single caller is inside game.obj (0x4cae10), which walks 156
-// records with `add ebx, 0x334` - which is what closes the record's size.
+// Copies one map/scenario setup record into the hero; its single caller
+// walks the 156 records.
 
 // Original: initialize_hero; game.cpp:9912
 // Complete moved map-hero setup from the game.cpp free function into this
-// hero member: retail 0x4d8b30 receives this in ECX and returns with ret 4.
-// The expanded HeroExtra adds primary skills, spells, custom name and sex;
-// fixed DC campaign-trait carryover is handled by Complete's campaign owner.
-// Retail writes patrolY before patrolX in the else arm. Mac 0xf4740..0xf4748
-// stores each widened troop count and then tests the member again. Its byte
-// clears load integer zeros through the TOC (0xf4690/0xf46b8), as MSL
-// std::fill_n does in initialize(short).
-// Use those library fills and the canonical clearSpells helper here too.
-// DC records one function-scope long i. Mac's final backpack scan uses an
-// unsigned comparison at 0xf4904, unlike the preceding signed loops; the
-// owning array's sizeof bound preserves that distinction.
-// The enum-valued backpack fill constructs each empty artifact inside the
-// loop in Mac; a preconstructed value changes that lifetime. Its equipped-slot test
-// reads the field directly, without an additional getArtifact helper call.
-// The start-level campaign test is SCampaign::isCurrentScenario, the
-// campaign/map pair compare repeated across the campaign code; as the sixth
-// depth-1 call it keeps the nested string::assign out of line, as retail.
+// hero member. The expanded HeroExtra adds primary skills, spells, custom
+// name and sex; fixed DC campaign-trait carryover is handled by Complete's
+// campaign owner. DC records one function-scope long i. The start-level
+// campaign test is SCampaign::isCurrentScenario.
 VA(0x004d8b30, 0x434)
 DC_ADDRESS(0x0b6c84, 0x57e)
 MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
@@ -1118,8 +1064,6 @@ void hero::initialize(const HeroExtra* setup)
         m_portrait = setup->m_portraitNumber;
 
     if (setup->m_customPrimarySkills) {
-        // Mac 0xf4658..0xf466c widens each signed skill byte before the
-        // store, matching the existing int-valued setter's expansion.
         for (i = 0; i < kNumPrimarySkills; i++)
             setPrimarySkill(i, setup->m_primarySkills[i]);
     }
@@ -1171,7 +1115,6 @@ void hero::initialize(const HeroExtra* setup)
 
     if (setup->m_customName) {
         m_hasCustomName = 1;
-        // Mac f4944 retains assign(str, 0, npos) from operator='s expansion.
         m_customName = setup->m_name;
     }
 
@@ -1179,13 +1122,10 @@ void hero::initialize(const HeroExtra* setup)
         m_experience = 0;
         int amount = setup->m_experience;
         // The one campaign that starts its hero at a level derived from
-        // another scenario's hero. Mac retains the getExperience call here;
-        // VC6 expands it.
+        // another scenario's hero.
         if (g_inCampaign
             && g_game->m_campaign.isCurrentScenario(g_startLevelCampaign,
                                                     g_startLevelScenario)) {
-            // Mac 0xf4998..0xf49a4 separates the hero-row address from the
-            // level load. This fixed valid ID folds getHero's null guard.
             int level = g_game->getHero(g_startLevelHeroId)->m_level
                        + g_startLevelBonus;
             amount = getExperience(level);
@@ -1198,9 +1138,8 @@ void hero::initialize(const HeroExtra* setup)
     m_maxMovePoints = m_movePoints = getMobility();
 }
 
-// 0x004d8f70 `ret 0`: returns a string - the campaign override
-// (hero id 0x1b under scenario 0xf) or akHeroClasses[class].field_4,
-// the 64-byte-stride class record at 0x67dcec.
+// Returns the campaign override (hero id 0x1b under scenario 0xf) or
+// akHeroClasses[class].field_4.
 VA(0x004d8f70, 0x3E)
 MAC_ADDRESS(0x0f4a74, 0x84)
 const char* hero::getClassName()
@@ -1211,11 +1150,8 @@ const char* hero::getClassName()
     return akHeroClassTraits[m_heroClass].m_name;
 }
 
-// 0x004d8fb0 `ret 0`: the custom-name path - returns the +0x3de pointer
-// when the +0x3d9 flag is set (c_str() falls back to basic_string's
-// _Nullstr byte at 0x63a608), otherwise strcmp's the +0x23 name band against
-// akHeroTraits[id] and substitutes the shared name table 0x6a66d8[id]
-// only while the live name still equals its default.
+// The custom name when its flag is set; otherwise the shared name table
+// entry, but only while the live name still equals the akHeroTraits default.
 VA(0x004d8fb0, 0xA0)
 MAC_ADDRESS(0x0f4af8, 0xc8)
 const char* hero::getBiography()
@@ -1245,11 +1181,8 @@ unsigned char hero::belongsToHuman() const
     return g_game->isHuman(m_owner) != 0;
 }
 
-// Mac 0xf4c28/0xf4ca4 and the following artifact scans expand the
-// eight-byte record-reference accessors. Keep the canonical Hero.h:965/970
-// getArtifact/getBackpack paths instead of direct array reads.
-// DC public ?get_equipped_artifacts@hero@@QBAJ_N@Z independently
-// proves the same bool countWarMachines contract as the backpack reader.
+// DC public ?get_equipped_artifacts@hero@@QBAJ_N@Z proves bool
+// countWarMachines.
 VA(0x004d9070, 0x45)
 DC_ADDRESS(0x0cc0e4, 0x52)
 MAC_ADDRESS(0x0f4c1c, 0x68)
@@ -1266,8 +1199,7 @@ long hero::getEquippedArtifacts(bool countWarMachines) const
     return count;
 }
 
-// DC public ?get_number_in_backpack@hero@@QBAJ_N@Z proves bool;
-// the dossier primitive is its lowered byte representation.
+// DC public ?get_number_in_backpack@hero@@QBAJ_N@Z proves bool.
 VA(0x004d90c0, 0x4A)
 DC_ADDRESS(0x0cc138, 0x78)
 MAC_ADDRESS(0x0f4c84, 0x6c)
@@ -1341,10 +1273,6 @@ unsigned char hero::hasArtifact(int whichArtifact) const
     return 0;
 }
 
-// DC 0xcc272/0xcc292 indexes the equipped array directly, as hasArtifact's
-// DC body does. Keep the getter path here: direct reads lower this body's
-// /Ob2 cost, so getLuck and getMoraleDescription expand it where retail
-// calls it.
 VA(0x004d91f0, 0x70)
 DC_ADDRESS(0x0cc26c, 0x3c)
 MAC_ADDRESS(0x0f4dfc, 0xc4)
@@ -1358,10 +1286,6 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
                 return 1;
         }
     }
-    // Mac 0xf4e6c/0xf4e88 reload m_targetCombo for the test and the index
-    // (CodeWarrior -O1 would keep a named local in r0): no local here. This
-    // also keeps the getArtifact-based body at the IL cost the description
-    // callers' retail append/_Grow decisions require.
     return akArtifactTraits[whichArtifact].m_targetCombo != -1
         && isWieldingArtifact(g_combinationArtifacts[
                akArtifactTraits[whichArtifact].m_targetCombo].m_artifactId);
@@ -1369,7 +1293,6 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
 
 // E:\gamedcs\hero.cpp:1466
 // DC's switch and the Mac body leave artifact unset in the default arm.
-// A fallback assignment there changes the retail bytes.
 VA(0x004d9260, 0x68)
 DC_ADDRESS(0x0cc2a8, 0x56)
 MAC_ADDRESS(0x0f4ec0, 0x8c)  // dc-bracket forced
@@ -1423,10 +1346,8 @@ void hero::addSpell(int whichSpell)
 
 // E:\gamedcs\hero.cpp:1527
 // DC mark_spells is the ordinary global school helper called by the Tome
-// arms of UpdateSpellList at dc 0xcc446. Complete collects each school's
-// grants in a returned bitset: retail 0x4d9386..0x4d93d2 constructs a
-// separate three-dword result, tests akSpellTraits.schoolBits, and copies
-// it into the artifact result. The other three Tome arms repeat this.
+// arms of UpdateSpellList; Complete collects each school's grants in a
+// returned bitset.
 DC_ADDRESS(0x0cc360, 0x2c)
 MAC_ADDRESS(0x0f5008, 0xb4)
 std::bitset<hero::NUM_SPELLS> markSpells(TSpellSchool school)
@@ -1439,28 +1360,12 @@ std::bitset<hero::NUM_SPELLS> markSpells(TSpellSchool school)
     return granted;
 }
 
-// The dispatch is `lea eax,[id-0x56] / cmp eax,0x31 / ja default` over a
-// 50-byte index table at +0x240 selecting a nine-entry dword jump table
-// at +0x21c. Read out of the image the 50 index bytes collapse to EIGHT
-// real cases; every other id in 0x56..0x87 falls to the bare epilogue.
-// The arm order below is the EMITTED order, hence source order.
+// Eight real cases; every other id in 0x56..0x87 falls to the bare epilogue.
 
-// Two shape facts are in the bytes rather than inferred. First, the four
-// Tome arms build a SEPARATE bitset at [ebp-0x28] and copy-assign all
-// three dwords into the result, while the level arm and the four literal
-// arms write the result in place at [ebp-0x1c] - the asymmetry is in the
-// addressing, not in inlining. Second, `granted[spell] = true` is
-// bitset::operator[] plus reference::operator=(bool), and the first
-// three Tome arms inline operator[] where the fourth calls it out of
-// line: that is purely the /Ob2 budget running out mid-switch, so all
-// four arms are written identically here.
+// The four Tome arms build a separate bitset and copy-assign it into the
+// result; the level arm and the four literal arms write the result in
+// place. All four Tome arms are written identically.
 
-// markSpells' explicit `!= 0` comparison keeps the final
-// bitset<70>::operator[] a call, as retail; an implicit test expands it.
-
-// Mac f5034/f50e8 initializes each result through the no-argument
-// three-word zeroing body e7378. Mac returns each Tome's set directly; VC6
-// needs the shared result assignment and clear tail.
 VA(0x004d9350, 0x272)
 MAC_ADDRESS(0x0f50bc, 0x214)  // retail artifact-id dispatch + bitset return, retail-only
 std::bitset<hero::NUM_SPELLS> markArtifactSpells(int artifactId)
@@ -1589,17 +1494,13 @@ void hero::heroScreenUpdate()
 }
 
 // E:\gamedcs\hero.cpp:1632
-// Dreamcast's UpdateArmies source shape and retail agree: one message
-// local, a seven-army-slot loop, and the same empty/populated/selected
-// widget branches. The old order-map assignment to HeroMessageUpdate was
-// a slot-alignment error, not retail evidence for a different identity.
-// Seven army slots, widget ids 0x44..0x4a, each with an icon at id-14,
-// a count text at id-7 and the slot itself. The literal 4 does double
-// duty as WIDGET_SET_ICON_FRAME and as WIDGET_DRAWN - retail CSEs it
-// into EBX and uses the one register for both fields.
+// Dreamcast's UpdateArmies source shape: one message local, a seven-army-slot
+// loop, and the same empty/populated/selected widget branches. Seven army
+// slots, widget ids 0x44..0x4a, each with an icon at id-14, a count text at
+// id-7 and the slot itself.
 
-// The named selected-widget ID and DC's codeX/codeY/extra assignment order
-// are required; an inline `slot + 0x44` reschedules the loop tail.
+// The selected-widget ID is named, and DC's codeX/codeY/extra assignment
+// order is kept.
 VA(0x004d97f0, 0x1A0)
 DC_ADDRESS(0x0cc540, 0x1c8)
 MAC_ADDRESS(0x0f56b8, 0x240)  // source-shape + retail body
@@ -1659,9 +1560,8 @@ void hero::updateArmies()
     }
 }
 
-// Retail reads both arguments, expands GetPrimarySkill, and passes gStatDesc
-// plus the quick/normal dialog type to NormalDialog. DC confirms the same
-// calls and arguments; the old HeroScreenUpdate association was positional.
+// Reads both arguments and passes gStatDesc plus the quick/normal dialog
+// type to NormalDialog, as DC does.
 // E:\gamedcs\hero.cpp:1709
 VA(0x004d9990, 0x65)
 DC_ADDRESS(0x0cc708, 0x54)
@@ -1713,22 +1613,12 @@ int hero::showDisassembleArtifactDialog(int artifact)
     return g_windowManager->m_dialogReturn;
 }
 
-// Retail-only body immediately after the independently mapped ViewArtifact.
-// The ASSEMBLE partner of 0x4d9b30 above, same arity settlement: `ret 4`,
-// ECX untouched, one artifact id in and the dialog reply out. It reads
-// the component's targetCombo, describes the ASSEMBLED artifact, and
-// asks general text 733 - the same prompt hero::offerCombinationArtifactAssembly uses - with
-// the assembled artifact's name formatted in and its icon (resource
-// type 8) shown beside the question. Retail reuses the incoming
-// parameter slot for the assembled id, which is why the format argument
-// and the dialog's resource extra are the same value.
-// The record describes the COMPONENT, not the assembled artifact -
-// retail's `mov [ebp-0x14], ecx` takes the incoming parameter straight
-// into the stack type_artifact - and `assembled` is computed FIRST even
-// though the record is used first.
-// Mac 0xf5c38..0xf5c40 constructs the component record solely for the
-// description query; no later operation uses it. It stays a temporary
-// receiver rather than a named local, as retail's prologue schedule needs.
+// Complete-only: the ASSEMBLE partner of showDisassembleArtifactDialog. It
+// reads the component's targetCombo, describes the ASSEMBLED artifact, and
+// asks general text 733 - the same prompt
+// hero::offerCombinationArtifactAssembly uses - with the assembled
+// artifact's name formatted in and its icon shown beside the question. The
+// record describes the COMPONENT, not the assembled artifact.
 VA(0x004d9cc0, 0x200)
 MAC_ADDRESS(0x0f5bf0, 0x14c)  // retail body + settled arity
 int hero::showAssembleArtifactDialog(int artifact)
@@ -1741,7 +1631,6 @@ int hero::showAssembleArtifactDialog(int artifact)
         type_artifact(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
             .getDescription();
     text += "\n\n";
-    // Mac retail retains the text vector's indexer call here.
     text += formatString((*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
                           akArtifactTraits[assembled].m_name);
     normalDialog(text.c_str(), 2, -1, PRIMARY_STAT_DIALOG_Y, 8, assembled,
@@ -1749,10 +1638,9 @@ int hero::showAssembleArtifactDialog(int artifact)
     return g_windowManager->m_dialogReturn;
 }
 
-// Dreamcast hero.cpp:1737 constructs CMCDeadHero with get_location;
-// retail VC6 expands the Hero.h point helper at that call site.
-// Complete releases the visited town slot before broadcasting death;
-// the older Dreamcast source does those operations in reverse order.
+// Dreamcast hero.cpp:1737 constructs CMCDeadHero with get_location.
+// Complete releases the visited town slot before broadcasting death; the
+// older Dreamcast source does those operations in reverse order.
 VA(0x004d9ec0, 0x4D3)
 DC_ADDRESS(0x0cc800, 0x380)
 MAC_ADDRESS(0x0f5d3c, 0x554)
@@ -1878,13 +1766,9 @@ int hero::getExperienceIncrement(int level)
 }
 
 // E:\gamedcs\hero.cpp:1862
-// No retail row: the carve is gap-free from GetExperienceIncrement
-// straight into ApplyBattleWinTemps, and hero::GiveExperience carries
-// the whole body expanded. The ordinary helper reproduces that decision;
-// no compiler-specific inline is needed. Same table and 1.2 extrapolation as
-// GetExperience above, walked forwards instead of indexed. Classic Mac and
-// Dreamcast retain a callable GetLevel body; Mac giveExperience calls it at
-// 0x1041f4. VC6 expands this body in giveExperience and has no retained row.
+// No retail row: inlined in hero::GiveExperience. Same table and 1.2
+// extrapolation as GetExperience above, walked forwards instead of indexed;
+// Classic Mac and Dreamcast retain a callable GetLevel body.
 DC_ADDRESS(0x0ccc8c, 0x110)
 MAC_ADDRESS(0x0f6390, 0xd0)
 int hero::getLevel(int experience)
@@ -1991,36 +1875,18 @@ TSecondarySkill getSkillAward(const hero* currentHero,
                                 TSkillMastery maxLevel,
                                 TSecondarySkill excluded);
 
-// STATIC-HELPER-AFTER-CALLER: retail emits CheckLevel BEFORE
-// get_skill_award, the reverse of the DC source order. Proven by the
-// call graph, not by rank - 0x004da720 calls 0x004dad00, and it also
-// calls philai's AI_choose_secondary_skill and hero::GiveSS
-// (0x004e22d0), which is what a level-up does. The two bodies also
-// disagree on arity in the direction the prototypes demand: 0x004da720
-// reads ecx only (`void hero::CheckLevel()`), 0x004dad00 reads ecx AND
-// edx, i.e. the /Gr free function `get_skill_award(hero*, ...)`.
 // E:\gamedcs\hero.cpp:2147
-// The level-up loop. EH-bearing, but NOT from a source try/catch: three
-// TLevelUpWindow locals in three mutually exclusive arms plus /GX give
-// the fs:[0] frame and the 0/1/2 trylevel by themselves, and the
-// prologue's `push 0xb` is a relocation ADDEND, not a state count.
-// hero::GetLevel is /Ob2-expanded at the top (its ordinary body is defined
-// above); get_skill_award remains a call. The magic-school test
-// on skills[0] really is emitted TWICE - once before skills[1] is drawn
-// and again inside the two-entry loop - so it is written twice here.
-// The inner braces in the third arm are load-bearing: that window's
-// destructor runs BEFORE the dialogReturn chain, where the second arm's
-// GiveSS runs INSIDE its window's lifetime.
+// The level-up loop. Three TLevelUpWindow locals live in three mutually
+// exclusive arms; GetLevel is inlined at the top and get_skill_award stays a
+// call. The magic-school test on skills[0] really is made twice - once
+// before skills[1] is drawn and again inside the two-entry loop. The inner
+// braces in the third arm matter: that window's destructor runs before the
+// dialogReturn chain, where the second arm's GiveSS runs inside its window's
+// lifetime.
 
-// The seed uses unsigned level multiplication (retail's lea/shift chain)
-// and signed levelSeed multiplication (imul), with the constant 154079.
-// Preserve all three window lifetimes and the canonical helper calls.
-// Mac 0xf709c tests for a second skill, performs the AI choice first, and
-// falls back to the sole skill at 0xf70ec; that branch order gives Windows'
-// separate chooser call sites. Mac 0xf6c18 assigns the chance sum to roll
-// before passing it to sRandom; retail needs that assignment too.
-// Mac retains this ordinary member at 0:f66a0..f66f0 and calls it from
-// both level-up selection paths. Its original source spelling is unknown.
+// The seed is level times levelSeed with the constant 154079. Mac retains
+// the isLevelUpCampaignOverride member and calls it from both level-up
+// selection paths; its original source spelling is unknown.
 MAC_ADDRESS(0x0f66a0, 0x50)
 bool hero::isLevelUpCampaignOverride() const
 {
@@ -2046,8 +1912,7 @@ void hero::checkLevel()
             sRand(static_cast<unsigned>(m_level) * 214013
                   + m_levelSeed * 156823 + 154079);
 
-            // DC names SRandom and Mac calls its retained body twice here.
-            // Windows aliases the same body through random at 0x50b230.
+            // DC names SRandom here.
             int roll = sRandom(1, 100);
             int stat = 0;
             const signed char* chances;
@@ -2169,11 +2034,9 @@ void hero::checkLevel()
 }
 
 // E:\gamedcs\hero.cpp:2014
-// /Gr free function: ecx = current_hero, edx = min_level, the remaining
-// two on the stack. Body reads the 64-byte-stride hero-class record
-// (akHeroClasses, 0x67dcec, indexed by hero+0x30) for the per-class
-// skill probabilities plus a campaign-specific override - exactly the
-// inputs a skill award needs - and its ONLY caller is CheckLevel.
+// Reads the hero-class record (akHeroClasses) for the per-class skill
+// probabilities plus a campaign-specific override; its only caller is
+// CheckLevel.
 
 // Three weighted draws in one body: the guaranteed-Wisdom window
 // (lastWisdom + 3 or 6 <= level), the guaranteed-magic-school window
@@ -2185,18 +2048,11 @@ void hero::checkLevel()
 // than two coincidences. `min_level` is assigned in the body, so it stays
 // a by-value parameter.
 
-// The general draw returns its loop COUNTER as a TSecondarySkill. That
-// conversion goes through a union overlay, NOT static_cast: a cast into
-// an enum domain is a cleanliness floor at zero in this tree, and the
-// overlay is byte-inert (the value is already in EAX).
+// The general draw returns its loop counter as a TSecondarySkill through a
+// union overlay rather than a cast into the enum domain.
 
-// Mac retains the ordinary hero::isLevelUpCampaignOverride member at
-// 0:f66a0..f66f0 and calls it here and in checkLevel. VC6 auto-inlines that
-// same body, producing the retail `sete cl; test cl,cl; je` campaign gate.
-// DC attests get_skill_award but does not name this campaign predicate; the
-// retained Mac body and its two callers establish the ordinary member
-// boundary here. HERO's CodeWarrior -char unsigned mode reproduces Mac's
-// disabled-skill zero tests with the source char arrays.
+// The campaign gate is the ordinary hero::isLevelUpCampaignOverride member
+// (Mac retains it); DC does not name this predicate.
 VA(0x004dad00, 0x283)
 DC_ADDRESS(0x0ccf78, 0x204)
 MAC_ADDRESS(0x0f66f0, 0x3d0)  // anchor-caller + arity
@@ -2232,7 +2088,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
     }
 
     // Dreamcast hero.cpp:2051 calls the typed Hero.h get_secondary_skill
-    // accessor here; retail VC6 expands its packed-byte load.
+    // accessor here.
     if (currentHero->m_lastWisdom + wisdomGap <= currentHero->m_level &&
         currentHero->getSecondarySkill(eSecSkillWisdom) < maxLevel &&
         currentHero->getSecondarySkill(eSecSkillWisdom) >= minLevel &&
@@ -2320,10 +2176,8 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
 }
 
 // E:\gamedcs\hero.cpp:2340. Ordinary update_artifact_slot(long, TArtifact)
-// helper: retail expands its four updateSlot calls. Absence of a retained
-// retail body is not evidence for an inline keyword. The message constructor
-// owns zero initialization; lines 2349/2358 set WIDGET_DRAWN inside each arm.
-// Keep both source stores and let VC6 decide which expansions share them.
+// helper, inlined at its four updateSlot calls. The message constructor owns
+// zero initialization; lines 2349/2358 set WIDGET_DRAWN inside each arm.
 DC_ADDRESS(0x0cd68c, 0x5c)
 MAC_ADDRESS(0x0f7124, 0xc8)
 void updateArtifactSlot(long id, TArtifact artifact)
@@ -2400,9 +2254,7 @@ void THeroScreenWindow::updateAllSlots()
 }
 
 // E:\gamedcs\hero.cpp:2393
-// No retail row: the one call site below is /Ob2-inlined into
-// UpdateBackpack, and `inline` reproduces the absence (the
-// strip::DrawNumber precedent).
+// No retail row: inlined into UpdateBackpack, its one call site.
 DC_ADDRESS(0x0cd76c, 0x22)
 MAC_ADDRESS(0x0f7360, 0x38)
 inline void updateBackpackItem(int i)
@@ -2463,9 +2315,6 @@ void type_artifact::getRolloverText(char* buffer) const
 }
 
 // E:\gamedcs\hero.cpp:2450
-// Only free row between get_rollover_text (0x004db350, claimed) and
-// UpdateHeroScreenStatusBar; carries a /GX frame and a hidden
-// return-UDT pointer, which is what a std::string-by-value member needs.
 // Everything but a SPELL SCROLL returns the traits description straight
 // into the return slot. A scroll's description carries a `[...]`
 // placeholder, and the body walks it by hand: copy up to the '[', splice
@@ -2804,8 +2653,6 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
 VA(0x004dbd90, 0x1E)
 DC_ADDRESS(0x0ce140, 0x28)
 MAC_ADDRESS(0x0f8290, 0x38)
-// Mac 0xf8298 and the following rotations/combination readers expand
-// the same record-reference accessors; writes remain owned by this hero.
 long hero::getLastBackpackIndex() const
 {
     for (long slot = 64; slot--; ) {
@@ -2866,7 +2713,6 @@ unsigned char hero::hasCombinationArtifactComponents(int combination)
     return missingComponents.none();
 }
 
-// Mac f8548/f859c/f85d0 expands bitset reference assignment/conversion.
 VA(0x004dbf30, 0x133)
 MAC_ADDRESS(0x0f84b4, 0x184)
 unsigned char hero::assembleCombinationArtifact(int combination, long slot)
@@ -2915,25 +2761,15 @@ void hero::disassembleCombinationArtifact(long slot)
     }
 }
 
-// The lever is DEPTH, spelled in the source. VC6's <bitset> defines
-//     bool operator[](size_t _P) const   { return (test(_P)); }
-//     reference operator[](size_t _P)    { return reference(*this,_P); }
-//     reference& reference::operator=(bool _X) { _Pbs->set(_Off,_X); }
-// so `b[i]` and `b[i] = true` reach test/set one level DEEPER than
-// `b.test(i)` and `b.set(i)` do, which puts `_Xran` at depth 3 instead of
-// 2 - past what /Ob2 expands here. All three sites are written that way
-// and all three throws collapse into retail's calls.
+// `b[i]` and `b[i] = true` are used rather than test()/set() at all three
+// sites.
 
-// Complete-only combination prompt. It calls the canonical predicate (its
-// proxy-assignment body), owns the native comboType and repeats the
-// canonical artifact lookup.
+// Complete-only combination prompt; it calls the canonical predicate.
 VA(0x004dc100, 0x217)
 MAC_ADDRESS(0x0f86ec, 0x1e0)  // retail-only, hero member, ret 4
 void hero::offerCombinationArtifactAssembly(long slot)
 {
     playerData& player = g_game->m_players[m_owner];
-    // Mac 0xf8734 owns comboType through its proxy write, then
-    // 0xf8770..0xf8780 repeats the canonical equipped-record lookup.
     int comboType =
         akArtifactTraits[m_equipped[slot].m_artifactId].m_comboType;
 
@@ -2964,22 +2800,15 @@ void hero::offerCombinationArtifactAssembly(long slot)
 }
 
 // E:\gamedcs\hero.cpp:2849
-// PROVEN BY CALLER: armygrp's armyGroup::get_morale_description
-// (0x44b960) calls exactly this address, and window.obj's hero-screen
-// status path (0x4f32a0) is the second site. /GX frame + hidden
-// return-UDT pointer, as the by-value std::string return needs.
+// Called from armyGroup::get_morale_description and the hero-screen status
+// path.
 
 // The description twin of hero::GetMorale (0x4e39b0): the same modifier
 // ladder, but each rung appends its ARRAYTXT line and accumulates what
 // it described, and the tail prints GetMorale's own answer MINUS that
-// sum as the "other modifiers" line. Every IsWieldingArtifact is
-// /Ob2-expanded exactly as in GetMorale. The Grail arm expands
-// town::HasBuilding INLINE here - `active & bitNumber[HOLY_GRAIL_ID]` -
-// where GetLuck's own arm is a real call, and it credits TOWN_CASTLE.
-// The opening flag arm ASSIGNS (Dinkumware `assign(const char*,
-// size_type)`), it does not append.
-// DC hero.cpp:2989 names town::HasBuilding at the Grail guard.
-// All leadership arms use operator+=, not an explicit strlen/append.
+// sum as the "other modifiers" line. The opening flag arm assigns rather
+// than appends. DC hero.cpp:2989 names town::HasBuilding at the Grail guard,
+// which credits TOWN_CASTLE.
 VA(0x004dc320, 0x793)
 DC_ADDRESS(0x0ce260, 0x3e8)
 MAC_ADDRESS(0x0f88cc, 0x5dc)  // anchor-caller (armyGroup::get_morale_description)
@@ -2990,8 +2819,7 @@ std::string hero::getMoraleDescription() const
 
     if (m_flags & 0x800000) {
         result = (*g_generalText)[GENERAL_TEXT_CHEAT_MAXIMUM];
-        // Dreamcast hero.cpp:2857 adds the override to the tracked bonus;
-        // Mac retail likewise emits addi r31,r31,500.
+        // Dreamcast hero.cpp:2857 adds the override to the tracked bonus.
         morale += 500;
     }
 
@@ -3065,10 +2893,8 @@ std::string hero::getMoraleDescription() const
         morale -= 3;
     }
 
-    // DC hero.cpp:2962/2968/2974 reload the leadership byte directly
-    // (mov.b, no Hero.h GetSecondarySkill row); the direct reads keep
-    // retail's twelve nested append sites within the /Ob2 budget. Mac
-    // expands the signed packed mastery accessor at each rung.
+    // DC hero.cpp:2962/2968/2974 reload the leadership byte directly (no
+    // Hero.h GetSecondarySkill row).
     if (m_skillLevel[eSecSkillLeadership] == eMasteryBasic) {
         result += g_moraleInfo[20];
         morale++;
@@ -3083,13 +2909,11 @@ std::string hero::getMoraleDescription() const
     }
 
     if (m_owner >= 0) {
-        // Direct row: getPlayer() would be a call Mac lacks (see getLuck);
-        // DC get_morale_description has no get_player call.
+        // Direct row: DC get_morale_description has no get_player call.
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
-            // Dreamcast hero.cpp:2989 names town::HasBuilding here. Retail
-            // expands its checkIncluded path against the two active words.
+            // Dreamcast hero.cpp:2989 names town::HasBuilding here.
             if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1)
                 && ownedTown->m_type == TOWN_CASTLE) {
                 // An explicit LF preserves Mac retail's 0a byte; CodeWarrior
@@ -3103,7 +2927,6 @@ std::string hero::getMoraleDescription() const
         }
     }
 
-    // Mac repeats the subtraction before abs in each arm; preserve this shape.
     int effectiveMorale = this->getMorale(0, 0, 0);
     if (effectiveMorale - morale < 0)
         result += formatString(g_moraleInfo[24], abs(effectiveMorale - morale));
@@ -3114,19 +2937,15 @@ std::string hero::getMoraleDescription() const
 }
 
 // E:\gamedcs\hero.cpp:3021
-// PROVEN BY CALLER: armygrp's armyGroup::get_luck_description
-// (0x44c1c0) calls exactly this address; 0x4f3540 is the second site.
-// Same /GX + return-UDT shape as its morale twin above.
+// Called from armyGroup::get_luck_description and the hero-screen status
+// path.
 
 // hero::GetLuck's describer, the exact shape of the morale twin. FOUR of
 // the flag rungs carry a SIGN as a format argument instead of their own
-// line: they share ONE carrier format, gLuckTexts[10], and pass the
-// literals "-1"/"+1"/"+2"/"+3" out of hero.obj's own pool. The Grail arm
-// expands town::HasBuilding INLINE against TOWN_RAMPART, unlike
-// hero::GetLuck's own arm, which calls it.
+// line: they share ONE carrier format, gLuckTexts[10], and pass the literals
+// "-1"/"+1"/"+2"/"+3". The Grail arm credits TOWN_RAMPART.
 
-// DC hero.cpp:3028 and :3149 name the text and town helpers. Preserve both.
-// The mist rung uses append(const char*), not an explicit strlen/append.
+// DC hero.cpp:3028 and :3149 name the text and town helpers.
 VA(0x004dcac0, 0x7E0)
 DC_ADDRESS(0x0ce648, 0x3f2)
 MAC_ADDRESS(0x0f8ea8, 0x5d4)  // anchor-caller (armyGroup::get_luck_description)
@@ -3138,8 +2957,7 @@ std::string hero::getLuckDescription() const
     if (m_flags & 0x400000) {
         // Dreamcast hero.cpp:3028 names TTextResource::operator[].
         result = (*g_generalText)[GENERAL_TEXT_CHEAT_MAXIMUM];
-        // Dreamcast hero.cpp:3029 adds the override to tracked_bonus;
-        // Mac retail likewise emits addi r31,r31,500 here.
+        // Dreamcast hero.cpp:3029 adds the override to tracked_bonus.
         luck += 500;
     }
 
@@ -3205,9 +3023,8 @@ std::string hero::getLuckDescription() const
         luck++;
     }
 
-    // Mac likewise expands the canonical mastery read for these luck rungs.
-    // DC reads the luck byte directly (+9, three mov.b reloads; no Hero.h
-    // row), as in getMoraleDescription.
+    // DC reads the luck byte directly (no Hero.h row), as in
+    // getMoraleDescription.
     if (m_skillLevel[eSecSkillLuck] == eMasteryBasic) {
         result += g_luckInfo[15];
         luck++;
@@ -3222,16 +3039,14 @@ std::string hero::getLuckDescription() const
     }
 
     if (m_owner >= 0) {
-        // Direct row: getPlayer() would be a call Mac lacks (see getLuck);
-        // DC get_luck_description has no get_player call.
+        // Direct row: DC get_luck_description has no get_player call.
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:3149 names town::HasBuilding here.
             if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1)
                 && ownedTown->m_type == TOWN_RAMPART) {
-                // The explicit LF matches the seven-byte shared Mac Grail
-                // format at data 1+0x44c2c.
+                // An explicit LF, as in the shared Mac Grail format.
                 result += formatString(
                     "\x0A%s +2",
                     getBuildingName(TOWN_RAMPART, HOLY_GRAIL_ID));
@@ -3241,8 +3056,6 @@ std::string hero::getLuckDescription() const
         }
     }
 
-    // Mac repeats the difference in the two abs arms; Windows needs the
-    // single difference local.
     int otherModifier = this->getLuck(0, 0, 0) - luck;
     if (otherModifier < 0)
         result += formatString(g_luckInfo[19], abs(otherModifier));
@@ -3305,13 +3118,8 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
 }
 
 // E:\gamedcs\hero.cpp:3229
-// ANCHOR-VTABLE: 0x004dd2a0 has no rel32 caller at all - it is reached
-// only through slot 14 of vtable 0x63eae8, and 0x63eae8 is the vtable
-// THeroScreenWindow's destructor (0x004e1550, claimed below) stores. It
-// is `ret 4` returning 2 and it fills the pointed-to message with
-// {0x200, 10, 10}, matching `int ExitDialog(message*)`.
-// Retail emits it AFTER the two description bodies, where the DC source
-// has it before the console-only ShowWidgets page switch (reviewed below).
+// Reached only through slot 14 of THeroScreenWindow's vtable; returns 2
+// after filling the message with {0x200, 10, 10}.
 VA(0x004dd2a0, 0x2C)
 DC_ADDRESS(0x0cebe0, 0x3c)
 MAC_ADDRESS(0x0f9684, 0x2c)  // anchor-vtable (slot 14 of 0x63eae8)
@@ -3871,18 +3679,10 @@ int THeroScreenWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-// Dreamcast ShowWidgets (hero.cpp:3239, dc 0xcec1c) switches the two
-// hero pages using advManager::infoScreen at +0x39: background ids 0/1
-// alternate and whole army/artifact/skill widget groups hide or show.
-// Complete builds one 672x586 page below, with id0 as its sole background
-// and id1 as the hero's name. Its adventure manager drops infoScreen;
-// +0x38 is now the network-handler pointer, followed by FPS/debug bytes.
-// Dreamcast show_skills (hero.cpp:3421, dc 0xcf3ac) uses that manager's
-// scroll_offset+0x3c, clamps it to 0..2 and enables arrow widgets 141/142.
-// It displays four skills from index 2*scroll_offset in two rows. Complete
-// instead creates eight skill icon/name/mastery triples in four rows here;
-// setupHeroView (0x4e1a50) fills all eight without moving their positions.
-// Complete has no skill-scroll arrows or adventure-manager scroll_offset.
+// Complete builds one 672x586 page with id0 as its sole background and id1
+// as the hero's name, and eight skill icon/name/mastery triples in four
+// rows; Dreamcast's ShowWidgets page switch and show_skills scroll arrows
+// are gone.
 VA(0x004de710, 0x2C52)
 DC_ADDRESS(0x0d0184, 0x2a64)
 MAC_ADDRESS(0x0fa5f0, 0x78b4)
@@ -4728,7 +4528,6 @@ int hero::giveSS(int whichSS, int numLevelsToGive)
 }
 
 // The DC formal type is non-const, and its source body tests skillOrder.
-// SetupHeroView calls this ordinary TU helper; no header force-inline view.
 // E:\gamedcs\hero.cpp:4689
 DC_ADDRESS(0x0d38d8, 0x12)
 MAC_ADDRESS(0x103018, 0x20)
@@ -4971,32 +4770,12 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
 // allowable-slot class, then hands the real work to hero::canEquipArtifactInEmptySlot -
 // but when the slot is already occupied it SAVES the displaced record,
 // removes it, runs the attempt, and puts the displaced artifact back
-// whatever the answer was. The restore is retail's, on BOTH paths: the
-// image's EH metadata proves a `try`/`catch (...)` here. The FuncInfo
-// this body's handler stub points at has nTryBlocks=1, tryLow=tryHigh=2,
-// catchHigh=3 and a NULL type descriptor (catch-all), and the state
-// stores bracket exactly one statement - `mov [ebp-4],2` at +0x166 just
-// before the second hero::canEquipArtifactInEmptySlot and `mov [ebp-4],-1` at +0x17b right
-// after it. The catch funclet the HandlerType names (0x4e29dc, 25 B, no
-// prologue, the parent's EBP frame) reads &displaced off [ebp-0x1c] and
-// `this` off [ebp-0x14], calls equip_artifact, and rethrows with
-// `push 0 / push 0 / call __CxxThrowException@8`. So the source is
-// `try { accepted = hero::canEquipArtifactInEmptySlot(...); } catch (...) { restore;
-// throw; }` with the normal-path restore repeated below - the same
-// restore-on-unwind idiom artifact.cpp's va_end pair has.
-
-// That try is ALSO what makes `.test(slot)` behave: VC6 will not expand
-// a callee that introduces EH state into a caller with no EH frame, so
-// with no catch scope here bitset<19>::_Xran stays a CALL where retail
-// expands its whole `_THROW(out_of_range, "invalid bitset<N> position")`
-// body inline. The VA extent includes the 25-byte catch funclet 0x4e29dc.
+// whatever the answer was. The restore runs on BOTH paths: the image's EH
+// metadata proves a catch-all `try` around the second attempt, whose
+// handler restores and rethrows; the normal-path restore is repeated below.
 VA(0x004e2840, 0x1B5)
 MAC_ADDRESS(0x1034d8, 0x124)  // retail-only, hero member, ret 8
-// Mac 0x1034d8..0x103da8 expands the canonical reference readers before
-// copying/testing records. Keep that read boundary; mutations stay owned here.
-// The slot's record is bound once, at entry, ahead of the placement gate:
-// later getArtifact sites divide /Ob2's nested budget and starve the bitset
-// _Xran expansion.
+// The slot's record is bound once, at entry, ahead of the placement gate.
 unsigned char hero::canReplaceArtifactInSlot(long artifact, long slot)
 {
     const type_artifact& current = getArtifact(TArtifactSlot(slot));
@@ -5021,10 +4800,7 @@ unsigned char hero::canReplaceArtifactInSlot(long artifact, long slot)
 
 // Original public ?equip_artifact@hero@@QAA_NABUtype_artifact@@J@Z
 // proves bool and const-reference formals. Complete dereferences the
-// supplied record without a null branch; the recursive spellbook case
-// passes an ordinary type_artifact temporary on both desktop builds.
-// DC's artifactAllowedInSlot call remains inside Complete's shared
-// canEquipArtifactInEmptySlot placement gate.
+// supplied record without a null branch.
 VA(0x004e2a00, 0x1C7)
 DC_ADDRESS(0x0d39d8, 0xf6)
 MAC_ADDRESS(0x1035fc, 0x258)
@@ -5098,8 +4874,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
 // artifact or any component affects it.
 
 // Retail uses the DC-named adjustPrimarySkill call and resets the whole
-// record through type_artifact(ARTIFACT_NONE); the explicit argument also
-// fixes the EAX/ECX order of the two equal -1 sentinel stores.
+// record through type_artifact(ARTIFACT_NONE).
 VA(0x004e2bd0, 0x174)
 DC_ADDRESS(0x0d3ad0, 0xa2)
 MAC_ADDRESS(0x103854, 0x200)  // anchor-bracket
@@ -5372,10 +5147,7 @@ int hero::giveRandomArtifact()
 }
 
 // Original DC public ?GiveExperience@hero@@QAAHHH_N@Z proves the final
-// parameter is bool; CodeView's lowered unsigned-byte record alone does not.
-// Both experience helpers expand here. Initializing getExperience's total
-// before its increment fixes the cap-result lifetime; getLevel keeps a
-// single level counter (Mac 0xf6394..0xf63c0).
+// parameter is bool. Both experience helpers are inlined here.
 VA(0x004e33b0, 0x24A)
 DC_ADDRESS(0x0d3e88, 0x130)
 MAC_ADDRESS(0x104098, 0x18c)
@@ -5447,8 +5219,6 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
             return 0;
     }
 
-    // DC 5187/5189 and Mac 0x1043c8..0x1043dc separately widen the packed
-    // mastery byte, matching the canonical typed skill getter's expansion.
     int luck = g_luckBonuses[m_skillLevel[eSecSkillLuck]];
     if (m_skillLevel[eSecSkillLuck] > eMasteryNone) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
@@ -5469,9 +5239,7 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
         luck++;
 
     if (m_owner >= 0) {
-        // Direct row, not getPlayer(): CodeWarrior emits a getPlayer call for
-        // that spelling, absent from Mac 0x1044f4 (which calls it at 17
-        // other sites); DC GetLuck has no get_player call either.
+        // Direct row, not getPlayer(): DC GetLuck has no get_player call.
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
@@ -5500,7 +5268,6 @@ int hero::getMorale(const hero* otherHero, bool onCursedGround,
     if (onCursedGround)
         return 0;
 
-    // Mac 0x104680..0x104698 repeats the same typed getter expansion.
     morale = g_leadershipBonuses[m_skillLevel[eSecSkillLeadership]];
     if (m_skillLevel[eSecSkillLeadership] > eMasteryNone) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
@@ -5538,9 +5305,6 @@ int hero::getMorale(const hero* otherHero, bool onCursedGround,
     return applyLimits ? limit(-3, morale, 3) : morale;
 }
 
-// Mac 0x104904..0x105898 expands packed mastery reads as lbz/extsb
-// before the skill tests and table indices. Preserve the canonical typed
-// Hero.h:981 getSecondarySkill boundary throughout these specialty readers.
 VA(0x004e3c60, 0x70)
 MAC_ADDRESS(0x104904, 0x84)  // MAC_ABSTRACTION_FROM(tokens1:1e1c32ce6d8d,53.0303): canonical Hero.h:981 getSecondarySkill reads replace the direct packed-mastery loads; same lbz/extsb tests, but the inline boundary grows the CW frame by 16 bytes.
 TCreatureType hero::getNecromancyCreature()
@@ -5556,8 +5320,7 @@ TCreatureType hero::getNecromancyCreature()
     return CREATURE_SKELETON;
 }
 
-// Dreamcast hero.cpp:5364 calls town::HasBuilding for the Necropolis
-// bonus; retail and Mac expand the Town.h active-mask accessor.
+// Dreamcast hero.cpp:5364 calls town::HasBuilding for the Necropolis bonus.
 VA(0x004e3cd0, 0x268)
 DC_ADDRESS(0x0d4390, 0x112)
 MAC_ADDRESS(0x104988, 0x280)
@@ -5925,10 +5688,8 @@ int hero::getMobility(bool seaMovement) const
     if (m_owner >= 0 && m_owner < 6 && !g_game->isHuman(m_owner) &&
         g_game->m_setup.m_difficulty > 2) {
         mobility += 75;
-        // Not getPlayer(): Mac 0x105b9c indexes the row after isHuman with
-        // no owner guard, and CodeWarrior keeps a getPlayer call here while
-        // Mac retains its 17 real calls elsewhere; retail likewise has no
-        // guard after the isHuman call. DC GetMobility has no get_player.
+        // Not getPlayer(): DC GetMobility has no get_player call, and there
+        // is no owner guard after isHuman.
         if (g_game->m_players[m_owner].m_personality == AI_PERSONALITY_AGGRESSIVE)
             mobility += 50;
     }
@@ -5938,8 +5699,7 @@ int hero::getMobility(bool seaMovement) const
 VA(0x004e4d90, 0x12)
 DC_ADDRESS(0x0d4d60, 0x50)
 MAC_ADDRESS(0x105be0, 0x38)
-// DC 5933 and Mac 0x105bf0 test the boat flag inline: Mac has no
-// predicate call where CodeWarrior would keep one for a hero.cpp helper.
+// DC 5933 tests the boat flag inline.
 int hero::getMobility() const
 {
     return getMobility((m_flags & 0x40000) != 0);
@@ -6003,7 +5763,6 @@ TSkillMastery hero::getSpellLevel(SpellID spell, int magicTerrain) const
 VA(0x004e5100, 0xBC)
 DC_ADDRESS(0x0d4e68, 0x68)
 MAC_ADDRESS(0x106090, 0xf8)
-// Mac PEF code 0+0x106090 has one shared return.
 TSkillMastery hero::getSpellSchoolLevel(TSpellSchool schoolMask,
                                         int magicTerrain) const
 {
@@ -6153,8 +5912,7 @@ void hero::setVisitedArena(const NewmapCell* cell)
     m_arenaFlags |= 1 << cell->m_extraInfo;
 }
 
-// Dreamcast hero.cpp:6173 calls GetPrimarySkill for attack and defense;
-// retail expands the same Hero.h clamp twice.
+// Dreamcast hero.cpp:6173 calls GetPrimarySkill for attack and defense.
 VA(0x004e5400, 0x93)
 DC_ADDRESS(0x0d50a0, 0xfa)
 MAC_ADDRESS(0x10641c, 0xec)
@@ -6215,8 +5973,6 @@ unsigned char hero::canSummonBoat() const
 VA(0x004e56b0, 0x21)
 DC_ADDRESS(0x0d52b0, 0x20)
 MAC_ADDRESS(0x1066e4, 0x38)
-// Mac 0x1066e4..0x106718 owns the negative-owner guard and player-row
-// lookup; guarded callers expand this same operation (e.g. 0x104a98).
 playerData* hero::getPlayer() const
 {
     if (m_owner < 0)
@@ -6227,7 +5983,7 @@ playerData* hero::getPlayer() const
 VA(0x004e56e0, 0x7C)
 DC_ADDRESS(0x0d52d0, 0xd0)
 MAC_ADDRESS(0x10671c, 0xd0)
-// Mac code 0+0x10671c retains both abs calls. DC names distance.
+// DC names distance.
 unsigned char hero::isInPatrolRadius(type_point point) const
 {
     if (m_patrolRadius < 0 || m_patrolX == kPatrolNone)
@@ -6317,7 +6073,7 @@ long hero::getHitPointBonus(int creatureType) const
     return bonus;
 }
 
-// DC hero.cpp:6356 names get_location and game::get_cell; VC6 expands both.
+// DC hero.cpp:6356 names get_location and game::get_cell.
 VA(0x004e5ce0, 0xE7)
 DC_ADDRESS(0x0d5548, 0x70)
 MAC_ADDRESS(0x106b98, 0x140)
@@ -6344,8 +6100,8 @@ void hero::walkOnWater(int level)
     m_waterWalkLevel = static_cast<TSkillMastery>(level);
 }
 
-// Complete adds the Rogue-aware identify-level getter; its original name
-// is unknown. Mac 0x106ce0 retains the creature-total call and expert floor.
+// Complete adds the Rogue-aware identify-level getter; its original name is
+// unknown.
 VA(0x004e5de0, 0x2D)
 MAC_ADDRESS(0x106ce0, 0x54)
 TSkillMastery hero::getIdentifyLevel() const
@@ -6370,13 +6126,10 @@ bool hero::isInIdentifyRange(const type_point& location) const
         range = 3;
 
     if (m_z == location.m_z) {
-        // Constructor form, not default-then-assign: it merges the y|z
-        // bitfield unit into one clear-then-or.
         type_point heroLocation(m_x, m_y, m_z);
 
         // Dreamcast hero.cpp:6395 passes location as the DistanceSquared
-        // receiver and the constructed hero point as its argument. Retail
-        // expands that same x/y-only call.
+        // receiver and the constructed hero point as its argument.
         if (location.distanceSquared(heroLocation) < range * range)
             return true;
     }
@@ -6384,7 +6137,7 @@ bool hero::isInIdentifyRange(const type_point& location) const
 }
 
 // Dreamcast hero.cpp:6407/6414/6418 calls get_location and the typed
-// get_secondary_skill accessor. Both header helpers expand in retail.
+// get_secondary_skill accessor.
 // Original DC public IsMobile@hero@@QBA_NXZ proves the bool result.
 VA(0x004e5f30, 0xBF)
 DC_ADDRESS(0x0d5644, 0xca)
@@ -6565,25 +6318,18 @@ inline const int& tLimit(const int& minimum, const int& value, const int& maximu
 #endif  // @carcass
 
 // ---------------------------------------------------------------------
-// STL COMDAT emission anchor - SCAFFOLDING, flagged for ratification.
-
-// The five claims in the COMDAT-tail block above name template members
-// whose definitions live in VC6's <vector>/<bitset>.  A claim alone does
-// not make the compiler emit anything: an inline member only gets its
-// out-of-line COMDAT when some call site declines to inline it, and with
-// /Ob2 every ordinary call site inlines.  `#pragma inline_depth(0)` is
-// the smallest construct that reproduces retail's emission decision, and
-// it costs exactly one extra symbol in hero.obj.
+// STL COMDAT emission anchor - SCAFFOLDING, flagged for ratification:
+// `#pragma inline_depth(0)` makes hero.obj emit the out-of-line COMDATs the
+// claims above name, which /Ob2 call sites would otherwise all inline.
 VA_COMPGEN(0x0048d940, 0x26, VECTOR_UFILL, int)
 
-// COMDAT pairing: bitset<144>::test (55 bytes).
+// COMDAT pairing: bitset<144>::test.
 VA_COMPGEN(0x0044d4d0, 0x37, BITSET_TEST, Bitset144)
 
-// Retail loadMap, markArtifactSpells (0x4d9350) and readTownData share this
-// bitset<70> cleanup. It expands in game but remains naturally emitted here
-// and in mapcell.
+// The bitset<70> cleanup shared by loadMap, markArtifactSpells and
+// readTownData.
 VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)
 
-// bitset<70>::reference::operator= - called by markArtifactSpells here
-// and by game::loadMap; game expands its uses, this unit emits the body.
+// bitset<70>::reference::operator=, called by markArtifactSpells and
+// game::loadMap.
 VA_COMPGEN(0x004cefa0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset70)

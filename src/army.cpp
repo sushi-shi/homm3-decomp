@@ -56,18 +56,7 @@ DATA(0x00693858) int g_walkingYMod;
 #undef max
 #endif
 
-// E:\gamedcs\army.cpp:52 () - retail 0x43d250, the FIRST row of
-// army.obj's span: the compiland's cinit/atexit thunk opens at 0x43ce60 and
-// the nine ~95-byte rows between it and this one are the /Gy header COMDATs
-// the link parked ahead of the first real body.  The constructor is fixed by
-// its member-construction run alone: the two TResourceHandle<CSprite> heads
-// at +0x164/+0x168, the `??_L` eh-vector-constructor-iterator over EIGHT
-// FOUR-byte elements at +0x170 (armySample), the deque<int> at +0x420 and
-// the four vector<army*> at +0x4f4/+0x504/+0x514/+0x524 - every one of them
-// a member this header already models, in declaration order, with unwind
-// states 1..7 across the run.
-// The array element destructor at 0x43cb10 releases the resource through
-// TResourceHandle. Instantiating TUs include the complete resource types.
+// E:\gamedcs\army.cpp:52
 VA(0x0043d250, 0x1A8)
 DC_ADDRESS(0x0436b8, 0xf4)
 MAC_ADDRESS(0x048b38, 0x1ac)  // anchor-global + member-construction run
@@ -100,8 +89,8 @@ army::~army()
 }
 
 // Original: army::set_retaliation_count; army.cpp:77
-// Init and ResetRound expand this ordinary helper in Complete. DC line 80
-// increments the Griffin allowance; VC6 folds the known initial value to 2.
+// Inlined in Init and ResetRound. DC line 80 increments the Griffin
+// allowance.
 DC_ADDRESS(0x0437ac, 0x84)
 MAC_ADDRESS(0x048e5c, 0x68)
 // Mac 0x48e90 reads COUNTERSTRIKE at +0x280; DC set_retaliation_count makes
@@ -145,24 +134,6 @@ void army::stopSample(army::TSampleID id)
 // every sound and the sprite, wipe the standing-spell row and the
 // spell queue, and reset the seven scalars that mean "nothing here".
 
-// The four slots between stop_sample and SetLuck pop 0 / 0x18 / 0x1c / 0
-// stack bytes, i.e. 0 / 6 / 7 / 0 arguments, and the six DC rows that could
-// occupy them take 1 / 0 / 6 / 7 / 0 / 0 - so InitClean, initialize, Init
-// and LoadResources fit in order and WaitSample (one argument) cannot.
-
-// THREE THINGS THIS BODY DECIDES ABOUT THE CLASS, all recorded on the
-// fields themselves: +0x420 is a std::deque (the erase-with-two-16-byte
-// -iterators call), +0xfc is DC's iLastFidgetTime (the GameTime::Get
-// stamp) and +0x24/+0x28 are the iMirror* pair rather than pad - they
-// take -1 out of the same `or eax,-1` the other four resets share,
-// which is what makes them dword fields.
-
-// The `for` counts UP in the source and DOWN in the bytes: nothing in
-// the loop reads `i` except the subscript, so C2 strength-reduces the
-// walk to a pointer and turns the index into a countdown. It is
-// memory-homed at [ebp-4] because the dispose call leaves no free
-// register - that slot is then reused for the two dead erase
-// iterators at the bottom.
 VA(0x0043d5c0, 0x166)
 DC_ADDRESS(0x0438e8, 0xc8)
 MAC_ADDRESS(0x049008, 0x100)  // anchor-bracket + arity
@@ -192,10 +163,7 @@ void army::initClean()
 }
 
 // E:\gamedcs\army.cpp:109
-// No retail out-of-line copy survives, but the Dreamcast call graph proves
-// this member boundary in range_attack. VC6 folds the inline definition into
-// that caller. Mac 0x48f98 retains the body; rangeAttack and castSpell call it
-// at 0x4bcf8 and 0x54d78 with SHOOT_SAMPLE.
+// Inlined in range_attack; Mac retains the body.
 DC_ADDRESS(0x0438a8, 0x3e)
 MAC_ADDRESS(0x048f98, 0x70)
 inline void army::waitSample(army::TSampleID which)
@@ -260,9 +228,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
 VA(0x0043d8b0, 0x135)
 DC_ADDRESS(0x043d9c, 0xe4)
 // DC records hexcell& back_cell. Both side stores read m_combatSide
-// directly: DC Init keeps its 14-byte Is call but has no get_owning_side
-// call, and retail narrows both loads to a byte, which the int-returning
-// getter's expansion does not.
+// directly: DC Init has no get_owning_side call.
 // Complete/Mac addAura precedes retaliation setup, unlike the older DC order.
 MAC_ADDRESS(0x0492e0, 0x13c)
 void army::init(int armyId, int newNumTroops, const hero* owner, int side,
@@ -487,8 +453,6 @@ void army::loadResources()
 VA(0x0043df20, 0xDD)
 DC_ADDRESS(0x044318, 0x9c)
 MAC_ADDRESS(0x049b90, 0x150)
-// Mac 0x49c2c/0x49c40 read the two luck rows; DC SetLuck makes no
-// get_spell_time call (see army.h getSpellTime).
 void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
                    const armyGroup* otherGroup, int magicTerrain)
@@ -524,8 +488,6 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
 VA(0x0043e000, 0x139)
 DC_ADDRESS(0x0443b4, 0xf4)
 MAC_ADDRESS(0x049ce0, 0x1f4)
-// Mac 0x49d48/0x49d5c read the two morale rows; DC SetMorale makes no
-// get_spell_time call (see army.h getSpellTime).
 void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      const town* ownerTown, const hero* otherHero,
                      const armyGroup* otherGroup, int magicTerrain,
@@ -594,27 +556,13 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
 // absolute row sum of akSpellTraits field_0, mapped to (x+1)/6), and
 // prints the count in gpTinyFont. The pow overlay places powSprite by
 // the effect row's flags nibble and draws it with bit 8 as the alpha.
-
-// Retail recycles the spent x parameter twice past the numbox (the
-// count ternary and the effect flags both home in [ebp+8]). DC records
-// text as char[10]; its rounded stack slot also hosts the karma divisor.
-// Treating the allocated twelve bytes as the array extent shifts that spill.
 VA(0x0043e140, 0x8C0)
 DC_ADDRESS(0x0444a8, 0x8a6)
 MAC_ADDRESS(0x049ed4, 0x810)  // anchor-global
 void army::drawToBuffer(int x, int y, int numBoxOnly)
 {
-    // DC801/819 and Mac0x4a378/0x4a3e4 select signed offsets without
-    // changing the original offset values. DC796 also increments hex_off
-    // for a double-wide army. Keep these expressions and the canonical
-    // HasArmy/GetArmy calls. The ten-byte text buffer restores the native
-    // divisor spill.
-    // DC 0x44d0c and Mac 0x4a570 bypass coordinate assignments outside
-    // placement modes 0..3; keep the native switch rather than inventing a
-    // fallback initialization. Known army-target effects use modes 0..3;
-    // other modes describe hex, projectile or tiled effects. The generic API
-    // does not enforce that domain, so malformed army-effect coordinates
-    // remain unspecified.
+    // Placement modes outside 0..3 leave the coordinates unassigned, as in
+    // DC 0x44d0c and Mac 0x4a570.
     int powX;
     int powY;
     if (g_combatManager->m_battleOver != 0)
@@ -734,7 +682,6 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
             xoff += 0x2c;
             ++step;
         }
-        // DC808 retains HasArmy; share its neighbor with the blocked-cell check.
         long neighborIndex = m_gridIndex + (m_facing == 0 ? -step : step);
         if ((g_combatManager->m_cells[neighborIndex].hasArmy()
              && !g_combatManager->m_cells[neighborIndex].getArmy()->m_isMoving)
@@ -752,16 +699,13 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                 g_windowManager->m_screenBitmap->Colorize(
                     numboxX + 1, numboxY + 1, 0x1c, 9, 0.75f, 0.8f);
             } else {
-                // DC army.cpp:830 places ComputeKarma and Colorize on one
-                // statement row.
                 g_windowManager->m_screenBitmap->Colorize(
                     numboxX + 1, numboxY + 1, 0x1c, 9,
                     static_cast<float>((computeKarma() + 1.0) * 0.1667f),
                     0.8f);
             }
             char countText[10];
-            // The count recycles the spent x parameter (retail homes
-            // the ternary's result in [ebp+8]).
+            // The count reuses the spent x parameter.
             x = m_numTroopsToShowOverride == -1 ? m_numTroops
                                               : m_numTroopsToShowOverride;
             sprintf(countText,
@@ -775,8 +719,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     if (m_showPowEffect != 0 && numBoxOnly == 0) {
         if (g_combatManager->m_powFrameIndex
             < g_combatManager->m_powSprite->GetNumFrames(0)) {
-            // The effect flags also recycle x ([ebp+8] again, this
-            // time read back unsigned for the >>8 below).
+            // The effect flags reuse x too.
             x = g_spellEffectTraits[g_combatManager->m_powSpellEffect]
                     .m_flags;
             switch (x & 0xf) {
@@ -808,8 +751,8 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
 }
 
 // Original: army::ComputeKarma; army.cpp:891
-// Complete expands the same weighted spell-karma calculation in DrawToBuffer;
-// its spell table grew from DC's 80 entries to 81.
+// Inlined in DrawToBuffer; Complete's spell table grew from DC's 80 entries
+// to 81.
 DC_ADDRESS(0x044d50, 0xc2)
 MAC_ADDRESS(0x04a6e4, 0xcc)
 // Mac 0x4a720 reads row i before the karma table; DC ComputeKarma makes no
@@ -834,20 +777,11 @@ double army::computeKarma() const
 // Append `arg` to `array` unless it is already there, answering whether
 // it went in.
 
-// STATIC, and the carve is what says so: erase_item below has a retail
-// out-of-line body at 0x43ea00 and this one has NO retail slot anywhere
-// - the whole 0x43e140..0x43ea70 gap holds exactly that one 103-byte
-// function - so the /Ob2 rule that emits an unconditional out-of-line
-// copy for every EXTERN function it inlines rules external linkage out.
-// Its two call sites are both inside add_aura, twice each, and every
-// one of them is expanded.
+// STATIC: it has no retail out-of-line copy; both call sites in add_aura
+// inline it.
 
-// The membership test is std::find, not a hand-rolled walk: the DC
-// build's army.obj carries an `army**` instantiation of it as a COMDAT
-// (the roster's std::find rows at the foot of army.h), and retail's
-// expansion is find's own rotated shape - the empty-range test, the
-// value compare, the increment, then ONE compare of the answer against
-// end().
+// The membership test is std::find (DC army.obj carries its `army**`
+// instantiation).
 // E:\gamedcs\army.cpp:917
 DC_ADDRESS(0x044e14, 0xac)
 MAC_ADDRESS(0x04a7b0, 0xdc)
@@ -917,12 +851,6 @@ void army::addAura()
 
 // Tear this stack out of both halves of the aura relationship: every
 // stack whose aura reaches it, and every stack its own aura reaches.
-
-// erase_item is inlined at both sites, but NOT to the same depth: the
-// first site keeps `copy` and `_Destroy` as calls where the second
-// gets the copy loop written out inline. That is the /Ob2 divisor
-// doing its job (budget / sites-still-to-come grows as the sites are
-// spent), not a source difference - both sites are the same call.
 VA(0x0043ec50, 0x1B4)
 DC_ADDRESS(0x045000, 0xbc)
 MAC_ADDRESS(0x04aa84, 0xa8)
@@ -968,11 +896,6 @@ void army::removeBinding()
 // Raise or lower the area-effect latch and re-pose the stack. The
 // answer is "did the latch actually change", which is why the
 // no-op arm returns 0 before touching anything else.
-
-// MarkCreatureEffect expands here for the second time in this TU (the
-// first is do_multi_head_attack's) and carries the same arrow-tower
-// arm, with `combatSide` on the 21-wide army stride and the 20-wide
-// byte row.
 VA(0x0043efe0, 0xCF)
 DC_ADDRESS(0x045164, 0xa0)
 MAC_ADDRESS(0x04abf0, 0x118)  // DC reads the side directly; Mac 0x4ac24's load is the same field read.
@@ -997,7 +920,7 @@ unsigned char army::setInsideAreaEffect(unsigned char arg)
 
 // E:\gamedcs\army.cpp:1062
 // DC EndWalk, called at Walk:1163 and WalkTo:2439.
-// Retail expands this ordinary helper; no standalone body is claimed.
+// Inlined; no standalone retail body.
 DC_ADDRESS(0x045204, 0x50)
 MAC_ADDRESS(0x04ad08, 0x8c)
 void army::endWalk()
@@ -1060,15 +983,8 @@ void army::walk(int direction, bool endWalk, bool initialWalk)
         this->endWalk();
 }
 
-// E:\gamedcs\army.cpp:1171. DC1258/1259 reads sprite dimensions before
-// computing the flight-frame count. Windows and Mac use (distance + 20)/40.
-// The DC1252..1348 projectile scope owns its saved bitmap and update bounds;
-// Mac0x4afa0 likewise joins the Enchanter, ray and projectile arms at exit.
-// Keep the corresponding if/else branches and the bitmap/sprite wrappers
-// (DC1303/1317/1322), rectangle Include/Clip and update helpers.
-// Mac0x4b008 also expands getOwningSide before markCreatureEffect.
-// The Windows fixed-viewport update/scroll definitions in cmbtmgr.h are
-// retail's, not the CE forwarding chain.
+// E:\gamedcs\army.cpp:1171. Windows and Mac use (distance + 20)/40 flight
+// frames.
 VA(0x0043f2c0, 0x63B)
 DC_ADDRESS(0x0453c8, 0x4d8)
 MAC_ADDRESS(0x04afa0, 0x68c)  // MAC_ABSTRACTION_FROM(tokens1:1b8626a2ce74,31.8986): Windows recovery of the SLimitData/s_combatAreaLimits identities and DC's else-if missile chain; CW reallocates the restructured body (masked 255 -> 241 of 419).
@@ -1165,7 +1081,6 @@ void army::animateMissile(army* armyToAttack)
                 if (frame != 0) {
                     saved.Draw(0, 0, width, height,
                                g_windowManager->m_screenBitmap, x, y, false);
-                    // Mac 0x4b3f4 constructs and copies the rectangle value.
                     updateArea = SLimitData(x, y, x + width - 1, y + height - 1);
                     x += stepX;
                     y += stepY;
@@ -1174,8 +1089,7 @@ void army::animateMissile(army* armyToAttack)
                 m_missileIcon->Draw(0, missileFrame, 0, 0, width, height,
                                   g_windowManager->m_screenBitmap, x, y,
                                   targetX < startX, 1);
-                // DC army.cpp:1326-1327 constructs this rectangle, then calls
-                // SLimitData::Include and Clip; VC6 expands both methods.
+                // DC army.cpp:1326-1327: Include, then Clip.
                 updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
                 updateArea.clip(combatManager::s_combatAreaLimits);
                 // DC army.cpp:1335/1336 retains the extent calls.
@@ -1208,10 +1122,6 @@ void army::animateMissile(army* armyToAttack)
 // BEFORE any null test; and the per-hex `dmg`/`killedNow` pair is only
 // assigned under `if (a)`, so an armyless hex adds the PREVIOUS
 // iteration's values into the totals.
-
-// DC1434/1435 clears the selected target before the Magog message, reusing
-// first, as in the Lich arm; a separate reported alias changes the native
-// branch/load arrangement.
 VA(0x0043f900, 0x7F9)
 DC_ADDRESS(0x0458a0, 0x5d0)
 MAC_ADDRESS(0x04b62c, 0x6e4)  // dc-bracket forced
@@ -1259,10 +1169,6 @@ void army::rangeAttack(army* armyToAttack)
             hexcell* cell = &g_combatManager->m_cells[hex];
             if (!g_combatManager->validHex(hex) || !cell->hasArmy())
                 continue;
-            // SLOT IS DECLARED FIRST, in both of this body's two scan
-            // loops: retail's `movsx edx,byte [ecx+0x1b]` for the slot lands
-            // AHEAD of the `movsx ebx,al` that reuses the already-tested
-            // armySide byte; the Lich loop below is the same.
             const int slot = cell->m_armySlot;
             long side = cell->m_armySide;
             army* a = cell->getArmy();
@@ -1403,13 +1309,10 @@ void army::rangeAttack()
     cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
 }
 
-// E:\gamedcs\army.cpp:1629 / 1643. DC has both out-of-line
-// (70 B each); Mac retains calls to both, while VC6 expands
-// every Windows use. One hex step around the combat ring:
-// a one-hex stack walks its six neighbours with +-1 modulo 6, a
-// two-hex stack has eight and they are not in ring order, so it goes
-// through the index/order table pair. Only get_multi_head_directions
-// expands them so far, and it expands each exactly once.
+// E:\gamedcs\army.cpp:1629 / 1643; inlined at every Windows use. One hex
+// step around the combat ring: a one-hex stack walks its six neighbours
+// with +-1 modulo 6, a two-hex stack has eight and they are not in ring
+// order, so it goes through the index/order table pair.
 DC_ADDRESS(0x045fc0, 0x46)
 MAC_ADDRESS(0x04beb0, 0x60)
 long army::getClockwise(long direction) const
@@ -1483,13 +1386,9 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
 // paralyze - which is what suppresses the retaliation.
 
 // Original public ?check_special_attack@army@@QAA_NPAV1@@Z proves bool.
-// Retail and Mac return 0/1; doAttack forwards this result to its public
-// direction wrapper, where it suppresses retaliation.
-//
-// The dendroid arm is TWO add_item calls (the static above, inlined
-// whole with its std::find and its push_back's insert COMDAT), the
-// first one guarded: an already-bound target returns without
-// re-raising the pending spell or the mirror link.
+// The dendroid arm is two add_item calls, the first one guarded: an
+// already-bound target returns without re-raising the pending spell or the
+// mirror link.
 VA(0x00440500, 0x4B4)
 DC_ADDRESS(0x0461a0, 0x33e)
 MAC_ADDRESS(0x04c16c, 0x440)
@@ -1588,8 +1487,7 @@ void army::doFireShield(long damageAmount)
     int i;
     army* a;
     g_combatManager->resetLimitCreature();
-    // Direct side read: DC DoFireShield has no get_owning_side call (DC
-    // keeps 30 such calls elsewhere).
+    // Direct side read: DC DoFireShield has no get_owning_side call.
     g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     for (side = 0; side < 2; side++) {
         a = &g_combatManager->m_armies[side][0];
@@ -1630,12 +1528,6 @@ void army::doFireShield(long damageAmount)
 // quick path (guarded again before WaitEndSample), and the Rust arm
 // constructs a std::string it never uses (its dtor constant-folds
 // away over the known-null _Ptr; only the EH state betrays it).
-
-// Dreamcast's later Rust-message rows are not carried into Complete:
-// retail's relocation/call multiset directly rejects them. Native Windows
-// forms the missing troop count before the first min, then multiplies by HP
-// for the second min (DC1907/1909/1912). Thunderbird base damage stays
-// separate from ModifySpellDamage (DC2006/2011).
 VA(0x00440bc0, 0xA41)
 DC_ADDRESS(0x046658, 0x592)
 MAC_ADDRESS(0x04c804, 0xa84)  // anchor-global
@@ -2037,14 +1929,10 @@ bool army::checkObstacleAttacks(bool isWalking)
 // facing at the end.
 
 // DC names/types: save_facing (int), direction and both next_cell locals
-// (const int). initial_walk forwards boolean state to Walk. Its named calls recover
-// remove_aura, EndWalk, GetObstacle, Is, OffsetToFront and
-// check_obstacle_attacks instead of pasted helper bodies.
-// Stopping happens before revealing the obstacle (DC 2459 before
-// GetObstacle:2461, likewise 2481/2483); the full statement order matters.
-// Mac walkTo calls cancelSpellType(AFTER_MOVE) at 0:0x4dfd0 with r4=0,
-// immediately after clearing m_isMoving. Both retained helper bodies have
-// an empty AFTER_MOVE arm. VC6 can eliminate this source call at the site.
+// (const int). Stopping happens before revealing the obstacle (DC 2459
+// before GetObstacle:2461, likewise 2481/2483).
+// cancelSpellType(AFTER_MOVE) currently cancels nothing; Mac retains the
+// call (0:0x4dfd0).
 VA(0x00441fa0, 0x461)
 DC_ADDRESS(0x0472f4, 0x2f8)
 MAC_ADDRESS(0x04dc70, 0x3a4)  // anchor-global
@@ -2187,8 +2075,6 @@ long army::getAdjustedAttack(const army* enemy,
 }
 
 // DC2624/2626 separates the adjusted call from the base-skill subtraction.
-// Its named result preserves both retained compiler bodies and restores
-// getUnitCombatValue's expanded register schedule with the defense counterpart.
 VA(0x00442550, 0x35)
 DC_ADDRESS(0x0477b8, 0x30)
 MAC_ADDRESS(0x04e2d4, 0x48)
@@ -2205,8 +2091,7 @@ VA(0x00442590, 0xC2)
 DC_ADDRESS(0x0477e8, 0xde)
 MAC_ADDRESS(0x04e31c, 0x17c)
 // Original public ?get_adjusted_defense@army@@QBAJPBV1@_N@Z proves the
-// Frenzy flag bool. Every Complete caller supplies 0 or 1; keep the native
-// domain alongside the adjusted-attack interface and modifier wrappers.
+// Frenzy flag bool.
 long army::getAdjustedDefense(const army* enemy,
                                 bool frenzyIncluded) const
 {
@@ -2243,8 +2128,6 @@ long army::getDefenseModifier() const
 
 // E:\gamedcs\army.cpp:2680: the recovered base modifier returns 1.0.
 // Complete's full damage-reduction operation starts from the same baseline.
-// Its composition with this base helper is a reconstruction hypothesis: both
-// compilers erase the constant-returning call, so bytes alone cannot prove it.
 DC_ADDRESS(0x0478fc, 0x8)
 inline double army::getDefenseDamageModifier(
     unsigned char rangedAttack) const
@@ -2252,11 +2135,7 @@ inline double army::getDefenseDamageModifier(
     return 1.0;
 }
 
-// The controller/owner pair. The two bodies differ by exactly the
-// hypnotize flip:
-
-//   0x442690 (57 B)  heroes[hypnotizeFlag ? 1 - combatSide : combatSide]
-//   0x4426d0 (20 B)  heroes[combatSide]
+// The controller/owner pair; they differ by exactly the hypnotize flip.
 VA(0x00442690, 0x39)
 DC_ADDRESS(0x047904, 0x1e)
 MAC_ADDRESS(0x04e4e8, 0x34)
@@ -2319,8 +2198,7 @@ VA(0x00442780, 0x100)
 DC_ADDRESS(0x047af8, 0xd2)
 MAC_ADDRESS(0x04e6f4, 0xdc)
 // Original DC public ?get_average_damage@army@@QBAJABV1@_NJ1J@Z proves
-// const army& and both bool flags. Mac retains adjustDamage/getTotalHitPoints;
-// retail accesses the supplied enemy directly with no nullable-target arm.
+// const army& and both bool flags.
 long army::getAverageDamage(const army& enemy, bool rangedAttack, long amount, bool limitDamage, long distance) const
 {
     double average = getAverageDamage();
@@ -2352,15 +2230,9 @@ bool army::isEnemy(const army* arg) const
     return 1;
 }
 
-// Mac retains this ordinary body at 0x4e840 between isEnemy and
-// enemyIsAdjacent; its cross-TU callers retain the same helper boundary.
-// DC public ?can_shoot@army@@QBA_NPBV1@@Z proves a native bool result.
-// DC line 2797 is a combined predicate; Complete adds the controller
-// artifact exemption before adjacency. Mac 0x4e8d0..0x4e940 retains the
-// intermediate boolean tests before the final forgetfulness condition.
-// A named result with guarded assignments leaves getControllingSide called
-// inside isCreatureSpellUsefulOnTarget's Bloodlust arm; the combined
-// predicate lets that nested helper expand as in retail.
+// DC public ?can_shoot@army@@QBA_NPBV1@@Z proves a native bool result. DC
+// line 2797 is a combined predicate; Complete adds the controller artifact
+// exemption before adjacency.
 VA(0x004428f0, 0xF6)
 DC_ADDRESS(0x047c04, 0x6e)
 MAC_ADDRESS(0x04e840, 0x118)
@@ -2400,35 +2272,22 @@ DATA(0x0063b7f0)
 static const double g_artilleryFactors[4] = { 1.0, 1.5, 1.5, 2.0 };
 
 // E:\gamedcs\army.cpp:2820
-// Dreamcast recovers the source boundaries hidden by Complete's inliner:
-// attack/defense modifiers, defense-damage adjustment, can_shoot(0), three
-// independent controller reads, get_average_damage, and two
-// get_total_hit_points(0) calls. Retail corroborates those boundaries and
-// also proves Complete's expanded shield/controller damage factor. Keep the
-// side-mass scan in its recovered pointer/count form; the indexed spelling
-// preserves the semantics but loses retail's loop lowering.
+// Dreamcast recovers the source boundaries: attack/defense modifiers,
+// defense-damage adjustment, can_shoot(0), three independent controller
+// reads, get_average_damage, and two get_total_hit_points(0) calls.
 
-// Mac 0x4ec84..0x4ecd4 joins both siege outcomes through result (one common
-// return), and each modifier helper's adjusted result is named. Retail
-// VA0x442deb and Mac 0x4ec1c/0x4ec2c prove the side-mass exclusion mask is
-// 0x600040: siege, immobilized and summoned armies.
+// The side-mass exclusion mask is 0x600040: siege, immobilized and summoned
+// armies.
 VA(0x00442a50, 0x410)
 DC_ADDRESS(0x047cf4, 0x472)
 MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global
 // Original DC public ?get_unit_combat_value@army@@QBANJJ_NPBV1@@Z.
-// Mac 0x4ec18/0x4ec68 load the side for the side-mass pointer/count, which
-// m_combatSide and an inline getOwningSide emit alike; DC's body (lines
-// 2888-2891) makes no get_owning_side call, though DC army.obj calls that
-// getter out of line elsewhere (GoBerserk, ProcessDeath, is_enemy).
 double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    bool ranged,
                                    const army* excluded) const
 {
     long attackDiff = getAttackModifier(0, ranged) - lowestAttack;
     long defenseDiff = getDefenseModifier() - lowestDefense;
-    // Mac 0x4ea40 calls the full reduction before the defense product.
-    // Keep the recovered base helper inside that upper operation; the inverse
-    // wrapper exhausts VC6's nested inline budget.
     double defense = computeDefenderDamageReduction(ranged);
     defense = (defenseDiff * 0.05 + 1.0) * defense;
     if (ranged && !canShoot(0))
@@ -2539,8 +2398,6 @@ DC_ADDRESS(0x0484a0, 0x2e)
 MAC_ADDRESS(0x04efa0, 0x5c)
 void army::setAIExpectedDamage(long arg)
 {
-    // Complete's by-value min helper retains the argument home at [ebp+8];
-    // DC names its reference-taking std::min counterpart at this source line.
     m_aiExpectedDamage = min(arg, getTotalHitPoints(0));
 }
 
@@ -2602,11 +2459,6 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
 
 // Complete separates the numeric damage bonus from the combat message and sound
 // so estimated-damage calculations can reuse it. Dreamcast combines these paths.
-// Its bool flags are inferred from that original bool interface and retail's
-// unchanged flag forwarding from both callers, rather than generated labels.
-// Keep the coherent logical bool interfaces: restoring only the reductions
-// adds a test/setne normalization, absent from retail, in the unsigned-char
-// callers.
 VA(0x00443320, 0x514)
 MAC_ADDRESS(0x04f230, 0x530)
 int army::computeAttackerBonus(int baseDamage, bool isShooting,
@@ -2716,8 +2568,7 @@ VA(0x00443840, 0x344)
 DC_ADDRESS(0x04868c, 0x582)
 MAC_ADDRESS(0x04f760, 0x358)
 // Original DC public ?ComputeAttackerDamageBonuses@army@@QBAHH_NPAV1@0J@Z
-// proves both flags bool: 0 backreferences the earlier _N parameter. The
-// debug procedure's unsigned-char rendering is a lowered bool representation.
+// proves both flags bool.
 int army::computeAttackerDamageBonuses(int baseDamage,
                                        bool isShooting,
                                        army* defender,
@@ -2829,8 +2680,6 @@ double army::computeAttackerDamageReduction(const army* defender,
     return reduction;
 }
 
-// Mac 0x4fd30/0x4fd48 multiplies the baseline by each shield factor.
-// VC6 folds the initial 1.0 product.
 VA(0x00443d90, 0x9C)
 DC_ADDRESS(0x048fc4, 0x12e)
 MAC_ADDRESS(0x04fd04, 0x88)
@@ -2856,18 +2705,9 @@ double army::computeDefenderDamageReduction(bool isShooting) const
 // Complete-only damage estimate used by the two ai_tactical skill-value
 // helpers. Its original name is unknown; the DC DamageEnemy interface and
 // helper sequence describe a different operation.
-// Mac 0x4fdd0..0x4fde4 keeps the attacker-adjusted result separate while
-// passing the original amount to computeDefenderDamageBonuses. That result
-// continues through both reductions and the minimum-one clamp. VC6 reuses
-// the dead amount parameter's stack slot for this distinct value; the stores
-// alone do not prove assignments to the source parameter.
-// The two reduction products keep their evidenced operand orientation.
 VA(0x00443e30, 0x101)
 MAC_ADDRESS(0x04fd8c, 0xf4)  // anchor-callee (ai_tactical's two skill-value; MAC_ABSTRACTION_FROM(tokens1:c55baa363583,55.5556): DC-backed bool ranged interface and accumulated damage local; masked shape rises from 40 to 48 of 61 retail instructions.
                        // functions) + arity ret 0x10, retail-only slot
-// Complete-only bool inference: its two AI callers use canShoot's logical
-// result, and retail forwards the shooting flag unchanged to the independently
-// proven bool reduction helper (no integer-to-bool normalization).
 long army::getEstimatedDamage(const army* target, long amount,
                                 bool ranged, long distance) const
 {
@@ -2958,9 +2798,8 @@ int army::damage(int damage)
 }
 
 // Original: army::Strength; army.cpp:3481
-// DC3482 multiplies the current troop count by baseFightValue (traits+46).
-// Complete widens that traits field to int at +64; this source API has no
-// separately claimed retained retail body.
+// DC3482 multiplies the current troop count by baseFightValue (traits+46);
+// Complete widens that traits field to int at +64.
 DC_ADDRESS(0x04935c, 0x44)
 unsigned long army::strength()
 {
@@ -2968,91 +2807,14 @@ unsigned long army::strength()
 }
 
 // E:\gamedcs\army.cpp:3492
-// ResetRound's own tail identifies this body: it ends `push 1 / mov ecx,esi /
-// call 0x444120`, a thiscall with exactly ONE
-// stack argument, and the body at 0x444120 ends `ret 4` to match - which
-// is the DC roster's two-parameter row (this + bFadeElementals) and
-// refutes the only other candidate in the gap outright. The body
-// corroborates it end to end: it walks the two bound-army vectors at
-// +0x514/+0x524 and calls remove_binding (0x43ee10), cancels all 0x51
-// spell rows through CancelIndividualSpell (0x444510), raises the death
-// bit 0x200000 in creatureId, rolls Random(1,100) twice for the two
-// morale side-effects, files the corpse into the hexcell's dead list,
-// and finally clears the CLONE link both ways - reaching the clone
-// through +0x28 and re-entering itself, which is the tail recursion C2
-// turned into the loop back to 0x44413c. DC ProcessDeath's own callee
-// set (remove_binding, remove_aura, CancelAllSpells, LeavesNoBody,
-// hexcell::HasArmy, Random) is the same body one build removed.
-// The carve size 0x3A6 against the DC row's 0x2F4 is 1.24x, inside the
-// SH4 -> x86 band.
 
-// THE DC LINE MAP (forward read), retail agreeing at every
-// point checked:
-//   3493  if (Is(1u << 21)) return;          retail's entry test, and the
-//         tail recursion at the bottom re-enters PAST it (0x44413c).
-//   3494  remove_aura();     INLINED by retail (both vector walks and
-//         both erase_item calls are open-coded here); the body already
-//         in this file expands to exactly those bytes.
-//   3497  remove_binding();  a real call to 0x43ee10.
-//   3501  if (!hypnotizeFlag) {
-//   3503    if (Random(1, 100) < 60)
-//   3504      gpCombatManager->field_53dc[get_owning_side()] = 1;
-//   3505    else if (Random(1, 100) < 80)
-//   3506      gpCombatManager->field_53de[1 - get_owning_side()] = 1;
-//         (+0x53de is inside cmbtmgr.h's pad_53de today; retail's
-//         `sub ecx,side / [ecx+0x53df]` is the 1-side index.)
-//   3512  CancelAllSpells();  INLINED - the 0x51-iteration walk of
-//         spellInfluence with CancelIndividualSpell(i) on each positive
-//         row. Dreamcast 0x499ac has NO retail slot (the carve leaves no
-//         gap between CancelIndividualSpell 0x444510 and
-//         SetSpellInfluence 0x4448f0), the EndWalk situation again.
-//   3516  creatureId |= 0x200000;   3517  bAllUnitsKilled = 0;
-//   3521  if (combatManager::ValidHex(gridIndex)) {   -- and retail's
-//         two rejects jump to the FUNCTION epilogue, so this block runs
-//         to the end of the body, mirror links included.
-//   3522    hexcell* pCell = &gpCombatManager->cells[gridIndex];
-//   3529    if (Is(1u << 0)) {          (the two-hex marker)
-//   3531      iGI2 = gridIndex + OffsetToFront(-1);
-//   3532      pCell2 = &gpCombatManager->cells[iGI2];   }
-//         BOTH ARE FUNCTION-SCOPE LOCALS ASSIGNED ONLY IN THAT ARM:
-//         retail's one-hex path reads [ebp-8] and [ebp-0xc] back
-//         UNINITIALISED. Same faithful-artifact class as AttackWall's
-//         defaultless switch - do not initialise them.
-//   3535    if (LeavesNoBody()) {     -- an Army.h inline with no
-//           retail copy, and it is a MASK not two Is() calls: retail
-//           emits one `test dword, 0x10400000`.
-//   3543      gpCombatManager->field_13438[combatSide][bitIndex] = 1;
-//   3544      gpCombatManager->field_13460 = 1;
-//   3558    } else {
-//   3562      if (pCell->field_1c < 14
-//                  && (!(Is(1u << 0)) || pCell2->field_1c < 14)) {
-//   3566        if (pCell->HasArmy()) {        (armySide >= 0, inlined)
-//   3568..3571   the three dead-list rows plus the count bump - and the
-//                THIRD array is retail-only surface: hexcell's
-//                pad_3c[0xe] is deadArmySide/deadArmySlot's parallel
-//                fourteen-entry row for field_1a (`[count + cell +
-//                0x3c]`).
-//   3574..3582   the identical block for pCell2.
-//   3592..3603   gpCombatManager->field_132cc = 0, the two cell
-//                identities set back to -1, and the same pair on the
-//                second hex behind another Is(1u << 0).
-//   3607..3619   the CLONE LINK, and the DC member table names both
-//                halves: army@36 iMirrorSourceIndex is retail +0x24 and
-//                army@40 iMirrorDestIndex is +0x28 (this band is
-//                unshifted - groupToAttack 16/+0x10 anchors it).
-//                `if (iMirrorSourceIndex != -1 &&
-//                 armies[combatSide][iMirrorSourceIndex].iMirrorDestIndex
-//                 == bitIndex) that.iMirrorDestIndex = -1;` then
-//                `if (iMirrorDestIndex != -1) { clone->numTroops = 0;
-//                 clone->ProcessDeath(bFadeElementals); }`.
-//   `bFadeElementals` IS NEVER READ - retail's body has no [ebp+8]
-//   access at all. It is a dead parameter, transcribed faithfully, and
-//   that is also why C2 could turn the recursion into the loop.
+// pCell2 and iGI2 are function-scope locals assigned only in the two-hex
+// arm; the one-hex path reads them back uninitialised, as retail does - do
+// not initialise them.
+// `fadeElementals` is never read: a dead parameter, transcribed faithfully.
 VA(0x00444120, 0x3A6)
 DC_ADDRESS(0x0493a0, 0x2f4)
 MAC_ADDRESS(0x0500f8, 0x338)
-// Mac 0x50224/0x503a4/0x503e4 expand getOwningSide for vanished/mirror rows;
-// its earlier 0x50160/0x50184 loads already occur through the existing calls.
 void army::processDeath(int fadeElementals)
 {
     if (is(creatureImmobilized))
@@ -3068,8 +2830,7 @@ void army::processDeath(int fadeElementals)
             g_combatManager->m_playYeah[1 - getOwningSide()] = 1;
     }
 
-    // DC 0x49420 calls the canonical member (army.cpp:3512). Complete
-    // expands its positive-duration walk here; keep the source call.
+    // DC 0x49420 calls the canonical member (army.cpp:3512).
     cancelAllSpells();
 
     m_monInfo.attributes |= creatureImmobilized;
@@ -3152,8 +2913,7 @@ void army::cancelSpellType(int spellType)
 }
 
 // Original: army::adjust_hitpoints; army.cpp:3660
-// ResetRound and the AGE/POISON spell paths expand this ordinary helper.
-// The by-value min wrapper preserves its two argument copies in retail.
+// Inlined in ResetRound and the AGE/POISON spell paths.
 DC_ADDRESS(0x0496dc, 0x6a)
 MAC_ADDRESS(0x0504ac, 0xd4)
 // Mac 0x504ac reads AGE at +0x2c4, as a direct row read and an inline
@@ -3179,11 +2939,9 @@ void army::adjustHitpoints()
 // the spell's entry back out of the cast-order queue. Disrupting Ray
 // is the one spell that never comes off.
 
-// The switch arms are in Dreamcast source order (jump-table switch): BIND's
-// binder teardown, HYPNOTIZE's remove_aura/add_aura helper pair, then the
-// seven stat restores. BIND's vector::clear, the aura helper boundary, and
-// AGE's adjust_hitpoints boundary are all positive CodeView facts; none may
-// be substituted with their lower-level implementation to protect a local score.
+// The switch arms are in Dreamcast source order: BIND's binder teardown,
+// HYPNOTIZE's remove_aura/add_aura helper pair, then the seven stat
+// restores.
 
 // The AGE arm re-reads spellInfluence[SPELL_AGE] AFTER the entry code
 // zeroed it, so its 0.5f halving arm is dead at runtime - the
@@ -3191,18 +2949,11 @@ void army::adjustHitpoints()
 // Its rounding constant is +0.95f (read from the image at 0x63b8c8),
 // not the usual +0.5f.
 
-// The tail is the deque surgery InitClean's note promised: std::find
-// over SpellInfluenceQueue expanded inline (the 0x1000 node-hop is
-// Dinkumware's _DEQUESIZ for a 4-byte element), then
-// `erase(it)` = `erase(it, it + 1)` with the two 16-byte iterators
-// built on the stack - the second and last call site of the
-// deque::erase COMDAT at 0x448db0.
-// DC 3790..3792 names iterator si and the single-iterator erase overload.
+// The tail pulls the spell out of SpellInfluenceQueue with std::find and the
+// single-iterator erase (DC 3790..3792 names the iterator si).
 VA(0x00444510, 0x3DB)
 DC_ADDRESS(0x049748, 0x262)
 MAC_ADDRESS(0x050580, 0x3b4)  // anchor-global
-// Mac 0x505a0..0x505ac reads the row before clearing it; DC
-// CancelIndividualSpell makes no get_spell_time call (see army.h).
 void army::cancelIndividualSpell(int spell)
 {
     if (m_spellInfluence[spell] <= 0)
@@ -3327,20 +3078,10 @@ static void drop_aura_links(army* self)
 // to the cast-order queue. The exact inverse of CancelIndividualSpell
 // above, arm for arm.
 
-// Dreamcast lines 3822-3843 recover the duration switch in this caller;
-// 4054-4057 recover CancelIndividualSpell -> remove_aura -> add_aura;
-// 4067-4068 are two separate Disease mins; 4075 is max followed by the
-// adjust_hitpoints boundary; and 4091-4092 are adjust_hitpoints followed by
-// one further min. Those statement groups account for the retail 54-branch
-// sequence.
-
-// Complete retail materializes Poison's double max result before converting
-// it to float: the double is named, not the float result or either input.
+// Poison's double max result is named before its float conversion.
 VA(0x004448f0, 0xB99)
 DC_ADDRESS(0x0499e8, 0x900)
 MAC_ADDRESS(0x050c8c, 0x7a8)  // anchor-global
-// Mac 0x50d18/0x50d34 read the duration/mastery rows. DC SetSpellInfluence
-// calls neither get_spell_time nor get_spell_level (see army.h getSpellTime).
 void army::setSpellInfluence(int spell, int power, int mastery,
                              const hero* castingHero)
 {
@@ -3533,8 +3274,8 @@ void army::setSpellInfluence(int spell, int power, int mastery,
 }
 
 // Original: army::DecrementSpellRounds; army.cpp:4129
-// ResetRound expands the spell/vanish countdown. Complete has 81 spell
-// entries; the older DC loop at line 4133 ends at 80.
+// Inlined in ResetRound. Complete has 81 spell entries; the older DC loop
+// at line 4133 ends at 80.
 DC_ADDRESS(0x04a2e8, 0x5e)
 MAC_ADDRESS(0x051434, 0x98)
 // Mac 0x51458 reads the row once for both tests; DC DecrementSpellRounds
@@ -3557,10 +3298,8 @@ void army::decrementSpellRounds()
 // The legal victims of a berserked stack: every living stack on either
 // side except this one and the arrow towers, kept only while it ties or
 // beats the closest distance seen so far.
-// Original: army::get_berserk_targets; army.cpp:4158 Dreamcast
-// names the two retained locals `closest` and `target`. Retail initializes
-// closest in the leading declaration region, before the inlined can_shoot;
-// that lifetime keeps `this` in EBX and reproduces the vector update loop.
+// Original: army::get_berserk_targets; army.cpp:4158. Dreamcast names the
+// two retained locals `closest` and `target`.
 VA(0x00445490, 0x23B)
 DC_ADDRESS(0x04a348, 0x138)
 MAC_ADDRESS(0x0514cc, 0x1d0)  // anchor-global
@@ -3660,8 +3399,6 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
             long hex = getAdjacentHex(ourHex, direction);
             if (combatManager::validHex(hex)
                 && enemy == g_combatManager->m_cells[hex].getArmy()) {
-                // Mac 0x518e8..0x51930 expands needToTurn, including its
-                // direction < 6 guard.
                 if (!needToTurn(direction))
                     return direction;
                 if (best == -1)
@@ -3676,8 +3413,7 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
 
 // One stack, one hex, whichever way it travels: a flyer flies, a devil
 // teleports, everything else walks. The grid identity is INVALIDATED
-// first (side and slot both -1 out of one register, the signed-char CSE
-// this class uses everywhere), then the destination is bounds-checked
+// first, then the destination is bounds-checked
 // and CanFit'ed, and only then does the manager clear its
 // last-moved-stack slot, drop the highlighter and mark the mover's own
 // hexes.
@@ -3719,7 +3455,7 @@ bool army::simpleMove(int hex, bool restoreFacing)
 }
 
 // simple_move's sibling: one stack attacking one hex. The grid identity
-// is invalidated first out of the same single register, the target is
+// is invalidated first, the target is
 // resolved and rejected if it is missing or is this stack itself, and
 // then the stack either shoots or walks its facing around to a
 // direction that reaches the target.
@@ -3805,13 +3541,8 @@ static const TWallTargetId g_walls[4] = {
 };
 
 // E:\gamedcs\army.cpp:4436
-// STATIC, and the retail link order is what says so: this body has no
-// retail slot of its own (attack_wall 0x445ec0 runs straight into
-// AttackWall's neighbour) while VC6 emits an out-of-line copy of every
-// EXTERN function it inlines. Its ONE call site is attack_wall, where
-// /Ob2 expands it with both the array and the count constant-folded -
-// which is what turns the `targets + count` limit into the bare
-// 0x63b850 the retail instruction carries.
+// STATIC: no retail out-of-line copy; inlined at its one call site,
+// attack_wall.
 DC_ADDRESS(0x04a8c8, 0xb2)
 MAC_ADDRESS(0x051ca8, 0xac)
 static TWallTargetId chooseWallTarget(TWallTargetId wall,
@@ -3949,20 +3680,7 @@ void army::attackWall(TWallTargetId wall,
 
 // DC names destX/destY/numFrames as const int and startY as int;
 // sample2b, shoot_sample and hit_sample name the resource/sample lifetimes.
-// The abs-of-dx branch precedes dy's declaration. Both sample-name
-// ternaries load the miss operand before conditionally choosing the hit.
-// DC line 4699 records the direct rectangle constructor below, with its
-// repeated getters and ordinary temporary.
-// DC army.cpp:4715 retains the bitmap-forwarding CSprite::Draw overload;
-// preserve its nested bitmap accessors, as in animateMissile.
-// Mac 0x521f0 expands getOwningSide before MarkCreatureEffect's array strides;
-// retain that canonical accessor as in doAttack.
-// The updateCombatArea extent passes by const reference (the Windows
-// overload), not as a by-value sixteen-byte copy.
-// DC army.cpp:4731 guards the sample; 4732 calls ResourceManager::Dispose
-// (sample*) at 0x1225c0. Keep both that guard and its named source call.
-// Mac 0x525b4..0x525cc expands its null guard and resource virtual disposal;
-// retain the canonical wrapper instead of repeating that body in this caller.
+// DC army.cpp:4731 guards the sample; 4732 calls ResourceManager::Dispose.
 VA(0x00445fd0, 0x526)
 DC_ADDRESS(0x04aacc, 0x5a4)
 MAC_ADDRESS(0x051fa4, 0x64c)  // anchor-callee
@@ -3986,9 +3704,6 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     int startY = g_combatManager->m_cells[m_gridIndex].m_refY
                  + m_monFrameInfo.m_missileOffset[3];
 
-    // dy is declared AFTER the abs: startY has to stay live across the
-    // branch, which is what keeps retail from folding it into the
-    // subtraction (the jns/jge polarity at +0xbb is the same artifact).
     long dx = destX - startX;
     if (dx < 0)
         dx = -dx;
@@ -4051,9 +3766,6 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         levelsDestroyed == 0
             ? DATA_COMPGEN(0x00660a6c, rockSpriteName, "CSGRCK.DEF")
             : DATA_COMPGEN(0x00660a60, explosionSpriteName, "SGEXPL.DEF"));
-    // DC army.cpp:4699 calls each sprite dimension getter three times
-    // while forming the constructor arguments. Mac 0x52348..0x523b0
-    // expands them and copies the four-word temporary into the bounds.
     g_combatManager->m_extent = SLimitData(
         destX - explosion->GetWidth() / 2,
         destY - explosion->GetHeight() / 2,
@@ -4180,7 +3892,7 @@ int army::leftX() const
 }
 
 // Original: army::FrontX; army.cpp:4825
-// DrawToBuffer expands the helper and its two CSprite accessors.
+// Inlined in DrawToBuffer.
 DC_ADDRESS(0x04b2e4, 0x6e)
 MAC_ADDRESS(0x052808, 0x6c)
 int army::frontX() const
@@ -4236,9 +3948,7 @@ int army::otherArmyAdjacent(int group, int index)
     return isAdjacent(g_combatManager->m_armies[group][index]);
 }
 
-// Original Turn@@QAAX_N proves the animation flag is bool; the retained
-// Windows body and callers use the same zero/one domain. Keep the two Is
-// helpers and the shared final animation after either facing arm.
+// Original Turn@@QAAX_N proves the animation flag is bool.
 VA(0x00446720, 0x107)
 DC_ADDRESS(0x04b454, 0x104)
 MAC_ADDRESS(0x052938, 0x174)  // anchor-global
@@ -4267,7 +3977,6 @@ void army::turn(bool animateTurn)
         if (animateTurn)
             playAnimation(10, -1, 0);
     }
-    // Mac 0x52a74 keeps one final wait-animation call after either facing arm.
     if (animateTurn)
         playAnimation(2, 1, 0);
 }
@@ -4277,8 +3986,6 @@ void army::turn(bool animateTurn)
 // draw this stack's cell into the buffer, take one full frame with
 // LetsPretendImNotHere raised, and blit the 800x600 result into the
 // manager's backup bitmap. Quick combat skips the lot.
-// DC 0x4b558 and 0x4b624 call Bitmap16Bit's Bitmap16Bit* Draw overload for
-// both backup blits; VC6 expands the header forwarding body here.
 VA(0x00446830, 0x103)
 DC_ADDRESS(0x04b558, 0xca)
 MAC_ADDRESS(0x052aac, 0x15c)
@@ -4453,9 +4160,7 @@ void army::newTurn()
     if (g_combatManager->m_creaturePlacement != 0)
         return;
     if (m_topCreatureDamage > 0) {
-        // Not getOwner(): Mac 0x53458 reads the side's hero inline, while
-        // CodeWarrior keeps getOwner a call (as in Mac rangeAttack 0x4b668);
-        // DC NewTurn has no get_owner call either.
+        // Not getOwner(): DC NewTurn has no get_owner call.
         if (m_creatureType == CREATURE_WIGHT
             || m_creatureType == ARMY_CREATURE_WRAITH
             || m_creatureType == CREATURE_TROLL
@@ -4506,10 +4211,6 @@ void army::newTurn()
 VA(0x00447120, 0x20A)
 DC_ADDRESS(0x04bc84, 0xfa)
 MAC_ADDRESS(0x05369c, 0x15c)
-// Mac 0x53700 reads POISON at +0x2b4; DC NewTurn makes no get_spell_time
-// call (see army.h getSpellTime).
-// adjustHitpoints reads the AGE row directly (see there): the inline
-// getter's AGE load cannot cross the poison-factor store.
 void army::resetRound()
 {
     if (m_numTroops <= 0)
@@ -4551,9 +4252,6 @@ void army::resetRound()
 VA(0x00447330, 0x9C)
 DC_ADDRESS(0x04bd80, 0xe4)
 MAC_ADDRESS(0x0537f8, 0x100)
-// Complete expands the by-value min wrappers, each containing cppMin; direct
-// reference selectors do not match. DC and Mac suggest a shared long
-// power/maxHits lifetime, which does not fit this TU.
 long army::getResurrectionSize(const army* target) const
 {
     if (m_creatureType == CREATURE_ARCHANGEL) {
@@ -4603,8 +4301,7 @@ static const int g_faerieDragonSpells[] = {
     -1,
 };
 
-// Uses DC's guarded-return getControllingSide (see army.h); a conditional
-// expression commutes one sideIsAi address.
+// Uses DC's guarded-return getControllingSide (see army.h).
 VA(0x00447510, 0x1A8)
 MAC_ADDRESS(0x053a3c, 0x18c)
 void army::chooseFaerieDragonSpell()
@@ -4643,12 +4340,7 @@ void army::chooseFaerieDragonSpell()
     }
 }
 
-// DC public ?can_cast_spell@army@@QBA_NJ@Z proves native bool despite
-// the lowered T_UCHAR debug record. Keep ValidSpellTargetArmy's bool result.
-// Mac forwards that result after materializing target presence: spelling
-// `target != 0` avoids the extra byte narrowing from implicit pointer-to-bool.
-// This gives the exact 824-byte Mac body and VC6's shared validation tail;
-// named bool/byte results or a conditional return do not.
+// DC public ?can_cast_spell@army@@QBA_NJ@Z proves native bool.
 VA(0x004476c0, 0x3BA)
 DC_ADDRESS(0x04beec, 0x116)
 MAC_ADDRESS(0x053bc8, 0x338)
@@ -4696,7 +4388,7 @@ bool army::canCastSpell(long hex) const
 }
 
 // Original: army::cast_resurrect; army.cpp:5396
-// CastSpell expands both resurrection helpers in Complete.
+// Inlined in CastSpell, as is the demonic variant below.
 DC_ADDRESS(0x04c004, 0x80)
 MAC_ADDRESS(0x053f00, 0xc4)
 void army::castResurrect(long hex)
@@ -4727,9 +4419,8 @@ void army::castDemonicResurrect(long hex)
 }
 
 // Original: group_has_melee; army.cpp:5433
-// DC5437/5455/5473 all count down with i-- > 0. Complete expands these
-// static helpers in its broader spell-validity worker, preserving the
-// CannotAttack and CanShoot boundaries inside the two capability scans.
+// DC5437/5455/5473 all count down with i-- > 0. Inlined in the
+// spell-validity worker.
 DC_ADDRESS(0x04c0f0, 0x64)
 MAC_ADDRESS(0x054034, 0x134)
 static bool groupHasMelee(long group)
@@ -4773,8 +4464,7 @@ static bool groupHasDragons(long group)
 
 // Complete's shared spell-validity worker is a desktop addition: the
 // older DC is_valid_caliph_spell contains these per-spell tests itself.
-// Both reuse the three ordinary group helpers above. The two loop sites
-// retain CanShoot calls in retail through that real helper nesting.
+// Both reuse the three ordinary group helpers above.
 VA(0x00447a80, 0x429)
 MAC_ADDRESS(0x0542f0, 0x17c)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
@@ -4799,7 +4489,6 @@ bool isCreatureSpellUsefulOnTarget(int spell, const army* target)
     case SPELL_CURE:
         return target->m_topCreatureDamage > 0;
     case SPELL_PRAYER:
-        // Mac 0x543e4..0x543f0 negates the attribute test.
         return !target->is(creatureDone);
     case SPELL_SLAYER:
         return groupHasDragons(1 - side);
@@ -4816,8 +4505,8 @@ bool isCreatureSpellUsefulOnTarget(int spell, const army* target)
     return 1;
 }
 
-// Mac retains this helper at 0x5446c, between isCreatureSpellUsefulOnTarget and
-// isValidCaliphSpell, and the Enchanter calls it twice. Its name is inferred.
+// Mac retains this helper; the Enchanter calls it twice. Its name is
+// inferred.
 MAC_ADDRESS(0x05446c, 0xac)
 static bool enchanterSpellHasTarget(int spell)
 {
@@ -4834,8 +4523,6 @@ static bool enchanterSpellHasTarget(int spell)
 }
 
 // DC public ?is_valid_caliph_spell@@YA_NW4SpellID@@PBVarmy@@@Z proves bool.
-// Mac 0x54548 forwards the worker result unchanged; the worker likewise
-// forwards the group predicates and canShoot without a truth conversion.
 VA(0x00447eb0, 0x21)
 DC_ADDRESS(0x04c210, 0x164)
 MAC_ADDRESS(0x054518, 0x44)
@@ -4847,9 +4534,7 @@ bool isValidCaliphSpell(SpellID spell, const army* target)
 }
 
 // E:\gamedcs\army.cpp:5546
-// Complete's x86 optimizer expands this source helper into both callers. The
-// named boundary remains part of the recovered source even though retail has
-// no separate emitted slot for it.
+// Inlined in both callers; no standalone retail body.
 DC_ADDRESS(0x04c374, 0x38)
 MAC_ADDRESS(0x05455c, 0x68)
 long army::getValidCaliphSpells(const army* target) const
@@ -4888,8 +4573,8 @@ void army::castCaliphSpell(long hex)
     }
 }
 
-// Mac retains this ordinary method at 0x5469c, immediately after
-// castCaliphSpell; Windows expands it in castSpell. The name is inferred.
+// Mac retains this ordinary method after castCaliphSpell; Windows inlines
+// it in castSpell. The name is inferred.
 MAC_ADDRESS(0x05469c, 0x64)
 void army::castFaerieDragonSpell(long hex)
 {
@@ -4985,8 +4670,7 @@ void army::castSpell(long hex)
         if ((targetX < myX && m_facing == 1) || shouldTurn)
             turn(1);
         g_combatManager->resetLimitCreature();
-        // Direct side read: DC CastSpell has no get_owning_side call, and
-        // the getter's expansion swaps the mark's registers.
+        // Direct side read: DC CastSpell has no get_owning_side call.
         g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
         g_combatManager->computeMaxExtent();
         long dx = targetX - myX;
@@ -5069,7 +4753,6 @@ void army::castSpell(long hex)
 
 VA(0x004487f0, 0x43)
 MAC_ADDRESS(0x054de4, 0x5c)
-// Mac 0x54de4 expands the MAGIC_MIRROR duration getter at +0x228.
 int army::getMagicMirrorChance() const
 {
     int effect = 0;
@@ -5152,8 +4835,6 @@ VA_COMPGEN(0x00448d30, 0x36, VECTOR_ERASE, army)
 VA(0x00448cd0, 0x4B)
 DC_ADDRESS(0x04c918, 0x50)
 MAC_ADDRESS(0x055028, 0x6c)
-// Mac 0x55028 reads SLOW at +0x270; DC get_speed makes no get_spell_time
-// call (see army.h getSpellTime).
 int army::getSpeed() const
 {
     int speed = m_monInfo.speed;
@@ -5167,9 +4848,7 @@ int army::getSpeed() const
     return speed;
 }
 
-// The nine-byte default constructor at 0x448d20 is army.obj's retained
-// TResourceHandle<sample> COMDAT (ICF-folded with identical four-byte
-// null constructors); vector iterators elsewhere pass its address.
+// army.obj's retained TResourceHandle<sample> default-constructor COMDAT.
 VA_COMPGEN(0x00448d20, 0x9, CLASS_CTOR, TResourceHandle)
 
 VA_COMPGEN(0x004490b0, 0x73, DEQUE_FREEFRONT, int)
@@ -5182,10 +4861,8 @@ VA_COMPGEN(0x00448db0, 0x2FE, DEQUE_ERASE, int)
 // COMDAT pairing: vector<army*>::clear.
 VA_COMPGEN(0x00448d70, 0x3D, VECTOR_CLEAR, army)
 
-// COMDAT pairing: deque<int>::iterator::operator++ and ::operator--, both
-// 51 bytes and byte-identical apart from the step they add - 0x449230 adds
-// +4 and 0x449270 adds -4 (materialized as 0xfffffffc), which is the whole
-// difference between the two bodies on our side as well.
+// COMDAT pairing: deque<int>::iterator::operator++ (0x449230, +4) and
+// ::operator-- (0x449270, -4).
 VA_COMPGEN(0x00449230, 0x33, DEQUE_ITERATOR_INC, int)
 
 VA_COMPGEN(0x00449270, 0x33, DEQUE_ITERATOR_DEC, int)
