@@ -3,6 +3,8 @@
 #ifndef HOMM3_HEROSPEC_H
 #define HOMM3_HEROSPEC_H
 
+#include "domains.h"
+
 #include "va.h"
 
 #include "secondaryskill.h"
@@ -22,14 +24,14 @@
 // data side: every per-skill factor table in hero.obj's .rdata run
 // (0x63e9e8 onward) is exactly FOUR floats wide, indexed by the
 // skillLevel byte.
-enum TSkillMastery {
+H3_ENUM_VALUES_BEGIN(TSkillMastery)
     eMasteryInvalid = -1,
     eMasteryNone = 0,
     eMasteryBasic = 1,
     eMasteryAdvanced = 2,
     eMasteryExpert = 3,
     kNumMasteries = 4
-};
+H3_ENUM_VALUES_END(TSkillMastery)
 
 // The hero-specialty record. DC public
 // ?akHeroSpecificAbilities@@3AAY0IA@$$CBUTHeroSpecificAbility@@A - a

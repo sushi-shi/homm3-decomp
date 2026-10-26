@@ -2810,7 +2810,7 @@ VA(0x005a4970, 0x249)
 DC_ADDRESS(0x153b60, 0x1cc)
 MAC_ADDRESS(0x195424, 0x21c)  // order-map+arity
 void combatManager::areaEffect(long targetCell, SpellID spellType,
-                               long mastery, long power)
+                               H3_ENUM_PARAM(TSkillMastery, long) mastery, long power)
 {
     hero* castingHero;
     unsigned char multipleTargets;

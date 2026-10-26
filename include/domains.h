@@ -33,6 +33,12 @@
 #define H3_ENUM_FORWARD(name) enum class name : int
 #define H3_ENUM_FORWARD_SPLIT(name, storage) enum class name : storage
 
+// A value catalog: an ordinal or arithmetic domain whose values are read as
+// numbers (mastery levels, counts). It stays unscoped, so it decays to int,
+// but its fixed type still rejects integers and other domains flowing in.
+#define H3_ENUM_VALUES_BEGIN(name) enum name : int {
+#define H3_ENUM_VALUES_END(name) };
+
 #define H3_ENUM_STORAGE(name, storage) H3EnumStorage<name, storage>
 #define H3_ENUM_STORAGE_STEPPED(name, storage) H3SteppedEnumStorage<name, storage>
 #define H3_ENUM_PARAM(name, storage) name
@@ -313,6 +319,8 @@ template<class Enum, class Storage> constexpr Enum H3DecodeEnum(Storage value)
 #define H3_ENUM_END_SPLIT(name, storage) };
 #define H3_ENUM_FORWARD(name) enum name
 #define H3_ENUM_FORWARD_SPLIT(name, storage) enum name
+#define H3_ENUM_VALUES_BEGIN(name) enum name {
+#define H3_ENUM_VALUES_END(name) };
 
 #define H3_ENUM_STORAGE(name, storage) storage
 #define H3_ENUM_STORAGE_STEPPED(name, storage) storage

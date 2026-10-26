@@ -1541,7 +1541,7 @@ public:
     // damage the ones that take it. The DC prototype (spells.cpp:3324)
     // supplies the four parameter names; `mastery` is spelled long here
     // for the reason mark_area_effect's is.
-    void areaEffect(long targetCell, SpellID spellType, long mastery,
+    void areaEffect(long targetCell, SpellID spellType, H3_ENUM_PARAM(TSkillMastery, long) mastery,
                     long power);  // 0x5a4970
     // 0x5a4bc0, the field-wide burn. The DC prototype (spells.cpp:3389)
     // supplies both parameter names; `level` is what indexes the spell's

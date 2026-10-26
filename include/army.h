@@ -898,7 +898,7 @@ public:
     unsigned long strength();
     bool isActive() const;
     inline void checkLuck();
-    void setSpellInfluence(int spell, int power, int mastery,
+    void setSpellInfluence(int spell, int power, H3_ENUM_PARAM(TSkillMastery, int) mastery,
                            const hero* castingHero);
     void cancelIndividualSpell(int spell);
     void cancelAllSpells();

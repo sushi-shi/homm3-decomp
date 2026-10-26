@@ -3037,7 +3037,7 @@ void army::cancelAllSpells()
 VA(0x004448f0, 0xB99)
 DC_ADDRESS(0x0499e8, 0x900)
 MAC_ADDRESS(0x050c8c, 0x7a8)  // anchor-global
-void army::setSpellInfluence(int spell, int power, int mastery,
+void army::setSpellInfluence(int spell, int power, H3_ENUM_PARAM(TSkillMastery, int) mastery,
                              const hero* castingHero)
 {
     long rounds;
