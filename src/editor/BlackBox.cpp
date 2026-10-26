@@ -55,13 +55,13 @@ VA(0x0040679e, 0x12)
 TSecondarySkillRecord::TSecondarySkillRecord(TSecondarySkill type, TSkillMastery mastery)
     : _m_type(type), _m_mastery(mastery)
 {
-    assert(type >= 0 && type < kNumSecSkills);
+    assert(type >= 0 && type < H3_IDX(kNumSecSkills));
     assert(mastery >= eMasteryBasic && mastery < eMasteryBasic + kNumMasteries);
 }
 
 void TSecondarySkillRecord::setType(TSecondarySkill newType)
 {
-    assert(newType >= 0 && newType < kNumSecSkills);
+    assert(newType >= 0 && newType < H3_IDX(kNumSecSkills));
     _m_type = newType;
 }
 

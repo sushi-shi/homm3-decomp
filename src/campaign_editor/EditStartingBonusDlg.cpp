@@ -941,7 +941,7 @@ BOOL TStartingBonusSecondarySkillDlg::OnInitDialog()
     GetDlgItem(IDC_SECONDARY_SKILL_STATIC)->SetWindowText(SEditStartingBonusDlgText::kSecondarySkillStaticStr);
     GetDlgItem(IDC_MASTERY_STATIC)->SetWindowText(SEditStartingBonusDlgText::kMasteryStaticStr);
     TStartingHeroBonusDlg::OnInitDialog();
-    for (unsigned int skill = 0; skill < kNumSecSkills; skill++)
+    for (unsigned int skill = 0; skill < H3_IDX(kNumSecSkills); skill++)
         _m_skillCombo.SetItemData(_m_skillCombo.AddString(akSSkillTraits[skill].m_name), skill);
     _m_skillCombo.SetCurSel(0);
     for (unsigned int mastery = eMasteryBasic; mastery < kNumMasteries; mastery++)

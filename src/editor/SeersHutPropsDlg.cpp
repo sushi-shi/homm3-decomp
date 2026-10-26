@@ -92,7 +92,7 @@ VA(0x004b76a9, 0x33)
 void TGetRewardDescFunc::visit(const TSeersHut::TRewardSecondarySkill& reward)
 {
     _m_desc.Format("%s %s", THero::s_akSkillMasteryTraits[reward.getMastery() - eMasteryBasic].m_name,
-                   THero::s_akSecondarySkillTraits[reward.getSkill()].m_name);
+                   H3_AT(THero::s_akSecondarySkillTraits, reward.getSkill()).m_name);
 }
 
 VA(0x004b76dc, 0x1e)

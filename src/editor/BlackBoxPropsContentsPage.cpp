@@ -183,8 +183,8 @@ private:
 class TEditSecondarySkillDlg : public CDialog {
 public:
     // A new skill: the first available one, basic.
-    TEditSecondarySkillDlg(CWnd* pParent, const std::bitset<kNumSecSkills>& abAvailableSkill);
-    TEditSecondarySkillDlg(CWnd* pParent, const std::bitset<kNumSecSkills>& abAvailableSkill,
+    TEditSecondarySkillDlg(CWnd* pParent, const std::bitset<H3_IDX(kNumSecSkills)>& abAvailableSkill);
+    TEditSecondarySkillDlg(CWnd* pParent, const std::bitset<H3_IDX(kNumSecSkills)>& abAvailableSkill,
                            const TSecondarySkillRecord& record);
 
     const TSecondarySkillRecord& getRecord() const { return _m_record; }
@@ -200,7 +200,7 @@ protected:
 
 private:
     TSecondarySkillRecord _m_record;
-    std::bitset<kNumSecSkills> _m_abAvailableSkill;
+    std::bitset<H3_IDX(kNumSecSkills)> _m_abAvailableSkill;
     CComboBox _m_typeCombo;
     int _m_masteryIndex;
 };
@@ -231,7 +231,7 @@ protected:
     DECLARE_MESSAGE_MAP()
 
 private:
-    std::bitset<kNumSecSkills> _getAvailableSkills() const;
+    std::bitset<H3_IDX(kNumSecSkills)> _getAvailableSkills() const;
 
     const TBlackBox* _m_pBlackBox;
     bool _m_bModified;
@@ -691,10 +691,10 @@ BEGIN_MESSAGE_MAP(TEditSecondarySkillDlg, CDialog)
     ON_WM_CREATE()
 END_MESSAGE_MAP()
 
-static TSecondarySkillRecord getFirstAvailableSkill(const std::bitset<kNumSecSkills>& abAvailableSkill);
+static TSecondarySkillRecord getFirstAvailableSkill(const std::bitset<H3_IDX(kNumSecSkills)>& abAvailableSkill);
 
 VA(0x0040886d, 0x6c)
-TEditSecondarySkillDlg::TEditSecondarySkillDlg(CWnd* pParent, const std::bitset<kNumSecSkills>& abAvailableSkill)
+TEditSecondarySkillDlg::TEditSecondarySkillDlg(CWnd* pParent, const std::bitset<H3_IDX(kNumSecSkills)>& abAvailableSkill)
     : CDialog(TEditSecondarySkillDlg::IDD, pParent),
       _m_record(getFirstAvailableSkill(abAvailableSkill)),
       _m_abAvailableSkill(abAvailableSkill)
@@ -705,17 +705,17 @@ VA_COMPGEN(0x004088d9, 0x1c, SCALAR_DELETING_DTOR, TEditSecondarySkillDlg)
 VA_COMPGEN(0x004088f5, 0x35, IMPLICIT_DTOR, TEditSecondarySkillDlg)
 
 VA(0x0040892a, 0x74)
-TEditSecondarySkillDlg::TEditSecondarySkillDlg(CWnd* pParent, const std::bitset<kNumSecSkills>& abAvailableSkill,
+TEditSecondarySkillDlg::TEditSecondarySkillDlg(CWnd* pParent, const std::bitset<H3_IDX(kNumSecSkills)>& abAvailableSkill,
                                                const TSecondarySkillRecord& record)
     : CDialog(TEditSecondarySkillDlg::IDD, pParent),
       _m_record(record),
       _m_abAvailableSkill(abAvailableSkill)
 {
-    _m_abAvailableSkill[record.getType()] = true;
+    H3_AT(_m_abAvailableSkill, record.getType()) = true;
 }
 
 VA(0x0040899e, 0x4d)
-static TSecondarySkillRecord getFirstAvailableSkill(const std::bitset<kNumSecSkills>& abAvailableSkill)
+static TSecondarySkillRecord getFirstAvailableSkill(const std::bitset<H3_IDX(kNumSecSkills)>& abAvailableSkill)
 {
     unsigned int skill = 0;
     while (!abAvailableSkill.test(skill))
@@ -752,12 +752,12 @@ BOOL TEditSecondarySkillDlg::OnInitDialog()
     GetDlgItem(IDC_EXPERT_RADIO)->SetWindowText(SEditSecondarySkillDlgText::kExpertRadioStr);
     _m_masteryIndex = _m_record.getMastery() - eMasteryBasic;
     CDialog::OnInitDialog();
-    for (unsigned int skill = 0; skill < kNumSecSkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumSecSkills); skill++) {
         if (_m_abAvailableSkill[skill])
             _m_typeCombo.SetItemData(_m_typeCombo.AddString(THero::s_akSecondarySkillTraits[skill].m_name), skill);
     }
     int index = 0;
-    while (_m_typeCombo.GetItemData(index) != _m_record.getType())
+    while (_m_typeCombo.GetItemData(index) != H3_IDX(_m_record.getType()))
         index++;
     _m_typeCombo.SetCurSel(index);
     return TRUE;
@@ -786,7 +786,7 @@ END_MESSAGE_MAP()
 VA(0x00408bfb, 0x7e)
 static CString getSecondarySkillText(TSecondarySkill skill, TSkillMastery mastery)
 {
-    return CString(THero::s_akSecondarySkillTraits[skill].m_name) + "\t"
+    return CString(H3_AT(THero::s_akSecondarySkillTraits, skill).m_name) + "\t"
            + THero::s_akSkillMasteryTraits[mastery - eMasteryBasic].m_name;
 }
 
@@ -802,9 +802,9 @@ VA_COMPGEN(0x00408d32, 0x1c, SCALAR_DELETING_DTOR, TSecondarySkillsDlg)
 VA_COMPGEN(0x00408d4e, 0x80, IMPLICIT_DTOR, TSecondarySkillsDlg)
 
 VA(0x00408dce, 0x6b)
-std::bitset<kNumSecSkills> TSecondarySkillsDlg::_getAvailableSkills() const
+std::bitset<H3_IDX(kNumSecSkills)> TSecondarySkillsDlg::_getAvailableSkills() const
 {
-    std::bitset<kNumSecSkills> abAvailableSkill;
+    std::bitset<H3_IDX(kNumSecSkills)> abAvailableSkill;
     abAvailableSkill.set();
     int count = _m_list.GetCount();
     for (int index = 0; index < count; index++)

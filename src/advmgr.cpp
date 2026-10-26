@@ -3441,15 +3441,15 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
         return;
 
     if (cell->playerKnowsCell(g_netLocalGamePos)) {
-        int skill = cell->getWitchSkill();
+        TSecondarySkill skill = cell->getWitchSkill();
         strcat(buffer, separator1);
         char tempText[50];
         sprintf(tempText,
                 g_generalText->GetText(GENERAL_TEXT_WITCH_SKILL_FORMAT),
-                akSSkillTraits[skill].m_name);
+                H3_AT(akSSkillTraits, skill).m_name);
         strcat(buffer, tempText);
         if (currentHero
-            && currentHero->getSecondarySkill(TSecondarySkill(skill))) {
+            && currentHero->getSecondarySkill(skill)) {
             strcat(buffer, separator2);
             strcat(buffer, g_generalText->GetText(
                 GENERAL_TEXT_HERO_KNOWS_WITCH_SKILL));

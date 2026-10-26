@@ -679,9 +679,9 @@ void game::calculateProduction()
         long (&production)[NUM_RESOURCES] =
             m_players[currHero.m_owner].m_ai.m_turnProductionResource;
         if (g_heroSpecificAbilities[i].m_type == eHeroAbilityResource) {
-            if (g_heroSpecificAbilities[i].m_skill >= WOOD
-                && g_heroSpecificAbilities[i].m_skill <= GEMS)
-                ++production[g_heroSpecificAbilities[i].m_skill];
+            if (g_heroSpecificAbilities[i].m_subject >= WOOD
+                && g_heroSpecificAbilities[i].m_subject <= GEMS)
+                ++production[g_heroSpecificAbilities[i].m_subject];
         }
     }
 
@@ -4168,11 +4168,11 @@ MAC_ADDRESS(0x0d6b44, 0x13c)  // dc-order + member receiver
 void game::randomizeUniversity(NewmapCell* cell)
 {
     type_university university;
-    std::bitset<kNumSecSkills> availableSkills;
+    std::bitset<H3_IDX(kNumSecSkills)> availableSkills;
     long choice;
     long i;
     TSecondarySkill skill;
-    for (i = 0; i < kNumSecSkills; ++i)
+    for (i = 0; i < H3_IDX(kNumSecSkills); ++i)
         availableSkills[i] = !g_game->m_ssDisabled[i];
 
     int availableCount = availableSkills.count();
@@ -4180,7 +4180,7 @@ void game::randomizeUniversity(NewmapCell* cell)
         choice = random(0, availableCount - 1);
         skill = eSecSkillPathfinding;
         for (;;) {
-            if (!availableSkills[skill]) {
+            if (!H3_AT(availableSkills, skill)) {
                 {
                     skill = TSecondarySkill(skill + 1);
                 }
@@ -4195,7 +4195,7 @@ void game::randomizeUniversity(NewmapCell* cell)
         }
 
         university.m_skills[i] = skill;
-        availableSkills[skill] = false;
+        H3_AT(availableSkills, skill) = false;
         --availableCount;
     }
 
@@ -4213,13 +4213,13 @@ DC_ADDRESS(0x0ac168, 0x3a)
 MAC_ADDRESS(0x0d6c80, 0x16c)
 static void randomizeWitchHut(NewmapCell* cell)
 {
-    std::bitset<kNumSecSkills> possibleSkills(cell->m_extraInfo);
+    std::bitset<H3_IDX(kNumSecSkills)> possibleSkills(cell->m_extraInfo);
     cell->m_extraInfo = 0;
     if (possibleSkills.none())
-        possibleSkills = ~std::bitset<kNumSecSkills>();
+        possibleSkills = ~std::bitset<H3_IDX(kNumSecSkills)>();
 
     int i;
-    for (i = 0; i < kNumSecSkills; ++i)
+    for (i = 0; i < H3_IDX(kNumSecSkills); ++i)
         possibleSkills[i] = possibleSkills[i]
             && !g_game->m_ssDisabled[i];
 
@@ -4229,7 +4229,7 @@ static void randomizeWitchHut(NewmapCell* cell)
         int choice = random(1, count);
         for (skill = eSecSkillPathfinding; skill < kNumSecSkills;
              skill = TSecondarySkill(skill + 1)) {
-            if (possibleSkills[skill] && --choice < 1)
+            if (H3_AT(possibleSkills, skill) && --choice < 1)
                 break;
         }
         cell->setWitchSkill(skill);
@@ -5059,7 +5059,7 @@ bool game::loadMap(TAbstractFile* mapFile)
                 || (akSpellTraits[spell].m_flags & 0x2000) != 0;
         }
 
-        std::bitset<kNumSecSkills> serializedSkills = readPackedBits<kNumSecSkills>(mapFile);
+        std::bitset<H3_IDX(kNumSecSkills)> serializedSkills = readPackedBits<H3_IDX(kNumSecSkills)>(mapFile);
         for (int skill = 0; skill < sizeof(m_ssDisabled); ++skill)
             m_ssDisabled[skill] = serializedSkills[skill];
     } else {

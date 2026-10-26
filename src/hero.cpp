@@ -194,7 +194,7 @@ static short g_experienceForLevel[12] = {
 // - hence NOT const, the same reason that table is not. Read only through
 // get_skill_award's campaign arm, where it REPLACES the scenario's own
 // gpGame->field_4e658 row. Values read from the pinned image.
-DATA(0x00679ca0) static char g_campaignDisabledSkills[kNumSecSkills] = {
+DATA(0x00679ca0) static char g_campaignDisabledSkills[H3_IDX(kNumSecSkills)] = {
     0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0,
     1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0
 };
@@ -213,49 +213,49 @@ DATA(0x00679cbc) static TSecondarySkill g_magicSchools[kNumSpellSchools] = {
 // what fixes the 156-row extent (0x679c80 - 0x678420 = 156 * 40).
 DATA(0x00678420)
 THeroSpecificAbility g_heroSpecificAbilitiesImp[game::HERO_COUNT] = {
-    { eHeroAbilitySecondarySkill, { eSecSkillArchery } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillArchery) } },
     { eHeroAbilityCreature, { 2 } },
     { eHeroAbilityCreature, { CREATURE_GRIFFIN } },
-    { eHeroAbilitySecondarySkill, { eSecSkillNavigation } },
-    { eHeroAbilitySecondarySkill, { eSecSkillEstates } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillNavigation) } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillEstates) } },
     { eHeroAbilityCreature, { 6 } },
     { eHeroAbilityCreature, { CREATURE_BALLISTA } },
     { eHeroAbilityCreature, { CREATURE_CAVALIER } },
-    { eHeroAbilitySecondarySkill, { eSecSkillFirstAid } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillFirstAid) } },
     { eHeroAbilitySpell, { 41 } },
     { eHeroAbilitySpell, { 45 } },
     { eHeroAbilitySpell, { 20 } },
     { eHeroAbilityCreature, { 8 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillEagleEye) } },
     { eHeroAbilitySpell, { 48 } },
     { eHeroAbilityResource, { 6 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillDefense } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillDefense) } },
     { eHeroAbilityCreature, { CREATURE_DWARF } },
     { eHeroAbilityResource, { 6 } },
     { eHeroAbilityCreature, { CREATURE_DENDROID_GUARD } },
-    { eHeroAbilitySecondarySkill, { eSecSkillMagicResistance } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillMagicResistance) } },
     { eHeroAbilityCreature, { CREATURE_WOOD_ELF } },
     { eHeroAbilityCreature, { 24 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillLogistics } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillLogistics) } },
     { eHeroAbilitySpell, { 55 } },
     { eHeroAbilitySpell, { 37 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillIntelligence } },
-    { eHeroAbilitySecondarySkill, { eSecSkillFirstAid } },
-    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillIntelligence) } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillFirstAid) } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillEagleEye) } },
     { eHeroAbilitySpell, { 51 } },
     { eHeroAbilitySpell, { 16 } },
     { eHeroAbilityCreature, { CREATURE_PEGASUS } },
     { eHeroAbilityCreature, { CREATURE_STONE_GARGOYLE } },
     { eHeroAbilityCreature, { 36 } },
     { eHeroAbilityCreature, { CREATURE_STONE_GOLEM } },
-    { eHeroAbilitySecondarySkill, { eSecSkillDefense } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillDefense) } },
     { eHeroAbilityCreature, { CREATURE_BALLISTA } },
     { eHeroAbilityCreature, { CREATURE_NAGA_SENTINEL } },
     { eHeroAbilityResource, { 1 } },
     { eHeroAbilityCreature, { 36 } },
     { eHeroAbilitySpell, { 60 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillMysticism } },
-    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillMysticism) } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillEagleEye) } },
     { eHeroAbilitySpell, { 51 } },
     { eHeroAbilityCreature, { CREATURE_MAGE } },
     { eHeroAbilitySpell, { 19 } },
@@ -269,43 +269,43 @@ THeroSpecificAbility g_heroSpecificAbilitiesImp[game::HERO_COUNT] = {
     { eHeroAbilityCreature, { 44 } },
     { eHeroAbilityCreature, { CREATURE_BALLISTA } },
     { eHeroAbilityCreature, { 50 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillIntelligence } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillIntelligence) } },
     { eHeroAbilitySpell, { 22 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillMysticism } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillMysticism) } },
     { eHeroAbilitySpell, { 45 } },
     { eHeroAbilityResource, { 3 } },
     { eHeroAbilitySpell, { 43 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillSorcery } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillSorcery) } },
     { eHeroAbilitySpell, { 21 } },
     { eHeroAbilityCreature, { CREATURE_WALKING_DEAD } },
     { eHeroAbilityCreature, { CREATURE_VAMPIRE } },
     { eHeroAbilityCreature, { CREATURE_LICH } },
     { eHeroAbilityCreature, { CREATURE_WIGHT } },
     { eHeroAbilityCreature, { CREATURE_BLACK_KNIGHT } },
-    { eHeroAbilitySecondarySkill, { eSecSkillNecromancy } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillNecromancy) } },
     { eHeroAbilityResource, { 6 } },
     { eHeroAbilityCreature, { CREATURE_SKELETON } },
     { eHeroAbilitySpell, { 24 } },
     { eHeroAbilitySpell, { 23 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillSorcery } },
-    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillSorcery) } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillEagleEye) } },
     { eHeroAbilitySpell, { 39 } },
     { eHeroAbilitySpell, { 46 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillNecromancy } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillNecromancy) } },
     { eHeroAbilityResource, { 6 } },
     { eHeroAbilityCreature, { 72 } },
     { eHeroAbilityCreature, { CREATURE_BALLISTA } },
     { eHeroAbilityCreature, { CREATURE_MINOTAUR } },
     { eHeroAbilityCreature, { 74 } },
     { eHeroAbilityResource, { 6 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillLogistics } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillLogistics) } },
     { eHeroAbilityCreature, { 80 } },
     { eHeroAbilityCreature, { CREATURE_TROGLODYTE } },
     { eHeroAbilitySpell, { 38 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillMysticism } },
-    { eHeroAbilitySecondarySkill, { eSecSkillSorcery } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillMysticism) } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillSorcery) } },
     { eHeroAbilitySpell, { 38 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillEagleEye) } },
     { eHeroAbilitySpell, { 23 } },
     { eHeroAbilityResource, { 4 } },
     { eHeroAbilitySpell, { 46 } },
@@ -315,32 +315,32 @@ THeroSpecificAbility g_heroSpecificAbilitiesImp[game::HERO_COUNT] = {
     { eHeroAbilityCreature, { 92 } },
     { eHeroAbilityCreature, { 84 } },
     { eHeroAbilityCreature, { 90 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillOffense } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillOffense) } },
     { eHeroAbilityCreature, { 86 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillSorcery } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillSorcery) } },
     { eHeroAbilityCreature, { 90 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillLogistics } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillLogistics) } },
     { eHeroAbilitySpell, { 53 } },
     { eHeroAbilitySpell, { 44 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillOffense } },
-    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillOffense) } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillEagleEye) } },
     { eHeroAbilityResource, { 5 } },
     { eHeroAbilityCreature, { CREATURE_BASILISK } },
     { eHeroAbilityCreature, { 98 } },
     { eHeroAbilityCreature, { 100 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillDefense } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillDefense) } },
     { eHeroAbilityCreature, { 102 } },
     { eHeroAbilityCreature, { 104 } },
     { eHeroAbilityCreature, { CREATURE_BALLISTA } },
     { eHeroAbilityCreature, { CREATURE_WYVERN } },
     { eHeroAbilitySpell, { 45 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillMysticism } },
-    { eHeroAbilitySecondarySkill, { eSecSkillNavigation } },
-    { eHeroAbilitySecondarySkill, { eSecSkillFirstAid } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillMysticism) } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillNavigation) } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillFirstAid) } },
     { eHeroAbilitySpell, { 46 } },
-    { eHeroAbilitySecondarySkill, { eSecSkillSorcery } },
-    { eHeroAbilitySecondarySkill, { eSecSkillIntelligence } },
-    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillSorcery) } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillIntelligence) } },
+    { eHeroAbilitySecondarySkill, { H3_IDX(eSecSkillEagleEye) } },
     { eHeroAbilityCreatureUniversal, { CREATURE_PSYCHIC_ELEMENTAL }, 3, 3, 0 },
     { eHeroAbilityCreatureUniversal, { CREATURE_EARTH_ELEMENTAL }, 2, 1, 5 },
     { eHeroAbilityCreatureUniversal, { CREATURE_FIRE_ELEMENTAL }, 1, 2, 2 },
@@ -965,11 +965,11 @@ void hero::initialize(short index)
     }
 
     if (akHeroTraits[index].m_1stSkill != eSecSkillNone) {
-        giveSS(akHeroTraits[index].m_1stSkill,
+        giveSS(H3_IDX(akHeroTraits[index].m_1stSkill),
                akHeroTraits[index].m_1stSkillLevel);
     }
     if (akHeroTraits[index].m_2ndSkill != eSecSkillNone) {
-        giveSS(akHeroTraits[index].m_2ndSkill,
+        giveSS(H3_IDX(akHeroTraits[index].m_2ndSkill),
                akHeroTraits[index].m_2ndSkillLevel);
     }
     if (akHeroTraits[index].m_startsWithSpellbook) {
@@ -1983,25 +1983,25 @@ void hero::checkLevel()
                 } else if (skills[1] == eSecSkillNone) {
                     TLevelUpWindow window(
                         this, stat,
-                        skills[0] * 3 + 3 + m_skillLevel[skills[0]], -1);
+                        H3_IDX(skills[0]) * 3 + 3 + H3_AT(m_skillLevel, skills[0]), -1);
                     if (g_game->isMultiplayer() &&
                         g_turnDuration.isExpired())
                         g_dialogDeadline = 15000;
                     window.doModal(0);
-                    giveSS(skills[0], 1);
+                    giveSS(H3_IDX(skills[0]), 1);
                 } else {
                     sprintf(text,
                             (*g_generalText)[GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT],
-                            g_secondarySkillLevels[m_skillLevel[skills[0]]],
-                            akSSkillTraits[skills[0]].m_name,
-                            g_secondarySkillLevels[m_skillLevel[skills[1]]],
-                            akSSkillTraits[skills[1]].m_name);
+                            g_secondarySkillLevels[H3_AT(m_skillLevel, skills[0])],
+                            H3_AT(akSSkillTraits, skills[0]).m_name,
+                            g_secondarySkillLevels[H3_AT(m_skillLevel, skills[1])],
+                            H3_AT(akSSkillTraits, skills[1]).m_name);
                     strcat(g_text, text);
                     {
                         TLevelUpWindow window(
                             this, stat,
-                            skills[0] * 3 + 3 + m_skillLevel[skills[0]],
-                            skills[1] * 3 + 3 + m_skillLevel[skills[1]]);
+                            H3_IDX(skills[0]) * 3 + 3 + H3_AT(m_skillLevel, skills[0]),
+                            H3_IDX(skills[1]) * 3 + 3 + H3_AT(m_skillLevel, skills[1]));
                         if (g_game->isMultiplayer() &&
                             g_turnDuration.isExpired())
                             g_dialogDeadline = 15000;
@@ -2009,24 +2009,24 @@ void hero::checkLevel()
                     }
                     if (g_windowManager->m_dialogReturn ==
                         DIALOG_RETURN_TIMEOUT) {
-                        giveSS(aiChooseSecondarySkill(
+                        giveSS(H3_IDX(aiChooseSecondarySkill(
                                    this, skills[0], skills[1],
-                                   !g_inSetup && m_owner >= 0), 1);
+                                   !g_inSetup && m_owner >= 0)), 1);
                     } else if (g_windowManager->m_dialogReturn ==
                                TLevelUpWindow::SKILLICON_1_ID) {
-                        giveSS(skills[0], 1);
+                        giveSS(H3_IDX(skills[0]), 1);
                     } else if (g_windowManager->m_dialogReturn ==
                                TLevelUpWindow::SKILLICON_2_ID) {
-                        giveSS(skills[1], 1);
+                        giveSS(H3_IDX(skills[1]), 1);
                     }
                 }
             } else if (skills[0] != eSecSkillNone) {
                 if (skills[1] != eSecSkillNone)
-                    giveSS(aiChooseSecondarySkill(
+                    giveSS(H3_IDX(aiChooseSecondarySkill(
                                this, skills[0], skills[1],
-                               !g_inSetup && m_owner >= 0), 1);
+                               !g_inSetup && m_owner >= 0)), 1);
                 else
-                    giveSS(skills[0], 1);
+                    giveSS(H3_IDX(skills[0]), 1);
             }
         }
         m_level = newLevel;
@@ -2064,7 +2064,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
     if (currentHero->isLevelUpCampaignOverride())
         skillDisabled = g_campaignDisabledSkills;
 
-    if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
+    if (currentHero->m_skillCount >= H3_IDX(kNumSecSkillsPerHero))
         minLevel = eMasteryBasic;
     if (minLevel >= maxLevel)
         return eSecSkillNone;
@@ -2093,7 +2093,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
         currentHero->getSecondarySkill(eSecSkillWisdom) < maxLevel &&
         currentHero->getSecondarySkill(eSecSkillWisdom) >= minLevel &&
         excluded != eSecSkillWisdom &&
-        !skillDisabled[eSecSkillWisdom])
+        !H3_AT(skillDisabled, eSecSkillWisdom))
         return eSecSkillWisdom;
 
     int i;
@@ -2108,11 +2108,11 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
             TSecondarySkill school = g_magicSchools[i];
             if (currentHero->getSecondarySkill(school) < maxLevel &&
                 currentHero->getSecondarySkill(school) >= minLevel &&
-                !skillDisabled[school]) {
+                !H3_AT(skillDisabled, school)) {
                 if (currentHero->getSecondarySkill(school) > 0)
                     schoolTotal++;
                 else
-                    schoolTotal += classTraits.m_gainSecondarySkillChance[school];
+                    schoolTotal += H3_AT(classTraits.m_gainSecondarySkillChance, school);
             }
         }
         if (schoolTotal > 0) {
@@ -2121,12 +2121,12 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
                 TSecondarySkill school = g_magicSchools[i];
                 if (currentHero->getSecondarySkill(school) < maxLevel &&
                     currentHero->getSecondarySkill(school) >= minLevel &&
-                    !skillDisabled[school]) {
+                    !H3_AT(skillDisabled, school)) {
                     if (currentHero->getSecondarySkill(school) > 0)
                         schoolRoll--;
                     else
                         schoolRoll -=
-                            classTraits.m_gainSecondarySkillChance[school];
+                            H3_AT(classTraits.m_gainSecondarySkillChance, school);
                     if (schoolRoll <= 0)
                         return school;
                 }
@@ -2135,10 +2135,10 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
     }
 
     int total = 0;
-    for (i = 0; i < kNumSecSkills; i++) {
+    for (i = 0; i < H3_IDX(kNumSecSkills); i++) {
         if (currentHero->getSecondarySkill(TSecondarySkill(i)) < maxLevel &&
             currentHero->getSecondarySkill(TSecondarySkill(i)) >= minLevel &&
-            i != excluded) {
+            i != H3_IDX(excluded)) {
             int chance;
             if (!skillDisabled[i])
                 chance = classTraits.m_gainSecondarySkillChance[i];
@@ -2154,10 +2154,10 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
         return eSecSkillNone;
 
     int roll = random(1, total);
-    for (i = 0; i < kNumSecSkills; i++) {
+    for (i = 0; i < H3_IDX(kNumSecSkills); i++) {
         if (currentHero->getSecondarySkill(TSecondarySkill(i)) < maxLevel &&
             currentHero->getSecondarySkill(TSecondarySkill(i)) >= minLevel &&
-            i != excluded) {
+            i != H3_IDX(excluded)) {
             int chance;
             if (!skillDisabled[i])
                 chance = classTraits.m_gainSecondarySkillChance[i];
@@ -2895,15 +2895,15 @@ std::string hero::getMoraleDescription() const
 
     // DC hero.cpp:2962/2968/2974 reload the leadership byte directly (no
     // Hero.h GetSecondarySkill row).
-    if (m_skillLevel[eSecSkillLeadership] == eMasteryBasic) {
+    if (H3_AT(m_skillLevel, eSecSkillLeadership) == eMasteryBasic) {
         result += g_moraleInfo[20];
         morale++;
     }
-    if (m_skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
+    if (H3_AT(m_skillLevel, eSecSkillLeadership) == eMasteryAdvanced) {
         result += g_moraleInfo[21];
         morale += 2;
     }
-    if (m_skillLevel[eSecSkillLeadership] == eMasteryExpert) {
+    if (H3_AT(m_skillLevel, eSecSkillLeadership) == eMasteryExpert) {
         result += g_moraleInfo[22];
         morale += 3;
     }
@@ -3025,15 +3025,15 @@ std::string hero::getLuckDescription() const
 
     // DC reads the luck byte directly (no Hero.h row), as in
     // getMoraleDescription.
-    if (m_skillLevel[eSecSkillLuck] == eMasteryBasic) {
+    if (H3_AT(m_skillLevel, eSecSkillLuck) == eMasteryBasic) {
         result += g_luckInfo[15];
         luck++;
     }
-    if (m_skillLevel[eSecSkillLuck] == eMasteryAdvanced) {
+    if (H3_AT(m_skillLevel, eSecSkillLuck) == eMasteryAdvanced) {
         result += g_luckInfo[16];
         luck += 2;
     }
-    if (m_skillLevel[eSecSkillLuck] == eMasteryExpert) {
+    if (H3_AT(m_skillLevel, eSecSkillLuck) == eMasteryExpert) {
         result += g_luckInfo[17];
         luck += 3;
     }
@@ -4363,7 +4363,7 @@ void THeroScreenWindow::setupHeroView()
         broadcastMessage(msg);
     }
 
-    if (g_currentHero->hasSecondarySkill(eSecSkillBattleTactics)) {
+    if (g_currentHero->hasSecondarySkill(H3_IDX(eSecSkillBattleTactics))) {
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x7e,
                          widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x7e,
@@ -4494,7 +4494,7 @@ int hero::takeSS(int whichSS, int numLevelsToTake)
         if (m_skillLevel[whichSS] < 0)
             m_skillLevel[whichSS] = 0;
         if (m_skillLevel[whichSS] == 0) {
-            for (int i = 0; i < kNumSecSkills; i++) {
+            for (int i = 0; i < H3_IDX(kNumSecSkills); i++) {
                 if (m_skillOrder[i] > m_skillOrder[whichSS])
                     m_skillOrder[i]--;
             }
@@ -4516,7 +4516,7 @@ int hero::giveSS(int whichSS, int numLevelsToGive)
     if (m_skillLevel[whichSS] > 0) {
         m_skillLevel[whichSS] += numLevelsToGive;
     } else {
-        if (m_skillCount < kNumSecSkillsPerHero) {
+        if (m_skillCount < H3_IDX(kNumSecSkillsPerHero)) {
             m_skillLevel[whichSS] = numLevelsToGive;
             m_skillOrder[whichSS] = m_skillCount + 1;
             m_skillCount++;
@@ -4565,7 +4565,7 @@ DC_ADDRESS(0x0d38b0, 0x28)
 MAC_ADDRESS(0x102fe0, 0x38)
 int hero::getNthSS(int which)
 {
-    for (int skill = 0; skill < kNumSecSkills; skill++) {
+    for (int skill = 0; skill < H3_IDX(kNumSecSkills); skill++) {
         if (m_skillOrder[skill] == which + 1)
             return skill;
     }
@@ -5219,8 +5219,8 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
             return 0;
     }
 
-    int luck = g_luckBonuses[m_skillLevel[eSecSkillLuck]];
-    if (m_skillLevel[eSecSkillLuck] > eMasteryNone) {
+    int luck = g_luckBonuses[H3_AT(m_skillLevel, eSecSkillLuck)];
+    if (H3_AT(m_skillLevel, eSecSkillLuck) > eMasteryNone) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill &&
             ability.m_skill == eSecSkillLuck)
@@ -5268,8 +5268,8 @@ int hero::getMorale(const hero* otherHero, bool onCursedGround,
     if (onCursedGround)
         return 0;
 
-    morale = g_leadershipBonuses[m_skillLevel[eSecSkillLeadership]];
-    if (m_skillLevel[eSecSkillLeadership] > eMasteryNone) {
+    morale = g_leadershipBonuses[H3_AT(m_skillLevel, eSecSkillLeadership)];
+    if (H3_AT(m_skillLevel, eSecSkillLeadership) > eMasteryNone) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill &&
             ability.m_skill == eSecSkillLeadership)
@@ -5326,8 +5326,8 @@ DC_ADDRESS(0x0d4390, 0x112)
 MAC_ADDRESS(0x104988, 0x280)
 float hero::getNecromancyFactor(unsigned char applyLimit) const
 {
-    float factor = g_necromancyFactors[m_skillLevel[eSecSkillNecromancy]];
-    if (m_skillLevel[eSecSkillNecromancy] > 0) {
+    float factor = g_necromancyFactors[H3_AT(m_skillLevel, eSecSkillNecromancy)];
+    if (H3_AT(m_skillLevel, eSecSkillNecromancy) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill &&
             ability.m_skill == eSecSkillNecromancy)
@@ -5366,8 +5366,8 @@ DC_ADDRESS(0x0d44a4, 0xbc)
 MAC_ADDRESS(0x104c08, 0x138)
 int hero::getMysticismBonus() const
 {
-    int bonus = g_mysticismBonuses[m_skillLevel[eSecSkillMysticism]];
-    if (m_skillLevel[eSecSkillMysticism] > 0) {
+    int bonus = g_mysticismBonuses[H3_AT(m_skillLevel, eSecSkillMysticism)];
+    if (H3_AT(m_skillLevel, eSecSkillMysticism) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillMysticism) {
             bonus = (m_level * 0.05f + 1.0f) * bonus;
@@ -5388,8 +5388,8 @@ DC_ADDRESS(0x0d4560, 0x78)
 MAC_ADDRESS(0x104d40, 0x11c)
 int hero::getVisibility() const
 {
-    int visibility = g_scoutingVisibility[m_skillLevel[eSecSkillScouting]];
-    if (m_skillLevel[eSecSkillScouting] > 0) {
+    int visibility = g_scoutingVisibility[H3_AT(m_skillLevel, eSecSkillScouting)];
+    if (H3_AT(m_skillLevel, eSecSkillScouting) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillScouting)
             visibility = (m_level * 0.05f + 1.0f) * visibility;
@@ -5406,8 +5406,8 @@ DC_ADDRESS(0x0d45d8, 0x8c)
 MAC_ADDRESS(0x104e5c, 0x114)
 float hero::getArcheryFactor() const
 {
-    float factor = g_archeryFactors[m_skillLevel[eSecSkillArchery]];
-    if (m_skillLevel[eSecSkillArchery] > 0) {
+    float factor = g_archeryFactors[H3_AT(m_skillLevel, eSecSkillArchery)];
+    if (H3_AT(m_skillLevel, eSecSkillArchery) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillArchery)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5426,8 +5426,8 @@ DC_ADDRESS(0x0d4664, 0x44)
 MAC_ADDRESS(0x104f70, 0x90)
 float hero::getOffenseFactor() const
 {
-    float factor = g_offenseFactors[m_skillLevel[eSecSkillOffense]];
-    if (m_skillLevel[eSecSkillOffense] > 0) {
+    float factor = g_offenseFactors[H3_AT(m_skillLevel, eSecSkillOffense)];
+    if (H3_AT(m_skillLevel, eSecSkillOffense) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillOffense)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5440,8 +5440,8 @@ DC_ADDRESS(0x0d46a8, 0x4e)
 MAC_ADDRESS(0x105000, 0xa8)
 float hero::getDefenseFactor() const
 {
-    float factor = g_defenseFactors[m_skillLevel[eSecSkillDefense]];
-    if (m_skillLevel[eSecSkillDefense] > 0) {
+    float factor = g_defenseFactors[H3_AT(m_skillLevel, eSecSkillDefense)];
+    if (H3_AT(m_skillLevel, eSecSkillDefense) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillDefense)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5456,8 +5456,8 @@ DC_ADDRESS(0x0d46f8, 0x6e)
 MAC_ADDRESS(0x1050a8, 0xf8)
 int hero::getEstatesBonus() const
 {
-    int bonus = g_estatesGold[m_skillLevel[eSecSkillEstates]];
-    if (m_skillLevel[eSecSkillEstates] > 0) {
+    int bonus = g_estatesGold[H3_AT(m_skillLevel, eSecSkillEstates)];
+    if (H3_AT(m_skillLevel, eSecSkillEstates) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill
             && ability.m_skill == eSecSkillEstates)
@@ -5475,8 +5475,8 @@ DC_ADDRESS(0x0d4768, 0xc4)
 MAC_ADDRESS(0x1051a0, 0x124)
 float hero::getEagleEyeChance() const
 {
-    float factor = g_eagleEyeFactors[m_skillLevel[eSecSkillEagleEye]];
-    if (m_skillLevel[eSecSkillEagleEye] > 0) {
+    float factor = g_eagleEyeFactors[H3_AT(m_skillLevel, eSecSkillEagleEye)];
+    if (H3_AT(m_skillLevel, eSecSkillEagleEye) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillEagleEye)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5497,8 +5497,8 @@ DC_ADDRESS(0x0d482c, 0x9a)
 MAC_ADDRESS(0x1052c4, 0x128)
 float hero::getSurrenderCostFactor() const
 {
-    float factor = g_diplomacyFactors[m_skillLevel[eSecSkillDiplomacy]];
-    if (m_skillLevel[eSecSkillDiplomacy] > 0) {
+    float factor = g_diplomacyFactors[H3_AT(m_skillLevel, eSecSkillDiplomacy)];
+    if (H3_AT(m_skillLevel, eSecSkillDiplomacy) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillDiplomacy)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5519,8 +5519,8 @@ DC_ADDRESS(0x0d48c8, 0x96)
 MAC_ADDRESS(0x1053ec, 0x128)
 float hero::getMagicResistanceFactor() const
 {
-    float factor = g_magicResistanceFactors[m_skillLevel[eSecSkillMagicResistance]];
-    if (m_skillLevel[eSecSkillMagicResistance] > 0) {
+    float factor = g_magicResistanceFactors[H3_AT(m_skillLevel, eSecSkillMagicResistance)];
+    if (H3_AT(m_skillLevel, eSecSkillMagicResistance) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillMagicResistance)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5541,8 +5541,8 @@ DC_ADDRESS(0x0d4960, 0x48)
 MAC_ADDRESS(0x105514, 0x98)
 float hero::getExperienceBonusFactor() const
 {
-    float factor = g_learningFactors[m_skillLevel[eSecSkillLearning]];
-    if (m_skillLevel[eSecSkillLearning] > 0) {
+    float factor = g_learningFactors[H3_AT(m_skillLevel, eSecSkillLearning)];
+    if (H3_AT(m_skillLevel, eSecSkillLearning) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillLearning)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5603,8 +5603,8 @@ DC_ADDRESS(0x0d4a88, 0x80)
 MAC_ADDRESS(0x105768, 0x98)
 float hero::getIntelligenceFactor() const
 {
-    float factor = g_intelligenceFactors[m_skillLevel[eSecSkillIntelligence]];
-    if (m_skillLevel[eSecSkillIntelligence] > 0) {
+    float factor = g_intelligenceFactors[H3_AT(m_skillLevel, eSecSkillIntelligence)];
+    if (H3_AT(m_skillLevel, eSecSkillIntelligence) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillIntelligence)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5617,8 +5617,8 @@ DC_ADDRESS(0x0d4b08, 0x48)
 MAC_ADDRESS(0x105800, 0x98)
 float hero::getFirstAidFactor() const
 {
-    float factor = g_firstAidFactors[m_skillLevel[eSecSkillFirstAid]];
-    if (m_skillLevel[eSecSkillFirstAid] > 0) {
+    float factor = g_firstAidFactors[H3_AT(m_skillLevel, eSecSkillFirstAid)];
+    if (H3_AT(m_skillLevel, eSecSkillFirstAid) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillFirstAid)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5790,20 +5790,20 @@ TSkillMastery hero::getSpellSchoolLevel(TSpellSchool schoolMask,
     } else {
         level = eMasteryNone;
         if (schoolMask & eSchoolAir) {
-            if (m_skillLevel[eSecSkillSchoolOfAirMagic] > level)
-                level = TSkillMastery(m_skillLevel[eSecSkillSchoolOfAirMagic]);
+            if (H3_AT(m_skillLevel, eSecSkillSchoolOfAirMagic) > level)
+                level = TSkillMastery(H3_AT(m_skillLevel, eSecSkillSchoolOfAirMagic));
         }
         if (schoolMask & eSchoolFire) {
-            if (m_skillLevel[eSecSkillSchoolOfFireMagic] > level)
-                level = TSkillMastery(m_skillLevel[eSecSkillSchoolOfFireMagic]);
+            if (H3_AT(m_skillLevel, eSecSkillSchoolOfFireMagic) > level)
+                level = TSkillMastery(H3_AT(m_skillLevel, eSecSkillSchoolOfFireMagic));
         }
         if (schoolMask & eSchoolEarth) {
-            if (m_skillLevel[eSecSkillSchoolOfEarthMagic] > level)
-                level = TSkillMastery(m_skillLevel[eSecSkillSchoolOfEarthMagic]);
+            if (H3_AT(m_skillLevel, eSecSkillSchoolOfEarthMagic) > level)
+                level = TSkillMastery(H3_AT(m_skillLevel, eSecSkillSchoolOfEarthMagic));
         }
         if (schoolMask & eSchoolWater) {
-            if (m_skillLevel[eSecSkillSchoolOfWaterMagic] > level)
-                level = TSkillMastery(m_skillLevel[eSecSkillSchoolOfWaterMagic]);
+            if (H3_AT(m_skillLevel, eSecSkillSchoolOfWaterMagic) > level)
+                level = TSkillMastery(H3_AT(m_skillLevel, eSecSkillSchoolOfWaterMagic));
         }
     }
     return level;
@@ -5818,23 +5818,23 @@ TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
     int bestLevel = -1;
     TSpellSchool bestSchool;
     if ((schoolMask & eSchoolAir)
-        && m_skillLevel[eSecSkillSchoolOfAirMagic] > bestLevel) {
-        bestLevel = m_skillLevel[eSecSkillSchoolOfAirMagic];
+        && H3_AT(m_skillLevel, eSecSkillSchoolOfAirMagic) > bestLevel) {
+        bestLevel = H3_AT(m_skillLevel, eSecSkillSchoolOfAirMagic);
         bestSchool = eSchoolAir;
     }
     if ((schoolMask & eSchoolFire)
-        && m_skillLevel[eSecSkillSchoolOfFireMagic] > bestLevel) {
-        bestLevel = m_skillLevel[eSecSkillSchoolOfFireMagic];
+        && H3_AT(m_skillLevel, eSecSkillSchoolOfFireMagic) > bestLevel) {
+        bestLevel = H3_AT(m_skillLevel, eSecSkillSchoolOfFireMagic);
         bestSchool = eSchoolFire;
     }
     if ((schoolMask & eSchoolEarth)
-        && m_skillLevel[eSecSkillSchoolOfEarthMagic] > bestLevel) {
-        bestLevel = m_skillLevel[eSecSkillSchoolOfEarthMagic];
+        && H3_AT(m_skillLevel, eSecSkillSchoolOfEarthMagic) > bestLevel) {
+        bestLevel = H3_AT(m_skillLevel, eSecSkillSchoolOfEarthMagic);
         bestSchool = eSchoolEarth;
     }
     if ((schoolMask & eSchoolWater)
-        && m_skillLevel[eSecSkillSchoolOfWaterMagic] > bestLevel) {
-        bestLevel = m_skillLevel[eSecSkillSchoolOfWaterMagic];
+        && H3_AT(m_skillLevel, eSecSkillSchoolOfWaterMagic) > bestLevel) {
+        bestLevel = H3_AT(m_skillLevel, eSecSkillSchoolOfWaterMagic);
         bestSchool = eSchoolWater;
     }
     return bestSchool;

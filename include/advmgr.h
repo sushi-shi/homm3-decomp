@@ -1081,7 +1081,7 @@ private:
                          type_point point, bool humanPlayer);
     void doArtifactSkillRequirement(class hero* currentHero,
                                     NewmapCell* cell, type_point point,
-                                    int skill, const char* dialogText,
+                                    H3_ENUM_PARAM(TSecondarySkill, int) skill, const char* dialogText,
                                     bool humanPlayer);
     void doEventFreeArtifact(class hero* currentHero, NewmapCell* cell,
                              type_point point, bool humanPlayer);

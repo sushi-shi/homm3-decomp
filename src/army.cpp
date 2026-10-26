@@ -1298,7 +1298,7 @@ void army::rangeAttack()
         rangeAttack(target);
     if (m_creatureType == ARMY_CREATURE_BALLISTA && target->m_numTroops > 0
         && getController()
-        && getController()->m_skillLevel[eSecSkillBattlefieldBallistics]
+        && H3_AT(getController()->m_skillLevel, eSecSkillBattlefieldBallistics)
                > 1) {
         rangeAttack(target);
     }

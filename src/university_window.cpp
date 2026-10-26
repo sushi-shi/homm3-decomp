@@ -54,7 +54,7 @@ type_university_skill_button::type_university_skill_button(
     long x, long y, long width, long height, long newId,
     const char* image, TSecondarySkill newSkill)
     : iconWidget(x, y, width, height, newId, image,
-                 newSkill * 3, 0, 0, 0, ICON_STYLE_PLAIN)
+                 H3_IDX(newSkill) * 3, 0, 0, 0, ICON_STYLE_PLAIN)
 {
     m_skill = newSkill;
     m_click = 0;
@@ -70,7 +70,7 @@ bool type_university_skill_button::handleClick(
 {
     if (downClick) {
         if (rightClick) {
-            normalDialog(akSSkillTraits[m_skill].m_levelNames[0], 4,
+            normalDialog(H3_AT(akSSkillTraits, m_skill).m_levelNames[0], 4,
                          -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return 1;
         }
@@ -165,7 +165,7 @@ type_university_window::type_university_window(
         m_skills[i].m_textWidget = new textWidget(
             m_skills[i].m_topBar->m_x, m_skills[i].m_topBar->m_y,
             m_skills[i].m_topBar->m_width, m_skills[i].m_topBar->m_height,
-            akSSkillTraits[m_skills[i].m_skill].m_name, "smalfont.fnt",
+            H3_AT(akSSkillTraits, m_skills[i].m_skill).m_name, "smalfont.fnt",
             font::PRIMARY, -1, 1, 0, 8);
         m_widgets.push_back(m_skills[i].m_textWidget);
         m_selectionWidgets.push_back(m_skills[i].m_textWidget);
@@ -306,8 +306,8 @@ void type_university_window::updateSkillButton(type_university_skill& skill)
         text = g_generalText->GetText(GENERAL_TEXT_HERO_ALREADY_KNOWS_THIS_SKILL);
         skill.m_topBar->setIconFrame(0);
         skill.m_bottomBar->setIconFrame(0);
-    } else if (akHeroClassTraits[m_currentHero->m_heroClass]
-                   .m_gainSecondarySkillChance[skill.m_skill] == 0) {
+    } else if (H3_AT(akHeroClassTraits[m_currentHero->m_heroClass]
+                         .m_gainSecondarySkillChance, skill.m_skill) == 0) {
         text = g_generalText->GetText(GENERAL_TEXT_HERO_CANNOT_LEARN_THIS_SKILL);
         skill.m_topBar->setIconFrame(2);
         skill.m_bottomBar->setIconFrame(2);
@@ -317,13 +317,13 @@ void type_university_window::updateSkillButton(type_university_skill& skill)
         skill.m_bottomBar->setIconFrame(2);
     } else {
         text = formatString(g_generalText->GetText(GENERAL_TEXT_UNIVERSITY_COST_FORMAT), g_secondarySkillLevels[0],
-                             akSSkillTraits[skill.m_skill].m_name, TUITION);
+                             H3_AT(akSSkillTraits, skill.m_skill).m_name, TUITION);
         if (skill.m_topBar)
             skill.m_topBar->setIconFrame(1);
         if (skill.m_bottomBar)
             skill.m_bottomBar->setIconFrame(1);
     }
-    skill.m_button->setIconFrame((skill.m_skill + 1) * 3);
+    skill.m_button->setIconFrame((H3_IDX(skill.m_skill) + 1) * 3);
     skill.m_button->setHelpText(text.c_str(), 0, 1);
 }
 
@@ -350,8 +350,8 @@ void type_university_window::skillClick(TSecondarySkill skill)
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
-    if (akHeroClassTraits[m_currentHero->m_heroClass]
-            .m_gainSecondarySkillChance[skill] == 0) {
+    if (H3_AT(akHeroClassTraits[m_currentHero->m_heroClass]
+                  .m_gainSecondarySkillChance, skill) == 0) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_HERO_CANNOT_LEARN_THIS_SKILL), NORMAL_DIALOG_DEFAULT, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
@@ -368,7 +368,7 @@ void type_university_window::skillClick(TSecondarySkill skill)
         m_purchaseWidgets[i]->show();
 
     std::string newText;
-    const char* skillName = akSSkillTraits[skill].m_name;
+    const char* skillName = H3_AT(akSSkillTraits, skill).m_name;
 
     newText = formatString(g_generalText->GetText(GENERAL_TEXT_UNIVERSITY_TUITION_FORMAT), g_secondarySkillLevels[0],
                              skillName, TUITION);
@@ -479,13 +479,13 @@ int type_university_window::purchaseClick(message& msg)
         std::string result;
         type_university_window* window =
             static_cast<type_university_window*>(msg.m_window);
-        int skill = window->m_selectedSkill.m_skill;
-        const char* skillName = akSSkillTraits[skill].m_name;
+        TSecondarySkill skill = window->m_selectedSkill.m_skill;
+        const char* skillName = H3_AT(akSSkillTraits, skill).m_name;
         result = formatString(
             g_universityWindowHelp[2].m_rclick, g_secondarySkillLevels[0],
             skillName, 2000);
         normalDialog(result.c_str(), 4, -1, -1,
-                     20, skill * 3 + 3, -1, 0, -1, 0, -1, 0);
+                     20, H3_IDX(skill) * 3 + 3, -1, 0, -1, 0, -1, 0);
         return 1;
     }
 
@@ -495,7 +495,7 @@ int type_university_window::purchaseClick(message& msg)
             static_cast<type_university_window*>(msg.m_window);
         playerData* player = window->m_currentHero->getPlayer();
         player->m_resources[6] -= 2000;
-        window->m_currentHero->giveSS(window->m_selectedSkill.m_skill, 1);
+        window->m_currentHero->giveSS(H3_IDX(window->m_selectedSkill.m_skill), 1);
         window->setSelectionMode();
         window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);

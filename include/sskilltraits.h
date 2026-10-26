@@ -15,7 +15,7 @@ struct TSSkillTraits {
 };
 SIZE(TSSkillTraits, 0x10);
 
-extern TSSkillTraits g_sSkillTraitsStorage[kNumSecSkills];
-extern const TSSkillTraits (&akSSkillTraits)[kNumSecSkills];
+extern TSSkillTraits g_sSkillTraitsStorage[H3_IDX(kNumSecSkills)];
+extern const TSSkillTraits (&akSSkillTraits)[H3_IDX(kNumSecSkills)];
 
 #endif  /* HOMM3_SSKILLTRAITS_H */

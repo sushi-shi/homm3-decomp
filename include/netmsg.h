@@ -533,7 +533,7 @@ SIZE(CPlayerDeadMsg, 0x18);
 class CHeroLevelUpdateMsg : public CNetMsg {
 public:
     int m_hero;  // +0x14
-    signed char m_ssLevel[kNumSecSkills];  // +0x18
+    signed char m_ssLevel[H3_IDX(kNumSecSkills)];  // +0x18
     signed char m_stats[H3_IDX(kNumPrimarySkills)];  // +0x34
     int m_numSSs;  // +0x38
 

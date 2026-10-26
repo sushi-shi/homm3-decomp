@@ -1003,7 +1003,8 @@ DC_ADDRESS(0x090c58, 0xb8)
 MAC_ADDRESS(0x0aa2bc, 0xb0)
 void advManager::doArtifactSkillRequirement(
     hero* currentHero, NewmapCell* cell, type_point point,
-    int skill, const char* dialogText, bool humanPlayer)
+    H3_ENUM_PARAM(TSecondarySkill, int) skill, const char* dialogText,
+    bool humanPlayer)
 {
     if (currentHero->getSecondarySkill(TSecondarySkill(skill))) {
         doEventFreeArtifact(currentHero, cell, point, humanPlayer);
@@ -1179,12 +1180,12 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         TSkillMastery level = blackBox->m_secondarySkills[j].m_level;
         unsigned char skillGiven = 0;
         if (currentHero->getSecondarySkill(skill) == 0
-            && currentHero->m_skillCount < kNumSecSkillsPerHero) {
-            currentHero->giveSS(skill, level);
+            && currentHero->m_skillCount < H3_IDX(kNumSecSkillsPerHero)) {
+            currentHero->giveSS(H3_IDX(skill), level);
             skillGiven = 1;
         } else if (currentHero->getSecondarySkill(skill) > 0
                    && currentHero->getSecondarySkill(skill) < level) {
-            currentHero->giveSS(skill,
+            currentHero->giveSS(H3_IDX(skill),
                 level - currentHero->getSecondarySkill(skill));
             skillGiven = 1;
         }
@@ -1192,7 +1193,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
             continue;
         if (humanPlayer) {
             addReward(msg, alternate, rewards, RES_SECONDARY_SKILL,
-                       skill * 3 + level + 2);
+                       H3_IDX(skill) * 3 + level + 2);
         }
         rewardGiven = 1;
     }
@@ -2211,7 +2212,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
 
     msg = formatString((*g_generalText)[GENERAL_TEXT_SCHOLAR_MAGIC_INTRO_FORMAT], firstHero->m_name);
     spellInfo.m_resource = RES_SECONDARY_SKILL;
-    spellInfo.m_qualifier = eSecSkillMagicScholar * 3
+    spellInfo.m_qualifier = H3_IDX(eSecSkillMagicScholar) * 3
                            + firstHero->getSecondarySkill(eSecSkillMagicScholar) + 2;
     spellsExchanged.push_back(spellInfo);
 
@@ -2924,15 +2925,15 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
         }
     }
     if (award == const_scholar_secondary_skill) {
-        int skill = info->getScholarSecondarySkill();
-        if (!currentHero->giveSS(skill, 1)) {
+        TSecondarySkill skill = info->getScholarSecondarySkill();
+        if (!currentHero->giveSS(H3_IDX(skill), 1)) {
             award = const_scholar_primary_skill;
         } else {
             if (humanPlayer)
                 normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_SCHOLAR],
                              1, -1, -1, 0x14,
-                             currentHero->getSecondarySkill(TSecondarySkill(skill))
-                                 + skill * 3 + 2,
+                             currentHero->getSecondarySkill(skill)
+                                 + H3_IDX(skill) * 3 + 2,
                              -1, 0, -1, 0, -1, 0);
         }
     }
@@ -4098,34 +4099,34 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
 {
     // Guard clauses keep all four dialogs, with getSecondarySkill and getText
     // retained.
-    int skill = cell->getWitchSkill();
+    TSecondarySkill skill = cell->getWitchSkill();
 
     cell->setCellVisited(currentHero->m_owner);
     g_game->setInfoFlag(WitchHutInfo, g_netLocalGamePos);
-    if (skill == -1) {
+    if (skill == eSecSkillNone) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_WITCH_HUT_NO_SKILL),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
-    if (currentHero->getSecondarySkill(TSecondarySkill(skill))) {
+    if (currentHero->getSecondarySkill(skill)) {
         if (humanPlayer) {
             sprintf(g_text,
                     g_adventureEventText->GetText(
                         ADV_EVENT_TEXT_WITCH_HUT_KNOWN_FORMAT),
-                    akSSkillTraits[skill].m_name);
+                    H3_AT(akSSkillTraits, skill).m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
         }
         return;
     }
-    if (currentHero->m_skillCount >= kNumSecSkillsPerHero) {
+    if (currentHero->m_skillCount >= H3_IDX(kNumSecSkillsPerHero)) {
         if (humanPlayer) {
             sprintf(g_text,
                     g_adventureEventText->GetText(
                         ADV_EVENT_TEXT_WITCH_HUT_FULL_FORMAT),
-                    akSSkillTraits[skill].m_name);
+                    H3_AT(akSSkillTraits, skill).m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
         }
@@ -4135,14 +4136,14 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
         sprintf(g_text,
                 g_adventureEventText->GetText(
                     ADV_EVENT_TEXT_WITCH_HUT_LEARN_FORMAT),
-                akSSkillTraits[skill].m_name);
+                H3_AT(akSSkillTraits, skill).m_name);
         // iResType1 20 is the secondary-skill picture class and the
         // extra is the icon slot: three mastery frames per skill, the
         // basic one being 3*skill + 3.
-        normalDialog(g_text, 1, -1, -1, 20, skill * 3 + 3,
+        normalDialog(g_text, 1, -1, -1, 20, H3_IDX(skill) * 3 + 3,
                      -1, 0, -1, 0, -1, 0);
     }
-    currentHero->giveSS(skill, 1);
+    currentHero->giveSS(H3_IDX(skill), 1);
     return;
 }
 

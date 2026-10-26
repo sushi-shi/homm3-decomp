@@ -753,7 +753,7 @@ void TScholar::setPrimarySkill(TPrimarySkill newPrimarySkill)
 
 void TScholar::setSecondarySkill(TSecondarySkill newSecondarySkill)
 {
-    assert(newSecondarySkill >= 0 && newSecondarySkill < kNumSecSkills);
+    assert(newSecondarySkill >= 0 && newSecondarySkill < H3_IDX(kNumSecSkills));
     _m_secondarySkill = newSecondarySkill;
 }
 
@@ -773,7 +773,7 @@ void TScholar::write(TRawOStream* pOStream, int version) const
         reward = H3_IDX(_m_primarySkill);
         break;
     case eRewardSecondarySkill:
-        reward = _m_secondarySkill;
+        reward = H3_IDX(_m_secondarySkill);
         break;
     case eRewardSpell:
         reward = _m_spell;
@@ -886,8 +886,8 @@ void TShrine::write(TRawOStream* pOStream, int version) const
     *pOStream << aReserved;
 }
 
-DATA(0x005a2208) const std::bitset<kNumSecSkills> TWitchHut::_s_kabDefaultPotentialSkill
-    = ~(std::bitset<kNumSecSkills>(1) << eSecSkillLeadership) & ~(std::bitset<kNumSecSkills>(1) << eSecSkillNecromancy);
+DATA(0x005a2208) const std::bitset<H3_IDX(kNumSecSkills)> TWitchHut::_s_kabDefaultPotentialSkill
+    = ~(std::bitset<H3_IDX(kNumSecSkills)>(1) << H3_IDX(eSecSkillLeadership)) & ~(std::bitset<H3_IDX(kNumSecSkills)>(1) << H3_IDX(eSecSkillNecromancy));
 
 VA(0x0048f7bc, 0x49)
 TWitchHut::TWitchHut(const TObjectType& objType)
@@ -905,7 +905,7 @@ TWitchHut::TWitchHut(const TObjectType& objType, TRawIStream* pIStream, int vers
 }
 
 VA(0x0048f887, 0xc)
-void TWitchHut::setPotentialSkills(const std::bitset<kNumSecSkills>& newSkills)
+void TWitchHut::setPotentialSkills(const std::bitset<H3_IDX(kNumSecSkills)>& newSkills)
 {
     _m_abPotentialSkill = newSkills;
 }
@@ -920,9 +920,9 @@ VA(0x0048f8a1, 0x62)
 void TWitchHut::write(TRawOStream* pOStream, int version) const
 {
     if (version >= 1) {
-        unsigned char aByte[(kNumSecSkills + 7) / 8];
+        unsigned char aByte[(H3_IDX(kNumSecSkills) + 7) / 8];
         std::fill_n(aByte, sizeof(aByte), 0);
-        for (unsigned int i = 0; i < kNumSecSkills; i++)
+        for (unsigned int i = 0; i < H3_IDX(kNumSecSkills); i++)
             if (_m_abPotentialSkill.test(i))
                 aByte[i / 8] |= 1 << (i % 8);
         *pOStream << aByte;

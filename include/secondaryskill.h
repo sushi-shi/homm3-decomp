@@ -2,11 +2,13 @@
 #ifndef HOMM3_SECONDARYSKILL_H
 #define HOMM3_SECONDARYSKILL_H
 
+#include "domains.h"
+
 // DC LF_ENUM `TSecondarySkill`, transcribed from
 // NB11 enum records (31 enumerators; the DC spellings, minus
 // aliases that name no distinct skill). Retail corroborates the domain in
 // hero specialty lookups and type_university's four elemental-school slots.
-enum TSecondarySkill {
+H3_ENUM_BEGIN(TSecondarySkill)
     eSecSkillNone = -1,
     kNumSecSkillsPerHero = 8,
     eSecSkillPathfinding = 0,
@@ -38,6 +40,7 @@ enum TSecondarySkill {
     eSecSkillMagicResistance = 26,
     eSecSkillFirstAid = 27,
     kNumSecSkills = 28
-};
+H3_ENUM_END(TSecondarySkill)
+H3_ENUM_STEPPED(TSecondarySkill)
 
 #endif  /* HOMM3_SECONDARYSKILL_H */

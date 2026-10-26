@@ -53,7 +53,7 @@ BOOL TWitchHutPropsDlg::OnInitDialog()
     _m_bModified = false;
     _m_abPotentialSkill = _m_pWitchHut->getPotentialSkills();
     CDialog::OnInitDialog();
-    for (unsigned int skill = 0; skill < kNumSecSkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumSecSkills); skill++) {
         int index = _m_skillsList.AddString(THero::s_akSecondarySkillTraits[skill].m_name);
         _m_skillsList.SetItemData(index, skill);
         _m_skillsList.SetCheck(index, _m_abPotentialSkill[skill]);

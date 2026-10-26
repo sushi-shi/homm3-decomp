@@ -390,7 +390,7 @@ public:
     void setDisabledHeroes(const std::bitset<kNumHeroes>& newMask);
     void setDisabledArtifacts(const std::bitset<kNumArtifacts>& newMask);
     void setDisabledSpells(const std::bitset<kNumSpells>& newMask);
-    void setDisabledSkills(const std::bitset<kNumSecSkills>& newMask);
+    void setDisabledSkills(const std::bitset<H3_IDX(kNumSecSkills)>& newMask);
     void setHeroPrototype(THeroID heroID, const THeroPrototype& newPrototype);
 
     TMapLayerObjectID placeObject(bool bSecondLayer, std::auto_ptr<TGameObject> pObj, const TTilePoint& loc,
@@ -459,7 +459,7 @@ public:
     const std::bitset<kNumHeroes>& getDisabledHeroes() const;
     const std::bitset<kNumArtifacts>& getDisabledArtifacts() const;
     const std::bitset<kNumSpells>& getDisabledSpells() const;
-    const std::bitset<kNumSecSkills>& getDisabledSkills() const;
+    const std::bitset<H3_IDX(kNumSecSkills)>& getDisabledSkills() const;
     const THeroPrototype& getHeroPrototype(THeroID heroID) const;
     bool isPlayerPresent(TPlayer player) const;
     unsigned int getNumPlayableSlots() const;

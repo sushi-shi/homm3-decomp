@@ -449,16 +449,16 @@ public:
     TWitchHut(const TObjectType& objType);
     TWitchHut(const TObjectType& objType, TRawIStream* pIStream, int version);
 
-    const std::bitset<kNumSecSkills>& getPotentialSkills() const { return _m_abPotentialSkill; }
-    void setPotentialSkills(const std::bitset<kNumSecSkills>& newSkills);
+    const std::bitset<H3_IDX(kNumSecSkills)>& getPotentialSkills() const { return _m_abPotentialSkill; }
+    void setPotentialSkills(const std::bitset<H3_IDX(kNumSecSkills)>& newSkills);
 
     virtual void write(TRawOStream* pOStream, int version) const;
     virtual bool isCustomized() const;
 
 private:
-    static const std::bitset<kNumSecSkills> _s_kabDefaultPotentialSkill;
+    static const std::bitset<H3_IDX(kNumSecSkills)> _s_kabDefaultPotentialSkill;
 
-    std::bitset<kNumSecSkills> _m_abPotentialSkill;
+    std::bitset<H3_IDX(kNumSecSkills)> _m_abPotentialSkill;
 };
 
 // A random dwelling whose alignment follows a town or a set of town types

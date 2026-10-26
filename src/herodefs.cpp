@@ -201,10 +201,10 @@ THeroClassTraits g_heroClassTraits[kNumHeroClasses] = {
     { 8, 0, 0.0f, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0 } },
 };
 
-DATA(0x00698cf0) TSSkillTraits g_sSkillTraitsStorage[kNumSecSkills];
+DATA(0x00698cf0) TSSkillTraits g_sSkillTraitsStorage[H3_IDX(kNumSecSkills)];
 DATA(0x0067dce8) const THeroTraits (&akHeroTraits)[163] = g_heroTraitsStorage;
 DATA(0x0067dcec) const THeroClassTraits (&akHeroClassTraits)[18] = g_heroClassTraits;
-DATA(0x0067dcf0) const TSSkillTraits (&akSSkillTraits)[kNumSecSkills] = g_sSkillTraitsStorage;
+DATA(0x0067dcf0) const TSSkillTraits (&akSSkillTraits)[H3_IDX(kNumSecSkills)] = g_sSkillTraitsStorage;
 
 namespace {
 
@@ -308,7 +308,7 @@ bool InitializeSSkillTraitsTable()
 
     int id = 0;
     int row = 2;
-    for (; id < kNumSecSkills; ++id, ++row) {
+    for (; id < H3_IDX(kNumSecSkills); ++id, ++row) {
         InitializeSSkillTraits(id, resource->GetRow(row));
     }
 
@@ -375,7 +375,7 @@ static void InitializeHeroClassTraits(int id, const TSpreadsheetResource::TStrin
     for (column = 0; column < H3_IDX(kNumPrimarySkills); ++column)
         traits.m_gainPrimarySkillChance10P[column] =
             static_cast<signed char>(atoi(values[column + 10]));
-    for (column = 0; column < kNumSecSkills; ++column)
+    for (column = 0; column < H3_IDX(kNumSecSkills); ++column)
         traits.m_gainSecondarySkillChance[column] =
             static_cast<signed char>(atoi(values[column + 14]));
     for (column = 0; column < TOWN_TYPE_COUNT; ++column)
@@ -388,7 +388,7 @@ DC_ADDRESS(0x0d5ee8, 0x194)
 MAC_ADDRESS(0x107e40, 0x16c)
 static void InitializeSSkillTraits(int id, const TSpreadsheetResource::TStringVector& values)
 {
-    assert(id >= 0 && id < kNumSecSkills);
+    assert(id >= 0 && id < H3_IDX(kNumSecSkills));
     assert(values.size() >= 4);
     TSSkillTraits& traits = g_sSkillTraitsStorage[id];
 
@@ -396,7 +396,7 @@ static void InitializeSSkillTraits(int id, const TSpreadsheetResource::TStringVe
                       secondarySkillNames)
     VA_COMPGEN(0x004e6d40, 0x14, STATIC_DTOR, secondarySkillNames)
     DATA(0x00698b28)
-    static TAutoStrPtr secondarySkillNames[kNumSecSkills];
+    static TAutoStrPtr secondarySkillNames[H3_IDX(kNumSecSkills)];
 
     secondarySkillNames[id].set(new char[strlen(values[0]) + 1]);
     strcpy(secondarySkillNames[id].get(), values[0]);
@@ -404,7 +404,7 @@ static void InitializeSSkillTraits(int id, const TSpreadsheetResource::TStringVe
 
     VA_COMPGEN(0x004e6d20, 0x14, STATIC_DTOR, secondarySkillLevelNames)
     DATA(0x00698b9c)
-    static TAutoStrPtr secondarySkillLevelNames[kNumSecSkills][3];
+    static TAutoStrPtr secondarySkillLevelNames[H3_IDX(kNumSecSkills)][3];
 
     int level;
     for (level = 0; level < 3; ++level) {

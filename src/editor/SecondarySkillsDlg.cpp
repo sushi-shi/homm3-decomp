@@ -143,7 +143,7 @@ void TSecondarySkillsDlg::setSecondarySkills(const THeroPrototype::TSecondarySki
     }
     slot = 0;
     for (THeroPrototype::TSecondarySkills::const_iterator it = skills.begin(); it != skills.end(); ++it)
-        _setSlot(slot++, _TSlot(it->first, it->second));
+        _setSlot(slot++, _TSlot(H3_IDX(it->first), it->second));
 }
 
 VA(0x004b5721, 0xaf)
@@ -284,7 +284,7 @@ BOOL TSecondarySkillsDlg::OnInitDialog()
         _TSlotControls& controls = _m_aSlotControls[slot];
         int index = controls.m_skillCombo.AddString(kSelNoneStr);
         controls.m_skillCombo.SetItemData(index, -1);
-        for (int skill = 0; skill < kNumSecSkills; skill++) {
+        for (int skill = 0; skill < H3_IDX(kNumSecSkills); skill++) {
             index = controls.m_skillCombo.AddString(THero::s_akSecondarySkillTraits[skill].m_name);
             controls.m_skillCombo.SetItemData(index, skill);
         }

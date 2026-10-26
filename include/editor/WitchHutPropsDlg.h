@@ -35,7 +35,7 @@ private:
     TWitchHut* _m_pWitchHut;
     EGameVersion _m_version;
     bool _m_bModified;
-    std::bitset<kNumSecSkills> _m_abPotentialSkill;
+    std::bitset<H3_IDX(kNumSecSkills)> _m_abPotentialSkill;
     CCheckListBox _m_skillsList;
 };
 

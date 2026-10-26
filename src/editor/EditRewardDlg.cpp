@@ -694,7 +694,7 @@ BOOL TRewardSecondarySkillDlg::OnInitDialog()
     GetDlgItem(IDC_REWARD_MASTERY_STATIC)->SetWindowText(SEditRewardDlgText::kMasteryStaticStr);
     CDialog::OnInitDialog();
     unsigned int skill;
-    for (skill = 0; skill < kNumSecSkills; skill++)
+    for (skill = 0; skill < H3_IDX(kNumSecSkills); skill++)
         _m_skillCombo.SetItemData(_m_skillCombo.AddString(THero::s_akSecondarySkillTraits[skill].m_name), skill);
     _m_skillCombo.SetCurSel(0);
     for (unsigned int mastery = eMasteryBasic; mastery < kNumMasteries; mastery++)

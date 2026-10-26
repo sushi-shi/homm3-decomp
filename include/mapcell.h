@@ -220,7 +220,7 @@ struct ScholarInfo {
 public:
     signed long m_award : 3;
     H3_ENUM_BITFIELD(TPrimarySkill, signed long) m_primary : 3;
-    signed long m_secondary : 7;
+    H3_ENUM_BITFIELD(TSecondarySkill, signed long) m_secondary : 7;
     signed long m_spell : 10;
     unsigned long m_tail : 9;
 };
@@ -351,7 +351,7 @@ SIZE(type_tomb_info, 4);
 struct type_witch_hut_info {
 public:
     unsigned long m_unused : 13;
-    signed long m_skill : 7;
+    H3_ENUM_BITFIELD(TSecondarySkill, signed long) m_skill : 7;
     unsigned long m_tail : 12;
 };
 SIZE(type_witch_hut_info, 4);

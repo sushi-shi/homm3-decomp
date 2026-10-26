@@ -214,7 +214,7 @@ enum ERmgTileFlags {
 // Necromancy.
 enum ERmgWitchHutSkills {
     RMG_WITCH_HUT_ALLOWED_SKILLS = 0xffff
-        & ~((1 << eSecSkillNavigation) | (1 << eSecSkillNecromancy))
+        & ~((1 << H3_IDX(eSecSkillNavigation)) | (1 << H3_IDX(eSecSkillNecromancy)))
 };
 
 // getValue result for a treasure this zone or moment cannot offer.
@@ -10898,7 +10898,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         std::bitset<70> disabledSpells;
         writePackedBits(outfile, disabledSpells);
 
-        std::bitset<kNumSecSkills> disabledSkills;
+        std::bitset<H3_IDX(kNumSecSkills)> disabledSkills;
         writePackedBits(outfile, disabledSkills);
 
         for (int hero = 0; hero < RMG_HERO_COUNT; ++hero)

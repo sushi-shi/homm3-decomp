@@ -1927,7 +1927,7 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
     if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
     for (i = 0; i < thisBox->m_secondarySkills.size(); ++i) {
-        value = thisBox->m_secondarySkills[i].m_type;
+        value = H3_IDX(thisBox->m_secondarySkills[i].m_type);
         if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
             return -1;
         value = thisBox->m_secondarySkills[i].m_level;
@@ -2214,7 +2214,7 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
         return -1;
 
     scholarInfo->m_primary = ePriSkillKnowledge;
-    scholarInfo->m_secondary = -1;
+    scholarInfo->m_secondary = eSecSkillNone;
     scholarInfo->m_spell = -1;
 
     // Dreamcast mapcell.cpp:2333 calls ExtraInfoUnion::GetScholarAward.
@@ -2232,13 +2232,13 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
             for (TSecondarySkill skill = eSecSkillPathfinding;
                  skill < kNumSecSkills;
                  skill = H3_ENUM_DECODE(TSecondarySkill, skill + 1)) {
-                if (!g_game->m_ssDisabled[skill])
+                if (!H3_AT(g_game->m_ssDisabled, skill))
                     candidates.push_back(skill);
             }
             scholarInfo->m_secondary =
                 candidates[random(0, candidates.size() - 1)];
         } else {
-            scholarInfo->m_secondary = value;
+            scholarInfo->m_secondary = H3_ENUM_DECODE(TSecondarySkill, value);
         }
         break;
 

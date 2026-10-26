@@ -14,7 +14,7 @@
 
 class TSecondarySkillsDlg : public CDialog {
 public:
-    enum { s_kNumSlots = kNumSecSkillsPerHero };
+    enum { s_kNumSlots = H3_IDX(kNumSecSkillsPerHero) };
 
     // Creates the dialog as a child of the parent.
     TSecondarySkillsDlg(CWnd* pParent);

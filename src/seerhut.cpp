@@ -2226,7 +2226,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
         int skill = m_value.m_secondarySkill.m_skillType;
         int bonus = m_value.m_secondarySkill.m_bonus;
         if (currentHero->getSecondarySkill(TSecondarySkill(skill)) == 0) {
-            if (currentHero->m_skillCount < kNumSecSkillsPerHero) {
+            if (currentHero->m_skillCount < H3_IDX(kNumSecSkillsPerHero)) {
                 currentHero->giveSS(skill, bonus);
                 break;
             }

@@ -1079,7 +1079,7 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
         signed char currentLevel = currentHero->getSecondarySkill(
             blackBox->m_secondarySkills[secondaryIndex].m_type);
         int level = blackBox->m_secondarySkills[secondaryIndex].m_level;
-        if (currentLevel == 0 && currentHero->m_skillCount < kNumSecSkillsPerHero)
+        if (currentLevel == 0 && currentHero->m_skillCount < H3_IDX(kNumSecSkillsPerHero))
             value += level * primarySkillValue;
         else if (currentLevel > 0 && currentLevel < level)
             value += (level - currentLevel) * primarySkillValue;
@@ -1538,7 +1538,7 @@ int hero::getSeerSkillRewardValue(int skill, int level)
     if (m_skillLevel[skill] >= level)
         return 0;
     if (m_skillLevel[skill] == 0) {
-        if (m_skillCount >= kNumSecSkillsPerHero)
+        if (m_skillCount >= H3_IDX(kNumSecSkillsPerHero))
             return 0;
         if (!wantsSkill(this, TSecondarySkill(typedSkill), 1))
             return 0;
@@ -1572,13 +1572,13 @@ static long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
     signed char level = ourHero->getSecondarySkill(skill);
     int oldLevel = level;
     if (oldLevel == 0)
-        const_cast<hero*>(ourHero)->m_skillLevel[skill] = 3;
+        H3_AT(const_cast<hero*>(ourHero)->m_skillLevel, skill) = 3;
     else
-        const_cast<hero*>(ourHero)->m_skillLevel[skill] = level + 1;
+        H3_AT(const_cast<hero*>(ourHero)->m_skillLevel, skill) = level + 1;
 
     long schoolValue =
         value.getBestSpellValue(SPELL_VALUE_CLASS_MASK) - baseValue;
-    const_cast<hero*>(ourHero)->m_skillLevel[skill] = oldLevel;
+    H3_AT(const_cast<hero*>(ourHero)->m_skillLevel, skill) = oldLevel;
     return schoolValue;
 }
 
@@ -1685,7 +1685,7 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     if (level == eMasteryExpert)
         return 0;
     if (level == eMasteryNone
-        && ourHero->m_skillCount == kNumSecSkillsPerHero)
+        && ourHero->m_skillCount == H3_IDX(kNumSecSkillsPerHero))
         return 0;
 
     long armyValue = 1000;
@@ -1830,32 +1830,32 @@ MAC_ADDRESS(0x13e904, 0x178)
 static unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
                          unsigned char complexChoice)
 {
-    long skillValue[kNumSecSkills];
-    TSecondarySkill skillIndex[kNumSecSkills];
+    long skillValue[H3_IDX(kNumSecSkills)];
+    TSecondarySkill skillIndex[H3_IDX(kNumSecSkills)];
 
     int openSlots;
     int i;
-    for (i = 0; i < kNumSecSkills; i++) {
+    for (i = 0; i < H3_IDX(kNumSecSkills); i++) {
         if (ourHero->getSecondarySkill(TSecondarySkill(i)) <= 0
             && (akHeroClassTraits[ourHero->m_heroClass]
                     .m_gainSecondarySkillChance[i]
-                || first == i))
+                || H3_IDX(first) == i))
             skillValue[i] = getSkillValue(ourHero, TSecondarySkill(i), complexChoice);
         else
             skillValue[i] = 0;
         skillIndex[i] = TSecondarySkill(i);
     }
 
-    for (i = 0; i < kNumSecSkills - 1; i++) {
-        for (int j = i + 1; j < kNumSecSkills; j++) {
-            if (skillValue[skillIndex[i]] > skillValue[skillIndex[j]])
+    for (i = 0; i < H3_IDX(kNumSecSkills) - 1; i++) {
+        for (int j = i + 1; j < H3_IDX(kNumSecSkills); j++) {
+            if (H3_AT(skillValue, skillIndex[i]) > H3_AT(skillValue, skillIndex[j]))
                 std::swap(skillIndex[i], skillIndex[j]);
         }
     }
 
-    openSlots = 8 - ourHero->m_skillCount;
-    for (i = 28; i-- > 0;) {
-        int skill = skillIndex[i];
+    openSlots = H3_IDX(kNumSecSkillsPerHero) - ourHero->m_skillCount;
+    for (i = H3_IDX(kNumSecSkills); i-- > 0;) {
+        TSecondarySkill skill = skillIndex[i];
         if (ourHero->getSecondarySkill(TSecondarySkill(skill)) == 0) {
             if (skill == first)
                 return 1;
@@ -1871,19 +1871,19 @@ DC_ADDRESS(0x113cbc, 0xe4)
 MAC_ADDRESS(0x13ec3c, 0x114)
 void aiVisitUniversity(hero* currentHero, type_university* university)
 {
-    if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
+    if (currentHero->m_skillCount >= H3_IDX(kNumSecSkillsPerHero))
         return;
     if (g_currentPlayer->m_resources[GOLD] < 2000)
         return;
 
     const THeroClassTraits& traits = akHeroClassTraits[currentHero->m_heroClass];
     do {
-        int bestSkill = -1;
+        TSecondarySkill bestSkill = eSecSkillNone;
         long bestValue = 0;
 
         for (int i = 0; i < 4; i++) {
-            int skill = university->m_skills[i];
-            if (traits.m_gainSecondarySkillChance[skill]
+            TSecondarySkill skill = university->m_skills[i];
+            if (H3_AT(traits.m_gainSecondarySkillChance, skill)
                 && currentHero->getSecondarySkill(TSecondarySkill(skill)) <= 0
                 && wantsSkill(currentHero, TSecondarySkill(skill), 1)) {
                 long value = getSkillValue(currentHero, TSecondarySkill(skill), 1);
@@ -1894,9 +1894,9 @@ void aiVisitUniversity(hero* currentHero, type_university* university)
             }
         }
 
-        if (bestSkill == -1)
+        if (bestSkill == eSecSkillNone)
             return;
-        currentHero->giveSS(bestSkill, 1);
+        currentHero->giveSS(H3_IDX(bestSkill), 1);
         g_currentPlayer->m_resources[GOLD] -= 2000;
     } while (g_currentPlayer->m_resources[GOLD] >= 2000);
 }
@@ -2124,7 +2124,7 @@ static long valueOfUniversity(const hero* currentHero,
                          type_university* university,
                          unsigned char mustPay)
 {
-    if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
+    if (currentHero->m_skillCount >= H3_IDX(kNumSecSkillsPerHero))
         return 0;
     if (mustPay && g_currentPlayer->m_resources[GOLD] < 2000)
         return 0;
@@ -2133,8 +2133,8 @@ static long valueOfUniversity(const hero* currentHero,
         &akHeroClassTraits[currentHero->m_heroClass];
     long total = 0;
     for (int i = 0; i < 4; i++) {
-        int skill = university->m_skills[i];
-        if (traits->m_gainSecondarySkillChance[skill]) {
+        TSecondarySkill skill = university->m_skills[i];
+        if (H3_AT(traits->m_gainSecondarySkillChance, skill)) {
             if (currentHero->getSecondarySkill(TSecondarySkill(skill)) <= 0) {
                 if (wantsSkill(currentHero, TSecondarySkill(skill), 1))
                     total += getSkillValue(currentHero, TSecondarySkill(skill), 1);
@@ -3726,10 +3726,10 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
     ExtraInfoUnion* info =
         static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));
     if (cell->playerKnowsCell(currentHero->m_owner)) {
-        if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
+        if (currentHero->m_skillCount >= H3_IDX(kNumSecSkillsPerHero))
             return 0;
-        int skill = info->getWitchSkill();
-        if (skill == -1)
+        TSecondarySkill skill = info->getWitchSkill();
+        if (skill == eSecSkillNone)
             return 0;
         if (currentHero->getSecondarySkill(TSecondarySkill(skill)))
             return 0;

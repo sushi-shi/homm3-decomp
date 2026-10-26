@@ -36,7 +36,7 @@ private:
     const TGameMap& _m_oldMap;
     TGameMap& _m_newMap;
     bool _m_bModified;
-    std::bitset<kNumSecSkills> _m_disabledSkills;
+    std::bitset<H3_IDX(kNumSecSkills)> _m_disabledSkills;
 
 public:
     CCheckListBox _m_secSkillsList;

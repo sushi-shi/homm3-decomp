@@ -50,7 +50,7 @@ BOOL TMapSpecsSecSkillsPage::OnInitDialog()
     CRect rect;
     _m_secSkillsList.GetClientRect(&rect);
     _m_secSkillsList.SetColumnWidth(rect.Width() / 2);
-    for (unsigned int skill = 0; skill < kNumSecSkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumSecSkills); skill++) {
         int index = _m_secSkillsList.AddString(THero::s_akSecondarySkillTraits[skill].m_name);
         _m_secSkillsList.SetItemData(index, skill);
     }

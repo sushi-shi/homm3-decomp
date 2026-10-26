@@ -1906,7 +1906,7 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
     building = currentTown->m_mageLevel;
 
     if (building >= 5
-        || building >= currentHero->m_skillLevel[eSecSkillWisdom] + 2
+        || building >= H3_AT(currentHero->m_skillLevel, eSecSkillWisdom) + 2
         || !currentTown->canBuild(building))
         return;
 
@@ -1926,7 +1926,7 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
             town* otherTown = g_game->getTown(player->m_townIds[townIndex]);
             int otherLevel = otherTown->m_mageLevel;
             if (otherLevel > building
-                && otherLevel < currentHero->m_skillLevel[eSecSkillWisdom] + 2
+                && otherLevel < H3_AT(currentHero->m_skillLevel, eSecSkillWisdom) + 2
                 && otherTown->canBuild(otherTown->m_mageLevel))
                 return;
         }
@@ -4647,7 +4647,7 @@ DC_ADDRESS(0x036450, 0x8a)
 MAC_ADDRESS(0x0370d8, 0x34)  // artifact get_value cluster order-map + get_AI_value
 long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact) const
 {
-    if (owner->m_skillLevel[eSecSkillNecromancy] == 0)
+    if (H3_AT(owner->m_skillLevel, eSecSkillNecromancy) == 0)
         return 0;
     return type_base_necromancy_artifact::getValue(owner, equipped, exact);
 }
@@ -4667,7 +4667,7 @@ long type_spellcaster_artifact::getValue(const hero* owner, unsigned char, unsig
 {
     if (owner->getValueOfPower() == 0)
         return 0;
-    if (owner->m_skillLevel[eSecSkillWisdom] == 0)
+    if (H3_AT(owner->m_skillLevel, eSecSkillWisdom) == 0)
         return 0;
     return owner->m_army.getAIValue() * m_bonus / 100;
 }

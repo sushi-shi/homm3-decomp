@@ -57,7 +57,7 @@ VA_COMPGEN(0x0044a0db, 0x1af, STATIC_CTOR, aHeroClassTraitsImp)
 // The class row's implicit destructor destroys its hero set (+0xc).
 VA_COMPGEN(0x0044a29e, 0x8, IMPLICIT_DTOR, TClassTraits)
 
-DATA(0x0059f274) THero::TSecondarySkillTraits aHeroSecondarySkillTraitsImp[kNumSecSkills];
+DATA(0x0059f274) THero::TSecondarySkillTraits aHeroSecondarySkillTraitsImp[H3_IDX(kNumSecSkills)];
 }
 
 DATA(0x005857d4) THero::TTraits* THero::s_akTraits = aHeroTraitsImp;
@@ -424,7 +424,7 @@ void THero::initialize()
     assert(kUnknownStr != NULL);
     initializeTraitsTable();
     InitializePrimarySkillTraitsTable();
-    for (unsigned int skill = 0; skill < kNumSecSkills; skill++)
+    for (unsigned int skill = 0; skill < H3_IDX(kNumSecSkills); skill++)
         aHeroSecondarySkillTraitsImp[skill].m_name = akSSkillTraits[skill].m_name;
     InitializeSkillMasteryTraitsTable();
 }

@@ -89,11 +89,11 @@ BOOL TScholarPropsDlg::OnInitDialog()
         index++;
     _m_primarySkillCombo.SetCurSel(index);
     _m_primarySkillCombo.EnableWindow(FALSE);
-    for (unsigned int secondarySkill = 0; secondarySkill < kNumSecSkills; secondarySkill++)
+    for (unsigned int secondarySkill = 0; secondarySkill < H3_IDX(kNumSecSkills); secondarySkill++)
         _m_secondarySkillCombo.SetItemData(
             _m_secondarySkillCombo.AddString(THero::s_akSecondarySkillTraits[secondarySkill].m_name), secondarySkill);
     index = 0;
-    while (_m_secondarySkillCombo.GetItemData(index) != _m_secondarySkill)
+    while (_m_secondarySkillCombo.GetItemData(index) != H3_IDX(_m_secondarySkill))
         index++;
     _m_secondarySkillCombo.SetCurSel(index);
     _m_secondarySkillCombo.EnableWindow(FALSE);

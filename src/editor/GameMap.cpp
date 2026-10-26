@@ -403,8 +403,8 @@ public:
     }
     const bitset<kNumSpells>& getDisabledSpells() const { return _m_pProperties->m_disabledSpells; }
     void setDisabledSpells(const bitset<kNumSpells>& newMask) { _m_pProperties->m_disabledSpells = newMask; }
-    const bitset<kNumSecSkills>& getDisabledSkills() const { return _m_pProperties->m_disabledSkills; }
-    void setDisabledSkills(const bitset<kNumSecSkills>& newMask) { _m_pProperties->m_disabledSkills = newMask; }
+    const bitset<H3_IDX(kNumSecSkills)>& getDisabledSkills() const { return _m_pProperties->m_disabledSkills; }
+    void setDisabledSkills(const bitset<H3_IDX(kNumSecSkills)>& newMask) { _m_pProperties->m_disabledSkills = newMask; }
     const THeroPrototype& getHeroPrototype(THeroID heroID) const { return (*_m_pProperties->m_aHeroPrototype)[heroID]; }
     void setHeroPrototype(THeroID heroID, const THeroPrototype& newPrototype);
     bool isPlayerPresent(TPlayer player) const { return _m_apPlayerBookkeeping[player]->m_numUnits > 0; }
@@ -658,7 +658,7 @@ private:
         bitset<kNumHeroes> m_disabledHeroes;
         bitset<kNumArtifacts> m_disabledArtifacts;
         bitset<kNumSpells> m_disabledSpells;
-        bitset<kNumSecSkills> m_disabledSkills;
+        bitset<H3_IDX(kNumSecSkills)> m_disabledSkills;
         TRefCountingPtr<TArray<THeroPrototype, kNumHeroes> > m_aHeroPrototype;
     };
 
@@ -4050,7 +4050,7 @@ void TGameMap::setDisabledSpells(const bitset<kNumSpells>& newMask)
 }
 
 VA(0x00429d71, 0x31)
-void TGameMap::setDisabledSkills(const bitset<kNumSecSkills>& newMask)
+void TGameMap::setDisabledSkills(const bitset<H3_IDX(kNumSecSkills)>& newMask)
 {
     _m_pImpl->setDisabledSkills(newMask);
 }
@@ -4345,7 +4345,7 @@ const bitset<kNumSpells>& TGameMap::getDisabledSpells() const
 }
 
 VA(0x0042a324, 0x9)
-const bitset<kNumSecSkills>& TGameMap::getDisabledSkills() const
+const bitset<H3_IDX(kNumSecSkills)>& TGameMap::getDisabledSkills() const
 {
     return _m_pImpl->getDisabledSkills();
 }
