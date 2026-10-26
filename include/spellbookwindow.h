@@ -124,7 +124,7 @@ public:
     DC_ADDRESS(0x14d33c, 0x6)
     unsigned getSchool() const
     {
-        return m_school;
+        return H3_IDX(m_school);
     }
 
     // E:\gamedcs\SpellbookWindow.h:236

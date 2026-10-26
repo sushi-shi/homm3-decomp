@@ -2710,7 +2710,7 @@ type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* proper
         for (long spell = 0; spell < 70; ++spell) {
             if (!(akSpellTraits[spell].m_flags & 0x2000)
                 && akSpellTraits[spell].m_level == level
-                && (akSpellTraits[spell].m_school & m_schoolMask))
+                && (H3_IDX(akSpellTraits[spell].m_school) & m_schoolMask))
                 object->m_spells.push_back(spell);
         }
     }

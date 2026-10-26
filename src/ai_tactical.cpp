@@ -1669,7 +1669,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
     armyGroup* group = g_combatManager->m_armyGroups[m_enemySide];
     TSkillMastery mastery;  // DC records enemy_mastery at procedure scope.
     for (long i = 0; i < hero::NUM_SPELLS; i++) {
-        if ((school & akSpellTraits[i].m_schoolBits) == 0)
+        if ((H3_IDX(school) & akSpellTraits[i].m_schoolBits) == 0)
             continue;
         if ((akSpellTraits[i].m_flags & 0x200) == 0)
             continue;

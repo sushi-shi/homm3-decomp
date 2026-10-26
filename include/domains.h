@@ -311,6 +311,29 @@ template<class Enum, class Storage> constexpr Enum H3DecodeEnum(Storage value)
         return previous;                                                                            \
     }
 
+// A flag domain: its enumerators are bits and its values are their unions.
+// The strict audit gives it the bitwise operators (result: the same domain);
+// H3_HAS tests a bit in a boolean context.
+#define H3_ENUM_FLAGS(name)                                                                        \
+    inline constexpr name operator|(name left, name right) {                                      \
+        return static_cast<name>(static_cast<__underlying_type(name)>(left)                        \
+                                 | static_cast<__underlying_type(name)>(right));                   \
+    }                                                                                              \
+    inline constexpr name operator&(name left, name right) {                                      \
+        return static_cast<name>(static_cast<__underlying_type(name)>(left)                        \
+                                 & static_cast<__underlying_type(name)>(right));                   \
+    }                                                                                              \
+    inline constexpr name operator^(name left, name right) {                                      \
+        return static_cast<name>(static_cast<__underlying_type(name)>(left)                        \
+                                 ^ static_cast<__underlying_type(name)>(right));                   \
+    }                                                                                              \
+    inline constexpr name operator~(name value) {                                                 \
+        return static_cast<name>(~static_cast<__underlying_type(name)>(value));                    \
+    }                                                                                              \
+    inline name& operator|=(name& left, name right) { return left = left | right; }               \
+    inline name& operator&=(name& left, name right) { return left = left & right; }               \
+    inline name& operator^=(name& left, name right) { return left = left ^ right; }
+
 #else
 
 #define H3_ENUM_BEGIN(name) enum name {
@@ -329,6 +352,7 @@ template<class Enum, class Storage> constexpr Enum H3DecodeEnum(Storage value)
 #define H3_ENUM_BITFIELD(name, storage) storage
 
 #define H3_ENUM_STEPPED(name)
+#define H3_ENUM_FLAGS(name)
 
 #endif
 
@@ -336,10 +360,12 @@ template<class Enum, class Storage> constexpr Enum H3DecodeEnum(Storage value)
 #define H3_AT(array, index) (array)[H3EnumIndex(index)]
 #define H3_IDX(value) H3EnumIndex(value)
 #define H3_ENUM_DECODE(name, value) H3DecodeEnum<name>(value)
+#define H3_HAS(flags, bit) (H3EnumIndex((flags) & (bit)) != 0)
 #else
 #define H3_AT(array, index) array[index]
 #define H3_IDX(value) value
 #define H3_ENUM_DECODE(name, value) (name)(value)
+#define H3_HAS(flags, bit) ((flags) & (bit))
 #endif
 
 #endif

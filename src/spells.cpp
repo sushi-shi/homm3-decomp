@@ -4431,19 +4431,19 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 {
     if (!target)
         return damage;
-    if ((akSpellTraits[spell].m_schoolBits & eSchoolEarth)
+    if ((akSpellTraits[spell].m_schoolBits & H3_IDX(eSchoolEarth))
         && target->getSpellTime(33))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromEarthFactor);
-    if ((akSpellTraits[spell].m_schoolBits & eSchoolAir)
+    if ((akSpellTraits[spell].m_schoolBits & H3_IDX(eSchoolAir))
         && target->getSpellTime(30))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromAirFactor);
-    if ((akSpellTraits[spell].m_schoolBits & eSchoolFire)
+    if ((akSpellTraits[spell].m_schoolBits & H3_IDX(eSchoolFire))
         && target->getSpellTime(31))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromFireFactor);
-    if ((akSpellTraits[spell].m_schoolBits & eSchoolWater)
+    if ((akSpellTraits[spell].m_schoolBits & H3_IDX(eSchoolWater))
         && target->getSpellTime(32))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromWaterFactor);

@@ -8,6 +8,8 @@
 #ifndef HOMM3_SPELLSCHOOL_H
 #define HOMM3_SPELLSCHOOL_H
 
+#include "domains.h"
+
 // Magic school selector; get_protection_value (0x4396e0) takes it, and
 // so does the hero-side pair hero::GetSpellSchoolLevel (0x4e5100) /
 // hero::GetHighestSchool (0x4e51c0).
@@ -23,7 +25,7 @@
 // with +0xd9 (16, Water).
 // No retail byte is claimed for the SPELLING - this is DC naming
 // evidence over an int-sized domain, and it changes no codegen.
-enum TSpellSchool {
+H3_ENUM_BEGIN(TSpellSchool)
     const_invalid_school = 0,
     eSchoolAir = 1,
     eSchoolFire = 2,
@@ -31,6 +33,7 @@ enum TSpellSchool {
     eSchoolEarth = 8,
     eSchoolAll = 15,
     kNumSpellSchools = 4
-};
+H3_ENUM_END(TSpellSchool)
+H3_ENUM_FLAGS(TSpellSchool)
 
 #endif  /* HOMM3_SPELLSCHOOL_H */

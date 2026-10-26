@@ -202,7 +202,7 @@ DATA(0x00679ca0) static char g_campaignDisabledSkills[H3_IDX(kNumSecSkills)] = {
 // The four magic schools as a table, retail .DATA 0x679cbc. NOT const:
 // get_skill_award walks it with a live `mov eax,[esi]` each iteration,
 // which a const array would let VC6 fold away.
-DATA(0x00679cbc) static TSecondarySkill g_magicSchools[kNumSpellSchools] = {
+DATA(0x00679cbc) static TSecondarySkill g_magicSchools[H3_IDX(kNumSpellSchools)] = {
     eSecSkillSchoolOfFireMagic, eSecSkillSchoolOfAirMagic,
     eSecSkillSchoolOfWaterMagic, eSecSkillSchoolOfEarthMagic
 };
@@ -1354,7 +1354,7 @@ std::bitset<hero::NUM_SPELLS> markSpells(TSpellSchool school)
 {
     std::bitset<hero::NUM_SPELLS> granted;
     for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
-        if ((akSpellTraits[spell].m_schoolBits & school) != 0)
+        if ((akSpellTraits[spell].m_schoolBits & H3_IDX(school)) != 0)
             granted[spell] = true;
     }
     return granted;
@@ -2104,7 +2104,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
         excluded != eSecSkillSchoolOfWaterMagic &&
         excluded != eSecSkillSchoolOfEarthMagic) {
         int schoolTotal = 0;
-        for (i = 0; i < kNumSpellSchools; i++) {
+        for (i = 0; i < H3_IDX(kNumSpellSchools); i++) {
             TSecondarySkill school = g_magicSchools[i];
             if (currentHero->getSecondarySkill(school) < maxLevel &&
                 currentHero->getSecondarySkill(school) >= minLevel &&
@@ -2117,7 +2117,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
         }
         if (schoolTotal > 0) {
             int schoolRoll = random(1, schoolTotal);
-            for (i = 0; i < kNumSpellSchools; i++) {
+            for (i = 0; i < H3_IDX(kNumSpellSchools); i++) {
                 TSecondarySkill school = g_magicSchools[i];
                 if (currentHero->getSecondarySkill(school) < maxLevel &&
                     currentHero->getSecondarySkill(school) >= minLevel &&
@@ -5785,23 +5785,23 @@ TSkillMastery hero::getSpellSchoolLevel(TSpellSchool schoolMask,
         break;
     }
     TSkillMastery level;
-    if (schoolMask & terrainSchool) {
+    if (H3_HAS(schoolMask, terrainSchool)) {
         level = eMasteryExpert;
     } else {
         level = eMasteryNone;
-        if (schoolMask & eSchoolAir) {
+        if (H3_HAS(schoolMask, eSchoolAir)) {
             if (H3_AT(m_skillLevel, eSecSkillSchoolOfAirMagic) > level)
                 level = TSkillMastery(H3_AT(m_skillLevel, eSecSkillSchoolOfAirMagic));
         }
-        if (schoolMask & eSchoolFire) {
+        if (H3_HAS(schoolMask, eSchoolFire)) {
             if (H3_AT(m_skillLevel, eSecSkillSchoolOfFireMagic) > level)
                 level = TSkillMastery(H3_AT(m_skillLevel, eSecSkillSchoolOfFireMagic));
         }
-        if (schoolMask & eSchoolEarth) {
+        if (H3_HAS(schoolMask, eSchoolEarth)) {
             if (H3_AT(m_skillLevel, eSecSkillSchoolOfEarthMagic) > level)
                 level = TSkillMastery(H3_AT(m_skillLevel, eSecSkillSchoolOfEarthMagic));
         }
-        if (schoolMask & eSchoolWater) {
+        if (H3_HAS(schoolMask, eSchoolWater)) {
             if (H3_AT(m_skillLevel, eSecSkillSchoolOfWaterMagic) > level)
                 level = TSkillMastery(H3_AT(m_skillLevel, eSecSkillSchoolOfWaterMagic));
         }
@@ -5817,22 +5817,22 @@ TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
 {
     int bestLevel = -1;
     TSpellSchool bestSchool;
-    if ((schoolMask & eSchoolAir)
+    if (H3_HAS(schoolMask, eSchoolAir)
         && H3_AT(m_skillLevel, eSecSkillSchoolOfAirMagic) > bestLevel) {
         bestLevel = H3_AT(m_skillLevel, eSecSkillSchoolOfAirMagic);
         bestSchool = eSchoolAir;
     }
-    if ((schoolMask & eSchoolFire)
+    if (H3_HAS(schoolMask, eSchoolFire)
         && H3_AT(m_skillLevel, eSecSkillSchoolOfFireMagic) > bestLevel) {
         bestLevel = H3_AT(m_skillLevel, eSecSkillSchoolOfFireMagic);
         bestSchool = eSchoolFire;
     }
-    if ((schoolMask & eSchoolEarth)
+    if (H3_HAS(schoolMask, eSchoolEarth)
         && H3_AT(m_skillLevel, eSecSkillSchoolOfEarthMagic) > bestLevel) {
         bestLevel = H3_AT(m_skillLevel, eSecSkillSchoolOfEarthMagic);
         bestSchool = eSchoolEarth;
     }
-    if ((schoolMask & eSchoolWater)
+    if (H3_HAS(schoolMask, eSchoolWater)
         && H3_AT(m_skillLevel, eSecSkillSchoolOfWaterMagic) > bestLevel) {
         bestLevel = H3_AT(m_skillLevel, eSecSkillSchoolOfWaterMagic);
         bestSchool = eSchoolWater;
@@ -6001,11 +6001,11 @@ long hero::modifySpellDamage(SpellID spell, int damage,
                                const class army* targetArmy) const
 {
     float value = static_cast<float>(damage);
-    int school = akSpellTraits[spell].m_school;
-    if (((school & eSchoolAir) && isWieldingArtifact(ARTIFACT_ORB_OF_THE_FIRMAMENT))
-        || ((school & eSchoolEarth) && isWieldingArtifact(ARTIFACT_ORB_OF_SILT))
-        || ((school & eSchoolFire) && isWieldingArtifact(ARTIFACT_ORB_OF_TEMPESTUOUS_FIRE))
-        || ((school & eSchoolWater) && isWieldingArtifact(ARTIFACT_ORB_OF_DRIVING_RAIN)))
+    TSpellSchool school = akSpellTraits[spell].m_school;
+    if ((H3_HAS(school, eSchoolAir) && isWieldingArtifact(ARTIFACT_ORB_OF_THE_FIRMAMENT))
+        || (H3_HAS(school, eSchoolEarth) && isWieldingArtifact(ARTIFACT_ORB_OF_SILT))
+        || (H3_HAS(school, eSchoolFire) && isWieldingArtifact(ARTIFACT_ORB_OF_TEMPESTUOUS_FIRE))
+        || (H3_HAS(school, eSchoolWater) && isWieldingArtifact(ARTIFACT_ORB_OF_DRIVING_RAIN)))
         value = value * 1.5f;
     value = getSorceryFactor() * value;
     if (targetArmy)

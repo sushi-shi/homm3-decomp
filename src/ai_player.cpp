@@ -4744,7 +4744,7 @@ long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
     for (SpellID spell = 0; spell < hero::NUM_SPELLS; spell++) {
         if (!owner->spellIsAvailable(spell))
             continue;
-        if (!(akSpellTraits[spell].m_schoolBits & m_school))
+        if (!(akSpellTraits[spell].m_schoolBits & H3_IDX(m_school)))
             continue;
         if (!(akSpellTraits[spell].m_flags & 0x200))
             continue;
@@ -4832,7 +4832,7 @@ long type_tome_artifact::getValue(const hero* owner, unsigned char equipped,
             continue;
         if (!equipped && owner->spellIsAvailable(spell))
             continue;
-        if (!(akSpellTraits[spell].m_schoolBits & m_school))
+        if (!(akSpellTraits[spell].m_schoolBits & H3_IDX(m_school)))
             continue;
 
         long value = caster.getRawSpellValue(spell);

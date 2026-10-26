@@ -65,9 +65,9 @@ DATA(0x00641d94) static const char* const g_levelSprites[] = {
 DC_ADDRESS(0x14d3a4, 0x28)
 int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
 {
-    if (schoolMask == eSchoolAll)
-        return kNumSpellSchools;
-    for (int position = 0; position < kNumSpellSchools; ++position) {
+    if (schoolMask == H3_IDX(eSchoolAll))
+        return H3_IDX(kNumSpellSchools);
+    for (int position = 0; position < H3_IDX(kNumSpellSchools); ++position) {
         if (schoolMask & (1 << position))
             return position;
     }
@@ -80,7 +80,7 @@ int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
 DC_ADDRESS(0x14d3cc, 0x12)
 TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
 {
-    return position < kNumSpellSchools ? (TSpellSchool)(1 << position)
+    return position < H3_IDX(kNumSpellSchools) ? (TSpellSchool)(1 << position)
                         : eSchoolAll;
 }
 
@@ -334,13 +334,13 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
             TSpellSchool selectedSchool = s_lastSchool;
             setSchool(selectedSchool);
             m_schoolTabsWidget->setIconFrame(
-                getPositionFromSchool(selectedSchool));
+                getPositionFromSchool(H3_IDX(selectedSchool)));
             gotoPage(s_lastPage);
         } else {
             setContext(eContextAdventure);
             setSchool(eSchoolAll);
             m_schoolTabsWidget->setIconFrame(
-                getPositionFromSchool(eSchoolAll));
+                getPositionFromSchool(H3_IDX(eSchoolAll)));
             gotoPage(0);
         }
     } else if (s_lastContext == context) {
@@ -348,13 +348,13 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
         TSpellSchool selectedSchool = s_lastSchool;
         setSchool(selectedSchool);
         m_schoolTabsWidget->setIconFrame(
-            getPositionFromSchool(selectedSchool));
+            getPositionFromSchool(H3_IDX(selectedSchool)));
         gotoPage(s_lastPage);
     } else {
         setContext(context);
         setSchool(eSchoolAll);
         m_schoolTabsWidget->setIconFrame(
-            getPositionFromSchool(eSchoolAll));
+            getPositionFromSchool(H3_IDX(eSchoolAll)));
         gotoPage(0);
     }
 }
@@ -411,7 +411,7 @@ void TSpellbookWindow::gotoPage(int page)
 
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         if (m_hero->spellIsAvailable(spell)
-            && (m_school & akSpellTraits[spell].m_school)
+            && H3_HAS(m_school, akSpellTraits[spell].m_school)
             && (m_contextMask & akSpellTraits[spell].m_flags)) {
             TSpellSchool highestSchool =
                 m_hero->getHighestSchool(akSpellTraits[spell].m_school);
@@ -433,7 +433,7 @@ void TSpellbookWindow::gotoPage(int page)
     int widgetIndex;
     if (page == 0 && m_school != eSchoolAll) {
         m_headingWidget->m_status |= widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-        m_headingWidget->setIconFrame(getPositionFromSchool(m_school));
+        m_headingWidget->setIconFrame(getPositionFromSchool(H3_IDX(m_school)));
 
         m_spellLevelWidgets[0]->m_status &=
             ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
@@ -464,7 +464,7 @@ void TSpellbookWindow::gotoPage(int page)
         m_spellLevelWidgets[widgetIndex]->m_status |=
             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
         m_spellLevelWidgets[widgetIndex]->setSprite(
-            g_levelSprites[getPositionFromSchool(entry.m_school)]);
+            g_levelSprites[getPositionFromSchool(H3_IDX(entry.m_school))]);
         m_spellLevelWidgets[widgetIndex]->setIconFrame(entry.m_mastery);
 
         m_spellIconWidgets[widgetIndex]->m_status |=
@@ -533,7 +533,7 @@ DC_ADDRESS(0x14ce10, 0x58)
 MAC_ADDRESS(0x18cc00, 0xec)
 void TSpellbookWindow::displayNewSchool(int position)
 {
-    if (getSchool() == getSchoolFromPosition(position))
+    if (getSchool() == H3_IDX(getSchoolFromPosition(position)))
         return;
 
     if (g_config.m_animateSpellBook)
@@ -627,7 +627,7 @@ int TSpellbookWindow::windowHandler(message& msg)
             break;
 
         case KEYCODE_KP_8: { // up
-            int schoolPosition = getPositionFromSchool(m_school);
+            int schoolPosition = getPositionFromSchool(H3_IDX(m_school));
             int tab = g_schoolToTab[schoolPosition] - 1;
             if (tab < 0)
                 tab = 4;
@@ -636,7 +636,7 @@ int TSpellbookWindow::windowHandler(message& msg)
         }
 
         case KEYCODE_KP_2: { // down
-            int schoolPosition = getPositionFromSchool(m_school);
+            int schoolPosition = getPositionFromSchool(H3_IDX(m_school));
             int tab = g_schoolToTab[schoolPosition] + 1;
             if (tab >= 5)
                 tab = 0;

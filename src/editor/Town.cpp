@@ -190,7 +190,7 @@ TTown::TTown(const TObjectType& objType, TRawIStream* pIStream, int version)
         readBitset(*pIStream, spellsMask);
         for (int spell = 0; spell < kNumSpells; spell++) {
             if (spellsMask[spell]
-                && ((akSpellTraits[spell].m_flags & 0x2000) || akSpellTraits[spell].m_school == 0
+                && ((akSpellTraits[spell].m_flags & 0x2000) || akSpellTraits[spell].m_school == const_invalid_school
                     || !typeTraits.hasMageGuildLevel(akSpellTraits[spell].m_level - 1)))
                 spellsMask[spell] = false;
         }
@@ -199,7 +199,7 @@ TTown::TTown(const TObjectType& objType, TRawIStream* pIStream, int version)
     readBitset(*pIStream, spellsMask);
     for (int spell = 0; spell < kNumSpells; spell++) {
         if (spellsMask[spell]
-            && ((akSpellTraits[spell].m_flags & 0x2000) || akSpellTraits[spell].m_school == 0
+            && ((akSpellTraits[spell].m_flags & 0x2000) || akSpellTraits[spell].m_school == const_invalid_school
                 || !typeTraits.hasMageGuildLevel(akSpellTraits[spell].m_level - 1)
                 || type < kNumTownTypes && akSpellTraits[spell].m_townGetsItChance[type] <= 0))
             spellsMask[spell] = false;
