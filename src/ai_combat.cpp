@@ -278,8 +278,7 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
 
     // DC263's nullary hit-point bonus precedes DC264's speed bonus. Retail
     // instead calls GetCombatSpeedBonus before this loop and the newer
-    // GetHitPointBonus(int) per creature at 0x4242de. The audit's source-order
-    // lead is this platform/ABI difference, not an omitted shared call.
+    // GetHitPointBonus(int) per creature at 0x4242de.
     m_totalCombatValue = 0;
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         TCreatureType creature = m_currentArmy->m_armyTypes[i];
@@ -373,8 +372,7 @@ void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
 // E:\gamedcs\ai_combat.cpp:381
 // DC proves the const receiver and this source position. Retail
 // expands the one call in initializeCreatures; that is not evidence for an
-// explicit inline keyword. All eight declaration/order controls are score-
-// flat; keep the ordinary canonical helper and its real read-only interface.
+// explicit inline keyword.
 DC_ADDRESS(0x02a52c, 0x5c)
 MAC_ADDRESS(0x026bf0, 0x64)
 type_speed_catagory type_AI_combat_data::getCatagory(
@@ -656,14 +654,7 @@ void type_AI_combat_data::getMassDamageValue(
 // castSpell calls. Line 758 assigns take_damage's return to the running value;
 // retail 0x425bd0 does so in both expansions (ESI/EDI <- EAX), then subtracts
 // that capped value. Separate subscripts also reproduce retail's vector reload
-// across getSpellDamage. The inherited cloned loops incorrectly carried the
-// uncapped sum. Never restore that dataflow or a caller-specific clone for score.
-// The 48-state boundary family and 96-state hasCreature follow-up exhausted
-// cloned/canonical, retained/removed fences and the three dataflow/lifetime
-// facts. Correct ordinary/unfenced + hasCreature scores castSpell 86.7910;
-// keeping the first inherited fence scores 88.5664. Both old fences are
-// removed. The remaining nested decisions close when castSpell recovers
-// its separate getSummoningValue boundary, as documented below.
+// across getSpellDamage.
 DC_ADDRESS(0x02ac58, 0x8a)
 MAC_ADDRESS(0x0275bc, 0xbc)
 void type_AI_combat_data::castMassDamageSpell(
@@ -837,11 +828,9 @@ void type_AI_combat_data::castSummoning(type_spell_choice& choice)
 }
 
 // Reading the defender's m_currentArmy and m_currentHero fields directly
-// (not through getArmy/getHero) fixes the last register homes: 99.7461% ->
-// exact, with Mac rising 89.90% -> 93.02%.
-// Mac retains the same 18 direct game calls in the same order, including both
-// getDamageSpellValue arms and the four cast helpers. A seven-mutation VC6
-// register probe on this body found no closer binding than the current one.
+// (not through getArmy/getHero) fixes retail's register homes. Mac retains
+// the same 18 direct game calls in the same order, including both
+// getDamageSpellValue arms and the four cast helpers.
 // E:\gamedcs\ai_combat.cpp:965
 VA(0x00425bd0, 0x593)
 DC_ADDRESS(0x02b094, 0x296)
@@ -1510,7 +1499,7 @@ long aiApproximateStrength(const hero* currentHero)
 }
 
 // E:\gamedcs\ai_combat.cpp:1674
-// LOCATED (hd-crossbuild + ida): same body with the group in edx.
+// Same body as DC's, with the group in edx.
 VA(0x00427690, 0x2F)
 DC_ADDRESS(0x02c628, 0x40)
 MAC_ADDRESS(0x029710, 0x80)  // corroborates (hd-crossbuild + ida)
@@ -1530,9 +1519,7 @@ VA_COMPGEN(0x00427750, 0x21, VECTOR_SIZE, type_monster_data)
 // links Dinkumware. Their exclusions live in config/source/dc_only_generated.tsv.
 
 // push_back on the combat AI's monster table retains Dinkumware's
-// three-argument vector::insert specialization in ai_combat.obj. Byte-
-// verified against the emitted COMDAT at 0.987 mnemonic agreement over 740
-// bytes - the largest single row the COMDAT pass recovered.
+// three-argument vector::insert specialization in ai_combat.obj.
 VA_COMPGEN(0x00427780, 0x2E4, VECTOR_INSERT, type_monster_data)
 
 // COMDAT pairing: std::_Sort<type_monster_data>, agreement 0.983.

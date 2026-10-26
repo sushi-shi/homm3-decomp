@@ -303,19 +303,6 @@ TRecruitWindow::~TRecruitWindow()
 // have alignment -1 and select the neutral background at table index zero.
 // `name_y` is genuinely unused here; the constructor uses it for the
 // adjacent name widgets after calling this helper.
-// Residual (93.6325%): blocks B0..B24, including all three allocations and
-// constructor calls, are instruction-for-instruction exact. The only delta is
-// the slow-growth tail of the FINAL Widgets.push_back: retail leaves the last
-// vector<widget*>::size() at 0x423110 out of line and therefore merges its
-// empty/non-empty return, while this VC6 compile inlines that 19-byte helper
-// and emits one duplicate exit. predict-inline measures 17 candidate calls
-// versus retail's 18. A statement-scoped inline_depth(1) is byte-flat, while
-// depth(0) de-inlines the whole push_back edge and falls to 51.8481%; it cannot
-// isolate the nested size() call. Other source-form controls: named border
-// temporary 93.59%; direct count-insert 79.10%; direct single-insert 87.60%.
-// All preserve the values but perturb more of Dinkumware's insertion lowering,
-// so the natural push_back form below is the banked maximum. Inline-budget /
-// generation residual, not missing game logic.
 VA(0x0054fb90, 0x30D)
 DC_ADDRESS(0x119820, 0x12c)
 MAC_ADDRESS(0x14ec28, 0x2a0)  // anchor-callee + anchor-global
@@ -1027,10 +1014,9 @@ int recruitUnit::main(message& msg)
 
 // E:\gamedcs\recruit.cpp:1082
 // Dreamcast and Mac keep this source-visible helper out of line. Without an
-// explicit inline specifier, VC6 still expands it in all three constructors;
-// both admitted Mac constructors then match exactly with their updateCost
-// calls intact. Raw NB11 names the sole surviving local `resCost`, while the
-// body calls the exact GetMonsterCost helper before deriving the two costs.
+// explicit inline specifier, VC6 still expands it in all three constructors.
+// Raw NB11 names the sole surviving local `resCost`, while the body calls the
+// exact GetMonsterCost helper before deriving the two costs.
 DC_ADDRESS(0x11ac7c, 0x88)
 MAC_ADDRESS(0x1506e0, 0xd8)
 void recruitUnit::updateCost()
@@ -1060,9 +1046,7 @@ void recruitUnit::updateCost()
 // pairs into +0x5c/+0x6c .. +0x68/+0x78, with the first pair also
 // seeding monsterType/numAvail.
 // DC lines 1121..1141 and Mac 0:0x150804..0x150848 preserve the full
-// field-store order below. The earlier isolated head-store probes left
-// type/viewOnly and selectedPosition outside that sequence. VC6 now matches
-// the 0x101-byte retail constructor exactly, including both calls.
+// field-store order below.
 VA(0x00551350, 0x101)
 DC_ADDRESS(0x11ad04, 0xae)
 MAC_ADDRESS(0x1507b8, 0xc4)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70
@@ -1097,8 +1081,7 @@ recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
 // `ret 0x24` = the nine hero-flavoured parameters; identical body with
 // thisHero taking the armyGroup pair's place.
 // DC lines 1159..1179 and Mac 0:0x1508c4..0x15090c establish the complete
-// field-store order below. VC6 matches the 0xFE-byte retail body exactly;
-// the earlier thisHero-first-only probe omitted the surrounding store order.
+// field-store order below.
 VA(0x00551460, 0xFE)
 DC_ADDRESS(0x11adb4, 0xa4)
 MAC_ADDRESS(0x15087c, 0xc0)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70
@@ -1163,7 +1146,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
 
 // E:\gamedcs\recruit.cpp:1219. Dreamcast and Mac retain this constructor;
 // Mac quickViewRecruit calls it at 0:0x150cc8. VC6 expands this ordinary
-// definition into the sole Windows caller at 0x551780 (45/45 calls agree).
+// definition into the sole Windows caller at 0x551780.
 DC_ADDRESS(0x11af24, 0x74)
 MAC_ADDRESS(0x150a6c, 0x58)
 TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
@@ -1196,7 +1179,7 @@ void quickViewRecruit(town* newTown, int newDwellingIndex)
 }
 
 // DC recruit.cpp:1295 names GetArmyName; Mac 0x150d5c..0x150d80 expands
-// its guarded plural lookup. Keep the canonical call; Windows remains 100%.
+// its guarded plural lookup. Keep the canonical call.
 VA(0x00551780, 0x641)
 DC_ADDRESS(0x11b028, 0x514)
 MAC_ADDRESS(0x150bb8, 0x688)
@@ -1329,12 +1312,11 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
     g_windowManager->doQuickView(recruitWindow);
 }
 
-// COMDAT pairing: vector<widget*>::insert, agreement 0.985. Three addresses
-// resembled this COMDAT and the CALLER SET settles it: 0x14d120 is reached
-// from TAdventureMapWindow's and TAdventureOptionsWindow's constructors
-// among others - window ctors pushing widgets, in units all over the tree,
-// which is what a single shared COMDAT looks like. combatwindow 0x73600 has
-// exactly ONE caller, TCombatWindow::combat_message, so it is that unit's
-// own vector and not this COMDAT; towngatewindow 0x5c2400 turned out to be
-// AddTown with the insert expanded into it.
+// COMDAT pairing: vector<widget*>::insert. The CALLER SET settles it:
+// 0x14d120 is reached from TAdventureMapWindow's and TAdventureOptionsWindow's
+// constructors among others - window ctors pushing widgets in units all over
+// the tree, as a single shared COMDAT is. combatwindow 0x73600 has exactly
+// ONE caller, TCombatWindow::combat_message, so it is that unit's own
+// vector; towngatewindow 0x5c2400 is AddTown with the insert expanded into
+// it.
 VA_COMPGEN(0x0054d120, 0x209, VECTOR_INSERT, widget)

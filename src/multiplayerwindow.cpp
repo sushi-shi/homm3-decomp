@@ -415,14 +415,12 @@ int CHotSeatEdit::onKeyPress(message* msg)
 
 // DC's derived member types make each push_back convert through a widget*
 // temporary, as retail does, and DC 938..940 guards the host button's push
-// like the hot-seat one. Together they raise this constructor from 83.92% to
-// 99.95%; proven STL fold identities and the native CRT comparison spelling
-// in deleteTempSaveGame close the remaining relocation differences.
+// like the hot-seat one.
 // Complete's three final registrations load +0xbc, +0xf4, then +0xf8 at
 // constructor +0x64f/+0x669/+0x683: player edit before the two headers.
 // Keep that retail widget order instead of the older DC header-first run.
-// DC multiplayerwindow.cpp:926/927 looks up the session and user headers.
-// Complete's existing getText helper is byte-flat under VC6 here.
+// DC multiplayerwindow.cpp:926/927 looks up the session and user headers;
+// Complete keeps its getText helper.
 VA(0x0050e050, 0xCFC)
 DC_ADDRESS(0x0ffb70, 0x898)
 MAC_ADDRESS(0x219ee8, 0xc3c)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims
@@ -822,7 +820,7 @@ inline bool TMultiPlayerWindow::onModem()
 // DC 1197..1297 fixes every arm's shape: CANCEL tests m_inSessionList
 // positively, HOST nests its cancel test and host/join-screen test under
 // the failed OnHost with the success flag in the else arm, and every arm
-// leaves through break to the single return. That shape is exact.
+// leaves through break to the single return.
 VA(0x0050f4e0, 0x458)
 DC_ADDRESS(0x1009a4, 0x276)
 MAC_ADDRESS(0x21ae68, 0x2e0)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect)
@@ -991,9 +989,7 @@ bool TMultiPlayerWindow::joinSession(CDPlaySession* session, const char* passwor
 }
 
 // Mac 0x21b18c calls initRemote (0x21297c), then its Mac transport setup
-// (0x2137ec). Windows retail hosts through DirectPlay in this method. The
-// missing Mac call in the source audit reflects this different implementation;
-// the shared-call reconciliation for this pair remains open.
+// (0x2137ec). Windows retail hosts through DirectPlay in this method.
 VA(0x0050fab0, 0x106)
 DC_ADDRESS(0x100d0c, 0x10a)
 MAC_ADDRESS(0x21b18c, 0x7c)
@@ -1576,9 +1572,7 @@ unsigned char TMultiPlayerWindow::isNT()
 // CHeroWindowEx::windowHandler (0x5ff820); CHotSeatEdit handles native keys.
 
 // Mac expands this constructor inside onHotSeat (0x21c710), retaining the
-// same reserve/push_back and widget calls. Windows' remaining difference is
-// the first vector::size expansion in the last push_back; sharing one loop
-// index across the edit/link/autodraw loops is byte-flat at 97.43%.
+// same reserve/push_back and widget calls.
 VA(0x00511e20, 0x5A1)
 DC_ADDRESS(0x1028c4, 0x364)
 CHotSeatDlg::CHotSeatDlg()

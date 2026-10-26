@@ -379,17 +379,15 @@ const std::bitset<TOWN_TYPE_COUNT>& getAngelicAllianceAlignments()
 // Resurrection only tests undead; Bless adds the damage-high test used by
 // Fortune/Misfortune/Slayer; Precision shares Forgetfulness's shooter test.
 // Stone tests the Troglodyte pair; Poison tests living and the Gargoyle pair.
-// The old transcription grouped these entries by apparent similarity and
-// also treated Diamond Golems as universally immune. The retail table puts
-// them on the normal path, Green/Red/Azure Dragons on level <= 3, Gold on
-// level <= 4, and Black/Magic Elemental on the unconditional zero path.
+// The retail table puts Diamond Golems on the normal path, Green/Red/Azure
+// Dragons on level <= 3, Gold on level <= 4, and Black/Magic Elemental on the
+// unconditional zero path.
 
 // DC lines 505..507 and retail +0x2bd..+0x2d5 make mind immunity a creature
 // trait OR a hero's Badge of Courage. DC 564..565 and retail +0x325 apply
 // GetMagicResistanceFactor after the entire creature switch, including its
 // default arm; it is not confined to Dwarves. The arrow-tower rejection at
-// retail +0xa7 is independent of the siege-weapon trait. These are behavior
-// corrections, verified separately from the byte similarity score.
+// retail +0xa7 is independent of the siege-weapon trait.
 VA(0x0044a4d0, 0x52E)
 DC_ADDRESS(0x04e644, 0x3f2)
 MAC_ADDRESS(0x0579bc, 0x574)  // linkorder
@@ -674,14 +672,12 @@ unsigned char armyGroup::isMember(TCreatureType monType) const
     return 0;
 }
 
-// Naming the creature once preserves getCreatureAlignment and recovers Windows
-// 67.8644 -> 100. Mac reuses that same creature load through the census.
-// Its ten byte stores reload a reference-bound integer zero: counted
-// std::fill_n reproduces this leaf body (99.7368%) while remaining Windows
-// exact. The older DC body calls memset instead. Pointer-range std::fill
-// keeps an eight-byte unrolled runtime loop; int versus sizeof count is flat.
-// The sole Mac residual is the fallback array's SP-0x10 versus SP-0x14 home;
-// do not pad the array or remove getCreatureAlignment to chase that displacement.
+// The creature is named once, preserving getCreatureAlignment (Mac reuses
+// the same creature load). Its ten byte stores reload a reference-bound
+// integer zero: counted std::fill_n (the older DC body calls memset).
+// Pointer-range std::fill keeps an eight-byte unrolled runtime loop.
+// The fallback array's Mac home is SP-0x10 against native SP-0x14; do not
+// pad the array or remove getCreatureAlignment for that displacement.
 VA(0x0044abb0, 0x97)
 DC_ADDRESS(0x04ebf0, 0xa6)
 MAC_ADDRESS(0x05828c, 0x17c)
@@ -746,9 +742,8 @@ long armyGroup::getAIValue() const
 // Original: armyGroup::GetNumArmies; armygrp.cpp:804.
 // The older DC body belongs to armygrp.cpp; Mac places its body after
 // getAIValue and before add, with 42 retained game-call sites. Body order
-// alone does not exclude a retained header copy. The ordinary source body
-// restores eight Windows callers to exact; Complete's hero bottom-view
-// count still expands, so its original TU/placement remains unresolved.
+// alone does not exclude a retained header copy; Complete's hero bottom-view
+// count still expands it, so the original TU/placement is unresolved.
 VA(0x0044acc0, 0x14)
 DC_ADDRESS(0x04ed28, 0x24)
 MAC_ADDRESS(0x058528, 0x7c)
@@ -928,7 +923,7 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
     return applyLimits ? limit(-3, morale, 3) : morale;
 }
 
-// FULLY TRANSCRIBED 2026-08-06. Complete has SIX params (ret 0x18),
+// Complete has SIX params (ret 0x18),
 // extending the older DC five-argument API: (index, ownerHero, ownerTown, MODE
 // 0, arg5, 0) - SEVEN pushes; Complete also adds the grouping argument
 // to DC's six-argument GetMorale. mode==3 -> (elementals/f_1f698 gate) townType
@@ -1189,10 +1184,8 @@ void armyGroup::mergeArmies(armyGroup& source)
 // alignments[9], angel_type, the GetArmyName calls and nested modifier scopes.
 // Complete's neutral alignment requires the ten-byte array below.
 // Mac materializes the shared four-valued town classification at 0x59868
-// and 0x5993c. Restoring its two calls removes the old switch-exit scaffolding
-// and raises Windows 97.27% to 99.21%; the source helper remains canonical.
-// DC lines 1375..1378 retain explicit penalty assignments in if/else arms;
-// this shape also recovers the final string append and return code in VC6.
+// and 0x5993c; the source keeps its two canonical helper calls. DC lines
+// 1375..1378 retain explicit penalty assignments in if/else arms.
 // Windows and Mac use text indices 38/39 for holy good/evil and 41/40 for
 // evil-fog good/evil (Mac loads at 0x598b4, 0x598e0, 0x59988, 0x599b4).
 VA(0x0044b960, 0x859)
@@ -1337,9 +1330,8 @@ std::string armyGroup::getMoraleDescription(
 // E:\gamedcs\armygrp.cpp:1464. Complete adds the creature argument and
 // full-width magic-terrain mode. DC line 1482 assigns the hero description;
 // line 1499 calls HasBuilding(EXTRA_0_ID, true). Preserve those source calls.
-// Mac 0x59fa0..0x59fe4 materializes the four-valued town classification.
-// Restoring its helper call matches every Windows byte, including the retained
-// Halfling string destructor and expanded final-adjustment cleanup.
+// Mac 0x59fa0..0x59fe4 materializes the four-valued town classification;
+// the helper call stays.
 // The town-type snapshot stays within its nonnull guard. Naming the formatted
 // string extends its lifetime and loses the native temporary cleanup boundary.
 // Luck remains int: Windows and Mac 0x5a18c use its full-width argument;
@@ -1434,8 +1426,7 @@ TTerrainType armyGroup::getNativeTerrain() const
     return native;
 }
 
-// COMDAT pairing: bitset<9>::reference::operator=, agreement 0.922; the
-// neighbouring 0x4c680 row scores 0.600 against the same COMDAT.
+// COMDAT pairing: bitset<9>::reference::operator=.
 VA_COMPGEN(0x0044c610, 0x67, BITSET_REFERENCE_ASSIGN, bitset9)
 
 // COMDAT pairing: the same bitset<9> instantiation's _Tidy, 23 B against

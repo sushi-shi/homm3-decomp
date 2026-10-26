@@ -374,12 +374,10 @@ void Bitmap16Bit::Grab(const unsigned short* src, int srcX, int srcY,
 // the inner store loop into its word-fill idiom (duplicate the colour into
 // a dword, `shr ecx,1 / rep stosd / adc ecx,ecx / rep stosw`).
 // DC bitmap16.cpp:699 (0x51566..0x51568) and retail both advance the row
-// cursor unconditionally. Retain that original source behavior for the exact
-// reconstruction, including its unused out-of-range pointer after a bottom-edge
-// rectangle with x > 0. For an owned 4x4 bitmap, fillRect(1,3,1,1) ends at
-// pixel offset 17, beyond one-past 16. The allocation does not include padding
-// that would make this valid portable C++. The earlier guarded repair scored
-// 82.1964%; tested integral offsets and zero-column origins do not match.
+// cursor unconditionally, so a bottom-edge rectangle with x > 0 leaves an
+// unused out-of-range row pointer: for an owned 4x4 bitmap, fillRect(1,3,1,1)
+// ends at pixel offset 17, beyond one-past 16. A guarded row step does not
+// match retail.
 VA(0x0044e4c0, 0x7D)
 DC_ADDRESS(0x05150c, 0x70)
 MAC_ADDRESS(0x05c348, 0xec)  // anchor-caller(textWidget::Draw, FadeToBlack) + order-map(DC bitmap16.obj)
@@ -405,9 +403,8 @@ void Bitmap16Bit::FillRect(int x, int y, int w, int h, unsigned short color)
 // proves the clipped width/height, one GetMap call, row loop, full top/bottom
 // rows, and two endpoint stores on interior rows. Retail independently fixes
 // Pitch as a byte stride and preserves this 18-block source shape.
-// Row-boundary residual (95.2113%): step only on a visited following row.
-// The last-row guard scores 94.3662%, visited-row offsets 70.2113%; original
-// 100% forms end+x at the bottom edge and fails the native pointer control.
+// The row step also runs after the last row, forming end+x at the bottom
+// edge as retail does; guarded or visited-row steps do not match.
 VA(0x0044e540, 0xA3)
 DC_ADDRESS(0x05157c, 0x98)
 MAC_ADDRESS(0x05c434, 0x11c)
@@ -438,10 +435,8 @@ void Bitmap16Bit::FrameRect(int x, int y, int w, int h,
 // E:\gamedcs\bitmap16.cpp:742. Dreamcast () proves the clipped
 // rectangle, one GetMap expression, RGB shift-mask construction, and nested
 // row/pixel loops. Complete inlines GetMap and independently fixes Pitch as
-// a byte stride; the earlier unchecked 0xA4-byte body was exact.
-// Row-boundary residual (82.6377%): an integral byte displacement advances
-// after each row, but the pointer is formed only on a visit. Next-row guards
-// score 77.4203%, last-row guards 64.5072%; the DC pixel/mask work is retained.
+// a byte stride. The row pointer advances after every row, including the
+// last; next-row and last-row guards do not match retail.
 VA(0x0044E5F0, 0xA4)
 DC_ADDRESS(0x051614, 0x94)
 MAC_ADDRESS(0x05c550, 0x1a8)
@@ -569,14 +564,9 @@ void Bitmap16Bit::Colorize(int x, int y, int width, int height,
 // double conversion are all loop-invariant and land in the inner loop's
 // preheader; only the fmod call itself stays per-pixel, because VC6 will not
 // hoist an opaque call.
-// Row-boundary residual (96.5654%): integral relative byte offsets avoid the
-// final end+x pointer. Next/last guards score 94.6013/94.5490%; unchecked
-// row walks are not safe. Native one-row differential tests cover all six
-// hue sectors.
-// EXACT: the helper's by-value parameter owns the double scratch storage.
-// Sixteen source states / eight reproduced objects isolate this from the
-// caller's early-return scope (DC 884/885), plain ushort row/pixel pointers,
-// and the helper's ordinary declaration; those source restorations are flat.
+// The row walk advances past the last row as retail does; next/last-row
+// guards do not match. The helper's by-value parameter owns the double
+// scratch storage.
 VA(0x0044e940, 0x3B8)
 DC_ADDRESS(0x0519c4, 0x47c)
 MAC_ADDRESS(0x05c9b4, 0x328)  // anchor-caller(the 16-bit Colorize tail call) + order-map(DC bitmap16.obj)

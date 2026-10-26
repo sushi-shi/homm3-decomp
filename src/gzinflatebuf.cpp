@@ -19,8 +19,7 @@
 // disassembly alone could not: the 0x63e704 / 0x645640 / 0x63aba8 vftables
 // are Dinkumware's three-slot {deleting dtor, what, _Doraise} shape, the
 // 354-byte body at 0x41ba90 is `std::runtime_error::runtime_error(const
-// string&)`'s COMDAT, and the 249-byte body at 0x49a0c0 - carried as
-// "substantial, unidentified" in dxplay.cpp's next-lane note - is
+// string&)`'s COMDAT, and the 249-byte body at 0x49a0c0 is
 // `TRuntimeError::TRuntimeError(const char*)`, not a dxplay method.
 
 // The header-check failures throw a plain `bool` (throw record 0x64e1b8
@@ -406,25 +405,19 @@ TGzInflateBuf::~TGzInflateBuf()
 
 // 0x4d6920: drain the source into the output half, either
 // through inflate or, for a non-gzip member, by straight copy.
-// Constructor visibility probes are Windows-flat. A temporary explicit
-// inline _mustGetC suppresses its required Windows body and is rejected.
-// CW auto/deferred/depth controls change the native retained-call pattern;
-// no source qualifier or compiler override is inferred from those controls.
+// _mustGetC is not explicitly inline: its Windows body is required.
 // Mac 0x221574..0x221588 dispatches inflate status with a range tree:
 // compare -3, skip larger values, compare -4, then select the exceptions.
-// A switch reproduces that tree at candidate +0xc0..+0xd4; sequential
-// equality guards do not. Windows 81.4346% -> 81.90%, with every trailer
-// _mustGetC call preserved. Exception homes and expansion decisions remain.
+// A switch reproduces that tree; sequential equality guards do not.
 
 // The FIRST guard reads `avail_in <= 0`, not `== 0`: retail inverts it to
 // `ja` (unsigned above) where `== 0` can only ever emit `jne`, and the two
-// are the same test on zlib's `uInt`. 80.8063 -> 81.1188. The second guard
-// really is `== 0` - retail emits `jne` there.
+// are the same test on zlib's `uInt`. The second guard really is `== 0` -
+// retail emits `jne` there.
 
 // Retail's raw-copy minimum uses a strict unsigned comparison: spelling
-// avail_in < avail_out ? avail_in : avail_out restores jb and raises this
-// caller from 81.1204% to 81.4346%. std::_cpp_min on copied local counts
-// adds operand homes and scores 79.1832%; keep the direct value expression.
+// avail_in < avail_out ? avail_in : avail_out gives jb, while std::_cpp_min
+// on copied local counts adds operand homes.
 
 // The gzip trailer is two _mustGetLong reads, as Loki h3maped retains
 // TGzInflateBuf::_mustGetLong (0x81d4070: four _mustGetC calls summed with
@@ -432,8 +425,8 @@ TGzInflateBuf::~TGzInflateBuf()
 // _mustGetC pattern (expanded at trailer reads 1,2,5,6, called at 3,4,7,8)
 // and its separate exception slots. Loki's refill also stores next_in
 // before avail_in (0x81d3ba1..0x81d3bb0); with the helper, that order is
-// retail's ecx load of the input buffer. 81.80% -> 100%. Mac expands all
-// eight checked reads without a visible group boundary.
+// retail's ecx load of the input buffer. Mac expands all eight checked reads
+// without a visible group boundary.
 VA(0x004d6920, 0x251)
 MAC_ADDRESS(0x2214c0, 0x4d4)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
 int TGzInflateBuf::underflow()
