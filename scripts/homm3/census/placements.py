@@ -1178,6 +1178,48 @@ def derive(log=print, want_suggestions=False):
     log(f"[placements] {len(homes)} string literals at unique referenced addresses; "
         f"{anchored} functions anchored by them, {prefixed} by masked prefixes")
 
+    # Every unit's body of a name: a shared unit compiled under another
+    # profile emits the same template differently, and each copy may be the
+    # one retail kept at its own address.
+    variants = defaultdict(list)
+    for (_unit, name), body in unit_bodies.items():
+        if body not in variants[name]:
+            variants[name].append(body)
+
+    def equal_at(name, target):
+        """Whether one of `name`'s compiled bodies equals retail at the
+        census start `target`, relocation fields masked."""
+        for body, relocs in variants.get(name, ()):
+            if functions.get(target) != len(body):
+                continue
+            mask = bytearray(len(body))
+            for site in relocs:
+                mask[site:site + 4] = b"\1\1\1\1"
+            if all(m or x == y for x, y, m in zip(blob(target, len(body)), body, mask)):
+                return True
+        return False
+
+    def keep_equal_bodies():
+        """A name proposed at several addresses keeps the one where its own
+        body equals retail when exactly one does: a call that a moved layout
+        pairs at the same offset can reach another callee (GameMap's save
+        pairs the long writer with the one-byte writer), while the callee's
+        own bytes are direct evidence."""
+        narrowed = False
+        for name, rvas in names.items():
+            if len(rvas) < 2:
+                continue
+            equal = {rva for rva in rvas if equal_at(name, rva)}
+            if len(equal) == 1 and equal != rvas:
+                for loser in rvas - equal:
+                    named_at[loser].discard(name)
+                rvas.intersection_update(equal)
+                narrowed = True
+        return narrowed
+
+    while keep_equal_bodies():
+        propagate()
+
     by_rva = defaultdict(set)
     for name, rvas in names.items():
         for rva in rvas:
@@ -1190,9 +1232,18 @@ def derive(log=print, want_suggestions=False):
                   if any(unit not in owned for unit in definers.get(name, ()))}
         if shared and shared != group:
             by_rva[rva] = shared
+
     def folded(rva):
-        return fold_label(by_rva[rva], names, bodies, definers, owned,
-                          lambda name: portable(name, definers[name][0]) in inline_comdats)
+        label = fold_label(by_rva[rva], names, bodies, definers, owned,
+                           lambda name: portable(name, definers[name][0]) in inline_comdats)
+        if label is not None:
+            return label
+        # Names whose bodies differ reach one address when callers inline
+        # differently (a set::insert wrapper paired with the _Tree::insert
+        # retail calls): the one name whose own body equals retail there,
+        # reaching no other address, is its identity.
+        equal = [name for name in by_rva[rva] if len(names[name]) == 1 and equal_at(name, rva)]
+        return equal[0] if len(equal) == 1 else None
 
     rows, conflicts = [], 0
     placed_keys = set()                   # the function keys rows name
