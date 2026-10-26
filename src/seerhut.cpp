@@ -643,9 +643,9 @@ VA(0x0056e3e0, 0x29)
 MAC_ADDRESS(0x165644, 0x38)
 unsigned char type_defeat_hero_quest::isSatisfied(hero* currentHero)
 {
-    if (currentHero->m_owner < 0)
+    if (currentHero->playerOwner < 0)
         return 0;
-    return (m_satisfiedMask & (1 << currentHero->m_owner)) != 0;
+    return (m_satisfiedMask & (1 << currentHero->playerOwner)) != 0;
 }
 
 VA(0x0056e410, 0x99)
@@ -780,7 +780,7 @@ VA(0x0056ebd0, 0x26)
 MAC_ADDRESS(0x165ca0, 0x28)
 unsigned char type_monster_quest::isSatisfied(hero* currentHero)
 {
-    int owner = currentHero->m_owner;
+    int owner = currentHero->playerOwner;
 
     if (owner < 0)
         return 0;
@@ -1449,7 +1449,7 @@ VA(0x005717b0, 0x4B)
 MAC_ADDRESS(0x168004, 0xf0)  // anchor-vtable
 unsigned char type_resource_quest::isSatisfied(hero* currentHero)
 {
-    int owner = currentHero->m_owner;
+    int owner = currentHero->playerOwner;
     if (owner < 0)
         return 0;
 
@@ -1468,7 +1468,7 @@ MAC_ADDRESS(0x1680f4, 0x94)  // anchor-vtable
 void type_resource_quest::takePayment(hero* currentHero)
 {
     int* questResource = m_resources;
-    long* playerResource = g_game->m_players[currentHero->m_owner].m_resources;
+    long* playerResource = g_game->m_players[currentHero->playerOwner].m_resources;
     int count = 7;
     do {
         *playerResource++ -= *questResource++;
@@ -1484,7 +1484,7 @@ void type_resource_quest::doProgressDialog(hero* currentHero)
     std::vector<type_dialog_resource> dialogResources;
     type_dialog_resource resource;
     long* playerResources =
-        g_game->m_players[currentHero->m_owner].m_resources;
+        g_game->m_players[currentHero->playerOwner].m_resources;
 
     for (int i = 0; i <= 6; ++i) {
         if (playerResources[i] < m_resources[i]) {
@@ -1694,7 +1694,7 @@ VA(0x005724f0, 0x1A)
 MAC_ADDRESS(0x168d30, 0x1c)
 unsigned char type_belong_to_player_quest::isSatisfied(hero* currentHero)
 {
-    return currentHero->m_owner == m_requiredOwner;
+    return currentHero->playerOwner == m_requiredOwner;
 }
 
 VA(0x00572510, 0x99)
@@ -1826,7 +1826,7 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
     }
 
     if (humanPlayer) {
-        if (!playerHasInfo(currentHero->m_owner))
+        if (!playerHasInfo(currentHero->playerOwner))
             m_quest->doProposalDialog();
         else if (!m_quest->isSatisfied(currentHero))
             m_quest->doProgressDialog(currentHero);
@@ -2005,12 +2005,12 @@ int TSeerHut::getValue(hero* currentHero)
 
     // The by-value max wrapper owns its argument temporaries only in this
     // arm; retail reuses that stack slot for the active quest below.
-    if (!playerHasInfo(currentHero->m_owner))
+    if (!playerHasInfo(currentHero->playerOwner))
         return ::max(value, 20);
 
     if (m_quest && !m_quest->hasExpired()
         && m_quest->isSatisfied(currentHero))
-        return value - m_quest->getAIPaymentValue(currentHero->m_owner);
+        return value - m_quest->getAIPaymentValue(currentHero->playerOwner);
 
     return 0;
 }
@@ -2227,7 +2227,7 @@ int TSeerReward::getValue(const hero* currentHero)
             return 0;
         return aiGetValueOfArtifact(
             type_artifact(static_cast<TArtifact>(m_value.m_dwords[0]) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */),
-            currentHero->m_owner);
+            currentHero->playerOwner);
     }
 
     case eRewardSpell:

@@ -1082,7 +1082,7 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
     EventCell = g_advManager->getCell(point);
     auto_retreat_on = 1;
     if (leftHero)
-        iPlayer[0] = leftHero->m_owner;
+        iPlayer[0] = leftHero->playerOwner;
     else
         iPlayer[0] = -1;
     iPlayer[1] = rightPlayer;

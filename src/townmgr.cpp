@@ -1599,7 +1599,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                     offsetToMon -= currTown->getCastleGrowthBonus(creature);
                 }
 
-                if (currTown->m_owner >= 0) {
+                if (currTown->playerOwner >= 0) {
                     long legionBonus = currTown->getAssembledLegionBonus(slot);
                     if (legionBonus > 0) {
                         rightText += formatString(
@@ -2119,7 +2119,7 @@ void townManager::newStrips()
         m_garrisonStrip = new strip(
             0xf1, 0x183, 0, 0xa2,
             g_game->getHero(m_townToView->m_garrisonHeroId)->m_portrait,
-            m_townToView->m_owner,
+            m_townToView->playerOwner,
             garrisonHero, &garrisonHero->m_army,
             0x64, 0, m_townWindow);
         if (!m_garrisonStrip)
@@ -2127,7 +2127,7 @@ void townManager::newStrips()
     } else {
         m_garrisonStrip = new strip(
             0xf1, 0x183, 0, 0xa1,
-            m_townToView->m_owner, m_townToView->m_owner, 0,
+            m_townToView->playerOwner, m_townToView->playerOwner, 0,
             &m_townToView->getArmy(),
             0x64, 0, m_townWindow);
         if (!m_garrisonStrip)
@@ -2138,7 +2138,7 @@ void townManager::newStrips()
         hero* visitingHero = g_game->getHero(m_townToView->m_visitingHeroId);
         m_heroStrip = new strip(
             0xf1, 0x1e3, 1, 0xa2,
-            visitingHero->m_portrait, visitingHero->m_owner,
+            visitingHero->m_portrait, visitingHero->playerOwner,
             visitingHero, &visitingHero->m_army,
             0x7c, 0, m_townWindow);
         if (!m_heroStrip)
@@ -2267,14 +2267,14 @@ void townManager::setHeroCommand()
             m_command = 8;
             return;
         }
-        if (garrisonHero->m_owner == visitingHero->m_owner) {
+        if (garrisonHero->playerOwner == visitingHero->playerOwner) {
             sprintf(m_statusText, g_townCommand[7], garrisonHero->m_name,
                     visitingHero->m_name);
             m_command = 9;
             return;
         }
     } else {
-        if (visitingHero->m_owner == m_townToView->m_owner) {
+        if (visitingHero->playerOwner == m_townToView->playerOwner) {
             if (m_townToView->m_garrisonHeroId == -1) {
                 sprintf(m_statusText, g_townCommand[6], visitingHero->m_name);
                 m_command = 7;
@@ -3778,7 +3778,7 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
     if (!g_townManager->m_garrisonStrip)
         memError();
     g_townManager->m_heroStrip = new strip(m_x + 28, m_y + 222, 1, 162,
-                                         inHero->m_portrait, inHero->m_owner,
+                                         inHero->m_portrait, inHero->playerOwner,
                                          inHero, &inHero->m_army, 124, 0, this);
     if (!g_townManager->m_heroStrip)
         memError();
@@ -4065,7 +4065,7 @@ MAC_ADDRESS(0x1ccb80, 0x284)  // anchor-vtable 0x643854 + ??_G call edge + arity
 type_monster_join_window::type_monster_join_window(hero* inHero,
                                                    armyGroup* monsters,
                                                    unsigned char flags)
-    : type_garrison_base_window(inHero, inHero->m_owner, *monsters)
+    : type_garrison_base_window(inHero, inHero->playerOwner, *monsters)
 {
     std::string title;
     m_isJoinDialog = 1;
@@ -4131,7 +4131,7 @@ DC_ADDRESS(0x17320c, 0x2c)
 MAC_ADDRESS(0x1cd03c, 0x70)
 void doEventGarrison(hero* inHero, garrison* thisGarrison)
 {
-    int owner = thisGarrison->m_playerOwner;
+    int owner = thisGarrison->playerOwner;
     if (!thisGarrison->m_removableTroops)
         owner = -1;
     TGarrisonWindow garrisonWindow(inHero, owner, thisGarrison->m_garrisonArmy);
@@ -5164,7 +5164,7 @@ int townManager::main(message& msg)
                 if (rclick)
                     goto building_popup;
                 else if (g_currentPlayer->isLocalHuman()
-                           && m_townToView->m_owner == g_netLocalGamePos) {
+                           && m_townToView->playerOwner == g_netLocalGamePos) {
                     doMarketplace();
                     m_resourceDisplay->update(1, 1);
                     resetStrips();
@@ -5763,7 +5763,7 @@ DC_ADDRESS(0x176bf0, 0x108)
 MAC_ADDRESS(0x1d20f0, 0x108)
 void townManager::moveHeroToGarrison()
 {
-    playerData* player = &g_game->m_players[m_townToView->m_owner];
+    playerData* player = &g_game->m_players[m_townToView->playerOwner];
 
     if (!g_currentPlayer->isLocalHuman())
         return;
@@ -5794,7 +5794,7 @@ DC_ADDRESS(0x176cf8, 0x1b8)
 MAC_ADDRESS(0x1d21f8, 0x1d4)
 void townManager::moveHeroFromGarrison()
 {
-    playerData* player = &g_game->m_players[m_townToView->m_owner];
+    playerData* player = &g_game->m_players[m_townToView->playerOwner];
 
     if (!g_currentPlayer->isLocalHuman())
         return;
@@ -5936,7 +5936,7 @@ TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int id)
     }
 
     if (g_remoteOn && !g_currentPlayer->isLocalHuman()
-        || g_townManager->m_townToView->m_owner != g_netLocalGamePos)
+        || g_townManager->m_townToView->playerOwner != g_netLocalGamePos)
         getWidget(BUY_BUTTON_ID)->enable(0);
 
     setPrerequisiteText(g_townManager->m_townToView, m_buildingId);
@@ -6088,7 +6088,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
     }
 
     if (building == HALL_CAPITOL_ID) {
-        if (g_game->m_players[currentTown->m_owner].hasCapitol()) {
+        if (g_game->m_players[currentTown->playerOwner].hasCapitol()) {
             m_rolloverText->setText(g_hallInfo[0]);
             return;
         }
@@ -8413,7 +8413,7 @@ void getCategoryStats(int whichCat, long* value, signed char* index)
             switch (whichCat) {
             case TG_STAT_TOWNS: {
                 for (unsigned int t = 0; t < g_game->m_towns.size(); t++) {
-                    if (g_game->m_towns[t].m_owner == i)
+                    if (g_game->m_towns[t].playerOwner == i)
                         total++;
                 }
                 value[i] = total;

@@ -69,8 +69,8 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     bitmapBorder* background = new bitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "heroqvbk.pcx", 0x800);
     // Mac retains a call in each branch at 0:0x14a8d4 and 0:0x14a8ec.
-    if (thisHero->m_owner >= 0)
-        background->setPlayerPaletteColors(thisHero->m_owner);
+    if (thisHero->playerOwner >= 0)
+        background->setPlayerPaletteColors(thisHero->playerOwner);
     else
         background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
     widgets.push_back(background);
@@ -134,7 +134,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         } else if (thisHero->m_disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
             int creature = g_game->getGameVersion() ? kNumCreatureTypes : 118;
             while (creature--) {
-                int owner = thisHero->m_owner;
+                int owner = thisHero->playerOwner;
                 int townType = g_game->getAlignment(creature);
 
                 int alignment = owner >= 0

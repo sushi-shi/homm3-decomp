@@ -155,7 +155,7 @@ public:
     // DC + 4, in order and without exception, which is what identifies
     // this record. The two fields the Dreamcast build has no counterpart
     // for are the dword at +0x08 and the flag at +0x1a.
-    signed char m_owner;  // +0x00
+    signed char Owner;  // +0x00
     int m_id;  // +0x04
     int m_objRef;  // +0x08 - copied to hero::field_01e
     unsigned char m_hasCustomName;  // +0x0c
@@ -575,7 +575,7 @@ public:
     DC_ADDRESS(0x0f4af0, 0x48)
     TownExtra() {}
     int m_objRef;
-    char m_playerOwner;
+    char playerOwner;
     char m_customBuildings;
     // Six bytes of stream reach each of these two; the record keeps eight.
     __int64 m_buildingBuiltMask;
@@ -626,7 +626,7 @@ public:
     unsigned char m_mapZ;  // +0x56
 
 protected:
-    char m_playerOwner;  // +0x57
+    char playerOwner;  // +0x57
     char m_townId;  // +0x58
 
 public:
@@ -637,7 +637,7 @@ public:
     // Dreamcast's generator-event xref records three calls to get_owner;
     // retail expands the signed owner-byte load and has no out-of-line row.
     DC_ADDRESS(0x01feac, 0xe)
-    inline long getOwner() const { return m_playerOwner; }
+    inline long get_owner() const { return playerOwner; }
     // Raw DC publics for load/save return bool (QAA_N); Complete ports the file argument.
     bool load(TAbstractFile* infile);
     // update_bonus's negative twin. Retail has no retained row between
@@ -645,7 +645,7 @@ public:
     // That does not establish the original inline spelling.
     inline void removeBonus();
     bool save(TAbstractFile* outfile);
-    inline void setOwner(long owner);
+    inline void set_owner(long owner);
     void updateBonus();
     void grow(int unusedArg);
 
@@ -662,7 +662,7 @@ public:
     };
     // +0x00/+0x01, both retail-proven: MineTypesOwned sign-extends
     // each and compares it against an int parameter.
-    char m_playerOwner;
+    char playerOwner;
     char m_type;
     // Retail abandoned-mine loading sets it; NewMap installs the guards
     // for these mines and the overview counts them separately.
@@ -680,7 +680,7 @@ public:
 
     DC_ADDRESS(0x0bce00, 0x52)
     mine()
-        : m_playerOwner(-1), m_type(-1), m_isAbandoned(0)
+        : playerOwner(-1), m_type(-1), m_isAbandoned(0)
     {
         m_mapX = -1;
         m_mapY = -1;
@@ -805,7 +805,7 @@ enum type_action_type {
 // the three trailing map bytes at +0x3c..+0x3e.
 class garrison {
 public:
-    char m_playerOwner;
+    char playerOwner;
     // Dreamcast and retail place the one-byte owner at +0 and army
     // at +4. The intervening three bytes align the armyGroup.
     char m_paddingBeforeArmy[3];

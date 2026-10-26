@@ -884,7 +884,7 @@ void advManager::payForArtifact(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    long* resources = g_game->m_players[currentHero->m_owner].m_resources;
+    long* resources = g_game->m_players[currentHero->playerOwner].m_resources;
     if (resources[GOLD] < goldCost ||
         resources[resourceType] < resourceCost) {
         if (humanPlayer)
@@ -1521,8 +1521,8 @@ void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
 
     heroBoat->m_occupyingHero = currentHero->m_id;
     heroBoat->m_occupied = 1;
-    char owner = currentHero->m_owner;
-    heroBoat->m_playerOwner = owner;
+    char owner = currentHero->playerOwner;
+    heroBoat->playerOwner = owner;
     if (g_game->isLocalHuman(owner)) {
         m_cursorType = CURSOR_TYPE_8;
         m_cursorDirection = heroBoat->m_facing;
@@ -1627,7 +1627,7 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
     std::string name = g_constCreatureBankTraits[cell->m_objectIndex].m_name;
     std::string dialogText;
 
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
     if (cell->m_extraInfo & 0x2000000) {
         if (humanPlayer) {
             dialogText = formatString((*g_adventureEventText)[ADV_EVENT_TEXT_CREATURE_BANK_EMPTY_FORMAT],
@@ -1676,7 +1676,7 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
 // 114/115 blocks are an alignment cascade from this one allocator choice,
 // not evidence for a source control-flow rewrite.
 // Naming the HasCreatures result (94.82%) or the guards reference (90.78%)
-// worsens VC6; naming getOwner scores 99.07%, and a typed generator pointer
+// worsens VC6; naming get_owner scores 99.07%, and a typed generator pointer
 // is byte-flat. Keep the canonical calls and current reference lifetime.
 VA(0x004a18b0, 0x79A)
 DC_ADDRESS(0x092814, 0x52a)
@@ -1695,7 +1695,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
     int id = g_game->getGeneratorId(point.m_x, point.m_y, point.m_z);
     generator& currentGenerator = g_game->m_generators[id];
 
-    if (!g_game->onSameTeam(currentGenerator.getOwner(), g_netLocalGamePos)) {
+    if (!g_game->onSameTeam(currentGenerator.get_owner(), g_netLocalGamePos)) {
         if (currentGenerator.m_guards.hasCreatures()) {
             if (humanPlayer) {
                 std::string prompt;
@@ -1724,7 +1724,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                          &currentGenerator.m_guards, -1, 1, 0))
                 return;
         }
-        if (!g_game->onSameTeam(currentGenerator.getOwner(),
+        if (!g_game->onSameTeam(currentGenerator.get_owner(),
                                 g_netLocalGamePos))
             g_game->claimGenerator(id, g_netLocalGamePos);
     }
@@ -1748,7 +1748,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE)
             return;
 
-        if (currentGenerator.getOwner() == g_netLocalGamePos) {
+        if (currentGenerator.get_owner() == g_netLocalGamePos) {
             bool canRecruit = false;
             std::string result;
             for (int i = 0; i < 4; i++) {
@@ -1787,8 +1787,8 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
         }
         generatorEvent(currentHero, cell, point);
     } else {
-        if (currentGenerator.getOwner() == g_netLocalGamePos
-            || currentGenerator.getOwner() < 0)
+        if (currentGenerator.get_owner() == g_netLocalGamePos
+            || currentGenerator.get_owner() < 0)
             aiPurchaseCreatures(currentHero, &currentGenerator);
     }
 }
@@ -1831,7 +1831,7 @@ MAC_ADDRESS(0x0ad5d8, 0x18c)
 void advManager::doEventDragonCity(hero* currentHero, NewmapCell* cell,
                                       type_point point, bool humanPlayer)
 {
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
     if (cell->m_creatureBankInfo.m_empty) {
         if (humanPlayer) {
             normalDialog((*g_generalText)[GENERAL_TEXT_DRAGON_CITY_EMPTIED],
@@ -1901,7 +1901,7 @@ MAC_ADDRESS(0x0adb98, 0x318)
 void advManager::doEventFountain(hero* currentHero, ExtraInfoUnion* cell,
                                  bool humanPlayer)
 {
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
     if ((currentHero->m_flags & 0x20) || (currentHero->m_flags & 0x38000000)) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_FOUNTAIN_OF_FORTUNE_VISITED],
@@ -2162,7 +2162,7 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
         g_mouseManager->showPointer(true);
     }
 
-    if (g_game->onSameTeam(otherHero->m_owner, g_netLocalGamePos)) {
+    if (g_game->onSameTeam(otherHero->playerOwner, g_netLocalGamePos)) {
         exchangeSpells(currentHero, otherHero);
         if (humanPlayer)
             heroSwap(currentHero, otherHero);
@@ -2176,7 +2176,7 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    doCombat(point, currentHero, &currentHero->m_army, otherHero->m_owner, 0,
+    doCombat(point, currentHero, &currentHero->m_army, otherHero->playerOwner, 0,
              otherHero, &otherHero->m_army, -1, 1, 0);
 }
 
@@ -2528,8 +2528,8 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
                              type_point point, bool human)
 {
     mine* currentMine = g_game->getMine(cell->m_extraInfo);
-    if (g_game->onSameTeam(currentMine->m_playerOwner, g_netLocalGamePos)) {
-        if (currentMine->m_playerOwner == g_netLocalGamePos && human)
+    if (g_game->onSameTeam(currentMine->playerOwner, g_netLocalGamePos)) {
+        if (currentMine->playerOwner == g_netLocalGamePos && human)
             doMonsterJoinDialog(currentHero, &currentMine->m_guards, 1);
         return;
     }
@@ -2538,7 +2538,7 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
         if (human) {
             overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
             updBottomView(0, 1, 1);
-            if (currentMine->m_playerOwner < 0)
+            if (currentMine->playerOwner < 0)
                 normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MINE_GUARDED_PROMPT],
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             else
@@ -2550,7 +2550,7 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
             return;
         }
 
-        if (currentMine->m_playerOwner < 0
+        if (currentMine->playerOwner < 0
             && currentMine->m_guards.getNumArmies() == 1) {
             int guardCount = currentMine->m_guards.m_numTroops[0];
             if (combatMonsterEvent(
@@ -2566,7 +2566,7 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
                 normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MINE_CLEARED],
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else if (doCombat(point, currentHero, &currentHero->m_army,
-                            currentMine->m_playerOwner, 0, 0,
+                            currentMine->playerOwner, 0, 0,
                             &currentMine->m_guards, -1, 1, 0)) {
             return;
         }
@@ -2695,10 +2695,10 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
     // Mac 0xb0a30 indexes the hero pool directly; retail has no getHero
     // sentinel guard at this call site.
     hero* prisoner = &g_game->m_heroes[heroID];
-    g_game->recordShowHero(prisoner, currentHero->m_owner, point, 0);
-    prisoner->m_owner = currentHero->m_owner;
-    g_game->m_heroAvailability[heroID] = currentHero->m_owner;
-    g_game->m_heroPoolMap[heroID][currentHero->m_owner] = 1;
+    g_game->recordShowHero(prisoner, currentHero->playerOwner, point, 0);
+    prisoner->playerOwner = currentHero->playerOwner;
+    g_game->m_heroAvailability[heroID] = currentHero->playerOwner;
+    g_game->m_heroPoolMap[heroID][currentHero->playerOwner] = 1;
     g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] =
         static_cast<HeroId>(heroID);
     ++g_currentPlayer->m_numHeroes;
@@ -2743,7 +2743,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
     if (!cell->pyramidIsGuarded()) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->GetText(
@@ -3146,7 +3146,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
                                akSpellTraits[spell].m_name);
 
     g_game->setInfoFlag(type, g_netLocalGamePos);
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
 
     if (currentHero->isInSpellbook(spell)) {
         if (!humanPlayer)
@@ -3503,7 +3503,7 @@ void advManager::doEventTreeOfKnowledge(hero* currentHero,
         return;
     }
 
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
     game* g = g_game;
     g->setInfoFlag(TreeOfKnowledgeInfo, g_netLocalGamePos);
     int experience = currentHero->getExperienceIncrement();
@@ -3563,7 +3563,7 @@ MAC_ADDRESS(0x0b383c, 0x204)
 void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
                               bool humanPlayer)
 {
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
     if (!cell->wagonIsFull()) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_WAGON_EMPTY],
@@ -3717,7 +3717,7 @@ void advManager::monstersFlee(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->m_owner);
+    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->playerOwner);
     eraseAndFizzle(cell, point, FIZZLE_SOUND_KILL_FADE);
     if (g_game->m_mapHeader.m_victoryCondition.checkForDefeatedMonsterWin(
             currentHero, point))
@@ -3755,7 +3755,7 @@ bool advManager::monstersJoin(hero* currentHero, NewmapCell* cell,
         }
     }
 
-    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->m_owner);
+    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->playerOwner);
     if (!currentHero->m_army.add(monType, numMons, -1)) {
         if (humanPlayer)
             doMonsterJoinDialog(currentHero, monType, numMons);
@@ -3790,7 +3790,7 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
     int numMons = cell->m_monsterInfo.m_qty;
     int cost = akCreatureTypeTraits[monType].cost[GOLD] * numMons;
 
-    if (cost > g_game->m_players[currentHero->m_owner].m_resources[GOLD])
+    if (cost > g_game->m_players[currentHero->playerOwner].m_resources[GOLD])
         return false;
 
     if (!humanPlayer) {
@@ -3818,8 +3818,8 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
         }
     }
 
-    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->m_owner);
-    g_game->m_players[currentHero->m_owner].m_resources[GOLD] -= cost;
+    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->playerOwner);
+    g_game->m_players[currentHero->playerOwner].m_resources[GOLD] -= cost;
     if (!currentHero->m_army.add(monType, numMons, -1)) {
         if (humanPlayer)
             doMonsterJoinDialog(currentHero, monType, numMons);
@@ -4078,7 +4078,7 @@ void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
                          1, -1, -1, 16, 0, 16, 0, -1, 0, 16, 0);
     }
 
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
     if (!(currentHero->m_flags & 0x200000)) {
         currentHero->m_flags |= 0x200000;
         currentHero->m_moraleBonus -= 3;
@@ -4093,7 +4093,7 @@ void advManager::doEventWaterWheel(hero* currentHero, ExtraInfoUnion* cell,
 {
     int gold = cell->getWheelGold();
 
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
     if (gold == 0) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_WATER_WHEEL_EMPTY],
@@ -4144,7 +4144,7 @@ void advManager::doEventWindmill(hero* currentHero, ExtraInfoUnion* cell,
     short amount = cell->getWindmillAmount();
     EGameResource resource = cell->getWindmillResource();
 
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
     if (amount == 0) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_WINDMILL_EMPTY],
@@ -4170,7 +4170,7 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
     // and learned skill at 0:0xb55b4, 0:0xb5634, 0:0xb56b0, 0:0xb5724.
     int skill = cell->getWitchSkill();
 
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
     g_game->setInfoFlag(WitchHutInfo, g_netLocalGamePos);
     if (skill == -1) {
         if (humanPlayer)
@@ -4235,7 +4235,7 @@ void advManager::doEventLithOneWay(hero* currentHero, NewmapCell* cell,
         g_game->setVisibility(point.m_x, point.m_y, point.m_z,
                               g_netLocalGamePos, 1, 0);
         doEventHero(currentHero, exitCell, point, humanPlayer);
-        if (currentHero->m_owner < 0)
+        if (currentHero->playerOwner < 0)
             return;
     }
 
@@ -4265,7 +4265,7 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
         g_game->setVisibility(point.m_x, point.m_y, point.m_z,
                               g_netLocalGamePos, 1, 0);
         doEventHero(currentHero, exitCell, point, humanPlayer);
-        if (currentHero->m_owner < 0)
+        if (currentHero->playerOwner < 0)
             return;
     }
 
@@ -4280,7 +4280,7 @@ MAC_ADDRESS(0x0af094, 0x114)
 inline void advManager::doEventLighthouse(NewmapCell* cell,
                                           unsigned char humanPlayer)
 {
-    if (!g_game->onSameTeam(g_game->getMine(cell->m_extraInfo)->m_playerOwner,
+    if (!g_game->onSameTeam(g_game->getMine(cell->m_extraInfo)->playerOwner,
                             g_netLocalGamePos)) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->GetText(
@@ -4533,11 +4533,11 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         g_mouseManager->showPointer(1);
         garrison* thisGarrison = g_game->getGarrison(cell->m_extraInfo);
-        if (!g_game->onSameTeam(thisGarrison->m_playerOwner,
+        if (!g_game->onSameTeam(thisGarrison->playerOwner,
                                 g_netLocalGamePos)) {
             if (thisGarrison->m_garrisonArmy.hasCreatures()) {
                 if (doCombat(point, currentHero, &currentHero->m_army,
-                             thisGarrison->m_playerOwner, 0, 0,
+                             thisGarrison->playerOwner, 0, 0,
                              &thisGarrison->m_garrisonArmy, -1, 1, 0))
                     break;
             }
@@ -4672,7 +4672,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 viewPuzzle();
             } else {
-                computeUALoc(currentHero->m_owner);
+                computeUALoc(currentHero->playerOwner);
             }
         } else if (humanPlayer) {
             normalDialog((*g_adventureEventText)[
@@ -4899,7 +4899,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             g_game->setVisibility(exitPoint.m_x, exitPoint.m_y, exitPoint.m_z,
                                   g_netLocalGamePos, 1, 0);
             doEventHero(currentHero, exitCell, exitPoint, humanPlayer);
-            if (currentHero->m_owner < 0)
+            if (currentHero->playerOwner < 0)
                 break;
         }
         if (exitCell->m_type == UNDERGROUND_GATE)
@@ -5068,11 +5068,11 @@ void advManager::heroSwap(hero* leftHero, hero* rightHero)
 
     if (g_remoteOn
         && g_currentPlayer->isLocalHuman()
-        && g_game->isHuman(rightHero->m_owner)
-        && rightHero->m_owner != leftHero->m_owner)
+        && g_game->isHuman(rightHero->playerOwner)
+        && rightHero->playerOwner != leftHero->playerOwner)
     {
         CTradeRequestMsg message(leftHero, rightHero);
-        transmitRemoteData(&message, rightHero->m_owner, 1, 1);
+        transmitRemoteData(&message, rightHero->playerOwner, 1, 1);
     }
 
     g_executive->doDialog(manager);
@@ -5089,12 +5089,12 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
     town* thisTown = g_game->getTown(
         g_game->getTownId(point.m_x, point.m_y, point.m_z));
     hero* currentHero = g_game->getCurrHero();
-    int oldOwner = thisTown->m_owner;
+    int oldOwner = thisTown->playerOwner;
 
     demobilizeCurrHero(0, 1);
 
-    if (g_game->onSameTeam(thisTown->m_owner, g_netLocalGamePos)) {
-        if (thisTown->m_owner == g_netLocalGamePos
+    if (g_game->onSameTeam(thisTown->playerOwner, g_netLocalGamePos)) {
+        if (thisTown->playerOwner == g_netLocalGamePos
                 && g_game->m_mapHeader.m_victoryCondition
                        .checkForArtifactTransportWin(currentHero, point))
         {
@@ -5140,7 +5140,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
             defender = g_game->getHero(thisTown->m_visitingHeroId);
             if (thisTown->m_garrisonHeroId >= 0) {
                 doCombat(point, currentHero, &currentHero->m_army,
-                         defender->m_owner, 0, defender, &defender->m_army,
+                         defender->playerOwner, 0, defender, &defender->m_army,
                          -1, 1, 0);
                 currentHero->checkLevel();
                 checkEndGame(0);
@@ -5157,7 +5157,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
         }
 
         if (doCombat(point, currentHero, &currentHero->m_army,
-                     thisTown->m_owner, thisTown, defender, defendingArmy,
+                     thisTown->playerOwner, thisTown, defender, defendingArmy,
                      -1, 1, 0) == 0) {
             thisTown->m_garrisonHeroId = -1;
             g_game->claimTown(thisTown->m_id, g_netLocalGamePos, 0, 1);
@@ -5357,7 +5357,7 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
     int id = g_game->getGeneratorId(point.m_x, point.m_y, point.m_z);
     generator& currentGenerator = g_game->m_generators[id];
 
-    if (currentGenerator.getOwner() == g_netLocalGamePos) {
+    if (currentGenerator.get_owner() == g_netLocalGamePos) {
         bool canRecruit = false;
         std::string result;
 
@@ -5400,8 +5400,8 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
     if (!manager)
         memError();
 
-    manager->m_viewOnly = currentGenerator.getOwner() != g_netLocalGamePos
-                         && currentGenerator.getOwner() >= 0;
+    manager->m_viewOnly = currentGenerator.get_owner() != g_netLocalGamePos
+                         && currentGenerator.get_owner() >= 0;
     g_executive->doDialog(manager);
     delete manager;
 }
@@ -5559,7 +5559,7 @@ void advManager::doEventUndeadLair(hero* currentHero, NewmapCell* cell, const ch
         return;
     }
 
-    cell->setCellVisited(currentHero->m_owner);
+    cell->setCellVisited(currentHero->playerOwner);
     if (cell->m_extraInfo & 0x2000000) {
         if (humanPlayer)
             normalDialog(emptyText, 1, -1, -1,
@@ -5778,7 +5778,7 @@ void advManager::heroLoses(hero* who, int vanishSound)
     completeDraw(false);
     updateScreen(0, 0);
 
-    int owner = who->m_owner;
+    int owner = who->playerOwner;
     who->deallocate(1, 0);
     fizzleCenter(vanishSound);
 
@@ -5795,7 +5795,7 @@ DC_ADDRESS(0x09b448, 0x11a)
 MAC_ADDRESS(0x0ba0f0, 0x16c)
 void advManager::doWhirlpool(hero* who)
 {
-    if (!g_game->isHuman(who->m_owner)
+    if (!g_game->isHuman(who->playerOwner)
         || who->isWieldingArtifact(ARTIFACT_SEA_CAPTAINS_HAT))
         return;
 
@@ -5865,7 +5865,7 @@ void advManager::doAIEvent(NewmapCell* cell, hero* currentHero, type_point point
     currentHero->m_movePoints = max(--currentHero->m_movePoints, 0);
     dispatchEvent(currentHero, cell, point, 0);
 
-    if (currentHero->m_owner != -1)
+    if (currentHero->playerOwner != -1)
         currentHero->checkLevel();
     if (g_game->m_mapHeader.m_victoryCondition.checkForTotalCreatures())
         checkEndGame(0);
@@ -5902,7 +5902,7 @@ int advManager::doNetCombat(CNetMsg* netMsg)
                         &seed, &winner,
                         &g_combatRetreated, &g_combatSurrendered);
 
-    int leftPlayer = leftHero->m_owner;
+    int leftPlayer = leftHero->playerOwner;
     if (g_remoteOn && !g_thisNetGotAdventureControl) {
         if (rightHero)
             setHeroContext(rightHero->m_id, 0, 1, 1);
@@ -6152,7 +6152,7 @@ DC_ADDRESS(0x09b970, 0x9ec)
 MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique)
 int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, bool finishHeroes, bool alternateLayout)
 {
-    int leftPlayer = leftHero ? leftHero->m_owner : -1;
+    int leftPlayer = leftHero ? leftHero->playerOwner : -1;
     int winningPlayer;  // DC winning_player
     hero* loser;
     CTurnDurationPause turnDurationPause;
@@ -6294,14 +6294,14 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     if (rightHero) {
         if (g_remoteOn && rightHuman && leftHuman
             && g_combatManager->winner == 1) {
-            if (g_game->isLocalHuman(rightHero->m_owner)) {
+            if (g_game->isLocalHuman(rightHero->playerOwner)) {
                 rightHero->checkLevel();
                 CHeroLevelUpdateMsg msg(rightHero->m_id, rightHero->m_skillCount,
                                         rightHero->m_skillLevel, rightHero->m_stats);
                 transmitRemoteData(&msg, g_netLocalGamePos, 0, 1);
             } else {
                 CLevelPickWaitDlg dlg2;
-                dlg2.waitForLevels(rightHero->m_owner);
+                dlg2.waitForLevels(rightHero->playerOwner);
                 if (dlg2.m_playerDropped) {
                     rightHero->checkLevel();
                 }
@@ -6429,9 +6429,9 @@ void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* l
     combatInitMsg.m_combatSurrender = combatSurrender;
 
     if (leftHero) {
-        combatInitMsg.m_leftOwner = leftHero->m_owner;
+        combatInitMsg.m_leftOwner = leftHero->playerOwner;
         combatInitMsg.m_leftGold =
-            g_game->m_players[leftHero->m_owner].m_resources[GOLD];
+            g_game->m_players[leftHero->playerOwner].m_resources[GOLD];
     } else {
         combatInitMsg.m_leftOwner = -1;
         combatInitMsg.m_leftGold = 0;
@@ -6439,7 +6439,7 @@ void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* l
     combatInitMsg.m_rightOwner = rightPlayer;
     if (rightHero)
         combatInitMsg.m_rightGold =
-            g_game->m_players[rightHero->m_owner].m_resources[GOLD];
+            g_game->m_players[rightHero->playerOwner].m_resources[GOLD];
     else
         combatInitMsg.m_rightGold = 0;
 

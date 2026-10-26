@@ -61,7 +61,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 385, 470, BACKGROUND_ID, "lvlupbkg.pcx", 0x800);
-    background->setPlayerPaletteColors(thisHero->m_owner);
+    background->setPlayerPaletteColors(thisHero->playerOwner);
     m_widgets.push_back(background);
 
     m_widgets.push_back(new bitmapBorder(

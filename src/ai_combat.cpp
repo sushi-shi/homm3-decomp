@@ -1337,7 +1337,7 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
                 defeatedHero->transferArtifacts(m_currentHero);
 
             if (enemyTown)
-                g_game->claimTown(enemyTown->m_id, m_currentHero->m_owner, 0, 1);
+                g_game->claimTown(enemyTown->m_id, m_currentHero->playerOwner, 0, 1);
         }
     } else if (m_currentHero) {
         m_currentHero->removeArtifact(ARTIFACT_HOLY_GRAIL);
@@ -1431,8 +1431,8 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
     if (defendingHero
         && defendingHero->belongsToHuman())
         humanCombat = 1;
-    if ((defendingTown && defendingTown->m_owner >= 0
-         && g_game->isHuman(defendingTown->m_owner))
+    if ((defendingTown && defendingTown->playerOwner >= 0
+         && g_game->isHuman(defendingTown->playerOwner))
         || humanCombat)
         defenderLuck = g_defenseEstimates[g_game->m_setup.m_difficulty];
 
@@ -1466,9 +1466,9 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
     if (defendingHero || defendingTown) {
         short defenderPlayer = -1;
         if (defendingHero)
-            defenderPlayer = defendingHero->m_owner;
+            defenderPlayer = defendingHero->playerOwner;
         if (defendingTown)
-            defenderPlayer = defendingTown->m_owner;
+            defenderPlayer = defendingTown->playerOwner;
         value = static_cast<long>(
             static_cast<float>(defendingArmy.getAIValue())
             * type_AI_player::getAttackBonus(defenderPlayer)

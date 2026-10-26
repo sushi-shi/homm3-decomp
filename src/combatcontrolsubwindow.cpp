@@ -451,7 +451,7 @@ void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
     char buffer[64];
     hero& mutableInfo = const_cast<hero&>(info);
 
-    m_backgroundWidget->setPlayerPaletteColors(info.m_owner);
+    m_backgroundWidget->setPlayerPaletteColors(info.playerOwner);
     m_portrait->setImage(akHeroTraits[info.m_portrait].m_large_portrait_name);
 
     sprintf(buffer, "%d", info.getPrimarySkill(0));
@@ -700,7 +700,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
     char buffer[64];
 
     m_backgroundWidget->setPlayerPaletteColors(
-        owner != 0 ? owner->m_owner : g_game->getLocalPlayerGamePos());
+        owner != 0 ? owner->playerOwner : g_game->getLocalPlayerGamePos());
 
     if (m_viewLevel == 1) {
         m_creatureIcon->setIconFrame(info.m_creatureType + 2);

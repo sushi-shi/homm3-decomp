@@ -178,8 +178,8 @@ void searchArray::enterLith(const hero* currentHero,
         type_point exitPoint = list[i];
         NewmapCell* cell = g_game->getCell(exitPoint);
         if (cell->m_type == HERO) {
-            if (g_game->onSameTeam(g_game->getHero(cell->m_extraInfo)->m_owner,
-                                   currentHero->m_owner))
+            if (g_game->onSameTeam(g_game->getHero(cell->m_extraInfo)->playerOwner,
+                                   currentHero->playerOwner))
                 continue;
         } else if (cell->m_type != cellType || cell->m_extraInfo == excluded
                    || !cell->m_isTrigger) {
@@ -264,7 +264,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
                              type_search_type searchType)
 {
     const town* ourTown = g_game->getTown(startTown);
-    if (!g_game->onSameTeam(ourTown->m_owner, currentHero->m_owner))
+    if (!g_game->onSameTeam(ourTown->playerOwner, currentHero->playerOwner))
         return;
     if (ourTown->m_type != TOWN_INFERNO)
         return;
@@ -392,18 +392,18 @@ bool searchArray::enter_trigger(const hero* current_hero,
             &g_game->m_worldMap.m_questGuardList[mapCell->m_extraInfo];
         if (!guard->m_quest || guard->m_quest->hasExpired())
             return false;
-        if (!guard->playerHasInfo(current_hero->m_owner))
+        if (!guard->playerHasInfo(current_hero->playerOwner))
             return true;
         if (!guard->m_quest->isSatisfied(const_cast<hero*>(current_hero)))
             return false;
         type_quest* quest = guard->m_quest;
-        int player = current_hero->m_owner;
+        int player = current_hero->playerOwner;
         cell.m_barrierValue -= quest->getAIPaymentValue(player);
         return true;
     }
     case HERO:
         if (g_game->onSameTeam(g_game->m_heroAvailability[mapCell->m_extraInfo],
-                               current_hero->m_owner))
+                               current_hero->playerOwner))
             return false;
         if (search_type == const_AI_enemy_search)
             return true;
@@ -413,8 +413,8 @@ bool searchArray::enter_trigger(const hero* current_hero,
     case GARRISON: {
         garrison* currentGarrison =
             g_game->getGarrison(mapCell->m_extraInfo);
-        if (g_game->onSameTeam(currentGarrison->m_playerOwner,
-                               current_hero->m_owner))
+        if (g_game->onSameTeam(currentGarrison->playerOwner,
+                               current_hero->playerOwner))
             return true;
     }
     case MONSTER:

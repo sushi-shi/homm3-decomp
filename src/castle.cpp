@@ -371,7 +371,7 @@ int THallWindow::windowHandler(message& msg)
                             getBuildingName(g_townManager->m_townToView->m_type, building));
                 } else if (!(g_townManager->m_canBuildMask & g_bitNumber[building])) {
                     if (building == HALL_CAPITOL_ID) {
-                        if (g_game->m_players[g_townManager->m_townToView->m_owner].hasCapitol()) {
+                        if (g_game->m_players[g_townManager->m_townToView->playerOwner].hasCapitol()) {
                             strcpy(g_text, g_hallInfo[0]);
                             break;
                         }

@@ -700,8 +700,8 @@ void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
     // final call. In the battle constructor, the shared ternary-call probe
     // changes the following widget insert/GetName schedules. These original
     // arms recover their retail instructions under VC6.
-    if (thisHero != 0 && thisHero->m_owner >= 0) {
-        plate->setPlayerPaletteColors(thisHero->m_owner);
+    if (thisHero != 0 && thisHero->playerOwner >= 0) {
+        plate->setPlayerPaletteColors(thisHero->playerOwner);
     } else {
         plate->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
     }

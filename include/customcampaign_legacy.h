@@ -15,7 +15,7 @@
 struct LegacyCampaignHero : public type_obscuring_object {
     short m_mana;                              // +0x018
     HeroId m_id;                               // +0x01a, DC THeroID id
-    signed char m_owner;                       // +0x01e
+    signed char playerOwner;                   // +0x01e
     char m_name[13];                           // +0x01f
     THeroClass m_heroClass;                    // +0x02c, DC THeroClass hero_class
     unsigned char m_portrait;                  // +0x030

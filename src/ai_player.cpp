@@ -1337,7 +1337,7 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
                               bool* prohibitedCreatures,
                               int* extraCost)
 {
-    playerData* player = &g_game->m_players[currentTown->m_owner];
+    playerData* player = &g_game->m_players[currentTown->playerOwner];
     switch (building) {
     case CASTLE_CITADEL_ID:
     case CASTLE_CASTLE_ID:
@@ -1749,7 +1749,7 @@ long valueOfHall(town* currentTown, type_building_id building)
         && building >= g_game->m_mapHeader.m_victoryCondition.m_hallLevel
                            + HALL_TOWN_ID)
         value = 5000000;
-    playerData* player = &g_game->m_players[currentTown->m_owner];
+    playerData* player = &g_game->m_players[currentTown->playerOwner];
     switch (building) {
     case HALL_VILLAGE_ID:
         return static_cast<long>(
@@ -1820,13 +1820,13 @@ MAC_ADDRESS(0x02f26c, 0x3f4)  // retail callee set + arity
 void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
 {
     playerData* player = &g_game->m_players[m_team];
-    type_AI_creature_purchaser purchaser(currentHero->m_owner, currentTown);
+    type_AI_creature_purchaser purchaser(currentHero->playerOwner, currentTown);
 
     hero* garrisonHero = 0;
     if (currentTown->m_garrisonHeroId > -1)
         garrisonHero = g_game->getHero(currentTown->m_garrisonHeroId);
 
-    unsigned char alliance = g_game->m_players[currentHero->m_owner]
+    unsigned char alliance = g_game->m_players[currentHero->playerOwner]
         .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doSwap(currentHero, &currentTown->getArmy(),
                      garrisonHero, alliance);
@@ -2942,7 +2942,7 @@ void aiMarkDangerZones(hero* currentHero, long* dangerZones)
 {
     for (int playerId = 0; playerId < NUM_PLAYERS; ++playerId) {
         const playerData& player = g_game->m_players[playerId];
-        if (!g_game->onSameTeam(playerId, currentHero->m_owner)
+        if (!g_game->onSameTeam(playerId, currentHero->playerOwner)
             && !g_game->m_playerDisabled[playerId]) {
             for (int heroIndex = 0; heroIndex < player.m_numHeroes;
                  ++heroIndex) {
@@ -2974,7 +2974,7 @@ static void checkHolyGrail(
     std::vector<HeroDestination>& destinations,
     const unsigned short* friendlyDistances)
 {
-    playerData* player = &g_game->m_players[currentHero->m_owner];
+    playerData* player = &g_game->m_players[currentHero->playerOwner];
     if (player->m_puzzleGuess.m_x >= 0) {
         HeroDestination point;
         point.m_point.m_x = player->m_puzzleGuess.m_x;
@@ -3004,7 +3004,7 @@ static void checkHolyGrail(
                         } else {
                             point.m_value = aiGetValueOfArtifact(
                                 type_artifact(ARTIFACT_HOLY_GRAIL),
-                                currentHero->m_owner);
+                                currentHero->playerOwner);
                         }
                         point.m_moveCost = max(
                             point.m_moveCost,
@@ -3123,7 +3123,7 @@ static void unblockLith(hero* currentHero,
     }
     if (cell->m_type == TOWN) {
         town* currentTown = g_game->getTown(cell->m_extraInfo);
-        if (currentTown->m_owner == currentHero->m_owner) {
+        if (currentTown->playerOwner == currentHero->playerOwner) {
             if (wasOnMap)
                 currentHero->obscureCell();
             return;
@@ -3453,7 +3453,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
             if (mapCell->m_type != HERO)
                 continue;
             hero* other = g_game->getHero(mapCell->m_extraInfo);
-            if (g_game->onSameTeam(other->m_owner, currentHero->m_owner))
+            if (g_game->onSameTeam(other->playerOwner, currentHero->playerOwner))
                 continue;
             if (static_cast<int>(cell->m_cost) > currentHero->m_movePoints)
                 continue;
@@ -3806,7 +3806,7 @@ bool attemptStep(hero* currentHero, pathCell& currentPathCell,
         currentHero->m_pathTargetZ = savedZ;
     }
 
-    if (currentHero->m_owner != g_netLocalGamePos)
+    if (currentHero->playerOwner != g_netLocalGamePos)
         return 0;
 
     if (eventCell == 0) {
@@ -3818,7 +3818,7 @@ bool attemptStep(hero* currentHero, pathCell& currentPathCell,
             return 0;
         if (eventCell->getMapObject() == HUT_OF_MAGI
             && eventCell->cellIsTrigger())
-            g_aiPlayers[currentHero->m_owner].clearMagusHutValue();
+            g_aiPlayers[currentHero->playerOwner].clearMagusHutValue();
         aiSetHeroBonuses(currentHero);
     }
 
@@ -4288,7 +4288,7 @@ void aiBuildShip(const hero* ourHero, long x, long y, long z)
     if (ourHero->belongsToHuman() && !g_goSolo)
         return;
 
-    playerData* player = &g_game->m_players[ourHero->m_owner];
+    playerData* player = &g_game->m_players[ourHero->playerOwner];
     town* shipyardTown = getShipyardTown(player, x, y, z);
     if (!shipyardTown) {
         if (!getMapShipyard(player, x, y, z))
@@ -4300,7 +4300,7 @@ void aiBuildShip(const hero* ourHero, long x, long y, long z)
 
     if (player->m_resources[WOOD] < 10 || player->m_resources[GOLD] < 1000)
         return;
-    if (g_game->createBoat(x, y, z, ourHero->m_owner, 0, 1) == -1)
+    if (g_game->createBoat(x, y, z, ourHero->playerOwner, 0, 1) == -1)
         return;
     player->m_resources[GOLD] -= 1000;
     player->m_resources[WOOD] -= 10;
@@ -4311,7 +4311,7 @@ DC_ADDRESS(0x035a10, 0xb6)
 MAC_ADDRESS(0x0360c8, 0x12c)  // MAC_ABSTRACTION_FROM(tokens1:43a2ba7d1807,51.3158): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 long aiGetShipCost(const hero* ourHero, type_point point)
 {
-    const playerData* player = &g_game->m_players[ourHero->m_owner];
+    const playerData* player = &g_game->m_players[ourHero->playerOwner];
     town* shipyardTown =
         getShipyardTown(player, point.m_x, point.m_y, point.m_z);
     int cost[NUM_RESOURCES];
@@ -4483,14 +4483,14 @@ MAC_ADDRESS(0x035070, 0x770)  // anchor-callee (consider_hiring 0x432bce + AI_ar
 static long valueOfHiring(town* currentTown, hero* candidate,
                           searchArray& currentSearchArray)
 {
-    short playerId = currentTown->m_owner;
-    playerData* player = &g_game->m_players[currentTown->m_owner];
+    short playerId = currentTown->playerOwner;
+    playerData* player = &g_game->m_players[currentTown->playerOwner];
     armyGroup heroArmy = candidate->m_army;
     armyGroup townArmy = currentTown->getArmy();
     type_AI_creature_purchaser purchaser(playerId, currentTown);
 
     candidate->m_turnExperienceToRvRatio = 0;
-    candidate->m_owner = static_cast<char>(playerId);
+    candidate->playerOwner = static_cast<char>(playerId);
     int resources[NUM_RESOURCES];
     memcpy(resources, player->m_resources, sizeof(resources));
     short population[14];
@@ -4521,7 +4521,7 @@ static long valueOfHiring(town* currentTown, hero* candidate,
         pathCell* cell = currentSearchArray.getCell(destination.m_point, 0);
         NewmapCell* mapCell = g_advManager->getCell(destination.m_point);
         if (mapCell->m_type == HERO && mapCell->m_isTrigger
-            && g_game->getHero(mapCell->m_extraInfo)->m_owner == playerId) {
+            && g_game->getHero(mapCell->m_extraInfo)->playerOwner == playerId) {
             cell->m_barrierValue = destination.m_value;
         } else if (cell->m_barrierValue < 0
                    && cell->m_monster.m_x < 255) {
@@ -4563,7 +4563,7 @@ static long valueOfHiring(town* currentTown, hero* candidate,
         }
     }
 
-    candidate->m_owner = -1;
+    candidate->playerOwner = -1;
     candidate->m_army = heroArmy;
     memcpy(player->m_resources, resources, sizeof(resources));
     memcpy(currentTown->m_population, population, sizeof(population));
@@ -4914,7 +4914,7 @@ long type_income_artifact::getValue(const hero* owner, unsigned char,
                                      unsigned char) const
 {
     return static_cast<long>(
-        m_amount * g_aiPlayers[owner->m_owner].getResourceValue(m_resource) * 3.0);
+        m_amount * g_aiPlayers[owner->playerOwner].getResourceValue(m_resource) * 3.0);
 }
 
 VA(0x00432d70, 0x219)
@@ -4925,7 +4925,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
                                                unsigned char exact) const
 {
     long value = 0;
-    const playerData& player = g_game->m_players[owner->m_owner];
+    const playerData& player = g_game->m_players[owner->playerOwner];
 
     if (exact) {
         int townId = g_game->getTownId(owner->m_x, owner->m_y, owner->m_z);
@@ -5009,7 +5009,7 @@ long type_angelic_alliance_artifact::getValue(
     const hero* owner, unsigned char equipped, unsigned char exact) const
 {
     std::bitset<TOWN_TYPE_COUNT> alliedAlignments = getAngelicAllianceAlignments();
-    playerData* player = &g_game->m_players[owner->m_owner];
+    playerData* player = &g_game->m_players[owner->playerOwner];
     long total = 0;
     int heroIndex = 0;
 
@@ -5106,7 +5106,7 @@ long type_statue_of_legion_artifact::getValue(
     const hero* owner, unsigned char, unsigned char) const
 {
     long total = 0;
-    playerData* player = &g_game->m_players[owner->m_owner];
+    playerData* player = &g_game->m_players[owner->playerOwner];
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
         const town* currentTown =
             g_game->getTown(player->m_townIds[townIndex]);
@@ -5367,8 +5367,8 @@ long getFullValue(const hero* ourHero)
         TCreatureType creature = ourHero->m_army.m_armyTypes[i];
         if (creature != CREATURE_NONE) {
             unsigned char hasAlliance;
-            if (ourHero->m_owner >= 0)
-                hasAlliance = g_game->m_players[ourHero->m_owner]
+            if (ourHero->playerOwner >= 0)
+                hasAlliance = g_game->m_players[ourHero->playerOwner]
                                   .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
             else
                 hasAlliance = ourHero->isWieldingArtifact(

@@ -2432,7 +2432,7 @@ int NewfullMap::readMineData(TAbstractFile* infile, CObject* mineObject)
 
     if (static_cast<unsigned>(infile->read(&owner, 1)) < 1)
         return -1;
-    tempMine.m_playerOwner = owner;
+    tempMine.playerOwner = owner;
     if (static_cast<unsigned>(infile->read(padding, 3)) < 3)
         return -1;
 
@@ -2847,7 +2847,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     count = infile->read(&charBuffer, sizeof(charBuffer));
     if (count < sizeof(charBuffer))
         return -1;
-    tempTown.m_playerOwner = charBuffer;
+    tempTown.playerOwner = charBuffer;
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
     if (count < sizeof(charBuffer))
@@ -2943,7 +2943,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                 || g_game->m_mapHeader.m_playerSlotAttributes[alignmentPlayer]
                        .m_canBeComputer)) {
             tempTown.m_townType = g_game->m_setup.m_alignment[alignmentPlayer];
-        } else if (tempTown.m_playerOwner == -1) {
+        } else if (tempTown.playerOwner == -1) {
             // Eight town bits, widened to the ninth only for an
             // expansion-era scenario in the two game states that allow it.
 
@@ -2964,7 +2964,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                 legalAlignments = 0x1ff;
             tempTown.m_townType = pickAlignment(legalAlignments, 0);
         } else {
-            tempTown.m_townType = g_game->m_setup.m_alignment[tempTown.m_playerOwner];
+            tempTown.m_townType = g_game->m_setup.m_alignment[tempTown.playerOwner];
         }
     }
 
@@ -3145,7 +3145,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
 
     heroData = &g_game->m_heroSetup[heroID];
     heroData->m_objRef = identifier;
-    heroData->m_owner = owner;
+    heroData->Owner = owner;
     heroData->m_id = heroID;
     heroObject->m_extraInfo = heroID;
 
@@ -3320,7 +3320,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     unsigned char owner;
     if (readValue(infile, owner) < sizeof(owner))
         return -1;
-    newGarrison.m_playerOwner = owner;
+    newGarrison.playerOwner = owner;
 
     unsigned char pad[3];
     if (infile->read(pad, sizeof(pad)) < sizeof(pad))

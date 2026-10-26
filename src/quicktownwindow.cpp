@@ -49,8 +49,8 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
     bitmapBorder* background = new bitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "townqvbk.pcx", 0x800);
     background->setPlayerPaletteColors(
-        thisTown->m_owner != -1
-            ? thisTown->m_owner
+        thisTown->playerOwner != -1
+            ? thisTown->playerOwner
             : g_game->getLocalPlayerGamePos());
     m_widgets.push_back(background);
 

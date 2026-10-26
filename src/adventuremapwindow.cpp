@@ -1303,7 +1303,7 @@ void TAdventureMapWindow::updateSpellButton(const hero* thisHero)
 {
     unsigned char enabled = 0;
     if (g_currentPlayer->isLocalHuman() && thisHero) {
-        if (thisHero->m_owner < 0)
+        if (thisHero->playerOwner < 0)
             return;
         enabled = 1;
     }

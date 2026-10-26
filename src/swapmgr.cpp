@@ -109,7 +109,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
             "trrecb.def", 0, 1, 0, 0, 2);
         updateArrows();
     } else {
-        if (heroes[1]->m_owner != g_game->getLocalPlayerGamePos()) {
+        if (heroes[1]->playerOwner != g_game->getLocalPlayerGamePos()) {
             m_widgets.push_back(new bitmapBorder(
                 0x16e, 0xfa, 0x43, 0x10f, 0,
                 "trarrowr.pcx", 0x800));
@@ -768,9 +768,9 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
     m_givingToAlly = 1;
     m_humanPlayerTrade = 0;
     if (g_remoteOn
-        && leftHero->m_owner != rightHero->m_owner
-        && g_game->isHuman(leftHero->m_owner)
-        && g_game->isHuman(rightHero->m_owner))
+        && leftHero->playerOwner != rightHero->playerOwner
+        && g_game->isHuman(leftHero->playerOwner)
+        && g_game->isHuman(rightHero->playerOwner))
     {
         m_humanPlayerTrade = 1;
         if (isLeftHero())
@@ -961,7 +961,7 @@ CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             m_abortPopupMsg = netMsg;
             return 0;
         }
-        int otherPlayer = g_swapManager->getOtherHero()->m_owner;
+        int otherPlayer = g_swapManager->getOtherHero()->playerOwner;
         if (g_game->getGamePosFromDPID(netMsg->m_dpidFrom)
             == otherPlayer)
             m_field0c = 1;
@@ -1264,7 +1264,7 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, bool shif
             m_sourceArmySlot = monster;
             m_destinationArmySlot = -1;
 
-            if (m_heroes[m_sourceHeroIndex]->m_owner == g_netLocalGamePos)
+            if (m_heroes[m_sourceHeroIndex]->playerOwner == g_netLocalGamePos)
             {
                 g_windowManager->broadcastMessage(
                     MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
@@ -1283,7 +1283,7 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, bool shif
     m_destinationArmySlot = monster;
     if (m_sourceHeroIndex == hero && m_sourceArmySlot == monster)
         viewMon();
-    else if (m_heroes[m_sourceHeroIndex]->m_owner == g_netLocalGamePos)
+    else if (m_heroes[m_sourceHeroIndex]->playerOwner == g_netLocalGamePos)
     {
         if ((g_splitArmyMode || shift)
             && (m_heroes[m_destinationHeroIndex]->m_army.m_armies[m_destinationArmySlot] == CREATURE_NONE
@@ -1472,7 +1472,7 @@ MAC_ADDRESS(0x1a779c, 0x144)
 void swapManager::sendHeroUpdate()
 {
     if (g_remoteOn && m_humanPlayerTrade && m_givingToAlly) {
-        int otherPlayer = getOtherHero()->m_owner;
+        int otherPlayer = getOtherHero()->playerOwner;
         if (!m_netMsgHandler->getAbortPopupMsg()) {
             hero* leftHero = m_heroes[0];
             hero* rightHero = m_heroes[1];
@@ -1571,7 +1571,7 @@ int swapManager::main(message& msg)
     {
         if (g_remoteOn)
         {
-            transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->m_owner, 0, 1);
+            transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->playerOwner, 0, 1);
         }
         return exitSwapManager(msg);
     }
@@ -1583,7 +1583,7 @@ int swapManager::main(message& msg)
         {
             if (isLeftHero())
             {
-                transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->m_owner, 0, 1);
+                transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->playerOwner, 0, 1);
             }
             exitFlag = 1;
         }
@@ -1613,7 +1613,7 @@ int swapManager::main(message& msg)
             case widget::WIDGET_END_DIALOG:
                 if (g_remoteOn && m_humanPlayerTrade)
                 {
-                    transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->m_owner,
+                    transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->playerOwner,
                                        0, 1);
                 }
                 exitFlag = 1;
@@ -2486,7 +2486,7 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
             && g_currentPlayer->isLocalHuman()
             && m_humanPlayerTrade)
         {
-            transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->m_owner, 0, 1);
+            transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->playerOwner, 0, 1);
         }
         exitFlag = 1;
         break;
@@ -2500,7 +2500,7 @@ DC_ADDRESS(0x15edf8, 0x2a)
 MAC_ADDRESS(0x1a9bcc, 0x4c)
 inline bool swapManager::isLeftHero()
 {
-    if (m_heroes[0]->m_owner == g_game->getLocalPlayerGamePos())
+    if (m_heroes[0]->playerOwner == g_game->getLocalPlayerGamePos())
         return true;
     return false;
 }
@@ -2511,7 +2511,7 @@ DC_ADDRESS(0x15ee24, 0x2a)
 MAC_ADDRESS(0x1a9c18, 0x4c)
 inline bool swapManager::isRightHero()
 {
-    if (m_heroes[1]->m_owner == g_game->getLocalPlayerGamePos())
+    if (m_heroes[1]->playerOwner == g_game->getLocalPlayerGamePos())
         return true;
     return false;
 }
@@ -2548,14 +2548,14 @@ bool swapManager::canModHero(int whichHero)
     // spelling differs.
     if (g_mpNetProtocol == MP_HOTSEAT) {
         if (!g_game->onSameTeam(
-                m_heroes[whichHero]->m_owner,
+                m_heroes[whichHero]->playerOwner,
                 g_game->getLocalPlayerGamePos()))
             return false;
         return true;
     }
     if (m_humanPlayerTrade && !m_givingToAlly)
         return false;
-    return m_heroes[whichHero]->m_owner == g_game->getLocalPlayerGamePos();
+    return m_heroes[whichHero]->playerOwner == g_game->getLocalPlayerGamePos();
 }
 
 // E:\gamedcs\swapmgr.cpp:2287
@@ -2568,7 +2568,7 @@ void swapManager::onReceiveFromAlly()
     drawSwapWin();
 
     // DC line 2294 is one ctor/GetOtherHero/transmit statement, with no locals.
-    transmitRemoteData(&CGiveMeStuffMsg(), getOtherHero()->m_owner, 0, 1);
+    transmitRemoteData(&CGiveMeStuffMsg(), getOtherHero()->playerOwner, 0, 1);
 }
 
 // E:\gamedcs\swapmgr.cpp:2298

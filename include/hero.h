@@ -199,7 +199,7 @@ public:
     unsigned char m_id;  // +0x19
     char m_type;  // +0x1a
     signed char m_facing;  // +0x1b
-    char m_playerOwner;  // +0x1c
+    char playerOwner;  // +0x1c
     char m_paddingBeforeOccupyingHero[3];
     int m_occupyingHero;  // +0x20 (THeroID)
     unsigned char m_occupied;  // +0x24
@@ -406,9 +406,8 @@ public:
     int m_order;  // +0x1e
     // Owning player. SIGNED char: town::View widens it with
     // `movsx edx, byte [gpGame + 1170*id + 0x21642]` before comparing
-    // it against the acting-player id. Name provisional.
-    // Before normalization (Dreamcast): playerOwner.
-    signed char m_owner;  // +0x22
+    // it against the acting-player id. Original Dreamcast playerOwner.
+    signed char playerOwner;  // +0x22
     // +0x23. hero::initialize copies exactly thirteen bytes of the setup
     // record's name here; SetRolloverText passes this band to sprintf.
     char m_name[13];

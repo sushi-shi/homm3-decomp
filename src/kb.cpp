@@ -2237,17 +2237,17 @@ void playerDead(int whichPlayer)
     }
 
     for (i = 0; i < g_game->m_mines.size(); i++) {
-        if (g_game->m_mines[i].m_playerOwner == whichPlayer)
+        if (g_game->m_mines[i].playerOwner == whichPlayer)
             g_game->claimMine(i, -1, const_normal_action);
     }
 
     for (i = 0; i < g_game->m_generators.size(); i++) {
-        if (g_game->m_generators[i].getOwner() == whichPlayer)
+        if (g_game->m_generators[i].get_owner() == whichPlayer)
             g_game->claimGenerator(i, -1);
     }
 
     for (i = 0; i < g_game->m_garrisons.size(); i++) {
-        if (g_game->m_garrisons[i].m_playerOwner == whichPlayer)
+        if (g_game->m_garrisons[i].playerOwner == whichPlayer)
             g_game->claimGarrison(i, -1);
     }
 

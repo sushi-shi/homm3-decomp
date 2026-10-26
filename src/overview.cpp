@@ -1056,7 +1056,7 @@ void game::overview()
     memset(res, 0, sizeof(res));
 
     for (unsigned mineIndex = 0; mineIndex < m_mines.size(); mineIndex++) {
-        if (m_mines[mineIndex].m_playerOwner == g_game->getLocalPlayerGamePos()
+        if (m_mines[mineIndex].playerOwner == g_game->getLocalPlayerGamePos()
                 && !m_mines[mineIndex].m_isAbandoned
                 && m_mines[mineIndex].m_type >= 0
                 && m_mines[mineIndex].m_type <= 6)
@@ -1862,7 +1862,7 @@ TOverviewWindow::TOverviewWindow()
     int localPlayer = g_game->getLocalPlayerGamePos();
 
     for (i = 0; i < g_game->m_mines.size(); ++i) {
-        if (g_game->m_mines[i].m_playerOwner != localPlayer)
+        if (g_game->m_mines[i].playerOwner != localPlayer)
             continue;
 
         if (g_game->m_mines[i].m_isAbandoned) {
@@ -1873,7 +1873,7 @@ TOverviewWindow::TOverviewWindow()
     }
 
     for (i = 0; i < g_game->m_generators.size(); ++i) {
-        if (g_game->m_generators[i].getOwner() != localPlayer)
+        if (g_game->m_generators[i].get_owner() != localPlayer)
             continue;
 
         // Windows keeps the original assignment (see above); Mac 0x139bac
@@ -1898,7 +1898,7 @@ TOverviewWindow::TOverviewWindow()
     }
 
     for (i = 0; i < g_game->m_garrisons.size(); ++i) {
-        if (g_game->m_garrisons[i].m_playerOwner != localPlayer)
+        if (g_game->m_garrisons[i].playerOwner != localPlayer)
             continue;
 
         NewmapCell* cell = g_game->m_worldMap.cell(

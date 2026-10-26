@@ -2112,7 +2112,7 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
             doAdvCommand(triggerPoint);
             return;
         }
-        if (myPos != g_game->getHero(clickedIndex)->m_owner)
+        if (myPos != g_game->getHero(clickedIndex)->playerOwner)
             return;
         // Retail homes this bool at [ebp+0xc] and pushes SetHeroContext's
         // trailing 1 AFTER the IsLocalHuman call. Historical uchar/int
@@ -2134,7 +2134,7 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
         town* clickedTown = g_game->getTown(clickedIndex);
         // Retail forwards this predicate directly to the bool context flag.
         bool waitingPlayer = !g_currentPlayer->isLocalHuman();
-        if (g_game->onSameTeam(g_curWatchPlayer, clickedTown->m_owner)
+        if (g_game->onSameTeam(g_curWatchPlayer, clickedTown->playerOwner)
             || m_debugViewAll)
             setTownContext(clickedIndex, waitingPlayer, 1);
         return;
@@ -2172,7 +2172,7 @@ void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
         if (id == g_game->getLocalPlayer()->m_currHeroId) {
             m_advCommand = ADV_COMMAND_VIEW_HERO;
             doAdvCommand(triggerPoint);
-        } else if (localPlayer == g_game->getHero(id)->m_owner) {
+        } else if (localPlayer == g_game->getHero(id)->playerOwner) {
             bool waiting = !g_currentPlayer->isLocalHuman();
             setHeroContext(id, 0, waiting, 1);
         }
@@ -2184,7 +2184,7 @@ void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
         } else if (id != -1) {
             town* currentTown = g_game->getTown(id);
             bool waiting = !g_currentPlayer->isLocalHuman();
-            if (g_game->onSameTeam(g_curWatchPlayer, currentTown->m_owner)
+            if (g_game->onSameTeam(g_curWatchPlayer, currentTown->playerOwner)
                 || m_debugViewAll)
                 setTownContext(id, waiting, 1);
         }
@@ -2224,7 +2224,7 @@ static void setPyramidHelp(
     strcpy(buffer, g_quickViewText[PYRAMID]);
     if (cell->m_isTrigger && currentHero) {
         strcat(buffer, separator);
-        if (cell->playerKnowsCell(currentHero->m_owner))
+        if (cell->playerKnowsCell(currentHero->playerOwner))
             strcat(buffer, g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
         else
             strcat(buffer, g_generalText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
@@ -2696,7 +2696,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case CREATURE_GENERATOR_1: {
         // DC3321/3342 records generator&.
         generator& mapGenerator = g_game->m_generators[cell->m_extraInfo];
-        int owner = mapGenerator.getOwner();
+        int owner = mapGenerator.get_owner();
         // DC3324/3345 records int.
         int generatorType = mapGenerator.m_genType;
         if (owner != -1) {
@@ -2712,7 +2712,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case CREATURE_GENERATOR_4: {
         // DC3321/3342 records generator&.
         generator& mapGenerator = g_game->m_generators[cell->m_extraInfo];
-        int owner = mapGenerator.getOwner();
+        int owner = mapGenerator.get_owner();
         // DC3324/3345 records int.
         int generatorType = mapGenerator.m_genType;
         if (owner != -1) {
@@ -2954,11 +2954,11 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case LIGHTHOUSE:
         strcpy(g_text, g_quickViewText[LIGHTHOUSE]);
         if (cell->m_isTrigger) {
-            if (g_game->getMine(cell->m_extraInfo)->m_playerOwner != -1) {
+            if (g_game->getMine(cell->m_extraInfo)->playerOwner != -1) {
                 sprintf(tempText, DATA_COMPGEN(
                     0x00660334, rolloverOwnerSuffixFormat, " - %s"),
                     g_ownedByColor[
-                        g_game->getMine(cell->m_extraInfo)->m_playerOwner]);
+                        g_game->getMine(cell->m_extraInfo)->playerOwner]);
                 strcat(g_text, tempText);
             }
         }
@@ -3431,7 +3431,7 @@ void getMineHelpText(char* buffer, NewmapCell* cell, long playerId,
                        const char* separator, unsigned char showFullList)
 {
     mine* currentMine = g_game->getMine(cell->m_extraInfo);
-    int owner = currentMine->m_playerOwner;
+    int owner = currentMine->playerOwner;
     int mineType = currentMine->m_type;
     if (currentMine->m_isAbandoned)
         strcpy(buffer, g_mineDescriptions[7]);
@@ -3606,7 +3606,7 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
             switch (currCell->m_type) {
             case TOWN: {
                 class town* town = g_game->getTown(currCell->m_extraInfo);
-                if (g_game->isLocalHuman(town->m_owner)) {
+                if (g_game->isLocalHuman(town->playerOwner)) {
                     m_advCommand = thisPlayer->m_currTownId == -1 ? 5 : 3;
                     g_mouseManager->setPointer(
                         3, mouseManager::ADVENTURE_SET);
@@ -3616,8 +3616,8 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
             }
             case HERO: {
                 class hero* hero = g_game->getHero(currCell->m_extraInfo);
-                if (g_game->isLocalHuman(hero->m_owner)
-                    && hero->m_owner == g_netLocalGamePos) {
+                if (g_game->isLocalHuman(hero->playerOwner)
+                    && hero->playerOwner == g_netLocalGamePos) {
                     g_mouseManager->setPointer(
                         2, mouseManager::ADVENTURE_SET);
                     m_advCommand = thisPlayer->m_currHeroId == -1 ? 4 : 2;
@@ -3656,7 +3656,7 @@ type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
 {
     if (currCell->m_isTrigger) {
         garrison& mapGarrison = *g_game->getGarrison(currCell->m_extraInfo);
-        if (!g_game->onSameTeam(mapGarrison.m_playerOwner, g_netLocalGamePos)
+        if (!g_game->onSameTeam(mapGarrison.playerOwner, g_netLocalGamePos)
             && mapGarrison.m_garrisonArmy.hasCreatures())
             return ADV_SWORD_POINTER;
     }
@@ -3765,7 +3765,7 @@ int advManager::processHover(int mouseX, int mouseY)
             if (currCell->m_type == TOWN) {
                 town* currentTown = g_game->getTown(
                     currCell->getTriggerCell()->getMapExtraInfo());
-                if (g_game->onSameTeam(currentTown->m_owner, g_netLocalGamePos)
+                if (g_game->onSameTeam(currentTown->playerOwner, g_netLocalGamePos)
                     || m_debugViewAll) {
                     g_mouseManager->setPointer(3,
                                                mouseManager::ADVENTURE_SET);
@@ -3775,7 +3775,7 @@ int advManager::processHover(int mouseX, int mouseY)
             }
 
             if (currCell->m_type == HERO
-                && g_game->getHero(currCell->m_extraInfo)->m_owner == g_netLocalGamePos) {
+                && g_game->getHero(currCell->m_extraInfo)->playerOwner == g_netLocalGamePos) {
                 g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
                 m_advCommand = 2;
                 return 1;
@@ -3808,7 +3808,7 @@ int advManager::processHover(int mouseX, int mouseY)
             if (currCell->m_type == TOWN) {
                 town* currentTown = g_game->getTown(
                     currCell->getTriggerCell()->getMapExtraInfo());
-                if (g_game->onSameTeam(currentTown->m_owner, g_netLocalGamePos)
+                if (g_game->onSameTeam(currentTown->playerOwner, g_netLocalGamePos)
                     || m_debugViewAll) {
                     g_mouseManager->setPointer(3,
                                                mouseManager::ADVENTURE_SET);
@@ -3890,7 +3890,7 @@ int advManager::processHover(int mouseX, int mouseY)
                 break;
             case HERO: {
                 hero* mapHero = g_game->getHero(currCell->m_extraInfo);
-                if (!g_game->onSameTeam(mapHero->m_owner, g_netLocalGamePos)) {
+                if (!g_game->onSameTeam(mapHero->playerOwner, g_netLocalGamePos)) {
                     newCursor = ADV_SWORD_POINTER;
                 } else {
                     newCursor = ADV_EXCHANGE_POINTER;
@@ -3904,7 +3904,7 @@ int advManager::processHover(int mouseX, int mouseY)
             case TOWN: {
                 town* currentTown = g_game->getTown(currCell->m_extraInfo);
                 if (currCell->m_isTrigger
-                    && !g_game->onSameTeam(currentTown->m_owner, g_netLocalGamePos)
+                    && !g_game->onSameTeam(currentTown->playerOwner, g_netLocalGamePos)
                     && currentTown->hasGarrison())
                     newCursor = ADV_SWORD_POINTER;
                 else
@@ -4409,18 +4409,18 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
     switch (type) {
     case RANDOM_TOWN:
     case TOWN:
-        owner = g_game->m_towns[extraInfo].m_owner;
+        owner = g_game->m_towns[extraInfo].playerOwner;
         break;
     case LIGHTHOUSE:
     case MINE:
-        owner = g_game->getMine(extraInfo)->m_playerOwner;
+        owner = g_game->getMine(extraInfo)->playerOwner;
         break;
     case GARRISON:
-        owner = g_game->getGarrison(extraInfo)->m_playerOwner;
+        owner = g_game->getGarrison(extraInfo)->playerOwner;
         break;
     case CREATURE_GENERATOR_1:
     case CREATURE_GENERATOR_4:
-        owner = g_game->m_generators[extraInfo].getOwner();
+        owner = g_game->m_generators[extraInfo].get_owner();
         break;
     case SHIPYARD:
         owner = extraInfo << 24 >> 24;
@@ -4462,9 +4462,9 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
                 currHero->getHflip());
         }
 
-        m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]->DrawHero(
+        m_boatFlagIcons[currBoat->m_type][currBoat->playerOwner]->DrawHero(
             currHero->getStandSequence(),
-            m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
+            m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->playerOwner]
                                 ->GetNumFrames(hs_stand_n),
             tilex + (3 - heroCellY - 1) * 32,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
@@ -4479,10 +4479,10 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
-    } else if (currHero->m_owner >= 0 && currHero->m_owner < NUM_PLAYERS) {
-        m_flagIcons[currHero->m_owner]->DrawHero(
+    } else if (currHero->playerOwner >= 0 && currHero->playerOwner < NUM_PLAYERS) {
+        m_flagIcons[currHero->playerOwner]->DrawHero(
             currHero->getStandSequence(),
-            m_animCtr % m_flagIcons[currHero->m_owner]->GetNumFrames(hs_stand_n),
+            m_animCtr % m_flagIcons[currHero->playerOwner]->GetNumFrames(hs_stand_n),
             tilex + (3 - heroCellY - 1) * 32,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
@@ -4512,7 +4512,7 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
     int heroCellX = part / 3;
 
     if (currHero->m_flags & 0x40000) {
-        if (currHero->m_owner < 0 || currHero->m_owner >= NUM_PLAYERS)
+        if (currHero->playerOwner < 0 || currHero->playerOwner >= NUM_PLAYERS)
             return;
 
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
@@ -4529,9 +4529,9 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
                 currHero->getHflip());
         }
 
-        m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]->DrawHeroShadow(
+        m_boatFlagIcons[currBoat->m_type][currBoat->playerOwner]->DrawHeroShadow(
             currHero->getStandSequence(),
-            m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
+            m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->playerOwner]
                                 ->GetNumFrames(hs_stand_n),
             tilex + (3 - heroCellY - 1) * 32,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
@@ -4546,10 +4546,10 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
-    } else if (currHero->m_owner >= 0 && currHero->m_owner < NUM_PLAYERS) {
-        m_flagIcons[currHero->m_owner]->DrawHeroShadow(
+    } else if (currHero->playerOwner >= 0 && currHero->playerOwner < NUM_PLAYERS) {
+        m_flagIcons[currHero->playerOwner]->DrawHeroShadow(
             currHero->getStandSequence(),
-            m_animCtr % m_flagIcons[currHero->m_owner]->GetNumFrames(hs_stand_n),
+            m_animCtr % m_flagIcons[currHero->playerOwner]->GetNumFrames(hs_stand_n),
             tilex + (3 - heroCellY - 1) * 32,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
@@ -5711,7 +5711,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
             } else {
                 color = m_groundTileset[currCell->m_groundSet]->GetPaletteColor(8);
                 if (x == current_hero_x && y == current_hero_y) {
-                    color = g_systemPalette->Palette[64 + current_hero->m_owner];
+                    color = g_systemPalette->Palette[64 + current_hero->playerOwner];
                 } else if (currCell->m_type == HERO
                            && currCell->m_isTrigger) {
                     color = g_systemPalette->Palette[64 +
@@ -5748,7 +5748,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                             NewmapCell* trigger_cell = currCell->getTriggerCell();
                             if (trigger_cell) {
                                 int owner = g_game->m_towns[
-                                    trigger_cell->getMapExtraInfo()].m_owner;
+                                    trigger_cell->getMapExtraInfo()].playerOwner;
                                 color = g_systemPalette->Palette[64 + owner];
                             }
                         }
@@ -5759,7 +5759,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                             NewmapCell* trigger_cell = currCell->getTriggerCell();
                             if (trigger_cell) {
                                 int owner = g_game->getMine(
-                                    trigger_cell->getMapExtraInfo())->m_playerOwner;
+                                    trigger_cell->getMapExtraInfo())->playerOwner;
                                 color = g_systemPalette->Palette[64 + owner];
                             }
                         }
@@ -5770,7 +5770,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                             NewmapCell* trigger_cell = currCell->getTriggerCell();
                             if (trigger_cell) {
                                 int owner = g_game->m_generators[
-                                    trigger_cell->getMapExtraInfo()].getOwner();
+                                    trigger_cell->getMapExtraInfo()].get_owner();
                                 color = g_systemPalette->Palette[64 + owner];
                             }
                         }
@@ -5782,7 +5782,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                                 // DC 7301 indexes the garrison vector here
                                 // rather than calling its GetGarrison inline.
                                 int owner = g_game->m_garrisons[
-                                    trigger_cell->getMapExtraInfo()].m_playerOwner;
+                                    trigger_cell->getMapExtraInfo()].playerOwner;
                                 color = g_systemPalette->Palette[64 + owner];
                             }
                         }
@@ -6223,7 +6223,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 break;
             }
             case CREATURE_GENERATOR_1: {
-                int owner = g_game->m_generators[testCell->m_extraInfo].getOwner();
+                int owner = g_game->m_generators[testCell->m_extraInfo].get_owner();
                 int type = g_game->m_generators[testCell->m_extraInfo].m_genType;
                 if (owner != -1) {
                     sprintf(g_text, DATA_COMPGEN(
@@ -6238,7 +6238,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 break;
             }
             case CREATURE_GENERATOR_4: {
-                int owner = g_game->m_generators[testCell->m_extraInfo].getOwner();
+                int owner = g_game->m_generators[testCell->m_extraInfo].get_owner();
                 int type = g_game->m_generators[testCell->m_extraInfo].m_genType;
                 if (owner != -1) {
                     sprintf(g_text, DATA_COMPGEN(
@@ -6508,7 +6508,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     char owner =
-                        g_game->getMine(testCell->m_extraInfo)->m_playerOwner;
+                        g_game->getMine(testCell->m_extraInfo)->playerOwner;
                     if (owner != -1) {
                         sprintf(tempText, visitFormat,
                                 g_ownedByColor[owner]);
@@ -7256,7 +7256,7 @@ void advManager::heroQuickView(int heroId, int x, int y,
     TSkillMastery identifyLevel = getIdentifyLevel(heroPoint);
 
     TQuickHeroWindow::TViewLevel level;
-    if (g_game->onSameTeam(theHero->m_owner, g_game->getLocalPlayerGamePos())
+    if (g_game->onSameTeam(theHero->playerOwner, g_game->getLocalPlayerGamePos())
         || identifyLevel >= eMasteryAdvanced || m_debugViewAll)
         level = TQuickHeroWindow::ViewAll;
     else
@@ -7317,9 +7317,9 @@ void advManager::townQuickView(int townId, int x, int y,
     const town* const thisTown = g_game->getTown(townId);
     TSkillMastery identifyLevel = getIdentifyLevel(thisTown->getLocation());
 
-    if (m_debugViewAll && thisTown->m_owner != g_netLocalGamePos) {
+    if (m_debugViewAll && thisTown->playerOwner != g_netLocalGamePos) {
         std::string msg;
-        playerData& enemyPlayer = g_game->m_players[thisTown->m_owner];
+        playerData& enemyPlayer = g_game->m_players[thisTown->playerOwner];
         unsigned char first = 1;
 
         msg = thisTown->m_name;
@@ -7384,7 +7384,7 @@ void advManager::townQuickView(int townId, int x, int y,
     }
 
     TQuickTownWindow::TViewLevel viewLevel;
-    if (g_game->onSameTeam(thisTown->m_owner, player)
+    if (g_game->onSameTeam(thisTown->playerOwner, player)
         || identifyLevel == eMasteryExpert)
         viewLevel = TQuickTownWindow::ViewAll;
     else if (g_game->getNumThievesGuilds(player) >= 2)
@@ -7427,7 +7427,7 @@ void advManager::garrisonQuickView(int id, int x, int y)
     TSkillMastery identifyLevel = TSkillMastery(getIdentifyLevel(point));
 
     TQuickTownWindow::TViewLevel level;
-    if (g_game->onSameTeam(thisGarrison->m_playerOwner, g_curWatchPlayer)
+    if (g_game->onSameTeam(thisGarrison->playerOwner, g_curWatchPlayer)
         || m_debugViewAll)
         identifyLevel = eMasteryExpert;
     if (identifyLevel == eMasteryExpert)

@@ -258,7 +258,7 @@ bool combatManager::aiCheckRetreat()
         long count = 0;
         unsigned char besiegedTownOnly = 0;
         long i = 0;
-        playerData* player = &g_game->m_players[Heroes[currControl]->m_owner];
+        playerData* player = &g_game->m_players[Heroes[currControl]->playerOwner];
         long numTowns = player->m_numTowns;
         if (numTowns > 0) {
             { for (; i < numTowns; i++) {

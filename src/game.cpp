@@ -358,7 +358,7 @@ VA(0x004b8450, 0xF7)
 MAC_ADDRESS(0x0ca048, 0xd4)
 void HeroExtra::reset(int heroId)
 {
-    m_owner = -1;
+    Owner = -1;
     m_id = heroId;
     m_objRef = 0;
     m_location = type_point(-1, -1, -1);
@@ -383,7 +383,7 @@ MAC_ADDRESS(0x0ca11c, 0x88)
 generator::generator()
     : m_genClass(-1), m_genType(-1)
 {
-    m_playerOwner = -1;
+    playerOwner = -1;
     m_mapX = -1;
     m_mapY = -1;
     m_mapZ = -1;
@@ -399,8 +399,8 @@ DC_ADDRESS(0x0a2e48, 0x194)
 MAC_ADDRESS(0x0ca1a4, 0x200)
 bool generator::load(TAbstractFile* infile)
 {
-    if (infile->read(&m_playerOwner, sizeof(m_playerOwner)) !=
-        sizeof(m_playerOwner))
+    if (infile->read(&playerOwner, sizeof(playerOwner)) !=
+        sizeof(playerOwner))
         return 0;
     if (infile->read(&m_genClass, sizeof(m_genClass)) != sizeof(m_genClass))
         return 0;
@@ -435,7 +435,7 @@ DC_ADDRESS(0x0a2fdc, 0xe6)
 MAC_ADDRESS(0x0ca3a4, 0x188)
 bool generator::save(TAbstractFile* outfile)
 {
-    outfile->write(&m_playerOwner, sizeof(m_playerOwner));
+    outfile->write(&playerOwner, sizeof(playerOwner));
     outfile->write(&m_genClass, sizeof(m_genClass));
     outfile->write(&m_genType, sizeof(m_genType));
 
@@ -463,19 +463,19 @@ bool generator::save(TAbstractFile* outfile)
 // Dreamcast records the alignment local as TTownType and get_alignment's
 // header declaration returns that same enum. Complete retains the helper call
 // here while update_bonus expands its elemental gate and traits lookup.
-// Mac retains removeBonus, updateBonus and setOwner consecutively at code0
+// Mac retains removeBonus, updateBonus and set_owner consecutively at code0
 // +0xca52c, +0xca624 and +0xca71c between save and initialize, as in the
 // Dreamcast game.cpp line order. Its calls do not establish inline spelling or
-// header placement. VC6 also expands removeBonus and setOwner from ordinary
+// header placement. VC6 also expands removeBonus and set_owner from ordinary
 // game.cpp definitions at their known call sites.
 DC_ADDRESS(0x0a30c4, 0xb2)
 MAC_ADDRESS(0x0ca52c, 0xf8)
 void generator::removeBonus()
 {
-    if (m_playerOwner < 0)
+    if (playerOwner < 0)
         return;
 
-    playerData& player = g_game->m_players[m_playerOwner];
+    playerData& player = g_game->m_players[playerOwner];
     int alignment = g_game->getAlignment(m_type[0]);
     if (alignment == -1)
         return;
@@ -494,10 +494,10 @@ MAC_ADDRESS(0x0ca624, 0xf8)
 // and has 26 blocks instead of the retail 38-block expansion.
 inline void generator::updateBonus()
 {
-    if (m_playerOwner < 0)
+    if (playerOwner < 0)
         return;
 
-    playerData& player = g_game->m_players[m_playerOwner];
+    playerData& player = g_game->m_players[playerOwner];
     int creature = m_type[0];
     int townType = g_game->getAlignment(creature);
     if (townType == -1)
@@ -513,13 +513,13 @@ inline void generator::updateBonus()
 // E:\gamedcs\game.cpp:557
 DC_ADDRESS(0x0a3250, 0x38)
 MAC_ADDRESS(0x0ca71c, 0x5c)
-void generator::setOwner(long owner)
+void generator::set_owner(long owner)
 {
-    if (owner == m_playerOwner)
+    if (owner == playerOwner)
         return;
 
     removeBonus();
-    m_playerOwner = owner;
+    playerOwner = owner;
     updateBonus();
 }
 
@@ -547,13 +547,13 @@ void generator::initialize(long newOwner)
     }
 
     m_townId = -1;
-    m_playerOwner = -1;
+    playerOwner = -1;
     while (typeCount--) {
         m_type[typeCount] = types[typeCount];
     }
 
     grow(1);
-    setOwner(newOwner);
+    set_owner(newOwner);
 }
 
 VA(0x004b8a60, 0x88)
@@ -621,8 +621,8 @@ void game::calculateProduction()
     long mineId;
     for (mineId = 0; mineId < m_mines.size(); ++mineId) {
         mine& currentMine = m_mines[mineId];
-        if (currentMine.m_playerOwner >= 0 && currentMine.m_type < GOLD) {
-            m_players[currentMine.m_playerOwner]
+        if (currentMine.playerOwner >= 0 && currentMine.m_type < GOLD) {
+            m_players[currentMine.playerOwner]
                 .m_ai.m_turnProductionResource[currentMine.m_type] +=
                     g_mineProduction[currentMine.m_type];
         }
@@ -637,10 +637,10 @@ void game::calculateProduction()
     long townId;
     for (townId = 0; townId < m_towns.size(); ++townId) {
         town& currentTown = m_towns[townId];
-        if (currentTown.m_owner < 0)
+        if (currentTown.playerOwner < 0)
             continue;
 
-        playerData& currentPlayer = m_players[currentTown.m_owner];
+        playerData& currentPlayer = m_players[currentTown.playerOwner];
         long* production = currentPlayer.m_ai.m_turnProductionResource;
         if (currentTown.hasBuilding(MARKETPLACE_SILO_ID, false)) {
             int* siloIncome = currentTown.getSiloIncome();
@@ -651,7 +651,7 @@ void game::calculateProduction()
         // Mac calculateProduction calls the mutable getArmy at 0xcac1c.
         // Windows folds both overload bodies at 0x5c1460.
         if (currentTown.getArmy().getCreatureTotal(CREATURE_CRYSTAL_DRAGON) > 0)
-            crystalDragonIncome[currentTown.m_owner] = 1;
+            crystalDragonIncome[currentTown.playerOwner] = 1;
 
         if (currentTown.m_type == TOWN_RAMPART && m_day == 1) {
             if (currentTown.hasBuilding(EXTRA_1_ID, true))
@@ -686,12 +686,12 @@ void game::calculateProduction()
 
     for (i = 0; i < HERO_COUNT; ++i) {
         const hero& currHero = m_heroes[i];
-        if (currHero.m_owner == -1)
+        if (currHero.playerOwner == -1)
             continue;
         if (currHero.m_army.getCreatureTotal(CREATURE_CRYSTAL_DRAGON) > 0)
-            crystalDragonIncome[currHero.m_owner] = 1;
+            crystalDragonIncome[currHero.playerOwner] = 1;
         long (&production)[NUM_RESOURCES] =
-            m_players[currHero.m_owner].m_ai.m_turnProductionResource;
+            m_players[currHero.playerOwner].m_ai.m_turnProductionResource;
         if (g_heroSpecificAbilities[i].m_type == eHeroAbilityResource) {
             if (g_heroSpecificAbilities[i].m_skill >= WOOD
                 && g_heroSpecificAbilities[i].m_skill <= GEMS)
@@ -821,7 +821,7 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
         if (readValue(infile, charBuffer)
             < sizeof(charBuffer))
             return -1;
-        m_mines[x].m_playerOwner = charBuffer;
+        m_mines[x].playerOwner = charBuffer;
         if (readValue(infile, charBuffer)
             < sizeof(charBuffer))
             return -1;
@@ -873,7 +873,7 @@ int game::saveMinePool(TAbstractFile* outfile)
         return -1;
 
     for (x = 0; x < m_mines.size(); ++x) {
-        charBuffer = m_mines[x].m_playerOwner;
+        charBuffer = m_mines[x].playerOwner;
         count = writeScalar(outfile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
@@ -929,7 +929,7 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
         count = infile->read(&charBuffer, sizeof(charBuffer));
         if (count < sizeof(charBuffer))
             return -1;
-        m_garrisons[x].m_playerOwner = charBuffer;
+        m_garrisons[x].playerOwner = charBuffer;
 
         m_garrisons[x].m_garrisonArmy.load(infile);
 
@@ -974,7 +974,7 @@ int game::saveGarrisonPool(TAbstractFile* outfile)
         return -1;
 
     for (x = 0; x < m_garrisons.size(); ++x) {
-        charBuffer = m_garrisons[x].m_playerOwner;
+        charBuffer = m_garrisons[x].playerOwner;
         count = writeScalar(outfile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
@@ -1042,7 +1042,7 @@ int game::loadBoatPool(TAbstractFile* infile)
         count = infile->read(&charBuffer, sizeof(charBuffer));
         if (count < sizeof(charBuffer))
             return -1;
-        m_boats[x].m_playerOwner = charBuffer;
+        m_boats[x].playerOwner = charBuffer;
 
         count = infile->read(&ushortBuffer, sizeof(ushortBuffer));
         if (count < sizeof(ushortBuffer))
@@ -1094,7 +1094,7 @@ int game::saveBoatPool(TAbstractFile* outfile)
         count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
-        charBuffer = m_boats[x].m_playerOwner;
+        charBuffer = m_boats[x].playerOwner;
         count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
@@ -1230,7 +1230,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
     if (!ourHero->m_army.merge(&ourTown->getArmy()))
         return 0;
 
-    g_game->recordHideHero(ourHero, ourHero->m_owner, 0);
+    g_game->recordHideHero(ourHero, ourHero->playerOwner, 0);
 
     if (g_remoteOn) {
         CMCHideHero hideHero(ourHero->m_id);
@@ -1246,7 +1246,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
 
     if (m_currHeroId == ourHero->m_id) {
         m_currHeroId = -1;
-        if (g_netLocalGamePos == ourHero->m_owner) {
+        if (g_netLocalGamePos == ourHero->playerOwner) {
             g_advManager->m_drawCursor = 0;
             g_advManager->m_curHeroMobile = 0;
         }
@@ -1897,7 +1897,7 @@ int game::mineTypesOwned(int whichPlayer, int mineType)
     int count = 0;
 
     for (unsigned i = 0; i < m_mines.size(); i++) {
-        if (m_mines[i].m_playerOwner == whichPlayer && m_mines[i].m_type == mineType)
+        if (m_mines[i].playerOwner == whichPlayer && m_mines[i].m_type == mineType)
             count++;
     }
     return count;
@@ -2056,7 +2056,7 @@ int game::createBoat(int x, int y, int z, int owner, bool isRemoteMove, signed c
     thisBoat.m_id = static_cast<unsigned char>(id);
     thisBoat.m_allocated = 1;
     thisBoat.m_facing = 2;
-    thisBoat.m_playerOwner = owner;
+    thisBoat.playerOwner = owner;
     thisBoat.m_occupyingHero = -1;
     thisBoat.m_occupied = 0;
     thisBoat.obscureCell();
@@ -3674,7 +3674,7 @@ MAC_ADDRESS(0x0d5000, 0x13c)
 void game::giveTroopsToNeutralTowns()
 {
     for (int i = 0; i < m_towns.size(); ++i) {
-        if (m_towns[i].m_owner < 0) {
+        if (m_towns[i].playerOwner < 0) {
             if (m_towns[i].isCastle()) {
                 if (random(0, 100)
                     < g_neutralTownFortifiedReinforcementChance)
@@ -3774,7 +3774,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
             type_point poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y,
                                    m_heroes[i].m_z);
             if (vcheroLoc == poolheroLoc) {
-                if (isHumanTeam(m_heroes[i].m_owner)) {
+                if (isHumanTeam(m_heroes[i].playerOwner)) {
                     m_mapHeader.m_victoryCondition.m_type = -1;
                 } else {
                     m_mapHeader.m_victoryCondition.m_heroId = i;
@@ -3801,7 +3801,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
     if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_CAPTURE_TOWN) {
         town* thisTown = getTown(getTownId(
             m_mapHeader.m_victoryCondition.m_townX, m_mapHeader.m_victoryCondition.m_townY, m_mapHeader.m_victoryCondition.m_townZ));
-        int team = getTeam(thisTown->m_owner);
+        int team = getTeam(thisTown->playerOwner);
         if (team >= 0 && isHumanTeam(team))
             m_mapHeader.m_victoryCondition.m_type = -1;
     }
@@ -3819,7 +3819,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
                         ++numHumanTeams;
                 }
                 if (numHumanTeams > 1
-                    || isComputerTeam(getTeam(m_heroes[i].m_owner))) {
+                    || isComputerTeam(getTeam(m_heroes[i].playerOwner))) {
                     m_mapHeader.m_lossCondition.m_type = -1;
                 } else {
                     m_mapHeader.m_lossCondition.m_heroId = i;
@@ -3840,8 +3840,8 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
                 ++numHumanTeams;
         }
         if (numHumanTeams > 1
-            || isComputerTeam(getTeam(thisTown->m_owner))
-            || thisTown->m_owner == -1)
+            || isComputerTeam(getTeam(thisTown->playerOwner))
+            || thisTown->playerOwner == -1)
             m_mapHeader.m_lossCondition.m_type = -1;
     }
 }
@@ -4757,7 +4757,7 @@ void game::randomizeEvents()
 
                 case CREATURE_GENERATOR_1:
                     id = getGeneratorId(x, y, z);
-                    claimGenerator(id, m_generators[id].getOwner());
+                    claimGenerator(id, m_generators[id].get_owner());
                     break;
 
                 case g_retailCreatureGenerator2:
@@ -4782,7 +4782,7 @@ void game::randomizeEvents()
 
                 case CREATURE_GENERATOR_4:
                     id = getGeneratorId(x, y, z);
-                    claimGenerator(id, m_generators[id].getOwner());
+                    claimGenerator(id, m_generators[id].get_owner());
                     break;
 
                 case DEAD_GUY:
@@ -4877,7 +4877,7 @@ void game::randomizeEvents()
                         // DC game.cpp:5284 calls the ordinary helper. Its
                         // expansion retains CMCClaimGarrison's constructor
                         // without a pin; the standalone helper stays exact.
-                        claimGarrison(id, g->m_playerOwner);
+                        claimGarrison(id, g->playerOwner);
                     }
                     break;
 
@@ -4953,7 +4953,7 @@ void game::randomizeEvents()
                         m_mines[id].m_guards.m_armies[0] = 0x46;
                         m_mines[id].m_guards.m_numTroops[0] = random(100, 200);
                     }
-                    claimMine(id, m_mines[id].m_playerOwner,
+                    claimMine(id, m_mines[id].playerOwner,
                               const_initialization_action);
                     break;
 
@@ -6728,7 +6728,7 @@ MAC_ADDRESS(0x0dc98c, 0x3dc)
 void game::claimTown(int townId, int newPlayerOwner, bool isRemoteMove, bool checkEndGame)
 {
     town* thisTown = &m_towns[townId];
-    long oldOwner = thisTown->m_owner;
+    long oldOwner = thisTown->playerOwner;
     long i;
     if (oldOwner == newPlayerOwner)
         return;
@@ -6740,25 +6740,25 @@ void game::claimTown(int townId, int newPlayerOwner, bool isRemoteMove, bool che
 
     if (!isRemoteMove) {
         for (i = 0; i < m_generators.size(); i++) {
-            if (m_generators[i].getOwner() == oldOwner
-                || m_generators[i].getOwner() == newPlayerOwner)
+            if (m_generators[i].get_owner() == oldOwner
+                || m_generators[i].get_owner() == newPlayerOwner)
                 m_generators[i].removeBonus();
         }
     }
 
-    if (thisTown->m_owner != -1) {
-        if (isComputerTeam(getTeam(thisTown->m_owner))
+    if (thisTown->playerOwner != -1) {
+        if (isComputerTeam(getTeam(thisTown->playerOwner))
             && isHumanTeam(getTeam(newPlayerOwner)))
             thisTown->m_builtThisTurn = 0;
         g_game->getTown(townId)->deallocate();
     }
 
-    thisTown->m_owner = newPlayerOwner;
+    thisTown->playerOwner = newPlayerOwner;
     if (isRemoteMove)
         return;
 
     thisTown->getArmy().initialize();
-    if (thisTown->m_owner != -1) {
+    if (thisTown->playerOwner != -1) {
         m_players[newPlayerOwner].m_townIds[m_players[newPlayerOwner].m_numTowns] =
             static_cast<char>(townId);
         m_players[newPlayerOwner].m_numTowns++;
@@ -6787,8 +6787,8 @@ void game::claimTown(int townId, int newPlayerOwner, bool isRemoteMove, bool che
     }
 
     for (i = 0; i < m_generators.size(); i++) {
-        if (m_generators[i].getOwner() == oldOwner
-            || m_generators[i].getOwner() == newPlayerOwner)
+        if (m_generators[i].get_owner() == oldOwner
+            || m_generators[i].get_owner() == newPlayerOwner)
             m_generators[i].updateBonus();
     }
 }
@@ -6805,7 +6805,7 @@ void game::claimMine(int mineId, int newPlayerOwner, type_action_type actionType
     if (actionType == const_normal_action)
         recordClaimMine(mineId, newPlayerOwner);
 
-    currentMine.m_playerOwner = newPlayerOwner;
+    currentMine.playerOwner = newPlayerOwner;
     if (newPlayerOwner != -1)
         setVisibility(location.m_x, location.m_y, location.m_z,
                       newPlayerOwner, 3, 0);
@@ -6822,7 +6822,7 @@ void game::claimGenerator(int generatorId, int newPlayerOwner)
     generator& currentGenerator = m_generators[generatorId];
     sendMapChange(&CMCClaimGenerator(generatorId, newPlayerOwner));
 
-    currentGenerator.setOwner(newPlayerOwner);
+    currentGenerator.set_owner(newPlayerOwner);
     if (newPlayerOwner != -1) {
         type_point location(currentGenerator.m_mapX, currentGenerator.m_mapY,
                             currentGenerator.m_mapZ);
@@ -6844,7 +6844,7 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
                         currentGarrison.m_mapZ);
     sendMapChange(&CMCClaimGarrison(garrisonId, newPlayerOwner));
 
-    currentGarrison.m_playerOwner = newPlayerOwner;
+    currentGarrison.playerOwner = newPlayerOwner;
     if (newPlayerOwner != -1)
         setVisibility(location.m_x, location.m_y, location.m_z,
                       newPlayerOwner, 3, 0);
@@ -6941,12 +6941,12 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     }
 
     if (thisTown) {
-        if (thisTown->m_owner >= 0)
-            hasAngelicAlliance = m_players[thisTown->m_owner]
+        if (thisTown->playerOwner >= 0)
+            hasAngelicAlliance = m_players[thisTown->playerOwner]
                                      .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
     } else if (thisHero) {
-        if (thisHero->m_owner >= 0)
-            hasAngelicAlliance = m_players[thisHero->m_owner]
+        if (thisHero->playerOwner >= 0)
+            hasAngelicAlliance = m_players[thisHero->playerOwner]
                                      .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
         else
             hasAngelicAlliance =
@@ -7251,12 +7251,12 @@ int game::computeDailyGold(int whichPlayer, bool includeSilo)
     int i;
 
     for (i = 0; i < m_mines.size(); ++i) {
-        if (m_mines[i].m_playerOwner == whichPlayer && m_mines[i].m_type == GOLD)
+        if (m_mines[i].playerOwner == whichPlayer && m_mines[i].m_type == GOLD)
             gold += 1000;
     }
 
     for (i = 0; i < m_towns.size(); ++i) {
-        if (m_towns[i].m_owner == whichPlayer) {
+        if (m_towns[i].playerOwner == whichPlayer) {
             gold += m_towns[i].getGoldIncome(includeSilo);
             if (m_towns[i].m_garrisonHeroId >= 0)
                 gold += getHero(m_towns[i].m_garrisonHeroId)->getEstatesBonus();
@@ -7304,7 +7304,7 @@ bool game::growCoverOfDarkness()
         if (m_towns[i].m_type == TOWN_NECROPOLIS
             && m_towns[i].hasBuilding(SPECIAL_BUILDING_ID, false)) {
             g_game->resetVisibility(m_towns[i].m_mapX, m_towns[i].m_mapY,
-                                    m_towns[i].m_mapZ, m_towns[i].m_owner,
+                                    m_towns[i].m_mapZ, m_towns[i].playerOwner,
                                     20);
             changed = true;
         }
@@ -7319,9 +7319,9 @@ void game::resetAllPlayerVisibility()
 {
     int i;
     for (i = 0; i < HERO_COUNT; ++i) {
-        if (m_heroes[i].m_owner != -1) {
+        if (m_heroes[i].playerOwner != -1) {
             setVisibility(m_heroes[i].m_x, m_heroes[i].m_y, m_heroes[i].m_z,
-                          m_heroes[i].m_owner, m_heroes[i].getVisibility(), 0);
+                          m_heroes[i].playerOwner, m_heroes[i].getVisibility(), 0);
         }
     }
 
@@ -7332,41 +7332,41 @@ void game::resetAllPlayerVisibility()
             range = 20;
         }
 
-        if (m_towns[i].m_owner != -1) {
+        if (m_towns[i].playerOwner != -1) {
             setVisibility(m_towns[i].m_mapX, m_towns[i].m_mapY, m_towns[i].m_mapZ,
-                          m_towns[i].m_owner, range, 0);
+                          m_towns[i].playerOwner, range, 0);
             if (m_day == 1 && m_week == 1 && m_month == 1
                 && m_towns[i].m_type == TOWN_TOWER
                 && m_towns[i].hasBuilding(HOLY_GRAIL_ID, false)) {
                 setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0,
-                              m_towns[i].m_owner, g_mapWidth, 0);
+                              m_towns[i].playerOwner, g_mapWidth, 0);
                 if (getNumMapLevels() > 1) {
                     setVisibility(g_mapWidth / 2, g_mapHeight / 2, 1,
-                                  m_towns[i].m_owner, g_mapWidth, 0);
+                                  m_towns[i].playerOwner, g_mapWidth, 0);
                 }
             }
         }
     }
 
     for (i = 0; i < m_mines.size(); ++i) {
-        if (m_mines[i].m_playerOwner != -1) {
+        if (m_mines[i].playerOwner != -1) {
             setVisibility(m_mines[i].m_mapX, m_mines[i].m_mapY, m_mines[i].m_mapZ,
-                          m_mines[i].m_playerOwner, 3, 0);
+                          m_mines[i].playerOwner, 3, 0);
         }
     }
 
     for (i = 0; i < m_generators.size(); ++i) {
-        if (m_generators[i].getOwner() != -1) {
+        if (m_generators[i].get_owner() != -1) {
             setVisibility(m_generators[i].m_mapX, m_generators[i].m_mapY,
-                          m_generators[i].m_mapZ, m_generators[i].getOwner(),
+                          m_generators[i].m_mapZ, m_generators[i].get_owner(),
                           3, 0);
         }
     }
 
     for (i = 0; i < m_garrisons.size(); ++i) {
-        if (m_garrisons[i].m_playerOwner != -1) {
+        if (m_garrisons[i].playerOwner != -1) {
             setVisibility(m_garrisons[i].m_mapX, m_garrisons[i].m_mapY,
-                          m_garrisons[i].m_mapZ, m_garrisons[i].m_playerOwner,
+                          m_garrisons[i].m_mapZ, m_garrisons[i].playerOwner,
                           3, 0);
         }
     }
@@ -7386,7 +7386,7 @@ void game::resetAllPlayerVisibility()
     }
 }
 
-// Dreamcast game.cpp:8123 passes town.m_owner directly to is_human_ally.
+// Dreamcast game.cpp:8123 passes town.playerOwner directly to is_human_ally.
 // Its canonical GetTeam wrapper performs the one team lookup visible in
 // Windows retail at +0xa5; pre-mapping here made the candidate look it up twice.
 // Dreamcast lines 8124 and 8126 place the zero store before the decrement.
@@ -7422,7 +7422,7 @@ void game::perDay()
     int i;
     for (i = 0; i < m_towns.size(); ++i) {
         if (g_game->m_setup.m_difficulty >= 2
-            || isHumanAlly(m_towns[i].m_owner)
+            || isHumanAlly(m_towns[i].playerOwner)
             || !townAlreadyBuiltOn(i)) {
             m_towns[i].m_builtThisTurn = 0;
         } else {
@@ -8891,12 +8891,12 @@ void game::processOnMapHeroes()
 
             if (m_heroAvailability[heroExtra->m_id]
                 != hero::HERO_AVAILABILITY_PRISON) {
-                m_players[currHero->m_owner].m_heroes[
-                    m_players[currHero->m_owner].m_numHeroes] = currHero->m_id;
-                ++m_players[currHero->m_owner].m_numHeroes;
+                m_players[currHero->playerOwner].m_heroes[
+                    m_players[currHero->playerOwner].m_numHeroes] = currHero->m_id;
+                ++m_players[currHero->playerOwner].m_numHeroes;
                 currHero->obscureCell();
                 setVisibility(currHero->m_x, currHero->m_y, currHero->m_z,
-                              currHero->m_owner, currHero->getVisibility(), 1);
+                              currHero->playerOwner, currHero->getVisibility(), 1);
             }
         } else {
             currHero = getHero(heroExtra->m_id);
@@ -10116,7 +10116,7 @@ MAC_ADDRESS(0x0e5044, 0x84)
 void game::giveTownEventReward(const TTownEvent& thisEvent)
 {
     town* thisTown = getTown(thisEvent.m_townNum);
-    if (g_netLocalGamePos == thisTown->m_owner) {
+    if (g_netLocalGamePos == thisTown->playerOwner) {
         giveTimeEventReward(&thisEvent);
         thisTown->giveEventReward(thisEvent);
     }
@@ -10195,7 +10195,7 @@ unsigned char game::getRandomLith(const std::vector<type_point>& points,
             exitPoint.m_x, exitPoint.m_y, exitPoint.m_z);
         if (exitCell->m_type == HERO && exitCell->m_isTrigger
             && !onSameTeam(
-                m_heroes[exitCell->m_extraInfo].m_owner, g_netLocalGamePos)) {
+                m_heroes[exitCell->m_extraInfo].playerOwner, g_netLocalGamePos)) {
             ++openCount;
         } else if (exitCell->m_type == cellType
                    && exitCell->m_extraInfo != excluded
@@ -10214,7 +10214,7 @@ unsigned char game::getRandomLith(const std::vector<type_point>& points,
             exitPoint.m_x, exitPoint.m_y, exitPoint.m_z);
         if (exitCell->m_type == HERO && exitCell->m_isTrigger
             && !onSameTeam(
-                m_heroes[exitCell->m_extraInfo].m_owner, g_netLocalGamePos)) {
+                m_heroes[exitCell->m_extraInfo].playerOwner, g_netLocalGamePos)) {
             if (--openCount == 0) {
                 result = exitPoint;
                 return 1;

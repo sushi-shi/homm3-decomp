@@ -266,7 +266,7 @@ type_record_claim_mine::type_record_claim_mine(long id,
 {
     m_id = id;
     m_newOwner = newOwner;
-    m_oldOwner = g_game->getMine(id)->m_playerOwner;
+    m_oldOwner = g_game->getMine(id)->playerOwner;
 }
 
 // E:\gamedcs\event_record.cpp:255
@@ -334,7 +334,7 @@ DC_ADDRESS(0x08ccd8, 0x24)
 MAC_ADDRESS(0x0bfaac, 0x24)
 void type_record_claim_mine::undo()
 {
-    g_game->getMine(m_id)->m_playerOwner = m_oldOwner;
+    g_game->getMine(m_id)->playerOwner = m_oldOwner;
 }
 
 VA(0x0049abe0, 0x7)
@@ -359,7 +359,7 @@ type_record_claim_town::type_record_claim_town(long id,
 {
     m_id = id;
     m_newOwner = newOwner;
-    m_oldOwner = g_game->m_towns[id].m_owner;
+    m_oldOwner = g_game->m_towns[id].playerOwner;
 }
 
 // E:\gamedcs\event_record.cpp:339
@@ -387,7 +387,7 @@ DC_ADDRESS(0x08cdd8, 0x70)
 MAC_ADDRESS(0x0bfc0c, 0xac)
 void type_record_claim_town::replay(bool draw)
 {
-    g_game->m_towns[m_id].m_owner = m_newOwner;
+    g_game->m_towns[m_id].playerOwner = m_newOwner;
     if (draw) {
         town& claimed = g_game->m_towns[m_id];
         if (getMapExtra(claimed.m_mapX, claimed.m_mapY, claimed.m_mapZ)
@@ -403,7 +403,7 @@ DC_ADDRESS(0x08ce48, 0x2a)
 MAC_ADDRESS(0x0bfcb8, 0x28)
 void type_record_claim_town::undo()
 {
-    g_game->m_towns[m_id].m_owner = m_oldOwner;
+    g_game->m_towns[m_id].playerOwner = m_oldOwner;
 }
 
 // E:\gamedcs\event_record.cpp:376
@@ -703,7 +703,7 @@ inline type_record_hide_hero::type_record_hide_hero(hero* who, char newOwner,
     // DC preserves this helper boundary; the two retail inline expansions
     // prove the snapshot is written before the requested replacement owner.
     m_currentHero = who;
-    m_prevOwner = who->m_owner;
+    m_prevOwner = who->playerOwner;
     m_newOwner = newOwner;
     m_townGarrison = townGarrison;
 }
@@ -774,7 +774,7 @@ void type_record_hide_hero::replay(bool draw)
     }
     m_currentHero->restoreCell();
 
-    m_currentHero->m_owner = m_newOwner;
+    m_currentHero->playerOwner = m_newOwner;
     if (g_netLocalGamePos == m_prevOwner && !m_townGarrison) {
         g_advManager->m_drawCursor = 0;
         g_advManager->m_curHeroMobile = 0;
@@ -790,7 +790,7 @@ DC_ADDRESS(0x08d688, 0x80)
 MAC_ADDRESS(0x0c0e08, 0x44)
 void type_record_hide_hero::undo()
 {
-    m_currentHero->m_owner = m_prevOwner;
+    m_currentHero->playerOwner = m_prevOwner;
     if (!m_townGarrison)
         m_currentHero->obscureCell();
 }
@@ -866,7 +866,7 @@ void type_record_show_hero::replay(bool draw)
     m_currentHero->m_y = m_location.m_y;
     m_currentHero->m_z = m_location.m_z;
     m_currentHero->obscureCell();
-    m_currentHero->m_owner = m_newOwner;
+    m_currentHero->playerOwner = m_newOwner;
     if (m_onBoat)
         m_currentHero->m_flags |= 0x40000;
     else
@@ -893,7 +893,7 @@ void type_record_show_hero::undo()
         g_advManager->m_drawCursor = 0;
         g_advManager->m_curHeroMobile = 0;
     }
-    m_currentHero->m_owner = m_prevOwner;
+    m_currentHero->playerOwner = m_prevOwner;
     m_currentHero->m_x = m_previousLocation.m_x;
     m_currentHero->m_y = m_previousLocation.m_y;
     m_currentHero->m_z = m_previousLocation.m_z;

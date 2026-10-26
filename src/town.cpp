@@ -231,7 +231,7 @@ int town::load(TAbstractFile* infile, int saveVersion)
     m_id = charBuffer;
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
-    m_owner = charBuffer;
+    playerOwner = charBuffer;
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     m_builtThisTurn = charBuffer;
@@ -366,7 +366,7 @@ int town::save(TAbstractFile* outfile)
     if (outfile->write(&charBuffer, sizeof(charBuffer))
         < sizeof(charBuffer))
         return -1;
-    charBuffer = m_owner;
+    charBuffer = playerOwner;
     if (outfile->write(&charBuffer, sizeof(charBuffer))
         < sizeof(charBuffer))
         return -1;
@@ -496,7 +496,7 @@ void town::setSummoningGenerator()
     int i;
 
     for (i = 0; i < g_game->m_generators.size(); ++i) {
-        if (g_game->m_generators[i].getOwner() == m_owner)
+        if (g_game->m_generators[i].get_owner() == playerOwner)
             generators.push_back(i);
     }
 
@@ -540,7 +540,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         && hasBuilding(EXTRA_0_ID, false)) {
         int maxMana = townHero->getMaxMana() * 2;
         if (townHero->m_mana < maxMana) {
-            if (g_game->isLocalHuman(m_owner))
+            if (g_game->isLocalHuman(playerOwner))
                 normalDialog((*g_generalText)[GENERAL_TEXT_MANA_VORTEX_VISIT], // Mana Vortex
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             townHero->m_mana = static_cast<short>(maxMana);
@@ -553,7 +553,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         townHero->m_flags |= 2;
         townHero->m_maxMovePoints += g_stablesMovementBonus;
         townHero->m_movePoints += g_stablesMovementBonus;
-        if (g_game->isLocalHuman(townHero->m_owner))
+        if (g_game->isLocalHuman(townHero->playerOwner))
             normalDialog((*g_generalText)[GENERAL_TEXT_STABLES_VISIT], // Stables
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
@@ -562,7 +562,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(3, 1);
-        if (g_game->isLocalHuman(townHero->m_owner))
+        if (g_game->isLocalHuman(townHero->playerOwner))
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_WALL_OF_KNOWLEDGE_VISIT], // Wall of Knowledge
                 1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
@@ -572,7 +572,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(2, 1);
-        if (g_game->isLocalHuman(townHero->m_owner))
+        if (g_game->isLocalHuman(townHero->playerOwner))
             normalDialog((*g_generalText)[GENERAL_TEXT_ORDER_OF_FIRE_VISIT], // Order of Fire
                          1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
     }
@@ -581,7 +581,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         int experience = static_cast<int>(
             townHero->getExperienceBonusFactor() * 1000.0f);
-        if (g_game->isLocalHuman(townHero->m_owner))
+        if (g_game->isLocalHuman(townHero->playerOwner))
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_BATTLE_SCHOLAR_ACADEMY_VISIT], // Battle Scholar Academy
                 1, -1, -1, 0x11, experience, -1, 0, -1, 0, -1, 0);
@@ -591,7 +591,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
 
     if (m_type == TOWN_STRONGHOLD && hasBuilding(EXTRA_2_ID, false)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
-        if (g_game->isLocalHuman(townHero->m_owner))
+        if (g_game->isLocalHuman(townHero->playerOwner))
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_HALL_OF_VALHALLA_VISIT], // Hall of Valhalla
                 1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
@@ -601,7 +601,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
 
     if (m_type == TOWN_FORTRESS && hasBuilding(SPECIAL_BUILDING_ID, false)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
-        if (g_game->isLocalHuman(townHero->m_owner))
+        if (g_game->isLocalHuman(townHero->playerOwner))
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_CAGE_OF_WARLORDS_VISIT], // Cage of Warlords
                 1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
@@ -626,7 +626,7 @@ town::town()
     m_populationMask = g_bitNumber[HALL_VILLAGE_ID];
     m_fullBuildingMask = m_populationMask;
     m_mageLevel = 0;
-    m_owner = -1;
+    playerOwner = -1;
     m_garrisonHeroId = -1;
     int slot;
     MEMSET(m_garrison.m_armies, -1, sizeof(m_garrison.m_armies), slot);
@@ -746,7 +746,7 @@ void town::view(int alreadyFaded)
     int heroId = viewedTown->m_visitingHeroId;
     if (heroId != -1) {
         hero* visitingHero = g_game->getHero(heroId);
-        if (visitingHero->m_owner == g_curWatchPlayer) {
+        if (visitingHero->playerOwner == g_curWatchPlayer) {
             g_advManager->setHeroContext(visitingHero->m_id, 0, 0, 1);
             g_adventureGraphicsPreserveMode = 0;
             g_townViewActive = 0;
@@ -762,7 +762,7 @@ DC_ADDRESS(0x166720, 0x10c)
 MAC_ADDRESS(0x1b3768, 0x134)
 void town::deallocate()
 {
-    playerData* player = &g_game->m_players[m_owner];
+    playerData* player = &g_game->m_players[playerOwner];
     int slot = -1;
     for (int i = 0; i < player->m_numTowns; i++) {
         if (player->m_townIds[i] == m_id)
@@ -775,8 +775,8 @@ void town::deallocate()
         player->m_currTownId = -1;
     player->m_numTowns--;
     g_advManager->m_advWindow->updateTownLocators(0, 1, 1);
-    g_game->m_towns[m_id].m_owner = -1;
-    m_owner = -1;
+    g_game->m_towns[m_id].playerOwner = -1;
+    playerOwner = -1;
 }
 
 // Dreamcast town.cpp:1106 calls town::PlaceInMap after moving the
@@ -789,7 +789,7 @@ void town::removeGarrisonHero()
     if (m_garrisonHeroId < 0)
         return;
     hero* garrisonHero = g_game->getHero(m_garrisonHeroId);
-    int player = m_owner;
+    int player = playerOwner;
     m_visitingHeroId = m_garrisonHeroId;
     m_garrisonHeroId = -1;
     placeInMap(garrisonHero->m_id, player, 0);
@@ -819,7 +819,7 @@ void town::swapHeroes()
     std::swap(currentTown->m_garrisonHeroId, currentTown->m_visitingHeroId);
 
     int rosterIndex = g_currentPlayer->findHero(visitingHero->m_id);
-    g_game->recordHideHero(visitingHero, visitingHero->m_owner, 0);
+    g_game->recordHideHero(visitingHero, visitingHero->playerOwner, 0);
     visitingHero->restoreCell();
 
     {
@@ -834,14 +834,14 @@ void town::swapHeroes()
 
     if (g_currentPlayer->m_currHeroId == visitingHero->m_id) {
         g_currentPlayer->m_currHeroId = -1;
-        if (g_netLocalGamePos == visitingHero->m_owner) {
+        if (g_netLocalGamePos == visitingHero->playerOwner) {
             g_advManager->m_drawCursor = 0;
             g_advManager->m_curHeroMobile = 0;
         }
     }
 
     // Dreamcast town.cpp:1143 and Mac retain the ordinary town::PlaceInMap call.
-    int player = currentTown->m_owner;
+    int player = currentTown->playerOwner;
     currentTown->placeInMap(garrisonHero->m_id, player, 0);
 }
 
@@ -1017,8 +1017,8 @@ DC_ADDRESS(0x166ed8, 0xf0)
 MAC_ADDRESS(0x1b41dc, 0x1c8)
 void town::destroyExtraCapitol()
 {
-    if (isCapitol() && m_owner >= 0) {
-        playerData* player = &g_game->m_players[m_owner];
+    if (isCapitol() && playerOwner >= 0) {
+        playerData* player = &g_game->m_players[playerOwner];
         int townCount = player->m_numTowns;
 
         for (int slot = 0; slot < townCount; ++slot) {
@@ -1074,7 +1074,7 @@ type_building_id town::buildBuilding(int buildingId,
 
     if (setBuiltFlag && buildingId != DOCK_WITH_BOAT_ID) {
         if (g_game->m_setup.m_difficulty >= 2
-            || g_game->isHumanAlly(m_owner)) {
+            || g_game->isHumanAlly(playerOwner)) {
             m_builtThisTurn = 1;
         } else {
             m_builtThisTurn = 2;
@@ -1102,15 +1102,15 @@ type_building_id town::buildBuilding(int buildingId,
 
     if (m_type == TOWN_TOWER) {
         if (buildingId == EXTRA_0_ID) {
-            g_game->setVisibility(m_mapX, m_mapY, m_mapZ, m_owner, 20, 0);
+            g_game->setVisibility(m_mapX, m_mapY, m_mapZ, playerOwner, 20, 0);
         }
         if (buildingId == HOLY_GRAIL_ID) {
-            g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0, m_owner,
+            g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0, playerOwner,
                                   g_mapWidth, 0);
             // DC town.cpp:1390 calls the game helper; both retail loops inline it.
             if (g_game->getNumMapLevels() > 1)
                 g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 1,
-                                      m_owner, g_mapWidth, 0);
+                                      playerOwner, g_mapWidth, 0);
         }
     }
 
@@ -1154,14 +1154,14 @@ DC_ADDRESS(0x167274, 0x102)
 MAC_ADDRESS(0x1b4948, 0x224)
 bool town::buyBuilding(type_building_id building)
 {
-    if (m_owner < 0)
+    if (playerOwner < 0)
         return 0;
     if (!canBuild(building))
         return 0;
     int* costs = getBuildCostArray(building);
-    playerData* player = &g_game->m_players[m_owner];
+    playerData* player = &g_game->m_players[playerOwner];
     if (!player->isHuman()) {
-        tradePlayerResources(m_owner, costs, 1);
+        tradePlayerResources(playerOwner, costs, 1);
         if (m_builtThisTurn)
             return 0;
     }
@@ -1279,7 +1279,7 @@ MAC_ADDRESS(0x1b5060, 0xc0)
 long town::getAssembledLegionBonus(long dwelling) const
 {
     long bonus = 0;
-    if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(ARTIFACT_STATUE_OF_LEGION)) {
+    if (playerOwner >= 0 && g_game->m_players[playerOwner].hasGivenArtifact(ARTIFACT_STATUE_OF_LEGION)) {
         TCreatureType creature = g_dwellingType[m_type][dwelling];
         long growth = akCreatureTypeTraits[creature].growthRate;
         bonus = getCastleGrowthBonus(creature);
@@ -1381,7 +1381,7 @@ short town::getGrowthRate(short dwelling) const
     short growth = akCreatureTypeTraits[creature].growthRate;
     growth += getCastleGrowthBonus(creature);
 
-    if (m_owner >= 0) {
+    if (playerOwner >= 0) {
         growth += getAssembledLegionBonus(dwellingIndex);
         growth += getLegionBonus(dwellingIndex);
     }
@@ -1414,7 +1414,7 @@ void town::increasePopulation(TCreatureType bonusCreature,
                 g_dwellingType[m_type][dwelling];
             if (creature == bonusCreature || creature == alternateBonus)
                 growth += bonusAmount;
-            if (m_owner == -1)
+            if (playerOwner == -1)
                 growth = growth / 2;
             m_population[dwelling] += growth;
         }
@@ -1477,7 +1477,7 @@ void showBuildingRewards(const town* thisTown,
     text = formatString(g_generalText->GetText(GENERAL_TEXT_EVENT_BUILDINGS_FORMAT),
                          thisTown->m_name.c_str(), text.c_str());
     if (g_currentPlayer->isLocalHuman()
-        && g_netLocalGamePos == thisTown->m_owner)
+        && g_netLocalGamePos == thisTown->playerOwner)
         extendedDialog(text.c_str(), rewards, -1, -1, 0);
     rewards.clear();
 }
@@ -1510,7 +1510,7 @@ void showCreatureRewards(const town* thisTown,
     msg = formatString(g_generalText->GetText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
                          firstCount, msg.c_str(), thisTown->m_name.c_str());
     if (g_currentPlayer->isLocalHuman()
-        && g_netLocalGamePos == thisTown->m_owner)
+        && g_netLocalGamePos == thisTown->playerOwner)
         extendedDialog(msg.c_str(), rewards, -1, -1, 0);
     rewards.clear();
 }
@@ -1658,7 +1658,7 @@ static void initializeBuildings(town* currentTown, const TownExtra* townSetup)
     currentTown->setLegalBuildings(disabledBuildings);
     if (townSetup->m_hasFort)
         currentTown->createBuilding(CASTLE_FORT_ID);
-    if (currentTown->m_owner >= 0) {
+    if (currentTown->playerOwner >= 0) {
         currentTown->createBuilding(TAVERN_ID);
         if (currentTown->hasBuilding(CASTLE_FORT_ID, false)) {
             currentTown->createBuilding(DWELLING_0_ID);
@@ -1711,7 +1711,7 @@ static void initializeArmy(town* currentTown, const TownExtra* townSetup)
             currentTown->getArmy().m_armies[slot] = -1;
             currentTown->getArmy().m_numTroops[slot] = 0;
         }
-        if (currentTown->m_owner < 0) {
+        if (currentTown->playerOwner < 0) {
             for (int tier = 0; tier < 4; tier++) {
                 if (random(1, 100) <= g_townInitArmyChance[tier]) {
                     int creature = g_dwellingType[currentTown->m_type][tier];
@@ -1730,9 +1730,9 @@ MAC_ADDRESS(0x1b6638, 0xbc)
 void town::initialize(const TownExtra* townSetup)
 {
     m_type = townSetup->m_townType;
-    m_owner = -1;
+    playerOwner = -1;
     memset(m_generatorBonus, 0, sizeof(m_generatorBonus));
-    g_game->claimTown(m_id, townSetup->m_playerOwner, 0, 0);
+    g_game->claimTown(m_id, townSetup->playerOwner, 0, 0);
     initializeArmy(this, townSetup);
     initializeBuildings(this, townSetup);
     updateFullBuildingMask();
@@ -1804,7 +1804,7 @@ bool town::canBuild(short buildingId) const
             if (buildingId == DOCK_ID)
                 return canBuildDock();
             if (buildingId == HALL_CAPITOL_ID)
-                return !g_game->m_players[m_owner].hasCapitol();
+                return !g_game->m_players[playerOwner].hasCapitol();
             char townType = m_type;
             __int64 requirements = g_hierarchyMask[townType][buildingId];
             __int64 buildingMask = getBuildingMask();
@@ -1832,7 +1832,7 @@ bool town::canEverBuild(int buildingId) const
         if (buildingId == DOCK_ID)
             return canBuildDock();
         if (!(buildingId == HALL_CAPITOL_ID
-              && g_game->m_players[m_owner].hasCapitol())) {
+              && g_game->m_players[playerOwner].hasCapitol())) {
             __int64 requirements = g_hierarchyMask[m_type][buildingId];
             if (((getBuildingMask() | m_legalBuildings) & requirements) == requirements)
                 return 1;
@@ -1865,7 +1865,7 @@ __int64 town::getBuildableMask() const
     mask &= m_legalBuildings;
     if (!canBuildDock())
         mask &= ~g_bitNumber[DOCK_ID];
-    if (g_game->m_players[m_owner].hasCapitol())
+    if (g_game->m_players[playerOwner].hasCapitol())
         mask &= ~g_bitNumber[HALL_CAPITOL_ID];
     return mask;
 }

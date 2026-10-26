@@ -214,7 +214,7 @@ unsigned char VictoryConditionStruct::checkForUpgradedTown()
     unsigned char castleOk = 0;
     town* checkedTown =
         g_game->getTown(g_game->getTownId(m_townX, m_townY, m_townZ));
-    signed char owner = checkedTown->m_owner;
+    signed char owner = checkedTown->playerOwner;
     if (owner == -1)
         return 0;
 
@@ -275,7 +275,7 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
                 if (isGrailTarget(thisTownLoc, grailTownLoc, anyTownLoc))
                     hasGrail = thisTown->hasBuilding(HOLY_GRAIL_ID, true);
                 if (hasGrail) {
-                    m_playerWinner = thisTown->m_owner;
+                    m_playerWinner = thisTown->playerOwner;
                     m_gameWon = 1;
                     return 1;
                 }
@@ -347,7 +347,7 @@ unsigned char VictoryConditionStruct::checkForTownCaptureWin()
         return 0;
 
     town* capturedTown = g_game->getTown(townId);
-    m_playerWinner = capturedTown->m_owner;
+    m_playerWinner = capturedTown->playerOwner;
     m_gameWon = 1;
     return 1;
 }
@@ -379,7 +379,7 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
         && !g_game->m_playerDisabled[g_netLocalGamePos]) {
         type_point pos(m_monsterX, m_monsterY, m_monsterZ);
         if (monsterLoc == pos) {
-            m_playerWinner = thisHero->m_owner;
+            m_playerWinner = thisHero->playerOwner;
             m_gameWon = 1;
             return 1;
         }
@@ -401,7 +401,7 @@ unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
         return 0;
 
     for (unsigned int i = 0; i < g_game->m_generators.size(); ++i) {
-        int owner = g_game->m_generators[i].getOwner();
+        int owner = g_game->m_generators[i].get_owner();
         if (!g_game->onSameTeam(owner, g_netLocalGamePos))
             return 0;
     }
@@ -424,7 +424,7 @@ unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
         return 0;
 
     for (unsigned int i = 0; i < g_game->m_mines.size(); ++i) {
-        int owner = g_game->getMine(i)->m_playerOwner;
+        int owner = g_game->getMine(i)->playerOwner;
         if (!g_game->onSameTeam(owner, g_netLocalGamePos))
             return 0;
     }
@@ -464,7 +464,7 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
         type_point target(m_townX, m_townY, m_townZ);
         if (target == townLoc) {
             if (thisHero->hasArtifact(m_artifactNum)) {
-                m_playerWinner = thisHero->m_owner;
+                m_playerWinner = thisHero->playerOwner;
                 m_gameWon = 1;
                 return 1;
             }

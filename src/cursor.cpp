@@ -102,7 +102,7 @@ void advManager::drawCursor(int cellX, int cellY)
                     g_windowManager->m_screenBitmap,
                     refX, refY, curr->getHflip());
             }
-            m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
+            m_boatFlagIcons[currBoat->m_type][currBoat->playerOwner]
                 ->DrawHero(
                     m_cursorSequence,
                     (m_animCtr + m_cursorFrameCount) % 8,
@@ -115,7 +115,7 @@ void advManager::drawCursor(int cellX, int cellY)
                 g_windowManager->m_screenBitmap,
                 refX, refY, curr->getHflip());
         } else {
-            m_flagIcons[curr->m_owner]->DrawHero(
+            m_flagIcons[curr->playerOwner]->DrawHero(
                 m_cursorSequence, (m_animCtr + m_cursorFrameCount) % 8,
                 cellX * 32, cellY * 32, 32, 32,
                 g_windowManager->m_screenBitmap,
@@ -193,7 +193,7 @@ void advManager::drawCursorAlpha()
 
             if (curr->m_flags & 0x40000) {
                 boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
-                m_boatFlagIcons[currBoat->m_type][curr->m_owner]->DrawHeroAlpha(
+                m_boatFlagIcons[currBoat->m_type][curr->playerOwner]->DrawHeroAlpha(
                     m_cursorSequence, (m_animCtr + m_cursorFrameCount) % 8,
                     clipx, clipy, 96 - rightClip - clipx,
                     64 - bottomClip - clipy,
@@ -205,7 +205,7 @@ void advManager::drawCursorAlpha()
                     g_windowManager->m_screenBitmap, refX, refY,
                     curr->getHflip());
             } else {
-                m_flagIcons[curr->m_owner]->DrawHeroAlpha(
+                m_flagIcons[curr->playerOwner]->DrawHeroAlpha(
                     m_cursorSequence, (m_animCtr + m_cursorFrameCount) % 8,
                     clipx, clipy, 96 - rightClip - clipx,
                     64 - bottomClip - clipy,
@@ -281,7 +281,7 @@ NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, bool isR
                 || curr->getTarget() == curr->getLocation())
                 checkAdjacentMon(foughtBattle);
 
-            if (curr->m_owner != g_netLocalGamePos)
+            if (curr->playerOwner != g_netLocalGamePos)
                 returnCell = 0;
         }
     }
@@ -498,9 +498,9 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
             curr->m_flags &= ~0x40000;
         }
 
-        g_game->recordHideHero(curr, curr->m_owner, 0);
+        g_game->recordHideHero(curr, curr->playerOwner, 0);
         g_game->recordShowBoat(oldBoat, curr->getLocation());
-        g_game->recordShowHero(curr, curr->m_owner, triggerPoint, 0);
+        g_game->recordShowHero(curr, curr->playerOwner, triggerPoint, 0);
 
         oldBoat->m_x = curr->m_x;
         oldBoat->m_y = curr->m_y;
@@ -529,12 +529,12 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
                                      origX, origY, standEnd,
                                      foughtBattle);
             else {
-                g_game->recordHideHero(curr, curr->m_owner, 0);
+                g_game->recordHideHero(curr, curr->playerOwner, 0);
                 // Mac 0x8fc38..0x8fc58 indexes the boat after recording the
                 // hero; DC records no boat local here.
                 g_game->recordHideBoat(g_game->getBoat(destCell->m_extraInfo),
                                        1, curr->m_id);
-                g_game->recordShowHero(curr, curr->m_owner,
+                g_game->recordShowHero(curr, curr->playerOwner,
                                          triggerPoint, 1);
                 becameBoat = 1;
                 if (g_remoteOn && isRemoteMove) {
@@ -566,7 +566,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
             // DC expands GetTown (game.h:1016..1018) once for the owner test
             // and again for HasGarrison; there is no town local.
             if (!g_game->onSameTeam(
-                    g_game->getTown(destCell->m_extraInfo)->m_owner,
+                    g_game->getTown(destCell->m_extraInfo)->playerOwner,
                     g_netLocalGamePos)
                 && g_game->getTown(destCell->m_extraInfo)->hasGarrison())
                 return handleStopOnTrigger(
@@ -610,11 +610,11 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         g_game->recordMove(curr, direction, triggerPoint);
 
     g_game->setVisibility(curr->m_x + xInc, curr->m_y + yInc, curr->m_z,
-                          curr->m_owner, curr->getVisibility(),
+                          curr->playerOwner, curr->getVisibility(),
                           isRemoteMove);
 
     if (g_remoteOn && isRemoteMove
-        && (g_game->getTeamMask(curr->m_owner)
+        && (g_game->getTeamMask(curr->playerOwner)
             & (1 << g_game->getLocalPlayerGamePos())))
         updateRadar(1, 1, 0, 0, 0);
 
@@ -686,7 +686,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
             if (curr->getTarget() != triggerPoint
                 && g_currentPlayer->isHuman()
                 && g_game->onSameTeam(
-                    g_game->getGarrison(eventCell->m_extraInfo)->m_playerOwner,
+                    g_game->getGarrison(eventCell->m_extraInfo)->playerOwner,
                     g_netLocalGamePos))
                 returnCell = 0;
             break;
@@ -873,7 +873,7 @@ int advManager::validMove(const hero* currentHero, int direction, int withEvent,
     if (destCell->m_type == HERO
             && destCell->getMapObject() == SANCTUARY) {
         hero* occupant = g_game->getHero(destCell->m_extraInfo);
-        if (occupant->m_owner != currentHero->m_owner)
+        if (occupant->playerOwner != currentHero->playerOwner)
             return 0;
     }
 
@@ -986,7 +986,7 @@ void advManager::onRecruitHero(CMapChange* mapChange)
     currentHero->m_z = change->m_point.m_z;
     currentHero->m_flags = 0;
     currentHero->m_facing = hero::kFacingE;
-    currentHero->m_owner = static_cast<signed char>(change->m_playerPos);
+    currentHero->playerOwner = static_cast<signed char>(change->m_playerPos);
     currentHero->obscureCell();
 }
 

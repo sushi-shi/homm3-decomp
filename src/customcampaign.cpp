@@ -375,7 +375,7 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
         return 0;
     }
     hero* chosen = g_game->getHero(heroSelector);
-    return chosen->m_owner == whichPlayer ? chosen : 0;
+    return chosen->playerOwner == whichPlayer ? chosen : 0;
 }
 
 // The two spell rows share the general-text pair 708/709: the campaign
@@ -1376,7 +1376,7 @@ TCampaignBrief::ScenarioStruct::~ScenarioStruct()
 // placement x to -1, and the availability table follows - the new id takes
 // the record's owner, the old one goes back to the tavern pool. Name
 // provisional.
-// 2026-09-07: 98.4901 -> 99.9509 by reading setup.m_owner directly in the
+// 2026-09-07: 98.4901 -> 99.9509 by reading setup.Owner directly in the
 // GetNewHeroId call; the prior named int owner rotated EAX/ECX/EDX throughout
 // the copy. heroClass remains a named THeroClass because that fixes its
 // evaluation before the direct owner read. All 38 blocks, 20 branches and 5
@@ -1398,7 +1398,7 @@ void game::rehomeCampaignHeroSetup(int heroId)
         return;
 
     THeroClass heroClass = akHeroTraits[heroId].m_class;
-    int newHeroId = getNewHeroId(setup.m_owner, kNumHeroClasses, 1, heroClass);
+    int newHeroId = getNewHeroId(setup.Owner, kNumHeroClasses, 1, heroClass);
     if (newHeroId == -1) {
         setup.m_location.m_x = -1;
         return;
@@ -1408,7 +1408,7 @@ void game::rehomeCampaignHeroSetup(int heroId)
     HeroExtra& newSetup = m_heroSetup[newHeroId];
     newSetup.m_id = newHeroId;
     setup.m_location.m_x = -1;
-    m_heroAvailability[newHeroId] = setup.m_owner;
+    m_heroAvailability[newHeroId] = setup.Owner;
     m_heroAvailability[heroId] = hero::HERO_AVAILABILITY_TAVERN_POOL;
     if (newSetup.m_portraitNumber == heroId)
         newSetup.m_portraitNumber = newHeroId;
@@ -1532,7 +1532,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     currentHero->m_x = static_cast<short>(triggerX);
     currentHero->m_y = static_cast<short>(triggerY);
     currentHero->m_z = object->m_z;
-    currentHero->m_owner = static_cast<signed char>(placeholder->m_owner);
+    currentHero->playerOwner = static_cast<signed char>(placeholder->m_owner);
     currentHero->m_heroClass = sourceHero->m_heroClass;
     currentHero->m_patrolRadius = -1;
     currentHero->m_patrolX = hero::kPatrolNone;
@@ -1648,14 +1648,14 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
             --currentHero->m_x;
     }
 
-    g_game->m_players[currentHero->m_owner].m_heroes[
-        g_game->m_players[currentHero->m_owner].m_numHeroes] = currentHero->m_id;
-    ++g_game->m_players[currentHero->m_owner].m_numHeroes;
+    g_game->m_players[currentHero->playerOwner].m_heroes[
+        g_game->m_players[currentHero->playerOwner].m_numHeroes] = currentHero->m_id;
+    ++g_game->m_players[currentHero->playerOwner].m_numHeroes;
     currentHero->obscureCell();
-    g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
-    g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
+    g_game->m_heroAvailability[currentHero->m_id] = currentHero->playerOwner;
+    g_game->m_heroPoolMap[currentHero->m_id][currentHero->playerOwner] = true;
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
-                          currentHero->m_owner, currentHero->getVisibility(), 1);
+                          currentHero->playerOwner, currentHero->getVisibility(), 1);
     g_game->m_campaign.m_assignedCarryover.push_back(currentHero->m_id);
 }
 
@@ -1712,7 +1712,7 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     currentHero->m_x = static_cast<short>(triggerX);
     currentHero->m_y = static_cast<short>(triggerY);
     currentHero->m_z = object->m_z;
-    currentHero->m_owner = static_cast<signed char>(placeholder->m_owner);
+    currentHero->playerOwner = static_cast<signed char>(placeholder->m_owner);
     g_game->setRandomHeroArmies(currentHero->m_id, 0, 0);
     currentHero->m_maxMovePoints = currentHero->m_movePoints
         = currentHero->getMobility();
@@ -1725,14 +1725,14 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
             --currentHero->m_x;
     }
 
-    g_game->m_players[currentHero->m_owner].m_heroes[
-        g_game->m_players[currentHero->m_owner].m_numHeroes] = currentHero->m_id;
-    ++g_game->m_players[currentHero->m_owner].m_numHeroes;
+    g_game->m_players[currentHero->playerOwner].m_heroes[
+        g_game->m_players[currentHero->playerOwner].m_numHeroes] = currentHero->m_id;
+    ++g_game->m_players[currentHero->playerOwner].m_numHeroes;
     currentHero->obscureCell();
-    g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
-    g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
+    g_game->m_heroAvailability[currentHero->m_id] = currentHero->playerOwner;
+    g_game->m_heroPoolMap[currentHero->m_id][currentHero->playerOwner] = true;
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
-                          currentHero->m_owner, currentHero->getVisibility(), 1);
+                          currentHero->playerOwner, currentHero->getVisibility(), 1);
 }
 
 // The map placeholders are handed the campaign's carried heroes strongest
@@ -2922,22 +2922,22 @@ void SCampaign::completeCurrentMap(
 
     if (m_currentCampaign == g_campaignOrdinal07
         && m_currentMap == g_campaignMapOrdinal06) {
-        if (g_game->getHero(155)->m_owner != gamePos) {
+        if (g_game->getHero(155)->playerOwner != gamePos) {
             crossover.push_back(*g_game->getHero(155));
         }
     }
     if (m_currentCampaign == g_campaignOrdinal18
         && m_currentMap == g_campaignMapOrdinal07) {
-        if (g_game->getHero(27)->m_owner != gamePos) {
+        if (g_game->getHero(27)->playerOwner != gamePos) {
             crossover.push_back(*g_game->getHero(27));
         }
-        if (g_game->getHero(102)->m_owner != gamePos) {
+        if (g_game->getHero(102)->playerOwner != gamePos) {
             crossover.push_back(*g_game->getHero(102));
         }
-        if (g_game->getHero(148)->m_owner != gamePos) {
+        if (g_game->getHero(148)->playerOwner != gamePos) {
             crossover.push_back(*g_game->getHero(148));
         }
-        if (g_game->getHero(96)->m_owner != gamePos) {
+        if (g_game->getHero(96)->playerOwner != gamePos) {
             crossover.push_back(*g_game->getHero(96));
         }
     }
@@ -3100,7 +3100,7 @@ static void convertLegacyCampaignHero(hero& newHero,
                                       const LegacyCampaignHero& oldHero)
 {
     newHero.m_id = oldHero.m_id;
-    newHero.m_owner = oldHero.m_owner;
+    newHero.playerOwner = oldHero.playerOwner;
     strcpy(newHero.m_name, oldHero.m_name);
     newHero.m_heroClass = oldHero.m_heroClass;
     newHero.m_portrait = oldHero.m_portrait;

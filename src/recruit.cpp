@@ -1143,7 +1143,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     m_numAvail = &newTown->m_population[newDwellingIndex];
     m_currArmyGroup = &newTown->getArmy();
     m_currArmyGroupIsTownGarrison = 1;
-    m_viewOnly = newTown->m_owner != g_netLocalGamePos;
+    m_viewOnly = newTown->playerOwner != g_netLocalGamePos;
     m_monType2 = (TCreatureType)-1;
     m_monType3 = (TCreatureType)-1;
     m_monType4 = (TCreatureType)-1;

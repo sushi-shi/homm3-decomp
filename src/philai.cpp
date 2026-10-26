@@ -180,7 +180,7 @@ DC_ADDRESS(0x10d640, 0x42)
 MAC_ADDRESS(0x13d804, 0xd4)
 void aiEnterGarrison(hero* currentHero, garrison* ourGarrison)
 {
-    if (currentHero->m_owner != ourGarrison->m_playerOwner)
+    if (currentHero->playerOwner != ourGarrison->playerOwner)
         return;
     if (!ourGarrison->m_removableTroops)
         return;
@@ -188,7 +188,7 @@ void aiEnterGarrison(hero* currentHero, garrison* ourGarrison)
         return;
 
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->playerOwner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     type_AI_creature_swapper swapper;
     swapper.doSwap(currentHero, &ourGarrison->m_garrisonArmy, 0,
@@ -421,7 +421,7 @@ DC_ADDRESS(0x10dcc4, 0x1e2)
 MAC_ADDRESS(0x13ed50, 0x324)
 static void buySpecialBuilding(const hero* currentHero, town* currentTown)
 {
-    if (currentHero->m_owner != currentTown->m_owner
+    if (currentHero->playerOwner != currentTown->playerOwner
         || g_game->townAlreadyBuiltOn(currentTown->m_id))
         return;
     switch (currentTown->m_type) {
@@ -430,7 +430,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             break;
         int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
         if (currentHero->getValueOfKnowledge()
-            > aiResourceCost(currentHero->m_owner, cost))
+            > aiResourceCost(currentHero->playerOwner, cost))
             currentTown->buyBuilding(EXTRA_2_ID);
         break;
     }
@@ -439,7 +439,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             break;
         int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
         if (currentHero->getValueOfPower()
-            > aiResourceCost(currentHero->m_owner, cost))
+            > aiResourceCost(currentHero->playerOwner, cost))
             currentTown->buyBuilding(EXTRA_2_ID);
         break;
     }
@@ -448,7 +448,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             break;
         int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
         if (currentHero->m_turnExperienceToRvRatio * 1000.0f
-            > aiResourceCost(currentHero->m_owner, cost))
+            > aiResourceCost(currentHero->playerOwner, cost))
             currentTown->buyBuilding(EXTRA_2_ID);
         break;
     }
@@ -459,7 +459,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
         long experience = currentHero->getExperienceIncrement();
         if (static_cast<float>(experience)
             * currentHero->m_turnExperienceToRvRatio
-            > aiResourceCost(currentHero->m_owner, cost))
+            > aiResourceCost(currentHero->playerOwner, cost))
             currentTown->buyBuilding(EXTRA_2_ID);
         break;
     }
@@ -470,7 +470,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
         long experience = currentHero->getExperienceIncrement();
         if (static_cast<float>(experience)
             * currentHero->m_turnExperienceToRvRatio
-            > aiResourceCost(currentHero->m_owner, cost))
+            > aiResourceCost(currentHero->playerOwner, cost))
             currentTown->buyBuilding(SPECIAL_BUILDING_ID);
         break;
     }
@@ -1022,7 +1022,7 @@ static inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
         return 0;
 
     type_artifact artifact(cell->getArtifactIndex());
-    int value = aiGetValueOfArtifact(artifact, currentHero->m_owner);
+    int value = aiGetValueOfArtifact(artifact, currentHero->playerOwner);
     if (value < 10)
         value = 10;
 
@@ -1105,7 +1105,7 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
     }
 
     // Mac 0:0x142378 retains the player-id wrapper.
-    value += aiResourceCost(currentHero->m_owner, blackBox->m_resQty);
+    value += aiResourceCost(currentHero->playerOwner, blackBox->m_resQty);
 
     int primarySkillValue = static_cast<int>(
         static_cast<float>(currentHero->getExperienceIncrement())
@@ -1168,7 +1168,7 @@ static long valueOfBank(const hero* currentHero, NewmapCell* cell)
     if (value <= -500000000)
         return value;
 
-    value += aiResourceCost(currentHero->m_owner, bank.m_resources);
+    value += aiResourceCost(currentHero->playerOwner, bank.m_resources);
 
     if (bank.m_rewardCreatures > 0)
         value += bank.m_rewardCreatures
@@ -1218,13 +1218,13 @@ MAC_ADDRESS(0x142c74, 0x164)
 inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
 {
     garrison* currentGarrison = g_game->getGarrison(cell->m_extraInfo);
-    if (currentGarrison->m_playerOwner == currentHero->m_owner
+    if (currentGarrison->playerOwner == currentHero->playerOwner
         && currentGarrison->m_removableTroops) {
         if (g_inCampaign && g_game->m_campaign.m_currentCampaign < 7)
             return 0;
 
         unsigned char hasAngelicAlliance =
-            g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+            g_game->m_players[currentHero->playerOwner].hasGivenArtifact(
                 ARTIFACT_ANGELIC_ALLIANCE);
         type_AI_creature_swapper swapper;
         return swapper.getSwapValue(
@@ -1232,8 +1232,8 @@ inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
             hasAngelicAlliance);
     }
 
-    if (g_game->onSameTeam(currentGarrison->m_playerOwner,
-                           currentHero->m_owner))
+    if (g_game->onSameTeam(currentGarrison->playerOwner,
+                           currentHero->playerOwner))
         return 0;
     return aiValueOfCombat(
         currentHero, 0, currentGarrison->m_garrisonArmy, 0, cell);
@@ -1321,8 +1321,8 @@ inline long valueOfHeroEvent(const hero* currentHero,
                                        short z, short moveCost)
 {
     hero* secondHero = g_game->getHero(cell->m_extraInfo);
-    if (secondHero->m_owner != currentHero->m_owner) {
-        if (g_game->onSameTeam(secondHero->m_owner, currentHero->m_owner))
+    if (secondHero->playerOwner != currentHero->playerOwner) {
+        if (g_game->onSameTeam(secondHero->playerOwner, currentHero->playerOwner))
             return 0;
 
         short townId = static_cast<short>(g_game->getTownId(x, y, z));
@@ -1332,7 +1332,7 @@ inline long valueOfHeroEvent(const hero* currentHero,
             value = static_cast<long>(
                 static_cast<float>(value)
                 + static_cast<float>(secondHero->m_bounty + 10000)
-                    * type_AI_player::getAttackBonus(secondHero->m_owner));
+                    * type_AI_player::getAttackBonus(secondHero->playerOwner));
         }
 
         if (townId < 0)
@@ -1356,7 +1356,7 @@ inline long valueOfHeroEvent(const hero* currentHero,
     short secondSkill = secondHero->getPrimarySkillTotal();
     if (secondSkill < currentSkill) {
         unsigned char hasAngelicAlliance =
-            g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+            g_game->m_players[currentHero->playerOwner].hasGivenArtifact(
                 ARTIFACT_ANGELIC_ALLIANCE);
         long value = swapper.getSwapValue(
             currentHero, &secondHero->m_army, secondHero,
@@ -1369,7 +1369,7 @@ inline long valueOfHeroEvent(const hero* currentHero,
     }
     if (secondSkill > currentSkill) {
         unsigned char hasAngelicAlliance =
-            g_game->m_players[secondHero->m_owner].hasGivenArtifact(
+            g_game->m_players[secondHero->playerOwner].hasGivenArtifact(
                 ARTIFACT_ANGELIC_ALLIANCE);
         return swapper.getSwapValue(
             secondHero, &currentHero->m_army, currentHero,
@@ -1458,7 +1458,7 @@ MAC_ADDRESS(0x143b54, 0x80)
 inline int valueOfLighthouse(NewmapCell* cell)
 {
     if (g_game->onSameTeam(
-            g_game->getMine(cell->m_extraInfo)->m_playerOwner,
+            g_game->getMine(cell->m_extraInfo)->playerOwner,
             g_netLocalGamePos))
         return 0;
     return 1000;
@@ -1800,7 +1800,7 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
         static const int constEstateValue[3] = {725, 725, 1550};
         if (complexChoice) {
             double goldValue =
-                g_aiPlayers[ourHero->m_owner].getResourceValue(GOLD);
+                g_aiPlayers[ourHero->playerOwner].getResourceValue(GOLD);
             return static_cast<long>(constEstateValue[level] * goldValue);
         }
         return constEstateValue[level];
@@ -2024,7 +2024,7 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 
     currentHero->m_movePoints = 0;
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->playerOwner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     type_AI_creature_swapper swapper;
     swapper.doSwap(currentHero, &currentTown->getArmy(),
@@ -2088,17 +2088,17 @@ void aiEnterTown(hero* currentHero, town* currentTown)
     if (currentTown->m_garrisonHeroId != -1)
         garrisonHero = g_game->getHero(currentTown->m_garrisonHeroId);
 
-    if (currentHero->m_owner == currentTown->m_owner) {
+    if (currentHero->playerOwner == currentTown->playerOwner) {
         considerGarrisoning(currentHero, currentTown);
         if (currentHero->m_movePoints > 0) {
-            g_aiPlayers[currentHero->m_owner].buyCreatures(
+            g_aiPlayers[currentHero->playerOwner].buyCreatures(
                 currentHero, currentTown);
-            g_aiPlayers[currentHero->m_owner].buyMageGuild(
+            g_aiPlayers[currentHero->playerOwner].buyMageGuild(
                 currentHero, currentTown);
         }
     }
 
-    playerData* player = &g_game->m_players[currentHero->m_owner];
+    playerData* player = &g_game->m_players[currentHero->playerOwner];
     if (player->m_resources[GOLD] >= 500
         && currentTown->hasBuilding(MAGE_GUILD_ID, 1)
         && !currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
@@ -2109,7 +2109,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
     currentTown->giveSpells(currentHero);
 
     if (currentHero->m_movePoints > 0
-        && currentHero->m_owner == currentTown->m_owner) {
+        && currentHero->playerOwner == currentTown->playerOwner) {
         upgradeCreatures(currentHero, currentTown);
         buySpecialBuilding(currentHero, currentTown);
 
@@ -2282,13 +2282,13 @@ void aiFriendlyHeroMeeting(hero* currentHero, hero* secondHero)
 
     if (secondSkill < currentSkill) {
         unsigned char hasAngelicAlliance =
-            g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+            g_game->m_players[currentHero->playerOwner].hasGivenArtifact(
                 ARTIFACT_ANGELIC_ALLIANCE);
         swapper.doSwap(currentHero, &secondHero->m_army, secondHero,
                         hasAngelicAlliance);
     } else if (secondSkill > currentSkill) {
         unsigned char hasAngelicAlliance =
-            g_game->m_players[secondHero->m_owner].hasGivenArtifact(
+            g_game->m_players[secondHero->playerOwner].hasGivenArtifact(
                 ARTIFACT_ANGELIC_ALLIANCE);
         swapper.doSwap(secondHero, &currentHero->m_army, currentHero,
                         hasAngelicAlliance);
@@ -2341,7 +2341,7 @@ static void moveHero(hero* currentHero, long* dangerZones,
                      unsigned char isLastHero, bool& exploreMode)
 {
     unsigned char mouseWasVisible = g_mouseManager->isVis();
-    playerData* player = &g_game->m_players[currentHero->m_owner];
+    playerData* player = &g_game->m_players[currentHero->playerOwner];
 
     checkForTown(currentHero);
     if (currentHero->m_patrolX != hero::kPatrolNone
@@ -2383,14 +2383,14 @@ static void moveHero(hero* currentHero, long* dangerZones,
         clearShipyards(player);
     }
 
-    if (currentHero->m_owner >= 0
+    if (currentHero->playerOwner >= 0
         && (currentHero->m_movePoints <= 0 || currentHero->m_isSleeping)) {
         int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
                                         currentHero->m_z);
         if (townId >= 0) {
             town* currentTown = g_game->getTown(townId);
             g_advManager->demobilizeCurrHero(0, 1);
-            if (currentTown->m_owner == currentHero->m_owner) {
+            if (currentTown->playerOwner == currentHero->playerOwner) {
                 if (currentTown->m_garrisonHeroId < 0) {
                     player->addGarrisonHero(currentTown);
                 } else {
@@ -2762,10 +2762,10 @@ DC_ADDRESS(0x110c04, 0x52)
 MAC_ADDRESS(0x142a4c, 0xc8)
 void aiPurchaseCreatures(hero* currentHero, generator* currentGenerator)
 {
-    type_AI_creature_purchaser purchaser(currentHero->m_owner,
+    type_AI_creature_purchaser purchaser(currentHero->playerOwner,
                                          currentGenerator);
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->playerOwner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doPurchase(&currentHero->m_army,
                           currentHero->getMorale(0, 0, 1), 0,
@@ -2861,10 +2861,10 @@ DC_ADDRESS(0x112208, 0x58)
 MAC_ADDRESS(0x144744, 0xd4)
 void aiRecruitRefugees(hero* currentHero, TCreatureType type, short* number)
 {
-    type_AI_creature_purchaser purchaser(currentHero->m_owner, type, number,
+    type_AI_creature_purchaser purchaser(currentHero->playerOwner, type, number,
                                          0);
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->playerOwner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doPurchase(&currentHero->m_army,
                           currentHero->getMorale(0, 0, 1), 0,
@@ -2952,7 +2952,7 @@ MAC_ADDRESS(0x141d98, 0xb8)
 int netValueOfArtifact(const hero* currentHero, int artifactValue,
     int goldCost, int resourceCost, EGameResource resourceType)
 {
-    playerData* player = &g_game->m_players[currentHero->m_owner];
+    playerData* player = &g_game->m_players[currentHero->playerOwner];
     if (player->m_resources[GOLD] < goldCost
         || player->m_resources[resourceType] < resourceCost)
         return 0;
@@ -3014,11 +3014,11 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
     short generatorId = g_game->getGeneratorId(x, y, z);
     currentGenerator = g_game->m_generators[generatorId];
 
-    if (currentGenerator.getOwner() != g_netLocalGamePos
-        && g_game->onSameTeam(currentGenerator.getOwner(),
+    if (currentGenerator.get_owner() != g_netLocalGamePos
+        && g_game->onSameTeam(currentGenerator.get_owner(),
                               g_netLocalGamePos))
         return 0;
-    if (currentGenerator.getOwner() != g_netLocalGamePos
+    if (currentGenerator.get_owner() != g_netLocalGamePos
         && currentGenerator.m_guards.hasCreatures()) {
         value = aiValueOfCombat(currentHero, 0,
                                    currentGenerator.m_guards, 0, cell);
@@ -3027,10 +3027,10 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
     if (value <= -500000000)
         return value;
 
-    type_AI_creature_purchaser purchaser(currentHero->m_owner,
+    type_AI_creature_purchaser purchaser(currentHero->playerOwner,
                                           &currentGenerator);
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->playerOwner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     long purchaseValue = purchaser.getPurchaseValue(
         &currentHero->m_army,
@@ -3038,7 +3038,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
         g_currentPlayer->m_resources, hasAngelicAlliance);
 
     if (moveCost >= 400
-        && currentGenerator.getOwner() == g_netLocalGamePos
+        && currentGenerator.get_owner() == g_netLocalGamePos
         && purchaser.getArmyIncrease()
                < currentHero->m_army.getAIValue() / 3)
         purchaseValue = 0;
@@ -3050,7 +3050,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
                 g_netLocalGamePos))
         && g_game->m_mapHeader.m_victoryCondition.m_type
                == VICTORY_CONDITION_FLAG_ALL_GENERATORS
-        && !g_game->onSameTeam(currentGenerator.getOwner(),
+        && !g_game->onSameTeam(currentGenerator.get_owner(),
                                g_netLocalGamePos)
         && g_game->getAlignment(currentGenerator.m_type[0]) != -1) {
         value += 5000000 / g_game->m_generators.size();
@@ -3112,7 +3112,7 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
     }
 
     townValue = static_cast<long>(
-        (type_AI_player::getAttackBonus(enemyTown->m_owner) + 1.0f)
+        (type_AI_player::getAttackBonus(enemyTown->playerOwner) + 1.0f)
         * townValue);
     if (player->m_numTowns == 0)
         townValue += 5000000;
@@ -3157,7 +3157,7 @@ int valueOfMine(const hero* currentHero, NewmapCell* cell)
     mine* currentMine = g_game->getMine(cell->m_extraInfo);
     long value = 0;
     int mineType = currentMine->m_type;
-    int sameTeam = onMySide(currentMine->m_playerOwner);
+    int sameTeam = onMySide(currentMine->playerOwner);
     if (sameTeam)
         return 0;
 
@@ -3173,7 +3173,7 @@ int valueOfMine(const hero* currentHero, NewmapCell* cell)
         static_cast<double>(g_mineCharacteristics[mineType])
         * player->m_ai.m_resourceValue[mineType] * 2.0);
     value += static_cast<int>(static_cast<float>(income)
-        * (type_AI_player::getAttackBonus(currentMine->m_playerOwner)
+        * (type_AI_player::getAttackBonus(currentMine->playerOwner)
            + 1.0f));
 
     if (g_game->m_mapHeader.m_victoryCondition.m_type
@@ -3262,7 +3262,7 @@ DC_ADDRESS(0x111f54, 0x118)
 MAC_ADDRESS(0x1443c0, 0x144)
 long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
 {
-    short owner = currentHero->m_owner;
+    short owner = currentHero->playerOwner;
     if (cell->playerKnowsCell(owner) && !cell->pyramidIsGuarded())
         return 0;
 
@@ -3341,9 +3341,9 @@ long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
                          short amount)
 {
     type_AI_creature_purchaser purchaser(
-        currentHero->m_owner, creature, &amount, 0);
+        currentHero->playerOwner, creature, &amount, 0);
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->playerOwner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     return purchaser.getPurchaseValue(
         &currentHero->m_army,
@@ -3477,8 +3477,8 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
         return 0;
 
     town* currentTown = g_game->getTown(townId);
-    if (currentTown->m_owner != currentHero->m_owner) {
-        if (onMySide(currentTown->m_owner))
+    if (currentTown->playerOwner != currentHero->playerOwner) {
+        if (onMySide(currentTown->playerOwner))
             return valueOfTownVisitBonuses(currentHero, currentTown);
 
         if (currentTown->m_visitingHeroId >= 0) {
@@ -3508,7 +3508,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
         } else {
             type_artifact grail(ARTIFACT_HOLY_GRAIL);
             value += aiGetValueOfArtifact(grail,
-                                                   currentHero->m_owner);
+                                                   currentHero->playerOwner);
         }
     }
 
@@ -3577,7 +3577,7 @@ DC_ADDRESS(0x112830, 0xe4)
 MAC_ADDRESS(0x144e60, 0x1a0)
 long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
 {
-    long playerId = currentHero->m_owner;
+    long playerId = currentHero->playerOwner;
     playerData* player = &g_game->m_players[playerId];
     type_AI_creature_purchaser purchaser(playerId, currentTown);
 
@@ -3586,7 +3586,7 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
         garrisonHero = g_game->getHero(currentTown->m_garrisonHeroId);
 
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->playerOwner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     long swapValue = purchaser.getSwapValue(
         currentHero,
@@ -3739,7 +3739,7 @@ static int valueOfTree(const hero* currentHero, NewmapCell* cell)
     int levelValue = static_cast<int>(static_cast<float>(increment)
         * currentHero->m_turnExperienceToRvRatio);
 
-    if (cell->playerKnowsCell(currentHero->m_owner)) {
+    if (cell->playerKnowsCell(currentHero->playerOwner)) {
         switch (cell->getTreePrice()) {
         case const_tree_wants_gold:
             if (g_currentPlayer->m_resources[GOLD] < 2000)
@@ -3828,7 +3828,7 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
 {
     ExtraInfoUnion* info =
         static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));
-    if (cell->playerKnowsCell(currentHero->m_owner)) {
+    if (cell->playerKnowsCell(currentHero->playerOwner)) {
         if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
             return 0;
         int skill = info->getWitchSkill();
@@ -3950,7 +3950,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
             return 0;
         if (moveCost > currentHero->m_movePoints)
             return 0;
-        if (cell->playerKnowsCell(currentHero->m_owner)) {
+        if (cell->playerKnowsCell(currentHero->playerOwner)) {
             const ExtraInfoUnion* info =
                 static_cast<const ExtraInfoUnion*>(
                     static_cast<const void*>(cell));
@@ -3976,7 +3976,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case HILL_FORT:
         return valueOfHillFort(currentHero, moveCost);
     case HUT_OF_MAGI:
-        return valueOfMagusHut(currentHero->m_owner);
+        return valueOfMagusHut(currentHero->playerOwner);
     case LEAN_TO:
         return valueOfLeanTo(cell, player);
     case LIBRARY:
@@ -4022,13 +4022,13 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         return valueOfMoveSource(
             currentHero, 0x80, 400, moveCost);
     case OBELISK:
-        return valueOfObelisk(cell, currentHero->m_owner);
+        return valueOfObelisk(cell, currentHero->playerOwner);
     // Windows maps object58 and60 to one arm at0x529134. Mac's
     // data1+0x4b7dc table also shares their aiValueOfObservatory call.
     case OBSERVATORY:
     case PILLAR_OF_FIRE:
         return
-            aiValueOfObservatory(point, currentHero->m_owner, 20);
+            aiValueOfObservatory(point, currentHero->playerOwner, 20);
     case POWER_SCHOOL:
         return valueOfPowerSchool(currentHero, cell);
     case PRISON:
@@ -4102,7 +4102,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case UNIVERSITY:
         return valueOfUniversity(currentHero, cell);
     case WAGON:
-        return valueOfWagon(cell, currentHero->m_owner);
+        return valueOfWagon(cell, currentHero->playerOwner);
     case WAR_MACHINE_FACTORY:
         return valueOfWarFactory(currentHero, moveCost);
     case WAR_SCHOOL:
@@ -4221,10 +4221,10 @@ MAC_ADDRESS(0x146f74, 0xd4)
 void aiJoinDecision(hero* currentHero, TCreatureType creature,
                       short amount)
 {
-    type_AI_creature_purchaser purchaser(currentHero->m_owner, creature,
+    type_AI_creature_purchaser purchaser(currentHero->playerOwner, creature,
                                          &amount, 1);
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->playerOwner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doPurchase(&currentHero->m_army,
                           currentHero->getMorale(0, 0, 0), 0,

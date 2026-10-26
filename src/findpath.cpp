@@ -694,7 +694,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
         if (destCell->m_type == HERO && destCell->m_isTrigger) {
             hero* other = g_game->getHero(destCell->m_extraInfo);
             if (other->obscuredIsTrigger() && other->getObscuredType() == SANCTUARY
-                    && other->m_owner != currentHero->m_owner) {
+                    && other->playerOwner != currentHero->playerOwner) {
                 flyingRequired = 1;
                 dest.m_canStop = 0;
             }

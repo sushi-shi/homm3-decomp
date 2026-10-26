@@ -665,7 +665,7 @@ void hero::placeInMap(int playerId, type_point point, bool resetFlags)
     g_game->m_heroAvailability[m_id] = static_cast<signed char>(playerId);
     g_game->m_heroPoolMap[m_id][playerId] = true;
 
-    m_owner = static_cast<signed char>(playerId);
+    playerOwner = static_cast<signed char>(playerId);
     m_x = point.m_x;
     m_y = point.m_y;
     m_z = point.m_z;
@@ -719,7 +719,7 @@ int hero::load(TAbstractFile* infile, int saveVersion)
         m_customName = readLengthPrefixedString(infile);
     }
 
-    m_owner = readValue<char>(infile);
+    playerOwner = readValue<char>(infile);
     m_patrolRadius = readValue<char>(infile);
     m_moraleBonus = readValue<char>(infile);
     m_luckBonus = readValue<char>(infile);
@@ -829,7 +829,7 @@ int hero::save(TAbstractFile* outfile)
     writeValue(outfile, static_cast<unsigned int>(m_customName.length()));
     outfile->write(m_customName.c_str(), m_customName.length());
 
-    writeValue(outfile, static_cast<char>(m_owner));
+    writeValue(outfile, static_cast<char>(playerOwner));
     writeValue(outfile, static_cast<char>(m_patrolRadius));
     writeValue(outfile, static_cast<char>(m_moraleBonus));
     writeValue(outfile, static_cast<char>(m_luckBonus));
@@ -930,7 +930,7 @@ MAC_ADDRESS(0x0f3e2c, 0x1b8)  // anchor-bracket
 hero::hero()
 {
     m_id = heroIdNone;
-    m_owner = -1;
+    playerOwner = -1;
     m_x = 0;
     m_y = 0;
     m_heroClass = classKnight;
@@ -996,7 +996,7 @@ void hero::initialize(short index)
     m_portrait = static_cast<unsigned char>(index);
     m_sex = initialSex;
     m_townSpecialGrantedMask.reset();
-    m_owner = -1;
+    playerOwner = -1;
     m_facing = kFacingE;
 
     strncpy(m_name, akHeroTraits[index].m_name, sizeof(m_name));
@@ -1107,7 +1107,7 @@ void hero::initialize(const HeroExtra* setup)
     m_x = setup->m_location.m_x;
     m_y = setup->m_location.m_y;
     m_z = setup->m_location.m_z;
-    m_owner = setup->m_owner;
+    playerOwner = setup->Owner;
     m_id = static_cast<HeroId>(setup->m_id);
     m_heroClass = akHeroTraits[setup->m_id].m_class;
 
@@ -1251,9 +1251,9 @@ DC_ADDRESS(0x0cc0bc, 0x26)
 MAC_ADDRESS(0x0f4bc0, 0x5c)
 unsigned char hero::belongsToHuman() const
 {
-    if (m_owner < 0)
+    if (playerOwner < 0)
         return 0;
-    return g_game->isHuman(m_owner) != 0;
+    return g_game->isHuman(playerOwner) != 0;
 }
 
 // Mac 0xf4c28/0xf4ca4 and the following artifact scans expand the
@@ -1799,7 +1799,7 @@ void hero::deallocate(bool gameLoaded, bool remoteMove)
         g_game->recordHideHero(this, -1, freedTownVisitor);
     }
 
-    int oldOwner = m_owner;
+    int oldOwner = playerOwner;
     playerData* player = &g_game->m_players[oldOwner];
     if (gameLoaded) {
         g_advManager->mobilizeCurrHero(0, 0, 1);
@@ -1827,7 +1827,7 @@ void hero::deallocate(bool gameLoaded, bool remoteMove)
     }
     if (player->m_currHeroId == m_id) {
         player->m_currHeroId = -1;
-        if (g_netLocalGamePos == m_owner)
+        if (g_netLocalGamePos == playerOwner)
             g_advManager->m_drawCursor = 0;
         if (oldOwner == g_netLocalGamePos)
             g_advManager->m_curHeroMobile = 0;
@@ -1837,16 +1837,16 @@ void hero::deallocate(bool gameLoaded, bool remoteMove)
 
     if (g_combatRetreated || g_combatSurrendered) {
         int slot = random(0, 1);
-        int other = g_game->m_players[m_owner].m_recruits[slot];
+        int other = g_game->m_players[playerOwner].m_recruits[slot];
         if (other != -1) {
             if (g_game->m_heroes[other].m_flags & 0x20000) {
                 slot = 1 - slot;
-                other = g_game->m_players[m_owner].m_recruits[slot];
+                other = g_game->m_players[playerOwner].m_recruits[slot];
             }
             if (other != -1 && g_game->m_heroAvailability[other] == HERO_AVAILABILITY_TAVERN_POOL)
                 g_game->m_heroAvailability[other] = -1;
         }
-        g_game->m_players[m_owner].m_recruits[slot] = m_id;
+        g_game->m_players[playerOwner].m_recruits[slot] = m_id;
         g_game->m_heroAvailability[m_id] = HERO_AVAILABILITY_TAVERN_POOL;
         m_flags |= 0x20000;
     }
@@ -1865,7 +1865,7 @@ void hero::deallocate(bool gameLoaded, bool remoteMove)
         }
     }
 
-    m_owner = -1;
+    playerOwner = -1;
     m_pathTargetY = -1;
     m_pathTargetX = -1;
     if (!(m_flags & 0x20000)) {
@@ -2131,8 +2131,8 @@ void hero::checkLevel()
                     m_lastMagicSchoolLevel = m_level;
             }
 
-            if (!g_inSetup && m_owner >= 0 &&
-                g_game->isLocalHuman(m_owner)) {
+            if (!g_inSetup && playerOwner >= 0 &&
+                g_game->isLocalHuman(playerOwner)) {
                 launchSample("nwherolv.82m", -1, 3);
                 if (g_remoteOn)
                     g_currentPlayer->isLocalHuman();
@@ -2174,7 +2174,7 @@ void hero::checkLevel()
                         DIALOG_RETURN_TIMEOUT) {
                         giveSS(aiChooseSecondarySkill(
                                    this, skills[0], skills[1],
-                                   !g_inSetup && m_owner >= 0), 1);
+                                   !g_inSetup && playerOwner >= 0), 1);
                     } else if (g_windowManager->m_dialogReturn ==
                                TLevelUpWindow::SKILLICON_1_ID) {
                         giveSS(skills[0], 1);
@@ -2187,7 +2187,7 @@ void hero::checkLevel()
                 if (skills[1] != eSecSkillNone)
                     giveSS(aiChooseSecondarySkill(
                                this, skills[0], skills[1],
-                               !g_inSetup && m_owner >= 0), 1);
+                               !g_inSetup && playerOwner >= 0), 1);
                 else
                     giveSS(skills[0], 1);
             }
@@ -3026,7 +3026,7 @@ VA(0x004dc100, 0x217)
 MAC_ADDRESS(0x0f86ec, 0x1e0)  // retail-only, hero member, ret 4
 void hero::offerCombinationArtifactAssembly(long slot)
 {
-    playerData& player = g_game->m_players[m_owner];
+    playerData& player = g_game->m_players[playerOwner];
     // Mac 0xf8734 owns comboType through its proxy write, then
     // 0xf8770..0xf8780 repeats the canonical equipped-record lookup.
     int comboType =
@@ -3206,10 +3206,10 @@ std::string hero::getMoraleDescription() const
         morale += 3;
     }
 
-    if (m_owner >= 0) {
+    if (playerOwner >= 0) {
         // Direct row: getPlayer() would be a call Mac lacks (see getLuck);
         // DC get_morale_description has no get_player call.
-        playerData& player = g_game->m_players[m_owner];
+        playerData& player = g_game->m_players[playerOwner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:2989 names town::HasBuilding here. Retail
@@ -3348,10 +3348,10 @@ std::string hero::getLuckDescription() const
         luck += 3;
     }
 
-    if (m_owner >= 0) {
+    if (playerOwner >= 0) {
         // Direct row: getPlayer() would be a call Mac lacks (see getLuck);
         // DC get_luck_description has no get_player call.
-        playerData& player = g_game->m_players[m_owner];
+        playerData& player = g_game->m_players[playerOwner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:3149 names town::HasBuilding here.
@@ -3720,7 +3720,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             drawWindow(1, 0xffff0001, 0xffff);
             break;
         case WIDGET_80_ID:
-            doQuestLog(g_currentHero->m_owner);
+            doQuestLog(g_currentHero->playerOwner);
             break;
         }
         break;
@@ -4719,10 +4719,10 @@ void THeroScreenWindow::setupHeroView()
 
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 0x8d;
-    if (g_currentHero->m_owner == -1)
+    if (g_currentHero->playerOwner == -1)
         msg.m_extra = 8;
     else
-        msg.m_extra = g_currentHero->m_owner;
+        msg.m_extra = g_currentHero->playerOwner;
     broadcastMessage(msg);
 
     g_currentHero->updateArmies();
@@ -5468,7 +5468,7 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // retain the desktop result and flag behavior while restoring the reference.
 // With both placement helpers returning bool, a bool placed local still
 // lowers Windows 95.9069% to 95.3968%; it does not close the caller's residual.
-// Retail indexes g_game->m_players[m_owner] here without getPlayer's guard and
+// Retail indexes g_game->m_players[playerOwner] here without getPlayer's guard and
 // reads the human byte inline; that direct row reproduces the guard-free
 // block (94.67%, 95.32% with the byte read) but moves the bitset range-check
 // out_of_range expansion, so the guarded helper call is kept for now.
@@ -5495,11 +5495,11 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
         if (g_game->getGameVersion() >= 2) {
             int targetCombo =
                 akArtifactTraits[artifact.m_artifactId].m_targetCombo;
-            if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
+            if (targetCombo != -1 && playerOwner >= 0 && playerOwner < 8) {
                 if (hasCombinationArtifactComponents(targetCombo)) {
                     playerData& player = *getPlayer();
                     if (announce) {
-                        if (m_owner == g_game->getLocalPlayerGamePos() &&
+                        if (playerOwner == g_game->getLocalPlayerGamePos() &&
                             !player.m_assembledCombinations[targetCombo]) {
                             int assembled =
                                 g_combinationArtifacts[targetCombo].m_artifactId;
@@ -5528,8 +5528,8 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
         return 0;
 
     if (akArtifactTraits[artifact.m_artifactId].m_comboType != -1
-        && m_owner >= 0 && m_owner < NUM_PLAYERS)
-        g_game->m_players[m_owner].m_assembledCombinations[
+        && playerOwner >= 0 && playerOwner < NUM_PLAYERS)
+        g_game->m_players[playerOwner].m_assembledCombinations[
             akArtifactTraits[artifact.m_artifactId].m_comboType] = true;
 
     if (checkEnd) {
@@ -5575,7 +5575,7 @@ int hero::giveExperience(int howMuch, int checkForLevelUp,
             if (m_experience > cap)
                 m_experience = cap;
             if (static_cast<unsigned char>(showCapWindow)
-                && g_game->isLocalHuman(m_owner)) {
+                && g_game->isLocalHuman(playerOwner)) {
                 std::string text =
                     formatString((*g_generalText)[GENERAL_TEXT_HERO_EXPERIENCE_LIMIT_FORMAT], m_name);
                 normalDialog(text.c_str(), 1, -1, -1, 0x11, 0, -1, 0, -1,
@@ -5598,16 +5598,16 @@ MAC_ADDRESS(0x104224, 0x128)
 void hero::giveResource(int whichRes, int howMuch)
 {
     if (whichRes >= 0 && whichRes <= NUM_RESOURCES - 1) {
-        g_game->m_players[m_owner].m_resources[whichRes] += howMuch;
-        if (g_game->m_players[m_owner].m_resources[whichRes] < 0)
-            g_game->m_players[m_owner].m_resources[whichRes] = 0;
+        g_game->m_players[playerOwner].m_resources[whichRes] += howMuch;
+        if (g_game->m_players[playerOwner].m_resources[whichRes] < 0)
+            g_game->m_players[playerOwner].m_resources[whichRes] = 0;
     }
 
-    if (&g_game->m_players[m_owner] == g_currentPlayer
+    if (&g_game->m_players[playerOwner] == g_currentPlayer
         && g_advManager->m_status == baseManager::STATUS_ACTIVE)
         g_advManager->m_advWindow->updateResourceDisplay(1, 1);
 
-    g_game->isHuman(m_owner);
+    g_game->isHuman(playerOwner);
 }
 
 // Original DC GetLuck/GetMorale publics end QBAHPBV1@_N1@Z: both flags
@@ -5652,11 +5652,11 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
     if (isWieldingArtifact(ARTIFACT_LADYBIRD_OF_LUCK))
         luck++;
 
-    if (m_owner >= 0) {
+    if (playerOwner >= 0) {
         // Direct row, not getPlayer(): CodeWarrior emits a getPlayer call for
         // that spelling, absent from Mac 0x1044f4 (which calls it at 17
         // other sites); DC GetLuck has no get_player call either.
-        playerData& player = g_game->m_players[m_owner];
+        playerData& player = g_game->m_players[playerOwner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
@@ -5704,7 +5704,7 @@ int hero::getMorale(const hero* otherHero, bool onCursedGround,
     if (isWieldingArtifact(ARTIFACT_GLYPH_OF_GALLANTRY))
         morale++;
 
-    if (m_owner >= 0) {
+    if (playerOwner >= 0) {
         playerData& player = *getPlayer();
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
@@ -5761,7 +5761,7 @@ float hero::getNecromancyFactor(unsigned char applyLimit) const
         if (isWieldingArtifact(ARTIFACT_DEAD_MANS_BOOTS))
             factor += 0.15f;
 
-        if (m_owner >= 0) {
+        if (playerOwner >= 0) {
             playerData& player = *getPlayer();
             for (int i = 0; i < player.m_numTowns; i++) {
                 town* ownedTown = g_game->getTown(player.m_townIds[i]);
@@ -6060,8 +6060,8 @@ int hero::getMobility(bool seaMovement) const
     if (seaMovement) {
         mobility = getNavigationFactor();
 
-        if (m_owner != -1)
-            mobility += g_game->mineTypesOwned(m_owner, 100) *
+        if (playerOwner != -1)
+            mobility += g_game->mineTypesOwned(playerOwner, 100) *
                         g_moveConstants.m_lighthouseBonus;
 
         if (isWieldingArtifact(ARTIFACT_SEA_CAPTAINS_HAT))
@@ -6106,14 +6106,14 @@ int hero::getMobility(bool seaMovement) const
             mobility += g_stablesMovementBonus;
     }
 
-    if (m_owner >= 0 && m_owner < 6 && !g_game->isHuman(m_owner) &&
+    if (playerOwner >= 0 && playerOwner < 6 && !g_game->isHuman(playerOwner) &&
         g_game->m_setup.m_difficulty > 2) {
         mobility += 75;
         // Not getPlayer(): Mac 0x105b9c indexes the row after isHuman with
         // no owner guard, and CodeWarrior keeps a getPlayer call here while
         // Mac retains its 17 real calls elsewhere; retail likewise has no
         // guard after the isHuman call. DC GetMobility has no get_player.
-        if (g_game->m_players[m_owner].m_personality == AI_PERSONALITY_AGGRESSIVE)
+        if (g_game->m_players[playerOwner].m_personality == AI_PERSONALITY_AGGRESSIVE)
             mobility += 50;
     }
     return mobility;
@@ -6364,8 +6364,8 @@ boat* hero::findSummonableBoat() const
     for (boat* candidate = g_game->m_boats.begin();
          candidate != g_game->m_boats.end(); candidate++) {
         if (candidate->m_allocated && !candidate->m_occupied
-            && (candidate->m_playerOwner == g_netLocalGamePos
-                || candidate->m_playerOwner == -1)) {
+            && (candidate->playerOwner == g_netLocalGamePos
+                || candidate->playerOwner == -1)) {
             int distance = abs(candidate->m_x - m_x) + abs(candidate->m_y - m_y);
             if (!result || distance <= closestDistance) {
                 result = candidate;
@@ -6404,9 +6404,9 @@ MAC_ADDRESS(0x1066e4, 0x38)
 // lookup; guarded callers expand this same operation (e.g. 0x104a98).
 playerData* hero::getPlayer() const
 {
-    if (m_owner < 0)
+    if (playerOwner < 0)
         return 0;
-    return &g_game->m_players[m_owner];
+    return &g_game->m_players[playerOwner];
 }
 
 VA(0x004e56e0, 0x7C)

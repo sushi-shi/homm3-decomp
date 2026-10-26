@@ -410,7 +410,8 @@ public:
     // Index of this town in gpGame->towns (byte, sign-extended).
     char m_id;
     // Owning player, -1 when unowned (Deallocate stores -1 here).
-    char m_owner;
+    // Original Dreamcast playerOwner.
+    char playerOwner;
     // can_build's first gate: nonzero in gpGame->towns[id] refuses
     // every build. Name unattested - ordinal placeholder.
     unsigned char m_builtThisTurn;

@@ -200,8 +200,8 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
             DATA_COMPGEN(0x00684bcc, spellbookBackground, "Spelback.pcx"),
             0x800);
         // Mac retains a call in each branch at 0:0x18b1bc and 0:0x18b1d8.
-        if (h.m_owner >= 0)
-            background->setPlayerPaletteColors(h.m_owner);
+        if (h.playerOwner >= 0)
+            background->setPlayerPaletteColors(h.playerOwner);
         else
             background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
         m_widgets.push_back(background);

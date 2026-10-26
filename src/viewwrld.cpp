@@ -159,7 +159,7 @@ void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
     if (tilew > 0 && tileh > 0) {
         int owner = -1;
         if (thisCell->m_type == HERO)
-            owner = g_game->getHero(thisCell->m_extraInfo)->m_owner;
+            owner = g_game->getHero(thisCell->m_extraInfo)->playerOwner;
         else if (hasFlag(thisCell->m_type))
             owner = getFlaggedObjectOwner(thisCell);
 
@@ -284,9 +284,9 @@ void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int 
                 currHero->getHflip());
         }
 
-        m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]->DrawHero(
+        m_boatFlagIcons[currBoat->m_type][currBoat->playerOwner]->DrawHero(
             currHero->getStandSequence(),
-            m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
+            m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->playerOwner]
                                 ->GetNumFrames(hs_stand_n),
             tilex + (3 - heroCellY - 1) * 32,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
@@ -302,9 +302,9 @@ void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int 
             g_memoryBuffer, 0, 0,
             currHero->getHflip());
     } else {
-        m_flagIcons[currHero->m_owner]->DrawHero(
+        m_flagIcons[currHero->playerOwner]->DrawHero(
             currHero->getStandSequence(),
-            m_animCtr % m_flagIcons[currHero->m_owner]->GetNumFrames(hs_stand_n),
+            m_animCtr % m_flagIcons[currHero->playerOwner]->GetNumFrames(hs_stand_n),
             tilex + (3 - heroCellY - 1) * 32,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_memoryBuffer, 0, 0,
@@ -346,9 +346,9 @@ void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX
                 currHero->getHflip());
         }
 
-        m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]->DrawHeroShadow(
+        m_boatFlagIcons[currBoat->m_type][currBoat->playerOwner]->DrawHeroShadow(
             currHero->getStandSequence(),
-            m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
+            m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->playerOwner]
                                 ->GetNumFrames(hs_stand_n),
             tilex + (3 - heroCellY - 1) * 32,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
@@ -364,9 +364,9 @@ void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX
             g_memoryBuffer, 0, 0,
             currHero->getHflip());
     } else {
-        m_flagIcons[currHero->m_owner]->DrawHeroShadow(
+        m_flagIcons[currHero->playerOwner]->DrawHeroShadow(
             currHero->getStandSequence(),
-            m_animCtr % m_flagIcons[currHero->m_owner]->GetNumFrames(hs_stand_n),
+            m_animCtr % m_flagIcons[currHero->playerOwner]->GetNumFrames(hs_stand_n),
             tilex + (3 - heroCellY - 1) * 32,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_memoryBuffer, 0, 0,

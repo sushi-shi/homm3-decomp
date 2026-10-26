@@ -169,7 +169,7 @@ void advManager::summonBoat(TSkillMastery level)
 
     type_point point = who->getLocation();
     if (getCell(point)->m_groundSet == eTerrainWater) {
-        if (g_game->isLocalHuman(who->m_owner)) {
+        if (g_game->isLocalHuman(who->playerOwner)) {
             sprintf(g_text,
                     (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT],
                     who->m_name);
@@ -195,7 +195,7 @@ void advManager::summonBoat(TSkillMastery level)
         }
     }
     if (!foundWater) {
-        if (g_game->isLocalHuman(who->m_owner)) {
+        if (g_game->isLocalHuman(who->playerOwner)) {
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_NO_WATER],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -227,9 +227,9 @@ void advManager::summonBoat(TSkillMastery level)
             theBoat->obscureCell();
         } else {
             if (level < eMasteryAdvanced
-                || g_game->createBoat(x, y, who->m_z, who->m_owner, 0, 0)
+                || g_game->createBoat(x, y, who->m_z, who->playerOwner, 0, 0)
                        < 0) {
-                if (g_game->isLocalHuman(who->m_owner)) {
+                if (g_game->isLocalHuman(who->playerOwner)) {
                     normalDialog(
                         (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE],
                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -249,7 +249,7 @@ void advManager::summonBoat(TSkillMastery level)
         updateScreen(0, 0);
         reseed(0, 0);
         waitEndSample(sample, -1);
-    } else if (g_game->isLocalHuman(who->m_owner)) {
+    } else if (g_game->isLocalHuman(who->playerOwner)) {
         sprintf(g_text,
                 (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT],
                 who->m_name);
@@ -309,7 +309,7 @@ void advManager::skuttleBoat(TSkillMastery level)
         reseed(0, 0);
         waitEndSample(sample, -1);
     } else {
-        if (g_game->isLocalHuman(who->m_owner)) {
+        if (g_game->isLocalHuman(who->playerOwner)) {
             sprintf(g_text,
                     (*g_generalText)[GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT],
                     who->m_name);
@@ -343,7 +343,7 @@ void advManager::dimensionDoor(TSkillMastery level)
     const TSpellTraits& traits = akSpellTraits[SPELL_DIMENSION_DOOR];
     hero* who = g_game->getCurrHero();
     if (who->m_movePoints <= 0) {
-        if (g_game->isLocalHuman(who->m_owner)) {
+        if (g_game->isLocalHuman(who->playerOwner)) {
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_SPELL_NEEDS_MOVEMENT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -353,7 +353,7 @@ void advManager::dimensionDoor(TSkillMastery level)
 
     TSkillMastery mastery = who->getSpellLevel(SPELL_DIMENSION_DOOR);
     if (who->m_dWalkSpellsCast >= traits.m_mastery_bonus[mastery]) {
-        if (g_game->isLocalHuman(who->m_owner)) {
+        if (g_game->isLocalHuman(who->playerOwner)) {
             sprintf(g_text,
                     (*g_generalText)[GENERAL_TEXT_DIMENSION_DOOR_LIMIT_FORMAT],
                     who->m_name);
@@ -374,7 +374,7 @@ void advManager::dimensionDoor(TSkillMastery level)
              && cell->m_groundSet != eTerrainWater)
             || ((who->m_flags & 0x40000) == 0
                 && cell->m_groundSet == eTerrainWater)) {
-            if (g_game->isLocalHuman(who->m_owner)) {
+            if (g_game->isLocalHuman(who->playerOwner)) {
                 normalDialog(
                     (*g_generalText)[GENERAL_TEXT_DIMENSION_DOOR_BLOCKED],
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -450,7 +450,7 @@ void advManager::townGate(TSkillMastery level)
 
     int cost = movementCost[level];
     if (who->m_movePoints < cost) {
-        if (g_game->isLocalHuman(who->m_owner)) {
+        if (g_game->isLocalHuman(who->playerOwner)) {
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_SPELL_NEEDS_MOVEMENT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -460,11 +460,11 @@ void advManager::townGate(TSkillMastery level)
 
     int numTowns = 0;
     for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
-        if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner))
+        if (g_game->onSameTeam(who->playerOwner, g_game->m_towns[i].playerOwner))
             numTowns++;
     }
     if (numTowns == 0) {
-        if (g_game->isLocalHuman(who->m_owner)) {
+        if (g_game->isLocalHuman(who->playerOwner)) {
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_TOWN_PORTAL_NO_TOWN],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -473,7 +473,7 @@ void advManager::townGate(TSkillMastery level)
     }
 
     if ((who->m_flags & 0x40000) != 0) {
-        if (g_game->isLocalHuman(who->m_owner)) {
+        if (g_game->isLocalHuman(who->playerOwner)) {
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_SPELL_NOT_FROM_BOAT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -485,7 +485,7 @@ void advManager::townGate(TSkillMastery level)
     if (level >= eMasteryAdvanced) {
         TTownGateWindow tgWindow(1);
         for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
-            if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
+            if (g_game->onSameTeam(who->playerOwner, g_game->m_towns[i].playerOwner)) {
                 if (g_game->getTown(i)->m_visitingHeroId == -1) {
                     tgWindow.addTown(i);
                 }
@@ -498,7 +498,7 @@ void advManager::townGate(TSkillMastery level)
         int closestDistance2 = (std::numeric_limits<int>::max)();
         type_point heroLoc = who->getLocation();
         for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
-            if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
+            if (g_game->onSameTeam(who->playerOwner, g_game->m_towns[i].playerOwner)) {
                 type_point townLoc = g_game->getTown(i)->getLocation();
                 if (heroLoc.distanceSquared(townLoc)
                     < closestDistance2) {
@@ -516,7 +516,7 @@ void advManager::townGate(TSkillMastery level)
 
     town* destination = g_game->getTown(selectedTown);
     if (destination->m_visitingHeroId != -1) {
-        if (g_game->isLocalHuman(who->m_owner)) {
+        if (g_game->isLocalHuman(who->playerOwner)) {
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -546,7 +546,7 @@ void advManager::identify(TSkillMastery level)
     hero* who = g_game->getCurrHero();
     SAMPLE2 sample = loadPlaySample(akSpellTraits[SPELL_VISIONS].m_sample);
     who->m_identifyLevel = level;
-    if (g_game->isLocalHuman(who->m_owner)) {
+    if (g_game->isLocalHuman(who->playerOwner)) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_VISIONS_CAST),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
