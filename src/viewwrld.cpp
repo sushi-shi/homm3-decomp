@@ -305,10 +305,10 @@ void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int 
             g_memoryBuffer, 0, 0,
             currHero->getHflip());
 
-        m_cursorIcons[currHero->m_heroClass]->DrawHero(
+        H3_AT(m_cursorIcons, currHero->m_heroClass)->DrawHero(
             currHero->getStandSequence(),
             m_animCtr
-                % m_cursorIcons[currHero->m_heroClass]->GetNumFrames(hs_stand_n),
+                % H3_AT(m_cursorIcons, currHero->m_heroClass)->GetNumFrames(hs_stand_n),
             tilex + (3 - heroCellY - 1) * 32,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_memoryBuffer, 0, 0,
@@ -367,10 +367,10 @@ void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX
             g_memoryBuffer, 0, 0,
             currHero->getHflip());
 
-        m_cursorIcons[currHero->m_heroClass]->DrawHeroShadow(
+        H3_AT(m_cursorIcons, currHero->m_heroClass)->DrawHeroShadow(
             currHero->getStandSequence(),
             m_animCtr
-                % m_cursorIcons[currHero->m_heroClass]->GetNumFrames(hs_stand_n),
+                % H3_AT(m_cursorIcons, currHero->m_heroClass)->GetNumFrames(hs_stand_n),
             tilex + (3 - heroCellY - 1) * 32,
             tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_memoryBuffer, 0, 0,

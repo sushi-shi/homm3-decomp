@@ -80,9 +80,9 @@ TObjectPaletteWnd::TObjectPaletteWnd(CWnd* pParent, TObjectPaletteWndClient* pCl
     if (!_m_toolTip.Create(this))
         throw TRuntimeError();
 
-    for (int heroClass = 0; heroClass <= kNumHeroClasses; heroClass++) {
+    for (int heroClass = 0; heroClass <= H3_IDX(kNumHeroClasses); heroClass++) {
         if (g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH
-            || THero::s_akClassTraits[heroClass].m_objType.getExtra() < classPlanesWalker)
+            || THero::s_akClassTraits[heroClass].m_objType.getExtra() < H3_IDX(eClassPlanesWalker))
             _m_aSlotInfo[eSlotHeroes].m_objTypes.push_back(&THero::s_akClassTraits[heroClass].m_objType);
     }
     for (unsigned int slot = 0; slot < kNumObjectSlots; slot++) {
@@ -457,7 +457,7 @@ BOOL TObjectPaletteWnd::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResu
         text = akArtifactTraits[pObjType->getExtra()].m_name;
         break;
     case HERO:
-        assert(pObjType->getExtra() >= 0 && pObjType->getExtra() < kNumHeroClasses);
+        assert(pObjType->getExtra() >= 0 && pObjType->getExtra() < H3_IDX(kNumHeroClasses));
         text = THero::s_akClassTraits[pObjType->getExtra()].m_name;
         break;
     case TOWN:

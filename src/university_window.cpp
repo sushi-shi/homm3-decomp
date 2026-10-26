@@ -306,7 +306,7 @@ void type_university_window::updateSkillButton(type_university_skill& skill)
         text = g_generalText->GetText(GENERAL_TEXT_HERO_ALREADY_KNOWS_THIS_SKILL);
         skill.m_topBar->setIconFrame(0);
         skill.m_bottomBar->setIconFrame(0);
-    } else if (H3_AT(akHeroClassTraits[m_currentHero->m_heroClass]
+    } else if (H3_AT(H3_AT(akHeroClassTraits, m_currentHero->m_heroClass)
                          .m_gainSecondarySkillChance, skill.m_skill) == 0) {
         text = g_generalText->GetText(GENERAL_TEXT_HERO_CANNOT_LEARN_THIS_SKILL);
         skill.m_topBar->setIconFrame(2);
@@ -350,7 +350,7 @@ void type_university_window::skillClick(TSecondarySkill skill)
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
-    if (H3_AT(akHeroClassTraits[m_currentHero->m_heroClass]
+    if (H3_AT(H3_AT(akHeroClassTraits, m_currentHero->m_heroClass)
                   .m_gainSecondarySkillChance, skill) == 0) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_HERO_CANNOT_LEARN_THIS_SKILL), NORMAL_DIALOG_DEFAULT, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);

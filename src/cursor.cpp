@@ -120,7 +120,7 @@ void advManager::drawCursor(int cellX, int cellY)
                 cellX * 32, cellY * 32, 32, 32,
                 g_windowManager->m_screenBitmap,
                 refX, refY, curr->getHflip());
-            m_cursorIcons[curr->m_heroClass]->DrawHero(
+            H3_AT(m_cursorIcons, curr->m_heroClass)->DrawHero(
                 m_cursorSequence, m_cursorFrameCount,
                 cellX * 32, cellY * 32, 32, 32,
                 g_windowManager->m_screenBitmap,
@@ -152,7 +152,7 @@ void advManager::drawCursorShadow(int cellX, int cellY)
                 g_windowManager->m_screenBitmap,
                 refX, refY, curr->getHflip());
         } else {
-            m_cursorIcons[curr->m_heroClass]->DrawHeroShadow(
+            H3_AT(m_cursorIcons, curr->m_heroClass)->DrawHeroShadow(
                 m_cursorSequence, m_cursorFrameCount,
                 cellX * 32, cellY * 32, 32, 32,
                 g_windowManager->m_screenBitmap,
@@ -211,7 +211,7 @@ void advManager::drawCursorAlpha()
                     64 - bottomClip - clipy,
                     g_windowManager->m_screenBitmap, refX, refY,
                     curr->getHflip());
-                m_cursorIcons[curr->m_heroClass]->DrawHeroAlpha(
+                H3_AT(m_cursorIcons, curr->m_heroClass)->DrawHeroAlpha(
                     m_cursorSequence, m_cursorFrameCount, clipx, clipy,
                     96 - rightClip - clipx, 64 - bottomClip - clipy,
                     g_windowManager->m_screenBitmap, refX, refY,

@@ -1837,7 +1837,7 @@ static unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
     int i;
     for (i = 0; i < H3_IDX(kNumSecSkills); i++) {
         if (ourHero->getSecondarySkill(TSecondarySkill(i)) <= 0
-            && (akHeroClassTraits[ourHero->m_heroClass]
+            && (H3_AT(akHeroClassTraits, ourHero->m_heroClass)
                     .m_gainSecondarySkillChance[i]
                 || H3_IDX(first) == i))
             skillValue[i] = getSkillValue(ourHero, TSecondarySkill(i), complexChoice);
@@ -1876,7 +1876,7 @@ void aiVisitUniversity(hero* currentHero, type_university* university)
     if (g_currentPlayer->m_resources[GOLD] < 2000)
         return;
 
-    const THeroClassTraits& traits = akHeroClassTraits[currentHero->m_heroClass];
+    const THeroClassTraits& traits = H3_AT(akHeroClassTraits, currentHero->m_heroClass);
     do {
         TSecondarySkill bestSkill = eSecSkillNone;
         long bestValue = 0;
@@ -2130,7 +2130,7 @@ static long valueOfUniversity(const hero* currentHero,
         return 0;
 
     const THeroClassTraits* traits =
-        &akHeroClassTraits[currentHero->m_heroClass];
+        &H3_AT(akHeroClassTraits, currentHero->m_heroClass);
     long total = 0;
     for (int i = 0; i < 4; i++) {
         TSecondarySkill skill = university->m_skills[i];

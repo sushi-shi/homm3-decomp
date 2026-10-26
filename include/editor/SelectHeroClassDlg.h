@@ -13,7 +13,7 @@
 #include "editor/resource.h"
 
 // The hero classes, and the random class after them.
-typedef std::bitset<kNumHeroClasses + 1> THeroClassMask;
+typedef std::bitset<H3_IDX(kNumHeroClasses) + 1> THeroClassMask;
 
 class TSelectHeroClassDlg : public CDialog {
 public:

@@ -306,7 +306,7 @@ CString TMapValidationFunc::_createHeroStr(const TBasicHero& hero, const TTilePo
                 // Retail computes the class value before saving the traits
                 // pointer; keep both this value and the hero-traits reference.
                 THeroClass heroClass = traits.m_class;
-                const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
+                const THero::TClassTraits& classTraits = H3_AT(THero::s_akClassTraits, heroClass);
                 heroStr.Format(kSpecificHeroAndClassFmtStr, _m_map.getHeroPrototype(heroID).getName().c_str(),
                                classTraits.m_name);
             } else

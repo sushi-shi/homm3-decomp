@@ -230,7 +230,7 @@ BOOL THeroPrototypePropsGeneralPage::OnInitDialog()
     GetDlgItem(IDC_EVENT_PLAYER7_CHECK)->SetWindowText(TFormattedString(SHeroPrototypePropsGeneralPageText::kPlayerCheckFmtStr, 7));
     GetDlgItem(IDC_EVENT_PLAYER8_CHECK)->SetWindowText(TFormattedString(SHeroPrototypePropsGeneralPageText::kPlayerCheckFmtStr, 8));
     _m_bModified = false;
-    _m_className = THero::s_akClassTraits[THero::s_akTraits[_m_heroID].m_class].m_name;
+    _m_className = H3_AT(THero::s_akClassTraits, THero::s_akTraits[_m_heroID].m_class).m_name;
     _m_portrait = _m_pNewPrototype->getPortrait();
     _m_gender = _m_pNewPrototype->getSex();
     _m_availability = _m_pNewPrototype->getAvailability();

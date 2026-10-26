@@ -883,7 +883,7 @@ BOOL TDefeatHeroDlg::OnInitDialog()
                         THeroID heroID = pPlaceholder->getHeroID();
                         const THero::TTraits& heroTraits = THero::s_akTraits[heroID];
                         THeroClass heroClass = heroTraits.m_class;
-                        const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
+                        const THero::TClassTraits& classTraits = H3_AT(THero::s_akClassTraits, heroClass);
                         heroName.Format(kSpecificHeroAndClassFmtStr, _m_map.getHeroPrototype(heroID).getName().c_str(),
                                         classTraits.m_name);
                     } else

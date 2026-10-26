@@ -2038,45 +2038,45 @@ MAC_ADDRESS(0x0ce1c8, 0x1d0)
 HeroId game::getStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
 {
     HeroId heroArray[HERO_COUNT];
-    THeroClass heroClass1 = classKnight;
-    THeroClass heroClass2 = classCleric;
+    THeroClass heroClass1 = eClassKnight;
+    THeroClass heroClass2 = eClassCleric;
 
     switch (alignment) {
     case eTownCastle:
-        heroClass1 = classKnight;
-        heroClass2 = classCleric;
+        heroClass1 = eClassKnight;
+        heroClass2 = eClassCleric;
         break;
     case eTownRampart:
-        heroClass1 = classDruid;
-        heroClass2 = classRanger;
+        heroClass1 = eClassDruid;
+        heroClass2 = eClassRanger;
         break;
     case eTownTower:
-        heroClass1 = classWizard;
-        heroClass2 = classAlchemist;
+        heroClass1 = eClassWizard;
+        heroClass2 = eClassAlchemist;
         break;
     case eTownInferno:
-        heroClass1 = classPagan;
-        heroClass2 = classHeretic;
+        heroClass1 = eClassPagan;
+        heroClass2 = eClassHeretic;
         break;
     case eTownNecropolis:
-        heroClass1 = classDeathKnight;
-        heroClass2 = classNecromancer;
+        heroClass1 = eClassDeathKnight;
+        heroClass2 = eClassNecromancer;
         break;
     case eTownDungeon:
-        heroClass1 = classOverlord;
-        heroClass2 = classWarlock;
+        heroClass1 = eClassOverlord;
+        heroClass2 = eClassWarlock;
         break;
     case eTownStronghold:
-        heroClass1 = classBarbarian;
-        heroClass2 = classBattleMage;
+        heroClass1 = eClassBarbarian;
+        heroClass2 = eClassBattleMage;
         break;
     case eTownFortress:
-        heroClass1 = classBeastmaster;
-        heroClass2 = classWitch;
+        heroClass1 = eClassBeastmaster;
+        heroClass2 = eClassWitch;
         break;
     case eTownConflux:
-        heroClass1 = classPlanesWalker;
-        heroClass2 = classElementalist;
+        heroClass1 = eClassPlanesWalker;
+        heroClass2 = eClassElementalist;
         break;
     }
 
@@ -2136,10 +2136,10 @@ HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
     THeroClass heroClass;
     long totalCount;
     long choice = 0;
-    long counts[kNumHeroClasses];
+    long counts[H3_IDX(kNumHeroClasses)];
     // CodeView records THeroID; Complete retains the same signed domain.
     HeroId heroId;
-    long weights[kNumHeroClasses];
+    long weights[H3_IDX(kNumHeroClasses)];
     long alignedCount;
 
     totalCount = 0;
@@ -2147,79 +2147,79 @@ HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
     TTownType alignment = getPlayerAlignment(playerPos);
 
     ZeroMemory(counts, sizeof(counts));
-    for (heroClass = classKnight; heroClass < kNumHeroClasses;
+    for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
          heroClass = THeroClass(heroClass + 1)) {
-        weights[heroClass] =
-            H3_AT(akHeroClassTraits[heroClass].m_foundInTownType, alignment);
+        H3_AT(weights, heroClass) =
+            H3_AT(H3_AT(akHeroClassTraits, heroClass).m_foundInTownType, alignment);
     }
 
     for (heroId = HeroId(0); heroId < HERO_COUNT; heroId = HeroId(heroId + 1)) {
         if (m_heroAvailability[heroId] == -1
             && (playerPos == -1 || m_heroPoolMap[heroId][playerPos])) {
             totalCount++;
-            counts[m_heroes[heroId].m_heroClass]++;
+            H3_AT(counts, m_heroes[heroId].m_heroClass)++;
         }
     }
 
     if (totalCount == 0)
         return heroIdNone;
 
-    for (heroClass = classKnight; heroClass < kNumHeroClasses;
+    for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
          heroClass = THeroClass(heroClass + 1)) {
-        if (counts[heroClass] == 0)
-            weights[heroClass] = 0;
+        if (H3_AT(counts, heroClass) == 0)
+            H3_AT(weights, heroClass) = 0;
     }
 
     if (g_game->m_gameVersion >= 2
         && g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != eTownConflux
-        && counts[classPlanesWalker] + counts[classElementalist]
+        && H3_AT(counts, eClassPlanesWalker) + H3_AT(counts, eClassElementalist)
             < totalCount) {
-        if (preferredClass != classPlanesWalker)
-            weights[classPlanesWalker] = 0;
-        if (preferredClass != classElementalist)
-            weights[classElementalist] = 0;
+        if (preferredClass != eClassPlanesWalker)
+            H3_AT(weights, eClassPlanesWalker) = 0;
+        if (preferredClass != eClassElementalist)
+            H3_AT(weights, eClassElementalist) = 0;
     }
 
     if (excluded < kNumHeroClasses
-        && counts[excluded] < totalCount) {
-        weights[excluded] = 0;
+        && H3_AT(counts, excluded) < totalCount) {
+        H3_AT(weights, excluded) = 0;
     }
 
     if (preferAlignment) {
         alignedCount = 0;
-        for (heroClass = classKnight; heroClass < kNumHeroClasses;
+        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
              heroClass = THeroClass(heroClass + 1)) {
-            if (akHeroClassTraits[heroClass].m_townType == alignment)
-                alignedCount += weights[heroClass];
+            if (H3_AT(akHeroClassTraits, heroClass).m_townType == alignment)
+                alignedCount += H3_AT(weights, heroClass);
         }
         if (alignedCount > 0) {
-            for (heroClass = classKnight; heroClass < kNumHeroClasses;
+            for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
                  heroClass = THeroClass(heroClass + 1)) {
-                if (akHeroClassTraits[heroClass].m_townType != alignment)
-                    weights[heroClass] = 0;
+                if (H3_AT(akHeroClassTraits, heroClass).m_townType != alignment)
+                    H3_AT(weights, heroClass) = 0;
             }
         }
     }
 
-    if (preferredClass != kNumHeroClasses && weights[preferredClass] != 0) {
+    if (preferredClass != kNumHeroClasses && H3_AT(weights, preferredClass) != 0) {
         heroClass = preferredClass;
     } else {
         totalCount = 0;
-        for (heroClass = classKnight; heroClass < kNumHeroClasses;
+        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
              heroClass = THeroClass(heroClass + 1)) {
-            totalCount += weights[heroClass];
+            totalCount += H3_AT(weights, heroClass);
         }
         choice = random(1, totalCount);
-        for (heroClass = classKnight; heroClass < kNumHeroClasses;
+        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
              heroClass = THeroClass(heroClass + 1)) {
-            choice -= weights[heroClass];
+            choice -= H3_AT(weights, heroClass);
             if (choice <= 0)
                 break;
         }
     }
 
-    choice = random(1, counts[heroClass]);
+    choice = random(1, H3_AT(counts, heroClass));
     for (heroId = HeroId(0); heroId < HERO_COUNT; heroId = HeroId(heroId + 1)) {
         if (m_heroAvailability[heroId] == -1
             && (playerPos == -1 || m_heroPoolMap[heroId][playerPos])
@@ -7287,11 +7287,11 @@ void game::setWeeklyRecruits(int playerPos)
         if (m_isTutorial
             && static_cast<unsigned short>(m_week) <= 2) {
             if (m_week == 1) {
-                heroId = getNewHero(classCleric);
+                heroId = getNewHero(eClassCleric);
             } else if (recruitSlot == 0) {
-                heroId = getNewHero(classPagan);
+                heroId = getNewHero(eClassPagan);
             } else {
-                heroId = getNewHero(classHeretic);
+                heroId = getNewHero(eClassHeretic);
             }
         } else {
             heroId = getNewHeroId(

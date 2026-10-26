@@ -1505,7 +1505,7 @@ void TGameMap::_TImpl::setPlaceholderHeroID(bool bSecondLayer, unsigned int objI
     _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[pPlaceholder->getOwner()];
     if (pPlaceholder->getHeroID() != -1) {
         THeroID heroID = pPlaceholder->getHeroID();
-        H3_AT(playerBookkeeping.m_aNumHeroesOfType, THero::s_akClassTraits[THero::s_akTraits[heroID].m_class].m_townType)--;
+        H3_AT(playerBookkeeping.m_aNumHeroesOfType, H3_AT(THero::s_akClassTraits, THero::s_akTraits[heroID].m_class).m_townType)--;
         playerBookkeeping.m_paHeroPlaceholderID->erase(heroID);
         _m_pBookkeeping->m_heroesOnMap.set(heroID, false);
     } else {
@@ -1514,7 +1514,7 @@ void TGameMap::_TImpl::setPlaceholderHeroID(bool bSecondLayer, unsigned int objI
     pPlaceholder->setHeroID(newHeroID);
     _m_pBookkeeping->m_heroesOnMap.set(newHeroID, true);
     playerBookkeeping.m_paHeroPlaceholderID->insert(newHeroID);
-    H3_AT(playerBookkeeping.m_aNumHeroesOfType, THero::s_akClassTraits[THero::s_akTraits[newHeroID].m_class].m_townType)++;
+    H3_AT(playerBookkeeping.m_aNumHeroesOfType, H3_AT(THero::s_akClassTraits, THero::s_akTraits[newHeroID].m_class).m_townType)++;
 }
 
 VA(0x00420a6b, 0xf7)
@@ -1525,7 +1525,7 @@ void TGameMap::_TImpl::clearPlaceholderHeroID(bool bSecondLayer, unsigned int ob
     THeroID heroID = pPlaceholder->getHeroID();
     THeroClass heroClass = THero::s_akTraits[heroID].m_class;
     H3_AT(_m_apPlayerBookkeeping[pPlaceholder->getOwner()]
-        ->m_aNumHeroesOfType, THero::s_akClassTraits[heroClass].m_townType)--;
+        ->m_aNumHeroesOfType, H3_AT(THero::s_akClassTraits, heroClass).m_townType)--;
     playerBookkeeping.m_paHeroPlaceholderID->erase(heroID);
     _m_pBookkeeping->m_heroesOnMap.set(heroID, false);
     pPlaceholder->setHeroID(-1);
@@ -1554,7 +1554,7 @@ void TGameMap::_TImpl::setHeroID(bool bSecondLayer, unsigned int objID, THeroID 
     THeroID oldHeroID = pHero->getHeroID();
     if (pHero->getOwner() != ePlayerNone) {
         _TPlayerBookkeeping* playerBookkeeping = _m_apPlayerBookkeeping[pHero->getOwner()].get();
-        H3_AT(playerBookkeeping->m_aNumHeroesOfType, THero::s_akClassTraits[THero::s_akTraits[oldHeroID].m_class].m_townType)--;
+        H3_AT(playerBookkeeping->m_aNumHeroesOfType, H3_AT(THero::s_akClassTraits, THero::s_akTraits[oldHeroID].m_class).m_townType)--;
         playerBookkeeping->m_paHeroID->erase(oldHeroID);
     }
     _m_pBookkeeping->m_paHeroRef->erase(oldHeroID);
@@ -1566,7 +1566,7 @@ void TGameMap::_TImpl::setHeroID(bool bSecondLayer, unsigned int objID, THeroID 
     if (pHero->getOwner() != ePlayerNone) {
         _TPlayerBookkeeping* playerBookkeeping = _m_apPlayerBookkeeping[pHero->getOwner()].get();
         playerBookkeeping->m_paHeroID->insert(newHeroID);
-        H3_AT(playerBookkeeping->m_aNumHeroesOfType, THero::s_akClassTraits[THero::s_akTraits[newHeroID].m_class].m_townType)++;
+        H3_AT(playerBookkeeping->m_aNumHeroesOfType, H3_AT(THero::s_akClassTraits, THero::s_akTraits[newHeroID].m_class).m_townType)++;
     }
 }
 
@@ -1846,7 +1846,7 @@ auto_ptr<TGameObject> TGameMap::_TImpl::createObject(const TObjectType& objType,
             int heroClass = 0;
             THeroID heroID;
             while ((heroID = _pickRandomHero(THeroClass(heroClass))) == -1) {
-                if (++heroClass >= kNumHeroClasses)
+                if (++heroClass >= H3_IDX(kNumHeroClasses))
                     throw TCreateObjFailureTooManyHeroesOnMap();
             }
             pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createPrison(objType, heroID).release());
@@ -2115,7 +2115,7 @@ bool TGameMap::_TImpl::canCreate(const TObjectType& objType, TPlayer player) con
         return !_m_pBookkeeping->m_bGrailPlaced;
     case HERO:
         {
-            assert(objType.getExtra() >= 0 && objType.getExtra() < kNumHeroClasses);
+            assert(objType.getExtra() >= 0 && objType.getExtra() < H3_IDX(kNumHeroClasses));
             if (player == ePlayerNone || _m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
                 return false;
             unsigned int numHeroes = _m_apPlayerBookkeeping[player]->m_numHeroes;
@@ -2152,7 +2152,7 @@ auto_ptr<TGameObject> TGameMap::_TImpl::reconstructObject(streambuf* pStreamBuf,
 VA(0x0042383f, 0x154)
 set<THeroID> TGameMap::_TImpl::getAvailableHeroesInClass(THeroClass heroClass) const
 {
-    const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
+    const THero::TClassTraits& classTraits = H3_AT(THero::s_akClassTraits, heroClass);
     set<THeroID> result;
     for (set<int>::const_iterator pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end();
          ++pHeroID)
@@ -2994,7 +2994,7 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TPrison* 
                 heroID = _pickRandomHero(THeroClass(heroClass));
                 if (heroID != -1)
                     break;
-                if (++heroClass >= kNumHeroClasses)
+                if (++heroClass >= H3_IDX(kNumHeroClasses))
                     throw TPlaceObjFailureNoAvailableHeroesInClass();
             }
         }
@@ -3403,7 +3403,7 @@ void TGameMap::_TImpl::_onHeroPlaceholderAdded(const THeroPlaceholder* pPlacehol
         _m_pBookkeeping->m_heroesOnMap.set(heroID, true);
         _m_apPlayerBookkeeping[pPlaceholder->getOwner()]->m_paHeroPlaceholderID->insert(heroID);
         H3_AT(_m_apPlayerBookkeeping[pPlaceholder->getOwner()]
-            ->m_aNumHeroesOfType, THero::s_akClassTraits[heroClass].m_townType)++;
+            ->m_aNumHeroesOfType, H3_AT(THero::s_akClassTraits, heroClass).m_townType)++;
     } else {
         _m_apPlayerBookkeeping[pPlaceholder->getOwner()]->m_numHeroPlaceholders++;
     }
@@ -3416,7 +3416,7 @@ void TGameMap::_TImpl::_onRemovingHeroPlaceholder(const THeroPlaceholder* pPlace
         THeroID heroID = pPlaceholder->getHeroID();
         THeroClass heroClass = THero::s_akTraits[heroID].m_class;
         H3_AT(_m_apPlayerBookkeeping[pPlaceholder->getOwner()]
-            ->m_aNumHeroesOfType, THero::s_akClassTraits[heroClass].m_townType)--;
+            ->m_aNumHeroesOfType, H3_AT(THero::s_akClassTraits, heroClass).m_townType)--;
         _m_apPlayerBookkeeping[pPlaceholder->getOwner()]->m_paHeroPlaceholderID->erase(heroID);
         _m_pBookkeeping->m_heroesOnMap.set(heroID, false);
     } else {
@@ -3664,7 +3664,7 @@ bool TGameMap::_TImpl::_isHeroAvailable(THeroID heroID) const
 VA(0x00428e86, 0x1ec)
 THeroID TGameMap::_TImpl::_pickRandomHero(THeroClass heroClass) const
 {
-    const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
+    const THero::TClassTraits& classTraits = H3_AT(THero::s_akClassTraits, heroClass);
     vector<THeroID> candidates;
     candidates.reserve(classTraits.m_heroes.size());
     set<int>::const_iterator pHeroID;

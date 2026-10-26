@@ -95,7 +95,7 @@ public:
 };
 SIZE(THeroClassTraits, 0x40);
 
-extern THeroClassTraits g_heroClassTraits[kNumHeroClasses];
+extern THeroClassTraits g_heroClassTraits[H3_IDX(kNumHeroClasses)];
 extern const THeroClassTraits (&akHeroClassTraits)[18];
 
 // Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner

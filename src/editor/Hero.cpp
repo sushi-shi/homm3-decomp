@@ -24,7 +24,7 @@
 const unsigned int kNumHeroReserved = 16;
 
 namespace {
-DATA(0x0059e690) TObjectTypeTable aHeroObjType(kNumHeroClasses + 1);
+DATA(0x0059e690) TObjectTypeTable aHeroObjType(H3_IDX(kNumHeroClasses) + 1);
 
 DATA(0x0059e6a0) THero::TTraits aHeroTraitsImp[kNumHeroes];
 VA_COMPGEN(0x0044a077, 0x1c, STATIC_CTOR, aHeroTraitsImp)
@@ -32,7 +32,7 @@ VA_COMPGEN(0x0044a077, 0x1c, STATIC_CTOR, aHeroTraitsImp)
 // the table's vector destructor and the unwind funclets name.
 VA_COMPGEN(0x0044a0c5, 0x5, IMPLICIT_DTOR, TTraits)
 
-DATA(0x0059f060) THero::TClassTraits aHeroClassTraitsImp[kNumHeroClasses + 1] = {
+DATA(0x0059f060) THero::TClassTraits aHeroClassTraitsImp[H3_IDX(kNumHeroClasses) + 1] = {
     THero::TClassTraits(aHeroObjType.m_objectTypes[0], eTownCastle),
     THero::TClassTraits(aHeroObjType.m_objectTypes[1], eTownCastle),
     THero::TClassTraits(aHeroObjType.m_objectTypes[2], eTownRampart),
@@ -294,9 +294,9 @@ VA(0x0044a8b5, 0x3b0)
 void initializeTraitsTable()
 {
     aHeroObjType.load("heroes.txt");
-    for (int heroClass = 0; heroClass < kNumHeroClasses; heroClass++)
+    for (int heroClass = 0; heroClass < H3_IDX(kNumHeroClasses); heroClass++)
         aHeroClassTraitsImp[heroClass].m_name = akHeroClassTraits[heroClass].m_name;
-    aHeroClassTraitsImp[kNumHeroClasses].m_name = kRandomStr;
+    aHeroClassTraitsImp[H3_IDX(kNumHeroClasses)].m_name = kRandomStr;
     TResourcePtr<TTextResource> pBiographies(ResourceManager::GetText("HeroBios.txt"));
     if (!pBiographies.get())
         throw TRuntimeError();
@@ -327,7 +327,7 @@ void initializeTraitsTable()
             traits.m_prototype.setSpells(spells);
         }
         {
-            const THeroClassTraits& classTraits = akHeroClassTraits[heroTraits.m_class];
+            const THeroClassTraits& classTraits = H3_AT(akHeroClassTraits, heroTraits.m_class);
             THeroPrototype::TPrimarySkills aPrimarySkill;
             std::copy(classTraits.m_initialPrimarySkill, classTraits.m_initialPrimarySkill + H3_IDX(kNumPrimarySkills),
                       aPrimarySkill.begin());
@@ -338,7 +338,7 @@ void initializeTraitsTable()
         gameVersions[GAME_VERSION_AB] = heroTraits.m_availableInExpansion;
         gameVersions[GAME_VERSION_SOD] = heroTraits.m_availableInExpansion;
         traits.m_gameVersions = gameVersions;
-        aHeroClassTraitsImp[heroTraits.m_class].m_heroes.insert(heroID);
+        H3_AT(aHeroClassTraitsImp, heroTraits.m_class).m_heroes.insert(heroID);
     }
 }
 

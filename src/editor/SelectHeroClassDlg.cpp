@@ -15,7 +15,7 @@ TSelectHeroClassDlg::TSelectHeroClassDlg(CWnd* pParent, const THeroClassMask& ma
     : CDialog(TSelectHeroClassDlg::IDD, pParent),
       _m_mask(mask),
       _m_mapVersion(mapVersion),
-      _m_heroClass(THeroClass(kNumHeroClasses))
+      _m_heroClass(THeroClass(H3_IDX(kNumHeroClasses)))
 {
 }
 
@@ -53,16 +53,16 @@ BOOL TSelectHeroClassDlg::OnInitDialog()
     GetDlgItem(IDCANCEL)->SetWindowText(kCancelStr);
     GetDlgItem(ID_HELP)->SetWindowText(kHelpStr);
     CDialog::OnInitDialog();
-    unsigned int numHeroClasses = _m_mapVersion >= GAME_VERSION_AB ? kNumHeroClasses : classPlanesWalker;
+    unsigned int numHeroClasses = H3_IDX(_m_mapVersion >= GAME_VERSION_AB ? kNumHeroClasses : eClassPlanesWalker);
     for (unsigned int heroClass = 0; heroClass < numHeroClasses; heroClass++) {
         if (_m_mask[heroClass]) {
             int index = _m_heroClassList.AddString(THero::s_akClassTraits[heroClass].m_name);
             _m_heroClassList.SetItemData(index, heroClass);
         }
     }
-    if (_m_mask[kNumHeroClasses]) {
-        int index = _m_heroClassList.AddString(THero::s_akClassTraits[kNumHeroClasses].m_name);
-        _m_heroClassList.SetItemData(index, kNumHeroClasses);
+    if (_m_mask[H3_IDX(kNumHeroClasses)]) {
+        int index = _m_heroClassList.AddString(H3_AT(THero::s_akClassTraits, kNumHeroClasses).m_name);
+        _m_heroClassList.SetItemData(index, H3_IDX(kNumHeroClasses));
     }
     _m_heroClassList.SetCurSel(-1);
     _m_okButton.EnableWindow(FALSE);

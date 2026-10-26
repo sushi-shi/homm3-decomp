@@ -728,18 +728,18 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // tests the already-nonzero value against SPELL_CASTER_ARTIFACT.
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
         if (m_currentSide == 0)
-            castX = H3_AT(g_combatHeroSprites, akHeroClassTraits[castingHero->m_heroClass].m_townType)[
+            castX = H3_AT(g_combatHeroSprites, H3_AT(akHeroClassTraits, castingHero->m_heroClass).m_townType)[
                 akHeroTraits[castingHero->m_id].m_sex].m_castX - 43;
         else
             castX = cmbtHero[1]->GetWidth()
-                - H3_AT(g_combatHeroSprites, akHeroClassTraits[castingHero->m_heroClass].m_townType)[
+                - H3_AT(g_combatHeroSprites, H3_AT(akHeroClassTraits, castingHero->m_heroClass).m_townType)[
                 akHeroTraits[castingHero->m_id].m_sex].m_castX + 693;
-        castY = H3_AT(g_combatHeroSprites, akHeroClassTraits[castingHero->m_heroClass].m_townType)[
+        castY = H3_AT(g_combatHeroSprites, H3_AT(akHeroClassTraits, castingHero->m_heroClass).m_townType)[
                 akHeroTraits[castingHero->m_id].m_sex].m_castY - 19;
 
         cmbtHeroFrameType[m_currentSide] = 4;
         for (int frame = 0;
-             frame < H3_AT(g_combatHeroSprites, akHeroClassTraits[castingHero->m_heroClass].m_townType)[
+             frame < H3_AT(g_combatHeroSprites, H3_AT(akHeroClassTraits, castingHero->m_heroClass).m_townType)[
                 akHeroTraits[castingHero->m_id].m_sex].m_castFrame; frame++) {
             cmbtHeroFrameIndex[m_currentSide] = frame;
             drawFrame(1, 0, 0, 100, 1, 1);
@@ -1611,7 +1611,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // update in this order.
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
         int nframes = cmbtHero[m_currentSide]->GetNumFrames(4);
-        for (int frame = H3_AT(g_combatHeroSprites, akHeroClassTraits[castingHero->m_heroClass].m_townType)[
+        for (int frame = H3_AT(g_combatHeroSprites, H3_AT(akHeroClassTraits, castingHero->m_heroClass).m_townType)[
                 akHeroTraits[castingHero->m_id].m_sex].m_castFrame;
              frame < nframes; ++frame) {
             cmbtHeroFrameIndex[m_currentSide] = frame;

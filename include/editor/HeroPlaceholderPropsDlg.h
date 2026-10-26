@@ -60,7 +60,7 @@ private:
     THeroPlaceholder* _m_pNewPlaceholder;
     bool _m_bModified;
     CButton _m_specificHeroRadio;
-    std::set<THeroID> _m_aHeroesInClass[kNumHeroClasses];
+    std::set<THeroID> _m_aHeroesInClass[H3_IDX(kNumHeroClasses)];
 };
 
 #endif  /* HOMM3_EDITOR_HEROPLACEHOLDERPROPSDLG_H */

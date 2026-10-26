@@ -1266,7 +1266,7 @@ BOOL TQuestBeASpecificHeroDlg::OnInitDialog()
     GetDlgItem(IDC_HERO_IDENTITY_STATIC)->SetWindowText(SEditQuestDlgText::kIdentityStaticStr);
     CDialog::OnInitDialog();
     EGameVersion mapVersion = _m_pMap->getVersion();
-    int numClasses = mapVersion >= GAME_VERSION_AB ? kNumHeroClasses : classPlanesWalker;
+    int numClasses = H3_IDX(mapVersion >= GAME_VERSION_AB ? kNumHeroClasses : eClassPlanesWalker);
     for (int heroClass = 0; heroClass < numClasses; heroClass++)
         _m_classCombo.SetItemData(_m_classCombo.AddString(THero::s_akClassTraits[heroClass].m_name), heroClass);
     _m_classCombo.SetCurSel(0);

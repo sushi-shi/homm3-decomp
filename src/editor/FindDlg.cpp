@@ -156,8 +156,8 @@ public:
 
 class THeroClassPattern : public TSingleTypeSingleExtraPattern {
 public:
-    THeroClassPattern(int heroClass)
-        : TSingleTypeSingleExtraPattern(THero::s_akClassTraits[heroClass].m_name, HERO, heroClass) {}
+    THeroClassPattern(H3_ENUM_PARAM(THeroClass, int) heroClass)
+        : TSingleTypeSingleExtraPattern(H3_AT(THero::s_akClassTraits, heroClass).m_name, HERO, H3_IDX(heroClass)) {}
 };
 
 class TMinePattern : public TDoubleTypeSingleExtraPattern {
@@ -654,22 +654,22 @@ TPatterns::TPatterns()
     DATA_COMPGEN_GUARD(0x0059bb98, heroClassPatternsGuard, akHeroClassPatterns)
     VA_COMPGEN(0x0041d766, 0x14, STATIC_DTOR, akHeroClassPatterns)
     DATA(0x0059ba98) static const THeroClassPattern akHeroClassPatterns[] = {
-        THeroClassPattern(classKnight),
-        THeroClassPattern(classCleric),
-        THeroClassPattern(classRanger),
-        THeroClassPattern(classDruid),
-        THeroClassPattern(classAlchemist),
-        THeroClassPattern(classWizard),
-        THeroClassPattern(classPagan),
-        THeroClassPattern(classHeretic),
-        THeroClassPattern(classDeathKnight),
-        THeroClassPattern(classNecromancer),
-        THeroClassPattern(classOverlord),
-        THeroClassPattern(classWarlock),
-        THeroClassPattern(classBarbarian),
-        THeroClassPattern(classBattleMage),
-        THeroClassPattern(classBeastmaster),
-        THeroClassPattern(classWitch)
+        THeroClassPattern(eClassKnight),
+        THeroClassPattern(eClassCleric),
+        THeroClassPattern(eClassRanger),
+        THeroClassPattern(eClassDruid),
+        THeroClassPattern(eClassAlchemist),
+        THeroClassPattern(eClassWizard),
+        THeroClassPattern(eClassPagan),
+        THeroClassPattern(eClassHeretic),
+        THeroClassPattern(eClassDeathKnight),
+        THeroClassPattern(eClassNecromancer),
+        THeroClassPattern(eClassOverlord),
+        THeroClassPattern(eClassWarlock),
+        THeroClassPattern(eClassBarbarian),
+        THeroClassPattern(eClassBattleMage),
+        THeroClassPattern(eClassBeastmaster),
+        THeroClassPattern(eClassWitch)
     };
     VA_COMPGEN(0x0041d752, 0x14, STATIC_DTOR, akMinePatterns)
     DATA(0x0059b9f8) static const TMinePattern akMinePatterns[] = {

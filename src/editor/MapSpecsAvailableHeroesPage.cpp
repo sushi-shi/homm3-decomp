@@ -56,7 +56,7 @@ BOOL TMapSpecsAvailableHeroesPage::OnInitDialog()
     CRect rect;
     _m_heroList.GetClientRect(&rect);
     _m_heroList.SetColumnWidth(rect.Width() / 4);
-    for (int heroClass = 0; heroClass < kNumHeroClasses; heroClass++) {
+    for (int heroClass = 0; heroClass < H3_IDX(kNumHeroClasses); heroClass++) {
         const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
         for (std::set<int>::const_iterator it = classTraits.m_heroes.begin(); it != classTraits.m_heroes.end(); ++it) {
             const std::bitset<3>& gameVersions = THero::s_akTraits[*it].m_gameVersions;

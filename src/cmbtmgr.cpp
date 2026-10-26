@@ -846,7 +846,7 @@ void combatManager::loadIcons()
         if (m_heroes[side]) {
             cmbtHero[side] = ResourceManager::GetSprite(
                 H3_AT(g_combatHeroSprites,
-                    akHeroClassTraits[m_heroes[side]->m_heroClass].m_townType)[
+                    H3_AT(akHeroClassTraits, m_heroes[side]->m_heroClass).m_townType)[
                     akHeroTraits[m_heroes[side]->m_id].m_sex].m_defName);
             cmbtHeroFlag[side] = ResourceManager::GetSprite(side == 0
                 ? DATA_COMPGEN(0x0066ff04, leftFlagSpriteName, "CmFlagL.def")

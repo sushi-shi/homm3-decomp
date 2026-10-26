@@ -890,7 +890,7 @@ hero::hero()
     m_owner = -1;
     m_x = 0;
     m_y = 0;
-    m_heroClass = classKnight;
+    m_heroClass = eClassKnight;
     m_portrait = 0;
     m_name[0] = 0;
 
@@ -961,7 +961,7 @@ void hero::initialize(short index)
     m_heroClass = akHeroTraits[index].m_class;
     m_skillCount = 0;
     for (i = 0; i < H3_IDX(kNumPrimarySkills); ++i) {
-        setPrimarySkill(i, akHeroClassTraits[m_heroClass].m_initialPrimarySkill[i]);
+        setPrimarySkill(i, H3_AT(akHeroClassTraits, m_heroClass).m_initialPrimarySkill[i]);
     }
 
     if (akHeroTraits[index].m_1stSkill != eSecSkillNone) {
@@ -979,7 +979,7 @@ void hero::initialize(short index)
         addSpell(akHeroTraits[index].m_startingSpell);
 
     m_aggression = static_cast<float>(random(75, 100)) *
-                akHeroClassTraits[m_heroClass].m_aggression /
+                H3_AT(akHeroClassTraits, m_heroClass).m_aggression /
                 static_cast<float>(random(100, 125));
 
     m_equipped[16].m_artifactId = ARTIFACT_CATAPULT;
@@ -1147,7 +1147,7 @@ const char* hero::getClassName()
     if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_inCampaign &&
         g_game->m_campaign.m_currentCampaign == CLASS_NAME_OVERRIDE_SCENARIO)
         return g_generalText->GetText(GENERAL_TEXT_SORCERESS_CLASS_NAME);
-    return akHeroClassTraits[m_heroClass].m_name;
+    return H3_AT(akHeroClassTraits, m_heroClass).m_name;
 }
 
 // The custom name when its flag is set; otherwise the shared name table
@@ -1917,15 +1917,15 @@ void hero::checkLevel()
             int stat = 0;
             const signed char* chances;
             if (m_level <= LEVEL_UP_LOW_LEVEL_LAST)
-                chances = akHeroClassTraits[m_heroClass].m_gainPrimarySkillChance;
+                chances = H3_AT(akHeroClassTraits, m_heroClass).m_gainPrimarySkillChance;
             else
-                chances = akHeroClassTraits[m_heroClass].m_gainPrimarySkillChance10P;
+                chances = H3_AT(akHeroClassTraits, m_heroClass).m_gainPrimarySkillChance10P;
             if (isLevelUpCampaignOverride()) {
                 if (m_level <= LEVEL_UP_LOW_LEVEL_LAST)
-                    chances = akHeroClassTraits[classBarbarian]
+                    chances = H3_AT(akHeroClassTraits, eClassBarbarian)
                                   .m_gainPrimarySkillChance;
                 else
-                    chances = akHeroClassTraits[classBarbarian]
+                    chances = H3_AT(akHeroClassTraits, eClassBarbarian)
                                   .m_gainPrimarySkillChance10P;
                 roll = chances[0] + chances[1];
                 roll = sRandom(1, roll);
@@ -2059,7 +2059,7 @@ MAC_ADDRESS(0x0f66f0, 0x3d0)  // anchor-caller + arity
 TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, TSkillMastery maxLevel, TSecondarySkill excluded)
 {
     const THeroClassTraits& classTraits =
-        akHeroClassTraits[currentHero->m_heroClass];
+        H3_AT(akHeroClassTraits, currentHero->m_heroClass);
     const char* skillDisabled = g_game->m_ssDisabled;
     if (currentHero->isLevelUpCampaignOverride())
         skillDisabled = g_campaignDisabledSkills;
@@ -2072,14 +2072,14 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
     int wisdomGap;
     // Dreamcast local: long levels_between_schools.
     long levelsBetweenSchools;
-    if (currentHero->m_heroClass == classCleric ||
-        currentHero->m_heroClass == classDruid ||
-        currentHero->m_heroClass == classWizard ||
-        currentHero->m_heroClass == classHeretic ||
-        currentHero->m_heroClass == classNecromancer ||
-        currentHero->m_heroClass == classWarlock ||
-        currentHero->m_heroClass == classBattleMage ||
-        currentHero->m_heroClass == classWitch) {
+    if (currentHero->m_heroClass == eClassCleric ||
+        currentHero->m_heroClass == eClassDruid ||
+        currentHero->m_heroClass == eClassWizard ||
+        currentHero->m_heroClass == eClassHeretic ||
+        currentHero->m_heroClass == eClassNecromancer ||
+        currentHero->m_heroClass == eClassWarlock ||
+        currentHero->m_heroClass == eClassBattleMage ||
+        currentHero->m_heroClass == eClassWitch) {
         wisdomGap = 3;
         levelsBetweenSchools = 3;
     } else {

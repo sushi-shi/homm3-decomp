@@ -65,7 +65,7 @@ THero* TTownPropsGeneralPage::_createHero()
 {
     TTown* pNewTown = _getNewTown();
     THeroClassMask availableClasses(0);
-    for (unsigned int heroClass = 0; heroClass < kNumHeroClasses + 1; heroClass++)
+    for (unsigned int heroClass = 0; heroClass < H3_IDX(kNumHeroClasses) + 1; heroClass++)
         availableClasses[heroClass] =
             _m_newMap.canCreate(THero::s_akClassTraits[heroClass].m_objType, pNewTown->getOwner());
     if (availableClasses.none()) {
@@ -77,7 +77,7 @@ THero* TTownPropsGeneralPage::_createHero()
     if (selectHeroClassDlg.DoModal() != IDOK)
         return NULL;
     std::auto_ptr<TGameObject> pObject = _m_newMap.createObject(
-        THero::s_akClassTraits[selectHeroClassDlg.getHeroClass()].m_objType, pNewTown->getOwner());
+        H3_AT(THero::s_akClassTraits, selectHeroClassDlg.getHeroClass()).m_objType, pNewTown->getOwner());
     if (!pObject.get())
         throw TAllocationFailure();
     return dynamic_cast<THero*>(pObject.release());

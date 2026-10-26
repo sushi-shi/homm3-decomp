@@ -105,12 +105,12 @@ BOOL THeroPlaceholderPropsDlg::OnInitDialog()
     _m_bModified = false;
     _m_heroChoice = _m_pNewPlaceholder->hasHeroID();
     unsigned int heroClass;
-    for (heroClass = 0; heroClass < kNumHeroClasses; heroClass++)
+    for (heroClass = 0; heroClass < H3_IDX(kNumHeroClasses); heroClass++)
         _m_aHeroesInClass[heroClass] = _m_pNewMap->getAvailableHeroesInClass(THeroClass(heroClass));
     if (_m_pNewPlaceholder->hasHeroID()) {
         THeroID heroID = _m_pNewPlaceholder->getHeroID();
         THeroClass heroClass = THero::s_akTraits[heroID].m_class;
-        _m_aHeroesInClass[heroClass].insert(heroID);
+        H3_AT(_m_aHeroesInClass, heroClass).insert(heroID);
     }
     CDialog::OnInitDialog();
     TPlayerMask owners = _m_pNewMap->getAvailableHeroOwnersMask();
@@ -127,7 +127,7 @@ BOOL THeroPlaceholderPropsDlg::OnInitDialog()
     _m_ownerCombo.SetCurSel(index);
     _m_powerRatingEdit.LimitText(TDigits<THeroPlaceholder::s_kMaxPowerRank>::getDigits());
     _m_powerRatingSpin.SetRange(THeroPlaceholder::s_kMinPowerRank, THeroPlaceholder::s_kMaxPowerRank);
-    for (heroClass = 0; heroClass < kNumHeroClasses; heroClass++) {
+    for (heroClass = 0; heroClass < H3_IDX(kNumHeroClasses); heroClass++) {
         if (_m_aHeroesInClass[heroClass].size() > 0)
             _m_classCombo.SetItemData(_m_classCombo.AddString(THero::s_akClassTraits[heroClass].m_name), heroClass);
     }
@@ -138,11 +138,11 @@ BOOL THeroPlaceholderPropsDlg::OnInitDialog()
         THeroID heroID = _m_pNewPlaceholder->getHeroID();
         THeroClass heroIDClass = THero::s_akTraits[heroID].m_class;
         index = 0;
-        while (_m_classCombo.GetItemData(index) != heroIDClass)
+        while (_m_classCombo.GetItemData(index) != H3_IDX(heroIDClass))
             index++;
         _m_classCombo.SetCurSel(index);
-        for (std::set<THeroID>::const_iterator it = _m_aHeroesInClass[heroIDClass].begin();
-             it != _m_aHeroesInClass[heroIDClass].end(); ++it)
+        for (std::set<THeroID>::const_iterator it = H3_AT(_m_aHeroesInClass, heroIDClass).begin();
+             it != H3_AT(_m_aHeroesInClass, heroIDClass).end(); ++it)
             _m_heroCombo.SetItemData(_m_heroCombo.AddString(_m_pNewMap->getHeroPrototype(*it).getName().c_str()), *it);
         index = 0;
         while (_m_heroCombo.GetItemData(index) != heroID)
@@ -213,8 +213,8 @@ void THeroPlaceholderPropsDlg::OnHeroRadio()
             _m_heroCombo.EnableWindow(TRUE);
             _m_classCombo.SetCurSel(0);
             THeroClass heroClass = THeroClass(_m_classCombo.GetItemData(0));
-            for (std::set<THeroID>::const_iterator it = _m_aHeroesInClass[heroClass].begin();
-                 it != _m_aHeroesInClass[heroClass].end(); ++it)
+            for (std::set<THeroID>::const_iterator it = H3_AT(_m_aHeroesInClass, heroClass).begin();
+                 it != H3_AT(_m_aHeroesInClass, heroClass).end(); ++it)
                 _m_heroCombo.SetItemData(_m_heroCombo.AddString(_m_pNewMap->getHeroPrototype(*it).getName().c_str()), *it);
             _m_heroCombo.SetCurSel(0);
         }
@@ -251,8 +251,8 @@ void THeroPlaceholderPropsDlg::OnSelChangeClassCombo()
 {
     _m_heroCombo.ResetContent();
     THeroClass heroClass = THeroClass(_m_classCombo.GetItemData(_m_classCombo.GetCurSel()));
-    for (std::set<THeroID>::const_iterator it = _m_aHeroesInClass[heroClass].begin();
-         it != _m_aHeroesInClass[heroClass].end(); ++it)
+    for (std::set<THeroID>::const_iterator it = H3_AT(_m_aHeroesInClass, heroClass).begin();
+         it != H3_AT(_m_aHeroesInClass, heroClass).end(); ++it)
         _m_heroCombo.SetItemData(_m_heroCombo.AddString(_m_pNewMap->getHeroPrototype(*it).getName().c_str()), *it);
     _m_heroCombo.SetCurSel(0);
 }

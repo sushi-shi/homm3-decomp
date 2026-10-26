@@ -755,13 +755,13 @@ BOOL TPrisonPropsGeneralPage::OnInitDialog()
     _m_heroClass = traits.m_class;
     TIdentifiedHeroPropsGeneralPage::OnInitDialog();
     std::set<THeroClass> heroClasses;
-    for (THeroClass heroClass = THeroClass(0); heroClass < kNumHeroClasses; heroClass = THeroClass(heroClass + 1)) {
+    for (THeroClass heroClass = eClassKnight; heroClass < kNumHeroClasses; heroClass = THeroClass(heroClass + 1)) {
         if (_m_newMap.getAvailableHeroesInClass(heroClass).size() > 0)
             heroClasses.insert(heroClass);
     }
     heroClasses.insert(_m_heroClass);
     for (std::set<THeroClass>::const_iterator it = heroClasses.begin(); it != heroClasses.end(); ++it)
-        _m_classCombo.SetItemData(_m_classCombo.AddString(THero::s_akClassTraits[*it].m_name), *it);
+        _m_classCombo.SetItemData(_m_classCombo.AddString(H3_AT(THero::s_akClassTraits, *it).m_name), H3_IDX(*it));
     int index;
     for (index = 0; THeroClass(_m_classCombo.GetItemData(index)) != _m_heroClass; index++)
         ;

@@ -4241,44 +4241,44 @@ void TSingleSelectionWindow::makeHeroFilter()
             continue;
         switch (town) {
         case eTownRampart:
-            heroClass1 = classDruid;
-            heroClass2 = classRanger;
+            heroClass1 = eClassDruid;
+            heroClass2 = eClassRanger;
             break;
         case eTownTower:
-            heroClass1 = classWizard;
-            heroClass2 = classAlchemist;
+            heroClass1 = eClassWizard;
+            heroClass2 = eClassAlchemist;
             break;
         case eTownInferno:
-            heroClass1 = classPagan;
-            heroClass2 = classHeretic;
+            heroClass1 = eClassPagan;
+            heroClass2 = eClassHeretic;
             break;
         case eTownNecropolis:
-            heroClass1 = classDeathKnight;
-            heroClass2 = classNecromancer;
+            heroClass1 = eClassDeathKnight;
+            heroClass2 = eClassNecromancer;
             break;
         case eTownDungeon:
-            heroClass1 = classOverlord;
-            heroClass2 = classWarlock;
+            heroClass1 = eClassOverlord;
+            heroClass2 = eClassWarlock;
             break;
         case eTownStronghold:
-            heroClass1 = classBarbarian;
-            heroClass2 = classBattleMage;
+            heroClass1 = eClassBarbarian;
+            heroClass2 = eClassBattleMage;
             break;
         case eTownFortress:
-            heroClass1 = classBeastmaster;
-            heroClass2 = classWitch;
+            heroClass1 = eClassBeastmaster;
+            heroClass2 = eClassWitch;
             break;
         case eTownConflux:
-            heroClass1 = classPlanesWalker;
-            heroClass2 = classElementalist;
+            heroClass1 = eClassPlanesWalker;
+            heroClass2 = eClassElementalist;
             break;
         case eTownCastle:
-            heroClass1 = classKnight;
-            heroClass2 = classCleric;
+            heroClass1 = eClassKnight;
+            heroClass2 = eClassCleric;
             break;
         default:
-            heroClass1 = classKnight;
-            heroClass2 = classCleric;
+            heroClass1 = eClassKnight;
+            heroClass2 = eClassCleric;
             break;
         }
         player->m_availableHeroesCount = 0;
