@@ -899,15 +899,10 @@ inline void CSpriteFrame::Clip(int& sx, int& sy, int& sw, int& sh,
 // (code,count-minus-one) runs; code 255 denotes a literal byte string, while
 // other codes denote a repeated palette index.  Raw/tile and adventure-object
 // encodings dispatch to their specialized renderers before this path.
-// Dreamcast names the table pointer `aLineOffset` and records each row loop as
-// one enclosing lifetime. Advancing lineDst directly by dpitch preserves that
-// source model and makes VC6 place its initialization before the loop guard
-// (rebuilding it from a base plus an integer row offset defers that store).
+// Dreamcast names the table pointer `aLineOffset` (const) and records each
+// row loop as one enclosing lifetime: lineDst advances directly by dpitch.
 // Loki's packet-reading loop keeps code/count decoding inside the skip loop
-// and exits when the requested source column lies in the current run, as the
-// editor's clipping/setup schedule needs.
-// DC proves the const aLineOffset local; both native builds load it after the
-// empty-extent return. The editor's two guard references name 0x005a991f.
+// and exits when the requested source column lies in the current run.
 VA(0x0047c570, 0x465)
 DC_ADDRESS(0x075810, 0x310)
 MAC_ADDRESS(0x08b710, 0x430)  // unique PC/DC renderer identity; retail byte verdict
@@ -1527,18 +1522,15 @@ void CSpriteFrame::DrawAdvObjImpl(int sx, int sy, int sw, int sh,
 // only ever reached from DrawSpellEffect's own eEncodeAdvObjRLE arm, which has
 // already made that decision.
 
-// The identity comes from that caller, which is EXACT: 0x47efca reaches this
-// body with the flag color 0 in slot 12 and hflip in slot 13, and
-// DrawAdvObjWithFlagAlpha is the only member of this class with that argument
-// order - DrawAdvObjImpl takes hflip in slot 12 and its flag color last.
+// The identity comes from its caller, which passes the flag color 0 in slot
+// 12 and hflip in slot 13; DrawAdvObjImpl takes hflip in slot 12 and its
+// flag color last.
 
-// Loki's h3maped (GCC -O0) computes each row's cell source before the
-// skipped-pixel base `sx & ~31`, which gives retail's row-setup registers. Its
-// flag blend also evaluates the flag term before the destination term.
-// DC records palette and aCellOffset as read-only pointers; lines
-// 2462/2463 load the map table and bind pal+0x1c before either row loop.
-// A single native row cursor, not a fixed base plus row offset. The decoder
-// and palette helpers remain unchanged.
+// Each row's cell source is computed before the skipped-pixel base
+// `sx & ~31`, and the flag blend evaluates the flag term before the
+// destination term, as in Loki's h3maped. DC records palette and
+// aCellOffset as read-only pointers; lines 2462/2463 load the map table and
+// bind pal+0x1c before either row loop. A single row cursor.
 VA(0x0047d4f0, 0x43C)
 DC_ADDRESS(0x076384, 0x302)
 MAC_ADDRESS(0x08c694, 0x450)  // anchor-caller (DrawSpellEffect 0x47efca) + DC source identity
@@ -1910,17 +1902,13 @@ void CSpriteFrame::DrawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 // encoded tiles use a word row-offset table and the same packed packet byte as
 // adventure cells.  Only code seven carries pixels in this renderer.
 
-// Four DC/retail direction arms, the eight-statement Duff loop, raw do/while
-// rows and indexed encoded for-rows recover all behavior. Retail and
-// Dreamcast agree on the surprising general-RLE delegation
-// `Draw(sw, sy, sw, ...)`. Loki's GCC 2.95 build (no auto-inlining or
-// cross-branch hoisting) loads `pal.Palette` once, right after the line-table
-// pointer and before the flip dispatch, as the sibling decoders' `palette`
-// local does. DC attributes both raw-row advances to one line (2938); the
-// destination row advances before the source row. Loki declares each raw
-// row's destination and source before its remaining count, as the editor
-// schedule needs. Retain Loki's form and DC's hFlipped/vFlipped/aLineOffset
-// spellings.
+// Four DC direction arms, the eight-statement Duff loop, raw do/while rows
+// and indexed encoded for-rows. Retail and Dreamcast agree on the surprising
+// general-RLE delegation `Draw(sw, sy, sw, ...)`. `pal.Palette` is loaded
+// once, right after the line-table pointer and before the flip dispatch (as
+// in Loki). DC attributes both raw-row advances to one line (2938); the
+// destination row advances before the source row. DC's
+// hFlipped/vFlipped/aLineOffset spellings are kept.
 VA(0x0047dd40, 0xAD8)
 DC_ADDRESS(0x076988, 0x762)
 MAC_ADDRESS(0x08cf24, 0x834) // retail raw/tileset decoder + DC source identity
@@ -2337,28 +2325,17 @@ void CSpriteFrame::DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 // either, which is why the body opens by returning on eEncodeRaw instead of
 // carrying DrawTile's unrolled raw arm.
 
-// Only two blends exist and the jump table at 0x47ef20 says which codes reach
-// them: 1 and 2 take three quarters of the destination
-// (`(p>>2)&div4mask + (p>>1)&div2mask`), 3 and 4 take a half, code 7's opaque
-// run is skipped over rather than drawn, and every other code just advances.
-// The mask widths are read straight from the bytes - div4mask is ANDed as a
-// word and div2mask as a dword in all four arms.
+// Only two blends exist: codes 1 and 2 take three quarters of the
+// destination (`(p>>2)&div4mask + (p>>1)&div2mask`), 3 and 4 take a half,
+// code 7's opaque run is skipped over rather than drawn, and every other
+// code just advances.
 
-// A single native row cursor, not a fixed base plus row offset.
-//
-// Loki's h3maped (GCC -O0) evaluates the three-quarter blend's div2mask term
-// first, which puts the div4mask term in the copy register as retail does
-// (which term VC6 schedules first follows TU symbol state). The term's AND
-// width is not this body either: VC6 widens a ushort global's AND to a dword
-// only when the object places that global on a 4-byte boundary. Retail's
-// div4mask sits at 0x6968aa (2 mod 4, `and bx,word[div4mask]`), which needs
-// EncodeGeneral's dynamically initialized kMaxRunLength in the .bss.
-// The half blend is written `--out; *out = (*out >> 1) & mask;` - reading the
-// same location AFTER the decrement, as retail spells it; `unsigned int color
-// = out[-1]; --out; *out = (color >> 1) & mask;` emits a widening
-// `xor eax,eax / mov ax,` pair retail does not have.
-// DC decoder/helper scopes and pixel arithmetic remain intact, including
-// reverse/raw source walks.
+// A single row cursor. The three-quarter blend evaluates its div2mask term
+// first, as Loki's h3maped does; div4mask's placement (and so its AND
+// width) depends on EncodeGeneral's dynamically initialized kMaxRunLength in
+// the .bss. The half blend is written `--out; *out = (*out >> 1) & mask;`,
+// reading the same location after the decrement. DC decoder/helper scopes
+// and pixel arithmetic remain intact, including reverse/raw source walks.
 VA(0x0047e820, 0x740)
 DC_ADDRESS(0x0770ec, 0x576)
 MAC_ADDRESS(0x08d758, 0x7a0)  // anchor-callee (CSprite::DrawTileShadow/DrawShroudTile) + DC source identity
@@ -2698,16 +2675,10 @@ void CSpriteFrame::DrawTileShadow(int sx, int sy, int sw, int sh,
 // and every encoded control run is skipped rather than filled - which is the
 // one place it departs from Draw, whose non-literal arm installs pal.data[code].
 
-// The two delegations are proven by arity and argument order. 0x47f39c hands
-// the tileset/raw encodings to DrawTile with a trailing 0, exactly as Draw
-// does; 0x47efca hands the adventure-object encoding to 0x47d4f0 with the flag
-// color 0 in slot 12 and hflip in slot 13, which is DrawAdvObjWithFlagAlpha's
-// signature and no other in this class - DrawAdvObjImpl takes hflip in slot 12
-// and its flag color last.
-// The native row cursor is one row lifetime (not a fixed base plus row
-// offset). The blend loops load div2mask as a dword only with the DC
-// spelling `Draw` for the delegated member: name-keyed TU state
-// (docs/vc6/behavior-catalog.md C12).
+// Both delegations follow Draw: the tileset/raw encodings go to DrawTile
+// with a trailing 0, the adventure-object encoding to
+// DrawAdvObjWithFlagAlpha. The delegated member is spelled `Draw`, as in DC
+// (name-keyed TU state, docs/vc6/behavior-catalog.md C12).
 VA(0x0047ef60, 0x47C)
 DC_ADDRESS(0x077664, 0x338)
 MAC_ADDRESS(0x08def8, 0x44c)  // anchor-callee (CSprite::DrawSpellEffect) + DC source identity
@@ -2926,10 +2897,9 @@ void CSpriteFrame::ClipScaled50(int& sx, int& sy, int& sw, int& sh,
     sy -= CroppedY;
 }
 
-// The completed Loki renderer and DC line groups retain a typed pixel-row
-// cursor, unsigned cell division, separate packet reads and a byte skip flag.
-// Keep the switch/fallthrough for flag runs. Loki writes the tail tests as
-// `count != 0`; the editor bytes require positive tests (`count > 0`).
+// Loki's row/packet model with DC's typed pixel-row cursor, unsigned cell
+// division, separate packet reads and a byte skip flag; the tail tests are
+// positive (`count > 0`) where Loki writes `count != 0`.
 // Original: CSpriteFrame::DrawAdvObjWithFlagScaled50; cspriteframe.cpp:4054
 DC_ADDRESS(0x077b6c, 0x1ea)
 void CSpriteFrame::DrawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh,
@@ -3152,10 +3122,8 @@ void CSpriteFrame::DrawAdvObjShadowScaled50(int sx, int sy, int sw, int sh,
     }
 }
 
-// Loki preserves each raw/RLE row cursor and the four flip branches. Byte
-// skip flags and positive tail tests (bytes require them over Loki's
-// `count != 0`) reproduce all 2,072 editor bytes at 0x004e1ca0; retain the
-// canonical clipping and palette operations.
+// Loki's row/RLE cursors and four flip branches, with byte skip flags and
+// positive tail tests (Loki writes `count != 0`).
 // Original: CSpriteFrame::DrawTileScaled50; cspriteframe.cpp:4330
 DC_ADDRESS(0x077f98, 0x606)
 void CSpriteFrame::DrawTileScaled50(int sx, int sy, int sw, int sh,
@@ -3593,12 +3561,11 @@ void CSpriteFrame::ClipScaled25(int& sx, int& sy, int& sw, int& sh,
     sy -= CroppedY;
 }
 
-// Loki CSpriteFrame.cpp's byte-matched quarter-size renderer supplies the
-// packet/switch model. Loki tests `count != 0` and `(count & 3) ? ...`; the
-// editor bytes require the positive `> 0` forms.
-// DC 5118..5119 (the shadow pass) record the remainder and its
-// four-complement select on consecutive lines; Loki's single conditional
-// statement is kept.
+// Loki CSpriteFrame.cpp's quarter-size renderer supplies the packet/switch
+// model; the tests are the positive `> 0` forms where Loki writes
+// `count != 0` and `(count & 3) ? ...`. DC 5118..5119 record the remainder
+// and its four-complement select on consecutive lines; Loki's single
+// conditional statement is kept.
 // Original: CSpriteFrame::DrawAdvObjWithFlagScaled25; cspriteframe.cpp:4907
 DC_ADDRESS(0x078774, 0x208)
 void CSpriteFrame::DrawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh,
@@ -3838,9 +3805,8 @@ void CSpriteFrame::DrawAdvObjShadowScaled25(int sx, int sy, int sw, int sh,
     }
 }
 
-// The completed Loki row/packet model with positive count/remainder tests
-// (bytes require them over Loki's `!= 0` forms) reproduces all 2,150 editor
-// bytes at 0x004e2c40.
+// Loki's row/packet model with positive count/remainder tests (Loki writes
+// `!= 0`).
 // Original: CSpriteFrame::DrawTileScaled25; cspriteframe.cpp:5201
 DC_ADDRESS(0x078be0, 0x67e)
 void CSpriteFrame::DrawTileScaled25(int sx, int sy, int sw, int sh,
