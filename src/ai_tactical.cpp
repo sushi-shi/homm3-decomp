@@ -67,8 +67,8 @@ DATA(0x0063b798) const double g_aiOddsLadder[6] = {
     2.6, 1.9, 1.5, 1.31, 1.2, 1.13
 };
 
-// Mac retains this terrain/school test once and calls it from all three
-// creature-spell valuers; Complete expands those calls.
+// Mac retains this terrain/school test; inlined in all three creature-spell
+// valuers.
 MAC_ADDRESS(0x03ca2c, 0xd8)
 static unsigned char spellIsExpertOnMagicTerrain(SpellID spell, int terrain)
 {
@@ -135,13 +135,9 @@ double aiValueOfLuck(long luck, long change)
 }
 
 // DC ai_tactical.cpp:2183, dc 0x42aa8, is army's implicit copy constructor:
-// one borrowed call-site line, member/array copies, then deque<SpellID> and
-// four vector<army*> copy constructors. Complete additionally copies resource
-// handles through their refcounting members. The natural implicit constructor
-// supplies the retained 0x437a00 body; do not add a second authored constructor.
-// Mac getBacklashValue expands the army copy. Its call at 0x435ac passes
-// source/destination +0x420 to the deque member copy at 0x46c1c; that callee
-// is not a retained whole-army constructor. Keep the natural member copy.
+// member/array copies, then deque<SpellID> and four vector<army*> copy
+// constructors; Complete also copies resource handles through their
+// refcounting members. Do not add an authored constructor.
 VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
 
 VA(0x00435980, 0x2A)
@@ -155,9 +151,8 @@ long aiGetAttackDamage(const army& currentArmy, long ourHits, const army& enemy,
     return currentArmy.getAverageDamage(enemy, ranged, troops, 1, distance);
 }
 
-// E:\gamedcs\ai_tactical.cpp:215 -  No retail slot of its
-// own: simulate_attack (0x4359b0) carries it inlined three times, so
-// /OPT:REF dropped the out-of-line copy.
+// E:\gamedcs\ai_tactical.cpp:215. Inlined three times in simulate_attack;
+// no retail body of its own.
 DC_ADDRESS(0x03c854, 0x88)
 MAC_ADDRESS(0x03d01c, 0xc0)
 void type_AI_combat_parameters::simulateSingleAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, bool ranged, long distance) const
@@ -258,8 +253,6 @@ long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, co
 VA(0x00435dc0, 0xF3)
 DC_ADDRESS(0x03cba0, 0xea)
 MAC_ADDRESS(0x03d5d8, 0x144)
-// Keep the complete bool chain through simulation, loss valuation and its
-// logical fields: uchar loss flags/casts add normalization.
 long type_AI_combat_parameters::getExchangeEffect(const army& currentArmy, const army& enemy, long distance) const
 {
     bool ranged = currentArmy.canShoot(0);
@@ -316,8 +309,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
         }
     }
     // Direct group fields: DC's four get_total_combat_value calls have no
-    // get_group/get_enemy_group calls (DC keeps 23 such calls elsewhere);
-    // the getters reorder each call's argument loads.
+    // get_group/get_enemy_group calls.
     m_friendlyCombatValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
                                                m_lowestDefense, 1);
     m_awakeFriendlyValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
@@ -348,8 +340,8 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
     }
 }
 
-// DC ai_tactical.cpp:497 and Mac 0:0x3da40 retain AI_get_attack_damage;
-// Complete expands its troop-count calculation at this constructor site.
+// DC ai_tactical.cpp:497 retains AI_get_attack_damage; inlined at this
+// constructor site.
 VA(0x004360c0, 0xBC)
 DC_ADDRESS(0x03ceb8, 0x98)
 MAC_ADDRESS(0x03d9ac, 0xe4)
@@ -419,11 +411,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
 
 // E:\gamedcs\ai_tactical.cpp:575
 // How many turns this stack needs to reach the hex `cell` describes.
-// Complete expands this ordinary TU helper into check_adjacent_hexes.
-// Its return boundary is visible in the caller: retail
-// leaves the answer in EAX across all four exits and stores it ONCE,
-// where the same statements written out in the caller store to the
-// slot at every assignment.
+// Inlined into check_adjacent_hexes.
 DC_ADDRESS(0x03d154, 0x8e)
 MAC_ADDRESS(0x03dc80, 0x6c)
 long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
@@ -511,8 +499,6 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
             threat = min(m_enemyAttackArray[otherHex], threat);
         }
         value += threat;
-        // Mac expands the ai_tactical.h:471..482 result getters at these
-        // best-hex/time/value reads. Keep their canonical caller boundaries.
         if (getBestHex() >= 0 && turns == getAttackTime()) {
             if (value < getHexValue())
                 continue;
@@ -537,11 +523,10 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
     }
 }
 
-// The kills_only argument here is a LITERAL 0, not estimate's own byte
-// (`push 0` where get_breath_bonus pushes estimate->kills_only), and
-// the ranged argument is 0 in both.
-// DC locals: already_checked and valid_directions. DC also calls the
-// ordinary ValidHex and min(int,int) helpers; VC6 expands both here.
+// The kills_only argument here is a literal 0, not estimate's own byte, and
+// the ranged argument is 0 in both. DC locals: already_checked and
+// valid_directions; DC also calls the ordinary ValidHex and min(int,int)
+// helpers.
 VA(0x00436620, 0x13A)
 DC_ADDRESS(0x03c608, 0xfe)
 MAC_ADDRESS(0x03ccf4, 0x184)
@@ -600,8 +585,7 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopC
     return value;
 }
 
-// DC ai_tactical.cpp:717/729/735 names OffsetToFront and two ValidHex
-// calls; Complete expands these header helpers in the attack search.
+// DC ai_tactical.cpp:717/729/735 names OffsetToFront and two ValidHex calls.
 VA(0x00436840, 0xEA)
 DC_ADDRESS(0x03d440, 0xe2)
 MAC_ADDRESS(0x03e070, 0x1a0)
@@ -631,9 +615,8 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
     return combatManager::validHex(getBestHex());
 }
 
-// E:\gamedcs\ai_tactical.cpp:744 -  No retail slot: both
-// type_spell_choice ctors inline it whole (their bytes carry the five
-// stores), so /OPT:REF dropped the out-of-line copy.
+// E:\gamedcs\ai_tactical.cpp:744. Inlined in both type_spell_choice
+// constructors; no retail body.
 DC_ADDRESS(0x03d524, 0x48)
 MAC_ADDRESS(0x03e210, 0x1c)
 // Original DC ??0type_enchant_data@@QAA@W4SpellID@@W4TSkillMastery@@JJ@Z
@@ -650,8 +633,6 @@ type_enchant_data::type_enchant_data(ESpellId newSpell, TSkillMastery newMastery
 VA(0x00436930, 0x1A)
 DC_ADDRESS(0x03d56c, 0x18)
 MAC_ADDRESS(0x03e22c, 0x28)
-// Mac retains calls from fire shield, earthquake and faerie dragon pricing
-// at 0:0x43a1c, 0:0x45808 and 0:0x464d4.
 long type_enchant_data::getMasteryValue() const
 {
     return akSpellTraits[m_spell].m_mastery_bonus[m_mastery];
@@ -683,8 +664,7 @@ type_spell_choice::type_spell_choice(ESpellId newSpell, TSkillMastery newMastery
 }
 
 // Original: type_AI_spellcaster::initialize; ai_tactical.cpp:779
-// Both constructors call this ordinary helper in DC. Complete expands the
-// same side/hero/flag initialization before the remaining setup operations.
+// Both constructors call this ordinary helper in DC; Complete inlines it.
 DC_ADDRESS(0x03d5dc, 0x28)
 MAC_ADDRESS(0x03e2f4, 0x3c)
 void type_AI_spellcaster::initialize(combatManager* combat, long side)
@@ -713,10 +693,6 @@ type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
 }
 
 // E:\gamedcs\ai_tactical.cpp:793
-// EH-bearing (P2.2): push -1 / push 0xb / mov eax,fs:[0] frame around
-// the operator-new of the 0x410-byte deputy caster - the ONE state the
-// funclet cleans is that raw allocation, so the frame is the `new`
-// expression's, not a local's.
 
 // The body is the public caster's whole setup: the two heroes off
 // combat->heroes[], the combat manager's own move order and simulation
@@ -725,14 +701,8 @@ type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
 // side, owned by this one (owns_deputy = 1), whose constructor is
 // inlined here in full.
 
-// `1 - side` is a LOCAL, not a re-read of the member: retail spills it
-// into the dead `combat` parameter slot at [ebp+8] and feeds the
-// deputy from there. The member would have to be reloaded, since
-// find_move_order / simulate_combat / find_AI_targets all sit between
-// the store and the use and none of them lets VC6 assume `this` is
-// unaliased.
-// Mac 0+0x3e330 stores the creature byte immediately after constructing
-// m_estimate; that assignment precedes the enemy local, as retail needs.
+// `1 - side` is a local, not a re-read of the member. The creature byte is
+// stored immediately after constructing m_estimate, before the enemy local.
 VA(0x004369c0, 0x22B)
 DC_ADDRESS(0x03d604, 0xec)
 MAC_ADDRESS(0x03e330, 0xec)  // anchor-callee
@@ -765,12 +735,9 @@ type_AI_spellcaster::~type_AI_spellcaster()
 }
 
 // E:\gamedcs\ai_tactical.cpp:837
-// DC's ordinary const helper precedes should_attack_now in this TU. Its
-// GetCurrentArmy, Is and IsIncapacitated calls remain canonical; VC6 expands
-// the helper naturally at its callers. Absence of a retained retail
-// body does not justify an explicit inline keyword.
-// DC reloads m_numArmies at the loop test. Keeping that bound in
-// the condition also reproduces retail VC6's Teleport stack homes exactly.
+// DC's ordinary const helper precedes should_attack_now in this TU; its
+// GetCurrentArmy, Is and IsIncapacitated calls remain canonical and it is
+// inlined at its callers. DC reloads m_numArmies at the loop test.
 DC_ADDRESS(0x03d7b0, 0x86)
 MAC_ADDRESS(0x03e528, 0xd8)
 unsigned char type_AI_spellcaster::isLastAction() const
@@ -860,18 +827,8 @@ long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_da
 
 // E:\gamedcs\ai_tactical.cpp:965
 // The per-GROUP half of every mass-damage pricer: sum get_damage_value
-// over one side's stacks, walking BACKWARDS. No retail body - the
-// carve cuts nothing between get_damage_spell_value (0x436f60, 69 B)
-// and get_mass_damage_effect (0x436fb0). Keep its ordinary definition;
-// absence of a retained retail body does not prove source inline. Its
-// two PARAMETERS are what let VC6 hoist the group index and the hero
-// out of the loop: consider_spell's mass arm homes them at [ebp+8] and
-// [ebp-0x10] before the walk and strength-reduces the army address
-// into a single decrementing byte offset; spelling the same two loops out
-// in the caller re-reads `this->enemy_side` every iteration and re-derives
-// the whole 1352-byte stride each time. DC row 973 forms the army address
-// before row 975's damage call: the address has its own target lifetime
-// (pointer or reference).
+// over one side's stacks, walking BACKWARDS; inlined, with no retail body.
+// DC row 973 forms the army address before row 975's damage call.
 DC_ADDRESS(0x03dabc, 0x6e)
 MAC_ADDRESS(0x03ea8c, 0x98)
 long type_AI_spellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
@@ -926,13 +883,10 @@ long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, TSk
 }
 
 // E:\gamedcs\ai_tactical.cpp:1035
-// The area-effect sweep, inlined into consider_spell and carrying no
-// retail body of its own. It tries every hex on the field and keeps
-// the best get_area_effect_value, skipping only the two off-field
-// margin columns - and it re-tests the 0..187 range in front of that
-// column test, which is why retail emits a range guard the loop bound
-// already guarantees. DC1039/1042 name getMasteryValue and
-// InInvisibleColumn: retain those nested calls inside the ordinary helper.
+// The area-effect sweep, inlined into consider_spell. It tries every hex on
+// the field and keeps the best get_area_effect_value, skipping only the two
+// off-field margin columns, and re-tests the 0..187 range in front of that
+// column test. DC1039/1042 name getMasteryValue and InInvisibleColumn.
 DC_ADDRESS(0x03dc50, 0x72)
 MAC_ADDRESS(0x03ece8, 0x100)
 void type_AI_spellcaster::considerAreaEffect(type_spell_choice& choice) const
@@ -1010,10 +964,8 @@ void type_AI_spellcaster::considerChainLightning(type_spell_choice& choice) cons
 }
 
 // E:\gamedcs\ai_tactical.cpp:1126
-// DC proves this const/reference helper and both ordered group calls.
-// Retail 0x43bb20 expands it but calls get_mass_damage_effect; the
-// get_mastery_value call in consider_summon (DC 3098/3167) gives that split
-// without a force-inline declaration or depth pin.
+// DC proves this const/reference helper and both ordered group calls;
+// inlined in its caller.
 DC_ADDRESS(0x03de90, 0x98)
 MAC_ADDRESS(0x03f018, 0xc0)
 void type_AI_spellcaster::considerMassDamage(
@@ -1041,9 +993,8 @@ long type_AI_spellcaster::getAgeValue(const army* enemy, type_enchant_data caste
                                          m_estimate.m_lowestDefense) / 3;
 }
 
-// DC ai_tactical.cpp:1158/1186.
-// Ordinary const overloads: callers expand them in retail; /OPT:REF drops
-// unreferenced retained bodies. Keep their source order before the callers.
+// DC ai_tactical.cpp:1158/1186. Ordinary const overloads, inlined at their
+// callers.
 DC_ADDRESS(0x03df5c, 0x1c4)
 MAC_ADDRESS(0x03f130, 0x148)
 long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
@@ -1160,7 +1111,6 @@ long type_AI_spellcaster::getAttackSkillValue(const army* ourArmy, const army* e
         return 0;
     army testArmy = *ourArmy;
     testArmy.m_monInfo.attackSkill += bonus;
-    // Preserve the logical result through getEstimatedDamage's bool interface.
     bool ranged = ourArmy->canShoot(0);
     double oldDamage = ourArmy->getEstimatedDamage(enemy, 100, ranged, 0);
     double newDamage = testArmy.getEstimatedDamage(enemy, 100, ranged, 0);
@@ -1321,12 +1271,8 @@ long type_AI_spellcaster::getDefenseSkillValue(const army* ourArmy, long duratio
     return getDefenseBoostValue(ourArmy, enemy, duration, increase);
 }
 
-// The shared SpellCastWorkChance call-site spelling is settled here
-// here, and it is ONE naming: the normalised creature-spell flag is a NAMED
-// LOCAL, not an inline `creature_spell != 0` argument.
-
-//     long creature_cast = creature_spell != 0;
-//     ... SpellCastWorkChance(spell, side, enemy, 0, 1, creature_cast)
+// The SpellCastWorkChance creature-spell flag is a named local, not an
+// inline `creature_spell != 0` argument.
 VA(0x00438a10, 0xAD)
 DC_ADDRESS(0x03ed34, 0x174)
 MAC_ADDRESS(0x040960, 0x174)
@@ -1480,9 +1426,6 @@ long type_AI_spellcaster::getWeaknessValue(const army* enemy, type_enchant_data 
         const army* target = enemy->getAITarget();
         if (target != 0
                 && enemy->getAITargetTime() <= 1) {
-            // Complete homes both operands before selecting their address.
-            // That is includes.h's by-value int wrapper around the
-            // reference-returning selector, rather than cppMin directly.
             long capped = min(
                 static_cast<int>(akSpellTraits[SPELL_WEAKNESS]
                                      .m_mastery_bonus[caster.m_mastery]),
@@ -1546,8 +1489,7 @@ long type_AI_spellcaster::getBlindValue(const army* enemy, type_enchant_data cas
 }
 
 // Original: type_AI_spellcaster::get_move_order_change_value; ai_tactical.cpp:1767
-// The two exchange estimates and null-target return expand in both Complete
-// callers, getMuckAndMireValue and getSpeedValue.
+// Inlined in both callers, getMuckAndMireValue and getSpeedValue.
 DC_ADDRESS(0x03f9d0, 0x52)
 MAC_ADDRESS(0x0415c0, 0x8c)
 long type_AI_spellcaster::getMoveOrderChangeValue(const army* ourArmy) const
@@ -1580,18 +1522,9 @@ long type_AI_spellcaster::getMoveOrderChangeValue(const army* ourArmy) const
 // spell's remaining turns, then turned back into an absolute time by
 // adding `time` again before the odds cap.
 
-// The work chance is the FLOAT round-trip (`fild dword / fstp DWORD /
-// fmul dword`), not the double one, as in get_damage_value.
-
-// The null-target test is inverted so the zero arm is the FALL-THROUGH
-// (`if (target == 0) { effect = 0; } else { ... }` - arm layout follows the
-// source's test polarity), and the army pointer is hoisted out of the loop
-// with `j++, our_army++` in the increment instead of re-subscripting
-// `&armies[side][j]` inside the body (the subscript form folds j into the
-// pre-header base address, where retail computes `&armies[side][0]` with no
-// j at all; set_melee_enemies below carries the same hoisted form). The
-// Dreamcast-authored Is and cannot_attack calls keep those inlined retail
-// tests, retail's stack allocation and final combat-value expression order.
+// The null-target test is inverted so the zero arm comes first, and the army
+// pointer is hoisted out of the loop with `j++, our_army++` in the
+// increment, as in set_melee_enemies.
 VA(0x00439270, 0x28B)
 DC_ADDRESS(0x03fa24, 0x1fa)
 MAC_ADDRESS(0x04164c, 0x330)  // anchor-vtable
@@ -1715,12 +1648,8 @@ long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data c
                            caster.m_duration);
 }
 
-// The work chance stays FLOAT to __ftol here exactly as in
-// get_damage_value - `fild dword / fstp DWORD / fmul dword` - while the
-// closing odds ladder is the TU's usual double one.
-// DC's ranged byte record is compatible with lowered bool. Keep the
-// canShoot bool result in its native domain through getLossCombatValue's
-// bool parameter: retail forwards the saved byte without test/setne.
+// DC's ranged byte record is a lowered bool; canShoot's bool result goes
+// straight to getLossCombatValue's bool parameter.
 VA(0x004396e0, 0x2BC)
 DC_ADDRESS(0x03fde4, 0x27c)
 MAC_ADDRESS(0x041bd8, 0x2d8)
@@ -1819,10 +1748,8 @@ long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_ench
     return getProtectionValue(ourArmy, eSchoolWater, 5, caster.m_duration, amount);
 }
 
-// DC ai_tactical.cpp:2116-2129. Ordinary const helper;
-// Complete expands it in the spell valuations. Mac retains direct calls
-// from mirth, sorrow, defense boost, misfortune, blind, curse and
-// forgetfulness, with defense boost passing zero for movedThisTurn.
+// DC ai_tactical.cpp:2116-2129. Ordinary const helper, inlined in the spell
+// valuations (Mac retains it).
 DC_ADDRESS(0x040130, 0x118)
 MAC_ADDRESS(0x042038, 0x94)
 double type_AI_spellcaster::getDuration(long turns, unsigned char movedThisTurn) const
@@ -1884,8 +1811,7 @@ long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data 
     return getCancelValue(&testArmy, 0);
 }
 
-// DC ai_tactical.cpp:2199 names the by-value min wrapper; its parameter
-// copies reproduce retail's healed/damage stack slots.
+// DC ai_tactical.cpp:2199 names the by-value min wrapper.
 VA(0x00439c30, 0x10F)
 DC_ADDRESS(0x0403c0, 0x1b0)
 MAC_ADDRESS(0x042748, 0x61c)
@@ -1942,20 +1868,11 @@ long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_dat
 // minus what it already retaliates for is the cap on how many of the
 // mastery row's retaliations can actually be used.
 
-// The traits row is the CONSTANT form - 58 folded into the displacement
-// as `[akSpellTraits + 4*mastery + 0x1f04]` - not the run-time
-// `caster.spell` form get_fire_shield_value carries.
-
-// DC ai_tactical.cpp:2292/2306 and Mac 0:0x4392c/0:0x439b0 call
-// AI_get_attack_damage and get_attack_boost_value. Complete expands
-// both ordinary helpers at this site. The second creatureId test is bit 15
-// (attacks twice) crossed with
-// bit 2 (shoots) clear: a melee double-attacker gets one more swing out
-// of the deal than a shooter does.
-// Dreamcast and Mac retain getAttackBoostValue; retail VC6 expands it.
-// Mac 0x439f4/0x43a34/0x43a54 has three early refusals. Its first damage
-// result is stored before scaling and then replaced by min with our hitpoints.
-// DC names the melee count enemies; keep the same canonical damage helpers.
+// DC ai_tactical.cpp:2292/2306 call AI_get_attack_damage and
+// get_attack_boost_value, inlined here. The second creatureId test is bit
+// 15 (attacks twice) crossed with bit 2 (shoots) clear: a melee
+// double-attacker gets one more swing out of the deal than a shooter does.
+// DC names the melee count enemies.
 VA(0x00439e80, 0x290)
 DC_ADDRESS(0x040628, 0x1be)
 MAC_ADDRESS(0x0437bc, 0x20c)
@@ -1969,8 +1886,7 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
     if (m_winLikely)
         return 0;
     long bonus = akSpellTraits[SPELL_COUNTERSTRIKE].m_mastery_bonus[caster.m_mastery];
-    // DC 0x40692 retains min; Mac 0x43848..0x43878 selects the two
-    // homed operands before overwriting the bonus/extra stack slot.
+    // DC 0x40692 retains min.
     long extra = min(m_meleeEnemies[ourArmy->m_bitIndex].m_count - mult, bonus);
     if (extra <= 0)
         return 0;
@@ -1996,7 +1912,6 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
 
 // The Efreet Sultan already carries a fire shield, so its own casting
 // is docked a flat 20 off the mastery row before the `<= 0` bail.
-// Dreamcast and Mac retain getAttackBoostValue; retail VC6 expands it.
 VA(0x0043a110, 0x222)
 DC_ADDRESS(0x0407e8, 0x140)
 MAC_ADDRESS(0x0439c8, 0x1ac)
@@ -2066,10 +1981,7 @@ long type_AI_spellcaster::getBerserkValue(const army* enemy, type_enchant_data c
 }
 
 // DC ai_tactical.cpp:2417/2427/2445 names cannot_attack and the by-value
-// min/max wrappers. The wrappers' parameter copies are visible in retail as
-// the two stack temporaries around each reference-returning selector. Clang
-// cannot choose between this project's int and double overloads for Win32
-// long, but VC6 selects the int wrapper.
+// min/max wrappers (VC6 selects the int wrapper).
 VA(0x0043a500, 0x16E)
 DC_ADDRESS(0x040ac0, 0xf6)
 MAC_ADDRESS(0x043d40, 0x228)
@@ -2145,10 +2057,8 @@ void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice& choice, l
 // exactly as in get_caliph_value: the family's second parameter is a
 // type_enchant_data, and a type_spell_choice derives from it.
 
-// DC ai_tactical.cpp:2532/2533 calls CannotAttack and GetSpellTime;
-// Complete expands their Army.h bodies in this loop. The +0x198 row is
-// read HERE by spell id, which is what the split of army.h's spell-row
-// view out of the round view exists for.
+// DC ai_tactical.cpp:2532/2533 calls CannotAttack and GetSpellTime. The
+// +0x198 row is read here by spell id.
 VA(0x0043a910, 0x150)
 DC_ADDRESS(0x040dc8, 0xf6)
 MAC_ADDRESS(0x044234, 0x1dc)
@@ -2192,9 +2102,8 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice& choice, long gr
 // flag is set before the first choose_melee_action, not after the
 // choice is taken - the damage is done by asking, not by accepting.
 
-// DC line 2593 calls get_current_army, IsIncapacitated and is_last_action.
-// The shared short-circuit expression lets VC6 expand the ordinary helper;
-// isLastAction keeps the direct loop bound.
+// DC line 2593 calls get_current_army, IsIncapacitated and is_last_action
+// in one short-circuit expression.
 VA(0x0043aa60, 0x235)
 DC_ADDRESS(0x040ec0, 0x15c)
 MAC_ADDRESS(0x044410, 0x218)  // anchor-callee // MAC_ABSTRACTION_FROM(tokens1:d3c7e499796f,32.4627): isIncapacitated now reads durations through getSpellTime; native Mac 0x44568 expands spell slots 62/70/74.
@@ -2241,11 +2150,10 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
 // E:\gamedcs\ai_tactical.cpp:2608
 // Resurrection and Animate Dead share one pricer: for each of our own
 // stacks the spell would land on, how many creatures come back and
-// what are they worth. The two lookups are cmbtmgr.h's own
-// find_resurrection_target SELECTOR inlined - the header already
-// records that retail expands it rather than emitting it - and the
-// second one exists because a DOUBLE-WIDE stack (creature bit 0)
-// occupies two hexes and the lookup may name the other one.
+// what are they worth. The two lookups are cmbtmgr.h's inlined
+// find_resurrection_target selector; the second exists because a
+// DOUBLE-WIDE stack (creature bit 0) occupies two hexes and the lookup may
+// name the other one.
 
 // Two refusals shaped by the AI's own caution: a stack that has lost
 // less than three quarters of its troops is not worth healing unless
@@ -2259,8 +2167,7 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
 
 // DC lines 2674-2675 call get_current_army and is_last_action in one
 // short-circuit expression. The existing healable count is clamped through
-// min rather than a second healed variable; the native Mac body likewise
-// uses the selected count directly in combat valuation.
+// min rather than a second healed variable.
 VA(0x0043aca0, 0x2AE)
 DC_ADDRESS(0x04101c, 0x25c)
 MAC_ADDRESS(0x044628, 0x2e0)  // anchor-callee; MAC_ABSTRACTION_FROM(tokens1:4d0275565ac1,28.9402): the only change since this checkpoint is the DC-proven akSpellTraits table and field spelling (2245b30a8, 72ee10712); CW addresses the restored table declaration differently.
@@ -2331,8 +2238,7 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
 // caster's power, all scaled by how many of the victim there are and
 // divided by the healed stack's own hit points.
 
-// DC lines 2742-2743 call get_current_army and is_last_action. VC6 expands
-// the ordinary helper here.
+// DC lines 2742-2743 call get_current_army and is_last_action.
 VA(0x0043af50, 0x284)
 DC_ADDRESS(0x041278, 0x228)
 MAC_ADDRESS(0x044908, 0x274)  // anchor-callee
@@ -2635,8 +2541,8 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice& choice) const
     long damage = min(choice.getMasteryValue(), total);
     long remaining = g_combatManager->m_numArmies[m_side];
     for (; remaining-- > 0; ++ourArmy) {
-        // Retail tests immobilization before the three spell influences;
-        // keep the broader cannotAttack helper for the remaining cases.
+        // Immobilization is tested before the three spell influences; the
+        // broader cannotAttack helper covers the remaining cases.
         if (ourArmy->is(creatureImmobilized) || ourArmy->cannotAttack())
             continue;
         const army* target = ourArmy->getAITarget();
@@ -2741,12 +2647,9 @@ void type_AI_spellcaster::considerSpell(type_spell_choice& choice) const
 }
 
 // E:\gamedcs\ai_tactical.cpp:3191
-// Both retail builds ask ourArmy for target time: Windows 0x43bfda/0x43bfe2
-// keeps the first army in ESI while the selected target is EDI; Mac
-// 0x45d88/0x45d94 passes the first army in r29 to speed and target-time calls.
-// This census intentionally reuses that same first army across iterations;
-// neither retail body increments its pointer. Preserve the helper calls.
-// Mac's zeroing entry is bzero; the Windows/DC spelling remains memset.
+// Both retail builds ask the first army for target time: this census reuses
+// that same first army across iterations, and neither increments its
+// pointer.
 VA(0x0043bf20, 0x119)
 DC_ADDRESS(0x0420ac, 0xc4)
 MAC_ADDRESS(0x045c80, 0x190)  // anchor-global // MAC_ABSTRACTION_FROM(tokens1:153aae567bb6,36.0000): isIncapacitated now reads durations through getSpellTime; native Mac 0x45cc4 expands spell slots 62/70/74.
@@ -2805,11 +2708,8 @@ void type_AI_spellcaster::addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
 // the one already recorded, back into enemies[]. worst_enemies[] is
 // then the per-stack maximum of the two.
 
-// Complete expands addEnemy at both census sites and setWorstEnemies at
-// the tail. DC ai_tactical.cpp:3284 also names CannotAttack and
-// GetSpellTime; Complete expands their Army.h checks here. Their ordinary
-// definitions preserve the source calls and the reference parameter used
-// for each enemy-data accumulator.
+// Complete inlines addEnemy at both census sites and setWorstEnemies at the
+// tail. DC ai_tactical.cpp:3284 also names CannotAttack and GetSpellTime.
 VA(0x0043c040, 0x2E6)
 DC_ADDRESS(0x04227c, 0x178)
 MAC_ADDRESS(0x045f34, 0x244)  // anchor-global
@@ -2852,8 +2752,7 @@ void type_AI_spellcaster::findEnemyAttacks()
     setWorstEnemies();
 }
 
-// DC ai_tactical.cpp:3312 names GetSpellTime for the Bloodlust guard;
-// Complete expands its spell-influence accessor.
+// DC ai_tactical.cpp:3312 names GetSpellTime for the Bloodlust guard.
 VA(0x0043c330, 0x16C)
 DC_ADDRESS(0x0423f4, 0xd0)
 MAC_ADDRESS(0x046178, 0xd8)
@@ -2954,8 +2853,8 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
 // The scan itself: walk the OTHER side's stacks and answer "the fight
 // is already decided" in field_1c unless some enemy is still magic-
 // vulnerable (creature bit 21 clear), still alive, and still able to
-// act (creature bit 6 clear). The walk is the TU's `count-- > 0`
-// pointer form, the same one consider_teleport carries.
+// act (creature bit 6 clear). The walk is the TU's `count-- > 0` pointer
+// form, as in consider_teleport.
 DC_ADDRESS(0x0425a8, 0x68)
 MAC_ADDRESS(0x046528, 0xb0)
 void type_AI_spellcaster::checkSimulation()
@@ -2976,9 +2875,8 @@ void type_AI_spellcaster::checkSimulation()
 }
 
 // E:\gamedcs\ai_tactical.cpp:3398
-// DC proves the const helper and early returns; cast_spell calls it
-// at line 3436. Complete also excludes Arrow Towers. Retail expands this
-// ordinary helper into 0x43c800; the bracket has no retained body for it.
+// DC proves the const helper and early returns; cast_spell calls it at line
+// 3436. Complete also excludes Arrow Towers. Inlined; no retail body.
 DC_ADDRESS(0x042610, 0xa0)
 MAC_ADDRESS(0x0465d8, 0x8c)
 unsigned char type_AI_spellcaster::spellsNotRequired() const
@@ -3007,9 +2905,8 @@ unsigned char type_AI_spellcaster::spellsNotRequired() const
 // above level 2 - Recanter's Cloak. The other two are the spell's own
 // traits bits: bit 0 gates it at all, and bit 9 marks the spells that
 // still make sense while RETREATING.
-// Original ?cast_spell@type_AI_spellcaster@@QAA_N_N@Z proves bool return
-// and bool retreating. Preserve AICheckRetreat's logical result directly
-// through this interface rather than inventing a byte-domain boundary.
+// Original ?cast_spell@type_AI_spellcaster@@QAA_N_N@Z proves bool return and
+// bool retreating.
 VA(0x0043c800, 0x308)
 DC_ADDRESS(0x0426b0, 0x2e4)
 MAC_ADDRESS(0x046664, 0x350)
