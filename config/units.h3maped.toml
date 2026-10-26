@@ -121,6 +121,23 @@ editor_o1_ob2_gr_windows = [
   "/D_WINDOWS",
 ]
 
+# Options.cpp and Colors.cpp pool their string literals read-only (/GF):
+# retail keeps their section and setting names (0x53fb3c..0x53fb94) and
+# "game.pal" (0x531cb8) in .rdata, where every other editor object's
+# literals sit in .data.
+editor_o1_ob2_gr_gf_windows = [
+  "/nologo",
+  "/c",
+  "/O1",
+  "/Ob2",
+  "/MT",
+  "/GX",
+  "/GR",
+  "/GF",
+  "/DNDEBUG",
+  "/D_WINDOWS",
+]
+
 editor_fastcall_o1_ob2_gr_windows = [
   "/nologo",
   "/c",
@@ -450,7 +467,7 @@ flags = "editor_o1_ob2_gr_windows"
 [[unit]]
 unit = "Colors"
 source = "src/editor/Colors.cpp"
-flags = "editor_o1_ob2_gr_windows"
+flags = "editor_o1_ob2_gr_gf_windows"
 
 [[unit]]
 unit = "GameMap"
@@ -625,7 +642,7 @@ flags = "editor_o1_ob2_gr_windows"
 [[unit]]
 unit = "Options"
 source = "src/editor/Options.cpp"
-flags = "editor_o1_ob2_gr_windows"
+flags = "editor_o1_ob2_gr_gf_windows"
 
 [[unit]]
 unit = "OptionsDlg"
