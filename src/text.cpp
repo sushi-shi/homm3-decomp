@@ -801,9 +801,9 @@ unsigned char initializeTentColorText()
 }
 
 // Read each window's run of rollover/right-click text pairs in file order,
-// skipping two rows between runs. DC 0x161b14..0x1622f0 checks each
-// section label with CheckSpreadsheetResource; the final check uses i,
-// whereas the section headers use i - 1. Its release body is empty.
+// skipping two rows between runs. DC checks each section label with
+// CheckSpreadsheetResource; the final check uses i, whereas the section
+// headers use i - 1. Its release body is empty.
 VA(0x005b98b0, 0x405)
 DC_ADDRESS(0x161ae4, 0x822)
 MAC_ADDRESS(0x1ae700, 0x830)

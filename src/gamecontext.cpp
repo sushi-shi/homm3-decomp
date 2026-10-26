@@ -21,27 +21,12 @@ VA_COMPGEN(0x004eccf0, 0xb, STATIC_CTOR, g_videoGameState)
 DATA(0x0069923c)
 int& g_videoGameState = g_defaultGameContext;
 
-// The 212-byte retail initializer constructs four unsigned-long bitsets in
-// one reused stack temporary, then copies them into 0x699240..0x69924f.
-// Its successive masks are 1, 3, 5 and 15. Game and single-selection readers
-// index this table by the context selector and test individual feature bits.
-
-// Each entry is a TGameContextFeatures built from an explicit bitset
-// temporary. Its constructors (cb 30) are inline candidate sites after
-// each bitset<4>(unsigned long) constructor, so the depth-2 site
-// list is eight long: each constructor's nested budget leaves bitset::_Tidy
-// expanded but refuses set (budgets 29, 35, 46 and 82 against its cb 91),
-// which keeps retail's four set calls. The same per-mask construction
-// reproduces artifact's slot table.
-// Readers use each entry as the bitset; a bitset member would add access
-// cost that changes updateMainWindow's expansion and onSetAsHostMsg.
-// A plain bitset array expands the first two set calls (budgets 137 and
-// 121), and implicit scalar initializers construct directly into the array
-// without retail's stack temporary. <bitset> alone emits the retail 32-byte
-// locale-id guard; <iostream> would add unmatched stream initialization.
-// Mac's table is built by a different compiland's initializer (0x221ee4,
-// which also runs <iostream> and terrain.h initialization) from plain bitset
-// temporaries four bytes apart.
+// Four unsigned-long bitsets with successive masks 1, 3, 5 and 15. Game and
+// single-selection readers index this table by the context selector and
+// test individual feature bits. Each entry is a TGameContextFeatures built
+// from an explicit bitset temporary, as is artifact's slot table; readers
+// use each entry as the bitset. Only <bitset> is included, not <iostream>.
+// Mac's table is built by a different compiland's initializer.
 VA_COMPGEN(0x004ecd00, 0xd4, STATIC_CTOR, g_gameContextFeatures)
 DATA(0x00699240)
 TGameContextFeatures g_gameContextFeatures[4] = {

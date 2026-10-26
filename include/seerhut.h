@@ -212,9 +212,9 @@ public:
 
     // Native DC ?QuestActiveforPlayer@TSeerHut@@QBA_NE@Z proves a const
     // bool-returning predicate with a byte argument (SeerHut.h:112).
-    // Complete adds the live quest and
-    // quest-log text tests; both retail consumers reload the quest after
-    // the visit test because the virtual text access can change the hut.
+    // Complete adds the live quest and quest-log text tests; both consumers
+    // reload the quest after the visit test because the virtual text access
+    // can change the hut.
     DC_ADDRESS(0x003250, 0x22)
     bool questActiveforPlayer(
         const unsigned char playerNum) const
@@ -233,8 +233,8 @@ public:
         return (m_visitedPlayers & (1 << playerNum)) != 0;
     }
 
-    // E:\gamedcs\seerhut.h:121 Retail corroborates the signed
-    // NameIndex load, 16-byte vector stride and inlined c_str() fallback.
+    // E:\gamedcs\seerhut.h:121. The signed NameIndex load, 16-byte vector
+    // stride and c_str() fallback.
     DC_ADDRESS(0x020244, 0x1c)
     const char* getName() const
     {

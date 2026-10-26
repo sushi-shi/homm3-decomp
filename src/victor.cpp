@@ -294,7 +294,7 @@ int __stdcall allocimage(imgdes* image, int width, int height, int bitsPerPixel)
 // Retail-only allocation worker. One global-memory block owns the header
 // and palette, plus pixels unless a DIB section supplies the pixel buffer.
 // Dimensions are checked for zero only; the signed stride arithmetic and
-// failure cleanup below follow the pinned executable's actual contract.
+// failure cleanup below follow the executable's actual contract.
 VA(0x006035c0, 0x1d6)  // anchor-caller allocimage + imgdes / bitmap header / Win32 allocation
 int __cdecl victorAllocateImage(imgdes* image, int width, int height,
                                int bitsPerPixel, unsigned int useDibSection)
@@ -380,10 +380,10 @@ void __stdcall freeimage(imgdes* image)
     }
 }
 
-// Retail loadpcx calls this after filling an indexed palette. The optional
-// DIB receives the same RGBQUAD rows through the recovered callback ABI.
-// The DC stubs contain no implementation of this Windows-only operation.
-// Only a failed memory DC sets the status, which lives in a stack slot.
+// loadpcx calls this after filling an indexed palette. The optional DIB
+// receives the same RGBQUAD rows through the recovered callback ABI. The DC
+// stubs contain no implementation of this Windows-only operation. Only a
+// failed memory DC sets the status.
 VA(0x00603810, 0x9a)  // anchor-caller loadpcx + GDI selection/cleanup + imgdes layout
 int __stdcall victorUploadPalette(imgdes* image)
 {
@@ -452,10 +452,9 @@ int __stdcall victorValidateBitmap(imgdes* image)
 }
 
 // Both the allocation worker and loadpcx use this grayscale initialization.
-// Retail writes red, green, blue, reserved in that order and expands the
-// palette-upload helper, discarding its status but preserving GDI cleanup.
-// /Ob2 expands the upload helper. The bitmap-header snapshot keeps retail's
-// depth reload; index and shade advance together in the for clause.
+// Red, green, blue, reserved are written in that order, and the
+// palette-upload helper's status is discarded while its GDI cleanup stays.
+// Index and shade advance together in the for clause.
 VA(0x006039c0, 0xfc)  // anchor-callers alloc/loadpcx + RGBQUAD stores / GDI cleanup
 void __stdcall victorInitializeGrayscalePalette(imgdes* image)
 {
@@ -481,10 +480,9 @@ void __stdcall victorInitializeGrayscalePalette(imgdes* image)
     }
 }
 
-// Provisional helper name. flipimage calls this at 0x603b7e with output
-// height then width. The unsigned inclusive extents and ordered stores are
-// byte-proven. Its returned EAX is overwritten by the caller, so the source
-// models a void result rather than inventing a value to reserve EAX.
+// Provisional helper name. flipimage calls this with output height then
+// width. The extents are unsigned and inclusive; the caller ignores the
+// result, so it is void.
 VA(0x00603ac0, 0x4d)  // anchor-caller flipimage + unsigned extent semantics; external Victor library
 void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
                                       unsigned int* height, unsigned int* width)
@@ -499,11 +497,10 @@ void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
         *height = secondHeight;
 }
 
-// Victor's module cleanups are reached only through g_victorModuleCleanups
-// (0x68d278), which nothing in the linked image reads; the lock records have
-// no other reader either. The owning Victor objects are unidentified, so the
-// bodies sit with the table. The first entry is a module with nothing to
-// release: 0x603b10 is a bare `ret`.
+// Victor's module cleanups are reached only through g_victorModuleCleanups,
+// which nothing in the linked image reads; the lock records have no other
+// reader either. The owning Victor objects are unidentified, so the bodies
+// sit with the table. The first entry is a module with nothing to release.
 VA(0x00603b10, 0x1)  // g_victorModuleCleanups[0]; external Victor library
 VA_AT(h3maped, 0x004fc350, 0x1)
 VA_AT(h3ccmped, 0x004630b0, 0x1)

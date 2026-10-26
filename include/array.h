@@ -37,13 +37,11 @@ public:
         m_array = 0;
     }
 
-    // Mac 0:0x177ad0 retains this CDPlayPlayer instantiation of destroy;
+    // Mac retains this CDPlayPlayer instantiation of destroy;
     // updateCurrentPlayers calls it explicitly, and the single-selection
-    // setup modes reach it through their CAutoArray destructor.
-    // Delegating to Destroy rather than writing the loop here is what keeps
-    // retail's virtual Get(i) dispatch: in a destructor VC6 assumes the
-    // exact type and devirtualizes, but inside the inlined Destroy - an
-    // ordinary member - Get stays a vtable call.
+    // setup modes reach it through their CAutoArray destructor. Delegating to
+    // Destroy keeps Get(i) a virtual call (a destructor would devirtualize
+    // it).
     DC_ADDRESS(0x08c148, 0x38)
     DC_ADDRESS(0x103084, 0x38)
     DC_ADDRESS(0x11ff64, 0x38)
@@ -73,15 +71,11 @@ public:
         m_size = m_allocSize = 0;
     }
 
-    // Retail's own shape, read off the one row the whole link carries for
-    // this member (0x558410, slot 1 of both CAutoArray vftables): the
-    // capacity test compares allocSize against size and not the other way
-    // round, allocSize grows BEFORE the allocation so `new` takes the new
-    // capacity rather than the sum, the copy is a `memcpy` of size*4 BYTES
-    // (retail inlines it as rep movsd + rep movsb over a byte count, which
-    // an element loop cannot produce) sharing the `if (pArray)` guard with
-    // the delete, and the tail stores through the VIRTUAL Put - `call
-    // [vfptr+0xc]`, slot 3 - after the count has already been bumped.
+    // The capacity test compares allocSize against size, allocSize grows
+    // BEFORE the allocation so `new` takes the new capacity, the copy is a
+    // `memcpy` of size*4 BYTES sharing the `if (pArray)` guard with the
+    // delete, and the tail stores through the VIRTUAL Put after the count has
+    // already been bumped.
     DC_ADDRESS(0x08c1e4, 0x68)
     DC_ADDRESS(0x1030bc, 0x68)
     DC_ADDRESS(0x11ff9c, 0x68)

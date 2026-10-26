@@ -142,9 +142,8 @@ int TDimensionDoorWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-// The twin of the claim at 0x491eb0, to the byte: the two classes share
-// this exit path verbatim, which is why its 0x2c size shows up twice in
-// the carve.
+// The twin of the skuttle-boat window's exit path: the two classes share
+// it verbatim.
 
 // E:\gamedcs\dimensiondoorwindow.cpp:208
 VA(0x00491ac0, 0x2C)

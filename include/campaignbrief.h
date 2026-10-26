@@ -269,7 +269,7 @@ public:
         // original helper name and class ownership remain inferred.
         int getScenarioCount() const { return m_scenarios.size(); }
 
-        // Complete expands this shared cleanup in both load and the destructor.
+        // Inlined in both load and the destructor.
         MAC_ADDRESS(0x096afc, 0x78)
         void clearScenarios()
         {

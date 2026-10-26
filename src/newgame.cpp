@@ -201,11 +201,8 @@ void game::getLossConditionText(char* text)
 }
 
 // DC newgame.cpp:721-725 records the separate anytown_loc/town_loc points
-// (townLoc is declared before anyTownLoc); Mac 0x132d28 constructs the
-// point and compares its coordinates to -1. Lines 764/766 call GetArmyName
-// with count 2, and its text lookups name TTextResource::operator[]; the
-// shared source calls are retained. Mac O3 retains 38 direct calls on each
-// side.
+// (townLoc is declared before anyTownLoc). Lines 764/766 call GetArmyName
+// with count 2, and its text lookups name TTextResource::operator[].
 VA(0x005139e0, 0x64C)
 DC_ADDRESS(0x103a08, 0x5ac)
 MAC_ADDRESS(0x132a68, 0x820)

@@ -134,11 +134,9 @@ public:
 
     soundManager();
 
-    // DC SoundMgr.h:124. Complete's ShutDown (0x4f3690)
-    // deletes the manager with this body expanded - the vftable store and the three
-    // DeleteCriticalSection calls on +0x90 / +0xa8 / +0xc0 in that order.
-    // Non-virtual: the retail vftable 0x63fe54 has only baseManager's
-    // three slots.
+    // DC SoundMgr.h:124. Inlined in ShutDown's delete: the vftable store and
+    // the three DeleteCriticalSection calls on +0x90 / +0xa8 / +0xc0 in that
+    // order. Non-virtual: the vftable has only baseManager's three slots.
     DC_ADDRESS(0x0e6ebc, 0x38)
     ~soundManager()
     {

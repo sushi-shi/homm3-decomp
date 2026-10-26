@@ -34,19 +34,13 @@
 class t_memory_file : public TAbstractFile {
 public:
 
-    // Both constructors are defined inline in this module-local class.
-    // Mac retains their bodies at 0x223168 and 0x2231cc; Windows expands
-    // the owning form into 0x512c80 / 0x512d40 (vptr, ownsBuffer, the
-    // hundred-byte allocation, capacity, position) and the borrowing form
-    // into 0x512e00, over a buffer it must not free.
+    // Both constructors are defined inline in this module-local class: the
+    // owning form (vptr, ownsBuffer, the hundred-byte allocation, capacity,
+    // position) and the borrowing form, over a buffer it must not free.
+    // Mac retains both bodies.
 
-    // The four members are assigned in the BODY, not in a member-initialiser
-    // list, and the difference is visible: an initialiser list emits the
-    // derived vptr store AFTER the members, which leaves the base class's
-    // own store live across the allocation call and gives TWO vptr stores.
-    // Assigning in the body puts the two stores adjacent, VC6 drops the
-    // base one, and what is left is retail's single `mov [this], 0x640264`
-    // ahead of the flag.
+    // The four members are assigned in the body, not a member-initialiser
+    // list.
     MAC_ADDRESS(0x223168, 0x64)
     t_memory_file()
     {
@@ -56,8 +50,7 @@ public:
         m_position = 0;
     }
 
-    // Mac loads capacity from netMsg+0xc inside this retained constructor;
-    // Windows expands that same load at 0x512e25.
+    // Capacity comes from netMsg+0xc.
     MAC_ADDRESS(0x2231cc, 0x2c)
     t_memory_file(CNetMsg* netMsg)
     {

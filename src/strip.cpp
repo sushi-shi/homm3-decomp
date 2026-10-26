@@ -55,9 +55,7 @@ void strip::draw(TCreatureType divideCreature)
 }
 
 // DC 0x15892a constructs an unused message before DrawOwner and only
-// writes its id. This is separate from DrawNumber's live message:
-// neither desktop body initializes that unused local before DrawOwner
-// (Windows 0x5a9dbf, Mac 0x19b064).
+// writes its id, separately from DrawNumber's live message.
 VA(0x005a9db0, 0x2A2)
 DC_ADDRESS(0x158910, 0xf0)
 MAC_ADDRESS(0x19b040, 0x15c)
@@ -91,8 +89,7 @@ void strip::drawIcons(unsigned char update, TCreatureType divideCreature)
 }
 
 // E:\gamedcs\strip.cpp:124
-// DC125 constructs message,126 sets its id; DrawIcons expands this ordinary
-// helper. The 12-state source-fact family preserves all five tracked bodies.
+// DC125 constructs message, 126 sets its id; inlined in DrawIcons.
 DC_ADDRESS(0x158a00, 0x80)
 MAC_ADDRESS(0x19b19c, 0xa8)
 void strip::drawNumber(int i)
@@ -164,9 +161,8 @@ void strip::drawOwner(int frame)
         msg.m_extra = widget::WIDGET_DRAWN;
         m_win->broadcastMessage(msg);
     } else {
-        // Mac writes SET_IMAGE before loading the portrait at 0x19b410..0x19b42c.
-        // Keep the direct assignment and both broadcasts (0x19b434/0x19b450);
-        // an early portrait-name local changes Windows scheduling and cleanup.
+        // SET_IMAGE is written before the portrait loads, with both
+        // broadcasts.
         msg.m_codeX = widget::WIDGET_SET_IMAGE;
         msg.m_extraText = akHeroTraits[frame].m_large_portrait_name;
         m_win->broadcastMessage(msg);
@@ -218,7 +214,7 @@ void strip::drawMonster(int i, int frame)
 }
 
 // E:\gamedcs\strip.cpp:253
-// Ordinary helper expanded at all three DrawIcons call sites. DC254
+// Ordinary helper inlined at all three DrawIcons call sites. DC254
 // constructs message and 255 sets its id. i counts 1..7 for army slots and
 // zero for the owner's selector widget.
 DC_ADDRESS(0x158cbc, 0x78)

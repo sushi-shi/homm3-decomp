@@ -362,10 +362,9 @@ public:
         m_heroIndex = -1;
     }
 
-    // DC SingleSelectionWindow.h:138. Complete keeps the same source
-    // helper but expands both calls in SetupAdvancedOptions.  Retail x86
-    // directly proves that Complete changed the three independent stores
-    // from DC's hero/player/town statement order to town/player/hero.
+    // DC SingleSelectionWindow.h:138; inlined at both calls in
+    // SetupAdvancedOptions. Complete changes the three independent stores
+    // from DC's hero/player/town order to town/player/hero.
     DC_ADDRESS(0x147610, 0x1a)
     void resetAdvancedOptions()
     {

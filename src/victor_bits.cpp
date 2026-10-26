@@ -40,10 +40,9 @@ void __stdcall victorInsertBits(unsigned char* destination,
     *destination = (*destination & ~mask) | saved;
 }
 
-// Retail-only bit-range extraction, paired with victorInsertBits by
-// flipimage. It left-aligns the source range and clears the trailing bits.
-// Advancing the destination parameter itself (no cursor copy) reproduces
-// retail's separate empty-count tail, which still addresses the parameter.
+// Complete-only bit-range extraction, paired with victorInsertBits by
+// flipimage. It left-aligns the source range and clears the trailing bits,
+// advancing the destination parameter itself.
 VA(0x006047b0, 0x73)  // anchor-caller flipimage + trailing bit-mask table
 void __stdcall victorExtractBits(unsigned char* destination,
                                  const unsigned char* source, int offset, int count)

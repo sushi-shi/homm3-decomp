@@ -18,17 +18,14 @@ DATA(0x0068d2a0) unsigned char g_victorPcxDefaultPalette[48] = {
 DATA(0x0068d2d0) unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
 
 // Dreamcast confirms the public fname/desimg API but contains only a stub.
-// Retail proves five decode modes, bounded input refills, paired RGB plane
-// accumulation and the palette fallback below. Short input ends decoding
-// without introducing a new error; the remaining palette work still runs.
-// The nibble arm jumps to the indexed row copy, which the converted RGB
-// row falls into; partial RGB planes continue without advancing the row.
-// Every handled row steps the destination up one stride, as retail does.
-// Victor is C: every local is declared at the top of the function, and
-// VC5 allocates registers by that declaration order (the input buffer
-// precedes its read index, the refill counts precede both). The refill
-// point is the buffered count less two encoded rows, unless that is not
-// positive.
+// Five decode modes, bounded input refills, paired RGB plane accumulation
+// and the palette fallback below. Short input ends decoding without
+// introducing a new error; the remaining palette work still runs. The
+// nibble arm jumps to the indexed row copy, which the converted RGB row
+// falls into; partial RGB planes continue without advancing the row. Every
+// handled row steps the destination up one stride. Victor is C: every local
+// is declared at the top of the function. The refill point is the buffered
+// count less two encoded rows, unless that is not positive.
 VA(0x00603e00, 0x494)  // anchor-caller PCX importers + RLE/plane/palette helper sequence
 int __stdcall loadpcx(const char* filename, imgdes* image)
 {

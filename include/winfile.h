@@ -83,10 +83,9 @@ protected:
 
 private:
 
-    // E:\gamedcs\winfile.h:90-92 - the one header-defined method (the
-    // DC winfile.obj contributor segment 0x198864-0x19886f is
-    // attributed to winfile.h). No retail body; the retail ctor
-    // expands these member initializations.
+    // E:\gamedcs\winfile.h:90-92 - the one header-defined method (the DC
+    // contributor segment is attributed to winfile.h); inlined into the
+    // constructor.
     DC_ADDRESS(0x198864, 0xc)
     void init()
     {

@@ -31,10 +31,9 @@ VA(0x005eee00, 0x265)
 DC_ADDRESS(0x18e3b8, 0x4)
 bool TFileVersionInfo::getVersionInfo(const char* name, std::string* buffer) const
 {
-    // The PC implementation is absent from DC's stub. Retail normalizes
-    // both WinAPI results before preserving this byte through cleanup.
-    // Both language/code-page prefixes are .rdata arrays (0x643b24,
-    // 0x643b40), not pooled .data literals.
+    // The PC implementation is absent from DC's stub. Both WinAPI results
+    // are normalized to bool. Both language/code-page prefixes are their
+    // own arrays, not pooled literals.
     DATA(0x00643b24) static const char usEnglishUnicodeBlock[] =
         "\\StringFileInfo\\040904B0\\";
     DATA(0x00643b40) static const char usEnglishAnsiBlock[] =

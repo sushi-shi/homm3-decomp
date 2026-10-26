@@ -88,8 +88,8 @@ public:
     void update(bool forceIt);
     void checkUpdate();
 
-    // E:\gamedcs\MouseMgr.h:210/215. Dreamcast emits these header helpers
-    // in kb.obj/adventuremapwindow.obj; Complete folds both into direct loads.
+    // E:\gamedcs\MouseMgr.h:210/215. Dreamcast emits these header helpers in
+    // kb.obj/adventuremapwindow.obj; Complete inlines both.
     // DC MouseMgr.h:189-200 (Enable/Disable) returns DisableCount without
     // mutating it in this build. SetPointer discards both results.
     DC_ADDRESS(0x01f0d0, 0xe)
@@ -118,8 +118,8 @@ public:
         return m_set;
     }
 
-    // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
-    // source helper while Complete's /Ob2 lowers it to the field_68 test.
+    // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this source
+    // helper (the field_68 test).
 DC_ADDRESS(0x038064, 0xa)
 unsigned char isVis() const { return m_hideCount == 0; }
 

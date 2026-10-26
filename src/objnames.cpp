@@ -82,21 +82,17 @@ static const int g_adventureObjectEnterableFromNorthIds[] = {
 // It zeroes all 232 rows (pointing every name at the shared empty
 // literal and seeding nameRow with the row's own index), replays five
 // .rdata override tables over them, then loads objnames.txt, measures
-// the total length of its first 232 lines, buys ONE buffer for all of
-// them through a function-local TAutoArrayPtr<char> at 0x691688, and
-// re-points each row's name into it.
+// the total length of its first 232 lines, buys ONE buffer for all of them
+// through a function-local TAutoArrayPtr<char>, and re-points each row's
+// name into it.
 
-// Its throw expands the shared derived-exception initialization (the
-// derived vftable) while gzinflatebuf keeps its 0x4d6b80 COMDAT; the body
-// lives in exceptions.h so both callers see it. Expansion does not
-// establish the original inline qualifier.
+// Its throw uses the shared derived-exception initialization, whose body
+// lives in exceptions.h so both this TU and gzinflatebuf see it.
 VA(0x0041b500, 0x28B)
 MAC_ADDRESS(0x21d350, 0x6dc)
 void InitializeAdvObjectTypeTraitsTable()
 {
-    // Mac 0:0x21d918/0x21d95c retains array-owner assignment/cleanup.
-    // Retail guards the static with bit 0 of 0x691690 and registers its
-    // 22-byte destructor at 0x41b790 with _atexit.
+    // The function-local static's destructor is registered with _atexit.
     DATA_COMPGEN_GUARD(0x00691690, nameBufferGuard, nameBuffer)
 
     VA_COMPGEN(0x0041b790, 0x16, STATIC_DTOR, nameBuffer)

@@ -59,8 +59,8 @@ void slider::initialize(const char* resourceName)
     m_currentState = 0;
 }
 
-// DC's constructor public ends H_N@Z: hotKey is native bool. Complete
-// keeps all ten arguments and copies its byte into m_hotKeys unchanged.
+// DC's constructor public ends H_N@Z: hotKey is native bool, copied into
+// m_hotKeys unchanged.
 VA(0x005960D0, 0xA8)
 DC_ADDRESS(0x149ae8, 0xbc)
 MAC_ADDRESS(0x189360, 0xc8)
@@ -454,7 +454,7 @@ int slider::deselect(message* msg)
 }
 
 // Original: slider::GetRealWidth; slider.cpp:602
-// These accessors share iconWidget's retail representatives 0x4eab20/30.
+// These accessors share iconWidget's bodies.
 DC_ADDRESS(0x14a67c, 0x16)
 int slider::getRealWidth() const { return m_sliderSprite->GetWidth(); }
 
@@ -463,8 +463,8 @@ DC_ADDRESS(0x14a694, 0x16)
 int slider::getRealHeight() const { return m_sliderSprite->GetHeight(); }
 
 // Original: slider::zBufferDraw; slider.cpp:610
-// CodeView's formal type proves this two-argument const hook; retail folds
-// it onto the empty ret-8 representative at 0x5bc7e0.
+// CodeView's formal type proves this two-argument const hook; it shares the
+// empty two-argument body.
 DC_ADDRESS(0x14a6ac, 0x4)
 void slider::zBufferDraw(unsigned short* zBuffer, int id) const
 {

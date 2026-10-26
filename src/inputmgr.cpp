@@ -131,8 +131,7 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
 }
 
 // construction rather than this constructor body. The message array uses
-// its canonical default constructor; repeating its stores in an additional
-// derived wrapper would introduce a second clear pass absent from retail.
+// its canonical default constructor.
 VA(0x004ec460, 0x6F)
 DC_ADDRESS(0x0dd97c, 0x68)
 MAC_ADDRESS(0x10e068, 0x7c)
@@ -242,10 +241,9 @@ message inputManager::peekEvent()
 
 // Original: inputManager::GetCurrQuals; inputmgr.cpp:970
 // DC973..978 and the retained keyboard/mouse bridges use the same three
-// GetKeyState queries in control/alt/shift order. Complete expands this
-// ordinary helper in keyboardMessageHandler, mouseMessageHandler and
-// forceMouseMove; the member does not read its receiver.
-// Mac retains it at 0:0x10e498 using GetKeys and the adjacent key-bit helper.
+// GetKeyState queries in control/alt/shift order; inlined in
+// keyboardMessageHandler, mouseMessageHandler and forceMouseMove. The
+// member does not read its receiver.
 DC_ADDRESS(0x0ddd08, 0x42)
 MAC_ADDRESS(0x10e498, 0x80)
 int inputManager::getCurrQuals()
@@ -271,8 +269,8 @@ void inputManager::setKeyCodeType(int newType)
     flush();
 }
 
-// Mac 0:0x10e55c copies the pretranslated message codeY field to codeX.
-// Complete's Windows body decodes scan codes and shift state instead.
+// Mac copies the pretranslated message codeY field to codeX; Complete's
+// Windows body decodes scan codes and shift state instead.
 VA(0x004ec6f0, 0x1C6)
 DC_ADDRESS(0x0ddd60, 0x114)
 MAC_ADDRESS(0x10e55c, 0xc)

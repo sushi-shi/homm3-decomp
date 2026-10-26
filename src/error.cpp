@@ -14,8 +14,8 @@
 DATA(0x0063de60) const char TAllocationFailure::_s_kMessage[] =
     "Allocation failure.";
 
-// The game's retained empty-base calls at 0x41b62a and 0x514dbd reach a body
-// folded with philAI::philAI at 0x524360; the editor keeps its own copy.
+// The game's empty-base calls reach a body shared with philAI::philAI; the
+// editor keeps its own copy.
 MAC_ADDRESS(0x2207b8, 0x4)
 TDebugBreak::TDebugBreak()
 {

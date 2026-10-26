@@ -189,9 +189,8 @@ void TTownGateWindow::updateTownLocator(int i)
 }
 
 // E:\gamedcs\towngatewindow.cpp:168
-// Complete has no retained body: VC6 expands this ordinary source helper in
-// DoModal, WindowHandler, and TownGateSliderCallback. Dreamcast preserves the
-// call boundary and one loop scope; both builds agree on every operation.
+// Inlined in DoModal, WindowHandler, and TownGateSliderCallback. Dreamcast
+// preserves the call boundary and one loop scope.
 DC_ADDRESS(0x1699e8, 0x9e)
 MAC_ADDRESS(0x1b88bc, 0xc0)
 void TTownGateWindow::updateTownLocators()
@@ -233,13 +232,7 @@ void TTownGateWindow::doModal()
 // the chosen town id (or -1 for Cancel) and rewrites the message into the
 // shared END_DIALOG forward. Every state read goes through the file-local
 // window pointer, not `this` - only GetWidget uses the receiver.
-// The END_DIALOG forward is written out in BOTH deselect arms. Written
-// once after the inner switch it is a two-predecessor join, and VC6 sinks
-// it past the CANCEL arm while retail lets the OK arm fall straight into
-// it and reaches it from CANCEL with a backward jmp; the duplicate leaves
-// the first copy single-predecessor, and the cross-jumper then merges the
-// shared tail into retail's layout; retail's allocation (msg in ESI, `this`
-// in EDI, the zero in EBX) follows from that block order.
+// The END_DIALOG forward is written out in BOTH deselect arms.
 VA(0x005c2840, 0x13B)
 DC_ADDRESS(0x169ae0, 0xc6)
 MAC_ADDRESS(0x1b8a28, 0x154)  // anchor-vtable (slot 9) + CAdvPopup::WindowHandler

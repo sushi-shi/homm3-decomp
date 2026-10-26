@@ -522,20 +522,17 @@ public:
     bool canBuildDock() const;
 
     // DC Town.h:299 / :305 header inlines, declaration-only here
-    // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC
-    // linker in ai_player.obj, ?get_generator_bonus@town@@QBAJJ@Z in
-    // townmgr.obj). Declared with IsCastle/IsCapitol below: four
-    // DC-attested members that also hold town's class-declarator count (an
-    // include-set input: the count changes sacrifice_window's
-    // create_artifact_widgets).
-    // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
-    // Retail's +0x158 band is m_fullBuildingMask; getBuildableMask expands this read.
+    // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC linker in
+    // ai_player.obj, ?get_generator_bonus@town@@QBAJJ@Z in townmgr.obj),
+    // declared with IsCastle/IsCapitol below: four DC-attested members.
+    // DC Town.h:299/300 returns full_building_mask (+0x150 in DC);
+    // Complete's is m_fullBuildingMask at +0x158. Inlined in getBuildableMask.
     DC_ADDRESS(0x037f50, 0x12)
     __int64 getBuildingMask() const { return m_fullBuildingMask; }
     long getCastleGrowthBonus(TCreatureType creature) const;
 
     // DC Town.h:305-306 returns generatorBonus[dwelling].
-    // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
+    // set_bonus_display calls this header helper; inlined.
     DC_ADDRESS(0x181404, 0x12)
     long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
     // Original ?get_gold_income@town@@QBAF_N@Z proves bool includeSilo.
@@ -560,15 +557,10 @@ public:
     }
     void calcNumLevelArchers(int* numArchers, int* archerLevel);
 
-    // Town.h:325-327 records the active-mask guard then the built-mask return.
-    // This early-return form preserves the retained body and recovers the
-    // nested isCastle expansion in Windows getVictoryConditionText.
-    // DC HasBuilding (Town.h:324-328) reads the active mask itself, with no
-    // GetBuildingMask call: a nested getBuildingMask() adds an inline site
-    // to every expansion and moves hero's description loops off retail's
-    // g_game register. DC also opens a second lexical scope for line 326:
-    // the active arm is braced, raising the inline cost to 62, which keeps
-    // retail's out-of-line call in hero::getLuck (budget 61).
+    // Town.h:325-327 records the active-mask guard then the built-mask
+    // return. DC HasBuilding (Town.h:324-328) reads the active mask itself,
+    // with no GetBuildingMask call, and opens a second lexical scope for
+    // line 326: the active arm is braced.
     VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18
     DC_ADDRESS(0x01fe14, 0x98)
     bool hasBuilding(int buildingId, bool checkIncluded) const
@@ -598,7 +590,7 @@ public:
     }
 
     // E:\gamedcs\Town.h:342. Public ?IsCapitol@town@@QBA_NXZ likewise
-    // proves native bool. Both declarations are byte-flat in all consumers.
+    // proves native bool.
     DC_ADDRESS(0x0bccb4, 0x28)
     bool isCapitol() const
     {

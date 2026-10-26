@@ -61,8 +61,8 @@ unsigned char File::close()
     return TRUE;
 }
 
-// E:\gamedcs\winfile.cpp:70 - no retail body; inlined into Delete and
-// Open below (the one-pass inliner needs the body before its callers).
+// E:\gamedcs\winfile.cpp:70 - inlined into Delete and Open below, so the
+// body precedes its callers.
 DC_ADDRESS(0x1984ec, 0x4)
 inline unsigned char File::exists(const char* filename)
 {

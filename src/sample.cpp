@@ -7,7 +7,7 @@
 
 #include "terrain.h"
 
-// Mac embeds a native sound owner: 0x276464 decodes RIFF/WAVE or AIFF/AIFC
+// Mac embeds a native sound owner that decodes RIFF/WAVE or AIFF/AIFC
 // before playback; Windows Miles receives the copied file bytes directly.
 VA(0x00566da0, 0x8E)
 DC_ADDRESS(0x129b3c, 0xe)
@@ -38,8 +38,8 @@ sample::~sample()
     memSample.memVolume = 0;
 }
 
-// The third sample vtable entry at 0x6416d8 fixes this compact override;
-// its constant is the complete 0x34-byte object followed by owned sample data.
+// The third sample vtable entry; its constant is the complete 0x34-byte
+// object followed by owned sample data.
 VA(0x00566e90, 0x07)
 MAC_ADDRESS(0x15dbf4, 0xc)
 unsigned int sample::getSize() const

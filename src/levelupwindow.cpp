@@ -42,8 +42,8 @@ DATA(0x00699634) static TLevelUpWindow* g_levelUpWindow;
 DATA(0x0067fa30) static int g_otherImHoverId = -1;
 DATA(0x0067fa34) static int g_lastImHoverId = -1;
 
-// Text tables read directly by the retail constructor. The shared four-entry
-// primary-skill table is declared with the other game-wide data in game.h.
+// Text tables the constructor reads. The shared four-entry primary-skill
+// table is declared with the other game-wide data in game.h.
 VA(0x004f8880, 0xE7E)
 DC_ADDRESS(0x0e8344, 0x8e8)
 MAC_ADDRESS(0x119b74, 0x1280)

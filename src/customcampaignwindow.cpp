@@ -189,8 +189,6 @@ bool CampaignHeaderPointerLess::operator()(
 // origin, highlights the selected one, hides the rows past the end of
 // the list, and mirrors the selection into the name text and the
 // description scroller.
-
-// The tail's `>=` else-first form is retail's layout.
 VA(0x00483330, 0x281)
 MAC_ADDRESS(0x21f884, 0x21c)  // LoadCampaignList's tail callee, retail-only
 void TCustomCampaignWindow::updateList()
@@ -321,13 +319,10 @@ static void customCampaignSliderHandler(int state, heroWindow* window)
     campaignWindow->drawWindow(1, 0xffff0001, 0xffff);
 }
 
-// Exact Dinkumware _Insertion_sort_1 body retained by the Complete-only
-// custom-campaign list sort. Retail proves four-byte pointer elements, the
-// by-value empty predicate, the extra _Ty** discriminator, and all three
-// out-of-line predicate calls. The stock VC6 template is byte-identical.
+// Dinkumware's _Insertion_sort_1 for the Complete-only custom-campaign list
+// sort: pointer elements, a by-value empty predicate.
 VA_COMPGEN(0x00483AA0, 0xA0, INSERTION_SORT_1,
            CampaignHeaderPointerLess)
 
-// COMDAT pairing: std::_Sort<CampaignHeaderStruct*, CampaignHeaderPointerLess>
-// - the only object in the image emitting that instantiation.
+// COMDAT pairing: std::_Sort<CampaignHeaderStruct*, CampaignHeaderPointerLess>.
 VA_COMPGEN(0x00483940, 0x151, STD_SORT, campaignheaderstruct_ptr)

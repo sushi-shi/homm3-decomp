@@ -43,8 +43,8 @@ public:
     DC_ADDRESS(0x122b28, 0x4)
     int GetHeight() const { return m_height; }
 
-    // Dreamcast bitmap24.h:72; both row advances in the raw
-    // Draw body inline this exact 24-bit pitch calculation in retail.
+    // Dreamcast bitmap24.h:72; inlined at both row advances in the raw Draw
+    // body.
     DC_ADDRESS(0x0533b0, 0xa)
     int GetPitch() const { return m_width * 3; }
     void Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,

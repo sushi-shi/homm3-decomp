@@ -81,7 +81,7 @@ DC_ADDRESS(0x1639a4, 0x46)
 MAC_ADDRESS(0x1b0d8c, 0x8c)
 TTextResource::~TTextResource()
 {
-    // Mac retains array delete (0x268c34) for the character buffer.
+    // Array delete for the character buffer.
     if (Data)
         delete[] Data;
 }
@@ -189,7 +189,7 @@ TSpreadsheetResource::~TSpreadsheetResource()
          ++it) {
         delete *it;
     }
-    // Mac retains array delete (0x268c34) for the character buffer.
+    // Array delete for the character buffer.
     if (Data)
         delete[] Data;
 }

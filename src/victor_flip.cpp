@@ -12,13 +12,12 @@
 
 #include "victor.h"
 
-// Public Victor vertical region flip. Retail reads paired rows through a
-// temporary so source and destination may be the same image. Monochrome
-// regions use two bit-range temporaries to preserve neighboring pixels.
-// Dreamcast has only the public API stub; all Windows semantics are retail.
-// Like retail, each loop steps all four row pointers after every copied
-// pair, including the last; the pointers are not read again. The header
-// snapshots exist only for the depth check, destination first.
+// Public Victor vertical region flip. Paired rows go through a temporary so
+// source and destination may be the same image. Monochrome regions use two
+// bit-range temporaries to preserve neighboring pixels. Dreamcast has only
+// the public API stub. Each loop steps all four row pointers after every
+// copied pair, including the last; the pointers are not read again. The
+// header snapshots exist only for the depth check, destination first.
 VA(0x00603b20, 0x2d2)  // anchor-caller PCX importers + paired row/bit helper calls
 int __stdcall flipimage(imgdes* source, imgdes* destination)
 {

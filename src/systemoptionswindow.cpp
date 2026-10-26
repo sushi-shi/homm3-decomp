@@ -280,8 +280,7 @@ TSystemOptionsWindow::~TSystemOptionsWindow()
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:205
-// Retail inlines this switch into WindowHandler; no separate entry exists
-// between the destructor and DoModal.
+// Inlined into WindowHandler.
 DC_ADDRESS(0x160698, 0x68)
 MAC_ADDRESS(0x1ac8cc, 0x98)
 int TSystemOptionsWindow::convertID2HelpID(int id) const
@@ -326,22 +325,18 @@ void TSystemOptionsWindow::doModal()
 
 // E:\gamedcs\systemoptionswindow.cpp:260
 // The dc 0x160698 helper owns, in order, the negative-id return, the
-// 201..242 range return, and the six-command switch assigning a local for one
-// final return; retail agrees at fn+0x46..+0xae: negative guard, range first,
-// command switch second, then one joined helpID test.
-// UpdateSystemOptions sets bPrefsChanged BEFORE it initializes the
-// otherwise-unused message, and the command tail saves codeY, writes
-// msg->id, then latches the saved command in dialogReturn.
+// 201..242 range return, and the six-command switch assigning a local for
+// one final return. UpdateSystemOptions sets bPrefsChanged BEFORE it
+// initializes the otherwise-unused message, and the command tail saves
+// codeY, writes msg->id, then latches the saved command in dialogReturn.
 // The slider arms send WIDGET_CLEAR/SET_STATUS directly, as DC's rows name
-// send_message here (DC never expands widget::set_visible; all 51 of its
-// uses call dc 0x56df8). Retail pushes both constants before getWidget, as
-// a direct send does.
+// send_message here (DC never inlines widget::set_visible).
 VA(0x005b3140, 0x61E)
 DC_ADDRESS(0x160770, 0x578)
 MAC_ADDRESS(0x1aca30, 0x6a4)  // vtable slot 9 + inlined help switch
 int TSystemOptionsWindow::windowHandler(message& msg)
 {
-    // DC records one procedure-local save; Mac reuses r24 in both slider arms.
+    // DC records one procedure-local save, used in both slider arms.
     int save;
     int result = CAdvPopup::windowHandler(msg);
     if (result)

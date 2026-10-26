@@ -58,16 +58,15 @@ public:
     void ResetPalette();
 
     // Bitmap816.h:70/71 header accessors. DrawBackground's Dreamcast xref
-    // graph records both inlined uses; the retail body reads +0x24/+0x28.
+    // graph records both inlined uses.
     DC_ADDRESS(0x020164, 0xc)
     int GetWidth() const { return Width; }
 
     DC_ADDRESS(0x020170, 0xc)
     int GetHeight() const { return Height; }
 
-    // DC Bitmap816.h:71 returns Width, while GetMap below
-    // addresses rows through Pitch. Masked Darken's retail loads independently
-    // confirm that distinction; do not replace this helper with m_pitch.
+    // DC Bitmap816.h:71 returns Width, while GetMap below addresses rows
+    // through Pitch; masked Darken depends on that distinction.
     DC_ADDRESS(0x05256c, 0x4)
     int GetPitch() const { return Width; }
 
@@ -84,7 +83,7 @@ public:
     DC_ADDRESS(0x054300, 0x8)
     TPalette24& GetPalette24() { return m_p24; }
 
-    // DC Bitmap816.h:98/99, expanded in masked Darken.
+    // DC Bitmap816.h:98/99; inlined in masked Darken.
     DC_ADDRESS(0x052570, 0xe)
     unsigned char* GetMap(int x, int y) { return map + Pitch * y + x; }
 

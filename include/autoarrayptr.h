@@ -19,9 +19,8 @@ public:
     DC_ADDRESS(0x05b208, 0x20)
     ~TAutoArrayPtr() { if (m_owns) delete [] m_ptr; }
 
-    // Loki's h3maped form: an empty exception specification (the Windows
-    // editors keep no unwind state for the assigned temporary), the
-    // self-assignment test and release() (h3maped 0x4021d7).
+    // Loki's h3maped form: an empty exception specification, the
+    // self-assignment test and release().
     DC_ADDRESS(0x05b228, 0x58)
     TAutoArrayPtr& operator=(const TAutoArrayPtr& rhs) throw()
     {

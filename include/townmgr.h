@@ -761,7 +761,7 @@ class townManager : public baseManager {
 public:
 
     // Original: townManager::SetTown; TownMgr.h:686
-    // town::view0x5be210 expands the assignment to Complete's +0x38 field.
+    // Inlined in town::view (Complete's +0x38 field).
     DC_ADDRESS(0x168e24, 0x6)
     void setTown(town* townToView) { m_townToView = townToView; }
 

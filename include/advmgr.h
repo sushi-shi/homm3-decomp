@@ -1342,7 +1342,7 @@ private:
 public:
 
     // E:\gamedcs\AdvMgr.h:1245. DC's fixed viewport center is (6,5);
-    // Complete's wider view uses (9,8), as the retail recentering paths prove.
+    // Complete's wider view uses (9,8).
     DC_ADDRESS(0x01f000, 0x84)
     type_point getMapCenter() const
     {

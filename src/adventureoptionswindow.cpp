@@ -118,12 +118,10 @@ TAdventureOptionsWindow::~TAdventureOptionsWindow()
 }
 
 // E:\gamedcs\adventureoptionswindow.cpp:112
-// Dreamcast emits this const helper out of line. Retail's handler contains
-// both calls inline and the 0x405680 slot is independently proved to be
-// CHeroWindowEx's handle_message forwarder, so the helper has no retail claim.
-// DC proves the early negative return followed by a switch assigning
-// one result for the final return. Complete adds the upper-bound fast reject;
-// with both bounds owned here, retail corroborates both inlined lowerings.
+// Dreamcast emits this const helper out of line; inlined at both handler
+// calls. DC proves the early negative return followed by a switch assigning
+// one result for the final return; Complete adds the upper-bound fast
+// reject.
 DC_ADDRESS(0x0051b0, 0x54)
 MAC_ADDRESS(0x005928, 0x84)
 int TAdventureOptionsWindow::convertID2HelpID(int id) const

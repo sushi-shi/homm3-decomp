@@ -22,8 +22,7 @@ static const int g_resourceDisplayOrder[NUM_RESOURCES] = {
 };
 
 // E:\gamedcs\resourcedisplay.cpp:40
-// A real `isSmall(is_small)` member initializer gives retail's
-// member-before-vptr store order.
+// `isSmall(is_small)` is a real member initializer.
 VA(0x00558ba0, 0x2A1)
 DC_ADDRESS(0x120c54, 0x294)
 MAC_ADDRESS(0x151684, 0x328)  // anchor-global
@@ -110,21 +109,13 @@ TResourceDisplay::~TResourceDisplay()
 }
 
 // E:\gamedcs\resourcedisplay.cpp:150
-// Dreamcast has three parameters (draw, update, inMap); retail takes two.
-// Proof: the body ends `ret 8`, reads the gate byte at [ebp+8] and
-// forwards the dword at [ebp+0xc] as the update flag of
-// TSubWindow::Draw(update, -0xffff, 0xffff) - there is no third slot.
-// Corroborated from the other side by recruitUnit::Close (0x550344),
-// which calls it with exactly two pushes (`push 0; push 1`). DC's
-// `inMap` has no retail home; the first two names are kept. DC's third
-// parameter guards `hide()` calls for each resource widget and the status
-// widget; retail's five-block body contains neither guard nor call, a
-// Complete-revision deletion.
-// DC public ?Update@TResourceDisplay@@QAAX_N00@Z proves native bool
-// flags despite the lowered T_UCHAR formal records. The first two survive
-// in retail; recruitUnit::close supplies push 0 / push 1 at 0x55033a.
-// DC156 proves playerData&; DC168/201 prove operator[] for the three
-// date labels in Update/Clear. Retail expands those canonical accessors.
+// Dreamcast has three parameters (draw, update, inMap); Complete takes two,
+// as recruitUnit::Close's two-argument call shows. DC's third parameter
+// guards `hide()` calls for each resource widget and the status widget;
+// Complete deletes both guard and calls. DC public
+// ?Update@TResourceDisplay@@QAAX_N00@Z proves native bool flags despite the
+// lowered T_UCHAR formal records. DC156 proves playerData&; DC168/201 prove
+// operator[] for the three date labels in Update/Clear.
 VA(0x00558f20, 0xF3)
 DC_ADDRESS(0x120fa0, 0x112)
 MAC_ADDRESS(0x151acc, 0x158)  // anchor-global
