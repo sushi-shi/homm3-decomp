@@ -243,7 +243,7 @@ void TRiverMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 {
     TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
     TGameMap::TLayer::TCell* pCell = layer.getPCell(loc.x(), loc.y());
-    pCell->setRiverType(tile.m_terrain);
+    pCell->setRiverType(H3_ENUM_VALUE(TRiverType, tile.m_terrain));
     pCell->setRiverTileNum(tile.m_frame);
     pCell->setBRiverHFlipped(tile.m_flipX);
     pCell->setBRiverVFlipped(tile.m_flipY);
@@ -254,7 +254,7 @@ VA(0x0045dca9, 0x4b)
 void TRiverMap::setLineType(const TTilePoint& loc, int type)
 {
     TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    layer.getPCell(loc.x(), loc.y())->setRiverType(type);
+    layer.getPCell(loc.x(), loc.y())->setRiverType(H3_ENUM_VALUE(TRiverType, type));
     _touch(loc);
 }
 
@@ -265,7 +265,7 @@ TRmgTerrainTile TRiverMap::getTile(const TTilePoint& loc)
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
     const TGameMap::TLayer::TCell& cell = layer.getCell(loc.x(), loc.y());
     TRmgTerrainTile tile;
-    tile.m_terrain = cell.getRiverType();
+    tile.m_terrain = H3_IDX(cell.getRiverType());
     tile.m_frame = cell.getRiverTileNum();
     tile.m_flipX = cell.getBRiverHFlipped();
     tile.m_flipY = cell.getBRiverVFlipped();
@@ -277,7 +277,7 @@ int TRiverMap::getLineType(const TTilePoint& loc)
 {
     const TGameMap* pMap = _m_pMap;
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
-    return layer.getCell(loc.x(), loc.y()).getRiverType();
+    return H3_IDX(layer.getCell(loc.x(), loc.y()).getRiverType());
 }
 
 H3_ENUM_RETURN(TTerrainType, int) TRiverMap::getTerrain(const TTilePoint& loc)
@@ -332,7 +332,7 @@ void TRoadMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 {
     TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
     TGameMap::TLayer::TCell* pCell = layer.getPCell(loc.x(), loc.y());
-    pCell->setRoadType(tile.m_terrain);
+    pCell->setRoadType(H3_ENUM_VALUE(TRoadType, tile.m_terrain));
     pCell->setRoadTileNum(tile.m_frame);
     pCell->setBRoadHFlipped(tile.m_flipX);
     pCell->setBRoadVFlipped(tile.m_flipY);
@@ -343,7 +343,7 @@ VA(0x0045de5e, 0x4d)
 void TRoadMap::setLineType(const TTilePoint& loc, int type)
 {
     TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    layer.getPCell(loc.x(), loc.y())->setRoadType(type);
+    layer.getPCell(loc.x(), loc.y())->setRoadType(H3_ENUM_VALUE(TRoadType, type));
     _touch(loc);
 }
 
@@ -354,7 +354,7 @@ TRmgTerrainTile TRoadMap::getTile(const TTilePoint& loc)
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
     const TGameMap::TLayer::TCell& cell = layer.getCell(loc.x(), loc.y());
     TRmgTerrainTile tile;
-    tile.m_terrain = cell.getRoadType();
+    tile.m_terrain = H3_IDX(cell.getRoadType());
     tile.m_frame = cell.getRoadTileNum();
     tile.m_flipX = cell.getBRoadHFlipped();
     tile.m_flipY = cell.getBRoadVFlipped();
@@ -366,7 +366,7 @@ int TRoadMap::getLineType(const TTilePoint& loc)
 {
     const TGameMap* pMap = _m_pMap;
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
-    return layer.getCell(loc.x(), loc.y()).getRoadType();
+    return H3_IDX(layer.getCell(loc.x(), loc.y()).getRoadType());
 }
 
 H3_ENUM_RETURN(TTerrainType, int) TRoadMap::getTerrain(const TTilePoint& loc)
@@ -688,7 +688,7 @@ int TMapDoc::_TTerrainPlacementOp::getFrame(const TTilePoint& loc)
 // cell to each next one.
 class TMapDoc::_TRiverPlacementOp : public TRiverMap {
 public:
-    _TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int riverType, const TTilePoint& start);
+    _TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, H3_ENUM_PARAM(TRiverType, int) riverType, const TTilePoint& start);
 
     void operator()(const TTilePoint& loc);
 
@@ -698,7 +698,7 @@ private:
 };
 
 VA(0x0045e752, 0xe7)
-TMapDoc::_TRiverPlacementOp::_TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int riverType,
+TMapDoc::_TRiverPlacementOp::_TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, H3_ENUM_PARAM(TRiverType, int) riverType,
                                                 const TTilePoint& start)
     : TRiverMap(pDoc->_m_pMap, bSecondLayer),
       _m_pDoc(pDoc),
@@ -764,7 +764,7 @@ void TMapDoc::_TRiverEraseOp::operator()(unsigned int left, unsigned int top, un
 // A road placement operation on one map layer.
 class TMapDoc::_TRoadPlacementOp : public TRoadMap {
 public:
-    _TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int roadType, const TTilePoint& start);
+    _TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, H3_ENUM_PARAM(TRoadType, int) roadType, const TTilePoint& start);
 
     void operator()(const TTilePoint& loc);
 
@@ -774,7 +774,7 @@ private:
 };
 
 VA(0x0045ea2a, 0xe7)
-TMapDoc::_TRoadPlacementOp::_TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int roadType,
+TMapDoc::_TRoadPlacementOp::_TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, H3_ENUM_PARAM(TRoadType, int) roadType,
                                               const TTilePoint& start)
     : TRoadMap(pDoc->_m_pMap, bSecondLayer),
       _m_pDoc(pDoc),
@@ -1284,7 +1284,7 @@ void TMapDoc::terrainFill(unsigned int left, unsigned int top, unsigned int widt
 }
 
 VA(0x0045fc93, 0x89)
-void TMapDoc::startRiverPlacementOp(bool bSecondLayer, int riverType, unsigned int x, unsigned int y)
+void TMapDoc::startRiverPlacementOp(bool bSecondLayer, H3_ENUM_PARAM(TRiverType, int) riverType, unsigned int x, unsigned int y)
 {
     assert(_m_pMap != NULL);
     assert(_m_pRiverPlacementOp == NULL);
@@ -1313,7 +1313,7 @@ void TMapDoc::placeRiver(unsigned int x, unsigned int y)
 }
 
 VA(0x0045fd5c, 0x89)
-void TMapDoc::startRoadPlacementOp(bool bSecondLayer, int roadType, unsigned int x, unsigned int y)
+void TMapDoc::startRoadPlacementOp(bool bSecondLayer, H3_ENUM_PARAM(TRoadType, int) roadType, unsigned int x, unsigned int y)
 {
     assert(_m_pMap != NULL);
     assert(_m_pRoadPlacementOp == NULL);

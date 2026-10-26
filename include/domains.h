@@ -33,6 +33,11 @@
 #define H3_ENUM_FORWARD(name) enum class name : int
 #define H3_ENUM_FORWARD_SPLIT(name, storage) enum class name : storage
 
+// A header that only names a domain through the storage, parameter and
+// return macros declares it here: VC6 sees those as the plain integers
+// and never needs the type, so the declaration exists for this pass only.
+#define H3_ENUM_DECLARE(name) enum class name : int;
+
 // A value catalog: an ordinal or arithmetic domain whose values are read as
 // numbers (mastery levels, counts). It stays unscoped, so it decays to int,
 // but its fixed type still rejects integers and other domains flowing in.
@@ -342,6 +347,7 @@ template<class Enum, class Storage> constexpr Enum H3DecodeEnum(Storage value)
 #define H3_ENUM_END_SPLIT(name, storage) };
 #define H3_ENUM_FORWARD(name) enum name
 #define H3_ENUM_FORWARD_SPLIT(name, storage) enum name
+#define H3_ENUM_DECLARE(name)
 #define H3_ENUM_VALUES_BEGIN(name) enum name {
 #define H3_ENUM_VALUES_END(name) };
 
@@ -360,11 +366,15 @@ template<class Enum, class Storage> constexpr Enum H3DecodeEnum(Storage value)
 #define H3_AT(array, index) (array)[H3EnumIndex(index)]
 #define H3_IDX(value) H3EnumIndex(value)
 #define H3_ENUM_DECODE(name, value) H3DecodeEnum<name>(value)
+// An integer entering a domain that a header only declares: VC6 keeps
+// the integer, since the storage it lands in is the integer too.
+#define H3_ENUM_VALUE(name, value) static_cast<name>(value)
 #define H3_HAS(flags, bit) (H3EnumIndex((flags) & (bit)) != 0)
 #else
 #define H3_AT(array, index) array[index]
 #define H3_IDX(value) value
 #define H3_ENUM_DECODE(name, value) (name)(value)
+#define H3_ENUM_VALUE(name, value) (value)
 #define H3_HAS(flags, bit) ((flags) & (bit))
 #endif
 

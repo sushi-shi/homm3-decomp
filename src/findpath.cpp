@@ -14,6 +14,7 @@
 #include "herospec.h"
 #include "kb.h"
 #include "path.h"
+#include "road_type.h"
 
 // Initial contents recovered from the pinned Complete image.
 DATA(0x00678150) tilePoint g_normalDirTable[MAP_DIRECTION_COUNT] = {
@@ -172,18 +173,18 @@ VA(0x004b1740, 0x13E)
 DC_ADDRESS(0x09f034, 0x11e)
 MAC_ADDRESS(0x0c4a78, 0x204)
 int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
-                    long pathfinding, long endRoad, long flying,
+                    long pathfinding, H3_ENUM_PARAM(TRoadType, long) endRoad, long flying,
                     long waterWalking, H3_ENUM_PARAM(TTerrainType, long) nativeTerrain,
                     unsigned char hasNomad)
 {
     H3_ENUM_STORAGE(TTerrainType, long) terrain = cell->m_groundSet;
-    long road = cell->m_roadSet;
+    H3_ENUM_STORAGE(TRoadType, long) road = cell->m_roadSet;
     if (hasNomad && terrain == eTerrainSand)
         terrain = eTerrainDirt;
     TAdventureObjectType special = cell->getSpecialTerrain();
     long cost;
-    if (road != 0 && endRoad != 0)
-        cost = g_terrainCost[g_roadCostRow[road]][pathfinding];
+    if (road != eRoadNone && endRoad != eRoadNone)
+        cost = g_terrainCost[H3_AT(g_roadCostRow, road)][pathfinding];
     else if (terrain == nativeTerrain && special != CURSED_GROUND)
         cost = 100;
     else
@@ -564,7 +565,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
             dest.m_adjustedCost += 100;
         } else if (source.m_inBoat) {
             cost = calcTerrainCost(srcCell, direction, turnMobility,
-                                   pathfinding, 0, -1, -1, eTerrainNone, hasNomad);
+                                   pathfinding, eRoadNone, -1, -1, eTerrainNone, hasNomad);
         } else {
             cost = calcTerrainCost(srcCell, direction, turnMobility,
                                    pathfinding, destCell->m_roadSet,
@@ -757,7 +758,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
                 boatCell.m_canStop = 1;
                 long boatCost = calcTerrainCost(srcCell, direction,
                                                  turnMobility, pathfinding,
-                                                 0, -1, -1, eTerrainNone, hasNomad);
+                                                 eRoadNone, -1, -1, eTerrainNone, hasNomad);
                 boatCell.m_adjustedCost += 500;
                 if (!(m_canSummonBoat && !source.m_magicForbidden))
                     boatCell.m_barrierValue +=

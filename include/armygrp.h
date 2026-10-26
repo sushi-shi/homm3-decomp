@@ -12,7 +12,7 @@
 #include "terrain_type.h"
 
 // town_type.h owns the town domain; the creature traits row only names it.
-H3_ENUM_FORWARD(TTownType);
+H3_ENUM_DECLARE(TTownType)
 
 // The seven primary resources (wood .. gold), the width of every cost
 // row; town.h's EGameResource names the columns. Dreamcast's complete

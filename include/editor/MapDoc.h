@@ -159,10 +159,10 @@ public:
     void startTerrainPlacementOp(bool bSecondLayer, TTerrainType terrainType);
     void endTerrainPlacementOp();
     void terrainFill(unsigned int left, unsigned int top, unsigned int width, unsigned int height);
-    void startRiverPlacementOp(bool bSecondLayer, int riverType, unsigned int x, unsigned int y);
+    void startRiverPlacementOp(bool bSecondLayer, H3_ENUM_PARAM(TRiverType, int) riverType, unsigned int x, unsigned int y);
     void endRiverPlacementOp();
     void placeRiver(unsigned int x, unsigned int y);
-    void startRoadPlacementOp(bool bSecondLayer, int roadType, unsigned int x, unsigned int y);
+    void startRoadPlacementOp(bool bSecondLayer, H3_ENUM_PARAM(TRoadType, int) roadType, unsigned int x, unsigned int y);
     void endRoadPlacementOp();
     void placeRoad(unsigned int x, unsigned int y);
     void startEraseOp(bool bSecondLayer);

@@ -46,6 +46,7 @@
 #include "recruit.h"
 #include "remote.h"
 #include "resourcemanager.h"
+#include "road_type.h"
 #include "sample.h"
 #include "singleselectionwindow.h"
 #include "soundmgr.h"
@@ -4938,7 +4939,7 @@ void advManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
         return;
 
     NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
-    if (!thisCell->m_riverSet)
+    if (thisCell->m_riverSet == eRiverNone)
         return;
 
     int baseX = m_scrollX + destX * 32;
@@ -4965,7 +4966,7 @@ void advManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
     if (tilew <= 0 || tileh <= 0)
         return;
 
-    m_riverTileset[thisCell->m_riverSet]->DrawTile(
+    H3_AT(m_riverTileset, thisCell->m_riverSet)->DrawTile(
         thisCell->m_riverIndex, tilex, tiley, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
         thisCell->m_riverFlippedHorizontal,
@@ -4981,7 +4982,7 @@ void advManager::drawRoad(int srcX, int srcY, int z, int destX, int destY)
         return;
 
     NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
-    if (!thisCell->m_roadSet)
+    if (thisCell->m_roadSet == eRoadNone)
         return;
 
     int baseX = m_scrollX + destX * 32;
@@ -5010,7 +5011,7 @@ void advManager::drawRoad(int srcX, int srcY, int z, int destX, int destY)
     if (tilew <= 0 || tileh <= 0)
         return;
 
-    m_roadTileset[thisCell->m_roadSet]->DrawTile(
+    H3_AT(m_roadTileset, thisCell->m_roadSet)->DrawTile(
         thisCell->m_roadIndex, tilex, tiley, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
         thisCell->m_roadFlippedHorizontal,

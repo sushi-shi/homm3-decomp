@@ -13,6 +13,10 @@
 #include "primaryskill.h"
 #include "secondaryskill.h"
 #include "terrain_type.h"
+
+// road_type.h owns the road and river domains; the cell only names them.
+H3_ENUM_DECLARE(TRoadType)
+H3_ENUM_DECLARE(TRiverType)
 #include "town.h"
 
 class BlackBoxData;
@@ -904,9 +908,9 @@ public:
     // `cmp byte ptr`, so the slice costs nothing there.
     H3_ENUM_BITFIELD(TTerrainType, int) m_groundSet : 8;
     int m_groundIndex : 8;
-    int m_riverSet : 8;
+    H3_ENUM_BITFIELD(TRiverType, int) m_riverSet : 8;
     int m_riverIndex : 8;
-    int m_roadSet : 8;
+    H3_ENUM_BITFIELD(TRoadType, int) m_roadSet : 8;
     int m_roadIndex : 8;
     // Dreamcast gives RoadSet/RoadIndex eight bits each in the unit
     // at +8, then starts cellFlags at +0xc. NH3API confirms that +0xa
@@ -1017,9 +1021,9 @@ public:
     {
         m_groundSet = eTerrainDirt;
         m_groundIndex = 0;
-        m_riverSet = 0;
+        m_riverSet = H3_ENUM_VALUE(TRiverType, 0);
         m_riverIndex = 0;
-        m_roadSet = 0;
+        m_roadSet = H3_ENUM_VALUE(TRoadType, 0);
         m_roadIndex = 0;
         m_flags0011 = 0;
         m_isTrigger = 0;

@@ -83,10 +83,10 @@ MAC_ADDRESS(0x254148, 0x6c) // anchor-callee 0x548143; Complete-only, thiscall r
 VA_AT(h3maped, 0x004b4243, 0x61)
 TRoadPlacementOp::TRoadPlacementOp(
     TRoadOp::TAbstractMap* newAdapter,
-    s32 newRoadType,
+    H3_ENUM_PARAM(TRoadType, s32) newRoadType,
     const TTilePoint& newStart)
     : TRoadOp(newAdapter),
-      m_walker(this, newRoadType, newStart)
+      m_walker(this, H3_IDX(newRoadType), newStart)
 {
 }
 

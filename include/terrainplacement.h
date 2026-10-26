@@ -21,8 +21,11 @@
 #include "homm3_int.h"
 #include "Point.h"
 
-// terrain_type.h owns the terrain domain; this interface only names it.
-H3_ENUM_FORWARD(TTerrainType);
+// terrain_type.h and road_type.h own the terrain, road and river domains;
+// these interfaces only name them.
+H3_ENUM_DECLARE(TTerrainType)
+H3_ENUM_DECLARE(TRoadType)
+H3_ENUM_DECLARE(TRiverType)
 struct TRmgTerrainTile;
 class TRmgTerrainPainter;
 

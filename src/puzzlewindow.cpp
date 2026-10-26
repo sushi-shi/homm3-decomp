@@ -320,8 +320,8 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
     m_objectY = -1;
 
     m_terrain = H3_IDX(cell->m_groundSet);
-    m_river = cell->m_riverSet;
-    m_road = cell->m_roadSet;
+    m_river = H3_IDX(cell->m_riverSet);
+    m_road = H3_IDX(cell->m_roadSet);
     m_diggable = cell->isDiggable();
 
     m_hasGrail = point.m_x == g_game->m_ultimateArtifactX &&

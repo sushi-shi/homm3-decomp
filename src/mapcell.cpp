@@ -20,6 +20,7 @@
 #include "misc.h"
 #include "newgame.h"
 #include "resourcemanager.h"
+#include "road_type.h"
 #include "smackmgr.h"
 
 VA(0x004fbf90, 0x61)
@@ -884,13 +885,13 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
             thisCell->m_groundIndex = charBuffer;
             if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
-            thisCell->m_riverSet = charBuffer;
+            thisCell->m_riverSet = H3_ENUM_DECODE(TRiverType, charBuffer);
             if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
             thisCell->m_riverIndex = charBuffer;
             if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
-            thisCell->m_roadSet = charBuffer;
+            thisCell->m_roadSet = H3_ENUM_DECODE(TRoadType, charBuffer);
             if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
             thisCell->m_roadIndex = charBuffer;
@@ -923,7 +924,7 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
 
             if (thisCell->m_groundSet == eTerrainWater
                 || thisCell->m_groundSet == eTerrainLava
-                || thisCell->m_riverSet != 0 || thisCell->m_roadSet != 0)
+                || thisCell->m_riverSet != eRiverNone || thisCell->m_roadSet != eRoadNone)
                 thisCell->m_animated = 1;
 
             ++thisCell;
@@ -959,7 +960,7 @@ int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
             count = writeScalar(outfile, charBuffer);
             if (count < sizeof(charBuffer))
                 return -1;
-            charBuffer = thisCell->m_riverSet;
+            charBuffer = H3_IDX(thisCell->m_riverSet);
             count = writeScalar(outfile, charBuffer);
             if (count < sizeof(charBuffer))
                 return -1;
@@ -967,7 +968,7 @@ int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
             count = writeScalar(outfile, charBuffer);
             if (count < sizeof(charBuffer))
                 return -1;
-            charBuffer = thisCell->m_roadSet;
+            charBuffer = H3_IDX(thisCell->m_roadSet);
             count = writeScalar(outfile, charBuffer);
             if (count < sizeof(charBuffer))
                 return -1;
@@ -1157,13 +1158,13 @@ int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
             thisCell->m_groundIndex = value;
             if (readValue(infile, value) < sizeof(value))
                 return -1;
-            thisCell->m_riverSet = value;
+            thisCell->m_riverSet = H3_ENUM_DECODE(TRiverType, value);
             if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_riverIndex = value;
             if (readValue(infile, value) < sizeof(value))
                 return -1;
-            thisCell->m_roadSet = value;
+            thisCell->m_roadSet = H3_ENUM_DECODE(TRoadType, value);
             if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_roadIndex = value;

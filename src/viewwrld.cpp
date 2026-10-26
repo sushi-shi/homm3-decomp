@@ -20,6 +20,7 @@
 #include "mousemgr.h"
 #include "recruit.h"
 #include "resourcemanager.h"
+#include "road_type.h"
 #include "soundmgr.h"
 #include "terrain.h"
 #include "textresource.h"
@@ -867,7 +868,7 @@ void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
     if (!(playerBit & getMapExtra(srcX, srcY, z)) && !g_vwTerrains)
         return;
 
-    if (!thisCell->m_riverSet)
+    if (thisCell->m_riverSet == eRiverNone)
         return;
 
     int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
@@ -876,7 +877,7 @@ void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
     memset(g_memoryBuffer->GetMap(0, 0), 0,
            g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
 
-    m_riverTileset[thisCell->m_riverSet]->DrawTile(
+    H3_AT(m_riverTileset, thisCell->m_riverSet)->DrawTile(
         thisCell->m_riverIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
         thisCell->m_riverFlippedHorizontal,
         thisCell->m_riverFlippedVertical);
@@ -909,7 +910,7 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
     if (!(playerBit & getMapExtra(srcX, srcY, z)) && !g_vwTerrains)
         return;
 
-    if (!thisCell->m_roadSet)
+    if (thisCell->m_roadSet == eRoadNone)
         return;
 
     int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
@@ -918,7 +919,7 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
     memset(g_memoryBuffer->GetMap(0, 0), 0,
            g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
 
-    m_roadTileset[thisCell->m_roadSet]->DrawTile(
+    H3_AT(m_roadTileset, thisCell->m_roadSet)->DrawTile(
         thisCell->m_roadIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
         thisCell->m_roadFlippedHorizontal,
         thisCell->m_roadFlippedVertical);

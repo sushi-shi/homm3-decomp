@@ -92,10 +92,10 @@ MAC_ADDRESS(0x253c60, 0x6c)
 VA_AT(h3maped, 0x004b3c4e, 0x61)
 TRiverPlacementOp::TRiverPlacementOp(
     TRiverOp::TAbstractMap* newAdapter,
-    s32 newRiverType,
+    H3_ENUM_PARAM(TRiverType, s32) newRiverType,
     const TTilePoint& newStart)
     : TRiverOp(newAdapter),
-      m_walker(this, newRiverType, newStart)
+      m_walker(this, H3_IDX(newRiverType), newStart)
 {
 }
 

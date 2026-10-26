@@ -10,6 +10,7 @@
 // dialog's patterns. Loki's _animate is gone (animate calls the frames
 // itself); the other per-view setters keep their int results for
 // mem_fun1.
+#include "road_type.h"
 #include "editor/stdafx.h"
 
 #include <assert.h>
@@ -454,8 +455,8 @@ TMapView::TMapView()
       _m_objectSlot(eSlotDirt),
       _m_brush(_eBrush2x2),
       _m_terrainType(eTerrainDirt),
-      _m_riverType(1),
-      _m_roadType(1),
+      _m_riverType(eRiverClear),
+      _m_roadType(eRoadDirt),
       _m_eraseBrush(_eBrush2x2),
       _m_obstacleBrush(_eObstacleBrushBorderedArea2x2),
       _m_currentPlayer(ePlayerNone),
@@ -792,7 +793,7 @@ void TMapView::onEditBrushBeginDrag(TMapEditingWnd* pWnd, const CRect& rect)
         pDoc->terrainFill(rect.left, rect.top, rect.Width(), rect.Height());
         break;
     case _eModeRiver:
-        if (_m_riverType != 0)
+        if (_m_riverType != eRiverNone)
             pDoc->startRiverPlacementOp(_m_bViewUnderground, _m_riverType, rect.left, rect.top);
         else {
             pDoc->startRiverEraseOp(_m_bViewUnderground);
@@ -800,7 +801,7 @@ void TMapView::onEditBrushBeginDrag(TMapEditingWnd* pWnd, const CRect& rect)
         }
         break;
     case _eModeRoad:
-        if (_m_roadType != 0)
+        if (_m_roadType != eRoadNone)
             pDoc->startRoadPlacementOp(_m_bViewUnderground, _m_roadType, rect.left, rect.top);
         else {
             pDoc->startRoadEraseOp(_m_bViewUnderground);
@@ -829,13 +830,13 @@ void TMapView::onEditBrushEndDrag(TMapEditingWnd* pWnd)
     }
         break;
     case _eModeRiver:
-        if (_m_riverType != 0)
+        if (_m_riverType != eRiverNone)
             getPDocument()->endRiverPlacementOp();
         else
             getPDocument()->endRiverEraseOp();
         break;
     case _eModeRoad:
-        if (_m_roadType != 0)
+        if (_m_roadType != eRoadNone)
             getPDocument()->endRoadPlacementOp();
         else
             getPDocument()->endRoadEraseOp();
@@ -855,13 +856,13 @@ void TMapView::onEditBrushDrag(TMapEditingWnd* pWnd, const CRect& rect)
         getPDocument()->terrainFill(rect.left, rect.top, rect.Width(), rect.Height());
         break;
     case _eModeRiver:
-        if (_m_riverType != 0)
+        if (_m_riverType != eRiverNone)
             getPDocument()->placeRiver(rect.left, rect.top);
         else
             getPDocument()->eraseRiver(rect.left, rect.top);
         break;
     case _eModeRoad:
-        if (_m_roadType != 0)
+        if (_m_roadType != eRoadNone)
             getPDocument()->placeRoad(rect.left, rect.top);
         else
             getPDocument()->eraseRoad(rect.left, rect.top);
@@ -2085,52 +2086,52 @@ VA(0x00483a80, 0x16)
 void TMapView::OnToolsRiversClear()
 {
     OnToolsRivers();
-    _m_riverType = 1;
+    _m_riverType = eRiverClear;
 }
 
 VA(0x00483a96, 0x23)
 void TMapView::OnUpdateToolsRiversClear(CCmdUI* pCmdUI)
 {
-    pCmdUI->SetRadio(_m_mode == _eModeRiver && _m_riverType == 1);
+    pCmdUI->SetRadio(_m_mode == _eModeRiver && _m_riverType == eRiverClear);
 }
 
 VA(0x00483ab9, 0x16)
 void TMapView::OnToolsRiversIcy()
 {
     OnToolsRivers();
-    _m_riverType = 2;
+    _m_riverType = eRiverIcy;
 }
 
 VA(0x00483acf, 0x26)
 void TMapView::OnUpdateToolsRiversIcy(CCmdUI* pCmdUI)
 {
-    pCmdUI->SetRadio(_m_mode == _eModeRiver && _m_riverType == 2);
+    pCmdUI->SetRadio(_m_mode == _eModeRiver && _m_riverType == eRiverIcy);
 }
 
 VA(0x00483af5, 0x16)
 void TMapView::OnToolsRiversLava()
 {
     OnToolsRivers();
-    _m_riverType = 4;
+    _m_riverType = eRiverLava;
 }
 
 VA(0x00483b0b, 0x26)
 void TMapView::OnUpdateToolsRiversLava(CCmdUI* pCmdUI)
 {
-    pCmdUI->SetRadio(_m_mode == _eModeRiver && _m_riverType == 4);
+    pCmdUI->SetRadio(_m_mode == _eModeRiver && _m_riverType == eRiverLava);
 }
 
 VA(0x00483b31, 0x16)
 void TMapView::OnToolsRiversMuddy()
 {
     OnToolsRivers();
-    _m_riverType = 3;
+    _m_riverType = eRiverMuddy;
 }
 
 VA(0x00483b47, 0x26)
 void TMapView::OnUpdateToolsRiversMuddy(CCmdUI* pCmdUI)
 {
-    pCmdUI->SetRadio(_m_mode == _eModeRiver && _m_riverType == 3);
+    pCmdUI->SetRadio(_m_mode == _eModeRiver && _m_riverType == eRiverMuddy);
 }
 
 VA(0x00483b6d, 0x8)
@@ -2149,39 +2150,39 @@ VA(0x00483b92, 0x16)
 void TMapView::OnToolsRoadsCobblestone()
 {
     OnToolsRoads();
-    _m_roadType = 3;
+    _m_roadType = eRoadCobblestone;
 }
 
 VA(0x00483ba8, 0x26)
 void TMapView::OnUpdateToolsRoadsCobblestone(CCmdUI* pCmdUI)
 {
-    pCmdUI->SetRadio(_m_mode == _eModeRoad && _m_roadType == 3);
+    pCmdUI->SetRadio(_m_mode == _eModeRoad && _m_roadType == eRoadCobblestone);
 }
 
 VA(0x00483bce, 0x16)
 void TMapView::OnToolsRoadsDirt()
 {
     OnToolsRoads();
-    _m_roadType = 1;
+    _m_roadType = eRoadDirt;
 }
 
 VA(0x00483be4, 0x23)
 void TMapView::OnUpdateToolsRoadsDirt(CCmdUI* pCmdUI)
 {
-    pCmdUI->SetRadio(_m_mode == _eModeRoad && _m_roadType == 1);
+    pCmdUI->SetRadio(_m_mode == _eModeRoad && _m_roadType == eRoadDirt);
 }
 
 VA(0x00483c07, 0x16)
 void TMapView::OnToolsRoadsGravel()
 {
     OnToolsRoads();
-    _m_roadType = 2;
+    _m_roadType = eRoadGravel;
 }
 
 VA(0x00483c1d, 0x26)
 void TMapView::OnUpdateToolsRoadsGravel(CCmdUI* pCmdUI)
 {
-    pCmdUI->SetRadio(_m_mode == _eModeRoad && _m_roadType == 2);
+    pCmdUI->SetRadio(_m_mode == _eModeRoad && _m_roadType == eRoadGravel);
 }
 
 VA(0x00483c43, 0x8)
@@ -2958,24 +2959,24 @@ VA(0x004850be, 0x13)
 void TMapView::OnToolsRiversErase()
 {
     OnToolsRivers();
-    _m_riverType = 0;
+    _m_riverType = eRiverNone;
 }
 
 VA(0x004850d1, 0x23)
 void TMapView::OnUpdateToolsRiversErase(CCmdUI* pCmdUI)
 {
-    pCmdUI->SetRadio(_m_mode == _eModeRiver && _m_riverType == 0);
+    pCmdUI->SetRadio(_m_mode == _eModeRiver && _m_riverType == eRiverNone);
 }
 
 VA(0x004850f4, 0x13)
 void TMapView::OnToolsRoadsErase()
 {
     OnToolsRoads();
-    _m_roadType = 0;
+    _m_roadType = eRoadNone;
 }
 
 VA(0x00485107, 0x23)
 void TMapView::OnUpdateToolsRoadsErase(CCmdUI* pCmdUI)
 {
-    pCmdUI->SetRadio(_m_mode == _eModeRoad && _m_roadType == 0);
+    pCmdUI->SetRadio(_m_mode == _eModeRoad && _m_roadType == eRoadNone);
 }

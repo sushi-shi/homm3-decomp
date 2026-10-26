@@ -32,6 +32,10 @@
 #include "editor/RefCountingPtr.h"
 #include "Uncopyable.h"
 
+// road_type.h owns the road and river domains; the cell only names them.
+H3_ENUM_DECLARE(TRoadType)
+H3_ENUM_DECLARE(TRiverType)
+
 class TGameObject;
 class TRawIStream;
 class TRawOStream;
@@ -711,9 +715,9 @@ public:
 
     TTerrainType getTerrainType() const { return TTerrainType(_m_terrainType); }
     unsigned int getTileNum() const { return _m_tileNum; }
-    unsigned int getRiverType() const { return _m_riverType; }
+    H3_ENUM_RETURN(TRiverType, unsigned int) getRiverType() const { return static_cast<H3_ENUM_RETURN(TRiverType, unsigned int)>(_m_riverType); }
     unsigned int getRiverTileNum() const { return _m_riverTileNum; }
-    unsigned int getRoadType() const { return _m_roadType; }
+    H3_ENUM_RETURN(TRoadType, unsigned int) getRoadType() const { return static_cast<H3_ENUM_RETURN(TRoadType, unsigned int)>(_m_roadType); }
     unsigned int getRoadTileNum() const { return _m_roadTileNum; }
     bool getBHFlipped() const { return _m_bHFlipped; }
     bool getBVFlipped() const { return _m_bVFlipped; }
@@ -724,9 +728,9 @@ public:
 
     void setTerrainType(TTerrainType newTerrainType) { _m_terrainType = H3_IDX(newTerrainType); }
     void setTileNum(unsigned int newTileNum) { _m_tileNum = newTileNum; }
-    void setRiverType(unsigned int newRiverType) { _m_riverType = newRiverType; }
+    void setRiverType(H3_ENUM_PARAM(TRiverType, unsigned int) newRiverType) { _m_riverType = H3_IDX(newRiverType); }
     void setRiverTileNum(unsigned int newTileNum) { _m_riverTileNum = newTileNum; }
-    void setRoadType(unsigned int newRoadType) { _m_roadType = newRoadType; }
+    void setRoadType(H3_ENUM_PARAM(TRoadType, unsigned int) newRoadType) { _m_roadType = H3_IDX(newRoadType); }
     void setRoadTileNum(unsigned int newTileNum) { _m_roadTileNum = newTileNum; }
     void setBHFlipped(bool bFlipped) { _m_bHFlipped = bFlipped; }
     void setBVFlipped(bool bFlipped) { _m_bVFlipped = bFlipped; }

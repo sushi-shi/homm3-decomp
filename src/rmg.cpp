@@ -9876,7 +9876,7 @@ unsigned char type_random_map_generator::paintRoad(TRmgMapPosition position, int
             position = previous;
             type_road_map adapter(&levelMap);
             TRoadPlacementOp painter(
-                &adapter, roadType, TTilePoint(position.getX(), position.getY()));
+                &adapter, H3_ENUM_VALUE(TRoadType, roadType), TTilePoint(position.getX(), position.getY()));
             painted = 1;
             for (;;) {
                 TRmgMapItem* item = m_map.getMapItem(position);
@@ -10031,7 +10031,7 @@ void type_random_map_generator::createRiverToJoin(TRmgMapPosition source)
         m_map.getWidth(), m_map.getHeight());
     type_river_map mapAdapter(&levelMap);
     TRiverPlacementOp riverPainter(
-        &mapAdapter, riverType, TTilePoint(nextPosition.getX(), nextPosition.getY()));
+        &mapAdapter, H3_ENUM_VALUE(TRiverType, riverType), TTilePoint(nextPosition.getX(), nextPosition.getY()));
     while (mapItem->m_movement.m_cost > 0) {
         position = mapItem->m_previousTile;
         mapItem = m_map.getMapItem(position);
@@ -10278,7 +10278,7 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
         m_map.getWidth(), m_map.getHeight());
     type_river_map mapAdapter(&levelMap);
     TRiverPlacementOp riverPainter(
-        &mapAdapter, riverType, TTilePoint(position.getX(), position.getY()));
+        &mapAdapter, H3_ENUM_VALUE(TRiverType, riverType), TTilePoint(position.getX(), position.getY()));
 
     if (mapItem->m_tileData.m_blockedDirections) {
         for (direction = 0; direction < 4; ++direction) {

@@ -242,7 +242,7 @@ class TRiverPlacementOp : public TRiverOp {
 public:
     TRiverPlacementOp(
         TRiverOp::TAbstractMap* newAdapter,
-        int newRiverType,
+        H3_ENUM_PARAM(TRiverType, int) newRiverType,
         const TTilePoint& start);
     virtual ~TRiverPlacementOp();
 
@@ -316,7 +316,7 @@ class TRoadPlacementOp : public TRoadOp {
 public:
     TRoadPlacementOp(
         TRoadOp::TAbstractMap* newAdapter,
-        int newRoadType,
+        H3_ENUM_PARAM(TRoadType, int) newRoadType,
         const TTilePoint& start);
     virtual ~TRoadPlacementOp();
 

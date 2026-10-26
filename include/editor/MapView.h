@@ -409,8 +409,8 @@ private:
     TObjectSlot _m_objectSlot;
     _TBrush _m_brush;
     TTerrainType _m_terrainType;
-    int _m_riverType;
-    int _m_roadType;
+    H3_ENUM_STORAGE(TRiverType, int) _m_riverType;
+    H3_ENUM_STORAGE(TRoadType, int) _m_roadType;
     _TBrush _m_eraseBrush;
     _TObstacleBrush _m_obstacleBrush;
     TPlayer _m_currentPlayer;

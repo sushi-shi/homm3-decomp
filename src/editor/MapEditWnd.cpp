@@ -6,6 +6,7 @@
 // with deferred scroll repaints posted as WM_USER, and the middle button
 // hands over to the panner. Objects are copied to the clipboard in a
 // format registered per editor window id.
+#include "road_type.h"
 #include "editor/stdafx.h"
 
 #include <assert.h>
@@ -523,8 +524,8 @@ void TMapEditWnd::animate(unsigned int frameNum, bool bForce)
                 bool bAnimated = true;
                 const TGroundTilesetTraits& groundTraits = H3_AT(akGroundTilesetTraits, mapCell.getTerrainType());
                 if (!(groundTraits.m_bAnimated && groundTraits.m_pTileTraits[mapCell.getTileNum()].m_bAnimated)) {
-                    unsigned int riverType = mapCell.getRiverType();
-                    if (!(riverType != 0 && akRiverTilesetTraits[riverType - 1].m_bAnimated))
+                    H3_ENUM_STORAGE(TRiverType, unsigned int) riverType = mapCell.getRiverType();
+                    if (!(riverType != eRiverNone && akRiverTilesetTraits[H3_IDX(riverType) - 1].m_bAnimated))
                         bAnimated = false;
                 }
                 if (bAnimated) {
@@ -1037,8 +1038,8 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
         for (cell.x = cells.left; cell.x < cells.right; cell.x++) {
             CPoint pos((cell.x - _m_viewPos.x) * tileSize - rect.left, (cell.y - _m_viewPos.y) * tileSize - rect.top);
             const TGameMap::TLayer::TCell& mapCell = layer.getCell(cell.x, cell.y);
-            if (mapCell.getRiverType() != 0)
-                (*akZoomTraits[_m_zoom].m_pDrawTile)(akRiverTilesetTraits[mapCell.getRiverType() - 1].m_pSprite,
+            if (mapCell.getRiverType() != eRiverNone)
+                (*akZoomTraits[_m_zoom].m_pDrawTile)(akRiverTilesetTraits[H3_IDX(mapCell.getRiverType()) - 1].m_pSprite,
                                                   mapCell.getRiverTileNum(), pos.x, pos.y,
                                                   _m_backBuffer.getLine(rect.top) + rect.left,
                                                   rect.Width(), rect.Height(), _m_backBuffer.getPitch(),
@@ -1052,8 +1053,8 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
             CPoint pos((cell.x - _m_viewPos.x) * tileSize - rect.left,
                        (cell.y - _m_viewPos.y) * tileSize + tileSize / 2 - rect.top);
             const TGameMap::TLayer::TCell& mapCell = layer.getCell(cell.x, cell.y);
-            if (mapCell.getRoadType() != 0)
-                (*akZoomTraits[_m_zoom].m_pDrawTile)(akRoadTilesetTraits[mapCell.getRoadType() - 1].m_pSprite,
+            if (mapCell.getRoadType() != eRoadNone)
+                (*akZoomTraits[_m_zoom].m_pDrawTile)(akRoadTilesetTraits[H3_IDX(mapCell.getRoadType()) - 1].m_pSprite,
                                                   mapCell.getRoadTileNum(), pos.x, pos.y,
                                                   _m_backBuffer.getLine(rect.top) + rect.left,
                                                   rect.Width(), rect.Height(), _m_backBuffer.getPitch(),
