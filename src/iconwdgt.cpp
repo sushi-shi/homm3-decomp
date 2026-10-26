@@ -232,38 +232,38 @@ void iconWidget::draw() const
     switch (m_style) {
     case ICON_STYLE_PLAIN:
         switch (m_sprite->get_resType()) {
-        case RESOURCE_TYPE_SPRITE:
+        case RType_sprite:
             m_sprite->Draw(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 1);
             break;
-        case RESOURCE_TYPE_CREATURE:
+        case RType_creature:
             m_sprite->DrawCreature(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(),
                 m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 0);
             break;
-        case RESOURCE_TYPE_ADVENTURE_OBJECT:
+        case RType_advobj:
             m_sprite->DrawAdvObj(m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
             break;
-        case RESOURCE_TYPE_HERO:
+        case RType_hero:
             m_sprite->DrawHero(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(),
                 m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
             break;
-        case RESOURCE_TYPE_TILESET:
+        case RType_tileset:
             m_sprite->DrawTile(m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 0);
             break;
-        case RESOURCE_TYPE_POINTER:
+        case RType_pointer:
             m_sprite->DrawPointer(m_frame, g_windowManager->m_screenBitmap,
                 drawX, drawY, m_isFlipped);
             break;
-        case RESOURCE_TYPE_INTERFACE:
+        case RType_interface:
             m_sprite->DrawInterface(m_frame, 0, 0, m_sprite->GetWidth(),
                 m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
             break;
-        case RESOURCE_TYPE_COMBAT_HERO:
+        case RType_combat_hero:
             m_sprite->DrawCombatHero(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(),
                 m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
@@ -277,38 +277,38 @@ void iconWidget::draw() const
         if (m_sprite->GetHeight() + 2 < m_height)
             drawY += m_height - m_sprite->GetHeight() - 2;
         switch (m_sprite->get_resType()) {
-        case RESOURCE_TYPE_SPRITE:
+        case RType_sprite:
             m_sprite->Draw(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 1);
             break;
-        case RESOURCE_TYPE_CREATURE:
+        case RType_creature:
             m_sprite->DrawCreature(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(),
                 m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 0);
             break;
-        case RESOURCE_TYPE_ADVENTURE_OBJECT:
+        case RType_advobj:
             m_sprite->DrawAdvObj(m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
             break;
-        case RESOURCE_TYPE_HERO:
+        case RType_hero:
             m_sprite->DrawHero(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(),
                 m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
             break;
-        case RESOURCE_TYPE_TILESET:
+        case RType_tileset:
             m_sprite->DrawTile(m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 0);
             break;
-        case RESOURCE_TYPE_POINTER:
+        case RType_pointer:
             m_sprite->DrawPointer(m_frame, g_windowManager->m_screenBitmap,
                 drawX, drawY, m_isFlipped);
             break;
-        case RESOURCE_TYPE_INTERFACE:
+        case RType_interface:
             m_sprite->DrawInterface(m_frame, 0, 0, m_sprite->GetWidth(),
                 m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
             break;
-        case RESOURCE_TYPE_COMBAT_HERO:
+        case RType_combat_hero:
             m_sprite->DrawCombatHero(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(),
                 m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);

@@ -14,7 +14,7 @@ DC_ADDRESS(0x129b3c, 0xe)
 MAC_ADDRESS(0x15da8c, 0x84)
 sample::sample(const char* newName, const void* src, long len,
                long channel, long volume, long loop)
-    : resource(newName, RESOURCE_TYPE_SFX)
+    : resource(newName, RType_sfx)
 {
     memSample.memCindex = channel;
     memSample.memVolume = volume;

@@ -19,7 +19,7 @@ resource::resource(const char* newName, EResourceType newType)
         ReferenceCount = 0;
     } else {
         Name[0] = 0;
-        resType = RESOURCE_TYPE_NONE;
+        resType = RType_null;
         ReferenceCount = -1;
     }
 }

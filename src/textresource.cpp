@@ -7,7 +7,7 @@
 
 // Original: TTextResource::TTextResource; textresource.cpp:33
 DC_ADDRESS(0x163808, 0x50)
-TTextResource::TTextResource() : resource(0, RESOURCE_TYPE_NONE), Data(0)
+TTextResource::TTextResource() : resource(0, RType_null), Data(0)
 {
 }
 
@@ -17,7 +17,7 @@ VA(0x005bbba0, 0x227)
 DC_ADDRESS(0x163858, 0x14c)
 MAC_ADDRESS(0x1b0b70, 0x21c)
 TTextResource::TTextResource(const char* name, int size, const char* data)
-    : resource(name, RESOURCE_TYPE_TEXT)
+    : resource(name, RType_text)
 {
     Data = new char[size];
     if (!Data)
@@ -96,7 +96,7 @@ unsigned int TTextResource::getSize() const
 // Original: TSpreadsheetResource::TSpreadsheetResource; textresource.cpp:177
 DC_ADDRESS(0x1639ec, 0x84)
 TSpreadsheetResource::TSpreadsheetResource()
-    : resource(0, RESOURCE_TYPE_NONE), Data(0)
+    : resource(0, RType_null), Data(0)
 {
 }
 
@@ -107,7 +107,7 @@ DC_ADDRESS(0x163a70, 0x1c0)
 MAC_ADDRESS(0x1b0ea8, 0x270)
 TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
                                             const char* data)
-    : resource(name, RESOURCE_TYPE_TEXT)
+    : resource(name, RType_text)
 {
     m_dataSize = size;
     Data = new char[size];

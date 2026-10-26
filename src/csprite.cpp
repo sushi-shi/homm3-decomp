@@ -23,7 +23,7 @@ VA_COMPGEN(0x0047b8f0, 0x21, SCALAR_DELETING_DTOR, CSprite)
 // remaining owned fields have the same null/zero initial state.
 DC_ADDRESS(0x07215c, 0x80)
 CSprite::CSprite()
-    : resource(0, RESOURCE_TYPE_NONE), s(0), p(0), p24(0),
+    : resource(0, RType_null), s(0), p(0), p24(0),
       numSequences(0), validSeqMask(0), Width(0), Height(0)
 {
 }
@@ -453,22 +453,22 @@ DC_ADDRESS(0x0732ec, 0xc8)
 int CSprite::GetSpriteType(const char* name)
 {
     if (!stricmp(name, "sprite"))
-        return RESOURCE_TYPE_SPRITE;
+        return RType_sprite;
     if (!stricmp(name, "creature"))
-        return RESOURCE_TYPE_CREATURE;
+        return RType_creature;
     if (!stricmp(name, "advobj"))
-        return RESOURCE_TYPE_ADVENTURE_OBJECT;
+        return RType_advobj;
     if (!stricmp(name, "hero"))
-        return RESOURCE_TYPE_HERO;
+        return RType_hero;
     if (!stricmp(name, "tileset"))
-        return RESOURCE_TYPE_TILESET;
+        return RType_tileset;
     if (!stricmp(name, "pointer"))
-        return RESOURCE_TYPE_POINTER;
+        return RType_pointer;
     if (!stricmp(name, "interface"))
-        return RESOURCE_TYPE_INTERFACE;
+        return RType_interface;
     if (!stricmp(name, "combathero"))
-        return RESOURCE_TYPE_COMBAT_HERO;
-    return RESOURCE_TYPE_INVALID;
+        return RType_combat_hero;
+    return RType_invalid;
 }
 
 // Original: CSprite::GetSpriteTypeName; csprite.cpp:506
@@ -476,18 +476,18 @@ DC_ADDRESS(0x0733b4, 0x78)
 const char* CSprite::GetSpriteTypeName(const int type)
 {
     switch (type) {
-    case RESOURCE_TYPE_SPRITE: return "Sprite";
-    case RESOURCE_TYPE_SPRITE_DEFINITION: return "SpriteDef";
-    case RESOURCE_TYPE_PALETTE: return "Palette";
-    case RESOURCE_TYPE_CREATURE: return "Creature";
-    case RESOURCE_TYPE_ADVENTURE_OBJECT: return "AdvObj";
-    case RESOURCE_TYPE_HERO: return "Hero";
-    case RESOURCE_TYPE_TILESET: return "Tileset";
-    case RESOURCE_TYPE_POINTER: return "Pointer";
-    case RESOURCE_TYPE_INTERFACE: return "Interface";
-    case RESOURCE_TYPE_SPRITE_FRAME: return "SpriteFrame";
-    case RESOURCE_TYPE_ADVENTURE_MASK: return "AdvObjMask";
-    case RESOURCE_TYPE_COMBAT_HERO: return "CombatHero";
+    case RType_sprite: return "Sprite";
+    case RType_spritedef: return "SpriteDef";
+    case RType_palette: return "Palette";
+    case RType_creature: return "Creature";
+    case RType_advobj: return "AdvObj";
+    case RType_hero: return "Hero";
+    case RType_tileset: return "Tileset";
+    case RType_pointer: return "Pointer";
+    case RType_interface: return "Interface";
+    case RType_spriteframe: return "SpriteFrame";
+    case RType_advmask: return "AdvObjMask";
+    case RType_combat_hero: return "CombatHero";
     default: return "?";
     }
 }
@@ -498,26 +498,26 @@ MAC_ADDRESS(0x08b03c, 0x50)
 int CSprite::GetNumSeqs(int type)
 {
     switch (type) {
-    case RESOURCE_TYPE_CREATURE:
+    case RType_creature:
         return 22;
-    case RESOURCE_TYPE_HERO:
+    case RType_hero:
         return 18;
-    case RESOURCE_TYPE_COMBAT_HERO:
+    case RType_combat_hero:
         return 5;
-    case RESOURCE_TYPE_SPRITE:
-    case RESOURCE_TYPE_ADVENTURE_OBJECT:
-    case RESOURCE_TYPE_TILESET:
-    case RESOURCE_TYPE_POINTER:
-    case RESOURCE_TYPE_INTERFACE:
+    case RType_sprite:
+    case RType_advobj:
+    case RType_tileset:
+    case RType_pointer:
+    case RType_interface:
         return 1;
-    case RESOURCE_TYPE_SPRITE_DEFINITION:
-    case RESOURCE_TYPE_SPRITE_FRAME:
-    case RESOURCE_TYPE_RESERVED_74:
-    case RESOURCE_TYPE_RESERVED_75:
-    case RESOURCE_TYPE_RESERVED_76:
-    case RESOURCE_TYPE_RESERVED_77:
-    case RESOURCE_TYPE_RESERVED_78:
-    case RESOURCE_TYPE_ADVENTURE_MASK:
+    case RType_spritedef:
+    case RType_spriteframe:
+    case RType_reserved_74:
+    case RType_reserved_75:
+    case RType_reserved_76:
+    case RType_reserved_77:
+    case RType_reserved_78:
+    case RType_advmask:
         return 0;
     default:
         return 0;
@@ -530,7 +530,7 @@ DC_ADDRESS(0x073468, 0x416)
 int CSprite::GetSequenceID(int type, const char* name)
 {
     switch (type) {
-    case RESOURCE_TYPE_CREATURE:
+    case RType_creature:
         if (!stricmp(name, "cs_walk")) return cs_walk;
         if (!stricmp(name, "cs_fidget")) return cs_fidget;
         if (!stricmp(name, "cs_wait")) return cs_wait;
@@ -554,7 +554,7 @@ int CSprite::GetSequenceID(int type, const char* name)
         if (!stricmp(name, "cs_prewalk")) return cs_prewalk;
         if (!stricmp(name, "cs_postwalk")) return cs_postwalk;
         break;
-    case RESOURCE_TYPE_HERO:
+    case RType_hero:
         if (!stricmp(name, "hs_stand_n")) return hs_stand_n;
         if (!stricmp(name, "hs_stand_ne")) return hs_stand_ne;
         if (!stricmp(name, "hs_stand_e")) return hs_stand_e;
@@ -574,23 +574,23 @@ int CSprite::GetSequenceID(int type, const char* name)
         if (!stricmp(name, "hs_turn_se_s")) return hs_turn_se_s;
         if (!stricmp(name, "hs_turn_s_se")) return hs_turn_s_se;
         break;
-    case RESOURCE_TYPE_COMBAT_HERO:
+    case RType_combat_hero:
         if (!stricmp(name, "chs_stand")) return combatHeroStand;
         if (!stricmp(name, "chs_fidget")) return combatHeroFidget;
         if (!stricmp(name, "chs_defeat")) return combatHeroDefeat;
         if (!stricmp(name, "chs_victory")) return combatHeroVictory;
         if (!stricmp(name, "chs_cast")) return combatHeroCast;
         break;
-    case RESOURCE_TYPE_SPRITE:
-    case RESOURCE_TYPE_ADVENTURE_OBJECT:
-    case RESOURCE_TYPE_TILESET:
-    case RESOURCE_TYPE_POINTER:
-    case RESOURCE_TYPE_INTERFACE:
+    case RType_sprite:
+    case RType_advobj:
+    case RType_tileset:
+    case RType_pointer:
+    case RType_interface:
         if (!stricmp(name, "default")) return 0;
         break;
-    case RESOURCE_TYPE_SPRITE_DEFINITION:
-    case RESOURCE_TYPE_SPRITE_FRAME:
-    case RESOURCE_TYPE_ADVENTURE_MASK:
+    case RType_spritedef:
+    case RType_spriteframe:
+    case RType_advmask:
         return -1;
     }
     return -1;
@@ -601,7 +601,7 @@ DC_ADDRESS(0x073880, 0x290)
 const char* CSprite::GetSequenceName(int type, int num)
 {
     switch (type) {
-    case RESOURCE_TYPE_CREATURE:
+    case RType_creature:
         switch (num) {
         case cs_walk: return "cs_walk";
         case cs_fidget: return "cs_fidget";
@@ -627,7 +627,7 @@ const char* CSprite::GetSequenceName(int type, int num)
         case cs_postwalk: return "cs_postwalk";
         }
         break;
-    case RESOURCE_TYPE_HERO:
+    case RType_hero:
         switch (num) {
         case hs_stand_n: return "hs_stand_n";
         case hs_stand_ne: return "hs_stand_ne";
@@ -649,7 +649,7 @@ const char* CSprite::GetSequenceName(int type, int num)
         case hs_turn_s_se: return "hs_turn_s_se";
         }
         break;
-    case RESOURCE_TYPE_COMBAT_HERO:
+    case RType_combat_hero:
         switch (num) {
         case combatHeroStand: return "chs_stand";
         case combatHeroFidget: return "chs_fidget";
@@ -658,15 +658,15 @@ const char* CSprite::GetSequenceName(int type, int num)
         case combatHeroCast: return "chs_cast";
         }
         break;
-    case RESOURCE_TYPE_SPRITE:
-    case RESOURCE_TYPE_ADVENTURE_OBJECT:
-    case RESOURCE_TYPE_TILESET:
-    case RESOURCE_TYPE_POINTER:
-    case RESOURCE_TYPE_INTERFACE:
+    case RType_sprite:
+    case RType_advobj:
+    case RType_tileset:
+    case RType_pointer:
+    case RType_interface:
         return "default";
-    case RESOURCE_TYPE_SPRITE_DEFINITION:
-    case RESOURCE_TYPE_SPRITE_FRAME:
-    case RESOURCE_TYPE_ADVENTURE_MASK:
+    case RType_spritedef:
+    case RType_spriteframe:
+    case RType_advmask:
         return "?";
     }
     return "?";

@@ -249,41 +249,41 @@ void reportMissingTypedResource(const char* caller,
 {
     std::string typeName;
     switch (resourceType) {
-    case RESOURCE_TYPE_NONE:
+    case RType_null:
         typeName = DATA_COMPGEN(0x00682fc8, nullResourceType, "null");
         break;
-    case RESOURCE_TYPE_DATA:
+    case RType_data:
         typeName = DATA_COMPGEN(0x00682fc0, dataResourceType, "data");
         break;
-    case RESOURCE_TYPE_TEXT:
+    case RType_text:
         typeName = DATA_COMPGEN(0x00682fb8, textResourceType, "text");
         break;
-    case RESOURCE_TYPE_BITMAP:
+    case RType_bitmap:
         typeName = DATA_COMPGEN(0x00682fb0, bitmap8ResourceType, "bitmap8");
         break;
-    case RESOURCE_TYPE_BITMAP24:
+    case RType_bitmap24:
         typeName = DATA_COMPGEN(0x00682fa4, bitmap24ResourceType, "bitmap24");
         break;
-    case RESOURCE_TYPE_BITMAP16:
+    case RType_bitmap16:
         typeName = DATA_COMPGEN(0x00682f98, bitmap16ResourceType, "bitmap16");
         break;
-    case RESOURCE_TYPE_BITMAP565:
+    case RType_bitmap565:
         typeName = DATA_COMPGEN(0x00682f8c, bitmap565ResourceType, "bitmap565");
         break;
-    case RESOURCE_TYPE_BITMAP555:
+    case RType_bitmap555:
         typeName = DATA_COMPGEN(0x00682f80, bitmap555ResourceType, "bitmap555");
         break;
-    case RESOURCE_TYPE_BITMAP1555:
+    case RType_bitmap1555:
         typeName = DATA_COMPGEN(0x00682f74, bitmap1555ResourceType,
                                      "bitmap1555");
         break;
-    case RESOURCE_TYPE_MIDI:
+    case RType_midi:
         typeName = DATA_COMPGEN(0x00682f6c, midiResourceType, "midi");
         break;
-    case RESOURCE_TYPE_FONT:
+    case RType_font:
         typeName = DATA_COMPGEN(0x00682f64, fontResourceType, "font");
         break;
-    case RESOURCE_TYPE_PALETTE:
+    case RType_palette:
         typeName = DATA_COMPGEN(0x00682f5c, paletteResourceType, "palette");
         break;
     default: {
@@ -309,41 +309,41 @@ void reportMissingSpriteResource(const char* caller,
 {
     std::string typeName;
     switch (resourceType) {
-    case RESOURCE_TYPE_SPRITE:
+    case RType_sprite:
         typeName = DATA_COMPGEN(0x0067555c, spriteResourceType, "sprite");
         break;
-    case RESOURCE_TYPE_SPRITE_DEFINITION:
+    case RType_spritedef:
         typeName = DATA_COMPGEN(
             0x00682ff4, spriteDefinitionResourceType, "spritedef");
         break;
-    case RESOURCE_TYPE_CREATURE:
+    case RType_creature:
         typeName = DATA_COMPGEN(0x00675550, creatureResourceType, "creature");
         break;
-    case RESOURCE_TYPE_ADVENTURE_OBJECT:
+    case RType_advobj:
         typeName = DATA_COMPGEN(
             0x00675548, adventureObjectResourceType, "advobj");
         break;
-    case RESOURCE_TYPE_HERO:
+    case RType_hero:
         typeName = DATA_COMPGEN(0x00675540, heroResourceType, "hero");
         break;
-    case RESOURCE_TYPE_TILESET:
+    case RType_tileset:
         typeName = DATA_COMPGEN(0x00675538, tilesetResourceType, "tileset");
         break;
-    case RESOURCE_TYPE_POINTER:
+    case RType_pointer:
         typeName = DATA_COMPGEN(0x00675530, pointerResourceType, "pointer");
         break;
-    case RESOURCE_TYPE_INTERFACE:
+    case RType_interface:
         typeName = DATA_COMPGEN(0x00675524, interfaceResourceType, "interface");
         break;
-    case RESOURCE_TYPE_SPRITE_FRAME:
+    case RType_spriteframe:
         typeName = DATA_COMPGEN(0x00682fe4, spriteFrameResourceType,
                                      "sprite frame");
         break;
-    case RESOURCE_TYPE_COMBAT_HERO:
+    case RType_combat_hero:
         typeName = DATA_COMPGEN(0x00682fd8, combatHeroResourceType,
                                      "combat hero");
         break;
-    case RESOURCE_TYPE_ADVENTURE_MASK:
+    case RType_advmask:
         typeName = DATA_COMPGEN(0x00682fd0, adventureMaskResourceType,
                                      "advmask");
         break;
@@ -370,7 +370,7 @@ void ResourceManager::RemapGraphics()
         resource* value = position->second;
 
         switch (value->get_resType()) {
-        case RESOURCE_TYPE_BITMAP16: {
+        case RType_bitmap16: {
             std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->get_Name()));
             if (loaded.get()) {
                 loaded->Draw(0, 0, loaded->GetWidth(), loaded->GetHeight(),
@@ -379,21 +379,21 @@ void ResourceManager::RemapGraphics()
             break;
         }
 
-        case RESOURCE_TYPE_CREATURE:
-        case RESOURCE_TYPE_ADVENTURE_OBJECT:
-        case RESOURCE_TYPE_HERO:
-        case RESOURCE_TYPE_TILESET:
-        case RESOURCE_TYPE_POINTER:
-        case RESOURCE_TYPE_INTERFACE:
-        case RESOURCE_TYPE_COMBAT_HERO:
+        case RType_creature:
+        case RType_advobj:
+        case RType_hero:
+        case RType_tileset:
+        case RType_pointer:
+        case RType_interface:
+        case RType_combat_hero:
             static_cast<CSprite*>(value)->ResetPalette();
             break;
 
-        case RESOURCE_TYPE_BITMAP:
+        case RType_bitmap:
             static_cast<Bitmap816*>(value)->ResetPalette();
             break;
 
-        case RESOURCE_TYPE_FONT: {
+        case RType_font: {
             std::auto_ptr<TPalette16> palette(loadPalette(
                 DATA_COMPGEN(0x0067f780, resourceGamePaletteName,
                              "game.pal")));
@@ -402,7 +402,7 @@ void ResourceManager::RemapGraphics()
             break;
         }
 
-        case RESOURCE_TYPE_PALETTE: {
+        case RType_palette: {
             TPalette16* destination = static_cast<TPalette16*>(value);
             std::auto_ptr<TPalette16> loaded(loadPalette(value->get_Name()));
             if (loaded.get())
@@ -424,7 +424,7 @@ void ResourceManager::SaturateGraphics()
         resource* value = position->second;
 
         switch (value->get_resType()) {
-        case RESOURCE_TYPE_BITMAP16: {
+        case RType_bitmap16: {
             std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->get_Name()));
             if (loaded.get()) {
                 loaded->Draw(0, 0, loaded->GetWidth(), loaded->GetHeight(),
@@ -433,34 +433,34 @@ void ResourceManager::SaturateGraphics()
             break;
         }
 
-        case RESOURCE_TYPE_CREATURE:
-        case RESOURCE_TYPE_ADVENTURE_OBJECT:
-        case RESOURCE_TYPE_HERO:
-        case RESOURCE_TYPE_TILESET:
-        case RESOURCE_TYPE_POINTER:
-        case RESOURCE_TYPE_INTERFACE:
-        case RESOURCE_TYPE_COMBAT_HERO: {
+        case RType_creature:
+        case RType_advobj:
+        case RType_hero:
+        case RType_tileset:
+        case RType_pointer:
+        case RType_interface:
+        case RType_combat_hero: {
             CSprite* sprite = static_cast<CSprite*>(value);
             sprite->GetPalette24().AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
             sprite->ResetPalette();
             break;
         }
 
-        case RESOURCE_TYPE_BITMAP: {
+        case RType_bitmap: {
             Bitmap816* bitmap = static_cast<Bitmap816*>(value);
             bitmap->GetPalette24().AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
             bitmap->ResetPalette();
             break;
         }
 
-        case RESOURCE_TYPE_FONT: {
+        case RType_font: {
             std::auto_ptr<TPalette16> palette(loadPalette("game.pal"));
             if (palette.get())
                 static_cast<font*>(value)->SetPalette(*palette);
             break;
         }
 
-        case RESOURCE_TYPE_PALETTE: {
+        case RType_palette: {
             TPalette16* destination = static_cast<TPalette16*>(value);
             std::auto_ptr<TPalette16> loaded(loadPalette(value->get_Name()));
             if (loaded.get())
@@ -735,7 +735,7 @@ Bitmap816* ResourceManager::GetBitmap816(const char* name)
             reportMissingTypedResource(
                 DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
                              "GetBitmap816"),
-                RESOURCE_TYPE_BITMAP, name);
+                RType_bitmap, name);
 
             // Each loader owns its fallback name as .rdata array storage
             // (two separate "default.pal" copies).
@@ -746,7 +746,7 @@ Bitmap816* ResourceManager::GetBitmap816(const char* name)
                 reportMissingTypedResource(
                     DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
                                  "GetBitmap816"),
-                    RESOURCE_TYPE_BITMAP, fallbackName);
+                    RType_bitmap, fallbackName);
                 return 0;
             }
         }
@@ -815,7 +815,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
             reportMissingTypedResource(
                 DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
                              "GetBitmap16"),
-                RESOURCE_TYPE_BITMAP16, name);
+                RType_bitmap16, name);
 
             DATA(0x006410a8) static const char fallbackName[] = "dfault24.pcx";
             lodFile = findBitmapResource(fallbackName);
@@ -824,7 +824,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
                 reportMissingTypedResource(
                     DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
                                  "GetBitmap16"),
-                    RESOURCE_TYPE_BITMAP16, fallbackName);
+                    RType_bitmap16, fallbackName);
                 return 0;
             }
         }
@@ -913,7 +913,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
         reportMissingTypedResource(
             DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                          "GetPalette"),
-            RESOURCE_TYPE_PALETTE, name);
+            RType_palette, name);
 
         DATA(0x006410b8) static const char fallbackName[] = "default.pal";
         lodFile = findBitmapResource(fallbackName);
@@ -922,7 +922,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
             reportMissingTypedResource(
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
-                RESOURCE_TYPE_PALETTE, fallbackName);
+                RType_palette, fallbackName);
             return 0;
         }
     }
@@ -998,7 +998,7 @@ TPalette24* ResourceManager::GetPalette24(const char* name)
     if (!lodFile) {
         reportMissingTypedResource(
             DATA_COMPGEN(0x0068304c, loadPaletteErrorContext, "GetPalette"),
-            RESOURCE_TYPE_PALETTE, name);
+            RType_palette, name);
 
         DATA(0x006410c4) static const char fallbackName[] = "default.pal";
         lodFile = findBitmapResource(fallbackName);
@@ -1007,7 +1007,7 @@ TPalette24* ResourceManager::GetPalette24(const char* name)
             reportMissingTypedResource(
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
-                RESOURCE_TYPE_PALETTE, fallbackName);
+                RType_palette, fallbackName);
             return 0;
         }
     }
@@ -1085,7 +1085,7 @@ font* ResourceManager::loadFont(const char* name)
     if (!lodFile) {
         reportMissingTypedResource(
             DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
-            RESOURCE_TYPE_FONT, name);
+            RType_font, name);
 
         DATA(0x006410d0) static const char fallbackName[] = "default.fnt";
         lodFile = findBitmapResource(fallbackName);
@@ -1093,7 +1093,7 @@ font* ResourceManager::loadFont(const char* name)
         if (!lodFile) {
             reportMissingTypedResource(
                 DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
-                RESOURCE_TYPE_FONT, fallbackName);
+                RType_font, fallbackName);
             return 0;
         }
     }
@@ -1166,7 +1166,7 @@ TTextResource* ResourceManager::loadText(const char* name)
     if (!lodFile) {
         reportMissingTypedResource(
             DATA_COMPGEN(0x00683060, loadTextErrorContext, "GetText"),
-            RESOURCE_TYPE_TEXT, name);
+            RType_text, name);
         return 0;
     }
 
@@ -1235,7 +1235,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
         reportMissingTypedResource(
             DATA_COMPGEN(0x00683068, loadSpreadsheetErrorContext,
                          "GetSpreadsheet"),
-            RESOURCE_TYPE_TEXT, name);
+            RType_text, name);
         return 0;
     }
 
@@ -1483,7 +1483,7 @@ CSprite* ResourceManager::GetSprite(const char* name)
         // Complete reports failed archive lookups; Mac retries without a reporter.
         reportMissingSpriteResource(
             DATA_COMPGEN(0x00683088, getSpriteErrorContext, "GetSprite"),
-            RESOURCE_TYPE_SPRITE, name);
+            RType_sprite, name);
 #endif
 
         lodFile = findSpriteResource(name);
@@ -1492,7 +1492,7 @@ CSprite* ResourceManager::GetSprite(const char* name)
 #ifdef _WIN32
             reportMissingSpriteResource(
                 DATA_COMPGEN(0x00683088, getSpriteErrorContext, "GetSprite"),
-                RESOURCE_TYPE_SPRITE, name);
+                RType_sprite, name);
 #endif
             return 0;
         }
@@ -1561,14 +1561,14 @@ CSprite* ResourceManager::GetSprite(const char* name)
             TCroppedSpriteFrameHeader croppedHeader;
             unsigned char* frameData;
 
-            if (Sdef.m_type == RESOURCE_TYPE_SPRITE ||
-                Sdef.m_type == RESOURCE_TYPE_CREATURE ||
-                Sdef.m_type == RESOURCE_TYPE_ADVENTURE_OBJECT ||
-                Sdef.m_type == RESOURCE_TYPE_HERO ||
-                Sdef.m_type == RESOURCE_TYPE_INTERFACE ||
-                Sdef.m_type == RESOURCE_TYPE_TILESET ||
-                Sdef.m_type == RESOURCE_TYPE_POINTER ||
-                Sdef.m_type == RESOURCE_TYPE_COMBAT_HERO) {
+            if (Sdef.m_type == RType_sprite ||
+                Sdef.m_type == RType_creature ||
+                Sdef.m_type == RType_advobj ||
+                Sdef.m_type == RType_hero ||
+                Sdef.m_type == RType_interface ||
+                Sdef.m_type == RType_tileset ||
+                Sdef.m_type == RType_pointer ||
+                Sdef.m_type == RType_combat_hero) {
                 memcpy(&croppedHeader,
                        fileData + sequences[sequenceIndex].m_frameOffsets[frameIndex], sizeof(croppedHeader));
                 croppedHeader.m_dataSize = LITTLE_ENDIAN_LONG(croppedHeader.m_dataSize);
@@ -1600,14 +1600,14 @@ CSprite* ResourceManager::GetSprite(const char* name)
                 sequences[sequenceIndex].m_frameNames[frameIndex]));
 
             if (!frame) {
-                if (Sdef.m_type == RESOURCE_TYPE_SPRITE ||
-                    Sdef.m_type == RESOURCE_TYPE_CREATURE ||
-                    Sdef.m_type == RESOURCE_TYPE_ADVENTURE_OBJECT ||
-                    Sdef.m_type == RESOURCE_TYPE_HERO ||
-                    Sdef.m_type == RESOURCE_TYPE_INTERFACE ||
-                    Sdef.m_type == RESOURCE_TYPE_TILESET ||
-                    Sdef.m_type == RESOURCE_TYPE_POINTER ||
-                    Sdef.m_type == RESOURCE_TYPE_COMBAT_HERO) {
+                if (Sdef.m_type == RType_sprite ||
+                    Sdef.m_type == RType_creature ||
+                    Sdef.m_type == RType_advobj ||
+                    Sdef.m_type == RType_hero ||
+                    Sdef.m_type == RType_interface ||
+                    Sdef.m_type == RType_tileset ||
+                    Sdef.m_type == RType_pointer ||
+                    Sdef.m_type == RType_combat_hero) {
                     frame = new CSpriteFrame(
                         sequences[sequenceIndex].m_frameNames[frameIndex],
                         croppedHeader.m_width, croppedHeader.m_height,
@@ -1717,7 +1717,7 @@ void ResourceManager::GetBackdrop(const char* resName, Bitmap16Bit* destBmap)
     } else {
         reportMissingTypedResource(
             DATA_COMPGEN(0x00683094, getBackdropErrorContext, "GetBackdrop"),
-            RESOURCE_TYPE_BITMAP, resName);
+            RType_bitmap, resName);
     }
 }
 

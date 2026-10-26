@@ -20,7 +20,7 @@ VA_COMPGEN(0x0044f7d0, 0x21, SCALAR_DELETING_DTOR, Bitmap816)
 // buffer directly, and the destructor releases it with delete[].
 DC_ADDRESS(0x053854, 0x10c)
 Bitmap816::Bitmap816(int w, int h)
-    : resource(0, RESOURCE_TYPE_NONE),
+    : resource(0, RType_null),
       ImageSize(w * h), Width(w), Height(h), Pitch(w)
 {
     DataSize = ImageSize;
@@ -35,7 +35,7 @@ DC_ADDRESS(0x053960, 0x106)
 MAC_ADDRESS(0x05daf0, 0xc4)
 Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data,
                      TPalette16* palette16, int dataSize)
-    : resource(name, RESOURCE_TYPE_BITMAP),
+    : resource(name, RType_bitmap),
       ImageSize(w * h), Width(w), Height(h), Pitch(w), m_p16(palette16)
 {
     DataSize = dataSize ? dataSize : ImageSize;
@@ -48,7 +48,7 @@ Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data,
 DC_ADDRESS(0x053a68, 0xa4)
 Bitmap816::Bitmap816(const char* name, int rbits, int rshift,
                      int gbits, int gshift, int bbits, int bshift)
-    : resource(name, RESOURCE_TYPE_BITMAP),
+    : resource(name, RType_bitmap),
       DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(0)
 {
     importPCXFile(name, rbits, rshift, gbits, gshift, bbits, bshift);
@@ -59,7 +59,7 @@ DC_ADDRESS(0x053b0c, 0x96)
 Bitmap816::Bitmap816(const char* name, const char* path,
                      int rbits, int rshift, int gbits, int gshift,
                      int bbits, int bshift)
-    : resource(name, RESOURCE_TYPE_BITMAP),
+    : resource(name, RType_bitmap),
       DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(0)
 {
     char filename[264];

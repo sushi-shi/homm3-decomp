@@ -30,7 +30,7 @@ VA(0x0044df70, 0xA3)
 DC_ADDRESS(0x050b00, 0x104)
 MAC_ADDRESS(0x05be20, 0xc4)
 Bitmap16Bit::Bitmap16Bit(int w, int h)
-    : resource(0, RESOURCE_TYPE_NONE),
+    : resource(0, RType_null),
       ImageSize(w * h * 2), Width(w), Height(h), Pitch(w * 2)
 {
     DataSize = ImageSize;
@@ -47,7 +47,7 @@ VA(0x0044e050, 0xA5)
 DC_ADDRESS(0x050c04, 0x104)
 MAC_ADDRESS(0x05bee4, 0xc0)  // in-span, name/type base ctor + vftable 0x63b9c8
 Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
-    : resource(name, RESOURCE_TYPE_BITMAP16),
+    : resource(name, RType_bitmap16),
       ImageSize(w * h * 2), Width(w), Height(h), Pitch(w * 2),
       referenced(0)
 {
@@ -67,7 +67,7 @@ Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
 DC_ADDRESS(0x050d08, 0xfa)
 Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h,
                          const unsigned short* data, int size)
-    : resource(name, RESOURCE_TYPE_BITMAP16),
+    : resource(name, RType_bitmap16),
       ImageSize(w * h * 2), Width(w), Height(h), Pitch(w * 2)
 {
     DataSize = size ? size : ImageSize;
@@ -80,7 +80,7 @@ Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h,
 // Original: Bitmap16Bit::Bitmap16Bit; bitmap16.cpp:187
 DC_ADDRESS(0x050e04, 0xb8)
 Bitmap16Bit::Bitmap16Bit(const char* name, const char* path)
-    : resource(name, RESOURCE_TYPE_BITMAP16),
+    : resource(name, RType_bitmap16),
       DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(0)
 {
     char fileName[261];

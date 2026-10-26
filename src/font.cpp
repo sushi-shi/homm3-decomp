@@ -10,7 +10,7 @@
 
 // Original: font::font; font.cpp:33
 DC_ADDRESS(0x0a1ba8, 0x5c)
-font::font() : resource("", RESOURCE_TYPE_FONT), Data(0)
+font::font() : resource("", RType_font), Data(0)
 {
 }
 
@@ -23,7 +23,7 @@ DC_ADDRESS(0x0a1c04, 0x90)
 MAC_ADDRESS(0x0c8cdc, 0xb8)  // anchor-global
 font::font(const char* name, const font::TFontSpec& fontspec, int dsize,
            unsigned char* d)
-    : resource(name, RESOURCE_TYPE_FONT), fs(fontspec)
+    : resource(name, RType_font), fs(fontspec)
 {
     Data = new unsigned char[dsize];
     m_dataSize = dsize;

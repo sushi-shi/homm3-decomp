@@ -40,7 +40,7 @@ static const unsigned int kCellWidth = 32;
 // Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:67
 DC_ADDRESS(0x074600, 0x64)
 CSpriteFrame::CSpriteFrame()
-    : resource(0, RESOURCE_TYPE_NONE),
+    : resource(0, RType_null),
       DataSize(0), ImageSize(0), EncodingMethod(eEncodeRaw),
       Width(0), Height(0), CroppedWidth(0), CroppedHeight(0),
       CroppedX(0), CroppedY(0), Pitch(0), map(0)
@@ -53,7 +53,7 @@ MAC_ADDRESS(0x08b24c, 0xc8)
 CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
                            unsigned char* data, int csize,
                            TEncodingMethod encoding)
-    : resource(name, RESOURCE_TYPE_SPRITE),
+    : resource(name, RType_sprite),
       ImageSize(w * h), EncodingMethod(encoding), Width(w), Height(h),
       CroppedWidth(w), CroppedHeight(h), CroppedX(0), CroppedY(0), Pitch(w)
 {
@@ -72,7 +72,7 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
                            unsigned char* data, int csize,
                            TEncodingMethod encoding,
                            int cw, int ch, int cx, int cy)
-    : resource(name, RESOURCE_TYPE_SPRITE),
+    : resource(name, RType_sprite),
       ImageSize(cw * ch), EncodingMethod(encoding), Width(w), Height(h),
       CroppedWidth(cw), CroppedHeight(ch), CroppedX(cx), CroppedY(cy),
       Pitch(cw)
@@ -88,7 +88,7 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
 // Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:188
 DC_ADDRESS(0x0747cc, 0x6e)
 CSpriteFrame::CSpriteFrame(const char* name, unsigned char cropped)
-    : resource(name, RESOURCE_TYPE_SPRITE),
+    : resource(name, RType_sprite),
       DataSize(0), ImageSize(0), EncodingMethod(eEncodeRaw),
       Width(0), Height(0), CroppedWidth(0), CroppedHeight(0),
       CroppedX(0), CroppedY(0), Pitch(0), map(0)
