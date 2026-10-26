@@ -452,6 +452,21 @@ def table_seeds_after_calls(run_targets, covered, ends, sites, min_run=8):
             and run_length(s) >= min_run]
 
 
+def initializer_seeds(c, covered):
+    """The `.CRT$XCU` slots that point inside a decoded function, at one of
+    its instruction boundaries: the CRT calls each slot, so each starts a
+    function that the descent of the code before it ran into."""
+    from homm3.census.eh import initializer_rows
+    if not any(s.name == ".data" for s in c.image.sections):
+        return []
+    out = []
+    for t, slot in initializer_rows(c):
+        owner = covered.get(t)
+        if owner is not None and t != owner and t in c.reached.get(owner, ()):
+            out.append((t, slot))
+    return out
+
+
 def run(image, log=print, catch_bodies=False, reviewed_starts=None):
     c = Census(image, catch_bodies=catch_bodies)
     pe = struct.unpack_from("<I", image.data, 0x3C)[0]
@@ -573,6 +588,11 @@ def run(image, log=print, catch_bodies=False, reviewed_starts=None):
     # deleting destructor after its constructor's throw)
     for t, s in table_seeds_after_calls(run_targets, covered, ends, sites):
         take(t, f"table-after-call@0x{s:x}", check=False)
+    # and so is a `.CRT$XCU` slot: every slot names an initializer, even one
+    # the descent ran into past a thrower's last call and the dead `pop` the
+    # /O1 epilogue leaves after it (h3maped 0x416c06 after bitset::_Xran)
+    for t, slot in initializer_seeds(c, covered):
+        take(t, f"xcu-slot:{slot}", check=False)
     index()
     for t in sorted(c.imms):
         work.append((t, "imm"))

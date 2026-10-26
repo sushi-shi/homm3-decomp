@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3maped.exe sha256=4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37 size=2134016
-# date: 2026-10-25
+# date: 2026-10-26
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 site_rva	value	channel	detail	target_class	ctx	disposition
 0x1026	0x5982f4	code	mov	data	-	kept
@@ -55641,7 +55641,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x17a278	0x4158e7	data	.data	code-start	-	kept
 0x17a27c	0x415913	data	.data	code-start	-	kept
 0x17a280	0x415dc1	data	.data	code-start	-	kept
-0x17a284	0x416c06	data	.data	code-interior	-	dropped
+0x17a284	0x416c06	data	.data	code-start	-	kept
 0x17a288	0x416e02	data	.data	code-start	-	kept
 0x17a28c	0x41735d	data	.data	code-start	-	kept
 0x17a290	0x417379	data	.data	code-start	-	kept

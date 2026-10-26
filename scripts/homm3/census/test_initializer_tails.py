@@ -1,6 +1,7 @@
 """Late-discovered initializer targets must not enlarge an intervening ctor."""
 import struct
 import unittest
+from unittest import mock
 from types import SimpleNamespace
 
 from homm3.census import eh, functions
@@ -111,6 +112,22 @@ class RegistrationRowsTest(unittest.TestCase):
 
     def test_different_stack_cleanup_is_not_the_proven_body(self):
         self.assertEqual(eh.registration_rows(self.census(b'\x5a'), [(0x1000, 7)], 0x1060), [])
+
+
+class InitializerSeedTest(unittest.TestCase):
+    def test_slot_at_an_instruction_inside_a_descended_body_starts_a_function(self):
+        # The body at 1000 ran past a call into 1006, which a slot names;
+        # 1003 is inside an instruction and 2000 lies outside every body.
+        c = SimpleNamespace(image=SimpleNamespace(sections=[SimpleNamespace(name=".data")]),
+                            reached={0x1000: {0x1000, 0x1005, 0x1006}})
+        covered = {0x1000 + i: 0x1000 for i in range(7)}
+        rows = [(0x1006, 3), (0x1003, 4), (0x2000, 5), (0x1000, 6)]
+        with mock.patch.object(eh, "initializer_rows", return_value=rows):
+            self.assertEqual(functions.initializer_seeds(c, covered), [(0x1006, 3)])
+
+    def test_an_image_without_data_has_no_slots(self):
+        c = SimpleNamespace(image=SimpleNamespace(sections=[]), reached={})
+        self.assertEqual(functions.initializer_seeds(c, {}), [])
 
 
 if __name__ == '__main__':
