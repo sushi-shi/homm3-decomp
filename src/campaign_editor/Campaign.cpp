@@ -369,7 +369,7 @@ auto_ptr<TScenarioStartingBonus> TScenarioStartingBonusCloner::clone(const TScen
 
 VA(0x004053d0, 0x4e)
 TScenarioBonusPrimarySkill::TScenarioBonusPrimarySkill(int hero,
-                                                       const TArray<unsigned int, kNumPrimarySkills>& skills)
+                                                       const TArray<unsigned int, H3_IDX(kNumPrimarySkills)>& skills)
     : TScenarioHeroBonus(hero), m_skills(skills)
 {
 }

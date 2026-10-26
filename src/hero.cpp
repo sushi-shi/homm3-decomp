@@ -960,7 +960,7 @@ void hero::initialize(short index)
     m_name[sizeof(m_name) - 1] = 0;
     m_heroClass = akHeroTraits[index].m_class;
     m_skillCount = 0;
-    for (i = 0; i < kNumPrimarySkills; ++i) {
+    for (i = 0; i < H3_IDX(kNumPrimarySkills); ++i) {
         setPrimarySkill(i, akHeroClassTraits[m_heroClass].m_initialPrimarySkill[i]);
     }
 
@@ -1064,7 +1064,7 @@ void hero::initialize(const HeroExtra* setup)
         m_portrait = setup->m_portraitNumber;
 
     if (setup->m_customPrimarySkills) {
-        for (i = 0; i < kNumPrimarySkills; i++)
+        for (i = 0; i < H3_IDX(kNumPrimarySkills); i++)
             setPrimarySkill(i, setup->m_primarySkills[i]);
     }
 
@@ -4186,7 +4186,7 @@ void hero::updateStats()
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_extraText = g_text;
 
-    for (int i = 0; i < kNumPrimarySkills; i++) {
+    for (int i = 0; i < H3_IDX(kNumPrimarySkills); i++) {
         sprintf(g_text, "%d", g_currentHero->getPrimarySkill(i));
         msg.m_codeY = i + 0x2e;
         g_heroScreenWindow->broadcastMessage(msg);
@@ -4838,7 +4838,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
         bool keptSlot = false;
         for (int component = 0; component < ARTIFACT_COUNT; component++) {
             if (components.test(component)) {
-                for (int skill = 0; skill < kNumPrimarySkills; skill++)
+                for (int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++)
                     adjustPrimarySkill(skill,
                         g_artifactPrimarySkillBonuses[component][skill]);
                 updateSpells = updateSpells
@@ -4856,7 +4856,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
         }
     }
 
-    for (int skill = 0; skill < kNumPrimarySkills; skill++)
+    for (int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++)
         adjustPrimarySkill(skill,
             g_artifactPrimarySkillBonuses[artifact.m_artifactId][skill]);
 
@@ -4893,7 +4893,7 @@ void hero::removeArtifact(long slot)
         bool keptSlot = false;
         for (int component = 0; component < ARTIFACT_COUNT; component++) {
             if (components.test(component)) {
-                for (int skill = 0; skill < kNumPrimarySkills; skill++)
+                for (int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++)
                     adjustPrimarySkill(skill,
                         -g_artifactPrimarySkillBonuses[component][skill]);
                 updateSpells = updateSpells
@@ -4911,7 +4911,7 @@ void hero::removeArtifact(long slot)
     }
 
     m_equipped[slot] = type_artifact(ARTIFACT_NONE);
-    for (int skill = 0; skill < kNumPrimarySkills; skill++)
+    for (int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++)
         adjustPrimarySkill(skill,
             -g_artifactPrimarySkillBonuses[artifact.m_artifactId][skill]);
     if (updateSpells
@@ -6022,7 +6022,7 @@ MAC_ADDRESS(0x106948, 0x88)
 short hero::getPrimarySkillTotal() const
 {
     short total = 0;
-    for (short skill = 0; skill < kNumPrimarySkills; ++skill) {
+    for (short skill = 0; skill < H3_IDX(kNumPrimarySkills); ++skill) {
         total += getPrimarySkill(skill);
     }
     return total;

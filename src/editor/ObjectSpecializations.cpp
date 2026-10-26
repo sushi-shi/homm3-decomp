@@ -747,7 +747,7 @@ void TScholar::setRewardType(TRewardType newRewardType)
 VA(0x0048f452, 0xa)
 void TScholar::setPrimarySkill(TPrimarySkill newPrimarySkill)
 {
-    assert(newPrimarySkill >= 0 && newPrimarySkill < kNumPrimarySkills);
+    assert(newPrimarySkill >= 0 && newPrimarySkill < H3_IDX(kNumPrimarySkills));
     _m_primarySkill = newPrimarySkill;
 }
 
@@ -770,7 +770,7 @@ void TScholar::write(TRawOStream* pOStream, int version) const
     signed char reward = 0;
     switch (_m_rewardType) {
     case eRewardPrimarySkill:
-        reward = _m_primarySkill;
+        reward = H3_IDX(_m_primarySkill);
         break;
     case eRewardSecondarySkill:
         reward = _m_secondarySkill;

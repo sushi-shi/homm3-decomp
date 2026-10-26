@@ -103,14 +103,14 @@ public:
     };
 
     // The four primary skills, a byte each in a map.
-    class TPrimarySkills : public TArray<int, kNumPrimarySkills> {
+    class TPrimarySkills : public TArray<int, H3_IDX(kNumPrimarySkills)> {
     public:
-        TPrimarySkills() : TArray<int, kNumPrimarySkills>(0) {}
+        TPrimarySkills() : TArray<int, H3_IDX(kNumPrimarySkills)>(0) {}
         TPrimarySkills(TRawIStream* pIStream, int version) { read(pIStream, version); }
 
-        TPrimarySkills& operator=(const TArray<int, kNumPrimarySkills>& other)
+        TPrimarySkills& operator=(const TArray<int, H3_IDX(kNumPrimarySkills)>& other)
         {
-            TArray<int, kNumPrimarySkills>::operator=(other);
+            TArray<int, H3_IDX(kNumPrimarySkills)>::operator=(other);
             return *this;
         }
 
@@ -138,7 +138,7 @@ public:
     void setSecondarySkills(const TSecondarySkills& newSecondarySkills);
     void setArtifacts(const TArtifactContainer& newArtifacts);
     void setSpells(const TSpells& newSpells);
-    void setPrimarySkills(const TArray<int, kNumPrimarySkills>& newPrimarySkills);
+    void setPrimarySkills(const TArray<int, H3_IDX(kNumPrimarySkills)>& newPrimarySkills);
     void setSex(int newSex);
     void setPortrait(int newPortrait);
     void setExperience(int newExperience);
@@ -319,7 +319,7 @@ public:
     const std::bitset<kNumSpells>& getSpells() const { return _m_spells; }
     bool getBCustomPrimarySkills() const { return _m_bCustomPrimarySkills; }
     void setBCustomPrimarySkills(bool bCustomPrimarySkills) { _m_bCustomPrimarySkills = bCustomPrimarySkills; }
-    const TArray<int, kNumPrimarySkills>& getPrimarySkills() const { return _m_aPrimarySkill; }
+    const TArray<int, H3_IDX(kNumPrimarySkills)>& getPrimarySkills() const { return _m_aPrimarySkill; }
     const std::string& getBiography() const { return _m_biography; }
     // h3maped 0x44b53a.
     void setArmy(const TArmy& newArmy);
@@ -332,7 +332,7 @@ public:
     void setArtifacts(const THeroPrototype::TArtifactContainer& newArtifacts);
     void setBiography(const std::string& newBiography);
     void setSpells(const std::bitset<kNumSpells>& newSpells);
-    void setPrimarySkills(const TArray<int, kNumPrimarySkills>& newPrimarySkills);
+    void setPrimarySkills(const TArray<int, H3_IDX(kNumPrimarySkills)>& newPrimarySkills);
     void setExperience(int newExperience);
     void setSex(int newSex);
 
@@ -360,7 +360,7 @@ private:
     THeroPrototype::TArtifactContainer _m_artifacts;
     std::string _m_biography;
     std::bitset<kNumSpells> _m_spells;
-    TArray<int, kNumPrimarySkills> _m_aPrimarySkill;
+    TArray<int, H3_IDX(kNumPrimarySkills)> _m_aPrimarySkill;
     int _m_experience;
     bool _m_bGroupedFormation;
     int _m_patrolRadius;

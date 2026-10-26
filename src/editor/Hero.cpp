@@ -172,7 +172,7 @@ void THeroPrototype::TSpells::write(TRawOStream* pOStream, int version) const
 VA(0x0044a4f3, 0x29)
 void THeroPrototype::TPrimarySkills::read(TRawIStream* pIStream, int version)
 {
-    for (unsigned int i = 0; i < kNumPrimarySkills; i++) {
+    for (unsigned int i = 0; i < H3_IDX(kNumPrimarySkills); i++) {
         unsigned char value;
         *pIStream >> value;
         (*this)[i] = value;
@@ -182,7 +182,7 @@ void THeroPrototype::TPrimarySkills::read(TRawIStream* pIStream, int version)
 VA(0x0044a51c, 0x28)
 void THeroPrototype::TPrimarySkills::write(TRawOStream* pOStream, int version) const
 {
-    for (unsigned int i = 0; i < kNumPrimarySkills; i++)
+    for (unsigned int i = 0; i < H3_IDX(kNumPrimarySkills); i++)
         *pOStream << static_cast<unsigned char>((*this)[i]);
 }
 
@@ -227,9 +227,9 @@ void THeroPrototype::setSpells(const TSpells& newSpells)
 }
 
 VA(0x0044a692, 0x4c)
-void THeroPrototype::setPrimarySkills(const TArray<int, kNumPrimarySkills>& newPrimarySkills)
+void THeroPrototype::setPrimarySkills(const TArray<int, H3_IDX(kNumPrimarySkills)>& newPrimarySkills)
 {
-    const TArray<int, kNumPrimarySkills>& current = getPrimarySkills();
+    const TArray<int, H3_IDX(kNumPrimarySkills)>& current = getPrimarySkills();
     if (!(newPrimarySkills == current))
         _m_pImpl->m_aPrimarySkill = newPrimarySkills;
 }
@@ -329,7 +329,7 @@ void initializeTraitsTable()
         {
             const THeroClassTraits& classTraits = akHeroClassTraits[heroTraits.m_class];
             THeroPrototype::TPrimarySkills aPrimarySkill;
-            std::copy(classTraits.m_initialPrimarySkill, classTraits.m_initialPrimarySkill + kNumPrimarySkills,
+            std::copy(classTraits.m_initialPrimarySkill, classTraits.m_initialPrimarySkill + H3_IDX(kNumPrimarySkills),
                       aPrimarySkill.begin());
             traits.m_prototype.setPrimarySkills(aPrimarySkill);
         }
@@ -585,7 +585,7 @@ void THero::setSpells(const std::bitset<kNumSpells>& newSpells)
 }
 
 VA(0x0044b5a3, 0x28)
-void THero::setPrimarySkills(const TArray<int, kNumPrimarySkills>& newPrimarySkills)
+void THero::setPrimarySkills(const TArray<int, H3_IDX(kNumPrimarySkills)>& newPrimarySkills)
 {
     _m_aPrimarySkill = newPrimarySkills;
 }
@@ -720,7 +720,7 @@ void THero::write(TRawOStream* pOStream, int version) const
     if (version >= GAME_VERSION_SOD) {
         *pOStream << static_cast<signed char>(_m_bCustomPrimarySkills);
         if (_m_bCustomPrimarySkills)
-            for (unsigned int i = 0; i < kNumPrimarySkills; i++)
+            for (unsigned int i = 0; i < H3_IDX(kNumPrimarySkills); i++)
                 *pOStream << static_cast<unsigned char>(_m_aPrimarySkill[i]);
     }
     signed char aReserved[kNumHeroReserved];

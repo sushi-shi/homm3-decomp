@@ -303,7 +303,7 @@ void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusPrimarySkill& 
     for (skill = 0; quantities[skill] <= 0; skill++)
         ;
     skills = TFormattedString("+%d %s", quantities[skill], akHeroPrimarySkillTraits[skill].m_name);
-    for (skill++; skill < kNumPrimarySkills; skill++) {
+    for (skill++; skill < H3_IDX(kNumPrimarySkills); skill++) {
         if (quantities[skill] > 0)
             skills += TFormattedString(", +%d %s", quantities[skill], akHeroPrimarySkillTraits[skill].m_name);
     }

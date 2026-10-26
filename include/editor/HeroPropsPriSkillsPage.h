@@ -26,7 +26,7 @@ public:
 
     bool wasModified() const { return _m_bModified; }
     // The skills shown while uncustomized (the hero's identity's).
-    void setDefaultPrimarySkills(const TArray<int, kNumPrimarySkills>& skills);
+    void setDefaultPrimarySkills(const TArray<int, H3_IDX(kNumPrimarySkills)>& skills);
 
     enum { IDD = IDD_HERO_PROPS_PRI_SKILLS };
     CButton _m_customizeCheck;

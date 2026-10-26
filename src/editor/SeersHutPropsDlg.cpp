@@ -85,7 +85,7 @@ void TGetRewardDescFunc::visit(const TSeersHut::TRewardResource& reward)
 VA(0x004b7680, 0x29)
 void TGetRewardDescFunc::visit(const TSeersHut::TRewardPrimarySkill& reward)
 {
-    _m_desc.Format("+%d %s", reward.getBonus(), THero::s_akPrimarySkillTraits[reward.getSkill()].m_name);
+    _m_desc.Format("+%d %s", reward.getBonus(), H3_AT(THero::s_akPrimarySkillTraits, reward.getSkill()).m_name);
 }
 
 VA(0x004b76a9, 0x33)

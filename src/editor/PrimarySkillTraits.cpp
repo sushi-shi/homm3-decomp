@@ -13,7 +13,7 @@
 #include "editor/Hero.h"
 
 namespace {
-DATA(0x005a2558) THero::TPrimarySkillTraits aHeroPrimarySkillTraitsImp[kNumPrimarySkills];
+DATA(0x005a2558) THero::TPrimarySkillTraits aHeroPrimarySkillTraitsImp[H3_IDX(kNumPrimarySkills)];
 }
 
 DATA(0x0058d348) THero::TPrimarySkillTraits* akHeroPrimarySkillTraits = aHeroPrimarySkillTraitsImp;
@@ -29,13 +29,13 @@ void InitializePrimarySkillTraitsTable()
         throw TRuntimeError();
     int size = 0;
     unsigned int i;
-    for (i = 0; i < kNumPrimarySkills; i++)
+    for (i = 0; i < H3_IDX(kNumPrimarySkills); i++)
         size += strlen(pTextResource->GetText(i)) + 1;
     pNames = TAutoArrayPtr<char>(new char[size]);
     if (!pNames.get())
         throw TAllocationFailure();
     char* p = pNames.get();
-    for (i = 0; i < kNumPrimarySkills; i++) {
+    for (i = 0; i < H3_IDX(kNumPrimarySkills); i++) {
         const char* text = pTextResource->GetText(i);
         int length = strlen(text) + 1;
         memcpy(p, text, length);

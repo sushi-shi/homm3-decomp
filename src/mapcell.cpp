@@ -1723,7 +1723,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         DECODE_LITTLE_ENDIAN_LONG(intBuffer);
         thisBox.m_resQty[x] = intBuffer;
     }
-    for (x = 0; x < kNumPrimarySkills; ++x) {
+    for (x = 0; x < H3_IDX(kNumPrimarySkills); ++x) {
         count = infile->read(&charBuffer, sizeof(charBuffer));
         if (count < sizeof(charBuffer))
             return -1;
@@ -1917,7 +1917,7 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
         if (static_cast<unsigned>(outfile->write(&dwordValue, 4)) < 4)
             return -1;
     }
-    for (i = 0; i < kNumPrimarySkills; ++i) {
+    for (i = 0; i < H3_IDX(kNumPrimarySkills); ++i) {
         value = thisBox->m_primarySkillBonus[i];
         if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
             return -1;
@@ -2057,7 +2057,7 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
             return -1;
         thisBox.m_resQty[x] = intBuffer;
     }
-    for (x = 0; x < kNumPrimarySkills; ++x) {
+    for (x = 0; x < H3_IDX(kNumPrimarySkills); ++x) {
         count = infile->read(&charBuffer, sizeof(charBuffer));
         if (count < sizeof(charBuffer))
             return -1;
@@ -2213,7 +2213,7 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
     if (count < sizeof(value))
         return -1;
 
-    scholarInfo->m_primary = 3;
+    scholarInfo->m_primary = ePriSkillKnowledge;
     scholarInfo->m_secondary = -1;
     scholarInfo->m_spell = -1;
 
@@ -2221,9 +2221,9 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
     switch (scholarObject->getScholarAward()) {
     case const_scholar_primary_skill:
         if (isRandom)
-            scholarInfo->m_primary = random(0, 3);
+            scholarInfo->m_primary = H3_ENUM_DECODE(TPrimarySkill, random(0, 3));
         else
-            scholarInfo->m_primary = value;
+            scholarInfo->m_primary = H3_ENUM_DECODE(TPrimarySkill, value);
         break;
 
     case const_scholar_secondary_skill:
@@ -3107,7 +3107,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             charBuffer = readValue<char>(infile);
             if (charBuffer) {
                 heroData->m_customPrimarySkills = 1;
-                for (x = 0; x < kNumPrimarySkills; ++x) {
+                for (x = 0; x < H3_IDX(kNumPrimarySkills); ++x) {
                     charBuffer = readValue<char>(infile);
                     heroData->m_primarySkills[x] = charBuffer;
                 }

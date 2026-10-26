@@ -534,7 +534,7 @@ class CHeroLevelUpdateMsg : public CNetMsg {
 public:
     int m_hero;  // +0x14
     signed char m_ssLevel[kNumSecSkills];  // +0x18
-    signed char m_stats[kNumPrimarySkills];  // +0x34
+    signed char m_stats[H3_IDX(kNumPrimarySkills)];  // +0x34
     int m_numSSs;  // +0x38
 
     // DC netmsg.h:488: DoCombat expands this header body.

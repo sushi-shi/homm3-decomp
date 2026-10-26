@@ -254,7 +254,7 @@ void TScenarioStartingBonusWriter::visit(const TScenarioBonusPrimarySkill& bonus
 {
     writeValue<ubyte>(*m_pOStream, eBonusPrimarySkill);
     writeValue<short>(*m_pOStream, bonus.getHero());
-    for (unsigned int i = 0; i < kNumPrimarySkills; i++)
+    for (unsigned int i = 0; i < H3_IDX(kNumPrimarySkills); i++)
         writeValue<ubyte>(*m_pOStream, bonus.getSkills()[i]);
 }
 
@@ -325,8 +325,8 @@ auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int ver
     }
     case eBonusPrimarySkill: {
         int hero = readValue<short>(iStream);
-        TArray<unsigned int, kNumPrimarySkills> skills;
-        for (int i = 0; i < kNumPrimarySkills; i++)
+        TArray<unsigned int, H3_IDX(kNumPrimarySkills)> skills;
+        for (int i = 0; i < H3_IDX(kNumPrimarySkills); i++)
             skills[i] = readValue<signed char>(iStream);
         pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusPrimarySkill(hero, skills));
         break;

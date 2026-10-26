@@ -13,7 +13,7 @@
 #include "editor/PrimarySkillsDlg.h"
 
 DATA(0x0053ff48)
-static const int g_aakSkillControlIDs[kNumPrimarySkills][2] = {
+static const int g_aakSkillControlIDs[H3_IDX(kNumPrimarySkills)][2] = {
     { IDC_ATTACK_EDIT, IDC_ATTACK_SPIN },
     { IDC_DEFENSE_EDIT, IDC_DEFENSE_SPIN },
     { IDC_SPELL_POWER_EDIT, IDC_SPELL_POWER_SPIN },
@@ -59,17 +59,17 @@ VA_COMPGEN(0x00494843, 0x35, IMPLICIT_DTOR, _TSkillControls)
 VA_COMPGEN(0x00494878, 0x49, IMPLICIT_DTOR, TPrimarySkillsDlg)
 
 VA(0x004948c1, 0x5c)
-void TPrimarySkillsDlg::setPrimarySkills(const TArray<int, kNumPrimarySkills>& skills)
+void TPrimarySkillsDlg::setPrimarySkills(const TArray<int, H3_IDX(kNumPrimarySkills)>& skills)
 {
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++)
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++)
         _m_aSkillControls[skill].m_edit.SetWindowText(TFormattedString("%d", skills[skill]));
 }
 
 VA(0x0049491d, 0xdc)
-TArray<int, kNumPrimarySkills> TPrimarySkillsDlg::getPrimarySkills() const
+TArray<int, H3_IDX(kNumPrimarySkills)> TPrimarySkillsDlg::getPrimarySkills() const
 {
-    TArray<int, kNumPrimarySkills> skills(0);
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++) {
+    TArray<int, H3_IDX(kNumPrimarySkills)> skills(0);
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         CString text;
         _m_aSkillControls[skill].m_edit.GetWindowText(text);
         int value = 0;
@@ -98,7 +98,7 @@ void TPrimarySkillsDlg::_onKillFocusSkillEdit(unsigned int skill)
 VA(0x00494aa3, 0x3c)
 void TPrimarySkillsDlg::DoDataExchange(CDataExchange* pDX)
 {
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         DDX_Control(pDX, g_aakSkillControlIDs[skill][0], _m_aSkillControls[skill].m_edit);
         DDX_Control(pDX, g_aakSkillControlIDs[skill][1], _m_aSkillControls[skill].m_spin);
     }
@@ -121,11 +121,11 @@ BOOL TPrimarySkillsDlg::OnInitDialog()
     GetDlgItem(IDC_SPELL_POWER_STATIC)->SetWindowText(SPrimarySkillsDlgText::kSpellPowerStaticStr);
     GetDlgItem(IDC_KNOWLEDGE_STATIC)->SetWindowText(SPrimarySkillsDlgText::kKnowledgeStaticStr);
     CDialog::OnInitDialog();
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         _m_aSkillControls[skill].m_edit.LimitText(TDigits<s_kMaxSkill>::getDigits());
         _m_aSkillControls[skill].m_spin.SetRange(0, s_kMaxSkill);
     }
-    setPrimarySkills(TArray<int, kNumPrimarySkills>(0));
+    setPrimarySkills(TArray<int, H3_IDX(kNumPrimarySkills)>(0));
     return TRUE;
 }
 
@@ -133,7 +133,7 @@ VA(0x00494bd7, 0x34)
 void TPrimarySkillsDlg::OnEnable(BOOL bEnable)
 {
     CDialog::OnEnable(bEnable);
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         _m_aSkillControls[skill].m_edit.EnableWindow(bEnable);
         _m_aSkillControls[skill].m_spin.EnableWindow(bEnable);
     }

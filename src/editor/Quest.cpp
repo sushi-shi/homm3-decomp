@@ -113,7 +113,7 @@ void TQuestAchieveExperienceLevel::accept(TVisitor& visitor) const
 }
 
 VA(0x00495104, 0x3d)
-TQuestAchievePrimarySkillLevel::TQuestAchievePrimarySkillLevel(const TArray<int, kNumPrimarySkills>& aLevel)
+TQuestAchievePrimarySkillLevel::TQuestAchievePrimarySkillLevel(const TArray<int, H3_IDX(kNumPrimarySkills)>& aLevel)
     : _m_aLevel(aLevel)
 {
 }
@@ -127,7 +127,7 @@ void TQuestAchievePrimarySkillLevel::accept(TVisitor& visitor) const
 VA(0x0049517c, 0xb)
 int TQuestAchievePrimarySkillLevel::getLevel(TPrimarySkill primarySkill) const
 {
-    return _m_aLevel[primarySkill];
+    return H3_AT(_m_aLevel, primarySkill);
 }
 
 VA(0x00495187, 0x12)

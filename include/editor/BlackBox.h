@@ -46,7 +46,7 @@ public:
     }
 
 private:
-    TArray<unsigned int, kNumPrimarySkills> _m_bonuses;
+    TArray<unsigned int, H3_IDX(kNumPrimarySkills)> _m_bonuses;
 };
 
 TRawOStream& operator<<(TRawOStream& stream, const TPrimarySkillBonuses& bonuses);

@@ -2270,7 +2270,7 @@ void swapManager::update()
     {
         msg.m_codeX = 3;
         msg.m_extraText = g_text;
-        for (i = 0; i < kNumPrimarySkills; ++i)
+        for (i = 0; i < H3_IDX(kNumPrimarySkills); ++i)
         {
             msg.m_codeY = 3 + side * 5 + i;
             sprintf(g_text,

@@ -31,7 +31,7 @@ THeroPropsPriSkillsPage::~THeroPropsPriSkillsPage()
 }
 
 VA(0x00452e58, 0x43)
-void THeroPropsPriSkillsPage::setDefaultPrimarySkills(const TArray<int, kNumPrimarySkills>& skills)
+void THeroPropsPriSkillsPage::setDefaultPrimarySkills(const TArray<int, H3_IDX(kNumPrimarySkills)>& skills)
 {
     _m_defaultSkills = skills;
     if (!_m_bCustomSkills)

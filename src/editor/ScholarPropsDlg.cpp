@@ -81,11 +81,11 @@ BOOL TScholarPropsDlg::OnInitDialog()
     _m_spell = _m_pScholar->getSpell();
     CDialog::OnInitDialog();
     int index;
-    for (unsigned int primarySkill = 0; primarySkill < kNumPrimarySkills; primarySkill++)
+    for (unsigned int primarySkill = 0; primarySkill < H3_IDX(kNumPrimarySkills); primarySkill++)
         _m_primarySkillCombo.SetItemData(
             _m_primarySkillCombo.AddString(THero::s_akPrimarySkillTraits[primarySkill].m_name), primarySkill);
     index = 0;
-    while (_m_primarySkillCombo.GetItemData(index) != _m_primarySkill)
+    while (_m_primarySkillCombo.GetItemData(index) != H3_IDX(_m_primarySkill))
         index++;
     _m_primarySkillCombo.SetCurSel(index);
     _m_primarySkillCombo.EnableWindow(FALSE);

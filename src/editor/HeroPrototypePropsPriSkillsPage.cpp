@@ -54,7 +54,7 @@ VA(0x00456f53, 0x72)
 void THeroPrototypePropsPriSkillsPage::OnOK()
 {
     CPropertyPage::OnOK();
-    TArray<int, kNumPrimarySkills> skills = _m_pPrimarySkillsDlg->getPrimarySkills();
+    TArray<int, H3_IDX(kNumPrimarySkills)> skills = _m_pPrimarySkillsDlg->getPrimarySkills();
     if (!(skills == _m_pNewPrototype->getPrimarySkills())) {
         _m_bModified = true;
         _m_pNewPrototype->setPrimarySkills(skills);

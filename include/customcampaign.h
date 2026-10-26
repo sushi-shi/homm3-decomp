@@ -322,7 +322,7 @@ public:
 
     int m_hero;
 
-    char m_skills[kNumPrimarySkills];
+    char m_skills[H3_IDX(kNumPrimarySkills)];
 
 };
 

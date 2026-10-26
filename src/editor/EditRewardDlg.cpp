@@ -590,7 +590,7 @@ VA(0x00413997, 0x9e)
 void TRewardPrimarySkillDlg::setReward(const TSeersHut::TRewardPrimarySkill& reward)
 {
     int index;
-    for (index = 0; _m_skillCombo.GetItemData(index) != reward.getSkill(); index++)
+    for (index = 0; _m_skillCombo.GetItemData(index) != H3_IDX(reward.getSkill()); index++)
         ;
     _m_skillCombo.SetCurSel(index);
     CString text;
@@ -621,10 +621,10 @@ BOOL TRewardPrimarySkillDlg::OnInitDialog()
     GetDlgItem(IDC_REWARD_PRIMARY_SKILL_STATIC)->SetWindowText(SEditRewardDlgText::kPrimarySkillStaticStr);
     GetDlgItem(IDC_REWARD_BONUS_STATIC)->SetWindowText(SEditRewardDlgText::kBonusStaticStr);
     CDialog::OnInitDialog();
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++)
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++)
         _m_skillCombo.SetItemData(_m_skillCombo.AddString(THero::s_akPrimarySkillTraits[skill].m_name), skill);
     int index;
-    for (index = 0; _m_skillCombo.GetItemData(index) != ePriSkillAttack; index++)
+    for (index = 0; _m_skillCombo.GetItemData(index) != H3_IDX(ePriSkillAttack); index++)
         ;
     _m_skillCombo.SetCurSel(index);
     _m_bonusEdit.SetWindowText("1");
@@ -663,7 +663,7 @@ VA(0x00413d2e, 0x88)
 void TRewardSecondarySkillDlg::setReward(const TSeersHut::TRewardSecondarySkill& reward)
 {
     int index;
-    for (index = 0; _m_skillCombo.GetItemData(index) != reward.getSkill(); index++)
+    for (index = 0; _m_skillCombo.GetItemData(index) != H3_IDX(reward.getSkill()); index++)
         ;
     _m_skillCombo.SetCurSel(index);
     for (index = 0; _m_masteryCombo.GetItemData(index) != reward.getMastery(); index++)

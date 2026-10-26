@@ -111,7 +111,7 @@ VA(0x00496351, 0x3e)
 void TQuestWriter::visit(const TQuestAchievePrimarySkillLevel& quest)
 {
     writeType(eQuestAchievePrimarySkillLevel);
-    for (int primarySkill = 0; primarySkill < kNumPrimarySkills; ++primarySkill)
+    for (int primarySkill = 0; primarySkill < H3_IDX(kNumPrimarySkills); ++primarySkill)
         *_m_pOStream << static_cast<signed char>(quest.getLevel(TPrimarySkill(primarySkill)));
 }
 
@@ -204,8 +204,8 @@ TQuest* TQuestReader::readAchieveExperienceLevel()
 VA(0x0049666a, 0x64)
 TQuest* TQuestReader::readAchievePrimarySkillLevel()
 {
-    TArray<int, kNumPrimarySkills> aLevel;
-    for (int primarySkill = 0; primarySkill < kNumPrimarySkills; ++primarySkill) {
+    TArray<int, H3_IDX(kNumPrimarySkills)> aLevel;
+    for (int primarySkill = 0; primarySkill < H3_IDX(kNumPrimarySkills); ++primarySkill) {
         signed char level;
         *_m_pIStream >> level;
         aLevel[primarySkill] = level;

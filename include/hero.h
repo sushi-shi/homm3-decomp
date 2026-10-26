@@ -16,7 +16,7 @@
 
 // hero.obj's four primary-stat descriptions.  Dreamcast supplies the name
 // and type; Complete fixes the 0x6a7540 address and all four indexed readers.
-extern const char* g_statDesc[kNumPrimarySkills];
+extern const char* g_statDesc[H3_IDX(kNumPrimarySkills)];
 
 #include "heroclass.h"
 #include "herotraits.h"
@@ -662,7 +662,7 @@ private:
     // hero::get_primary_skill_total 0x4e5960 - a four-iteration
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
     // and by 0x4e6120, which adds artifact bonuses into the same band.
-    signed char m_stats[kNumPrimarySkills];  // +0x476
+    signed char m_stats[H3_IDX(kNumPrimarySkills)];  // +0x476
 
 public:
     // +0x47a. AI_value_of_combat (0x42730f) reads this as a float,

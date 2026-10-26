@@ -84,9 +84,9 @@ public:
     int m_townType;  // +0x00
     const char* m_name;  // +0x04
     float m_aggression;  // +0x08
-    signed char m_initialPrimarySkill[kNumPrimarySkills];  // +0x0c
-    signed char m_gainPrimarySkillChance[kNumPrimarySkills];  // +0x10
-    signed char m_gainPrimarySkillChance10P[kNumPrimarySkills];  // +0x14
+    signed char m_initialPrimarySkill[H3_IDX(kNumPrimarySkills)];  // +0x0c
+    signed char m_gainPrimarySkillChance[H3_IDX(kNumPrimarySkills)];  // +0x10
+    signed char m_gainPrimarySkillChance10P[H3_IDX(kNumPrimarySkills)];  // +0x14
     signed char m_gainSecondarySkillChance[kNumSecSkills];  // +0x18
     signed char m_foundInTownType[9];  // +0x34
     // Complete expands foundInTownType to nine bytes at +0x34.

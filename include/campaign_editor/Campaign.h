@@ -189,7 +189,7 @@ private:
 
 class TScenarioBonusPrimarySkill : public TScenarioHeroBonus {
 public:
-    TScenarioBonusPrimarySkill(int hero, const TArray<unsigned int, kNumPrimarySkills>& skills);
+    TScenarioBonusPrimarySkill(int hero, const TArray<unsigned int, H3_IDX(kNumPrimarySkills)>& skills);
 
     const TArray<unsigned int, kNumPrimarySkills>& getSkills() const { return m_skills; }
 
@@ -201,7 +201,7 @@ public:
     }
 
 private:
-    TArray<unsigned int, kNumPrimarySkills> m_skills;
+    TArray<unsigned int, H3_IDX(kNumPrimarySkills)> m_skills;
 };
 
 class TScenarioBonusSecondarySkill : public TScenarioHeroBonus {

@@ -366,13 +366,13 @@ static void InitializeHeroClassTraits(int id, const TSpreadsheetResource::TStrin
     traits.m_aggression = static_cast<float>(atof(values[1]));
 
     int column;
-    for (column = 0; column < kNumPrimarySkills; ++column)
+    for (column = 0; column < H3_IDX(kNumPrimarySkills); ++column)
         traits.m_initialPrimarySkill[column] =
             static_cast<signed char>(atoi(values[column + 2]));
-    for (column = 0; column < kNumPrimarySkills; ++column)
+    for (column = 0; column < H3_IDX(kNumPrimarySkills); ++column)
         traits.m_gainPrimarySkillChance[column] =
             static_cast<signed char>(atoi(values[column + 6]));
-    for (column = 0; column < kNumPrimarySkills; ++column)
+    for (column = 0; column < H3_IDX(kNumPrimarySkills); ++column)
         traits.m_gainPrimarySkillChance10P[column] =
             static_cast<signed char>(atoi(values[column + 10]));
     for (column = 0; column < kNumSecSkills; ++column)

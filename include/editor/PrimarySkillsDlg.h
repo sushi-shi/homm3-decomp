@@ -17,8 +17,8 @@ public:
     // Creates the dialog as a child of the parent.
     TPrimarySkillsDlg(CWnd* pParent);
 
-    void setPrimarySkills(const TArray<int, kNumPrimarySkills>& skills);
-    TArray<int, kNumPrimarySkills> getPrimarySkills() const;
+    void setPrimarySkills(const TArray<int, H3_IDX(kNumPrimarySkills)>& skills);
+    TArray<int, H3_IDX(kNumPrimarySkills)> getPrimarySkills() const;
 
     enum { IDD = IDD_PRIMARY_SKILLS };
 
@@ -41,8 +41,8 @@ private:
 
     void _onKillFocusSkillEdit(unsigned int skill);
 
-    _TSkillControls _m_aSkillControls[kNumPrimarySkills];
-    TArray<int, kNumPrimarySkills> _m_skills;
+    _TSkillControls _m_aSkillControls[H3_IDX(kNumPrimarySkills)];
+    TArray<int, H3_IDX(kNumPrimarySkills)> _m_skills;
 };
 
 #endif  /* HOMM3_EDITOR_PRIMARYSKILLSDLG_H */

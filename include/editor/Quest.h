@@ -82,12 +82,12 @@ private:
 
 class TQuestAchievePrimarySkillLevel : public TQuest {
 public:
-    TQuestAchievePrimarySkillLevel(const TArray<int, kNumPrimarySkills>& aLevel);
+    TQuestAchievePrimarySkillLevel(const TArray<int, H3_IDX(kNumPrimarySkills)>& aLevel);
 
     virtual void accept(TVisitor& visitor) const;
 
     int getLevel(TPrimarySkill primarySkill) const;
-    const TArray<int, kNumPrimarySkills>& getLevels() const { return _m_aLevel; }
+    const TArray<int, H3_IDX(kNumPrimarySkills)>& getLevels() const { return _m_aLevel; }
 
     friend bool operator==(const TQuestAchievePrimarySkillLevel& lhs, const TQuestAchievePrimarySkillLevel& rhs)
     {
@@ -95,7 +95,7 @@ public:
     }
 
 private:
-    TArray<int, kNumPrimarySkills> _m_aLevel;
+    TArray<int, H3_IDX(kNumPrimarySkills)> _m_aLevel;
 };
 
 // Defeat a hero or a monster: the target's link id follows the vtable (the

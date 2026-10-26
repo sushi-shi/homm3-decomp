@@ -544,7 +544,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, false)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
-        townHero->adjustPrimarySkill(3, 1);
+        townHero->adjustPrimarySkill(H3_IDX(ePriSkillKnowledge), 1);
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_WALL_OF_KNOWLEDGE_VISIT], // Wall of Knowledge
@@ -554,7 +554,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     if (m_type == TOWN_INFERNO && hasBuilding(EXTRA_2_ID, false)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
-        townHero->adjustPrimarySkill(2, 1);
+        townHero->adjustPrimarySkill(H3_IDX(ePriSkillPower), 1);
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog((*g_generalText)[GENERAL_TEXT_ORDER_OF_FIRE_VISIT], // Order of Fire
                          1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
@@ -579,7 +579,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
                 (*g_generalText)[GENERAL_TEXT_HALL_OF_VALHALLA_VISIT], // Hall of Valhalla
                 1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
         townHero->m_townSpecialGrantedMask[m_id] = 1;
-        townHero->adjustPrimarySkill(0, 1);
+        townHero->adjustPrimarySkill(H3_IDX(ePriSkillAttack), 1);
     }
 
     if (m_type == TOWN_FORTRESS && hasBuilding(SPECIAL_BUILDING_ID, false)
@@ -589,7 +589,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
                 (*g_generalText)[GENERAL_TEXT_CAGE_OF_WARLORDS_VISIT], // Cage of Warlords
                 1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
         townHero->m_townSpecialGrantedMask[m_id] = 1;
-        townHero->adjustPrimarySkill(1, 1);
+        townHero->adjustPrimarySkill(H3_IDX(ePriSkillDefense), 1);
     }
 }
 

@@ -77,7 +77,7 @@ private:
 // one skill is above 0.
 class TQuestAchievePrimarySkillLevelDlg : public TQuestTypeDlg {
 public:
-    enum { IDD = IDD_QUEST_PRIMARY_SKILL_LEVEL, s_kMaxLevel = kMaxPrimarySkillLevel };
+    enum { IDD = IDD_QUEST_PRIMARY_SKILL_LEVEL, s_kMaxLevel = H3_IDX(kMaxPrimarySkillLevel) };
     TQuestAchievePrimarySkillLevelDlg(TClient* pClient, EGameVersion mapVersion)
         : TQuestTypeDlg(pClient, false), _m_mapVersion(mapVersion), _m_bCreated(false) {}
 
@@ -103,12 +103,12 @@ private:
         CSpinButtonCtrl m_spin;
     };
 
-    void _onLevelChange(int skill);
+    void _onLevelChange(H3_ENUM_PARAM(TPrimarySkill, int) skill);
 
     EGameVersion _m_mapVersion;
     unsigned int _m_numSkills;
-    TArray<int, kNumPrimarySkills> _m_aLevel;
-    _TSkillControls _m_aSkillControls[kNumPrimarySkills];
+    TArray<int, H3_IDX(kNumPrimarySkills)> _m_aLevel;
+    _TSkillControls _m_aSkillControls[H3_IDX(kNumPrimarySkills)];
     bool _m_bCreated;
 };
 
@@ -504,7 +504,7 @@ struct TSkillControlIDs {
 };
 
 DATA(0x005321d0)
-static const TSkillControlIDs g_aSkillControlIDs[kNumPrimarySkills] = {
+static const TSkillControlIDs g_aSkillControlIDs[H3_IDX(kNumPrimarySkills)] = {
     { IDC_ATTACK_EDIT, IDC_ATTACK_SPIN },
     { IDC_DEFENSE_EDIT, IDC_DEFENSE_SPIN },
     { IDC_SPELL_POWER_EDIT, IDC_SPELL_POWER_SPIN },
@@ -516,7 +516,7 @@ void TQuestAchievePrimarySkillLevelDlg::setQuest(const TQuestAchievePrimarySkill
 {
     _m_aLevel = quest.getLevels();
     _m_numSkills = 0;
-    for (int skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         if (_m_aLevel[skill] > 0)
             _m_numSkills++;
         TFormattedString text("%d", _m_aLevel[skill]);
@@ -537,7 +537,7 @@ std::auto_ptr<TQuest> TQuestAchievePrimarySkillLevelDlg::getQuest() const
 VA(0x0040ebdf, 0x4d)
 void TQuestAchievePrimarySkillLevelDlg::DoDataExchange(CDataExchange* pDX)
 {
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         DDX_Control(pDX, g_aSkillControlIDs[skill].m_editID, _m_aSkillControls[skill].m_edit);
         DDX_Control(pDX, g_aSkillControlIDs[skill].m_spinID, _m_aSkillControls[skill].m_spin);
     }
@@ -560,12 +560,12 @@ BOOL TQuestAchievePrimarySkillLevelDlg::OnInitDialog()
     GetDlgItem(IDC_SPELL_POWER_STATIC)->SetWindowText(SEditQuestDlgText::kSpellPowerStaticStr);
     GetDlgItem(IDC_KNOWLEDGE_STATIC)->SetWindowText(SEditQuestDlgText::kKnowledgeStaticStr);
     int skill;
-    for (skill = 0; skill < kNumPrimarySkills; skill++)
+    for (skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++)
         _m_aLevel[skill] = 0;
     _m_numSkills = 0;
     _setValid(false);
     CDialog::OnInitDialog();
-    for (skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         _m_aSkillControls[skill].m_edit.LimitText(TDigits<s_kMaxLevel>::getDigits());
         _m_aSkillControls[skill].m_edit.SetWindowText("0");
         _m_aSkillControls[skill].m_spin.SetRange(0, s_kMaxLevel);
@@ -574,15 +574,15 @@ BOOL TQuestAchievePrimarySkillLevelDlg::OnInitDialog()
 }
 
 VA(0x0040ed07, 0xa5)
-void TQuestAchievePrimarySkillLevelDlg::_onLevelChange(int skill)
+void TQuestAchievePrimarySkillLevelDlg::_onLevelChange(H3_ENUM_PARAM(TPrimarySkill, int) skill)
 {
     if (_m_bCreated) {
         int level = 0;
         CString text;
-        _m_aSkillControls[skill].m_edit.GetWindowText(text);
+        H3_AT(_m_aSkillControls, skill).m_edit.GetWindowText(text);
         sscanf(text, "%d", &level);
-        int oldLevel = _m_aLevel[skill];
-        _m_aLevel[skill] = level;
+        int oldLevel = H3_AT(_m_aLevel, skill);
+        H3_AT(_m_aLevel, skill) = level;
         if (level == 0) {
             if (oldLevel != 0 && --_m_numSkills == 0)
                 _setValid(false);

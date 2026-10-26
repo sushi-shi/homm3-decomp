@@ -176,7 +176,7 @@ private:
     const TBlackBox* _m_pBlackBox;
     bool _m_bModified;
     TPrimarySkillBonuses _m_primarySkillBonuses;
-    _TSkillControls _m_aSkillControls[kNumPrimarySkills];
+    _TSkillControls _m_aSkillControls[H3_IDX(kNumPrimarySkills)];
 };
 
 // A secondary skill and its mastery, the skill among the available ones.
@@ -623,7 +623,7 @@ void TResourcesDlg::OnOK()
 }
 
 DATA(0x00530a40)
-static const int g_aakPrimarySkillControlIDs[kNumPrimarySkills][2] = {
+static const int g_aakPrimarySkillControlIDs[H3_IDX(kNumPrimarySkills)][2] = {
     { IDC_ATTACK_EDIT, IDC_ATTACK_SPIN },
     { IDC_DEFENSE_EDIT, IDC_DEFENSE_SPIN },
     { IDC_SPELL_POWER_EDIT, IDC_SPELL_POWER_SPIN },
@@ -646,7 +646,7 @@ VA_COMPGEN(0x004085fb, 0x48, IMPLICIT_DTOR, TPrimarySkillBonusesDlg)
 VA(0x00408643, 0x3c)
 void TPrimarySkillBonusesDlg::DoDataExchange(CDataExchange* pDX)
 {
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         DDX_Control(pDX, g_aakPrimarySkillControlIDs[skill][0], _m_aSkillControls[skill].m_edit);
         DDX_Control(pDX, g_aakPrimarySkillControlIDs[skill][1], _m_aSkillControls[skill].m_spin);
     }
@@ -662,7 +662,7 @@ BOOL TPrimarySkillBonusesDlg::OnInitDialog()
     _m_bModified = false;
     _m_primarySkillBonuses = _m_pBlackBox->getContents().getPrimarySkillBonuses();
     CDialog::OnInitDialog();
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         _m_aSkillControls[skill].m_edit.LimitText(TDigits<TPrimarySkillBonuses::s_kMax>::getDigits());
         CString text;
         text.Format("%d", _m_primarySkillBonuses.get(TPrimarySkill(skill)));
@@ -676,7 +676,7 @@ VA(0x004087ad, 0xba)
 void TPrimarySkillBonusesDlg::OnOK()
 {
     CDialog::OnOK();
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         int bonus = 0;
         CString text;
         _m_aSkillControls[skill].m_edit.GetWindowText(text);

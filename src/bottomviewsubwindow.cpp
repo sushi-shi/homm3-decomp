@@ -327,7 +327,7 @@ TBottomViewMessage::~TBottomViewMessage()
 // own cursor against &[2] for the "power and knowledge floor at 1"
 // arm, which is what proves the row is a table and not four literals.
 DATA(0x00660bb0)
-static int g_heroStatCoords[kNumPrimarySkills][2] = {
+static int g_heroStatCoords[H3_IDX(kNumPrimarySkills)][2] = {
     { 65, 51 }, { 92, 51 }, { 120, 51 }, { 148, 51 }
 };
 
@@ -431,7 +431,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     m_widgets.push_back(new textWidget(66, 2, 107, 17, who->m_name,
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
-    for (int i = 0; i < kNumPrimarySkills; i++) {
+    for (int i = 0; i < H3_IDX(kNumPrimarySkills); i++) {
         int value = who->getPrimarySkill(i);
         sprintf(g_text, "%d", value);
         m_widgets.push_back(new textWidget(g_heroStatCoords[i][0],

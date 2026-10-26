@@ -219,7 +219,7 @@ enum ScholarAwards {
 struct ScholarInfo {
 public:
     signed long m_award : 3;
-    signed long m_primary : 3;
+    H3_ENUM_BITFIELD(TPrimarySkill, signed long) m_primary : 3;
     signed long m_secondary : 7;
     signed long m_spell : 10;
     unsigned long m_tail : 9;
@@ -678,7 +678,7 @@ public:
     signed char m_moraleBonus;  // +0x58
     signed char m_luckBonus;  // +0x59
     int m_resQty[NUM_RESOURCES];  // +0x5c
-    signed char m_primarySkillBonus[kNumPrimarySkills];  // +0x78
+    signed char m_primarySkillBonus[H3_IDX(kNumPrimarySkills)];  // +0x78
     std::vector<SecondarySkillData> m_secondarySkills;  // +0x7c
     // CodeView preserves vector<TArtifact> and vector<SpellID>.
     // loadBlackBox widens the serialized identifiers at the read boundary.

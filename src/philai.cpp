@@ -749,7 +749,7 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
             if (selectedHero)
                 *isLastHero = 0;
             skillSum = 0;
-            for (short skill = 0; skill < kNumPrimarySkills; ++skill)
+            for (short skill = 0; skill < H3_IDX(kNumPrimarySkills); ++skill)
                 skillSum += currentHero->getPrimarySkill(skill);
             if (selectedHero) {
                 if (currentHero->m_patrolX != hero::kPatrolNone
@@ -1067,7 +1067,7 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
     int primarySkillValue = static_cast<int>(
         static_cast<float>(currentHero->getExperienceIncrement())
         * currentHero->m_turnExperienceToRvRatio);
-    for (int skill = 0; skill < kNumPrimarySkills; ++skill) {
+    for (int skill = 0; skill < H3_IDX(kNumPrimarySkills); ++skill) {
         if (blackBox->m_primarySkillBonus[skill] > 0)
             value += blackBox->m_primarySkillBonus[skill]
                 * primarySkillValue;

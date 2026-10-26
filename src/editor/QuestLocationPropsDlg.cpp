@@ -125,10 +125,10 @@ void TGetQuestDescFunc::visit(const TQuestAchieveExperienceLevel& quest)
 VA(0x00497433, 0xfc)
 void TGetQuestDescFunc::visit(const TQuestAchievePrimarySkillLevel& quest)
 {
-    const TArray<int, kNumPrimarySkills>& aLevel = quest.getLevels();
+    const TArray<int, H3_IDX(kNumPrimarySkills)>& aLevel = quest.getLevels();
     unsigned int numSkills = 0;
     unsigned int skill;
-    for (skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         if (aLevel[skill] > 0)
             numSkills++;
     }
@@ -140,7 +140,7 @@ void TGetQuestDescFunc::visit(const TQuestAchievePrimarySkillLevel& quest)
         _m_desc.Format(kQuestAchieveFmtStr, (LPCTSTR)level);
     } else {
         _m_desc = kQuestAchieveTheFollowingStr;
-        for (skill = 0; skill < kNumPrimarySkills; skill++) {
+        for (skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
             if (aLevel[skill] > 0) {
                 TFormattedString line(kQuestPrimarySkillLevelFmtStr, THero::s_akPrimarySkillTraits[skill].m_name,
                                       aLevel[skill]);
@@ -321,7 +321,7 @@ void TGetDefaultQuestMessageFunc::visit(const TQuestAchievePrimarySkillLevel& qu
 {
     unsigned int numSkills = 0;
     unsigned int skill;
-    for (skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         if (quest.getLevel(TPrimarySkill(skill)) > 0)
             numSkills++;
     }

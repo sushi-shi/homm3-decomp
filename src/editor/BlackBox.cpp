@@ -22,20 +22,20 @@ const unsigned int kNumBlackBoxReserved = 8;
 
 void TPrimarySkillBonuses::set(TPrimarySkill primarySkill, unsigned int newBonus)
 {
-    assert(primarySkill >= 0 && primarySkill < kNumPrimarySkills);
+    assert(primarySkill >= 0 && primarySkill < H3_IDX(kNumPrimarySkills));
     assert(newBonus <= s_kMax);
-    _m_bonuses[primarySkill] = newBonus;
+    H3_AT(_m_bonuses, primarySkill) = newBonus;
 }
 
 unsigned int TPrimarySkillBonuses::get(TPrimarySkill primarySkill) const
 {
-    assert(primarySkill >= 0 && primarySkill < kNumPrimarySkills);
-    return _m_bonuses[primarySkill];
+    assert(primarySkill >= 0 && primarySkill < H3_IDX(kNumPrimarySkills));
+    return H3_AT(_m_bonuses, primarySkill);
 }
 
 TRawOStream& operator<<(TRawOStream& stream, const TPrimarySkillBonuses& bonuses)
 {
-    for (unsigned int primarySkill = 0; primarySkill < kNumPrimarySkills; ++primarySkill)
+    for (unsigned int primarySkill = 0; primarySkill < H3_IDX(kNumPrimarySkills); ++primarySkill)
         stream << static_cast<signed char>(bonuses.get(TPrimarySkill(primarySkill)));
     return stream;
 }
@@ -43,7 +43,7 @@ TRawOStream& operator<<(TRawOStream& stream, const TPrimarySkillBonuses& bonuses
 VA(0x00406774, 0x2a)
 TRawIStream& operator>>(TRawIStream& stream, TPrimarySkillBonuses& bonuses)
 {
-    for (unsigned int primarySkill = 0; primarySkill < kNumPrimarySkills; ++primarySkill) {
+    for (unsigned int primarySkill = 0; primarySkill < H3_IDX(kNumPrimarySkills); ++primarySkill) {
         signed char bonus;
         stream >> bonus;
         bonuses.set(TPrimarySkill(primarySkill), bonus);

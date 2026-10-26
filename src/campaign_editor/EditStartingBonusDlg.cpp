@@ -218,10 +218,10 @@ private:
     void _onChangeSkillEdit(unsigned int skill);
     void _onKillFocusSkillEdit(unsigned int skill);
 
-    TArray<unsigned int, kNumPrimarySkills> _m_skills;
+    TArray<unsigned int, H3_IDX(kNumPrimarySkills)> _m_skills;
     // The skills above 0.
     unsigned int _m_numSkills;
-    _TSkillControls _m_aSkillControls[kNumPrimarySkills];
+    _TSkillControls _m_aSkillControls[H3_IDX(kNumPrimarySkills)];
     // Whether the edits are attached: their change notifications count.
     bool _m_bControls;
 };
@@ -718,7 +718,7 @@ void TStartingBonusSpellScrollDlg::OnOK()
 }
 
 DATA(0x00488df8)
-static const int g_aakSkillControlIDs[kNumPrimarySkills][2] = {
+static const int g_aakSkillControlIDs[H3_IDX(kNumPrimarySkills)][2] = {
     { IDC_ATTACK_EDIT, IDC_ATTACK_SPIN },
     { IDC_DEFENSE_EDIT, IDC_DEFENSE_SPIN },
     { IDC_SPELL_POWER_EDIT, IDC_SPELL_POWER_SPIN },
@@ -803,7 +803,7 @@ void TStartingBonusPrimarySkillDlg::setBonus(const TScenarioBonusPrimarySkill& b
 {
     TStartingHeroBonusDlg::setBonus(bonus);
     _m_numSkills = 0;
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         _m_skills[skill] = bonus.getSkills()[skill];
         _m_aSkillControls[skill].m_edit.SetWindowText(TFormattedString("%d", _m_skills[skill]));
         if (_m_skills[skill] > 0)
@@ -866,7 +866,7 @@ VA(0x0041fec0, 0x54)
 void TStartingBonusPrimarySkillDlg::DoDataExchange(CDataExchange* pDX)
 {
     TStartingHeroBonusDlg::DoDataExchange(pDX);
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         DDX_Control(pDX, g_aakSkillControlIDs[skill][0], _m_aSkillControls[skill].m_edit);
         DDX_Control(pDX, g_aakSkillControlIDs[skill][1], _m_aSkillControls[skill].m_spin);
     }
@@ -882,7 +882,7 @@ BOOL TStartingBonusPrimarySkillDlg::OnInitDialog()
     GetDlgItem(IDC_SPELL_POWER_STATIC)->SetWindowText(SEditStartingBonusDlgText::kSpellPowerStaticStr);
     GetDlgItem(IDC_KNOWLEDGE_STATIC)->SetWindowText(SEditStartingBonusDlgText::kKnowledgeStaticStr);
     TStartingHeroBonusDlg::OnInitDialog();
-    for (unsigned int skill = 0; skill < kNumPrimarySkills; skill++) {
+    for (unsigned int skill = 0; skill < H3_IDX(kNumPrimarySkills); skill++) {
         CEdit& edit = _m_aSkillControls[skill].m_edit;
         edit.LimitText(TDigits<s_kMaxSkill>::getDigits());
         _m_aSkillControls[skill].m_spin.SetRange(0, s_kMaxSkill);

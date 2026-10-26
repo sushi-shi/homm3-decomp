@@ -1162,7 +1162,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         rewardGiven = 1;
     }
 
-    for (int i = 0; i < kNumPrimarySkills; i++) {
+    for (int i = 0; i < H3_IDX(kNumPrimarySkills); i++) {
         if (blackBox->m_primarySkillBonus[i] > 0) {
             if (humanPlayer) {
                 addReward(msg, alternate, rewards,
@@ -2377,7 +2377,7 @@ void advManager::doEventMagicSchool(hero* currentHero, NewmapCell* cell,
         skill = aiChooseMagicSkill(currentHero);
     }
 
-    currentHero->adjustPrimarySkill(skill, 1);
+    currentHero->adjustPrimarySkill(H3_IDX(skill), 1);
     currentHero->m_magicSchoolFlags |= 1 << cell->m_extraInfo;
     g_currentPlayer->m_resources[GOLD] -= 1000;
 }
@@ -2938,11 +2938,11 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
     }
 
     if (award == const_scholar_primary_skill) {
-        int primary = info->getScholarPrimarySkill();
+        TPrimarySkill primary = info->getScholarPrimarySkill();
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_SCHOLAR],
-                         1, -1, -1, primary + 0x1f, 1, -1, 0, -1, 0, -1, 0);
-        currentHero->adjustPrimarySkill(primary, 1);
+                         1, -1, -1, H3_IDX(primary) + RES_PRIMARY_SKILL_ATTACK, 1, -1, 0, -1, 0, -1, 0);
+        currentHero->adjustPrimarySkill(H3_IDX(primary), 1);
     }
 
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
