@@ -16,8 +16,7 @@
 // objects.txt writer, operator<<(ostream&, const TObjectType&) (line 270,
 // befriended in ObjectType.h), sits just before the reader. Retail keeps no
 // ostream code here, so /OPT:REF dropped the unreferenced writer; with it
-// restored the compiled initializer is byte-identical to 0x51b830 (the claim
-// tooling cannot yet bind a facet-id initializer to its CRT slot).
+// restored the compiled initializer is byte-identical to 0x51b830.
 #include <assert.h>
 #include <iostream>
 #include <map>
@@ -229,21 +228,14 @@ inline std::vector<TObjectType::_TImageInfo>& TObjectType::_getAImageInfo()
 
 VA_COMPGEN(0x00514930, 0x2A, LOCAL_STATIC_DTOR, imageCache)
 
-// The retained cache insert at 0x516c10 agrees in every non-relocation
-// byte of its 522-byte body, including its ten call sites. Its _Construct
-// at 0x517b50 uses a six-dword rep movsd, consistent with the ordinary copy.
-// An explicit point copy constructor contradicts that callee: _Construct
-// grows from 20 to 39 bytes and replaces rep movsd with six individual
-// load/store pairs. Coordinate constructors taking values or references
-// are neutral when the empty point is initialized before the row count.
+// The retained cache insert at 0x516c10 calls _Construct at 0x517b50,
+// which uses a six-dword rep movsd, consistent with the ordinary copy; an
+// explicit point copy constructor contradicts that callee (it grows to 39
+// bytes with six load/store pairs).
 VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, _TImageInfo)
 
 // Loki and Mac 0x223c44 initialize the mask counter after the four resource
-// reads. Keeping it local to the loop matches all 551 editor bytes and the
-// game's 791-byte instruction stream. The game comparison remains 99.9605%
-// because its two class-local imageCacheGuard references are not yet paired.
-// Earlier counter/register probes used provisional registry helpers and no
-// longer describe the canonical source.
+// reads; the counter stays local to the loop.
 VA(0x00514610, 0x317)
 MAC_ADDRESS(0x223aa4, 0x2b8)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
 TObjectType& TObjectType::setImageName(
@@ -353,8 +345,7 @@ TObjectType& TObjectType::_setTriggerMask(const std::bitset<OBJECT_MASK_CELLS>& 
 // Names are provisional. setPassableMask includes cells outside the image;
 // setTerrainMask keeps recommended terrain inside the new legal terrain.
 // Keep ordinary member boundaries: the reader's expanded chain reproduces
-// retail's retained bitset operations and string destruction. Flattening
-// these calls with the same declarations/default constructors scores 76.6378%.
+// retail's retained bitset operations and string destruction.
 MAC_ADDRESS(0x223ea8, 0x9c)
 TObjectType& TObjectType::_setPassableMask(const std::bitset<OBJECT_MASK_CELLS>& mask)
 {
@@ -430,7 +421,6 @@ std::ostream& operator<<(std::ostream& os, const TObjectType& objectType)
 // istream::ignore(1, EOF) between the string/bitset extractions. MSL's
 // bitset extractor reads istreambuf_iterator directly without a sentry;
 // VC6's BITSET constructs a sentry and skips that whitespace itself.
-// The Windows body is byte-exact with the chained extractions below.
 VA(0x00514b80, 0x1F7)
 MAC_ADDRESS(0x224078, 0x1ac)
 std::istream& operator>>(std::istream& is, TObjectType& objectType)
@@ -593,10 +583,8 @@ bool std::less<TObjectType>::operator()(const TObjectType& lhs, const TObjectTyp
 // string temporary, 0x62e738 the exception object, and 0x62e743/5d/68 the
 // per-row stream's virtual base (guarded by the construction flag at
 // [ebp-0x14]), its strstreambuf and the stream itself.
-// resize(count), an explicit TObjectType() argument and a named default
-// object reproduced three lower-scoring objects. The canonical inline
-// ResourceManager::dispose(resource*) calls at both exit paths restore the
-// nested expansion and make the whole Windows body exact (73.3263% -> 100%).
+// The canonical inline ResourceManager::dispose(resource*) calls at both exit
+// paths give retail's nested expansion.
 VA(0x00514d80, 0x284)
 MAC_ADDRESS(0x224224, 0x244)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMap::loadObjectTypeTemplates; retail-only
 void TObjectTypeTable::load(char* filename)
@@ -634,14 +622,13 @@ VA_COMPGEN(0x00515010, 0x198, BASIC_STRING_RESIZE, char)
 
 // --- Dinkumware COMDAT pairings -------------------------------------------
 
-// COMDAT pairing: TUniqueSet<std::string>'s implicit destructor, agreement
-// 0.915: the vector at +0x10 freed, then _Tree::_Erase over the head node.
+// COMDAT pairing: TUniqueSet<std::string>'s implicit destructor: the
+// vector at +0x10 freed, then _Tree::_Erase over the head node.
 VA_COMPGEN(0x00514130, 0x7E, IMPLICIT_DTOR, TUniqueSet)
 MAC_COMPGEN_ADDRESS(0x223810, 0x88, IMPLICIT_DTOR, TUniqueSet)
 
-// COMDAT pairing: basic_istream<char>'s streambuf constructor, agreement
-// 0.931 (the `_Bool` tie-parameter arm - the only istream ctor this object
-// emits).
+// COMDAT pairing: basic_istream<char>'s streambuf constructor (the `_Bool`
+// tie-parameter arm - the only istream ctor this object emits).
 VA_COMPGEN(0x005151b0, 0xAA, CLASS_CTOR, basic_istream)
 
 VA_COMPGEN(0x00515a40, 0x32, SCALAR_DELETING_DTOR, basic_istream)
@@ -664,7 +651,7 @@ VA_COMPGEN(0x00516560, 0x23, SCALAR_DELETING_DTOR, TObjectSlotTraits)
 // COMDAT pairing: strstreambuf(const char*, int), agreement 0.957.
 VA_COMPGEN(0x005165f0, 0xE7, CLASS_CTOR, strstreambuf)
 
-// COMDAT pairing: istrstream's scalar deleting destructor, agreement 1.000.
+// COMDAT pairing: istrstream's scalar deleting destructor.
 // It calls the CRT's own ??1istrstream@std@@ at 0x60af24 by name, so no
 // similarity argument is needed.
 VA_COMPGEN(0x00516720, 0x30, SCALAR_DELETING_DTOR, istrstream)
@@ -685,16 +672,16 @@ void istrstream::`vbase destructor'();
 
 // load retains this unsigned-long constructor for its flipped passable
 // temporary. Default construction of trigger and both terrain masks instead
-// expands to their retained _Tidy bodies, closing load at 100%.
+// expands to their retained _Tidy bodies.
 VA_COMPGEN(0x005154a0, 0x61, BITSET_CTOR, bitset48)
 
-// COMDAT pairing: bitset<48>::flip(), agreement 1.000 - the trigger-mask
+// COMDAT pairing: bitset<48>::flip() - the trigger-mask
 // member TObjectType::setTriggerMask flips, and 48 is the only bitset width
 // whose flip this object emits.
 VA_COMPGEN(0x00516770, 0x28, BITSET_FLIP, bitset48)
 
 // COMDAT pairing: vector<TObjectType>::insert(ptr, count, const&) and
-// ::erase(first, last), agreements 1.000 and 1.000, both reached from the
+// ::erase(first, last), both reached from the
 // already-claimed TObjectTypeTable::load at 0x514d80. These two are
 // compiland-private by construction - TObjectType is this header's type -
 // which is why the sizes agree to the byte.
@@ -702,8 +689,8 @@ VA_COMPGEN(0x005167a0, 0x2E1, VECTOR_INSERT, TObjectType)
 
 VA_COMPGEN(0x00516a90, 0x44, VECTOR_ERASE, TObjectType)
 
-// COMDAT pairing: _Tree<string, pair<const string,int>>::erase(first, last),
-// agreement 0.960 - the registry map's range eraser.
+// COMDAT pairing: _Tree<string, pair<const string,int>>::erase(first, last)
+// - the registry map's range eraser.
 VA_COMPGEN(0x00516ae0, 0x12B, TREE_ERASE_RANGE, string)
 
 VA_COMPGEN(0x00516e20, 0x1C, BASIC_STRING_SUBSCRIPT, char)
@@ -719,15 +706,14 @@ VA_COMPGEN(0x00516f10, 0x1D, EXCEPTION_DORAISE, invalid_argument)
 
 VA_COMPGEN(0x00516f30, 0x157, IMPLICIT_COPY_CTOR, invalid_argument)
 
-// COMDAT pairing: _Tree<string,...>::erase(iterator) - at 1342 B the largest
-// unclaimed body in the span - agreement 0.971, and ::_Erase(node), the
-// recursive subtree destroyer, agreement 0.952.
+// COMDAT pairing: _Tree<string,...>::erase(iterator) (1342 B) and
+// ::_Erase(node), the recursive subtree destroyer.
 VA_COMPGEN(0x00517090, 0x53E, TREE_ERASE_ITERATOR, string)
 
 VA_COMPGEN(0x005175d0, 0xAD, TREE_ERASE, string)
 
 // COMDAT pairing: num_get<char, istreambuf_iterator<char>>::num_get(size_t),
-// agreement 0.889 - the facet constructor, the mirror of num_put's already
+// the facet constructor, the mirror of num_put's already
 // claimed at 0x4546e0.
 VA_COMPGEN(0x00517d70, 0x5C, CLASS_CTOR, num_get)
 // The map editor's num_get and num_put deleting destructors fold into one.
@@ -735,9 +721,9 @@ VA_COMPGEN_AT(h3maped, 0x004360bf, 0x1c, SCALAR_DELETING_DTOR, num_get)
 
 VA_COMPGEN(0x0051a120, 0xCC, CLASS_CTOR, basic_string)
 
-// COMDAT pairing: _Tree<string,...>::insert(const value_type&), agreement
-// 0.969, and the pair<iterator,bool> constructor it returns through,
-// agreement 1.000 - the latter is 0x51af50's only call into this span.
+// COMDAT pairing: _Tree<string,...>::insert(const value_type&) and the
+// pair<iterator,bool> constructor it returns through - the latter is
+// 0x51af50's only call into this span.
 // setImageName retains map<string,int>::insert as a thin hidden-return
 // wrapper around the tree insertion below.
 VA_COMPGEN(0x00517B70, 0x2C, MAP_INSERT, string)
@@ -746,9 +732,8 @@ VA_COMPGEN(0x0051af50, 0x156, TREE_INSERT, string)
 
 VA_COMPGEN(0x0051b150, 0x18, CLASS_CTOR, pair)
 
-// COMDAT pairing: _Tree<string,...>::_Lbound, agreement 0.941, and
-// const_iterator::_Dec, agreement 0.952 - the predecessor walk whose
-// successor twin is already claimed at 0x517780.
+// COMDAT pairing: _Tree<string,...>::_Lbound and const_iterator::_Dec - the
+// predecessor walk whose successor twin is already claimed at 0x517780.
 VA_COMPGEN(0x0051b510, 0xBC, TREE_LBOUND, string)
 
 VA_COMPGEN(0x0051b5d0, 0xB3, TREE_CONST_ITERATOR_DEC, string)
@@ -759,14 +744,14 @@ VA_COMPGEN(0x0051b5d0, 0xB3, TREE_CONST_ITERATOR_DEC, string)
 VA_COMPGEN(0x005157b0, 0x20, STREAMBUF_SGETC, char)
 
 // COMDAT pairing: basic_string<char>::replace(pos, n, const char*, n),
-// agreement 0.994 - the `.msk` suffix rewrite in setImageName.
+// - the `.msk` suffix rewrite in setImageName.
 VA_COMPGEN(0x00515a80, 0x199, BASIC_STRING_REPLACE, char)
 
-// COMDAT pairing: basic_string<char>::rfind(const char*, pos, n), agreement
-// 0.983 - the `rfind('.')` that finds the extension setImageName replaces.
+// COMDAT pairing: basic_string<char>::rfind(const char*, pos, n) - the
+// `rfind('.')` that finds the extension setImageName replaces.
 VA_COMPGEN(0x00515c20, 0x74, BASIC_STRING_RFIND, char)
 
-// COMDAT pairing: basic_istream<char>::ipfx(bool), agreement 0.969 - the
+// COMDAT pairing: basic_istream<char>::ipfx(bool) - the
 // whitespace-skipping prefix every extraction in this compiland runs
 // through, and the reason use_facet<ctype<char>> is instantiated here.
 VA_COMPGEN(0x00515ca0, 0x27A, ISTREAM_IPFX, char)
@@ -777,7 +762,6 @@ VA_COMPGEN(0x00515f20, 0x26, BASIC_IOS_SETSTATE, char)
 // ctype<char>'s SDK cleanup, registered with atexit by its constructor and
 // the expanded constructor in use_facet. Both retail operands name 0x516060;
 // its 13-byte body loads _Cltab at 0x6ab1c4 and calls free at 0x6195e0.
-// The ordinary full-TU object emits the identical body and relocations.
 VA_COMPGEN(0x00516060, 0x0D, CTYPE_TERM, char)
 VA_COMPGEN_AT(h3maped, 0x00432a00, 0xd, CTYPE_TERM, char)
 
@@ -794,8 +778,7 @@ VA_COMPGEN(0x005160d0, 0x1C, CTYPE_DO_TOUPPER_CHAR, char)
 
 VA_COMPGEN(0x005160f0, 0x38, CTYPE_DO_TOUPPER_RANGE, char)
 
-// COMDAT pairing: basic_ios<char>::clear and basic_streambuf<char>::sbumpc,
-// agreements 1.000 and 1.000.
+// COMDAT pairing: basic_ios<char>::clear and basic_streambuf<char>::sbumpc.
 VA_COMPGEN(0x00517af0, 0x1D, BASIC_IOS_CLEAR, char)
 
 VA_COMPGEN(0x00517b10, 0x32, STREAMBUF_SBUMPC, char)
@@ -817,7 +800,7 @@ VA_COMPGEN(0x00518d20, 0x3C9, NUM_GET_DO_GET, char)
 
 VA_COMPGEN(0x005190f0, 0x40E, NUM_GET_DO_GET, char)
 
-// COMDAT pairing: ctype<char>::is(mask, char), agreement 1.000 - reached
+// COMDAT pairing: ctype<char>::is(mask, char) - reached
 // from the float arm of do_get immediately above it.
 VA_COMPGEN(0x00519500, 0x22, CTYPE_IS, char)
 
@@ -827,14 +810,13 @@ VA_COMPGEN(0x00519950, 0x414, NUM_GET_DO_GET, char)
 
 VA_COMPGEN(0x00519d70, 0x393, NUM_GET_DO_GET, char)
 
-// COMDAT pairing: num_get<char>::_Getifld, agreement 0.968 - the integer
+// COMDAT pairing: num_get<char>::_Getifld - the integer
 // field scanner the five integral do_get arms share.
 VA_COMPGEN(0x0051a1f0, 0x534, NUM_GET_GETIFLD, char)
 
 VA_COMPGEN(0x0051a110, 0x7, IMPLICIT_DTOR, facet)
 
-// COMDAT pairing: istreambuf_iterator<char>'s operator*, _Inc and _Peek,
-// agreements 1.000, 1.000 and 1.000.
+// COMDAT pairing: istreambuf_iterator<char>'s operator*, _Inc and _Peek.
 VA_COMPGEN(0x0051a730, 0x4F, ISTREAMBUF_ITERATOR_DEREF, char)
 
 VA_COMPGEN(0x0051a8e0, 0x53, ISTREAMBUF_ITERATOR_INC, char)
@@ -872,20 +854,20 @@ VA_COMPGEN(0x0051b170, 0x92, TIDYFAC_NUM_GET_TIDY, char)
 VA_COMPGEN_AT(h3maped, 0x00437c1e, 0x4d, TIDYFAC_NUM_PUT_TIDY, char)
 VA_COMPGEN_AT(h3maped, 0x00437cb8, 0x4d, TIDYFAC_NUMPUNCT_TIDY, char)
 
-// COMDAT pairing: _Tree<string,...>::_Insert, agreement 0.968 - the
+// COMDAT pairing: _Tree<string,...>::_Insert - the
 // rebalancing node inserter behind the already-claimed public insert.
 VA_COMPGEN(0x0051b210, 0x2FF, TREE_NODE_INSERT, string)
 
-// COMDAT pairing: std::_Maklocstr, agreement 1.000 - the locale-name
+// COMDAT pairing: std::_Maklocstr - the locale-name
 // duplicator, reached from use_facet<numpunct>.
 VA_COMPGEN(0x0051b690, 0x39, MAKLOCSTR, char)
 
-// COMDAT pairing: _Construct<pair<const string, int>>, agreement 0.962 -
+// COMDAT pairing: _Construct<pair<const string, int>> -
 // the registry map's node initializer.
 VA_COMPGEN(0x0051b6d0, 0x15B, STD_CONSTRUCT, string_uint_pair)
 
-// COMDAT pairing: basic_string<char>'s two compare overloads, agreements
-// 0.976 and 1.000; the sizes (84 vs 106) agree with the mangled parameter
+// COMDAT pairing: basic_string<char>'s two compare overloads; the sizes
+// (84 vs 106) agree with the mangled parameter
 // lists on both sides.
 VA_COMPGEN(0x0051b8b0, 0x54, BASIC_STRING_COMPARE_STR, char)
 
@@ -938,8 +920,8 @@ VA_COMPGEN(0x0041bc30, 0x159, IMPLICIT_COPY_CTOR, runtime_error)
 // 0x404690 is `??1logic_error`: it stores the class's own vtable 0x6455bc
 // (whose only other writers are the two logic_error constructors), releases
 // the reference-counted `what` string at +0x10, zeroes the three string
-// words and tail-calls ~exception. Our COMDAT is the same 75 bytes,
-// instruction for instruction. 0x404660 is the scalar deleting destructor
+// words and tail-calls ~exception. 0x404660 is the scalar deleting
+// destructor
 // that wraps it.
 
 // The throwing call site that pulls this whole group into the image's first
@@ -957,30 +939,27 @@ VA_COMPGEN(0x00404690, 0x4B, IMPLICIT_DTOR, logic_error)
 VA_COMPGEN(0x004046e0, 0x1D, EXCEPTION_DORAISE, out_of_range)
 
 // Retail 0x4b6be3 stores runtime_error's vptr (0x645640); its COL names
-// .?AVruntime_error@std@@. The ordinary SDK destructor emitted here agrees
-// instruction-for-instruction, including delete and exception::~exception.
-// The former game.cpp out_of_range claim was a mnemonic-only pairing:
-// out_of_range's emitted destructor instead installs logic_error's vptr and
-// is identical to the 0x404690 body above. No authored helper is removed.
+// .?AVruntime_error@std@@. The former game.cpp out_of_range claim was a
+// mnemonic-only pairing: out_of_range's emitted destructor instead installs
+// logic_error's vptr and is identical to the 0x404690 body above.
 VA_COMPGEN(0x004b6be0, 0x4B, IMPLICIT_DTOR, runtime_error)
 
 // The old count-insert claim at 0x46aeb0 named TImageInfo only because
 // its trivial 24-byte record produced the same generic vector code. Retail
 // callers are combatManager::placeObstacle and castSpell, both operating
-// on TObstacle. Their native count-insert bodies match all 740 retail bytes
-// outside the two verified new/delete relocations. The retained claim now
-// belongs to cmbtmgr's TObstacle specialization; no image-cache count-insert
+// on TObstacle. The retained claim now belongs to cmbtmgr's TObstacle
+// specialization; no image-cache count-insert
 // call or explicit instantiation is introduced just to emit another copy.
 VA_COMPGEN(0x00516c10, 0x20A, VECTOR_INSERT_SINGLE, _TImageInfo)
 
 // This insertion and setupAndLoadObstacles (0x466290) both call 0x517750.
 // Retail retains the folded size helper here in the objecttype cluster.
-// The TObstacle copy expands in cmbtmgr; this native TImageInfo instance
-// matches all 33 retail bytes, with no relocations or added instantiation.
+// The TObstacle copy expands in cmbtmgr; this native TImageInfo instance is
+// the retained one, with no added instantiation.
 VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, _TImageInfo)
 
-// COMDAT pairing: basic_istream<char>'s destructor, agreement 0.750 on a
-// 15-byte body - the virtual-base vtable fixup, and 1:1 in this object.
+// COMDAT pairing: basic_istream<char>'s destructor (15 bytes) - the
+// virtual-base vtable fixup, and 1:1 in this object.
 VA_COMPGEN(0x00515260, 0xF, IMPLICIT_DTOR, basic_istream)
 VA_COMPGEN_AT(h3maped, 0x00490e57, 0xf, IMPLICIT_DTOR, basic_istream)
 

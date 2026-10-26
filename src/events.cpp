@@ -784,8 +784,8 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
 
 // E:\gamedcs\events.cpp:498. Dreamcast proves this private helper, its
 // short `artifact` local and statement order: line 501 loads the artifact
-// inside the human-player block, which makes doEventArtifact exact. Mac doEventArtifact retains
-// a call to it at 0:0xa9d28; VC6 auto-inlines it into the free arm.
+// inside the human-player block. Mac doEventArtifact retains a call to it at
+// 0:0xa9d28; VC6 auto-inlines it into the free arm.
 DC_ADDRESS(0x090878, 0x62)
 MAC_ADDRESS(0x0a9d28, 0xa4)
 void advManager::doEventFreeArtifact(hero* currentHero,
@@ -916,12 +916,9 @@ TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 // CheckLevel; the guarded copy keeps FizzleCenter as a call and the
 // plain one folds it, exactly as DoCustomSpellScroll's pair does.
 // Dreamcast places treasure on line 657 and artifactId on line 659.
-// Keep the source getCustomIndex call inside getTreasureData. The older
-// direct-expression control was exact here and in doCustomSpellScroll,
-// but omitted the DC-proven boundary retained as an expansion on Mac.
-// Negative control: spelling DC's unsigned-char human_player literally changes
-// the x86 decorated identity; retail's `_N` suffix proves this parameter is bool.
-// Splitting artifactId's declaration from its accessor assignment is byte-flat.
+// Keep the source getCustomIndex call inside getTreasureData (the
+// DC-proven boundary Mac retains as an expansion). Retail's `_N` suffix
+// proves humanPlayer is bool, not DC's unsigned char.
 VA(0x0049f070, 0x765)
 DC_ADDRESS(0x090d34, 0x3ce)
 MAC_ADDRESS(0x0aa38c, 0x590)  // dc-bracket forced, ret 0x10=p5
@@ -1030,18 +1027,11 @@ void advManager::doArtifactSkillRequirement(
 // E:\gamedcs\events.cpp:760. The Dreamcast signature and helper roster
 // identify the source surface; retail fixes the price-arm order, costs and
 // text indices. This is the ordinary artifact event dispatcher.
-// Exact once doEventFreeArtifact loads its artifact inside the human-player
-// block (DC events.cpp:501); earlier the body stayed at 85.81%.
-// Restoring DoArtifactSkillRequirement's nested DoEventFreeArtifact call and
-// short refusal local fixes the dialog semantics. With the old GiveArtifact
-// reconstruction this measured 0%; recovering its proven constructor and
-// accessor reaches 85.81439. Either redundant sentinel stores or the old
-// memcpy assignment alone reproduces that 672-byte non-expanded control.
-// The canonical 752-byte caller expands GiveArtifact in the free arm at
-// cost/budget 113/113, retaining calls in the skill arms at budgets 6 and 4,
-// exactly the retail call decisions. MAX before this reconstruction: 78.1174.
-// Early returns versus full/partial nested dispatch reproduce three objects
-// with no MAX gain; branch nesting alone does not merge the skill-success tail.
+// doEventFreeArtifact loads its artifact inside the human-player block (DC
+// events.cpp:501). DoArtifactSkillRequirement's nested DoEventFreeArtifact
+// call and short refusal local fix the dialog semantics. The canonical
+// caller expands GiveArtifact in the free arm and retains calls in the skill
+// arms, exactly the retail call decisions.
 VA(0x0049f7e0, 0x2A4)
 DC_ADDRESS(0x091104, 0x1b8)
 MAC_ADDRESS(0x0aa91c, 0x260)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5
@@ -1795,8 +1785,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
 
 // DC1653/1661 call TTextResource::operator[], not GetText directly. The same
 // wrapper is recorded for Garden (1858/1866), MercenaryCamp (2303/2311), and
-// PowerSchool (2492/2500). Restoring all eight calls preserves their exact
-// retail bodies; it does not by itself recover dispatchEvent's retained calls.
+// PowerSchool (2492/2500).
 // Keep humanPlayer as bool: the DC publics for all four handlers at
 // 0x92d40/0x93368/0x941c8/0x946b4 end in PAVNewmapCell@@_N@Z. Their
 // unsigned-char CodeView formal records are lowered bool representations,
@@ -4164,8 +4153,8 @@ MAC_ADDRESS(0x0b5418, 0x334)
 void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
                                     bool humanPlayer)
 {
-    // Guard clauses preserve all four dialogs while matching retail
-    // 0x4a8080 exactly with getSecondarySkill and getText retained.
+    // Guard clauses preserve all four dialogs, with getSecondarySkill and
+    // getText retained.
     // Mac retains separate dialogs for no skill, known skill, full skills,
     // and learned skill at 0:0xb55b4, 0:0xb5634, 0:0xb56b0, 0:0xb5724.
     int skill = cell->getWitchSkill();
@@ -4334,35 +4323,22 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
 // whirlpool between the two monolith arms - and the five EH states run
 // 0..4 in exactly that order: sacrifice window, hill fort window, thieves
 // guild new, university window, war factory new.
-// [2026-08-28] SOURCE-SHAPE CHECKPOINT (99.37%): the earlier 99.99% source
-// was a local maximum produced by pasting nine Dreamcast event-handler bodies
-// and four game accessors directly into this switch. The fatal DC gate now
-// requires all thirteen calls, plus NewfullMap::cell in the eye sweep and the
-// AI-first university statement order. The inline definitions above and the
-// Game.h views preserve those boundaries while VC6 folds them back into this
-// retail row. Do not trade that proof away for the old score: recover the
-// remaining register/inlining decisions inside the named hierarchy. Restoring
-// SetInfoFlag's own attested GetTeam call raised the coherent checkpoint from
-// 99.05% to 99.29%; inline_depth(1) blocked SetInfoFlag itself (98.36%),
-// inline_depth(2) returned to 99.05%, and the unforced natural declaration
-// plus call produced 99.29%. Naming gpAdvManager as the whirlpool receiver
-// closed that expansion, and restoring the dossier's single direct obelisk
-// update (no invented pointer/mask locals) raised the checkpoint to 99.37%.
-// Border-tent operand order/force-inline and a named faerie-ring game receiver
-// were byte-flat; force-inlining GetTeam regressed this row to 99.13% and its
-// independently exact COMDAT to zero, so only its attested inline declaration
-// is retained.
+// The thirteen Dreamcast event-handler and game-accessor calls,
+// NewfullMap::cell in the eye sweep and the AI-first university statement
+// order are source facts: the inline definitions above and the Game.h views
+// keep those boundaries while VC6 folds them into this row. SetInfoFlag keeps
+// its attested GetTeam call; GetTeam keeps only its attested inline
+// declaration (forcing it inline changes its own exact COMDAT). The
+// whirlpool arm names gpAdvManager as its receiver, and the obelisk arm makes
+// the dossier's single direct update.
 // Retail calls the five ordinary handlers with retained bodies (Campfire,
 // DefenseTower, Garden, MercenaryCamp, PowerSchool) because C1XX does not save
-// their bodies for /Ob2: the traced save cliff lies between cost 174 (saved)
-// and 176 (flags 0x2a, never a candidate). The Dreamcast scopes give the four
+// their bodies for /Ob2: the save cliff lies between cost 174 (saved) and 176
+// (flags 0x2a, never a candidate). The Dreamcast scopes give the four
 // primary-skill visitors an else branch and a braced else-dialog (two
 // coincident scopes; 176). Campfire braces only its closing call (DC 1369);
 // ExtraInfoUnion::getCampfireResource's DC EGameResource return supplies the
-// rest. All five bodies stay byte-exact (88.58% -> 100%). The earlier depth-zero pins
-// and early-return controls are superseded. Residual 99.997%: in the faerie
-// ring arm retail loads the nested getTeam byte as [ecx+eax] while the loop
-// keeps [eax+ecx]; the identical mermaid arm matches the base form.
+// rest.
 VA(0x004a84f0, 0x2542)
 DC_ADDRESS(0x09824c, 0x1870)
 MAC_ADDRESS(0x0b5b24, 0x1f6c)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above)
@@ -5181,8 +5157,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
 }
 
 // DC events.cpp:5397 retains game::GetMine. Naming its result in the mine
-// arm keeps that source call and gives VC6 the retail 52-block, 29-call body.
-// Mac's paired comparison is currently unscored (unbound TOC literal @6813).
+// arm keeps that source call and gives VC6 the retail body.
 VA(0x004ab410, 0x632)
 DC_ADDRESS(0x09a288, 0x2a0)
 MAC_ADDRESS(0x0b85a8, 0x36c)
@@ -5991,16 +5966,6 @@ int advManager::doNetCombat(CNetMsg* netMsg)
 // back-level file.
 const int g_netCombatSaveVersion = 42;
 
-// Before scalar-helper recovery, both had one residual `push ecx`. Retail carries no
-// frame at all - it homes the byte buffer at [ebp+0xb] and the dword at
-// [ebp+8], overlapping inside the dead `infile` parameter slot once that
-// pointer is live in ESI. Block-scoping the pair and swapping their
-// declaration order are both byte-flat, measured. Moving int_buffer's
-// declaration to its first assignment, and delaying write's const-cast
-// alias until its tail calls, are byte-flat as well (2026-09-07).
-// Eight paired scratch-type/lifetime controls (plain/signed char, int/long,
-// shared/per-field dword scopes) produce two distinct objects and leave both
-// scores unchanged. None recovers the overlapping dead parameter home.
 // Mac 0xba8b4/0xbab44 stages each scalar independently; retain those
 // helper lifetimes in both serializers instead of shared scratch variables.
 VA(0x004ad1f0, 0x148)
@@ -6514,33 +6479,15 @@ void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho
     }
 }
 
-// RETIRED 2026-09-06, claim lane 31, and the note it replaces had the trade
-// priced against only ONE of the two rows involved.
-
-// The user-defined `~CWaitForRemoteBattleDlg()` with an interior
-// `#pragma inline_depth(0)` was kept here because it made DoCombat's one
-// inline expansion of the destructor call ~CNetMsgHandlerPause,
-// ~CCombatInitMsg and ~CAnimatedDlg rather than expand their string
-// teardowns, and because the synthesized spelling measured 98.54 there
-// against 99.05. What that measurement never looked at is the emitted
-// COMDAT: retail's own `??1CWaitForRemoteBattleDlg` is 0x4aea00 in this
-// object's band, it has NO vtable store and it EXPANDS all three string
-// teardowns - exactly the synthesized shape. The user-defined form scored
-// that 253-byte row 28.9125.
-
-// Removing the declaration (the class inherits CAnimatedDlg's virtual
-// destructor, so the implicit one stays virtual) and the definition with
-// it: 0x4aea00 28.9125 -> 100.0000 and DoCombat 99.0481 -> 98.5379, i.e.
-// +180 B against -8 B, with SendHeroTownData, DoNetCombat,
-// ReceiveHeroTownData, ~CCombatInitMsg, the constructor, Wait,
-// handle_message and the scalar deleting destructor all holding at
-// 100.0000. It also retires an inline-depth pin.
+// CWaitForRemoteBattleDlg has no user-declared destructor: retail's own
+// ??1CWaitForRemoteBattleDlg (0x4aea00) has no vtable store and expands all
+// three string teardowns - the synthesized shape (the inherited CAnimatedDlg
+// virtual destructor keeps it virtual).
 
 // COMDAT pairing: std::_Sort<ESpellId, spell_level_order>.
 VA_COMPGEN(0x004b00b0, 0x294, STD_SORT, ESpellId_spell_level_order)
 
-// COMDAT pairing: std::_Sort_0<ESpellId, spell_level_order>, agreement 1.000 over
-// all 330 instructions.
+// COMDAT pairing: std::_Sort_0<ESpellId, spell_level_order>.
 VA_COMPGEN(0x004afcb0, 0x350, STD_SORT_0, ESpellId_spell_level_order)
 
 // COMDAT pairing: std::_Unguarded_partition<ESpellId, spell_level_order>.
@@ -6549,32 +6496,31 @@ VA_COMPGEN(0x004b0400, 0x123, STD_UNGUARDED_PARTITION, ESpellId_spell_level_orde
 // COMDAT pairing: std::_Unguarded_insert<ESpellId, spell_level_order>.
 VA_COMPGEN(0x004b0350, 0xAB, STD_UNGUARDED_INSERT, ESpellId_spell_level_order)
 
-// COMDAT pairing: ccombatinitmsg::1CCombatInitMsg, mnemonic agreement 0.938.
+// COMDAT pairing: ccombatinitmsg::1CCombatInitMsg.
 VA_COMPGEN(0x004ad130, 0xB4, IMPLICIT_DTOR, ccombatinitmsg)
 MAC_COMPGEN_ADDRESS(0x0ba7cc, 0x90, IMPLICIT_DTOR, ccombatinitmsg)
 
-// COMDAT pairing: clevelpickwaitdlg::1CLevelPickWaitDlg, mnemonic agreement 0.902.
+// COMDAT pairing: clevelpickwaitdlg::1CLevelPickWaitDlg.
 VA_COMPGEN(0x004aeb00, 0x4B, IMPLICIT_DTOR, clevelpickwaitdlg)
 MAC_COMPGEN_ADDRESS(0x0bc4dc, 0x6c, IMPLICIT_DTOR, clevelpickwaitdlg)
 
-// COMDAT pairing: vector<std::string>::insert(pos, n, val), agreement 0.985.
+// COMDAT pairing: vector<std::string>::insert(pos, n, val).
 // Its single-element sibling and retained cleanup/copy/fill chain are now
 // enrolled in seerhut, where their canonical <vector>/<algorithm> bodies
 // still emit. Retail creatureBankEvent and five quest dialogs share them.
 VA_COMPGEN(0x004af550, 0x2A5, VECTOR_INSERT, string)
 
-// COMDAT pairing: std::_Construct<std::string>, agreement 0.972.
+// COMDAT pairing: std::_Construct<std::string>.
 VA_COMPGEN(0x004afb40, 0x167, STD_CONSTRUCT, string)
 
-// COMDAT pairing: vector<std::string>::~vector, agreement 0.950.
+// COMDAT pairing: vector<std::string>::~vector.
 VA_COMPGEN(0x004af2c0, 0x6B, VECTOR_DTOR, string)
 
 VA_COMPGEN(0x004af330, 0x13, VECTOR_SIZE, type_dialog_resource)
 
 VA_COMPGEN(0x0054cba0, 0x1C5, VECTOR_INSERT, type_dialog_resource)
 
-// COMDAT pairing: town's implicit destructor, agreement 1.000 at an exactly
-// equal 74-byte extent.
+// COMDAT pairing: town's implicit destructor (74 bytes).
 VA_COMPGEN(0x004ad0e0, 0x4A, IMPLICIT_DTOR, town)
 MAC_COMPGEN_ADDRESS(0x0ba85c, 0x58, IMPLICIT_DTOR, town)
 

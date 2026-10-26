@@ -173,7 +173,7 @@ void ResourceManager::AddToCache(resource* value)
 
 // The ostringstream used by both missing-resource reporters makes VC6 retain
 // this Dinkumware vbase-destructor closure. The base object's ??_D public and
-// both retail calls independently identify it; all 20 emitted bytes agree.
+// both retail calls independently identify it.
 #if 0  // @carcass -- compiler/library COMDAT emitted by ostringstream
 
 VA(0x005594f0, 0x14)  // anchor-caller + emitted COFF public, retail-only
@@ -215,8 +215,8 @@ VA_COMPGEN_AT(h3ccmped, 0x004442c0, 0x1d, STATIC_CTOR, g_resourcePath)
 // typeName.c_str() before constructing the stream; an ordinary shared helper
 // recovers that argument boundary and the stream's short lifetime. VC6 expands
 // this body naturally: no source inline keyword or inline-depth controls.
-// Both typed reporters are byte-exact with ordinary string assignments. Pasting
-// this body into those callers gives 78.49/72.05 and the wrong stream expansion.
+// Both typed reporters use ordinary string assignments; pasting this body
+// into those callers gives the wrong stream expansion.
 // The original helper name and exact source location are not available.
 static void reportMissingResource(const char* caller, const char* typeName,
                                   const char* resourceName)
@@ -245,9 +245,9 @@ static void reportMissingResource(const char* caller, const char* typeName,
 // 0..96 dispatch maps the admitted resource values to names and renders every gap
 // as `0x` plus a hexadecimal value before building the diagnostic shown by
 // the callers.
-// 100%: ordinary string assignments plus reportMissingResource recover all
-// retail calls and lifetimes without inline-depth pins. The former bootstrap
-// C linkage suppressed EH cleanup; keep the ordinary C++ declaration.
+// Ordinary string assignments plus reportMissingResource give all retail
+// calls and lifetimes without inline-depth pins; keep the ordinary C++
+// declaration (C linkage suppresses EH cleanup).
 VA(0x00559510, 0x4C1)  // caller ABI + retail type-name jump table/message graph
 void reportMissingTypedResource(const char* caller,
                                 int resourceType,
@@ -307,9 +307,9 @@ void reportMissingTypedResource(const char* caller,
 
 // Complete splits sprite-family diagnostics from the common resource
 // reporter above, with the same calling convention. The retail jump table
-// proves the complete 64..79 type-name mapping. Like the common
-// reporter, this is 100% with ordinary assignments and reportMissingResource;
-// no artificial message scope or inline-depth control is needed.
+// proves the complete 64..79 type-name mapping; like the common reporter it
+// uses ordinary assignments and reportMissingResource, with no artificial
+// message scope or inline-depth control.
 VA(0x005599e0, 0x448)  // anchor-caller + retail type-name jump table
 void reportMissingSpriteResource(const char* caller,
                                  int resourceType,
@@ -713,8 +713,7 @@ VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
 // Complete. Dreamcast names the anonymous bmpHeader local but cannot fix its
 // scope; retail keeps its stack home live across the loose FILE branch. Its
 // function-scope declaration prevents that branch's cache insertion pair from
-// reusing the header slot and matches all 0x41f retail bytes, 34 CFG blocks,
-// and 32 ordered calls. Moving result before the cache lookup was byte-flat.
+// reusing the header slot.
 VA(0x0055a800, 0x41F)
 DC_ADDRESS(0x121ac8, 0x194)
 MAC_ADDRESS(0x152df8, 0x1d0)  // bitmapBorder::SetImage loader;
@@ -993,10 +992,8 @@ TPalette24* ResourceManager::loadPalette24Data(const char* name,
 // 0x153434 through an 8-byte LOD stream adapter. Complete also opens loose
 // FILE resources and reports missing resources. Two source calls to the
 // ordinary findBitmapResource and loadPalette24Data helpers auto-inline in
-// VC6, matching all 0x2d1 retail bytes and its 22 ordered call sites. The
-// latter helper owns the header/RGBA locals recorded in Dreamcast's older
-// direct-reader function; its recovered lifetime closes the former 8-byte
-// frame-coloring residual.
+// VC6. The latter helper owns the header/RGBA locals recorded in Dreamcast's
+// older direct-reader function.
 VA(0x0055b470, 0x2D1)
 DC_ADDRESS(0x121ec8, 0xe4)
 MAC_ADDRESS(0x1534dc, 0x84)  // dc/hd public identity + retail palette-file shape
@@ -1049,8 +1046,8 @@ TPalette24* ResourceManager::GetPalette24(const char* name)
 // Dreamcast's older GetFont body records a TFontSpec local and calls the
 // reference-taking font::SetPalette. Mac loadFontData at 0:0x153560 likewise
 // passes the fetched palette directly at 0x153700, with no copy temporary.
-// Passing *palette matches the declared reference interface, removes VC6's
-// implicit TPalette16 pointer-conversion temporary and closes this body.
+// Passing *palette matches the declared reference interface and avoids VC6's
+// implicit TPalette16 pointer-conversion temporary.
 VA(0x0055b750, 0x17A)
 MAC_ADDRESS(0x153560, 0x260)
 font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
@@ -1089,8 +1086,7 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
 // The latter reads through the same 8-byte LOD stream adapter and performs
 // endian conversion of the font records. Complete also opens loose FILE
 // resources and uses its separate Windows loadFontData body at 0x55b750. Two
-// ordinary source calls to findBitmapResource auto-inline in VC6 and close
-// this 0x229-byte Windows body exactly, preserving all 18 ordered calls.
+// ordinary source calls to findBitmapResource auto-inline in VC6.
 VA(0x0055b8d0, 0x229)
 MAC_ADDRESS(0x1538a8, 0x9c)
 font* ResourceManager::loadFont(const char* name)
@@ -1845,10 +1841,9 @@ void resource::dispose()
 // CSprite's retail vtable fixes this Complete-only override as slot 1.
 // DC CSprite type 0x17d3 / fields 0x17d4 has no Dispose virtual; its
 // ResourceManager disposal functions supply the older frame-walk semantics.
-// Retail proves that GetNumSeqs consumes resType and
-// that every live frame is released before the base cache-removal path. The
-// complete 25-block / 280-byte body is exact, including the map/tree iterator
-// return boundary retained inside the inlined base disposal.
+// Retail proves that GetNumSeqs consumes resType and that every live frame is
+// released before the base cache-removal path; the map/tree iterator return
+// boundary is retained inside the inlined base disposal.
 VA(0x0055d1a0, 0x118)
 MAC_ADDRESS(0x15483c, 0x118)
 void CSprite::dispose()
@@ -1902,8 +1897,7 @@ VA_COMPGEN(0x0055d630, 0x1AD, STRINGBUF_OVERFLOW, char)
 VA_COMPGEN(0x0055db40, 0x7D, IMPLICIT_DTOR, basic_stringbuf)
 
 // The resource cache's own map teardown helper, and the two remaining
-// stringbuf members. All three byte-verified against the emitted COMDATs
-// (0.977 / 0.992 / 0.978); `_Erase` keys off the tree's NAMED key type,
+// stringbuf members. `_Erase` keys off the tree's NAMED key type,
 // TCacheMapKey, exactly as the iterator-increment claim below does.
 VA_COMPGEN(0x0055e760, 0x7E, TREE_ERASE, TCacheMapKey)
 
@@ -1961,8 +1955,7 @@ VA_COMPGEN(0x004b7ec0, 0x114, BASIC_STRING_CONCAT, char)
 VA_COMPGEN(0x0048d7d0, 0x28, LOCALE_FACET_INCREF, char)
 
 // COMDAT pairing: basic_ostringstream<char>::str and
-// basic_streambuf<char>::setg, agreements 1.000 and 1.000 at exactly equal
-// 33-byte extents.
+// basic_streambuf<char>::setg (33 bytes each).
 VA_COMPGEN(0x0055d600, 0x21, OSTRINGSTREAM_STR, char)
 
 VA_COMPGEN(0x0055e540, 0x21, STREAMBUF_SETG, char)

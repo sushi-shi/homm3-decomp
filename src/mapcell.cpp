@@ -75,11 +75,6 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 // mapcell.cpp:89/91 both readString results are stored in count's sp+0x14
 // slot, as are the later gzread results. The read/guard pairs and failure
 // scopes are separate at mapcell.cpp:93..120.
-// The 24-state family emitted four reproduced code results: recovered count
-// placement, char padding and error braces keep 99.4737%. Removing the old
-// cleanup pin gives 72.9210% in every corresponding control. That retained
-// site still calls the string destructor where retail calls _Tidy(true);
-// default depth expands the child too, so this boundary remains unresolved.
 VA(0x004fc1a0, 0x1EE)
 DC_ADDRESS(0x0eb7d0, 0x1ce)
 MAC_ADDRESS(0x11d5f0, 0x284)  // order-map: callers readTimedEventList + readTownData (inlined TTownEvent::Read), calls readString 0x4c6010; EH-bearing
@@ -519,12 +514,8 @@ VA_COMPGEN(0x004fd1c0, 0x18, DEFAULT_CTOR_CLOSURE, CObjectType)
 
 // Original: NewfullMap::~NewfullMap, mapcell.cpp:530
 // DC line 532 calls Close before member destruction. Complete additionally
-// disposes the sprite resources here. Recovering the ordinary member call
-// and Close's shared map-object cleanup makes this body and init both 100%,
-// with no inline-depth control. A cell-only Close gives 97.66% here (init
-// stays 100%): mapObjectData.clear still expands instead of remaining a call.
-// The old pasted body with its clear pin was 95.8833; a whole-body free
-// closeMap helper was not the original boundary and gave 87.7157.
+// disposes the sprite resources here. Close owns the shared map-object
+// cleanup; a cell-only Close leaves mapObjectData.clear expanded here.
 VA(0x004fd1e0, 0x271)
 DC_ADDRESS(0x0ec6a4, 0x80)
 MAC_ADDRESS(0x11ef58, 0x22c)  // anchor-global
@@ -586,9 +577,6 @@ void NewfullMap::init(int size, unsigned char twoLayers)
     memset(g_mapExtra, 0, cellCount * sizeof(*g_mapExtra));
 }
 
-// Everything else in the body is byte-identical; the remaining diff rows are
-// reloc NAMES only, on the ten STL erase COMDATs the clears reach, which are
-// excluded class and will never carry a claim.
 VA(0x004fd690, 0x2B3)
 DC_ADDRESS(0x0ec8f4, 0x2a0)
 MAC_ADDRESS(0x11f3dc, 0x1f0)
@@ -713,9 +701,8 @@ void NewfullMap::loadQuestGuardList(
 // before reading its quest. The quest value owns stack slot +0x5c across the
 // guard and append (0x11f6fc/0x11f754), rather than holding a row reference
 // across load. Retail passes the corresponding pointer local at ebp-4.
-// Recovering both owners raises Windows NewfullMap::load 96.43730% -> 100%.
-// Indexed reloads without the quest local retain the whole helper and score
-// 73.2997%; preserve the complete lifetime model and canonical operations.
+// Without the quest local, indexed reloads keep the whole helper out of
+// line; preserve the complete lifetime model and canonical operations.
 MAC_ADDRESS(0x11f67c, 0x11c)
 int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
 {
@@ -751,7 +738,6 @@ int NewfullMap::saveSeerList(TAbstractFile* outfile)
 // Its count is the endian-aware exception among these list writers:
 // Mac 0x11f7c4 zero-extends the short, then sthbrx encodes it at 0x11f7c8.
 // Keep the size as an int and narrow it at the serialization boundary.
-// This shared writer restores Windows save from 83.80 to 95.76%.
 MAC_ADDRESS(0x11f798, 0x9c)
 void NewfullMap::saveQuestGuardList(TAbstractFile* outfile)
 {
@@ -911,9 +897,8 @@ int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
 // bit and test truth before the bitfield assignment. Native Mac
 // 0x11fed0..0x11ff8c independently masks and normalizes the six bits to bool,
 // storing ground H/V, river H/V, then road H/V in that source order.
-// Retain those boolean assignments and canonical scalar reads. This model
-// closes Windows 95.4717 -> 100%; the former unsigned flags/shift hoist
-// kept a byte live across the merged insertion and changed its association.
+// Retain those boolean assignments and canonical scalar reads; an unsigned
+// flags/shift hoist keeps a byte live across the merged insertion.
 VA(0x004fe220, 0x26B)
 DC_ADDRESS(0x0ecf98, 0x3ea)
 MAC_ADDRESS(0x11fd20, 0x394)  // order-map: leaf (file I/O devirtualized-inline); called x2 by Read 0xfd690 in the layer slot
@@ -1911,7 +1896,7 @@ int NewfullMap::readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
 // size store, the write, the count test and the per-record err test their
 // own statements. That staging (rather than a writeValue temporary) lets
 // NewfullMap::save keep retail's retained quest-guard size call
-// (95.76 -> 100%) and its direct size store into the buffer.
+// and its direct size store into the buffer.
 DC_ADDRESS(0x0eeb3c, 0xa0)
 MAC_ADDRESS(0x1220f8, 0xc4)
 int NewfullMap::saveBlackBoxList(TAbstractFile* outfile)
@@ -2255,9 +2240,9 @@ int NewfullMap::readSeerData(TAbstractFile* infile, CObject* seerObject)
 // prove vector<enum SpellID>. Use the existing ESpellId enum for that domain;
 // the legacy global SpellID alias still denotes int. TSecondarySkill owns
 // the skill candidates. Their enum iterators supply the appended values.
-// Both emitted enum insert bodies reproduce retail 0x54d120, including its
-// new/delete targets; vector<int>::insert instead has its separately
-// admitted identity at 0x404200. The caller's instructions match throughout.
+// The enum insert bodies are retail 0x54d120, including its new/delete
+// targets; vector<int>::insert has its separately admitted identity at
+// 0x404200.
 VA(0x00500b30, 0x2AE)
 DC_ADDRESS(0x0efbb8, 0x26e)
 MAC_ADDRESS(0x122f6c, 0x318)
@@ -2549,14 +2534,10 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // DC records one unsigned char_buffer, signed disposition and short_buffer;
 // retain those separate owners and the block-scoped MonsterData constructor.
 // Mac 0x123ba8..0x123bbc and 0x123d18..0x123d24 decode the checked
-// quantity/resource slots through the same scalar-reader operation. Canonical
-// byte readers recover VC6's retained string::_Tidy constructor boundary
-// (98.3846 -> 99.9573); pragma depth and constructor spelling probes did not.
-// Mac 0x123d6c/0x123d9c stores the decoded artifact in each format arm.
-// Keeping those direct source assignments closes the final EAX/ECX difference
-// (99.9573 -> 100%) without a synthetic integer artifact owner.
-// Mac currently retains readLittleEndianValue<short/int> without admitted
-// target identities, so its comparison is unavailable through those helpers.
+// quantity/resource slots through the same scalar-reader operation; the
+// canonical byte readers keep VC6's retained string::_Tidy constructor
+// boundary. Mac 0x123d6c/0x123d9c stores the decoded artifact in each format
+// arm, with no synthetic integer artifact owner.
 // Both Complete builds clear MonsterInfo bits 27..30 after dontGrow;
 // Mac 0x123e64..0x123e6c and Windows mask 0x87fbffff prove that store.
 VA(0x005013b0, 0x3DC)
@@ -2574,10 +2555,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     } else {
         // The else arm reads into its OWN local and assigns: retail's
         // `mov ecx,[ebp-0x18] / mov [ebp-0x18],ecx` at the join is that
-        // copy after the allocator coalesced the two slots (+0.58).
-        // Reading straight into `identifier` loses the pair; hoisting the
-        // zero out of the if arm scores 94.95 and the whole-block rewrite
-        // 94.96.
+        // copy after the allocator coalesced the two slots. Reading straight
+        // into `identifier` loses the pair.
         int rawIdentifier;
         rawIdentifier = readLittleEndianValue<int>(infile);
         identifier = rawIdentifier;
@@ -2594,9 +2573,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     if (readValue(infile, charBuffer) < sizeof(charBuffer))
         return -1;
 
-    // DC and Mac leave disposition untouched for an out-of-range input.
-    // The former Windows-only default assignment was a codegen workaround:
-    // removing it raises Windows from 97.3333% to 98.4017%.
+    // DC and Mac leave disposition untouched for an out-of-range input;
+    // there is no default assignment.
     char disposition;
     switch (static_cast<signed char>(charBuffer)) {
     case MONSTER_QTY_UNRESOLVED:
@@ -2682,7 +2660,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 // size store, the write, the count test and the per-record err test their
 // own statements. That staging (rather than a writeValue temporary) lets
 // NewfullMap::save keep retail's retained quest-guard size call
-// (95.76 -> 100%) and its direct size store into the buffer.
+// and its direct size store into the buffer.
 DC_ADDRESS(0x0f06e8, 0xa0)
 MAC_ADDRESS(0x123f44, 0xc4)
 int NewfullMap::saveMonsterList(TAbstractFile* outfile)
@@ -2795,28 +2773,20 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // identifier, 0x124468 the checked troop short, and 0x124798 the event count.
 // Keep those canonical endian operations; native byte/range virtual calls
 // alone do not identify another game helper around the stream interface.
-// The returned identifier reader closes the former eight-byte frame growth
-// and infile ESI/EDI inversion: the current source matches B0..B18 and
-// B20..B44, including the complete first spell traversal.
-// Before the count restoration (89.8371%) the troop failure jumped to a
-// later cleanup, a string::_Tidy child stayed called and the second spell
-// traversal's cold throw code moved; all three were the low inline cost.
 // DC 2887/2888, 2894/2895, 2913/2914 and 2942/2943 read every checked
 // field through the shared count before testing it, and DC 2919's spell
-// loop body carries a coincident scope pair (braced). Restoring both
-// raises the C1XX cost 1243 -> 1265, inside the 1265..1325 window where
-// the late _Grow keeps retail's ten _Tidy calls (89.84 -> 98.47%).
+// loop body carries a coincident scope pair (braced); that C1XX cost lets
+// the late _Grow keep retail's ten _Tidy calls.
 // The alignment byte is read into its own block-scoped scratch byte and
 // copied to a register local: retail never stores the -1 default and reads
 // into [ebp+0x13]; Mac 0x124808 keeps -1 in r5 and reads into its own 0x80
-// slot (a readValue<char> temporary does the same but adds a candidate site
-// that moves the window to 1341.., 90.10%). Mac 0x12488c also tests the
-// owner's -1 first and branches to the owner-alignment arm.
+// slot. Mac 0x12488c also tests the owner's -1 first and branches to the
+// owner-alignment arm.
 // Mac 0x124674..0x124694 and 0x12470c..0x12472c use signed division/modulo
 // and construct proxies directly on the TownExtra members; no returned mask
-// temporary is present. The unsigned decodePackedBits spelling costs 79.6586%.
-// Hero::load 0xf3428/0xf3438/0xf3470 independently proves that existing
-// decoder's unsigned traversal, so the town's signed caller-owned x remains.
+// temporary is present. Hero::load 0xf3428/0xf3438/0xf3470 independently
+// proves that existing decoder's unsigned traversal, so the town's signed
+// caller-owned x remains.
 VA(0x005019f0, 0x7CC)
 DC_ADDRESS(0x0f094c, 0x4a8)
 MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing
@@ -3006,50 +2976,37 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // likewise store decoded enum words without memcpy. Use the shared enum
 // decoding macro at those serialized and integer-valued boundaries.
 
-// The next structure pass reads the raw symbol nesting, not only the compact
-// roster: all thirteen DC locals appear under S_GPROC32 before the first
-// S_BLOCK32. Restoring one function-scope int_buffer, short_buffer and
-// char_buffer (and reusing them across the reads) moves the current checkpoint
-// to 82.9570% in that compiler context. HeroID uses the proven THeroID
-// domain through canonical HeroId; Complete expands the roster to 156
-// without changing the enum's word width. Decode integer-valued helper/table
-// boundaries into that domain. The native enum family is Windows-byte-flat
-// at 93.9180% with the endian scalar readers restored.
+// The raw symbol nesting, not only the compact roster, places all thirteen
+// DC locals under S_GPROC32 before the first S_BLOCK32: one function-scope
+// int_buffer, short_buffer and char_buffer are reused across the reads.
+// HeroID uses the proven THeroID domain through canonical HeroId; Complete
+// expands the roster to 156 without changing the enum's word width. Decode
+// integer-valued helper/table boundaries into that domain.
 
-// Two facts remain deliberate.  Retail reaches __CxxThrowException@8 twice
-// and never calls bitset<70>::_Xran, so both bit stores use `operator[]` ->
-// `reference::operator=` -> `set`; spelling either as `set(pos,val)` keeps the
-// throw out of line.  Retail also CALLS three-argument basic_string::assign at
-// the hero-name store, so the statement-scoped inline_depth(0) below prevents
-// expansion without de-inlining ReadLengthPrefixedString.  Complete's decoded
-// body has no Random relocation: unlike Dreamcast, an absent custom experience
-// stays zero and is passed unchanged to GetStartingHeroId.
-// With the preserved Owner dataflow restored, MAX is 82.6833 (HIST 92.7472).
-// Unpinned `m_name = heroName` gives 75.34 and expands to 110 CFG blocks
-// against retail's 94; direct assignment from the returned string also
-// over-expands (75.71 before the Owner correction). These are not recovered
-// boundaries, so the assignment pin remains diagnostic debt.
+// Retail reaches __CxxThrowException@8 twice and never calls
+// bitset<70>::_Xran, so both bit stores use `operator[]` ->
+// `reference::operator=` -> `set`; spelling either as `set(pos,val)` keeps
+// the throw out of line. Retail CALLS three-argument basic_string::assign at
+// the hero-name store. Complete's decoded body has no Random relocation:
+// unlike Dreamcast, an absent custom experience stays zero and is passed
+// unchanged to GetStartingHeroId.
 
 // Mac 0x124b00..0x125360 retains scalar reads in separate staging slots.
 // Identifier/name length/experience/skill count use lwbrx at 0x124b0c,
 // 0x124ba8, 0x124c04/0x124c9c and 0x124e40; troop/artifact/backpack shorts
 // use lhbrx at 0x124f18, 0x125028, 0x125064 and 0x1250dc. Preserve these
-// operations through the canonical endian readers (Windows-byte-flat at
-// 93.9180%). DC char_buffer (sp+0x12, T_RCHAR) is plain char,
-// matching both targets' signed byte extension under their default char
-// mode. The plain-char reader family emits the same Windows object.
+// operations through the canonical endian readers. DC char_buffer (sp+0x12,
+// T_RCHAR) is plain char, matching both targets' signed byte extension under
+// their default char mode.
 // Native Mac 0x125004/0x125030 and 0x1250b8/0x1250e4 store the equipped
 // and backpack artifact enums within each format arm, without an intBuffer
-// join. Recovering those stores raises Windows 93.9180% -> 96.86389%; both
-// artifact loops now match. Native Mac 0x1251cc..0x1251dc
-// widens the sex byte before its sentinel test/store, and 0x125210..0x125268
-// retains the widened spell value across the bitset temporary. Reusing the
-// existing intBuffer for those consumers reproduces both Windows regions:
-// 96.86389% -> 98.68750%. Mac 0x124cf4..0x124d08 loads alignment
-// directly as the getStartingHeroId argument; keeping that expression at the
-// call restores retail's right-to-left argument evaluation (99.808334%).
-// Mac 0x124d4c/0x124d50/0x124d54 and retail store the quest identifier
-// before owner and hero ID. Restoring that order closes Windows at 100%.
+// join. Native Mac 0x1251cc..0x1251dc widens the sex byte before its
+// sentinel test/store, and 0x125210..0x125268 retains the widened spell
+// value across the bitset temporary; both reuse the existing intBuffer. Mac
+// 0x124cf4..0x124d08 loads alignment directly as the getStartingHeroId
+// argument, which gives retail's right-to-left argument evaluation. Mac
+// 0x124d4c/0x124d50/0x124d54 and retail store the quest identifier before
+// owner and hero ID.
 VA(0x005021c0, 0x835)
 DC_ADDRESS(0x0f0df4, 0x726)
 MAC_ADDRESS(0x124a84, 0x998)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject
@@ -3153,8 +3110,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // for a non-random hero with `strncpy(Name, tempText, 12)`. Complete
     // changed this group: retail has one customName guard, stores 1, then
     // performs the runtime-NUL scan and strlen+1 copy of an inlined strcpy.
-    // Our emitted 15-instruction copy sequence is instruction-identical to
-    // retail, so the older bounded copy and isRandomHero guard are DC-only.
+    // The older bounded copy and isRandomHero guard are DC-only.
     if (customName) {
         heroData->m_hasCustomName = 1;
         strcpy(heroData->m_nameBuffer, tempText);
@@ -3782,8 +3738,8 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
 // calls gzwrite directly at each of the four rows (dc 0xf1b3a..0xf1bca).
 // Mac stages the three coordinates through one byte slot and the type index
 // through a separate short slot. Direct write calls matter to the caller:
-// through the free writeScalar wrapper this body's /Ob2 cost fell to 156 and
-// saveMapObjects expanded it (55.45%); retail and Mac both call it.
+// through the free writeScalar wrapper this body's /Ob2 cost falls and
+// saveMapObjects expands it, where retail and Mac both call it.
 VA(0x00503640, 0x8D)
 DC_ADDRESS(0x0f1b1c, 0xda)
 MAC_ADDRESS(0x126268, 0x108)
@@ -3887,17 +3843,8 @@ int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 // whose filename-length and extra-field uses remain. Row 3619 positively
 // reads the diagnostic type from the committed record. Direct field I/O
 // is not equivalent: a short read would partially change the destination.
-// Residual (99.9633%): native enum ownership changes 18 stack displacement
-// bytes, with unchanged instruction order, size and relocation targets. The 8-state
-// owner/query family and 9-state field-lifetime follow-up are exhausted;
-// the latter's best 99.9673% requires splitting the proven generic buffer
-// and adding phase scopes, so retain the simpler native local. No dummy
-// lifetime operations or substitute representation casts are introduced.
 // DC's CObjectType reference, separate int count, and char dummy[2] are
-// restored as canonical source facts. Twelve source candidates produced four
-// reproduced objects; these locals and the reference call leave the retained
-// reader/caller bytes unchanged. A short or byte buffer does not explain the
-// remaining int_buffer/enum-owner stack displacements.
+// restored as canonical source facts.
 // Windows and DC initialize the first image-name byte then zero the other
 // 99 bytes. Native Mac 0x126480/0x1264a8..0x1264cc copies the same static
 // 100-byte zero initializer in twelve eight-byte chunks and one final word.
@@ -3986,7 +3933,7 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     // The object type is read through the int staging value and copied into
     // the typed member, exactly as the trait fixup below copies into it: a
     // separate TAdventureObjectType local takes its own frame slot and pushes
-    // every later displacement by four (99.9633 against retail's 0x8c frame).
+    // every later displacement by four (retail's frame is 0x8c).
     count = readLittleEndianValue(infile, value);
     if (count < sizeof(value))
         return -1;
@@ -4171,9 +4118,6 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
 // and _Last, and the entry clear passes exactly that pair to
 // vector<int>::erase.
 
-// TWO SOURCE FACTS, both read straight out of the frame, worth 78.4070 ->
-// 87.2791 together (2026-08-20).  The note this replaces had both of them
-// pointed at the wrong construct, so read the bytes, not the prose.
 VA_COMPGEN(0x00504290, 0x2A, STATIC_DTOR, g_invalidPlacementList)
 DATA(0x00699690)
 std::vector<int> g_invalidPlacementList;
@@ -4258,13 +4202,8 @@ void NewfullMap::rebuildObjectTypeIndex()
 // Mac 0x1272bc..0x1272f0 and 0x127540..0x127588 read each count with the
 // stream virtual, test it, then lwbrx-decode the slot and store it back
 // before copying it to numObjects: the caller decodes in place after the
-// guard (98.04%; the inferred readLittleEndianValue wrapper scored 93.79%).
-// VC6 still retains the string constructor instead of expanding it to _Tidy:
-// cb 942 needs 940 with no Dispose site in the release loop (100% with that
-// loop calling dispose() directly and braced guards, which DC's single
-// scopes at 3854/3893 do not show).
-// Naming the canonical GetSprite result inside the sprite loop also changes
-// the inline context; its direct vector assignment is the supported form.
+// guard. The sprite loop assigns the canonical GetSprite result directly to
+// the vector.
 VA(0x00504470, 0x5C9)
 DC_ADDRESS(0x0f2c20, 0x3f6)
 MAC_ADDRESS(0x127278, 0x440)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing
@@ -4462,7 +4401,7 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
 // is hoisted.
 
 // DC names four CObjectType::_getBitPos calls; Mac retains the same helper at
-// 0:0x127c38. Complete expands them without changing this exact retail body.
+// 0:0x127c38. Complete expands them.
 VA(0x00505060, 0x1CD)
 DC_ADDRESS(0x0f33fc, 0x2b4)
 MAC_ADDRESS(0x127a98, 0x1a0)
@@ -4579,7 +4518,7 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
 // at bit 4. Retail signed extraction supports the canonical fields for
 // the 47 - row*8 - col index.
 // Mac 0x128100..0x128114 retains signed nibble extraction; native field
-// access also preserves its different bitfield direction. Windows stays exact.
+// access also preserves its different bitfield direction.
 VA(0x00505610, 0x3F8)
 DC_ADDRESS(0x0f3a24, 0x8ca)
 MAC_ADDRESS(0x127f6c, 0x48c)
@@ -4726,8 +4665,8 @@ void NewfullMap::calculateCellExtra(NewmapCell* thisCell, unsigned char setExtra
 // hands it to StampObject, then recalculates the cell's derived extra.
 
 // Mac 0x128688..0x1286a0 inserts CellX and CellY separately before
-// stampObject. Keep the typed field writes; Windows still folds them to
-// its exact packed-byte store.
+// stampObject. Keep the typed field writes; VC6 folds them to retail's
+// packed-byte store.
 // The two bounds tests are not the same test twice: the x test guards the
 // whole inner loop (it `continue`s the OUTER one) while the y test guards a
 // single cell.  Both compare against the world extents MAP_WIDTH/MAP_HEIGHT
@@ -4836,8 +4775,7 @@ CObjectType* NewfullMap::findObjectType(int objectType, int extra)
 // it appends a copy to objectTypes and its sprite to sprites and records the
 // new index, then writes the resolved index into object->typeIndex.
 // No direct DC counterpart; Complete retains both vector count-insert calls.
-// Ordinary push_back calls reproduce them at 100% without inline-depth pins:
-// named/direct record and sprite arguments all reproduce the same exact body.
+// Ordinary push_back calls give them, without inline-depth pins.
 // The sprite insert's widget* retail name is a folded pointer-vector alias.
 // The non-const bitset operator[] proxy supplies retail's third frame slot;
 // .test(terrain) instead compacts the frame from 0xc to 0x8. There is no
@@ -5074,15 +5012,14 @@ VA_COMPGEN(0x00508cf0, 0x3B9, VECTOR_INSERT, TownExtra)
 // Retail insert(position, count, value) is a separate overload from 0x5078b0.
 VA_COMPGEN(0x00507ad0, 0x2F9, VECTOR_INSERT_COUNT, TQuestGuard)
 
-// COMDAT pairing: bitset10::set, mnemonic agreement 1.000.
+// COMDAT pairing: bitset10::set.
 VA_COMPGEN(0x00506820, 0x60, BITSET_SET, bitset10)
 
-// COMDAT pairing: vector<CMapObjectData*>::clear, agreement 1.000 at an
-// exactly equal 61-byte extent. The 4-byte element stride of its copy loop
+// COMDAT pairing: vector<CMapObjectData*>::clear (61 bytes). The 4-byte
+// element stride of its copy loop
 // is the pointer element, and CMapObjectData is this header's type, so no
 // other compiland can be the owner.
 VA_COMPGEN(0x0048b4a0, 0x3D, VECTOR_CLEAR, CMapObjectData)
 
-// COMDAT pairing: bitset<48>::_Tidy, agreement 1.000 at an exactly equal
-// 40-byte extent.
+// COMDAT pairing: bitset<48>::_Tidy (40 bytes).
 VA_COMPGEN(0x004e66c0, 0x28, BITSET_TIDY, Bitset48)

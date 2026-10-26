@@ -167,9 +167,7 @@ DATA(0x006aa5f0) int g_townViewActive;
 DATA(0x00699548) int g_adventureGraphicsPreserveMode;
 DATA(0x0069778c) int g_curWatchPlayer;
 
-// Narrow town.obj-only globals reached by town::View. Their owning
-// compilands remain outside the admitted surface.
-
+// Narrow town.obj-only globals reached by town::View.
 
 
 
@@ -338,21 +336,10 @@ int town::load(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
-// E:\gamedcs\town.cpp:616, promoted from the carcass and the mirror of
+// E:\gamedcs\town.cpp:616, the mirror of
 // load above. It always writes the modern length-prefixed name, it packs
 // field_38/field_34/field_33 back into one byte, and it re-packs the
 // bitset<70> into 70 bytes of which only the first nine carry bits.
-// Residual (99.8370%): the frame, 0x48 against retail's 0x50, and it is one
-// recycled-home decision. Retail puts the BYTE `char_buffer` in the first
-// parameter's padding byte [ebp+0xb] and gives the name-length dword its own
-// slot at [ebp-8]; our CL puts the DWORD in the parameter home [ebp+8] and
-// gives the byte its own slot at [ebp-1], which costs the 8 bytes and shifts
-// spellBuf from [ebp-0x50] to [ebp-0x48]. Every other instruction agrees
-// (59 = 59 blocks, all exact). MEASURED AND REJECTED 2026-09-06, all
-// byte-flat at 99.8370: declaring nameLength FIRST in the local block,
-// hoisting the spell loop counter to function scope, and block-scoping
-// char_buffer around its whole run. VC6 hands the recycled home to the
-// widest local that fits, and no declaration form observed here changes it.
 VA(0x005bd2f0, 0x402)
 DC_ADDRESS(0x165988, 0x3d4)
 MAC_ADDRESS(0x1b2290, 0x5e8)  // carcass promotion; anchor-callee armyGroup::save; caller game::Save's town pool
@@ -532,8 +519,7 @@ DC_ADDRESS(0x165ea0, 0x568)
 MAC_ADDRESS(0x1b2b88, 0x700)
 // Comparing the bitset proxy with zero preserves its conversion helper and
 // reproduces retail's first test expansion; negation keeps an extra call.
-// Both == 0 and == false reproduce Windows 100%. Shared bitset references
-// and outer mana/experience lifetimes do not recover that decision.
+// Both == 0 and == false give retail's code.
 void town::applySpecialBuildingEffect(hero* townHero)
 {
     if (m_type == TOWN_DUNGEON && m_manaVortexFull
@@ -802,11 +788,10 @@ void town::removeGarrisonHero()
 // adventure-view latches only when the hidden hero was both current and
 // locally owned. Dreamcast splits the exchange over lines 1115-1117; the
 // precise source spelling is unknown because no temporary survives CodeView.
-// std::swap's reference boundary reproduces retail's reloads: a temporary plus
-// two assignments makes VC6 retain the already-loaded ids and falls to
-// 88.92481%. DC 1124 constructs the hide message and sends it on one line
-// with no recorded local; scoping the message to that statement pair gives
-// retail's id/zero store schedule (97.7744% unscoped).
+// std::swap's reference boundary gives retail's reloads (a temporary plus
+// two assignments keeps the already-loaded ids). DC 1124 constructs the hide
+// message and sends it on one line with no recorded local; the message is
+// scoped to that statement pair, which gives retail's id/zero store schedule.
 VA(0x005be450, 0x1AC)
 DC_ADDRESS(0x166864, 0xea)
 MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global
@@ -845,14 +830,7 @@ void town::swapHeroes()
     currentTown->placeInMap(garrisonHero->m_id, player, 0);
 }
 
-// Residual 99.9356%: one fixed-spell store swaps the level/slot sum
-// registers. Reusing totalWeight for the draw is flat; sharing the spell
-// counter across the initial mask and selection loops lowers this to 98.0947.
-// A typed pointer to the guild row and a named row index at that store are
-// also byte-flat: both keep VC6's ECX sum where retail uses EAX. Keep the
-// array access and the DC-attested bitset reference assignment. A reference
-// to the fixed guild slot and reversing spell/weight declaration order are
-// also byte-flat; an outer shared guild row index falls to 96.16%.
+// Keep the array access and the DC-attested bitset reference assignment.
 VA(0x005be600, 0x32A)
 DC_ADDRESS(0x166950, 0x214)
 MAC_ADDRESS(0x1b3abc, 0x298)
@@ -912,9 +890,8 @@ void town::initializeSpells(const TownExtra* townSetup)
     }
 
     // Native Mac 0x1b3ce4..0x1b3d2c uses a five-iteration counted search
-    // with an early exit on HasBuilding. VC6 restores its expanded bitset
-    // constructor with this ordinary loop. Current CodeWarrior unrolls the
-    // loop; retain the helper while recovering that compiler-state boundary.
+    // with an early exit on HasBuilding; VC6 expands its bitset constructor
+    // with this ordinary loop (CodeWarrior unrolls it).
     int guildLevel;
     for (guildLevel = 5; guildLevel > 0; --guildLevel) {
         if (hasBuilding(guildLevel - 1, false))
@@ -946,8 +923,7 @@ void town::setSpellsAvailable()
 // a horde changes the result, while population and later building checks
 // still use the request. Retail keeps the request in EDX and the result in
 // its dead parameter slot; Mac uses r4/r31 (0x1b3e50, 0x1b3fb0, 0x1b4074).
-// DC likewise copies r12 to r9 at 0x166c46. Restoring these two values
-// reproduces the full Windows body, including its four recursive calls.
+// DC likewise copies r12 to r9 at 0x166c46.
 VA(0x005be930, 0x330)
 DC_ADDRESS(0x166c08, 0x2ce)
 MAC_ADDRESS(0x1b3e3c, 0x3a0)  // body (built-mask OR) + order-map
@@ -1447,8 +1423,6 @@ void extendedDialog(const char* text,
 const char* getBuildingName(int townType, int buildingId);
 
 // DC retains vector-reference parameters; both native caller ABIs agree.
-// Pointer-to-reference recovery leaves both complete VC6 bodies and their
-// relocations unchanged, and the ordinary CodeWarrior bodies are byte-flat.
 void showBuildingRewards(const town* thisTown,
                            std::vector<type_dialog_resource>& rewards);
 void showCreatureRewards(const town* thisTown,
@@ -1527,8 +1501,7 @@ void showCreatureRewards(const town* thisTown,
 // caller. DC names exclude_mask and reward_mask and proves a const event
 // reference; Mac reloads the event's two mask words during each iteration.
 // Direct member access, the Complete bound and this natural declaration
-// order reproduce the full Windows body. The reference interface emits
-// identical bytes to its pointer-ABI diagnostic fixture (880-byte COFF extent).
+// order are retail's.
 VA(0x005bfeb0, 0x369)
 DC_ADDRESS(0x167c3c, 0x32c)
 MAC_ADDRESS(0x1b5b90, 0x3f4)  // anchor-callgraph + arity (ret 4)
@@ -1682,9 +1655,9 @@ static void initializeBuildings(town* currentTown, const TownExtra* townSetup)
 // twin is 0x1b7020. Windows folds both retained bodies at 0x5c1460, so
 // that target label alone does not establish a const receiver.
 // DC proves both initializers are file-static, and DC/Mac source order is
-// initializeBuildings, initializeArmy, town::initialize. Restoring that
-// private building-helper boundary gives VC6 the native getArmy frontier
-// inside initialize and reproduces its complete retail body.
+// initializeBuildings, initializeArmy, town::initialize; that private
+// building-helper boundary gives VC6 the native getArmy frontier inside
+// initialize.
 DC_ADDRESS(0x168330, 0xfc)
 MAC_ADDRESS(0x1b648c, 0x1ac)
 static void initializeArmy(town* currentTown, const TownExtra* townSetup)
@@ -1741,9 +1714,8 @@ void town::initialize(const TownExtra* townSetup)
 }
 
 // Retail 0x5c0ce7 reads the whole +0xc flags word before testing bits 8
-// and 12 at 0x5c0ceb/0x5c0cf3. The canonical NewmapCell union now exposes
-// that word as m_cellFlags; the old cell_flags_word cast wrapper predates
-// its restoration and has no independent CodeView helper boundary.
+// and 12 at 0x5c0ceb/0x5c0cf3: the canonical NewmapCell union's m_cellFlags
+// word.
 VA(0x005c0c90, 0x89)
 DC_ADDRESS(0x167f68, 0x8a)
 MAC_ADDRESS(0x1b5f84, 0xc8)
@@ -1793,7 +1765,7 @@ void town::updateFullBuildingMask()
 // DC names the short parameter building_id and the 64-bit local
 // building_mask. Its source rows retain TownAlreadyBuiltOn,
 // is_legal_building, CanBuildDock and get_building_mask; Complete expands
-// those same source calls and matches this body exactly.
+// those same source calls.
 VA(0x005c0d20, 0x13D)
 DC_ADDRESS(0x168504, 0x158)
 MAC_ADDRESS(0x1b67f8, 0x19c)  // anchor-global
@@ -1844,8 +1816,8 @@ bool town::canEverBuild(int buildingId) const
 // Dreamcast town.cpp:2188 calls CanBuildDock; the source helper also
 // survives as a direct Mac call at 0:0x1b6b8c.
 // Mac 0:0x1b6ae4/0x1b6ae8 reads town type and the tutorial flag in the
-// loop. Ordinary field access also reproduces Complete exactly; caching
-// the tutorial flag through a caller-local reference changes VC6 scheduling.
+// loop, as ordinary field access does in Complete; caching the tutorial flag
+// through a caller-local reference changes VC6 scheduling.
 VA(0x005c0f20, 0x156)
 DC_ADDRESS(0x168714, 0x18a)
 MAC_ADDRESS(0x1b6a8c, 0x180)
@@ -2113,6 +2085,5 @@ bool town::initializeBuildingCostsTables()
     return 1;
 }
 
-// COMDAT pairing: bitset<48>::set(pos, bool), agreement 1.000 at an exactly
-// equal 96-byte extent.
+// COMDAT pairing: bitset<48>::set(pos, bool) (96 bytes).
 VA_COMPGEN(0x00506780, 0x60, BITSET_SET, Bitset48)

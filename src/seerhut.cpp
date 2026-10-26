@@ -96,15 +96,11 @@ std::string formatString(const char* format, ...);
 // three-column tables from it, then walk every row
 
 // Complete loads quest text from a spreadsheet; Dreamcast initializes a fixed table.
-// The name-row append is inferred from retail. Canonical push_back gave
-// 79.8841%; direct insert formerly hid the remaining inline-context mismatch.
-// Mac's lightly optimized build confirms the source-shaped temporary string:
-// its constructor, vector push_back, and destructor are retained in order
-// (8/8 direct calls in the full function). Explicit/named string construction,
-// positive validation and the cell accessor did not recover VC6 retail's
-// retained string::assign during that conversion. Releasing the sheet through
-// ResourceManager's canonical inline helper restores that decision and makes
-// the Windows body exact without changing the seven retained calls.
+// The name-row append is inferred from retail. Mac's lightly optimized build
+// confirms the source-shaped temporary string: its constructor, vector
+// push_back, and destructor are retained in order. Releasing the sheet
+// through ResourceManager's canonical inline helper gives VC6 retail's
+// retained string::assign.
 // E:\gamedcs\seerhut.cpp:50
 VA(0x0056c3e0, 0x183)
 DC_ADDRESS(0x12cd28, 0x35c)
@@ -253,8 +249,8 @@ void type_quest::loadFromMap(TAbstractFile* file)
 // writers call it after their own payload, including the folded be-hero save.
 // Mac swaps m_limit and each text length with stwbrx before writing;
 // writeLittleEndianValue supplies that file-format boundary while retaining
-// writeScalar/writeValue underneath. Windows remains exact. CodeWarrior
-// still retains this scalar wrapper where native expands the operation.
+// writeScalar/writeValue underneath. CodeWarrior retains this scalar wrapper
+// where native expands the operation.
 VA(0x0056cf70, 0xCD)
 MAC_ADDRESS(0x16438c, 0x180)
 void type_quest::save(TAbstractFile* file)
@@ -281,9 +277,7 @@ void type_quest::save(TAbstractFile* file)
 // getTextColumn and getCurrentTurn preserve that lookup and the signed-short
 // date result. This Complete-only caller has no Dreamcast source record;
 // the shared helper bodies and retail expansion support these source calls.
-// Constructing text from the separator directly removes two extra Mac calls
-// (6/6 retained) and exactly matches Windows. The earlier 75.2472% control
-// also moved remainingDays earlier, so it did not isolate construction.
+// The text is constructed from the separator directly, as both retails show.
 VA(0x0056d040, 0x1F7)
 MAC_ADDRESS(0x16450c, 0x108)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
 std::string type_quest::getTimeLimitText()
@@ -438,9 +432,6 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 // Mac Complete retains this common skill-picture dialog at code0:0x164e44
 // (three callers), taking text and four signed skill values after `this`.
 // Windows Complete expands it in slot 5; preserve one ordinary source body.
-// The ordinary-header CodeWarrior body matches all 192 native bytes after
-// its three direct-call reload NOPs collapse. The reviewed constructor,
-// append, extendedDialog and vector cleanup destinations all agree.
 MAC_ADDRESS(0x164e44, 0xc0)
 void type_skill_quest::showSkillRequirementsDialog(
     const char* text, const signed char* skills)
@@ -513,9 +504,8 @@ void type_skill_quest::doProgressDialog(hero* currentHero)
 // The picture class advances from 0x1f with the skill index, while the
 // qualifier packs the displayed value below a high-word one.
 // Mac Complete calls the shared skill-picture helper, and its temporary
-// progress string lives through that call before destruction. This direct
-// full-expression form matches the Mac slot-5 body byte for byte. Windows
-// expands the ordinary helper; the previous local loop scored 96.6180%.
+// progress string lives through that call before destruction: one direct
+// full-expression call. Windows expands the ordinary helper.
 // This Complete quest has no Dreamcast counterpart to settle the source form.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056dd60, 0xF5)
@@ -887,13 +877,11 @@ void type_monster_quest::save(TAbstractFile* file)
 // existing game::getCell and getArmyName helpers. Their declarations have
 // DC evidence; these Complete-only caller expansions are inferred from
 // retail. Keep the canonical calls and ordinary direction assignments.
-// The nine direction arms share one brace style: the middle-north arm was
-// already braced, and bracing every arm of the two-level if/else ladder lets
-// VC6 expand that arm's string assign as retail does (95.53 -> 100%). The
-// standalone guards stay unbraced; bracing only the three text guards is
-// flat. Explicit inner returns in getArmyName lower this caller and four
-// other consumers; the plural selection remains the shared helper's
-// conditional expression. No Dreamcast body exists for this Complete code.
+// The nine direction arms share one brace style: bracing every arm of the
+// two-level if/else ladder lets VC6 expand the middle-north arm's string
+// assign as retail does. The standalone guards stay unbraced. getArmyName's
+// plural selection remains the shared helper's conditional expression.
+// No Dreamcast body exists for this Complete code.
 VA(0x0056ef20, 0x57C)
 MAC_ADDRESS(0x16604c, 0x490)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()
@@ -1012,11 +1000,9 @@ void type_artifact_quest::takePayment(hero* currentHero)
 // Slot 4 filters the payload to missing artifacts and keeps both the id and
 // name vectors alive across the text choice. Mac retains calls from both
 // branches to the same artifact-picture helper at code offset 0x166b38;
-// CodeWarrior emits both source calls, while VC6 expands the helper here.
-// With the canonical helper, VC6 rises from 75.9889% to 90.2222%; its 31 CFG
-// blocks agree. Earlier attempts to force vector inlining with inline_depth,
-// counted insert, and per-iteration resource construction did not establish
-// a source-backed match, so the ordinary helper and push_back remain.
+// CodeWarrior emits both source calls, while VC6 expands the helper here;
+// the ordinary helper and push_back stay (inline_depth, counted insert and
+// per-iteration resource construction are not source-backed).
 // E:\gamedcs\seerhut.cpp
 VA(0x0056f8a0, 0x313)
 MAC_ADDRESS(0x1668fc, 0x1e8)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
@@ -1047,12 +1033,10 @@ void type_artifact_quest::doProgressDialog(hero* currentHero)
     }
 }
 
-// Slot 5 calls that same helper with the full artifact payload. The direct
-// expression below matches all 21 Mac instructions in order after relocation
-// masking, including all three calls; no Dreamcast counterpart exists. VC6
-// expands the same helper and is exact when the picture kind is assigned
-// inside its loop, matching Mac 0x166b74. The earlier copied loop reached
-// only 89.8471%; preserve the retained helper and both proposal call sites.
+// Slot 5 calls that same helper with the full artifact payload, a direct
+// expression matching Mac's three calls; no Dreamcast counterpart exists.
+// VC6 expands the same helper; the picture kind is assigned inside its
+// loop, matching Mac 0x166b74.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056fbc0, 0xE6)
 MAC_ADDRESS(0x166ae4, 0x54)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
@@ -1277,8 +1261,7 @@ void type_creature_quest::doProgressDialog(hero* currentHero)
 
 // Preserve the canonical questText proposal lookup and natural declaration
 // order. Both vectors are destroyed before text without an extra scope.
-// This Complete-only interface is inferred from retail; the combined
-// helper/lifetime model must be measured in the merged compiler context.
+// This Complete-only interface is inferred from retail.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570b80, 0x2D5)
 MAC_ADDRESS(0x1676c4, 0x2b8)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
@@ -1374,7 +1357,7 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
 // Complete-only: the Dreamcast procedure roster has no creature-quest save
 // body. Retail's one-slot frame and reuse of the file parameter home for the
 // integer count identify the canonical by-value writeValue boundary; direct
-// staging used two frame slots and stopped at 99.4853%.
+// staging uses two frame slots.
 VA(0x00571280, 0x137)
 MAC_ADDRESS(0x167be8, 0xe4)
 void type_creature_quest::save(TAbstractFile* file)
@@ -1556,9 +1539,9 @@ void type_resource_quest::save(TAbstractFile* file)
     type_quest::save(file);
 }
 
-// The canonical questTexts -> getTextColumn chain is exact. Branch returns
-// in the shared row selector preserve the retained child call here; its old
-// conditional-expression body over-expanded that child (91.2333%).
+// The canonical questTexts -> getTextColumn chain; branch returns in the
+// shared row selector keep the retained child call here (a
+// conditional-expression body over-expands it).
 VA(0x00571cc0, 0x23E)
 MAC_ADDRESS(0x1685e0, 0x1e0)
 void type_resource_quest::setDefaultText()
@@ -1774,9 +1757,9 @@ void type_belong_to_player_quest::save(TAbstractFile* file)
     type_quest::save(file);
 }
 
-// The canonical questTexts -> getTextColumn chain is exact. Branch returns
-// in the shared row selector preserve the retained child call here; its old
-// conditional-expression body over-expanded that child (87.4421%).
+// The canonical questTexts -> getTextColumn chain; branch returns in the
+// shared row selector keep the retained child call here (a
+// conditional-expression body over-expands it).
 VA(0x00572940, 0x204)
 MAC_ADDRESS(0x169050, 0x168)
 void type_belong_to_player_quest::setDefaultText()
@@ -1806,8 +1789,8 @@ TQuestGuard::TQuestGuard()
 
 // Complete-only caller: retail expands the same expiry test retained in
 // hasExpired and the row selector retained at 0x52e6b0. Keep those canonical
-// calls. Direct predicate use preserves all retail bytes; the intermediate
-// bool result added an absent conversion and measured 96.25%.
+// calls. The predicate is used directly; an intermediate bool result adds a
+// conversion.
 VA(0x00572b60, 0x1FE)
 MAC_ADDRESS(0x1691c8, 0x250)
 void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
@@ -2034,10 +2017,6 @@ int TSeerHut::getValue(hero* currentHero)
 // payment/reward tail. This also puts the completion-text temporary in the
 // caller's EH state, after which VC6 naturally expands the retained
 // DoEmptyDialog source call and keeps all three retail `_Tidy` boundaries.
-// The resulting 59-block CFG and all 27 branches agree with retail. The only
-// byte residual is a two-instruction scheduling difference inside the expanded
-// ordinary getValue helper; why-reg finds the same pseudos in a different C1
-// processing order, and its source-local creation-order probe regresses.
 VA(0x00573670, 0x400)
 DC_ADDRESS(0x12d0e4, 0x74)
 MAC_ADDRESS(0x169bfc, 0x2d4)  // code plus two retail switch tables in the admitted row
@@ -2503,8 +2482,8 @@ std::string TSeerHut::getQuickInfoText(int player) const
 // carries NO unwind action because nothing between its construction and its
 // destruction can throw - rand() is extern "C" and nothrow under /GX.
 
-// The shared value-reader model keeps load() exact and restores the retained
-// type_quest constructor call in the legacy arm.
+// The shared value reader keeps the retained type_quest constructor call in
+// the legacy arm.
 // Mac keeps this map-quest loader as a separate body at code0+0x16aa6c,
 // immediately before TSeerHut::read. Complete expands its sole source call.
 MAC_ADDRESS(0x16aa6c, 0x7c)
@@ -2621,12 +2600,10 @@ void TSeerHut::read(TAbstractFile* infile)
     // from one static TPickANumber(0,47). Complete replaces that body with
     // this dynamic-name-table selection, and neither retail nor Mac
     // 0x16aee0..0x16afec retains a call for it. VC6 places it in read itself:
-    // as a static helper (2026-10-05) the depth-2 budget expanded the legacy
-    // arm's vector constructor and called vector<bool>::_Ufill, both opposite
-    // to retail (87.52%); written here, both retail decisions follow (100%).
+    // as a helper the depth-2 budget expands the legacy arm's vector
+    // constructor and calls vector<bool>::_Ufill, both opposite to retail.
     // Mac agrees on placement: with this code in read, CodeWarrior emits
-    // retail's exact 29-call stream (0x16aae8); as an inline helper the extra
-    // depth leaves allocator<unsigned long>::allocator and num_words calls.
+    // retail's 29-call stream (0x16aae8).
     // Mac uses packed vector<bool> fill and bit proxies (0x131708, 0xe73b8,
     // 0x99fb8); VC6 selects its generic byte container for the same
     // declaration, as in TPickANumber, so keep the native bool type.
@@ -2652,8 +2629,8 @@ void TSeerHut::read(TAbstractFile* infile)
 }
 
 // Complete reuses one byte scratch for every scalar read. Routing those reads
-// through the shared value reader restores the constructor's retail inline
-// decisions; open-coded staging blocks expanded it and measured 35.2488%.
+// through the shared value reader keeps the constructor's retail inline
+// decisions; open-coded staging blocks expand it.
 // Dreamcast's older four-line body has one gzread and no comparable quest
 // representation.
 VA(0x00574A90, 0x24A)
@@ -2691,26 +2668,25 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
 // COMDAT pairing: Hstd on the char instantiation, mnemonic agreement 1.000.
 VA_COMPGEN(0x00574d10, 0x120, BASIC_STRING_CONCAT, char)
 
-// COMDAT pairing: basic_string<char>'s scalar deleting destructor, agreement
-// 1.000 at an exactly equal 86-byte extent. The body is _Tidy expanded in
+// COMDAT pairing: basic_string<char>'s scalar deleting destructor (86
+// bytes). The body is _Tidy expanded in
 // place - the reference-count byte at `_Ptr[-1]`, saturating at 0xff, freed
 // when it reaches zero - ahead of the delete, which no other ??_G in the
 // image looks like.
 VA_COMPGEN(0x004b7080, 0x56, SCALAR_DELETING_DTOR, basic_string)
 
-// COMDAT pairing: vector<basic_string<char>>::_Ufill, agreement 1.000 at an
-// exactly equal 41-byte extent.
+// COMDAT pairing: vector<basic_string<char>>::_Ufill (41 bytes).
 VA_COMPGEN(0x004af840, 0x29, VECTOR_UFILL, string)
 
 // The shared single-string insertion and its retained library helpers no
 // longer emit in events, but this TU naturally emits the same specializations.
 // Retail calls 0x4af350 from creatureBankEvent and five quest dialogs:
 // artifact/creature/resource proposals, creature progress and resource text.
-// The latter callers prove this consumer independently of matching scores.
-// All 1,217 instruction bytes below agree outside relocation operands.
+// The latter callers prove this consumer independently.
 // Allocation/deallocation, _Construct/_Ufill and the four calls within this
-// chain agree; size at 0x4af4e0 is byte-identical to the retained string-vector
-// size (also folded with vector<vector<hero> >). _Xran and memmove are the
+// chain are retail's; size at 0x4af4e0 is byte-identical to the retained
+// string-vector size (also folded with vector<vector<hero> >). _Xran and
+// memmove are the
 // retail invalid-position throw and overlap-safe copy; npos/empty-string
 // data point to 0x63a60c/0x63a608. No template body or caller is manufactured.
 VA_COMPGEN(0x004af350, 0x183, VECTOR_INSERT_SINGLE, string)
