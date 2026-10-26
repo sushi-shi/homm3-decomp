@@ -7,7 +7,10 @@
 // therefore retains each retail field, parameter, and return representation.
 // A C++20 analysis pass instead gets scoped enums and width-preserving storage
 // proxies, so a value cannot silently decay to an integer or another domain.
-#if defined(__cplusplus) && __cplusplus >= 202002L
+// `homm3 enums strict` is that analysis; its --reference run predefines
+// H3_STRICT_ENUMS=0 to parse the plain expansion under the same front end.
+#if defined(H3_STRICT_ENUMS)
+#elif defined(__cplusplus) && __cplusplus >= 202002L
 #define H3_STRICT_ENUMS 1
 #else
 #define H3_STRICT_ENUMS 0

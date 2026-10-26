@@ -114,3 +114,32 @@ Parser and coverage controls run with:
 ```sh
 PYTHONPATH=scripts python -m unittest homm3.analysis.test_compiler_warnings
 ```
+
+## Strict enum-domain audit
+
+`include/domains.h` gives each enum domain two expansions: VC6 sees plain
+enums and the retail storage types, while a C++20 front end sees scoped enums
+(`enum class` plus `using enum`) and width-preserving storage proxies. The
+strict audit is the enforcement oracle for that typing:
+
+```sh
+homm3 enums strict            # every C++ TU of every image, H3_STRICT_ENUMS=1
+homm3 enums strict --delta    # also the plain-enum reference; report the difference
+homm3 enums strict --image h3maped --unit GameMap
+```
+
+Each TU is parsed with its manifest profile (`-fsyntax-only`, no warnings,
+unlimited errors) for the game, `h3maped` and `h3ccmped`; a source that several
+images compile with an identical Clang command is parsed once and lists every
+owner. `--reference` predefines `H3_STRICT_ENUMS=0`, so its errors are the
+language-mode differences between Clang and VC6 (for-scope leakage, overload
+leniency, 1998 library headers) that no domain typing causes. `--delta` runs
+both and writes `build/strict-enums/delta.tsv`: the strict error sites that the
+reference lacks, which is the domain work queue. Results for each mode go to
+`build/strict-enums/<mode>/` (`errors.tsv`, `jobs.json`, `run.json`). Clang's
+columns are approximate; read each site before editing it, and run the audit
+again after every change instead of reusing an older report.
+
+```sh
+PYTHONPATH=scripts python -m unittest homm3.analysis.test_strict_enums
+```

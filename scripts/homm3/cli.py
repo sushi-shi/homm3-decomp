@@ -59,6 +59,12 @@ Subcommands
         and pinned VC6 /W4. Full logs and isolated objects go under build/;
         source, matching objects, the ledger and README stay unchanged.
 
+  enums strict [--image KEY] [--unit TU] [--reference] [--jobs N]
+        Strict enum-domain audit (homm3.analysis.strict_enums): Clang
+        C++20 with H3_STRICT_ENUMS over every C++ TU of every image; per-TU
+        error counts and build/strict-enums/<mode>/errors.tsv. --reference
+        parses with plain enums to separate language-mode errors.
+
   labels [--unit U ...|--all]
         Source-claim extraction (homm3.retail_labels.source): the lexical
         VA/VA_COMPGEN/DATA/DATA_COMPGEN scan over src/*.c* + the base-obj
@@ -357,6 +363,11 @@ def _dispatch(argv: list[str]) -> int:
         return run_module("homm3.mac", *argv[1:])
     if argv and argv[0] == "warnings":
         return run_module("homm3.analysis.compiler_warnings", *argv[1:])
+    if argv and argv[0] == "enums":
+        if argv[1:2] != ["strict"]:
+            print("usage: homm3 enums strict [--help]", file=sys.stderr)
+            return 2
+        return run_module("homm3.analysis.strict_enums", *argv[2:])
     if argv and argv[0] == "victor":
         return run_module("homm3.victor", *argv[1:])
     if argv and argv[0] == "link":
@@ -429,6 +440,8 @@ def _dispatch(argv: list[str]) -> int:
 
     sub.add_parser("warnings", add_help=False,
                    help="fresh Clang/VC6 warning report (homm3 warnings --help)")
+    sub.add_parser("enums", add_help=False,
+                   help="strict C++20 enum-domain audit of every image (homm3 enums strict --help)")
     sub.add_parser('compare', add_help=False, help='compare existing objects without compiling or banking scores')
     sub.add_parser('verify', add_help=False,
                    help='data-relocs / data-access / data-coverage / data-tu-order / library-data-refs / library-code / library-closure / generated-code / link-diff')
