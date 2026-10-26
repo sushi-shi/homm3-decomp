@@ -2504,21 +2504,21 @@ bool combatManager::validSpellTargetArmy(SpellID spellId,
 VA(0x005a3cc0, 0x175)
 DC_ADDRESS(0x153158, 0x1a0)
 MAC_ADDRESS(0x1945d8, 0x1b0)
-army* combatManager::findResurrectionTarget(int side, int hex,
+army* combatManager::findResurrectionTarget(int iArmyGroup, int targetIndex,
                                               long creatureSpell)
 {
-    if (!validHex(hex))
+    if (!validHex(targetIndex))
         return 0;
-    const hexcell& tcell = cell[hex];
+    const hexcell& tcell = cell[targetIndex];
     if (tcell.HasArmy()) {
         army* target = tcell.get_army();
-        if (target->getOwningSide() != side)
+        if (target->getOwningSide() != iArmyGroup)
             return 0;
         if (!target->is(creatureAlive))
             return 0;
         if (target->m_numTroops >= target->m_origNumTroops)
             return 0;
-        if (validSpellTargetArmy(SPELL_RESURRECTION, side, target, 1,
+        if (validSpellTargetArmy(SPELL_RESURRECTION, iArmyGroup, target, 1,
                                  creatureSpell))
             return target;
         return 0;
@@ -2531,23 +2531,23 @@ army* combatManager::findResurrectionTarget(int side, int hex,
     do {
         army* corpse = &Armies[tcell.deadArmyGroup[i]]
                               [tcell.deadArmyIndex[i]];
-        if (tcell.deadArmyGroup[i] != side)
+        if (tcell.deadArmyGroup[i] != iArmyGroup)
             continue;
         if (!corpse->is(creatureAlive))
             continue;
         if (tcell.deadPartOfDouble[i] == 0) {
-            if (cell[hex + 1].HasArmy())
+            if (cell[targetIndex + 1].HasArmy())
                 continue;
-            if (cell[hex + 1].attributes & hexcell::blocked)
+            if (cell[targetIndex + 1].attributes & hexcell::blocked)
                 continue;
         }
         if (tcell.deadPartOfDouble[i] == 1) {
-            if (cell[hex - 1].HasArmy())
+            if (cell[targetIndex - 1].HasArmy())
                 continue;
-            if (cell[hex - 1].attributes & hexcell::blocked)
+            if (cell[targetIndex - 1].attributes & hexcell::blocked)
                 continue;
         }
-        if (validSpellTargetArmy(SPELL_RESURRECTION, side, corpse, 1,
+        if (validSpellTargetArmy(SPELL_RESURRECTION, iArmyGroup, corpse, 1,
                                  creatureSpell))
             return corpse;
     } while (--i >= 0);
@@ -2561,11 +2561,12 @@ army* combatManager::findResurrectionTarget(int side, int hex,
 VA(0x005a3e40, 0x10D)
 DC_ADDRESS(0x1532f8, 0x108)
 MAC_ADDRESS(0x194788, 0x100)
-army* combatManager::findDemonicResurrectionTarget(int side, int hex)
+army* combatManager::findDemonicResurrectionTarget(int iArmyGroup,
+                                                     int targetIndex)
 {
-    if (!validHex(hex))
+    if (!validHex(targetIndex))
         return 0;
-    hexcell* tcell = &cell[hex];
+    hexcell* tcell = &cell[targetIndex];
     if (tcell->attributes & hexcell::blocked)
         return 0;
     if (tcell->HasArmy())
@@ -2573,20 +2574,20 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
     for (int i = tcell->iBodiesInHex - 1; i >= 0; i--) {
         int deadSide = tcell->deadArmyGroup[i];
         int deadSlot = tcell->deadArmyIndex[i];
-        if (deadSide != side)
+        if (deadSide != iArmyGroup)
             continue;
         if (!(Armies[deadSide][deadSlot].is(creatureAlive)))
             continue;
         if (tcell->deadPartOfDouble[i] == 0) {
-            if (cell[hex + 1].HasArmy())
+            if (cell[targetIndex + 1].HasArmy())
                 continue;
-            if (cell[hex + 1].attributes & hexcell::blocked)
+            if (cell[targetIndex + 1].attributes & hexcell::blocked)
                 continue;
         }
         if (tcell->deadPartOfDouble[i] == 1) {
-            if (cell[hex - 1].HasArmy())
+            if (cell[targetIndex - 1].HasArmy())
                 continue;
-            if (cell[hex - 1].attributes & hexcell::blocked)
+            if (cell[targetIndex - 1].attributes & hexcell::blocked)
                 continue;
         }
         return &Armies[deadSide][deadSlot];
@@ -2597,20 +2598,21 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
 VA(0x005a3f50, 0x171)
 DC_ADDRESS(0x153400, 0x180)
 MAC_ADDRESS(0x194888, 0x1ac)
-army* combatManager::findAnimateDeadTarget(int side, int hex)
+army* combatManager::findAnimateDeadTarget(int iArmyGroup, int targetIndex)
 {
-    if (!validHex(hex))
+    if (!validHex(targetIndex))
         return 0;
-    hexcell* tcell = &cell[hex];
+    hexcell* tcell = &cell[targetIndex];
     if (tcell->HasArmy()) {
         army* target = tcell->get_army();
-        if (target->getOwningSide() != side)
+        if (target->getOwningSide() != iArmyGroup)
             return 0;
         if (!target->is(creatureUndead))
             return 0;
         if (target->m_numTroops >= target->m_origNumTroops)
             return 0;
-        if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, target, 1, 0))
+        if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, iArmyGroup, target, 1,
+                                 0))
             return target;
         return 0;
     }
@@ -2622,23 +2624,24 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
     do {
         army* corpse = &Armies[tcell->deadArmyGroup[i]]
                               [tcell->deadArmyIndex[i]];
-        if (tcell->deadArmyGroup[i] != side)
+        if (tcell->deadArmyGroup[i] != iArmyGroup)
             continue;
         if (!corpse->is(creatureUndead))
             continue;
         if (tcell->deadPartOfDouble[i] == 0) {
-            if (cell[hex + 1].HasArmy())
+            if (cell[targetIndex + 1].HasArmy())
                 continue;
-            if (cell[hex + 1].attributes & hexcell::blocked)
+            if (cell[targetIndex + 1].attributes & hexcell::blocked)
                 continue;
         }
         if (tcell->deadPartOfDouble[i] == 1) {
-            if (cell[hex - 1].HasArmy())
+            if (cell[targetIndex - 1].HasArmy())
                 continue;
-            if (cell[hex - 1].attributes & hexcell::blocked)
+            if (cell[targetIndex - 1].attributes & hexcell::blocked)
                 continue;
         }
-        if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, corpse, 1, 0))
+        if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, iArmyGroup, corpse, 1,
+                                 0))
             return corpse;
     } while (--i >= 0);
     return 0;
@@ -4285,17 +4288,17 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
     addArmy(currControl, monType, count, hex, 0x400000, 1);
 }
 
-// DC spells.cpp:4815 proves hexcell& with long group/index (side/slot here).
+// DC spells.cpp:4815 proves hexcell& with long group/index.
 // The nested corpse helper passes cell lvalues; retail uses the same address
 // ABI and never tests this argument for null. Keep the reference boundary.
 VA(0x005a7320, 0x68)
 DC_ADDRESS(0x1565e4, 0xa8)
 MAC_ADDRESS(0x1983dc, 0x90)
-void combatManager::removeCorpse(hexcell& hex, long side, long slot)
+void combatManager::removeCorpse(hexcell& hex, long group, long index)
 {
     int i;
     for (i = 0; i < hex.iBodiesInHex; i++) {
-        if (hex.deadArmyGroup[i] == side && hex.deadArmyIndex[i] == slot)
+        if (hex.deadArmyGroup[i] == group && hex.deadArmyIndex[i] == index)
             break;
     }
     for (; i < hex.iBodiesInHex; i++) {

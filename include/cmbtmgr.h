@@ -1474,7 +1474,7 @@ public:
     void markTowerForEffect(const army* tower);
     void demonicResurrection(const army* caster, army* target);
     void removeCorpse(army* corpse);
-    void removeCorpse(hexcell& hex, long side, long slot);  // 0x5a7320
+    void removeCorpse(hexcell& hex, long group, long index);  // 0x5a7320
     // DC public symbols encode firstTarget, redirected and validation results
     // as native bool (_N); the lowered debug records spell them T_UCHAR.
     // Keep creatureSpell integral for Complete's artifact caster value 2.
@@ -1645,9 +1645,9 @@ public:
                         const army* target,
                         bool redirected,
                         long creatureSpell) const;  // 0x5a8640
-    army* findResurrectionTarget(int side, int hex,
+    army* findResurrectionTarget(int iArmyGroup, int targetIndex,
                                    long creatureSpell);
-    army* findAnimateDeadTarget(int side, int hex);
+    army* findAnimateDeadTarget(int iArmyGroup, int targetIndex);
 
 private:
     // 0x5a3950, the selector in front of the two rows above: it bounds the
@@ -1801,7 +1801,7 @@ public:
     DC_ADDRESS(0x027fa0, 0x34)
     TObstacle& getObstacle(int index) { return Obstacles[index]; }
 
-    army* findDemonicResurrectionTarget(int side, int hex);
+    army* findDemonicResurrectionTarget(int iArmyGroup, int targetIndex);
     void markAreaEffect(SpellID spell, long hex, long mastery,
                           std::vector<army*>& targets);
     void markAreaEffect(long hex, long radius,
