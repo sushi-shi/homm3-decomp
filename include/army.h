@@ -414,7 +414,7 @@ public:
     // +0xec is a dword field and not pad.
     int m_postPowSpellToCast;         // +0xec
     unsigned char m_hitByCreature;  // +0xf0
-    // The stack's own place in combatManager::m_armies, the original
+    // The stack's own place in combatManager::Armies, the original
     // Dreamcast (group, index) pair that groupToAttack/indexToAttack
     // above mirror for the target. group is the side that OWNS the
     // stack, written once by Init and never by a spell: the hypnotize

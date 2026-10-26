@@ -14,7 +14,7 @@ int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimi
     if (!combatManager::validHex(fpTargetCellIndex))
         return 0;
     int moves;
-    if (!g_combatManager->m_creaturePlacement && !moveUnlimited)
+    if (!g_combatManager->InPlacementPhase && !moveUnlimited)
         moves = getSpeed();
     else
         moves = 99;
@@ -23,7 +23,7 @@ int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimi
         moves = 0;
     int group = getControllingSide();
     return g_searchArray->findCombatPath(this, group, fpTargetCellIndex,
-        g_combatManager->m_creaturePlacement, moves, -1);
+        g_combatManager->InPlacementPhase, moves, -1);
 }
 
 VA(0x00523a70, 0xA8)
@@ -92,7 +92,7 @@ int army::validAttack(int currIndex, int direction, int criteria, int literalInd
         return 0;
     if (literalIndex != -1 && *testCellIndex != literalIndex)
         return 0;
-    hexcell* hc = &g_combatManager->m_cells[*testCellIndex];
+    hexcell* hc = &g_combatManager->cell[*testCellIndex];
     switch (criteria) {
         case ATTACK_CRITERIA_SELF:
             if (hc->m_armySide == groupToAttack && hc->m_armySlot == indexToAttack)
@@ -121,7 +121,7 @@ int army::getAdjacentCellIndex(int currIndex, int direction) const
         direction = (m_facing == 1) ? 5 : 0;
     else if (direction == COMBAT_DIRECTION_WIDE_LOWER)
         direction = (m_facing == 1) ? 3 : 2;
-    return g_combatManager->m_adjacentCells[currIndex][direction];
+    return g_combatManager->gAdjacentIndex[currIndex][direction];
 }
 
 VA(0x00523df0, 0x86)
@@ -153,7 +153,7 @@ int getAdjacentCellIndexNoArmy(int currIndex, int direction)
         direction = 5;
     else if (direction == COMBAT_DIRECTION_WIDE_LOWER)
         direction = 3;
-    return g_combatManager->m_adjacentCells[currIndex][direction];
+    return g_combatManager->gAdjacentIndex[currIndex][direction];
 }
 
 VA(0x00523ec0, 0x1F)

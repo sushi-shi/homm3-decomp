@@ -1,7 +1,7 @@
 [[data]]
 retail_va = 0x00694f18
 source = "src/cmbtmgr.cpp"
-mac_symbol = "s_combatAreaLimits__13combatManager"
+mac_symbol = "CombatAreaLimits__13combatManager"
 same_tu_definition = true
 same_tu_external = true
 same_tu_constructed = true
@@ -9,7 +9,7 @@ mac_section = 1
 mac_offset = 0x65ab0
 mac_size = 16
 sha256 = "374708fff7719dd5979ec875d56cd2286f6d3cf7ec317a3b25632aab28ec37bb"
-evidence = "Mac shootMissile at code0+0x7465c loads TOC1+0x86c, whose loader pointer identifies these four zero storage words. The receiver is used for the clipping rectangle at the same source clip calls as Windows combatManager::s_combatAreaLimits. The ordinary DATA-owned SLimitData constructor remains in cmbtmgr.cpp; MWOB emits 16 bytes of RW UDATA plus its startup initializer. This admits storage identity only, not a byte verdict for the runtime initializer."
+evidence = "Mac shootMissile at code0+0x7465c loads TOC1+0x86c, whose loader pointer identifies these four zero storage words. The receiver is used for the clipping rectangle at the same source clip calls as Windows combatManager::CombatAreaLimits. The ordinary DATA-owned SLimitData constructor remains in cmbtmgr.cpp; MWOB emits 16 bytes of RW UDATA plus its startup initializer. This admits storage identity only, not a byte verdict for the runtime initializer."
 
 [[data]]
 retail_va = 0x006aace8
@@ -66,7 +66,7 @@ evidence = "Mac shootMissile and shootAnimatedMissile load binary32 0.5 directly
 
 [[data]]
 retail_va = 0x0063cf7c
-mac_symbol = "s_combatSpeedMod__13combatManager"
+mac_symbol = "CombatSpeedMod__13combatManager"
 source = "src/cmbtmgr.cpp"
 mac_section = 0
 mac_offset = 0x2a40a0

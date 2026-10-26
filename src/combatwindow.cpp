@@ -49,16 +49,16 @@ void checkCombatCheatCode(std::string& chatString)
     DATA(0x0063d49c) static const char redPillCode[] = "ajperqcvyy";
     DATA(0x0063d4a8) static const char allSpellsCode[] = "ajpgurervfabfcbba";
     hero* currentHero =
-        g_combatManager->m_heroes[g_combatManager->m_currentSide];
+        g_combatManager->Heroes[g_combatManager->currControl];
     bool recognized = 0;
     TCheatCode code(chatString.c_str());
 
     if (code.compare(bluePillCode)) {
         recognized = 1;
-        g_combatManager->cheatKillSide(g_combatManager->m_currentSide);
+        g_combatManager->cheatKillSide(g_combatManager->currControl);
     } else if (code.compare(redPillCode)) {
         recognized = 1;
-        g_combatManager->cheatKillSide(1 - g_combatManager->m_currentSide);
+        g_combatManager->cheatKillSide(1 - g_combatManager->currControl);
     } else if (code.compare(allSpellsCode)
                && currentHero) {
         recognized = 1;
@@ -430,9 +430,9 @@ void TCombatWindow::combatMessage(const char* newText,
         return;
     if (!m_controlSubWindow->m_rolloverWidget)
         return;
-    if (!g_combatManager->m_combatShowIt)
+    if (!g_combatManager->bCombatShowIt)
         return;
-    if (g_combatManager->m_battleOver)
+    if (g_combatManager->bBattleOver)
         return;
 
     if (!keep) {

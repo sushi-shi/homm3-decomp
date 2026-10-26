@@ -60,7 +60,7 @@ MAC_ADDRESS(0x0c7f1c, 0xcc)
 bool army::findFlyerAttackCell(int start, int target) const
 {
     for (long dir = 0; dir < COMBAT_DIRECTION_COUNT; dir++) {
-        long adjacent = g_combatManager->m_adjacentCells[target][dir];
+        long adjacent = g_combatManager->gAdjacentIndex[target][dir];
         long hex = adjacent - start + m_gridIndex;
         if (adjacent >= 0 && combatManager::validHex(hex)
                 && combatManager::getDistance(start, adjacent) <= getSpeed()
@@ -93,12 +93,12 @@ bool army::validFlight(int destIndex, bool literalTest) const
 
     if (literalTest || groupToAttack == -1 || indexToAttack == -1) {
         if (combatManager::getDistance(m_gridIndex, destIndex) > getSpeed()
-                && !g_combatManager->m_creaturePlacement)
+                && !g_combatManager->InPlacementPhase)
             return 0;
         if (!canFit(destIndex, 0, 0))
             return 0;
     } else {
-        const army* enemy = &g_combatManager->m_armies[groupToAttack][indexToAttack];
+        const army* enemy = &g_combatManager->Armies[groupToAttack][indexToAttack];
         long enemyHex = enemy->m_gridIndex;
         if (!findFlyerAttackCell(enemyHex)) {
             if (!enemy->is(creatureDoubleWide)
@@ -142,7 +142,7 @@ int army::flyTo(int destIndex, bool restoreFacing)
 // GameTime::NextFrameTime in kbwin.h; its elapsed-time clamp is present
 // in retail, so a direct timer increment would change the operation.
 
-// The typed m_saveScreenPostGrid bitmap restores the previous draw bounds.
+// The typed SaveScreenPostGrid bitmap restores the previous draw bounds.
 // Keep the by-value frame extent and the canonical renderer calls: Complete's
 // fixed-viewport header helpers eliminate ScrollTo and expand UpdateCombatArea.
 // No extra block is needed around the outer loop; its removal is byte-flat.
@@ -176,10 +176,10 @@ int army::fly(int destIndex)
     if (turn)
         this->turn(1);
 
-    int startX = g_combatManager->m_cells[m_gridIndex].m_refX;
-    long startY = g_combatManager->m_cells[m_gridIndex].m_refY;
-    long spanX = g_combatManager->m_cells[destIndex].m_refX - startX;
-    long spanY = g_combatManager->m_cells[destIndex].m_refY - startY;
+    int startX = g_combatManager->cell[m_gridIndex].m_refX;
+    long startY = g_combatManager->cell[m_gridIndex].m_refY;
+    long spanX = g_combatManager->cell[destIndex].m_refX - startX;
+    long spanY = g_combatManager->cell[destIndex].m_refY - startY;
     int ttlLoops = static_cast<int>(
         sqrt(static_cast<double>(spanX * spanX + spanY * spanY)));
     if (m_monFrameInfo.m_flightPixelSpan > 0)
@@ -207,34 +207,34 @@ int army::fly(int destIndex)
         float y = static_cast<float>(startY);
         const int flyPeriod = static_cast<long>(
             static_cast<float>(m_monFrameInfo.m_walkCycleTime)
-            * combatManager::s_combatSpeedMod[g_config.m_combatSpeed]
+            * combatManager::CombatSpeedMod[g_config.m_combatSpeed]
             / static_cast<float>(numFlapFrames));
 
         for (loop = 0; loop < ttlLoops; loop++) {
             for (m_currFrameIndex = 0; m_currFrameIndex < numFlapFrames;
                     m_currFrameIndex++) {
-                SLimitData ttlExtent = g_combatManager->m_extent;
+                SLimitData ttlExtent = g_combatManager->Extent;
                 x += stepX / static_cast<float>(numFlapFrames);
                 y += stepY / static_cast<float>(numFlapFrames);
-                g_combatManager->m_saveScreenPostGrid->Draw(
-                           g_combatManager->m_extent.m_minX,
-                           g_combatManager->m_extent.m_minY,
-                           g_combatManager->m_extent.width(),
-                           g_combatManager->m_extent.height(),
+                g_combatManager->SaveScreenPostGrid->Draw(
+                           g_combatManager->Extent.m_minX,
+                           g_combatManager->Extent.m_minY,
+                           g_combatManager->Extent.width(),
+                           g_combatManager->Extent.height(),
                            g_windowManager->m_screenBitmap->GetMap(0, 0),
-                           g_combatManager->m_extent.m_minX,
-                           g_combatManager->m_extent.m_minY,
+                           g_combatManager->Extent.m_minX,
+                           g_combatManager->Extent.m_minY,
                            g_windowManager->m_screenBitmap->GetWidth(),
                            g_windowManager->m_screenBitmap->GetHeight(),
                            g_windowManager->m_screenBitmap->GetPitch(),
                            false);
-                g_combatManager->m_extent = heroWindowManager::s_nullLimits;
-                g_combatManager->m_saveBiggestExtent = 1;
+                g_combatManager->Extent = heroWindowManager::s_nullLimits;
+                g_combatManager->SaveBiggestExtent = 1;
                 drawToBuffer(static_cast<int>(x), static_cast<int>(y), 0);
-                g_combatManager->m_saveBiggestExtent = 0;
+                g_combatManager->SaveBiggestExtent = 0;
                 bool scrolled = g_combatManager->scrollTo(
-                    g_combatManager->m_extent, true, true, true);
-                ttlExtent.include(g_combatManager->m_extent);
+                    g_combatManager->Extent, true, true, true);
+                ttlExtent.include(g_combatManager->Extent);
                 GameTime::delayTil(g_timers[0]);
                 g_timers[0] = GameTime::nextFrameTime(g_timers[0], flyPeriod);
                 if (!scrolled)

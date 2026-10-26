@@ -182,7 +182,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         type = TCreatureType(0);
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
-            army& stack = g_combatManager->m_armies[0][slot];
+            army& stack = g_combatManager->Armies[0][slot];
             if (stack.m_creatureType != -1 &&
                     stack.m_creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
@@ -196,14 +196,14 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         m_widgets.push_back(new textWidget(
             89, 37, 115, 20,
             numMons > 1
-                ? g_combatManager->m_armies[0][type].m_monInfo.m_plural_name
-                : g_combatManager->m_armies[0][type].m_monInfo.m_name,
+                ? g_combatManager->Armies[0][type].m_monInfo.m_plural_name
+                : g_combatManager->Armies[0][type].m_monInfo.m_name,
             "smalfont.fnt", font::WHITE, ATTACKER_NAME, 0, 0, 8));
         m_widgets.push_back(new iconWidget(
             21, 38, 58, 64, ATTACKER_PORTRAIT, "TwCrPort.def",
             0, 0, 0, 0, 0x10));
         static_cast<iconWidget*>(m_widgets.back())->setIconFrame(
-            g_combatManager->m_armies[0][type].m_creatureType + 2);
+            g_combatManager->Armies[0][type].m_creatureType + 2);
     }
 
     m_widgets.push_back(new textWidget(
@@ -222,7 +222,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         type = TCreatureType(0);
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
-            army& stack = g_combatManager->m_armies[1][slot];
+            army& stack = g_combatManager->Armies[1][slot];
             if (stack.m_creatureType != -1 &&
                     stack.m_creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
@@ -236,14 +236,14 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         m_widgets.push_back(new textWidget(
             266, 37, 115, 20,
             numMons > 1
-                ? g_combatManager->m_armies[1][type].m_monInfo.m_plural_name
-                : g_combatManager->m_armies[1][type].m_monInfo.m_name,
+                ? g_combatManager->Armies[1][type].m_monInfo.m_plural_name
+                : g_combatManager->Armies[1][type].m_monInfo.m_name,
             "smalfont.fnt", font::WHITE, DEFENDER_NAME, 2, 0, 8));
         m_widgets.push_back(new iconWidget(
             392, 38, 58, 64, DEFENDER_PORTRAIT, "TwCrPort.def",
             0, 0, 1, 0, 0x10));
         static_cast<iconWidget*>(m_widgets.back())->setIconFrame(
-            g_combatManager->m_armies[1][type].m_creatureType + 2);
+            g_combatManager->Armies[1][type].m_creatureType + 2);
     }
 
     // Retail's defender status text repeats the defender NAME rectangle
@@ -347,9 +347,9 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     for (int side = 0; side < 2; side++) {
         ttlDeadArmies[side] = 0;
         for (int slot = 0; slot < 20; slot++) {
-            type = g_combatManager->m_armies[side][slot].m_creatureType;
-            amount = g_combatManager->m_armies[side][slot].m_origNumTroops
-                - g_combatManager->m_armies[side][slot].m_numTroops;
+            type = g_combatManager->Armies[side][slot].m_creatureType;
+            amount = g_combatManager->Armies[side][slot].m_origNumTroops
+                - g_combatManager->Armies[side][slot].m_numTroops;
             if (type != -1 && amount > 0) {
                 int row;
                 for (row = 0; row < ttlDeadArmies[side]; row++)

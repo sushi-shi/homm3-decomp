@@ -3825,8 +3825,8 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_ORDINAL_B798:
         markGameAsCheated();
-        g_combatManager->m_debugNoSpellLimit = !g_combatManager->m_debugNoSpellLimit;
-        if (g_combatManager->m_debugNoSpellLimit)
+        g_combatManager->DebugNoSpellLimit = !g_combatManager->DebugNoSpellLimit;
+        if (g_combatManager->DebugNoSpellLimit)
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B798, MF_CHECKED);
         else
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B798, MF_UNCHECKED);
@@ -3834,18 +3834,18 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_DESTROY_OPPOSING_ARMY:
         if (g_combatManager)
-            g_combatManager->cheatKillSide(1 - g_combatManager->m_currentSide);
+            g_combatManager->cheatKillSide(1 - g_combatManager->currControl);
         break;
 
     case APP_MENU_COMBAT_DESTROY_ACTING_ARMY:
         if (g_combatManager)
-            g_combatManager->cheatKillSide(g_combatManager->m_currentSide);
+            g_combatManager->cheatKillSide(g_combatManager->currControl);
         break;
 
     case APP_MENU_COMBAT_ORDINAL_B79B:
         markGameAsCheated();
-        g_combatManager->m_debugShowHiddenObjects = !g_combatManager->m_debugShowHiddenObjects;
-        if (g_combatManager->m_debugShowHiddenObjects)
+        g_combatManager->DebugShowHiddenObjects = !g_combatManager->DebugShowHiddenObjects;
+        if (g_combatManager->DebugShowHiddenObjects)
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B79B, MF_CHECKED);
         else
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B79B, MF_UNCHECKED);
@@ -3854,12 +3854,12 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_ORDINAL_B79C:
         markGameAsCheated();
-        g_combatManager->m_debugShowBlockedHexes = !g_combatManager->m_debugShowBlockedHexes;
-        if (g_combatManager->m_debugShowBlockedHexes)
+        g_combatManager->DebugShowBlockedHexes = !g_combatManager->DebugShowBlockedHexes;
+        if (g_combatManager->DebugShowBlockedHexes)
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B79C, MF_CHECKED);
         else
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B79C, MF_UNCHECKED);
-        g_combatManager->m_backgroundDrawn = 0;
+        g_combatManager->bBackgroundDrawn = 0;
         g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
         break;
 
@@ -3888,7 +3888,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 && idItem < APP_MENU_SECONDARY_LAST) {
             markGameAsCheated();
             if (g_combatManager->m_status == baseManager::STATUS_ACTIVE)
-                currentHero = g_combatManager->m_heroes[g_combatManager->m_currentSide];
+                currentHero = g_combatManager->Heroes[g_combatManager->currControl];
             if (currentHero) {
                 currentHero->setSS(
                     (idItem - APP_MENU_SECONDARY_FIRST)
@@ -3910,7 +3910,7 @@ int handleAppSpecificMenuCommands(int idItem)
         else if (idItem >= APP_MENU_SPELL_ALL
                 && idItem < APP_MENU_SPELL_LAST) {
             if (g_combatManager->m_status == baseManager::STATUS_ACTIVE)
-                currentHero = g_combatManager->m_heroes[g_combatManager->m_currentSide];
+                currentHero = g_combatManager->Heroes[g_combatManager->currControl];
             if (currentHero) {
                 type_artifact artifact(ARTIFACT_NONE);
                 markGameAsCheated();

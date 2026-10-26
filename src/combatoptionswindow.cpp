@@ -37,7 +37,7 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     bitmapBorder* background = new bitmapBorder(
         0, 0, 481, 431, BACKGROUND_ID, "comopbck.pcx", 0x800);
     background->setPlayerPaletteColors(
-        g_combatManager->m_playerIds[g_combatManager->m_currentSide]);
+        g_combatManager->iPlayer[g_combatManager->currControl]);
     m_widgets.push_back(background);
 
     m_widgets.push_back(new button(

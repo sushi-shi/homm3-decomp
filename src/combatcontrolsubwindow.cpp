@@ -55,7 +55,7 @@ type_combat_sub_window::type_combat_sub_window(
 
     bitmapBorder* background = new bitmapBorder(0, 0, 800, 44, 0x7d0,
         backgroundSpriteName, 0x800);
-    int gamePos = g_combatManager->m_playerIds[g_combatManager->m_currentSide];
+    int gamePos = g_combatManager->iPlayer[g_combatManager->currControl];
     // Mac calls the palette helper in each arm at 0:0x77718 and 0:0x77734.
     if (gamePos >= 0)
         background->setPlayerPaletteColors(gamePos);

@@ -40,7 +40,7 @@ and suspect pointers to their allocation, caller or API. The generated census
 and lexical listings remain disposable files under `build/`, not a symbol ledger.
 The final deduplicated navigation inventory contains 420 pointer-arithmetic
 sites, 554 increments/decrements, 14 cast subscripts, 520 record-pointer casts
-and four one-byte members (three padding fields and `m_onBeach`). Those are
+and four one-byte members (three padding fields and `OnBeach`). Those are
 candidates, not defect counts; typed traversal also excludes resolved vendor
 paths reached through `src/../vendor` includes.
 

@@ -229,8 +229,8 @@ Within a TU, compile order is:
 
 **drawing.cpp history (measured):**
 
-* At `11ad7f73d`, `drawing.cpp` defined `combatManager::s_visibleCombatAreaLimits`
-  and `s_combatAreaLimits` above `showCreatureSpellError`. Both have
+* At `11ad7f73d`, `drawing.cpp` defined `combatManager::CombatAreaLimits_Visible`
+  and `CombatAreaLimits` above `showCreatureSpellError`. Both have
   `SLimitData` constructors, so their initializers `_$E60` and `_$E63` were
   compiled first, and the function received 1 and matched retail.
 * `3f0b03da3` moved those definitions out of the TU. The function became the

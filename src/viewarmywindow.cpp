@@ -155,13 +155,13 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
 
     int side = thisArmy->getOwningSide();
     hero* thisHero = thisArmy->getOwner();
-    hero* enemyHero = g_combatManager->m_heroes[1 - side];
-    armyGroup* group = g_combatManager->m_armyGroups[side];
-    armyGroup* enemies = g_combatManager->m_armyGroups[1 - side];
+    hero* enemyHero = g_combatManager->Heroes[1 - side];
+    armyGroup* group = g_combatManager->ArmyGroups[side];
+    armyGroup* enemies = g_combatManager->ArmyGroups[1 - side];
     unsigned char groupAlignments = g_combatManager->m_hasAngelicAlliance[side];
     const town* ourTown = 0;
     if (side == 1)
-        ourTown = g_combatManager->m_defendingTown;
+        ourTown = g_combatManager->combatTown;
     // DC lines 98/107 append the returned strings, and retail retains the
     // append calls. Complete reloads ArmyType for each added creature arg.
     m_moraleHelp += group->getMoraleDescription(
@@ -189,10 +189,10 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // otherwise the creature's special-ability blurb.
     if (showOk
             && thisArmy->getControllingSide()
-                   == g_combatManager->m_currentSide
+                   == g_combatManager->currControl
             && thisArmy->m_creatureType == CREATURE_FAERIE_DRAGON
             && stackTraits->m_hasSpell > 0
-            && !g_combatManager->m_creaturePlacement) {
+            && !g_combatManager->InPlacementPhase) {
         m_widgets.push_back(new bitmapBorder(
             74, 236, 48, 34, -1,
             "Box46x32.pcx",  // pooled with create_upgrade_widget's 0x68c664

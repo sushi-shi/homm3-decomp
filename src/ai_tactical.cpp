@@ -310,8 +310,8 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
     m_killsOnly = 0;
     m_simulated = 0;
     for (long group = 0; group < 2; group++) {
-        for (long i = 0; i < combat->m_numArmies[group]; i++) {
-            const army* ourArmy = &combat->m_armies[group][i];
+        for (long i = 0; i < combat->numArmies[group]; i++) {
+            const army* ourArmy = &combat->Armies[group][i];
             if (ourArmy->m_numTroops <= 0)
                 continue;
             if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
@@ -396,13 +396,13 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
         && !g_combatManager->IsHuman[estimate->getGroup()])
         return 0;
     for (long direction = 0; direction < COMBAT_DIRECTION_COUNT; direction++) {
-        long index = g_combatManager->m_adjacentCells[hex][direction];
+        long index = g_combatManager->gAdjacentIndex[hex][direction];
         if (!g_combatManager->validHex(index))
             continue;
-        army* neighbor = g_combatManager->m_cells[index].getArmy();
+        army* neighbor = g_combatManager->cell[index].getArmy();
         if (!neighbor)
             continue;
-        if (neighbor->getOwningSide() == g_combatManager->m_currentSide)
+        if (neighbor->getOwningSide() == g_combatManager->currControl)
             continue;
         if (neighbor == attacker)
             continue;
@@ -474,7 +474,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
     long checked;
     long turns;
     for (direction = startDirection; direction < stopDirection; direction++) {
-        long hex = g_combatManager->m_adjacentCells[enemyHex][direction];
+        long hex = g_combatManager->gAdjacentIndex[enemyHex][direction];
         if (!g_combatManager->validHex(hex))
             continue;
         const pathCell* cell = search_array->getHex(hex);
@@ -492,12 +492,12 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
         if (g_game->m_setup.m_difficulty > 0
                 || g_combatManager->IsHuman[estimate->getGroup()]) {
             if (attacker->is(creatureMultiHeaded))
-                value += getMultiHeadBonus(g_combatManager->m_currentSide,
+                value += getMultiHeadBonus(g_combatManager->currControl,
                                               attacker, hex, our_strength,
                                               enemy, enemy->m_gridIndex,
                                               estimate);
             if (attacker->is(creatureHasExtendedAttack))
-                value += getBreathBonus(g_combatManager->m_currentSide,
+                value += getBreathBonus(g_combatManager->currControl,
                                           attacker, hex, our_strength,
                                           enemy, enemy->m_gridIndex,
                                           estimate);
@@ -568,7 +568,7 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long tro
         long hex = ourArmy->getAdjacentHex(ourHex, i);
         if (!g_combatManager->validHex(hex))
             continue;
-        army* target = g_combatManager->m_cells[hex].getArmy();
+        army* target = g_combatManager->cell[hex].getArmy();
         if (target == 0)
             continue;
         if (target->getOwningSide() == ourGroup)
@@ -597,7 +597,7 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopC
     long hex = ourArmy->getAdjacentCellIndex(breathHex, direction);
     if (!g_combatManager->validHex(hex))
         return 0;
-    army* target = g_combatManager->m_cells[hex].getArmy();
+    army* target = g_combatManager->cell[hex].getArmy();
     if (target == 0 || target == enemy)
         return 0;
     long damage = ourArmy->getAverageDamage(*target, 0, troopCount, 1, 0);
@@ -631,11 +631,11 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
                 && offset == enemy->offsetToFront(-1))
             hex = enemy->getSecondGridIndex();
         if (offset < 0) {
-            long second = g_combatManager->m_adjacentCells[hex][4];
+            long second = g_combatManager->gAdjacentIndex[hex][4];
             if (g_combatManager->validHex(second))
                 checkAdjacentHexes(second, 3, 6);
         } else {
-            long second = g_combatManager->m_adjacentCells[hex][1];
+            long second = g_combatManager->gAdjacentIndex[hex][1];
             if (g_combatManager->validHex(second))
                 checkAdjacentHexes(second, 0, 3);
         }
@@ -703,8 +703,8 @@ void type_AI_spellcaster::initialize(combatManager* combat, long side)
 {
     m_side = side;
     m_enemySide = 1 - side;
-    m_ourHero = combat->m_heroes[side];
-    m_enemyHero = combat->m_heroes[m_enemySide];
+    m_ourHero = combat->Heroes[side];
+    m_enemyHero = combat->Heroes[m_enemySide];
     m_winLikely = 0;
 }
 
@@ -782,15 +782,15 @@ type_AI_spellcaster::~type_AI_spellcaster()
 // GetCurrentArmy, Is and IsIncapacitated calls remain canonical; VC6 expands
 // the helper naturally at its callers. Absence of a retained retail
 // body does not justify an explicit inline keyword.
-// DC reloads m_numArmies at the loop test. Keeping that bound in
+// DC reloads numArmies at the loop test. Keeping that bound in
 // the condition also reproduces retail VC6's Teleport stack homes exactly.
 DC_ADDRESS(0x03d7b0, 0x86)
 MAC_ADDRESS(0x03e528, 0xd8)
 unsigned char type_AI_spellcaster::isLastAction() const
 {
     const army* current = g_combatManager->getCurrentArmy();
-    for (long j = 0; j < g_combatManager->m_numArmies[m_side]; j++) {
-        const army* other = &g_combatManager->m_armies[m_side][j];
+    for (long j = 0; j < g_combatManager->numArmies[m_side]; j++) {
+        const army* other = &g_combatManager->Armies[m_side][j];
         if (other->is(creatureSiegeWeapon | creatureImmobilized) || other->isIncapacitated())
             continue;
         if (other->is(creatureDone))
@@ -818,9 +818,9 @@ unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
         return 1;
     if ((m_enemyCanAttack & (1 << enemy.index)) == 0)
         return 0;
-    long total = g_combatManager->m_numArmies[m_side];
+    long total = g_combatManager->numArmies[m_side];
     for (long j = 0; j < total; j++) {
-        const army* ourArmy = &g_combatManager->m_armies[m_side][j];
+        const army* ourArmy = &g_combatManager->Armies[m_side][j];
         if (ourArmy->is(creatureImmobilized) || ourArmy->isIncapacitated())
             continue;
         if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
@@ -895,9 +895,9 @@ long type_AI_spellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
                                                         long group, hero* targetHero) const
 {
     long value = 0;
-    long count = g_combatManager->m_numArmies[group];
+    long count = g_combatManager->numArmies[group];
     while (count--) {
-        const army* target = &g_combatManager->m_armies[group][count];
+        const army* target = &g_combatManager->Armies[group][count];
         value += getDamageValue(spell, baseDamage, targetHero, target);
     }
     return value;
@@ -992,11 +992,11 @@ long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery maste
         else
             enemyDamage += getDamageValue(SPELL_CHAIN_LIGHTNING, damage,
                                              m_enemyHero, target);
-        g_combatManager->m_effected[target->getOwningSide()][target->index] = 1;
+        g_combatManager->ArmyEffected[target->getOwningSide()][target->index] = 1;
         long hex = g_combatManager->getNextChainLightningTarget(target, 0);
         if (!g_combatManager->validHex(hex))
             break;
-        target = g_combatManager->m_cells[hex].getArmy();
+        target = g_combatManager->cell[hex].getArmy();
         damage = damage / 2;
     }
     return getMassDamageEffect(enemyDamage, friendlyDamage);
@@ -1008,8 +1008,8 @@ MAC_ADDRESS(0x03ef30, 0xe8)
 void type_AI_spellcaster::considerChainLightning(type_spell_choice& choice) const
 {
     long targetSide = 1 - m_side;
-    for (long i = 0; i < g_combatManager->m_numArmies[targetSide]; ++i) {
-        army* target = &g_combatManager->m_armies[targetSide][i];
+    for (long i = 0; i < g_combatManager->numArmies[targetSide]; ++i) {
+        army* target = &g_combatManager->Armies[targetSide][i];
         long creatureCast = m_isCreatureSpell != 0;
         if (!target->is(creatureImmobilized)
                 && g_combatManager->validSpellTargetArmy(SPELL_CHAIN_LIGHTNING,
@@ -1467,10 +1467,10 @@ MAC_ADDRESS(0x040f50, 0x1c4)
 long type_AI_spellcaster::getDisruptiveRayValue(const army* enemy, type_enchant_data caster) const
 {
     const combatManager* combat = g_combatManager;
-    const army* stacks = combat->m_armies[m_side];
+    const army* stacks = combat->Armies[m_side];
     if (m_estimate.m_killsOnly)
         return 0;
-    long count = combat->m_numArmies[m_side];
+    long count = combat->numArmies[m_side];
     long i;
     for (i = 0; i < count; i++)
         if (stacks[i].getAITarget() == enemy)
@@ -1637,8 +1637,8 @@ long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_da
     if (newSpeed < 1)
         newSpeed = 1;
     if (time == 1) {
-        const army* ourArmy = &g_combatManager->m_armies[m_side][0];
-        for (long j = 0; j < g_combatManager->m_numArmies[m_side]; j++, ourArmy++) {
+        const army* ourArmy = &g_combatManager->Armies[m_side][0];
+        for (long j = 0; j < g_combatManager->numArmies[m_side]; j++, ourArmy++) {
             if (ourArmy->getAITarget() != enemy || ourArmy->cannotAttack())
                 continue;
             if (ourArmy->getSpeed() > speed)
@@ -1756,11 +1756,11 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
         return 0;
     if (ourArmy->is(creatureClone))
         return 0;
-    long power = g_combatManager->m_spellPower[m_enemySide];
+    long power = g_combatManager->iSideSpellPower[m_enemySide];
     long value = 0;
     bool ranged = ourArmy->canShoot(0);
     long ourHits = ourArmy->getTotalHitPoints(0);
-    armyGroup* group = g_combatManager->m_armyGroups[m_enemySide];
+    armyGroup* group = g_combatManager->ArmyGroups[m_enemySide];
     TSkillMastery mastery;  // DC records enemy_mastery at procedure scope.
     for (long i = 0; i < hero::NUM_SPELLS; i++) {
         if ((school & akSpellTraits[i].m_schoolBits) == 0)
@@ -2101,7 +2101,7 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
     if (m_winLikely || enemy->cannotAttack())
         return 0;
     long total = 0;
-    const army* enemyRow = g_combatManager->m_armies[m_enemySide];
+    const army* enemyRow = g_combatManager->Armies[m_enemySide];
     long turns = min(g_hypnotizeTurns[caster.m_mastery],
                        m_estimate.m_roundsLeft);
     if (enemy->is(creatureDone))
@@ -2109,13 +2109,13 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
     if (turns == 0)
         return 0;
     g_searchArray->seedCombatPosition(enemy, m_side, enemy->m_monInfo.speed * turns, 0, -1);
-    long count = g_combatManager->m_numArmies[m_enemySide];
+    long count = g_combatManager->numArmies[m_enemySide];
     for (; count-- > 0; enemyRow++) {
         if (enemyRow == enemy)
             continue;
         if (enemyRow->is(creatureImmobilized))
             continue;
-        if (!g_combatManager->m_cells[enemyRow->m_gridIndex].m_validMove)
+        if (!g_combatManager->cell[enemyRow->m_gridIndex].m_validMove)
             continue;
         total = max(getTraitorValue(enemy, enemyRow), total);
     }
@@ -2129,8 +2129,8 @@ void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice& choice, l
 {
     TEnchantValue valueFunc = getEnchantmentFunction(choice.m_spell);
     const army* best = 0;
-    for (long i = 0; i < g_combatManager->m_numArmies[group]; i++) {
-        const army* target = &g_combatManager->m_armies[group][i];
+    for (long i = 0; i < g_combatManager->numArmies[group]; i++) {
+        const army* target = &g_combatManager->Armies[group][i];
         if (target->cannotAttack())
             continue;
         long creatureCast = m_isCreatureSpell != 0;
@@ -2183,8 +2183,8 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice& choice, long gr
     }
     TEnchantValue valueOf = getEnchantmentFunction(choice.m_spell);
     long value = 0;
-    for (long i = 0; i < g_combatManager->m_numArmies[group]; i++) {
-        const army* target = &g_combatManager->m_armies[group][i];
+    for (long i = 0; i < g_combatManager->numArmies[group]; i++) {
+        const army* target = &g_combatManager->Armies[group][i];
         if (target->cannotAttack())
             continue;
         if (target->getSpellTime(choice.m_spell))
@@ -2225,8 +2225,8 @@ MAC_ADDRESS(0x044410, 0x218)  // anchor-callee // MAC_ABSTRACTION_FROM(tokens1:d
 void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
 {
     unsigned char moved = 0;
-    const army* ourArmy = g_combatManager->m_armies[m_side];
-    long count = g_combatManager->m_numArmies[m_side];
+    const army* ourArmy = g_combatManager->Armies[m_side];
+    long count = g_combatManager->numArmies[m_side];
     for (; count-- > 0; ++ourArmy) {
         if (ourArmy->is(creatureImmobilized))
             continue;
@@ -2242,15 +2242,15 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
         long before = g_combatManager->chooseMeleeAction(ourArmy, 0, 0, m_side);
         long gain = g_combatManager->chooseMeleeAction(ourArmy, 1, 0, m_side)
                     - before;
-        if (g_combatManager->m_nextAction != AI_ORDER_MOVE_AND_ATTACK)
+        if (g_combatManager->giNextAction != AI_ORDER_MOVE_AND_ATTACK)
             continue;
-        if (g_combatManager->m_nextActionGridIndex == ourArmy->m_gridIndex)
+        if (g_combatManager->giNextActionGridIndex == ourArmy->m_gridIndex)
             continue;
         if (gain <= choice.m_value)
             continue;
         choice.m_value = gain;
         choice.m_target = ourArmy->m_gridIndex;
-        choice.m_secondTargetHex = g_combatManager->m_nextActionExtra;
+        choice.m_secondTargetHex = g_combatManager->giNextActionExtra;
         choice.m_castNow =
             ourArmy == g_combatManager->getCurrentArmy()
             || ourArmy->isIncapacitated()
@@ -2292,8 +2292,8 @@ DC_ADDRESS(0x04101c, 0x25c)
 MAC_ADDRESS(0x044628, 0x2e0)  // anchor-callee; MAC_ABSTRACTION_FROM(tokens1:4d0275565ac1,28.9402): the only change since this checkpoint is the DC-proven akSpellTraits table and field spelling (2245b30a8, 72ee10712); CW addresses the restored table declaration differently.
 void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
 {
-    const army* ourArmy = g_combatManager->m_armies[m_side];
-    long count = g_combatManager->m_numArmies[m_side];
+    const army* ourArmy = g_combatManager->Armies[m_side];
+    long count = g_combatManager->numArmies[m_side];
     for (; count-- > 0; ++ourArmy) {
         long creatureCast = m_isCreatureSpell != 0;
         if (!g_combatManager->validSpellTargetArmy(choice.m_spell, m_side, ourArmy, 1,
@@ -2365,8 +2365,8 @@ DC_ADDRESS(0x041278, 0x228)
 MAC_ADDRESS(0x044908, 0x274)  // anchor-callee
 void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const army* healedArmy, long targetHex) const
 {
-    const army* victim = g_combatManager->m_armies[m_side];
-    long count = g_combatManager->m_numArmies[m_side];
+    const army* victim = g_combatManager->Armies[m_side];
+    long count = g_combatManager->numArmies[m_side];
     for (; count-- > 0; ++victim) {
         if (victim->is(creatureImmobilized))
             continue;
@@ -2415,8 +2415,8 @@ DC_ADDRESS(0x0414a0, 0xb8)
 MAC_ADDRESS(0x044b7c, 0x134)
 void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice) const
 {
-    const army* candidateHealedArmy = g_combatManager->m_armies[m_side];
-    long count = g_combatManager->m_numArmies[m_side];
+    const army* candidateHealedArmy = g_combatManager->Armies[m_side];
+    long count = g_combatManager->numArmies[m_side];
     for (; count-- > 0; ++candidateHealedArmy) {
         long creatureSpell = m_isCreatureSpell != 0;
         if (!g_combatManager->validSpellTargetArmy(
@@ -2633,7 +2633,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice& choice) const
         return;
     if (m_winLikely)
         return;
-    if (g_combatManager->m_fortificationLevel == eFortificationNone)
+    if (g_combatManager->fortificationLevel == eFortificationNone)
         return;
     long lowest = 0x7fff;
     long total = 0;
@@ -2645,8 +2645,8 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice& choice) const
     }
     if (total == 0)
         return;
-    const army* enemy = g_combatManager->m_armies[m_enemySide];
-    long count = g_combatManager->m_numArmies[m_enemySide];
+    const army* enemy = g_combatManager->Armies[m_enemySide];
+    long count = g_combatManager->numArmies[m_enemySide];
     for (; count-- > 0; ++enemy) {
         if (enemy->is(creatureImmobilized))
             continue;
@@ -2658,9 +2658,9 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice& choice) const
     if (count < 0)
         return;
     long value = 0;
-    const army* ourArmy = g_combatManager->m_armies[m_side];
+    const army* ourArmy = g_combatManager->Armies[m_side];
     long damage = min(choice.getMasteryValue(), total);
-    long remaining = g_combatManager->m_numArmies[m_side];
+    long remaining = g_combatManager->numArmies[m_side];
     for (; remaining-- > 0; ++ourArmy) {
         // Retail tests immobilization before the three spell influences;
         // keep the broader cannotAttack helper for the remaining cases.
@@ -2779,9 +2779,9 @@ DC_ADDRESS(0x0420ac, 0xc4)
 MAC_ADDRESS(0x045c80, 0x190)  // anchor-global // MAC_ABSTRACTION_FROM(tokens1:153aae567bb6,36.0000): isIncapacitated now reads durations through getSpellTime; native Mac 0x45cc4 expands spell slots 62/70/74.
 void type_AI_spellcaster::setMeleeEnemies()
 {
-    const army* ourArmy = &g_combatManager->m_armies[m_side][0];
+    const army* ourArmy = &g_combatManager->Armies[m_side][0];
     memset(melee_enemies, 0, sizeof(melee_enemies));
-    for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++) {
+    for (long i = 0; i < g_combatManager->numArmies[m_side]; i++) {
         if (ourArmy->cannotAttack() || ourArmy->getSpellTime(SPELL_HYPNOTIZE))
             continue;
         const army* target = ourArmy->getAITarget();
@@ -2800,7 +2800,7 @@ DC_ADDRESS(0x042170, 0xae)
 MAC_ADDRESS(0x045e10, 0x84)
 void type_AI_spellcaster::setWorstEnemies()
 {
-    for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++) {
+    for (long i = 0; i < g_combatManager->numArmies[m_side]; i++) {
         worst_enemies[i] = melee_enemies[i];
         if (ranged_enemies[i].m_damage > worst_enemies[i].m_damage)
             worst_enemies[i] = ranged_enemies[i];
@@ -2847,15 +2847,15 @@ void type_AI_spellcaster::findEnemyAttacks()
     memset(worst_enemies, 0, sizeof(worst_enemies));
     memset(ranged_enemies, 0, sizeof(ranged_enemies));
     setMeleeEnemies();
-    const army* ourArmy = &g_combatManager->m_armies[m_side][0];
-    for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++, ourArmy++) {
+    const army* ourArmy = &g_combatManager->Armies[m_side][0];
+    for (long i = 0; i < g_combatManager->numArmies[m_side]; i++, ourArmy++) {
         if (ourArmy->is(creatureImmobilized))
             continue;
         if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        army* enemy = &g_combatManager->m_armies[m_enemySide][0];
+        army* enemy = &g_combatManager->Armies[m_enemySide][0];
         const army* meleeEnemy = melee_enemies[i].m_enemy;
-        for (long j = 0; j < g_combatManager->m_numArmies[m_enemySide]; j++, enemy++) {
+        for (long j = 0; j < g_combatManager->numArmies[m_enemySide]; j++, enemy++) {
             if (enemy->cannotAttack())
                 continue;
             if (enemy->getSpellTime(60))
@@ -2943,7 +2943,7 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
 
     type_spell_choice choice(static_cast<ESpellId>(spell), /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
                               mastery, power, power);
-    army* target = g_combatManager->m_cells[hex].getArmy();
+    army* target = g_combatManager->cell[hex].getArmy();
     long baseDamage;
     switch (spell) {
     case SPELL_MAGIC_ARROW:
@@ -2987,8 +2987,8 @@ DC_ADDRESS(0x0425a8, 0x68)
 MAC_ADDRESS(0x046528, 0xb0)
 void type_AI_spellcaster::checkSimulation()
 {
-    const army* enemy = g_combatManager->m_armies[m_enemySide];
-    long count = g_combatManager->m_numArmies[m_enemySide];
+    const army* enemy = g_combatManager->Armies[m_enemySide];
+    long count = g_combatManager->numArmies[m_enemySide];
     for (; count-- > 0; ++enemy) {
         if (enemy->is(creatureImmobilized))
             continue;
@@ -3012,8 +3012,8 @@ unsigned char type_AI_spellcaster::spellsNotRequired() const
 {
     if (!m_winLikely)
         return 0;
-    const army* ourArmy = g_combatManager->m_armies[m_side];
-    long count = g_combatManager->m_numArmies[m_side];
+    const army* ourArmy = g_combatManager->Armies[m_side];
+    long count = g_combatManager->numArmies[m_side];
     for (; count-- > 0; ++ourArmy) {
         if (ourArmy->is(creatureImmobilized))
             continue;
@@ -3043,9 +3043,9 @@ MAC_ADDRESS(0x046664, 0x350)
 bool type_AI_spellcaster::castSpell(bool retreating)
 {
     type_spell_choice best;
-    long power = g_combatManager->m_spellPower[m_side];
+    long power = g_combatManager->iSideSpellPower[m_side];
     long duration = power;
-    const armyGroup* enemyGroup = g_combatManager->m_armyGroups[m_enemySide];
+    const armyGroup* enemyGroup = g_combatManager->ArmyGroups[m_enemySide];
     unsigned char inhibited = 0;
     if (m_ourHero->isWieldingArtifact(g_artifactRecantersCloak))
         inhibited = 1;
@@ -3102,10 +3102,10 @@ bool type_AI_spellcaster::castSpell(bool retreating)
     }
     if (best.m_spell != SPELL_NONE) {
         if (best.m_castNow || retreating) {
-            g_combatManager->m_nextAction = 1;
-            g_combatManager->m_nextActionExtra = best.m_spell;
-            g_combatManager->m_nextActionGridIndex = best.m_target;
-            g_combatManager->m_nextActionGridIndex2 = best.m_secondTargetHex;
+            g_combatManager->giNextAction = 1;
+            g_combatManager->giNextActionExtra = best.m_spell;
+            g_combatManager->giNextActionGridIndex = best.m_target;
+            g_combatManager->giNextActionGridIndex2 = best.m_secondTargetHex;
             return 1;
         }
     }

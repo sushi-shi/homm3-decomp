@@ -331,19 +331,19 @@ class combatManager : public baseManager {
 public:
     // Original public CombatSpeedMod[3] (DC ?CombatSpeedMod@combatManager@@2QBMB).
     // Complete stores the three animation-speed factors at 0x63cf7c.
-    static const float s_combatSpeedMod[3];
+    static const float CombatSpeedMod[3];
 
     // Original public const statics. CombatAreaLimits_Visible has no
     // independently identified Complete storage; ScreenLimits is owned by
     // heroWindowManager and is not an alias for that older declaration.
-    static const SLimitData s_combatAreaLimits;
-    static const SLimitData s_visibleCombatAreaLimits;
-    static const SLimitData s_gridAreaLimits;
-    static const SLimitData s_drawbridgeLimits;
-    static const SLimitData s_leftHeroLimits;
-    static const SLimitData s_rightHeroLimits;
-    static const SLimitData s_mainBuildingLimits;
-    static const SLimitData s_upperTowerLimits;
+    static const SLimitData CombatAreaLimits;
+    static const SLimitData CombatAreaLimits_Visible;
+    static const SLimitData GridAreaLimits;
+    static const SLimitData DrawbridgeLimits;
+    static const SLimitData LeftHeroLimits;
+    static const SLimitData RightHeroLimits;
+    static const SLimitData MainBuildingLimits;
+    static const SLimitData UpperTowerLimits;
 
     // Dreamcast drawing.cpp:666. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
@@ -405,14 +405,14 @@ public:
     };
 
 private:
-    static const TObstacleInfo s_obstacleInfo[];
+    static const TObstacleInfo ObstacleInfo[];
     // Dreamcast records all four as private static arrays. Their raw MSVC
     // names (`@@0QBU...`) independently distinguish this declaration from
     // both a singleton object and a public static member. Retail fixes the
     // first elements at 0x63cee8, 0x63cf00 and 0x63cf18 respectively.
-    static const TObstacleInfo s_quicksandInfo[];
-    static const TObstacleInfo s_landMineInfo[];
-    static const TObstacleInfo s_wallObstacleInfo[];
+    static const TObstacleInfo QuicksandInfo[];
+    static const TObstacleInfo LandMineInfo[];
+    static const TObstacleInfo WallObstacleInfo[];
     // One 68-byte elevation-overlay catalogue at retail 0x0063bec0.
     // Dreamcast PlaceLargeObstacle references sElevationOverlay directly;
     // retail placement reads masks at +0/+2 and 25 blocked shorts at +0xc.
@@ -432,7 +432,7 @@ private:
         short m_blockedSquares[25];
         const char* m_fileName;
     };
-    static const SElevationOverlay s_elevationOverlay[34];
+    static const SElevationOverlay sElevationOverlay[34];
 
 public:
     // Retail writes only name/hitpoints here; Dreamcast CodeView supplies
@@ -453,7 +453,7 @@ public:
     };
 
 private:
-    static TWallTraits s_wallTraits[9][kNumWallSections];
+    static TWallTraits akWallTraits[9][kNumWallSections];
 
 public:
     enum {
@@ -523,7 +523,7 @@ public:
             return -1;
         }
     };
-    static const TWallTarget s_wallTargets[WALL_TARGET_COUNT];
+    static const TWallTarget wallTargets[WALL_TARGET_COUNT];
     // One of the three defending-town archer positions. InitializeArchers
     // clears three contiguous 0x24-byte rows at +0x13d78 and fills these
     // members in this order; DamageWall later uses armySlot from each row
@@ -575,7 +575,7 @@ public:
     // combatManager vptr store prove the inheritance directly.
     // Open (0x462a20) constructs this CNetMsgHandlerPause with its native
     // 0x10-byte size; Close deletes it.
-    CNetMsgHandlerPause* m_netMsgHandlerPause;
+    CNetMsgHandlerPause* netMsgHandlerPause;
     // The pending AI order, written as a (code, hex) pair. move_toward
     // (0x41f580) sets the code to 2 the moment a path exists, raises it
     // to 8 when waiting still looks better than the hex it settled on,
@@ -583,118 +583,116 @@ public:
     // settled on is the stack's own. The hex slot starts at the stack's
     // own gridIndex and is overwritten with each accepted step - and
     // the same body compares it back against gridIndex, so it is a
-    // combat cell index, not a pointer. Both names are ADDRESS
-    // ORDINALS: no DC layout exists for combatManager at all (the
-    // Dreamcast dump carries no fieldlist for it) and no string or
-    // roster entry reaches either slot.
-    // Project-inferred boundary for the pending-action protocol. Original
-    // field access is unknown; preserve the four existing slots in place.
-    int m_nextAction;  // +0x3c
+    // combat cell index, not a pointer. The four slots are Dreamcast's
+    // giNextAction/giNextActionExtra/giNextActionGridIndex/
+    // giNextActionGridIndex2 (combatManager field list 0x4429, +0x4c..
+    // +0x58 there).
+    int giNextAction;  // +0x3c
     // The order's FIRST hex slot. berserk_attack (0x4222c0) writes the
     // acting stack's own gridIndex here when the target is already
     // adjacent and the next step of the path when it is not, with
-    // field_44 taking the target's hex in both cases - so the pair is
-    // (where I go, what I hit). Name is an address ordinal for the same
-    // reason its two neighbours are.
-    int m_nextActionExtra;  // +0x40
-    int m_nextActionGridIndex;  // +0x44
-    // The order's fourth slot, and ai_tactical's cast_spell (0x43c800)
-    // is the writer that slices it out of the pad: it stamps the
-    // chosen spell into field_40, its target hex into field_44 and the
-    // choice's own field_18 here, all three behind field_3c = 1.
-    // Address ordinal for the same reason its neighbours are.
-    int m_nextActionGridIndex2;  // +0x48
+    // giNextActionGridIndex taking the target's hex in both cases - so
+    // the pair is (where I go, what I hit).
+    int giNextActionExtra;  // +0x40
+    int giNextActionGridIndex;  // +0x44
+    // ai_tactical's cast_spell (0x43c800) stamps the chosen spell into
+    // giNextActionExtra, its target hex into giNextActionGridIndex and the
+    // choice's second target here, all three behind giNextAction = 1.
+    int giNextActionGridIndex2;  // +0x48
 public:
     // Two 187-byte per-hex rows, both cleared by Open (0x462a20) with
     // `mov ecx,0x2e / xor eax,eax / rep stosd / stosw / stosb` - 0x2e
     // dwords plus a word plus a byte is exactly COMBAT_GRID_CELLS, and
     // 0x4c + 0xbb == 0x107 and 0x107 + 0xbb == 0x1c2 closes the band
-    // exactly against `cells`. Same shape as the 187-byte row at
-    // +0x14031. No reader is decoded for either, so both stay ordinals.
-    unsigned char m_lastDrawGridShade[COMBAT_GRID_CELLS];  // +0x4c
-    unsigned char m_curDrawGridShade[COMBAT_GRID_CELLS];  // +0x107
+    // exactly against `cell`. Same shape as the 187-byte row at
+    // +0x14031. Original Dreamcast iLastDrawGridShade/iCurDrawGridShade.
+    unsigned char iLastDrawGridShade[COMBAT_GRID_CELLS];  // +0x4c
+    unsigned char iCurDrawGridShade[COMBAT_GRID_CELLS];  // +0x107
     // The 187-byte current-shading array ends at +0x1c2; retail
     // ValidAttack places the four-byte-aligned cell array at +0x1c4.
     // Dreamcast retains the same two-byte gap at +0x1d2.
     char m_paddingBeforeCells[0x2];
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
-    // (0x523bb0: index*112 + 0x1c4).
-    // Before normalization (Dreamcast): cell.
-    hexcell m_cells[COMBAT_GRID_CELLS];  // +0x1c4, ends 0x5394
-    // PlaceAllObstacles shifts one by this dword while field_53c0 is -1;
-    // it is the current combat terrain selector for the catalogue mask.
-    int m_terrainType;  // +0x5394
+    // (0x523bb0: index*112 + 0x1c4). Original Dreamcast cell.
+    hexcell cell[COMBAT_GRID_CELLS];  // +0x1c4, ends 0x5394
+    // PlaceAllObstacles shifts one by this dword while m_magicTerrain is
+    // -1; it is the current combat terrain selector for the catalogue
+    // mask. Original Dreamcast combatTerrain.
+    int combatTerrain;  // +0x5394
     // GetBackgroundName resets these two dwords after selecting the image.
-    // Their wider animation roles await decoded readers/writers.
-    int m_combatFringe;  // +0x5398
-    int m_combatCycleType;  // +0x539c
-    // Selected large-obstacle catalogue id, written by PlaceLargeObstacle.
-    int m_largeObstacleId;  // +0x53a0
+    // Original Dreamcast combatFringe/iCombatCycleType.
+    int combatFringe;  // +0x5398
+    int iCombatCycleType;  // +0x539c
+    // Selected large-obstacle (elevation overlay) catalogue id, written by
+    // PlaceLargeObstacle and indexing sElevationOverlay. Original Dreamcast
+    // iElevationOverlay.
+    int iElevationOverlay;  // +0x53a0
     // The drawbridge state (EDrawbridgeState). LowerDoor stores 3/2/1
     // through it one frame at a time; RaiseDoor gates on 1;
     // HexIsBlocked, should_lower_door and IsInMoat all gate on 3.
-    int m_drawbridgeState;  // +0x53a4
+    // Original Dreamcast iDoorStatus.
+    int iDoorStatus;  // +0x53a4
     // "This combat has a moat at all": IsInMoat (0x469dc0) answers 0
     // outright while this byte is clear, before it looks at any row.
-    // Name provisional.
-    unsigned char m_moatOn;  // +0x53a8
+    unsigned char bMoatOn;  // +0x53a8
     // "This combat has a SECOND moat row": searchArray::set_moat
     // (0x4b3290) stamps the eleven hexes of the second table, and later
     // re-opens that table's gate hex, only while this byte is set -
-    // always nested inside the field_53a8 test above. Name provisional.
-    unsigned char m_moatIsWide;  // +0x53a9
+    // always nested inside the bMoatOn test above.
+    unsigned char moatIsWide;  // +0x53a9
     // Dreamcast bMoatOn/moatIsWide are bytes at +0x53b8/9 before
     // the saved-screen pointer at +0x53bc; retail shifts this run by -0x10.
     char m_paddingBeforeSaveScreenPreGrid[0x2];
     // Open constructs all three saved-screen buffers through the native
     // Bitmap16Bit(w, h) constructor (0x44df70), allocating 0x38 bytes each.
-    Bitmap16Bit* m_saveScreenPreGrid;
+    Bitmap16Bit* SaveScreenPreGrid;
     // RETYPED 2026-08-13: army::Fly (0x4b4a40) calls Bitmap16Bit::Draw
     // on this slot once per animation frame, blitting the clean
     // battlefield back over the previous frame's extent - so it is the
     // combat back-buffer, not a bare polymorphic object. Close still
     // deletes it through the same slot-0 virtual destructor either way.
-    Bitmap16Bit* m_saveScreenPostGrid;
-    Bitmap16Bit* m_combatMouseBackground;
+    Bitmap16Bit* SaveScreenPostGrid;
+    Bitmap16Bit* combatMouseBackground;
     // CombatSystemOptions clears this dword after the modal dialog closes.
-    int m_backgroundDrawn;  // +0x53b8
+    int bBackgroundDrawn;  // +0x53b8
     // Adventure-map cell under the battlefield. DetermineCombatTerrain
     // reads its terrain, object and special-terrain state.
-    NewmapCell* m_combatCell;  // +0x53bc
-    // can_cast_spells (0x41f890) refuses a CREATURE cast (hero_spell
-    // clear) while this word reads 2, and refuses every cast at all
-    // while the byte below is set. Both names await a writer.
+    NewmapCell* EventCell;  // +0x53bc
+    // The battlefield's magic terrain kind (Dreamcast's OnMagicPlains /
+    // OnCursedGround byte pair, widened by Complete). can_cast_spells
+    // (0x41f890) refuses a CREATURE cast (hero_spell clear) while this word
+    // reads 2, and refuses every cast at all while OnAntiMagicGarrison is
+    // set.
     int m_magicTerrain;  // +0x53c0
-    unsigned char m_onAntiMagicGarrison;  // +0x53c4
-    unsigned char m_isSurrounded;  // +0x53c5
+    unsigned char OnAntiMagicGarrison;  // +0x53c4
+    unsigned char IsSurrounded;  // +0x53c5
     // GetBackgroundName selects CmBkDeck.pcx while this byte is set.
-    // Name remains ordinal until its writer is reconstructed.
-    unsigned char m_onBoats;  // +0x53c6
-    char m_onBeach[0x1];
+    unsigned char OnBoats;  // +0x53c6
+    char OnBeach[0x1];
     // The defending town. DetermineCombatTerrain calls its
     // GetNativeTerrain method; RaiseDoor and IsInMoat independently
     // read the faction byte at town+4.
-    town* m_defendingTown;  // +0x53c8
+    town* combatTown;  // +0x53c8
     // The two combat heroes, indexed by side: can_cast_spells indexes
     // heroes[side] for the spellbook test and then walks both slots for
     // the Orb of Inhibition, and army::get_controller (0x442690) /
     // army::get_owner (0x4426d0) do the same lookup off
     // gpCombatManager, with and without the hypnotize flip.
-    hero* m_heroes[2];  // +0x53cc
-    int m_spellPower[2];  // +0x53d4
+    hero* Heroes[2];  // +0x53cc
+    int iSideSpellPower[2];  // +0x53d4
     // A per-side latch berserk_attack (0x4222c0) raises, indexed by
     // SIDE as a byte, on exactly one path: when a berserked stack's
-    // chosen target turns out to be on its OWN side. Name awaits a
-    // writer - no roster or string reaches the pair.
-    unsigned char m_playDoh[2];  // +0x53dc
+    // chosen target turns out to be on its OWN side. Original Dreamcast
+    // PlayDoh/PlayYeah/DohPlayedThisRound/YeahPlayedThisRound.
+    unsigned char PlayDoh[2];  // +0x53dc
     // Three more per-side byte pairs, all cleared together by
     // InitNonVisualVars (0x463c60) in the order (0x53e0, 0x53e1),
     // (0x53e2, 0x53e3), (0x53dc, 0x53dd), (0x53de, 0x53df) - each pair
     // written HIGH slot first, which is the `x[0] = x[1] = 0` chained
-    // form. No reader is decoded for any of them.
-    unsigned char m_playYeah[2];  // +0x53de
-    unsigned char m_dohPlayedThisRound[2];  // +0x53e0
-    unsigned char m_yeahPlayedThisRound[2];  // +0x53e2
+    // form.
+    unsigned char PlayYeah[2];  // +0x53de
+    unsigned char DohPlayedThisRound[2];  // +0x53e0
+    unsigned char YeahPlayedThisRound[2];  // +0x53e2
     // The two combat heroes' battlefield animation, indexed by side, in the
     // original Dreamcast spellings (cmbtHero... at +0x53f4 there; retail
     // shifts the run by -0x10). LoadIcons loads cmbtHero from the hero's
@@ -716,7 +714,7 @@ public:
     // Per-side spells observed during combat and eligible for Eagle Eye.
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
-    std::set<SpellID> m_eagleEyeData[2];  // +0x545c; set roots at +0x5460
+    std::set<SpellID> EagleEyeSpellLearned[2];  // +0x545c; set roots at +0x5460
     // Per-stack "this stack has already been affected" marks, indexed
     // [combatSide][army slot]. THREE independent readings agree on the
     // shape, which is why it is sliced in place from the old pad_547c[0x28]
@@ -727,14 +725,12 @@ public:
     //     the spell, walking a row pointer that advances 0x14 per SIDE and
     //     is indexed by the army slot - which gives the [2][20].
     //   * ai_tactical's get_chain_lightning_value (0x437190) raises
-    //     [this + bitIndex + 20*combatSide + 0x547c] before asking
+    //     [this + index + 20*group + 0x547c] before asking
     //     GetNextChainLightningTarget for the next hop - same indexing.
-    // Named generally rather than for chain lightning: the mass-spell
-    // writer and the chain-lightning writer both use it.
     // Original ShowMassSpell's AAY11BE@_N parameter proves bool [2][20];
     // every source caller supplies this member, whose stores are 0 or 1.
-    // Before normalization (Dreamcast): ArmyEffected.
-    bool m_effected[2][20];  // +0x547c
+    // Original Dreamcast ArmyEffected.
+    bool ArmyEffected[2][20];  // +0x547c
     // Per-side "this side is played by a human" latches, the original
     // Dreamcast IsHuman/IsLocalHuman. SetupCombat stamps them with
     // game::isHuman and game::isLocalHuman of the side's player, and with 0
@@ -746,8 +742,8 @@ public:
     // inlined IsQuickCombat indexes the 360-byte gpGame->players row with
     // each value and reads that player's +0xe4 quickCombat preference;
     // UpdateArmyGroup applies its creatureId bit-22 exclusion only while
-    // the selected id is not -1.
-    int m_playerIds[2];  // +0x54a8
+    // the selected id is not -1. Original Dreamcast iPlayer.
+    int iPlayer[2];  // +0x54a8
     unsigned char m_artifactCast[2];  // +0x54b0
     // Passed as the final, byte-wide SetMorale input for every stack
     // controlled by the indexed side. Its meaning and public name are
@@ -758,72 +754,53 @@ public:
     // Per-side "this side's hero has already cast this round" latch:
     // DoCommand (0x476bd0) refuses to open the spell book, and shows
     // genrltxt entry 129 instead, while the acting side's word is set
-    // and field_13d74 is clear. Name is an address ordinal - no roster
-    // or string reaches the pair.
-    int m_spellsCast[2];  // +0x54b4
+    // and DebugNoSpellLimit is clear. Original Dreamcast bSpellsCast.
+    int bSpellsCast[2];  // +0x54b4
     // Live stack count per side; every ai_tactical walk of armies[side]
     // bounds itself with it (type_AI_spellcaster ctor 0x4369c0,
     // set_melee_enemies 0x43bf20).
-    int m_numArmies[2];  // +0x54bc
+    int numArmies[2];  // +0x54bc
     // The two persistent army groups combat was initialized from.
     // RaiseSkeletons indexes this pair by side and tries to merge the
     // post-combat raised stack into the selected group.
-    armyGroup* m_armyGroups[2];  // +0x54c4
-    army m_armies[2][21];  // +0x54cc
-    // Per-side dword SetupCombat initialises to 30000 (0x7530) for both
-    // sides, in the same loop as playerIds and field_54b0 - retail reaches
-    // it as `[&playerIds[side] + 0xddf8]`, which is what proves the stride
-    // and the pair. The magnitude reads like a millisecond budget but no
-    // reader is decoded, so the name stays an address ordinal.
-    // GATED, AND THAT IS A MEASUREMENT - the fourth firing of the
-    // include-set class from this header, and the first one that says
-    // WHICH edit shape fires it. Bisected 2026-08-20 against command.obj's
-    // GetCommand (92.5714 is that canary's ceiling), one edit at a time:
-    //   * slicing one pad declarator into three (this row), or adding any
-    //     further member declarator to the class          -> 92.5357;
-    //   * RETYPING a pad in place at the SAME declarator count,
-    //     `char pad_54a6[2]` -> `unsigned char IsLocalHuman[2]`,
-    //                                                     -> 92.5714,
-    //     unmoved. Three such renames landed un-gated and cost nothing.
-    // So the trigger is the DECLARATOR COUNT C1XX numbers member handles
-    // from - not the member's name, its type, or the bytes it covers.
-    // The per-side pair InitNonVisualVars' closing walk raises when a
-    // side owns at least one stack with army::field_4d8 set. Byte-wide
-    // and indexed by side.
-    // Original Dreamcast OnNativeTerrain (+0x12970): retail
-    // InitNonVisualVars scans each side for an army on native terrain;
-    // quicksand and landmine creation use it to set enemy visibility.
-    unsigned char m_onNativeTerrain[2];  // +0x1329c
+    armyGroup* ArmyGroups[2];  // +0x54c4
+    army Armies[2][21];  // +0x54cc
+    // This class's member DECLARATOR COUNT is codegen state: command.obj's
+    // GetCommand moves when a declarator is added (or a pad split), but not
+    // when one is renamed or retyped in place.
+    // Per-side "a stack stands on its native terrain" flag, the original
+    // Dreamcast OnNativeTerrain (+0x12970): InitNonVisualVars' closing walk
+    // raises it when a side owns a stack on native terrain (army
+    // m_onNativeTerrain); quicksand and landmine creation use it to set
+    // enemy visibility.
+    unsigned char OnNativeTerrain[2];  // +0x1329c
     // The native-terrain flags are two bytes at +0x1329c; the next
     // per-side integer array starts at +0x132a0. These bytes align it.
     char m_paddingBeforeTurnSinceLastEnchanter[0x2];
+    // Complete-only per-side dword SetupCombat initialises to 30000
+    // (0x7530) in the same loop as iPlayer - retail reaches it as
+    // `[&iPlayer[side] + 0xddf8]`, which proves the stride and the pair.
     int m_turnSinceLastEnchanter[2];  // +0x132a0
-    // Two dwords InitNonVisualVars sets to -1.
-
-    // RETYPED AS A PER-SIDE PAIR 2026-08-20 by combatManager::
-    // SummonElemental (0x5a7080), which stamps the summoned creature's
-    // type through `[this + 4*currentSide + 0x132a8]` - so the two
-    // dwords are one row indexed by SIDE, exactly like the six other
-    // per-side pairs this class already carries, and not two unrelated
-    // ordinals. Dreamcast supplies the matching array name below.
-    // Original Dreamcast SummonedElemental (+0x12974): retail
-    // SummonElemental (0x5a7080) writes the creature type, and the
-    // spell eligibility check rejects a different elemental type.
-    int m_summonedElemental[2];  // +0x132a8 .. +0x132af
+    // The summoned elemental's creature type per side, -1 from
+    // InitNonVisualVars: SummonElemental (0x5a7080) stamps it through
+    // `[this + 4*currControl + 0x132a8]`, and the spell eligibility check
+    // rejects a different elemental type. Original Dreamcast
+    // SummonedElemental (+0x12974).
+    int SummonedElemental[2];  // +0x132a8 .. +0x132af
     // Two per-side "this side has already lost / fled" latches, byte
     // proven by CombatIsOver (0x465830) and IsWinner (0x4658b0): both
     // index them by SIDE as bytes (`byte [this + side + 0x132b2]`,
     // `byte [this + side + 0x132b0]`) and answer "combat over" / "this
     // side won" the moment either reads non-zero. Retail tests the
     // 0x132b2 pair FIRST in both functions. HandleCombatPlayerDrop writes
-    // field_132b0[1] when the remote combat player disappears. The retreat
-    // and surrender writers distinguish the pair names below.
+    // SideRetreated[1] when the remote combat player disappears. The
+    // retreat and surrender writers distinguish the pair names below.
     // Original Dreamcast SideRetreated (+0x1297c): retail
     // DoCommand sets this pair in the retreat action, also used on peer drop.
-    unsigned char m_sideRetreated[2];  // +0x132b0
+    unsigned char SideRetreated[2];  // +0x132b0
     // Original Dreamcast SideSurrendered (+0x1297e): retail
     // DoCommand sets this pair in the surrender action before transferring gold.
-    unsigned char m_sideSurrendered[2];  // +0x132b2
+    unsigned char SideSurrendered[2];  // +0x132b2
     // Read as a full dword by is_computer_action (0x474bf0) and paired
     // there with the g_goSolo byte: when that byte is set and
     // this slot is non-zero the acting stack is computer-driven no
@@ -831,26 +808,26 @@ public:
     // Original Dreamcast gbThisNetHasControl (+0x12980): retail
     // command dispatch derives this dword from local/network control and
     // gates locally issued actions on it.
-    int m_thisNetHasControl;  // +0x132b4
-    // The stack whose turn it is, as a (side, slot) pair into armies:
-    // should_attack_now (0x436c60) forms armies[actingSide][actingSlot]
-    // with the flattened index actingSide*21 + actingSlot and then
-    // excludes that stack from both of its censuses. Names provisional.
-    // Before normalization (Dreamcast): currArmyGroup.
-    int m_actingSide;  // +0x132b8
-    // Before normalization (Dreamcast): currArmyIndex.
-    int m_actingSlot;  // +0x132bc
-    // The side whose stack is acting: get_hex_attack_value (0x436180)
-    // rejects a neighbour whose army::group equals it. Name provisional.
-    int m_currentSide;  // +0x132c0
+    int gbThisNetHasControl;  // +0x132b4
+    // The stack whose turn it is, as a (group, index) pair into Armies:
+    // should_attack_now (0x436c60) forms Armies[currArmyGroup]
+    // [currArmyIndex] with the flattened index group*21 + index and then
+    // excludes that stack from both of its censuses. Original Dreamcast
+    // currArmyGroup/currArmyIndex.
+    int currArmyGroup;  // +0x132b8
+    int currArmyIndex;  // +0x132bc
+    // The side in control of the acting stack: get_hex_attack_value
+    // (0x436180) rejects a neighbour whose army::group equals it.
+    // Original Dreamcast currControl.
+    int currControl;  // +0x132c0
     // The automation-preference gate. is_computer_action (0x474bf0)
     // reads this dword before every one of the four preference fields it
     // consults in g_config (combatCatapult for the catapult,
     // combatBallista for the ballista and the arrow tower,
     // combatFirstAidTent for the tent, combatAutoCreatures for every
     // other stack) and only honours the preference while it is non-zero.
-    // Name is an address ordinal.
-    int m_autoCombatOn;  // +0x132c4
+    // Original Dreamcast autoCombatOn.
+    int autoCombatOn;  // +0x132c4
     // The stack that most recently finished a move. army::simple_move
     // (0x445950) clears it before it moves anything and stores `this`
     // into it on EVERY exit afterwards - the successful fly, the
@@ -858,61 +835,67 @@ public:
     // and DoCompAI (0x4221f0) zeroes it as the very first thing it
     // does, before it even turns the highlighter off. An `army*`, not
     // a counter: simple_move's store is `mov [ecx+0x132c8], esi` with
-    // esi holding `this`. Name is provisional; no roster reaches the
-    // slot (the Dreamcast dump carries no combatManager fieldlist).
+    // esi holding `this`. Complete-only: Dreamcast's selectorOn/
+    // selectorIndex pair at this place is gone.
     army* m_lastMovedArmy;  // +0x132c8
     // Dreamcast TurnOffHighlighter (dc 0x6ed18) uses highlighterOn /
     // highlighterIndex at +0x1299c/+0x129a0; retail 0x477e10 uses this
     // byte/int pair at +0x132cc/+0x132d0. The earlier reference mapping
     // called them selectorOn/selectorIndex and shifted the following names.
-    unsigned char m_highlighterOn;  // +0x132cc
+    unsigned char highlighterOn;  // +0x132cc
     char m_paddingBeforeHighlighterIndex[3];
-    int m_highlighterIndex;  // +0x132d0
+    int highlighterIndex;  // +0x132d0
     // Command-loop consumers prove the hovered cell, chosen attack hex,
     // last displayed command and current command respectively. Dreamcast
     // names the same four consecutive ints at +0x129a4..+0x129b0.
-    int m_lastCellIndex;  // +0x132d4
-    int m_lastMoveToIndex;  // +0x132d8
-    int m_lastCommand;  // +0x132dc
-    int m_combatCommand;  // +0x132e0
+    int lastCellIndex;  // +0x132d4
+    int lastMoveToIndex;  // +0x132d8
+    int lastCommand;  // +0x132dc
+    int combatCommand;  // +0x132e0
     // InitNonVisualVars clears Dreamcast CastleAttackDone at +0x129b4
     // (dc 0x5e6c2, cmbtmgr.cpp:1358) and retail +0x132e4 (0x463c91)
     // at the corresponding reset. Both stores and the DC member are bytes.
-    unsigned char m_castleAttackDone;  // +0x132e4
+    unsigned char CastleAttackDone;  // +0x132e4
     // InitNonVisualVars clears the preceding slot as a byte at +0x132e4.
     // LoadSpellEffect proves the pointer at +0x132e8; these bytes align it.
     char m_paddingBeforePowSprite[0x3];
     // LoadSpellEffect (0x5a92f0) disposes/refills the sprite and caches
     // the effect ID; PowEffect (0x468990) queries its frame count and
     // advances the frame index, proving this three-member sequence.
-    CSprite* m_powSprite;  // +0x132e8
-    int m_powSpellEffect;  // +0x132ec
-    int m_powFrameIndex;  // +0x132f0
+    // Original Dreamcast gCurLoadedSpellIcon/gCurLoadedSpellEffect/
+    // gCurSpellEffectFrame.
+    CSprite* gCurLoadedSpellIcon;  // +0x132e8
+    int gCurLoadedSpellEffect;  // +0x132ec
+    int gCurSpellEffectFrame;  // +0x132f0
     // Original public fortificationLevel. HexIsBlocked and door routing
     // use the same tier that selects the defending town's wall targets.
-    TFortificationLevel m_fortificationLevel;  // +0x132f4
-    // Cleared by InitNonVisualVars at full width. Ordinal.
-    int m_battleOver;  // +0x132f8
-    TCombatWindow* m_combatWindow;  // +0x132fc
-    int m_combatShowIt;  // +0x13300
+    TFortificationLevel fortificationLevel;  // +0x132f4
+    // Cleared by InitNonVisualVars at full width. Original Dreamcast
+    // bBattleOver, mainWindow and bCombatShowIt.
+    int bBattleOver;  // +0x132f8
+    TCombatWindow* mainWindow;  // +0x132fc
+    int bCombatShowIt;  // +0x13300
     // Replaces synthetic pad_13304. Dreamcast combatManager type 0x66c7
     // names iconWidgetWL/textWidgetWL, each an array of 25 widget pointers.
     // NH3API confirms PC offsets +0x13304/+0x13368; retail mainWindow /
     // combatDirections accesses bound the same 200-byte interval.
-    iconWidget* m_iconWidgetWL[25];  // +0x13304
-    textWidget* m_textWidgetWL[25];  // +0x13368
+    iconWidget* iconWidgetWL[25];  // +0x13304
+    textWidget* textWidgetWL[25];  // +0x13368
     // SetCombatDirections fills twelve direction/hex pairs here. Retail
     // addresses the second row exactly 0x30 bytes after the first.
+    // Dreamcast declares the rows as two arrays, attack_cursor[12] and
+    // attack_hex[12]; splitting them would add a declarator (see the note
+    // above OnNativeTerrain).
     int m_combatDirections[2][12];  // +0x133cc
     // CheckSetMouseDirection caches the current combat cursor frame here and
     // only calls mouseManager::SetPointer when the selected direction maps
-    // to a different frame. No roster names the storage, so it stays ordinal.
-    int m_lastAttackCursor;  // +0x1342c
+    // to a different frame. Original Dreamcast last_attack_cursor.
+    int last_attack_cursor;  // +0x1342c
     // Replaces synthetic pad_13430. Dreamcast originals iTtlCombatDirections
     // and iBackgroundFrame are int; NH3API confirms +0x13430/+0x13434.
     // Retail lastAttackCursor and bCreatureVanish bound this eight-byte span.
-    int m_ttlCombatDirections;  // +0x13430
-    int m_backgroundFrame;  // +0x13434
+    int iTtlCombatDirections;  // +0x13430
+    int iBackgroundFrame;  // +0x13434
     // Per-army "this dead stack leaves no body" latch, twenty bytes per
     // side. army's death path raises it, with bSomeCreaturesVanish, only
     // when leavesNoBody(); otherwise the stack becomes a corpse in its hex.
@@ -934,30 +917,32 @@ public:
     // The battlefield background image name. SetupCombat caches
     // GetBackgroundName()'s answer here as its very last act; the pointer
     // is into the .rdata name tables that method selects from, so it is
-    // never owned or freed.
-    const char* m_backgroundName;  // +0x13464
+    // never owned or freed. Original Dreamcast cBkgName.
+    const char* cBkgName;  // +0x13464
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
-    // 6/7 are resolved to real directions by facing first.
-    short m_adjacentCells[COMBAT_GRID_CELLS][COMBAT_DIRECTION_COUNT];  // +0x13468
-    bool m_saveBiggestExtent;        // +0x13d2c
+    // 6/7 are resolved to real directions by facing first. Original
+    // Dreamcast gAdjacentIndex.
+    short gAdjacentIndex[COMBAT_GRID_CELLS][COMBAT_DIRECTION_COUNT];  // +0x13468
+    bool SaveBiggestExtent;        // +0x13d2c
     // Dreamcast SaveBiggestExtent is one byte before the LimitToExtent
     // dword; retail preserves this alignment boundary at +0x13d2c/30.
     char m_paddingBeforeLimitToExtent[0x3];
-    int m_limitToExtent;  // +0x13d30
-    int m_computeExtentOnly;  // +0x13d34
+    int LimitToExtent;  // +0x13d30
+    int ComputeExtentOnly;  // +0x13d34
     // Original: Extent (SLimitData), public in DC combatManager records.
     // The inclusive drawing extent is also replaced with the fixed bounds
     // at 0x694f30 before a drawbridge animation.
-    SLimitData m_extent;  // +0x13d38
+    SLimitData Extent;  // +0x13d38
     // Set to 3 by InitNonVisualVars, out of the same register as
-    // field_5418. Ordinal.
-    int m_winner;  // +0x13d48
+    // cmbtHeroFlagFrame[1]. Original Dreamcast winner.
+    int winner;  // +0x13d48
     // Pending post-combat raised stack. RaiseSkeletons first attempts
     // this pair unchanged, then promotes the creature and converts the
     // count at a two-for-three ratio if the destination group is full.
-    int m_raisedCreatureCount;  // +0x13d4c
-    TCreatureType m_raisedCreatureType;  // +0x13d50
+    // Original Dreamcast SkeletonsCreated/skeleton_type.
+    int SkeletonsCreated;  // +0x13d4c
+    TCreatureType skeleton_type;  // +0x13d50
     // CmNumWin.pcx, the box army::DrawToBuffer draws a stack's troop
     // count in. Original Dreamcast NumberWindow.
     Bitmap816* NumberWindow;  // +0x13d54
@@ -968,31 +953,33 @@ public:
     // this really is a vector; only its first two members are proven.
     // Complete uses Dinkumware: allocator at +0,
     // pointers at +4/+8/+0xc; TObstacle remains a 0x18-byte value.
-    std::vector<TObstacle> m_obstacles;  // +0x13d58
+    std::vector<TObstacle> Obstacles;  // +0x13d58
     // Placement-phase latch: FindPath/ValidPath forward it into
     // FindCombatPath's in_placement_phase and lift the speed limit
-    // to 99 while it is set. Name provisional.
+    // to 99 while it is set.
     // Original InPlacementPhase; boolean result set by Main and forwarded
     // directly to the original _N SeedCombatPosition/FindCombatPath flags.
-    bool m_creaturePlacement;  // +0x13d68
+    bool InPlacementPhase;  // +0x13d68
     // Dreamcast InPlacementPhase is a byte followed by turn_number;
     // retail preserves the three-byte integer-alignment gap at +0x13d69.
     char m_paddingBeforeTurnNumber[0x3];
-    // Cleared by Open just before the acting pair is stamped. Ordinal.
-    int m_turnNumber;  // +0x13d6c
+    // Cleared by Open just before the acting pair is stamped. Original
+    // Dreamcast turn_number.
+    int turn_number;  // +0x13d6c
     // Placement inset measured in combat-grid columns. command.obj's
     // is_outside_placement_boundry reads it at +0x13d70 and forms the
-    // two side limits as 2*n+1 and 2*n+15 respectively.
-    int m_placementBoundaryDepth;  // +0x13d70
+    // two side limits as 2*n+1 and 2*n+15 respectively: the Tactics
+    // advantage, Dreamcast BattleTacticsAdvantage.
+    int BattleTacticsAdvantage;  // +0x13d70
     // Second half of DoCommand's spell-book gate: the dialog only fires
-    // while field_54b4[currentSide] is set AND this byte is clear, so it
-    // reads as a "casting restriction lifted" latch. Name is an address
-    // ordinal - nothing else decoded reaches it.
-    unsigned char m_debugNoSpellLimit;  // +0x13d74
+    // while bSpellsCast[currControl] is set AND this byte is clear. The
+    // three debug bytes are the original Dreamcast DebugNoSpellLimit,
+    // DebugShowHiddenObjects and DebugShowBlockedHexes.
+    unsigned char DebugNoSpellLimit;  // +0x13d74
     // Its two neighbours, cleared with it in one run by
-    // InitNonVisualVars. Ordinals.
-    unsigned char m_debugShowHiddenObjects;  // +0x13d75
-    unsigned char m_debugShowBlockedHexes;  // +0x13d76
+    // InitNonVisualVars.
+    unsigned char DebugShowHiddenObjects;  // +0x13d75
+    unsigned char DebugShowBlockedHexes;  // +0x13d76
     // The three debug bytes end at +0x13d77; the retail archer records
     // start at +0x13d78. This byte aligns the records, as in Dreamcast.
     char m_paddingBeforeArchers[0x1];
@@ -1000,8 +987,8 @@ public:
 private:
     // Original ArcherTraits public ?ArcherTraits@combatManager@@0QBUTArcherTraits@1@B
     // independently proves this private static const table owner.
-    static const TArcherTraits s_archerTraits[9];
-    TArcher m_archers[kNumArchers];  // +0x13d78; armySlot at +0x20
+    static const TArcherTraits ArcherTraits[9];
+    TArcher Archers[kNumArchers];  // +0x13d78; armySlot at +0x20
 
 public:
     // "Move order is reversed for this combat": find_move_order
@@ -1010,11 +997,10 @@ public:
     // that is not already flagged with the NEGATED speed, which turns
     // the descending sort into an ascending one. move_toward (0x41f580)
     // is the second reader. Byte width is proven by the `mov al, [ecx +
-    // 0x13de4] / test al, al` pair. Name provisional.
-    // Army-slot indexes for the main building, lower tower and upper
-    // tower defenders. DamageWall reads one selected slot when the
-    // corresponding target falls and marks that stack removed.
-    unsigned char m_inSecondPhase;  // +0x13de4
+    // 0x13de4] / test al, al` pair. The waiting stacks move in this
+    // reversed second phase of the round: original Dreamcast
+    // in_second_phase.
+    unsigned char in_second_phase;  // +0x13de4
 
 public:
     // Dreamcast in_second_phase is a byte followed by OriginalAttackSkill;
@@ -1025,10 +1011,10 @@ public:
     // clamped to [0, 99], stats[2] clamped to [1, 99] - spell power is
     // never zero - and the mana word widened. All four are zeroed when
     // there is no defending hero.
-    int m_originalAttackSkill;  // +0x13de8
-    int m_originalDefenseSkill;  // +0x13dec
-    int m_originalPowerSkill;  // +0x13df0
-    int m_originalMana;  // +0x13df4
+    int OriginalAttackSkill;  // +0x13de8
+    int OriginalDefenseSkill;  // +0x13dec
+    int OriginalPowerSkill;  // +0x13df0
+    int original_mana;  // +0x13df4
 private:
     // Original private wallImages / wallLevel / wall_frame arrays (DC
     // combatManager type 0x1ed7). Complete preserves their 18-row extents
@@ -1036,13 +1022,13 @@ private:
     // whole level array; the last three rows are the arrow towers/keep.
     // DrawWall indexes the image table by wall_frame; DamageWall switches
     // that frame between the standing and destroyed art.
-    Bitmap816* m_wallImages[kNumWallSections][5];  // +0x13df8
-    int m_wallLevel[kNumWallSections];            // +0x13f60
-    int m_wallFrame[kNumWallSections];            // +0x13fa8
+    Bitmap816* wallImages[kNumWallSections][5];  // +0x13df8
+    int wallLevel[kNumWallSections];            // +0x13f60
+    int wall_frame[kNumWallSections];            // +0x13fa8
 
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
-    type_point m_mapPoint;  // +0x13ff0
+    type_point map_point;  // +0x13ff0
 
 public:
     // ccellgrd.pcx and ccellshd.pcx, the hex grid outline and the cell
@@ -1050,23 +1036,23 @@ public:
     // CombatCellGrid/CombatCellShaded.
     Bitmap816* CombatCellGrid;  // +0x13ff4
     Bitmap816* CombatCellShaded;  // +0x13ff8
-    int m_obstacleAnimationFrame;  // +0x13ffc
+    int ObstacleAnimationFrame;  // +0x13ffc
 private:
     // Original private bCreatureEffect/bHeroEffect/bFlagEffect/bArcherEffect.
     // Marked drawables contribute to the next limited repaint extent;
     // ResetLimitCreature clears these flags before that set is rebuilt.
-    unsigned char m_creatureEffect[2][20];  // +0x14000
-    unsigned char m_heroEffect[2];  // +0x14028
-    unsigned char m_flagEffect[2];  // +0x1402a
-    unsigned char m_archerEffect[3];  // +0x1402c
+    unsigned char bCreatureEffect[2][20];  // +0x14000
+    unsigned char bHeroEffect[2];  // +0x14028
+    unsigned char bFlagEffect[2];  // +0x1402a
+    unsigned char bArcherEffect[3];  // +0x1402c
 
 public:
     // Original Dreamcast auto_retreat_on (+0x136f7). Retail SetupCombat
     // enables this byte at +0x1402f; command processing asks whether to
     // retreat and records the answer here. Earlier any_action_taken
     // correspondence was shifted by one byte.
-    unsigned char m_autoRetreatOn;  // +0x1402f
-    unsigned char m_anyActionTaken;  // +0x14030
+    unsigned char auto_retreat_on;  // +0x1402f
+    unsigned char any_action_taken;  // +0x14030
     unsigned char m_obstacleAttackVisited[COMBAT_GRID_CELLS];  // +0x14031
 
     combatManager();
@@ -1129,10 +1115,10 @@ public:
     DC_ADDRESS(0x04cc74, 0x18)
     void markCreatureEffect(int group, int index)
     {
-        if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
-            markTowerForEffect(&m_armies[group][index]);
+        if (Armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
+            markTowerForEffect(&Armies[group][index]);
         else
-            m_creatureEffect[group][index] = 1;
+            bCreatureEffect[group][index] = 1;
     }
     void raiseDoor();
     void testRaiseDoor();
@@ -1735,20 +1721,20 @@ public:
     DC_ADDRESS(0x027edc, 0x20)
     long getWallStrength(TWallTargetId target) const
     {
-        return m_wallLevel[s_wallTargets[target].m_wall];
+        return wallLevel[wallTargets[target].m_wall];
     }
 
     // DC header inline (cmbtmgr.h:1478); the DC xref graph
     // lists it among DoCompAI's callees and retail carries no
     // out-of-line copy, so it is the /Ob2 inline-away case.
     DC_ADDRESS(0x027efc, 0x2c)
-    army* getCurrentArmy() { return &m_armies[m_actingSide][m_actingSlot]; }
+    army* getCurrentArmy() { return &Armies[currArmyGroup][currArmyIndex]; }
 
     // Original: combatManager::get_current_army; CmbtMgr.h:1483
     DC_ADDRESS(0x1581b8, 0x2c)
     const army* getCurrentArmy() const
     {
-        return &m_armies[m_actingSide][m_actingSlot];
+        return &Armies[currArmyGroup][currArmyIndex];
     }
 
     // E:\gamedcs\CmbtMgr.h:1488. Dreamcast proves the single-expression
@@ -1767,7 +1753,7 @@ public:
     // Its original ?is_in_second_phase@combatManager@@QBA_NXZ public
     // proves bool even though CodeView lowers the result to primitive 0x20.
     DC_ADDRESS(0x027f28, 0xc)
-    bool isInSecondPhase() const { return m_inSecondPhase; }
+    bool isInSecondPhase() const { return in_second_phase; }
 
     // Dreamcast S_PUB32 fixes this entire inline band: GetHexIndex and GridX
     // are static int helpers, RowIsOdd is a const bool member, and
@@ -1815,7 +1801,7 @@ public:
     DC_ADDRESS(0x063a5c, 0x2c)
     hexcell& getCell(int x, int y)
     {
-        return m_cells[getHexIndex(x, y)];
+        return cell[getHexIndex(x, y)];
     }
 
     // DC header inline (CmbtMgr.h:1542). Retail re-loads
@@ -1825,7 +1811,7 @@ public:
     // it is kept because the DC roster attests the accessor, not as a
     // matching lever.
     DC_ADDRESS(0x027fa0, 0x34)
-    TObstacle& getObstacle(int index) { return m_obstacles[index]; }
+    TObstacle& getObstacle(int index) { return Obstacles[index]; }
 
     army* findDemonicResurrectionTarget(int side, int hex);
     void markAreaEffect(SpellID spell, long hex, long mastery,

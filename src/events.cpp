@@ -6243,9 +6243,9 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                         *rightArmyGroup = *trightArmyGroup;
                         delete trightArmyGroup;
                     }
-                    g_combatManager->m_winner = winnerId;
+                    g_combatManager->winner = winnerId;
                 } else {
-                    g_combatManager->m_winner = 0;
+                    g_combatManager->winner = 0;
                 }
                 goto combatFinished;
             }
@@ -6293,7 +6293,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     }
     if (rightHero) {
         if (g_remoteOn && rightHuman && leftHuman
-            && g_combatManager->m_winner == 1) {
+            && g_combatManager->winner == 1) {
             if (g_game->isLocalHuman(rightHero->m_owner)) {
                 rightHero->checkLevel();
                 CHeroLevelUpdateMsg msg(rightHero->m_id, rightHero->m_skillCount,
@@ -6313,7 +6313,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
 
 
 combatFinished:
-    int winner = g_combatManager->m_winner;
+    int winner = g_combatManager->winner;
     if (winner != 0) {
         g_game->m_worldMap.notifyHeroDefeated(leftHero->m_id, rightPlayer);
     }
@@ -6343,31 +6343,31 @@ combatFinished:
             winningPlayer, loser);
     }
 
-    if (g_combatManager->m_raisedCreatureCount > 0 && winner == 0
+    if (g_combatManager->SkeletonsCreated > 0 && winner == 0
         && g_game->isLocalHuman(leftPlayer)) {
         sprintf(g_text, "pickup%02d.82M", sRandom(1, 7));
         SAMPLE2 sample = loadPlaySample(g_text);
-        if (g_combatManager->m_raisedCreatureCount == 1) {
+        if (g_combatManager->SkeletonsCreated == 1) {
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_NECROMANCY_RAISE_ONE_FORMAT),
-                    getArmyName(g_combatManager->m_raisedCreatureType, 1));
+                    getArmyName(g_combatManager->skeleton_type, 1));
         } else {
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_NECROMANCY_RAISE_MANY_FORMAT),
-                    g_combatManager->m_raisedCreatureCount,
-                    getArmyName(g_combatManager->m_raisedCreatureType, 2));
+                    g_combatManager->SkeletonsCreated,
+                    getArmyName(g_combatManager->skeleton_type, 2));
         }
         normalDialog(
             g_text, 1, -1, -1, 0x15,
-            (static_cast<unsigned short>(g_combatManager->m_raisedCreatureCount)
+            (static_cast<unsigned short>(g_combatManager->SkeletonsCreated)
              << 16)
                 | static_cast<unsigned short>(
-                      g_combatManager->m_raisedCreatureType),
+                      g_combatManager->skeleton_type),
             -1, 0, -1, 15000, -1, 0);
         g_game->m_mapHeader.m_victoryCondition.checkForTotalCreatures();
         clearMemSample(sample);
     }
 
     if (finishHeroes) {
-        switch (g_combatManager->m_winner) {
+        switch (g_combatManager->winner) {
         case COMBAT_WINNER_LEFT:
             if (rightTown && rightHero
                 && rightTown->m_garrisonHeroId == rightHero->m_id) {
@@ -6410,7 +6410,7 @@ combatFinished:
     g_adventureCombatActive = 0;
     g_mouseManager->showPointer(1);
     checkEndGame(0);
-    return g_combatManager->m_winner;
+    return g_combatManager->winner;
 }
 
 VA(0x004aeb50, 0x390)
