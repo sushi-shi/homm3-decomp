@@ -23,9 +23,9 @@
 class TEditArtifactDlg : public CDialog {
 public:
     // The slot "where" names the backpack with.
-    enum { s_kBackpackSlot = kNumArtifactSlots + 1, s_kNumSlotClasses = 15 };
+    enum { s_kBackpackSlot = H3_IDX(kNumArtifactSlots) + 1, s_kNumSlotClasses = 15 };
 
-    typedef std::bitset<kNumArtifactSlots + 1> TSlots;
+    typedef std::bitset<H3_IDX(kNumArtifactSlots) + 1> TSlots;
     typedef TArray<int, s_kNumSlotClasses> TSlotClassCounts;
 
     TEditArtifactDlg(CWnd* pParent, const TSlots& unusedSlots, const TSlotClassCounts& slotClassCounts,

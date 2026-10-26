@@ -248,7 +248,7 @@ bool combatManager::aiCheckRetreat()
 
                 combatValue = 0;
                 type_artifact artifact;
-                { for (long i = 0; i < kNumArtifactSlots + 1; i++) {
+                { for (long i = 0; i < H3_IDX(kNumArtifactSlots) + 1; i++) {
                         artifact = m_heroes[m_currentSide]->getArtifact(TArtifactSlot(i));
                         if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;

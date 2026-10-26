@@ -3818,7 +3818,7 @@ void combatManager::lootDeadHero(int side,
     if (!dead)
         return;
     hero* winner = m_heroes[side];
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < H3_IDX(kNumArtifactSlots) + 1; slot++) {
         // Complete walks 19 equipped ordinals; getArtifact retains DC's TArtifactSlot argument (Hero.h:18 positions).
         type_artifact artifact = dead->getArtifact(static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         if (artifact.m_artifactId == ARTIFACT_NONE

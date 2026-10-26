@@ -1109,17 +1109,17 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
     int artifact = m_heroes[hero]->getArtifact(TArtifactSlot(slot)).m_artifactId;
     if (artifact == ARTIFACT_NONE)
     {
-        int type = akArtifactSlotTraits[slot].m_type;
+        int type = H3_AT(akArtifactSlotTraits, slot).m_type;
         unsigned int remaining = m_heroes[hero]->m_artifactSlotCounts[type];
         if (remaining > 0)
         {
-            const std::bitset<kNumArtifactSlots + 1>& slots = g_artifactSlotMasks[type];
-            for (int i = kNumArtifactSlots + 1; ; )
+            const std::bitset<H3_IDX(kNumArtifactSlots) + 1>& slots = g_artifactSlotMasks[type];
+            for (int i = H3_IDX(kNumArtifactSlots) + 1; ; )
             {
                 --i;
                 if (!slots.test(i))
                     continue;
-                if (i == slot)
+                if (i == H3_IDX(slot))
                 {
                     artifact = 0x91;
                     break;
@@ -1133,27 +1133,27 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
 
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE
         && m_heroes[hero]->canReplaceArtifactInSlot(
-               g_heroScreenDraggedArtifact.m_artifactId, slot))
+               g_heroScreenDraggedArtifact.m_artifactId, H3_IDX(slot)))
     {
         int converted;
         converted = artifact;
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x96,
+            hero * (H3_IDX(kNumArtifactSlots) + 1) + H3_IDX(slot) + 0x96,
             TArtifact(converted));
         converted = 0x90;
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            hero * (H3_IDX(kNumArtifactSlots) + 1) + H3_IDX(slot) + 0x1b,
             TArtifact(converted));
     }
     else
     {
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x96,
+            hero * (H3_IDX(kNumArtifactSlots) + 1) + H3_IDX(slot) + 0x96,
             ARTIFACT_NONE);
         int converted;
         converted = artifact;
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            hero * (H3_IDX(kNumArtifactSlots) + 1) + H3_IDX(slot) + 0x1b,
             TArtifact(converted));
     }
 }
@@ -1165,8 +1165,8 @@ MAC_ADDRESS(0x1a6c1c, 0x70)
 void swapManager::updateAllSlots()
 {
     for (int hero = 0; hero < 2; ++hero)
-        for (int slot = const_first_artifact_slot;
-             slot < kNumArtifactSlots + 1;
+        for (int slot = H3_IDX(const_first_artifact_slot);
+             slot < H3_IDX(kNumArtifactSlots) + 1;
              slot++)
             // Complete adds ordinal 18 to Dreamcast's public TArtifactSlot
             // domain; keep the proved callee ABI and make that revision
@@ -1327,7 +1327,7 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
                         if (ourHero->showDisassembleArtifactDialog(
                                 oldArtifact.m_artifactId)
                             == DIALOG_RETURN_ACCEPT) {
-                            ourHero->disassembleCombinationArtifact(slot);
+                            ourHero->disassembleCombinationArtifact(H3_IDX(slot));
                             this->update();
                             drawSwapWin();
                         }
@@ -1339,7 +1339,7 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
                         if (ourHero->showAssembleArtifactDialog(
                                 oldArtifact.m_artifactId)
                             == DIALOG_RETURN_ACCEPT) {
-                            ourHero->assembleCombinationArtifact(targetCombo, slot);
+                            ourHero->assembleCombinationArtifact(targetCombo, H3_IDX(slot));
                             this->update();
                             drawSwapWin();
                         }
@@ -1364,7 +1364,7 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
 
         if (canModHero(side)) {
             g_heroScreenDraggedArtifact = oldArtifact;
-            ourHero->removeArtifact(slot);
+            ourHero->removeArtifact(H3_IDX(slot));
             this->update();
             g_mouseManager->setPointer(
                 g_heroScreenDraggedArtifact.m_artifactId,
@@ -1377,7 +1377,7 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
     if (rightClick)
         return;
     if (!ourHero->canReplaceArtifactInSlot(
-            g_heroScreenDraggedArtifact.m_artifactId, slot))
+            g_heroScreenDraggedArtifact.m_artifactId, H3_IDX(slot)))
         return;
 
     if (g_inCampaign
@@ -1391,18 +1391,18 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
     }
 
     if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
-        ourHero->equipArtifact(g_heroScreenDraggedArtifact, slot);
+        ourHero->equipArtifact(g_heroScreenDraggedArtifact, H3_IDX(slot));
         if (g_game->m_gameVersion >= 2)
-            ourHero->offerCombinationArtifactAssembly(slot);
+            ourHero->offerCombinationArtifactAssembly(H3_IDX(slot));
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
         this->update();
         g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
         reset();
     } else if (canModHero(side)) {
-        ourHero->removeArtifact(slot);
-        ourHero->equipArtifact(g_heroScreenDraggedArtifact, slot);
+        ourHero->removeArtifact(H3_IDX(slot));
+        ourHero->equipArtifact(g_heroScreenDraggedArtifact, H3_IDX(slot));
         if (g_game->m_gameVersion >= 2)
-            ourHero->offerCombinationArtifactAssembly(slot);
+            ourHero->offerCombinationArtifactAssembly(H3_IDX(slot));
         g_heroScreenDraggedArtifact = oldArtifact;
         this->update();
         g_mouseManager->setPointer(

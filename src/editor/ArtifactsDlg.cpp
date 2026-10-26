@@ -26,7 +26,7 @@ const TArtifactSlot akListedSlots[] = {
     eArtifactSlotHead,      eArtifactSlotShoulders,  eArtifactSlotNeck,        eArtifactSlotRightHand,
     eArtifactSlotLeftHand,  eArtifactSlotTorso,      eArtifactSlotRightRing,   eArtifactSlotLeftRing,
     eArtifactSlotFeet,      eArtifactSlotMisc1,      eArtifactSlotMisc2,       eArtifactSlotMisc3,
-    eArtifactSlotMisc4,     TArtifactSlot(kNumArtifactSlots), eArtifactSlotWarMachine1, eArtifactSlotWarMachine2,
+    eArtifactSlotMisc4,     TArtifactSlot(H3_IDX(kNumArtifactSlots)), eArtifactSlotWarMachine1, eArtifactSlotWarMachine2,
     eArtifactSlotWarMachine3
 };
 
@@ -40,7 +40,7 @@ VA(0x0040490d, 0x29)
 TListedSlots::TListedSlots()
 {
     for (const TArtifactSlot* pSlot = akListedSlots; pSlot < akListedSlots + sizeof(akListedSlots) / sizeof(akListedSlots[0]); ++pSlot)
-        set(*pSlot);
+        set(H3_IDX(*pSlot));
 }
 
 // Releases a string's buffer, which a list item's text holds, on leaving
@@ -57,7 +57,7 @@ private:
 
 const char* getLocationName(TArtifactSlot slot)
 {
-    return slot < TArtifactsDlg::s_kBackpackSlot ? akArtifactSlotTraits[slot].m_name : kBackpackStr;
+    return H3_IDX(slot) < TArtifactsDlg::s_kBackpackSlot ? H3_AT(akArtifactSlotTraits, slot).m_name : kBackpackStr;
 }
 
 // Sorts by the clicked column, then by the other one.
@@ -106,7 +106,7 @@ VA(0x00404c17, 0x169)
 void TArtifactsDlg::setArtifacts(const THeroPrototype::TArtifactContainer& artifacts)
 {
     OnRemoveAllButton();
-    int numSlots = _m_mapVersion >= GAME_VERSION_SOD ? kNumArtifactSlots + 1 : kNumArtifactSlots;
+    int numSlots = _m_mapVersion >= GAME_VERSION_SOD ? H3_IDX(kNumArtifactSlots) + 1 : H3_IDX(kNumArtifactSlots);
     for (int slot = 0; slot < numSlots; slot++) {
         if (getListedSlots()[slot]) {
             TArtifact artifact = artifacts.getSlot(TArtifactSlot(slot));
@@ -206,7 +206,7 @@ int TArtifactsDlg::_insertItem(int index, TArtifact artifact, TArtifactSlot slot
                 return -1;
             }
         }
-        if (slot >= s_kBackpackSlot)
+        if (H3_IDX(slot) >= s_kBackpackSlot)
             _m_artifacts.getBackpack().insert(artifact);
         else {
             _m_artifacts.setSlot(slot, artifact);
@@ -242,7 +242,7 @@ void TArtifactsDlg::_removeItem(int index)
     TArtifact artifact = TArtifact(LOWORD(data));
     TArtifactSlot slot = TArtifactSlot(HIWORD(data));
     _m_list.DeleteItem(index);
-    if (slot >= s_kBackpackSlot)
+    if (H3_IDX(slot) >= s_kBackpackSlot)
         _m_artifacts.getBackpack().erase(_m_artifacts.getBackpack().find(artifact));
     else {
         int combination = akArtifactTraits[artifact].m_comboType;
@@ -268,7 +268,7 @@ void TArtifactsDlg::_updateUnusedSlots()
 {
     _m_unusedSlots = getListedSlots();
     int i;
-    for (i = 0; i < kNumArtifactSlots + 1; i++) {
+    for (i = 0; i < H3_IDX(kNumArtifactSlots) + 1; i++) {
         if (_m_artifacts.getSlot(TArtifactSlot(i)) != ARTIFACT_NONE)
             _m_unusedSlots.set(i, false);
     }

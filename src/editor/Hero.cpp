@@ -98,7 +98,7 @@ void THeroPrototype::TSecondarySkills::write(TRawOStream* pOStream, int version)
 VA(0x0044a367, 0xe)
 void THeroPrototype::TArtifactContainer::setSlot(TArtifactSlot slot, TArtifact artifact)
 {
-    _m_aSlot[slot] = artifact;
+    H3_AT(_m_aSlot, slot) = artifact;
 }
 
 // The backpack count comes through readValue<short>, the Complete-era read
@@ -107,7 +107,7 @@ void THeroPrototype::TArtifactContainer::setSlot(TArtifactSlot slot, TArtifact a
 VA(0x0044a375, 0xb1)
 void THeroPrototype::TArtifactContainer::read(TRawIStream* pIStream, int version)
 {
-    int numSlots = (version >= 27 ? 1 : 0) + kNumArtifactSlots;
+    int numSlots = (version >= 27 ? 1 : 0) + H3_IDX(kNumArtifactSlots);
     for (int slot = 0; slot < numSlots; slot++) {
         int artifact;
         if (version >= 21) {
@@ -140,7 +140,7 @@ void THeroPrototype::TArtifactContainer::read(TRawIStream* pIStream, int version
 VA(0x0044a426, 0xaf)
 void THeroPrototype::TArtifactContainer::write(TRawOStream* pOStream, int version) const
 {
-    int numSlots = (version >= GAME_VERSION_SOD ? 1 : 0) + kNumArtifactSlots;
+    int numSlots = (version >= GAME_VERSION_SOD ? 1 : 0) + H3_IDX(kNumArtifactSlots);
     for (int slot = 0; slot < numSlots; slot++) {
         TArtifact artifact = _m_aSlot[slot];
         if (version >= GAME_VERSION_AB)
@@ -636,7 +636,7 @@ bool THero::hasArtifact(TArtifact artifact) const
     if (!_m_bCustomArtifacts)
         return false;
     const THeroPrototype::TArtifactContainer& artifacts = getArtifacts();
-    for (unsigned int slot = 0; slot < kNumArtifactSlots + 1; slot++)
+    for (unsigned int slot = 0; slot < H3_IDX(kNumArtifactSlots) + 1; slot++)
         if (artifacts.getSlot(TArtifactSlot(slot)) == artifact)
             return true;
     const std::multiset<TArtifact>& backpack = artifacts.getBackpack();

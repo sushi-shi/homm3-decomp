@@ -30,8 +30,8 @@ TEditArtifactDlg::TEditArtifactDlg(CWnd* pParent, const TSlots& unusedSlots,
       _m_mapVersion(mapVersion)
 {
     if (_m_bBackpackFull)
-        _m_slot = TArtifactSlot(std::find_if(TConstBitsetIterator<kNumArtifactSlots + 1>(_m_unusedSlots, 0),
-                                             TConstBitsetIterator<kNumArtifactSlots + 1>(_m_unusedSlots, s_kBackpackSlot),
+        _m_slot = TArtifactSlot(std::find_if(TConstBitsetIterator<H3_IDX(kNumArtifactSlots) + 1>(_m_unusedSlots, 0),
+                                             TConstBitsetIterator<H3_IDX(kNumArtifactSlots) + 1>(_m_unusedSlots, s_kBackpackSlot),
                                              std::bind2nd(std::not_equal_to<bool>(), false))
                                     .position());
 }
@@ -69,7 +69,7 @@ void TEditArtifactDlg::_setArtifacts()
             continue;
         if (akArtifactTraits[artifact].m_disabled)
             continue;
-        if (_m_slot >= s_kBackpackSlot || _isAllowed(TArtifact(artifact), _m_slot))
+        if (H3_IDX(_m_slot) >= s_kBackpackSlot || _isAllowed(TArtifact(artifact), _m_slot))
             _m_artifactCombo.SetItemData(_m_artifactCombo.AddString(akArtifactTraits[artifact].m_name), artifact);
     }
     if (_m_artifact != ARTIFACT_NONE) {
@@ -158,13 +158,13 @@ BOOL TEditArtifactDlg::OnInitDialog()
     CDialog::OnInitDialog();
     if (!_m_bBackpackFull)
         _m_whereCombo.SetItemData(_m_whereCombo.AddString(kBackpackStr), s_kBackpackSlot);
-    int numSlots = _m_mapVersion >= GAME_VERSION_SOD ? kNumArtifactSlots + 1 : kNumArtifactSlots;
+    int numSlots = _m_mapVersion >= GAME_VERSION_SOD ? H3_IDX(kNumArtifactSlots) + 1 : H3_IDX(kNumArtifactSlots);
     for (int slot = 0; slot < numSlots; slot++) {
         if (_m_unusedSlots.test(slot))
             _m_whereCombo.SetItemData(_m_whereCombo.AddString(akArtifactSlotTraits[slot].m_name), slot);
     }
     int index;
-    for (index = 0; _m_whereCombo.GetItemData(index) != _m_slot; index++)
+    for (index = 0; _m_whereCombo.GetItemData(index) != H3_IDX(_m_slot); index++)
         ;
     _m_whereCombo.SetCurSel(index);
     _m_okButton.EnableWindow(_m_artifact != ARTIFACT_NONE);

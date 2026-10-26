@@ -23,9 +23,9 @@
 class TArtifactsDlg : public CDialog {
 public:
     // The location a backpack artifact lists.
-    enum { s_kBackpackSlot = kNumArtifactSlots + 1, s_kMaxBackpackSize = 64, s_kNumSlotClasses = 15 };
+    enum { s_kBackpackSlot = H3_IDX(kNumArtifactSlots) + 1, s_kMaxBackpackSize = 64, s_kNumSlotClasses = 15 };
 
-    typedef std::bitset<kNumArtifactSlots + 1> TSlots;
+    typedef std::bitset<H3_IDX(kNumArtifactSlots) + 1> TSlots;
     typedef TArray<int, s_kNumSlotClasses> TSlotClassCounts;
 
     TArtifactsDlg(CWnd* pParent, EGameVersion mapVersion);

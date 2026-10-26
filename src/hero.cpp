@@ -1095,11 +1095,11 @@ void hero::initialize(const HeroExtra* setup)
     }
 
     if (setup->m_customArtifacts) {
-        for (i = 0; i < kNumArtifactSlots + 1; i++) {
+        for (i = 0; i < H3_IDX(kNumArtifactSlots) + 1; i++) {
             if (m_equipped[i].m_artifactId != ARTIFACT_NONE)
                 removeArtifact(i);
         }
-        for (i = 0; i < kNumArtifactSlots + 1; i++) {
+        for (i = 0; i < H3_IDX(kNumArtifactSlots) + 1; i++) {
             if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
                 equipArtifact(setup->m_artifacts[i], i);
         }
@@ -1189,7 +1189,7 @@ MAC_ADDRESS(0x0f4c1c, 0x68)
 long hero::getEquippedArtifacts(bool countWarMachines) const
 {
     long count = 0;
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < H3_IDX(kNumArtifactSlots) + 1; slot++) {
         int id = m_equipped[slot].m_artifactId;
         if (id != -1 && id != ARTIFACT_SPELLBOOK && !countWarMachines &&
             id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
@@ -1262,7 +1262,7 @@ DC_ADDRESS(0x0cc220, 0x4a)
 MAC_ADDRESS(0x0f4d94, 0x68)
 unsigned char hero::hasArtifact(int whichArtifact) const
 {
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < H3_IDX(kNumArtifactSlots) + 1; slot++) {
         if (m_equipped[slot].m_artifactId == whichArtifact)
             return 1;
     }
@@ -1281,7 +1281,7 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
     if (whichArtifact == ARTIFACT_SPELLBOOK) {
         return getArtifact(eArtifactSlotSpellbook).m_artifactId == ARTIFACT_SPELLBOOK;
     } else {
-        for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+        for (int slot = 0; slot < H3_IDX(kNumArtifactSlots) + 1; slot++) {
             if (getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
                 return 1;
         }
@@ -1315,7 +1315,7 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
         break;
     }
     // Nineteen equipped slots, one more than the DC build's eighteen.
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < H3_IDX(kNumArtifactSlots) + 1; slot++) {
         if (m_equipped[slot].m_artifactId == artifact) {
             removeArtifact(slot);
             return;
@@ -2205,7 +2205,7 @@ void THeroScreenWindow::updateSlot(TArtifactSlot slot)
 {
     TArtifact artifact = TArtifact(g_currentHero->getArtifact(slot).m_artifactId);
     if (artifact == ARTIFACT_NONE) {
-        int type = akArtifactSlotTraits[slot].m_type;
+        int type = H3_AT(akArtifactSlotTraits, slot).m_type;
         unsigned int remaining = g_currentHero->m_artifactSlotCounts[type];
         if (remaining > 0) {
             int i = ARTIFACT_SLOT_COUNT;
@@ -2213,7 +2213,7 @@ void THeroScreenWindow::updateSlot(TArtifactSlot slot)
                 --i;
                 if (!g_artifactSlotMasks[type].test(i))
                     continue;
-                if (i == slot) {
+                if (i == H3_IDX(slot)) {
                     artifact = TArtifact(0x91);
                     break;
                 }
@@ -2226,12 +2226,12 @@ void THeroScreenWindow::updateSlot(TArtifactSlot slot)
 
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE
         && g_currentHero->canReplaceArtifactInSlot(
-               g_heroScreenDraggedArtifact.m_artifactId, slot)) {
-        updateArtifactSlot(slot + 0x15, artifact);
-        updateArtifactSlot(slot + 2, TArtifact(0x90));
+               g_heroScreenDraggedArtifact.m_artifactId, H3_IDX(slot))) {
+        updateArtifactSlot(H3_IDX(slot) + 0x15, artifact);
+        updateArtifactSlot(H3_IDX(slot) + 2, TArtifact(0x90));
     } else {
-        updateArtifactSlot(slot + 0x15, ARTIFACT_NONE);
-        updateArtifactSlot(slot + 2, artifact);
+        updateArtifactSlot(H3_IDX(slot) + 0x15, ARTIFACT_NONE);
+        updateArtifactSlot(H3_IDX(slot) + 2, artifact);
     }
 }
 
@@ -2705,7 +2705,7 @@ unsigned char hero::hasCombinationArtifactComponents(int combination)
 {
     std::bitset<ARTIFACT_COUNT> missingComponents =
         g_combinationArtifacts[combination].m_components;
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < H3_IDX(kNumArtifactSlots) + 1; slot++) {
         int artifactId = getArtifact(TArtifactSlot(slot)).m_artifactId;
         if (artifactId != ARTIFACT_NONE)
             missingComponents[artifactId] = false;
@@ -4580,7 +4580,7 @@ void hero::transferArtifacts(hero* src)
     if (!src)
         return;
     type_artifact artifact;
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < H3_IDX(kNumArtifactSlots) + 1; slot++) {
         artifact = src->m_equipped[slot];
         if (artifact.m_artifactId == ARTIFACT_NONE ||
             artifact.m_artifactId == ARTIFACT_HOLY_GRAIL ||
@@ -4696,12 +4696,12 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
         int slotClass = akArtifactSlotTraits[slot].m_type;
         unsigned int worn = m_artifactSlotCounts[slotClass];
         if (worn > 0) {
-            std::bitset<kNumArtifactSlots + 1> classSlots = g_artifactSlotMasks[slotClass];
+            std::bitset<H3_IDX(kNumArtifactSlots) + 1> classSlots = g_artifactSlotMasks[slotClass];
             size_t capacity = classSlots.count();
             if (worn >= capacity)
                 continue;
             int occupied = 0;
-            for (int i = 0; i < kNumArtifactSlots + 1; i++) {
+            for (int i = 0; i < H3_IDX(kNumArtifactSlots) + 1; i++) {
                 if (classSlots[i] &&
                     getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
                     occupied++;
@@ -4735,7 +4735,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                     continue;
                 }
                 int componentCount = counts[componentClass];
-                std::bitset<kNumArtifactSlots + 1> classSlots =
+                std::bitset<H3_IDX(kNumArtifactSlots) + 1> classSlots =
                     g_artifactSlotMasks[componentClass];
                 size_t capacity = classSlots.count();
                 if (componentCount >= capacity) {
@@ -4746,7 +4746,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                     int occupied =
                         (akArtifactTraits[artifact].m_allowableSlotMask
                          == componentClass) ? 1 : 0;
-                    for (int i = 0; i < kNumArtifactSlots + 1; i++) {
+                    for (int i = 0; i < H3_IDX(kNumArtifactSlots) + 1; i++) {
                         if (classSlots[i] &&
                             getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
                             occupied++;
@@ -4809,7 +4809,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
     if (slot == -1) {
         slot = 0;
         while (1) {
-            if (slot >= kNumArtifactSlots + 1)
+            if (slot >= H3_IDX(kNumArtifactSlots) + 1)
                 return 0;
             if (canEquipArtifactInEmptySlot(artifact.m_artifactId, slot))
                 break;
@@ -4824,7 +4824,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
     m_equipped[slot].m_extra = artifact.m_extra;
 
     if (artifact.m_artifactId == ARTIFACT_TITANS_THUNDER
-        && m_equipped[eArtifactSlotSpellbook].m_artifactId == ARTIFACT_NONE) {
+        && H3_AT(m_equipped, eArtifactSlotSpellbook).m_artifactId == ARTIFACT_NONE) {
         type_artifact spellbook(ARTIFACT_SPELLBOOK);
         equipArtifact(spellbook, 17);
     }
@@ -4952,7 +4952,7 @@ bool hero::removeArtifact(TArtifact artifact)
             return 1;
         }
     }
-    for (slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (slot = 0; slot < H3_IDX(kNumArtifactSlots) + 1; slot++) {
         if (m_equipped[slot].m_artifactId == artifact) {
             removeArtifact(slot);
             return 1;

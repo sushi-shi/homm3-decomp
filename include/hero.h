@@ -597,7 +597,7 @@ public:
     TSkillMastery m_identifyLevel;  // +0x129
 
 private:
-    type_artifact m_equipped[kNumArtifactSlots + 1];
+    type_artifact m_equipped[H3_IDX(kNumArtifactSlots) + 1];
 
 public:
     // One byte per artifact slot class. remove_artifact decrements the
@@ -1092,7 +1092,7 @@ public:
     DC_ADDRESS(0x027e8c, 0x10)
     const type_artifact& getArtifact(TArtifactSlot slot) const
     {
-        return m_equipped[slot];
+        return H3_AT(m_equipped, slot);
     }
 
     // E:\gamedcs\Hero.h:970
@@ -1294,7 +1294,7 @@ class THeroScreenWindow : public CAdvPopup {
 public:
     enum EArtifactSlotBounds {
         ARTIFACT_SLOT_FIRST = 0,
-        ARTIFACT_SLOT_COUNT = kNumArtifactSlots + 1
+        ARTIFACT_SLOT_COUNT = H3_IDX(kNumArtifactSlots) + 1
     };
     // The hero screen's widget ids, as UpdateHeroScreenStatusBar's switch
     // surfaces them in message::codeY. Decoded from the three dispatch

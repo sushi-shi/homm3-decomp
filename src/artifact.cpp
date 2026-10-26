@@ -174,7 +174,7 @@ namespace {
 // names slot zero. The one exception is column 7, the two-handed weapon
 // class (slot 18), which sits between slots 13 and 12 in the file.
 DATA(0x0063b940)
-static const int g_artifactSlotColumnBits[kNumArtifactSlots + 1] = {
+static const int g_artifactSlotColumnBits[H3_IDX(kNumArtifactSlots) + 1] = {
     17, 16, 15, 14, 13, 18, 12, 11, 10, 9,
     8, 7, 6, 5, 4, 3, 2, 1, 0
 };
@@ -195,15 +195,15 @@ DATA(0x006939f8)
 static TArtifactTraits g_artifactTraitsStorage[ARTIFACT_COUNT];
 
 DATA(0x00694bf8)
-static TArtifactSlotTraits g_artifactSlotTraitsStorage[kNumArtifactSlots + 1];
+static TArtifactSlotTraits g_artifactSlotTraitsStorage[H3_IDX(kNumArtifactSlots) + 1];
 
 } // namespace
 
 VA(0x0044c720, 0x10B)
 MAC_ADDRESS(0x05a534, 0xdc)
-static std::bitset<kNumArtifactSlots + 1> makeArtifactSlotMask(unsigned count, ...)
+static std::bitset<H3_IDX(kNumArtifactSlots) + 1> makeArtifactSlotMask(unsigned count, ...)
 {
-    std::bitset<kNumArtifactSlots + 1> mask;
+    std::bitset<H3_IDX(kNumArtifactSlots) + 1> mask;
     va_list slots;
     va_start(slots, count);
     try {
@@ -293,7 +293,7 @@ VA_COMPGEN(0x0044c960, 0x298, STATIC_CTOR, g_combinationArtifactTable)
 // instantiation.
 DATA(0x00693898)
 const TArtifactSlotMask g_artifactSlotMasks[15] = {
-    TArtifactSlotMask(std::bitset<kNumArtifactSlots + 1>()),
+    TArtifactSlotMask(std::bitset<H3_IDX(kNumArtifactSlots) + 1>()),
     TArtifactSlotMask(makeArtifactSlotMask(1, 0)),
     TArtifactSlotMask(makeArtifactSlotMask(1, 1)),
     TArtifactSlotMask(makeArtifactSlotMask(1, 2)),
@@ -467,13 +467,13 @@ bool InitializeArtifactTraitsTable()
             ResourceManager::GetSpreadsheet(
                 DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
                              "artslots.txt")));
-        if (!slotsSheet.get() || slotsSheet->GetNumberOfRows() < kNumArtifactSlots + 1) {
+        if (!slotsSheet.get() || slotsSheet->GetNumberOfRows() < H3_IDX(kNumArtifactSlots) + 1) {
             return 0;
         }
 
         unsigned stringBytes = 0;
         int slot;
-        for (slot = 0; slot < kNumArtifactSlots + 1; ++slot)
+        for (slot = 0; slot < H3_IDX(kNumArtifactSlots) + 1; ++slot)
             stringBytes += strlen(slotsSheet->GetRow(slot)[0]) + 1;
 
         VA_COMPGEN(0x0044d340, 0x16, STATIC_DTOR, artifactSlotStrings)
@@ -487,7 +487,7 @@ bool InitializeArtifactTraitsTable()
             return 0;
 
         char* destination = artifactSlotStrings.get();
-        for (slot = 0; slot < kNumArtifactSlots + 1; ++slot) {
+        for (slot = 0; slot < H3_IDX(kNumArtifactSlots) + 1; ++slot) {
             const char* source = slotsSheet->GetRow(slot)[0];
             unsigned length = strlen(source) + 1;
             memcpy(destination, source, length);
@@ -512,10 +512,10 @@ static inline void InitializeArtifactTraits(int id,
     assert(id >= 0 && id < ARTIFACT_COUNT);
     assert(resource.size() >= 23);
     TArtifactTraits& traits = g_artifactTraitsStorage[id];
-    std::bitset<kNumArtifactSlots + 1> allowableSlots;
+    std::bitset<H3_IDX(kNumArtifactSlots) + 1> allowableSlots;
     traits.m_cost = atoi(resource[1]);
     int column;
-    for (column = 0; column < kNumArtifactSlots + 1; ++column) {
+    for (column = 0; column < H3_IDX(kNumArtifactSlots) + 1; ++column) {
         int bit = g_artifactSlotColumnBits[column];
         allowableSlots[bit] = resource[column + 2][0] != 0
             && resource[column + 2][0] != ' ';

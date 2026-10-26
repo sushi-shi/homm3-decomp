@@ -1,6 +1,8 @@
 #ifndef HOMM3_ARTIFACT_H
 #define HOMM3_ARTIFACT_H
 
+#include "domains.h"
+
 #include "va.h"
 
 #include <assert.h>
@@ -11,7 +13,7 @@
 // Dreamcast's public wearable-position type. Complete adds a nineteenth
 // equipped position, but retains the same dword parameter ABI and may pass
 // that retail-only ordinal through functions which use this shared type.
-enum TArtifactSlot {
+H3_ENUM_BEGIN(TArtifactSlot)
     eArtifactSlotHead = 0,
     eArtifactSlotShoulders,
     eArtifactSlotNeck,
@@ -35,8 +37,9 @@ enum TArtifactSlot {
     // kNumArtifactSlots + 1 long (NH3API MAX_ARTIFACT_SLOTS_SOD); a
     // separate enumerator for that count reschedules advManager::doCombat.
     kNumArtifactSlots,
-    const_first_artifact_slot = eArtifactSlotHead
-};
+    const_first_artifact_slot = 0
+H3_ENUM_END(TArtifactSlot)
+H3_ENUM_STEPPED(TArtifactSlot)
 
 // The per-artifact traits record. The 32-byte STRIDE is byte-proven by
 // hero::IsWieldingArtifact's `shl esi,5` index, and +0x18 by the same
@@ -128,8 +131,8 @@ SIZE(TCombinationArtifact, 24);
 // the bitset itself, as the game-context table's readers must (see
 // gamecontext.cpp); a bitset member here leaves the hero and swapmgr readers
 // unchanged. The original type name is unknown.
-struct TArtifactSlotMask : public std::bitset<kNumArtifactSlots + 1> {
-    TArtifactSlotMask(const std::bitset<kNumArtifactSlots + 1>& slots) : std::bitset<kNumArtifactSlots + 1>(slots) {}
+struct TArtifactSlotMask : public std::bitset<H3_IDX(kNumArtifactSlots) + 1> {
+    TArtifactSlotMask(const std::bitset<H3_IDX(kNumArtifactSlots) + 1>& slots) : std::bitset<H3_IDX(kNumArtifactSlots) + 1>(slots) {}
 };
 SIZE(TArtifactSlotMask, 4);
 
@@ -159,10 +162,10 @@ DC_ADDRESS(0x037d88, 0x2c)
 inline bool artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
 {
     assert(artifact >= 0 && artifact < ARTIFACT_COUNT);
-    assert(slot >= 0 && slot < kNumArtifactSlots);
-    const std::bitset<kNumArtifactSlots + 1>& allowable =
+    assert(slot >= 0 && slot < H3_IDX(kNumArtifactSlots));
+    const std::bitset<H3_IDX(kNumArtifactSlots) + 1>& allowable =
         g_artifactSlotMasks[akArtifactTraits[artifact].m_allowableSlotMask];
-    return allowable[slot];
+    return H3_AT(allowable, slot);
 }
 
 // Retail .data 0x6aa9f8, defined by townmgr.cpp and consumed by the AI

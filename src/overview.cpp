@@ -716,11 +716,11 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 g_overWin->addWidget(g_buttonDynamic[row * 3 + 1], -1);
             } else {
                 offsetToMon = 292;
-                for (item = 0; item < kNumArtifactSlots / 2; item++) {
+                for (item = 0; item < H3_IDX(kNumArtifactSlots) / 2; item++) {
                     artifact = currHero->getArtifact(TArtifactSlot(
-                        (item + (kNumArtifactSlots / 2)
+                        (item + (H3_IDX(kNumArtifactSlots) / 2)
                             * g_overviewHeroArtifactPage[heroNumber])
-                            % kNumArtifactSlots));
+                            % H3_IDX(kNumArtifactSlots)));
                     g_iconWidgetDynamic[row * 70 + curBitmap] = new iconWidget(
                         offsetToMon, row * 116 + 90,
                         44, 44, rowWidgetId + item + 119,

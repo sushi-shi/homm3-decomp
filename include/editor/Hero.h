@@ -73,7 +73,7 @@ public:
         void read(TRawIStream* pIStream, int version);
         void write(TRawOStream* pOStream, int version) const;
 
-        TArtifact getSlot(TArtifactSlot slot) const { return _m_aSlot[slot]; }
+        TArtifact getSlot(TArtifactSlot slot) const { return H3_AT(_m_aSlot, slot); }
         void setSlot(TArtifactSlot slot, TArtifact artifact);
         const std::multiset<TArtifact>& getBackpack() const { return _m_backpack; }
         std::multiset<TArtifact>& getBackpack() { return _m_backpack; }
@@ -85,7 +85,7 @@ public:
         friend bool operator!=(const TArtifactContainer& lhs, const TArtifactContainer& rhs) { return !(lhs == rhs); }
 
     private:
-        TArray<TArtifact, kNumArtifactSlots + 1> _m_aSlot;
+        TArray<TArtifact, H3_IDX(kNumArtifactSlots) + 1> _m_aSlot;
         std::multiset<TArtifact> _m_backpack;
     };
 
