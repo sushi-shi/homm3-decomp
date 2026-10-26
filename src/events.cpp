@@ -577,9 +577,7 @@ bool initializeRandomSignText()
     return true;
 }
 
-// The flash itself is FizzleCenter (0x4acbb0) inlined, exactly as in
-// HeroLoses: the callee's own body is at the far end of this file and is
-// emitted anyway, but /Ob2 expands it at both sites.
+// FizzleCenter is inlined here, as in HeroLoses.
 VA(0x0049e170, 0x16E)
 DC_ADDRESS(0x090348, 0x6a)
 MAC_ADDRESS(0x0a94f0, 0x90)
@@ -784,8 +782,8 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
 
 // E:\gamedcs\events.cpp:498. Dreamcast proves this private helper, its
 // short `artifact` local and statement order: line 501 loads the artifact
-// inside the human-player block. Mac doEventArtifact retains a call to it at
-// 0:0xa9d28; VC6 auto-inlines it into the free arm.
+// inside the human-player block. Mac doEventArtifact calls it; inlined into
+// the free arm.
 DC_ADDRESS(0x090878, 0x62)
 MAC_ADDRESS(0x0a9d28, 0xa4)
 void advManager::doEventFreeArtifact(hero* currentHero,
@@ -801,11 +799,9 @@ void advManager::doEventFreeArtifact(hero* currentHero,
     giveArtifact(currentHero, point, humanPlayer);
 }
 
-// DC events.cpp:518 reads the artifact guard-count bitfield into int amount.
-// Its older artifact record has a 15-bit lane; Complete uses the canonical
-// MapArtifactInfo 14-bit lane at 17..30. Mac 0xa9e00..0xa9e0c likewise
-// extracts the count as a field. Use the canonical member while preserving
-// the artifact defender/index helpers below.
+// DC events.cpp:518 reads the artifact guard-count bitfield into int amount;
+// Complete uses the canonical MapArtifactInfo 14-bit lane at 17..30 (DC's
+// older record has a 15-bit lane).
 VA(0x0049ea40, 0x304)
 DC_ADDRESS(0x0908dc, 0x1fc)
 MAC_ADDRESS(0x0a9dcc, 0x290)
@@ -908,17 +904,12 @@ TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 
 // E:\gamedcs\events.cpp:656.  The customised artifact: the editor record
 // may put a message OR a composed guardian roster in front of the pickup.
-// The Dreamcast publishes the locals - treasure, the short artifact id,
-// the four message strings (first_guard_amount / guards / first_guard /
-// msg, declared up front and assigned after, which is what keeps _Tidy
-// and the assigns out of line) and the guard_list armyGroup. Both exits
-// inline advManager::GiveArtifact whole and cross-jump onto one final
-// CheckLevel; the guarded copy keeps FizzleCenter as a call and the
-// plain one folds it, exactly as DoCustomSpellScroll's pair does.
-// Dreamcast places treasure on line 657 and artifactId on line 659.
-// Keep the source getCustomIndex call inside getTreasureData (the
-// DC-proven boundary Mac retains as an expansion). Retail's `_N` suffix
-// proves humanPlayer is bool, not DC's unsigned char.
+// The Dreamcast publishes the locals - treasure, the short artifact id, the
+// four message strings (first_guard_amount / guards / first_guard / msg,
+// declared up front and assigned after) and the guard_list armyGroup. Both
+// exits inline advManager::GiveArtifact and end on one CheckLevel. DC
+// places treasure on line 657 and artifactId on line 659. Retail's `_N`
+// suffix proves humanPlayer is bool, not DC's unsigned char.
 VA(0x0049f070, 0x765)
 DC_ADDRESS(0x090d34, 0x3ce)
 MAC_ADDRESS(0x0aa38c, 0x590)  // dc-bracket forced, ret 0x10=p5
@@ -1004,8 +995,8 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
 }
 
 // Dreamcast events.cpp:629-641 emits DoArtifactSkillRequirement as a
-// separate helper; Mac doEventArtifact calls the same body at 0:0xaa2bc
-// twice. VC6 auto-inlines the ordinary helper at both retail call sites.
+// separate helper; Mac doEventArtifact calls it twice; inlined at both
+// retail call sites.
 // Its success arm calls DoEventFreeArtifact and its refusal names a short
 // artifact; retail's skill-success dialogs read g_artifactEventText.
 DC_ADDRESS(0x090c58, 0xb8)
@@ -1025,13 +1016,10 @@ void advManager::doArtifactSkillRequirement(
 }
 
 // E:\gamedcs\events.cpp:760. The Dreamcast signature and helper roster
-// identify the source surface; retail fixes the price-arm order, costs and
-// text indices. This is the ordinary artifact event dispatcher.
-// doEventFreeArtifact loads its artifact inside the human-player block (DC
-// events.cpp:501). DoArtifactSkillRequirement's nested DoEventFreeArtifact
-// call and short refusal local fix the dialog semantics. The canonical
-// caller expands GiveArtifact in the free arm and retains calls in the skill
-// arms, exactly the retail call decisions.
+// identify the source surface. This is the ordinary artifact event
+// dispatcher. doEventFreeArtifact loads its artifact inside the
+// human-player block (DC events.cpp:501). GiveArtifact is inlined in the
+// free arm and called in the skill arms.
 VA(0x0049f7e0, 0x2A4)
 DC_ADDRESS(0x091104, 0x1b8)
 MAC_ADDRESS(0x0aa91c, 0x260)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5
@@ -1524,12 +1512,11 @@ void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
     }
 }
 
-// EraseAndFizzle is INLINED here, as in monsters_fight, and FizzleCenter
-// inside it in turn; with the sound fixed at PICKUP the fizzle's switch
-// folds to the sprintf arm alone.
+// EraseAndFizzle is inlined here, as in monsters_fight, and FizzleCenter
+// inside it.
 
-// DC 1361 gives the dialog one if-body scope (unbraced); 1369 has two
-// coincident scopes, so only the closing setEnvironmentOrigin is braced.
+// DC 1361 gives the dialog one unbraced if-body; only the closing
+// setEnvironmentOrigin is braced (DC 1369).
 VA(0x004a1120, 0x1C4)
 DC_ADDRESS(0x0922e8, 0xc6)
 MAC_ADDRESS(0x0ac3dc, 0x124)
@@ -1783,13 +1770,9 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
     }
 }
 
-// DC1653/1661 call TTextResource::operator[], not GetText directly. The same
-// wrapper is recorded for Garden (1858/1866), MercenaryCamp (2303/2311), and
-// PowerSchool (2492/2500).
-// Keep humanPlayer as bool: the DC publics for all four handlers at
-// 0x92d40/0x93368/0x941c8/0x946b4 end in PAVNewmapCell@@_N@Z. Their
-// unsigned-char CodeView formal records are lowered bool representations,
-// not evidence for changing the source interface or steering the inliner.
+// DC1653/1661 call TTextResource::operator[], as do Garden (1858/1866),
+// MercenaryCamp (2303/2311) and PowerSchool (2492/2500). humanPlayer is
+// bool: the DC publics for all four handlers end in PAVNewmapCell@@_N@Z.
 VA(0x004a2050, 0xE4)
 DC_ADDRESS(0x092d40, 0xac)
 MAC_ADDRESS(0x0ad3b4, 0x224)
@@ -1811,9 +1794,8 @@ void advManager::doEventDefenseTower(hero* currentHero, NewmapCell* cell,
     }
 }
 
-// DC events.cpp:1677 isolates the creature-bank empty bit; Mac
-// 0xad618..0xad61c reads the same one-bit member. Use the canonical bank
-// record rather than a raw extra-info mask.
+// DC events.cpp:1677 isolates the creature-bank empty bit; the canonical
+// bank record reads it.
 VA(0x004a2140, 0xE8)
 DC_ADDRESS(0x092dec, 0x11a)
 MAC_ADDRESS(0x0ad5d8, 0x18c)
@@ -1879,11 +1861,6 @@ void advManager::doEventFlotsam(hero* currentHero, NewmapCell* cell,
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
-// This is the dragon city's finding read from the other side, and the two
-// together give the discriminator: a merged tail entered by an
-// UNCONDITIONAL jmp that skips a test is a source `goto` (one call site);
-// a TWO-WAY branch inside one argument list with everything else shared
-// is two call sites.
 VA(0x004a2480, 0x16C)
 DC_ADDRESS(0x09312c, 0x16a)
 MAC_ADDRESS(0x0adb98, 0x318)
@@ -1973,10 +1950,8 @@ void advManager::doEventGarden(hero* currentHero, NewmapCell* cell,
     }
 }
 
-// Dreamcast keeps these object visitors as named source boundaries. Mac also
-// retains their bodies as direct calls; retail VC6 expands them in dispatchEvent.
-// The Mac calls do not settle their inline qualifiers, so the existing VC6
-// source declarations stay in place while the newly found gate is separate.
+// Dreamcast keeps these object visitors as named source boundaries; Mac
+// retains their bodies, and retail inlines them in dispatchEvent.
 DC_ADDRESS(0x091fec, 0xf4)
 MAC_ADDRESS(0x0abcec, 0x138)
 inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
@@ -2000,10 +1975,8 @@ inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
     }
 }
 
-// Mac 0:0xabe24..0xabec0 is the separate border-gate visitor called by
-// dispatchEvent at 0:0xb61d0. Mac passes point in r4 before cell in r5 and
-// humanPlayer in r6; this body does not use point. The earlier Dreamcast build
-// has no named body.
+// Mac's separate border-gate visitor, called by dispatchEvent; this body
+// does not use point. The earlier Dreamcast build has no named body.
 MAC_ADDRESS(0x0abe24, 0x9c)
 void advManager::doEventBorderGate(type_point, NewmapCell* cell,
                                    unsigned char humanPlayer)
@@ -2127,16 +2100,11 @@ inline bool spell_level_order::operator()(ESpellId first,
 static void exchangeSpells(hero* left, hero* right);
 void aiFriendlyHeroMeeting(hero* currentHero, hero* otherHero);
 
-// The whole of game::GetHero is expanded at the top - its `-1` arm gives
-// the null hero the cell can carry - and so is game::OnSameTeam, both
-// of its `< 0` guards included, which is what puts the two signed tests
-// ahead of the pair of teamInfo byte loads.
+// game::GetHero is inlined at the top - its `-1` arm gives the null hero
+// the cell can carry - and so is game::OnSameTeam.
 
-// The town test spends the point three times because GetTownId takes
-// the three coordinates separately; the packed `y` and `z` share one
-// 16-bit unit and both are extracted out of the SAME dword load, which
-// is why the second half of the point is read at +0x12 rather than the
-// field being addressed on its own.
+// The town test passes the point's three coordinates separately to
+// GetTownId.
 VA(0x004a2800, 0x13F)
 DC_ADDRESS(0x0939bc, 0x15a)
 MAC_ADDRESS(0x0aeab8, 0x1c0)
@@ -2303,9 +2271,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     extendedDialog(msg.c_str(), spellsExchanged, -1, -1, 0);
 }
 
-// GetLeanToAmount is decorated `short`, and that width is the whole
-// reason the emptiness test is a sixteen-bit `test si,si` and the dialog
-// argument a `movsx`: an int-wide read would not truncate.
+// GetLeanToAmount is decorated `short`.
 VA(0x004a31a0, 0xDF)
 DC_ADDRESS(0x093b18, 0xde)
 MAC_ADDRESS(0x0aec78, 0x170)
@@ -2366,9 +2332,7 @@ void advManager::doEventLibrary(hero* currentHero, NewmapCell* cell,
 
 TPrimarySkill aiChooseMagicSkill(hero* currentHero);
 
-// `game* g = gpGame;` is spelled out for the war school's reason: it is
-// what puts the player position first in the SIB of the inlined
-// teamInfo[playerNum] load (`[pos + gpGame]`).
+// `game* g = gpGame;` is spelled out, as in the war school.
 VA(0x004a33e0, 0x1AD)
 DC_ADDRESS(0x093db0, 0x1bc)
 MAC_ADDRESS(0x0af1a8, 0x330)
@@ -2426,7 +2390,6 @@ void advManager::doEventMagicSpring(hero* currentHero, ExtraInfoUnion* cell,
 {
     game* g = g_game;
     g->setInfoFlag(MagicSpringInfo, g_netLocalGamePos);
-    // Mac extracts the five-bit item id before checking whether the spring is empty.
     short id = cell->getItemId();
     g_currentPlayer->m_magicSpringFlags |= 1 << id;
 
@@ -2681,8 +2644,7 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
     updateScreen(0, 0);
     eraseObj(cell, point, 1);
 
-    // Mac 0xb0a30 indexes the hero pool directly; retail has no getHero
-    // sentinel guard at this call site.
+    // The hero pool is indexed directly, with no getHero sentinel guard.
     hero* prisoner = &g_game->m_heroes[heroID];
     g_game->recordShowHero(prisoner, currentHero->m_owner, point, 0);
     prisoner->m_owner = currentHero->m_owner;
@@ -2779,8 +2741,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
     }
 }
 
-// The visit bit is materialised into a register at the top and reused for
-// the write-back, which is what one named mask expression produces.
+// The visit bit is one named mask expression, reused for the write-back.
 VA(0x004a44c0, 0x136)
 DC_ADDRESS(0x094c8c, 0xf6)
 MAC_ADDRESS(0x0b0f20, 0x280)
@@ -2993,7 +2954,6 @@ MAC_ADDRESS(0x0b1994, 0x228)
 void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
-    // Mac 0xb19b8 initializes both artifact fields before decoding the reward.
     type_artifact artifact;
     int reward = cell->getSeaChestReward();
     if (reward == const_sea_chest_artifact
@@ -3392,11 +3352,7 @@ void advManager::doEventTrainingGrounds(hero* currentHero, NewmapCell* cell,
                      1, -1, -1, 0x11, amount, -1, 0, -1, 0, -1, 0);
     currentHero->giveExperience(amount, 0, 1);
     currentHero->m_trainingGroundsFlags |= 1 << cell->m_extraInfo;
-    // The `game* g` spelling, do_event_watering_hole's lever: it is what
-    // puts the player position first in the SIB of the inlined
-    // teamInfo[playerNum] load (`[pos + gpGame]`). The four
-    // primary-skill handlers above want the direct call for the same
-    // byte, so the choice stays per-call-site.
+    // The `game* g` spelling, as in do_event_watering_hole.
     game* g = g_game;
     g->setInfoFlag(TrainingGroundsInfo, g_netLocalGamePos);
     currentHero->checkLevel();
@@ -3410,8 +3366,6 @@ unsigned char aiChooseResourceOrExperience(const hero* currentHero,
 
 // E:\gamedcs\events.cpp:3377. The gold-or-experience offer shared by the
 // treasure chest and the campfire-style pickups.
-// Mac b31cc..b3208 selects the human or AI choice before one giveResource
-// call at b321c or one giveExperience call at b3234.
 VA(0x004a6440, 0xD8)
 DC_ADDRESS(0x0962dc, 0xfc)
 MAC_ADDRESS(0x0b30e4, 0x174)  // dc-bracket forced, ret 0xc=p4
@@ -3473,10 +3427,8 @@ void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
     currentHero->checkLevel();
 }
 
-// The visit mask is materialised at the TOP - `1 << GetItemId()` into a
-// frame slot - and read back for the write-back after the award, which is
-// what one named local produces where two `1 << id` expressions would have
-// been recomputed.
+// The visit mask `1 << GetItemId()` is one named local, read back for the
+// write-back after the award.
 VA(0x004a6710, 0x29D)
 DC_ADDRESS(0x0964c4, 0x2be)
 MAC_ADDRESS(0x0b33bc, 0x480)
@@ -3632,14 +3584,10 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
     } while (remaining);
 }
 
-// EraseAndFizzle is INLINED here - its own out-of-line body stays emitted
-// for its external linkage, and FizzleCenter is inlined inside it in turn,
-// so the whole save/force/restore bracket and the 224x224 kill fade appear
-// in this function. With the sound fixed at KILL_FADE the fizzle's switch
-// folds away and only its gCompleteDrawEnabled gate survives - as an `if`
-// around the block rather than as an early return, which is why the two
-// restores appear ONCE here where EraseAndFizzle's own body carries three
-// copies of them.
+// EraseAndFizzle is inlined here, and FizzleCenter inside it in turn: the
+// save/force/restore bracket and the 224x224 kill fade appear in this
+// function, with the fizzle's gCompleteDrawEnabled gate as an `if` around
+// the block.
 VA(0x004a6c60, 0x188)
 DC_ADDRESS(0x096b14, 0x104)
 MAC_ADDRESS(0x0b3c18, 0x10c)
@@ -3674,13 +3622,10 @@ unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
                                 long goldCost);
 void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 
-// EraseAndFizzle is inlined here exactly as in monsters_fight, and with
-// it FizzleCenter, so the save/force/restore bracket and the 224x224
-// fade appear in this body.
+// EraseAndFizzle is inlined here exactly as in monsters_fight.
 
-// The two monsters_fight calls are separate sites with their own
-// epilogues - the human arm forwards `human_player` and the AI arm the
-// literal false, which is what keeps them from tail-merging.
+// The two monsters_fight calls are separate sites: the human arm forwards
+// `human_player` and the AI arm the literal false.
 VA(0x004a6df0, 0x20B)
 DC_ADDRESS(0x096c18, 0x13c)
 MAC_ADDRESS(0x0b3d24, 0x18c)
@@ -3762,9 +3707,8 @@ bool advManager::monstersJoin(hero* currentHero, NewmapCell* cell,
 
 // The prompt is split by count, and the plural form is built in two
 // pieces: the lead-in is copied whole into gText and the (count, name,
-// gold) tail is formatted into a 300-byte local and appended, which is
-// what the 0x13c frame is for. Both forms carry the price as an
-// iResType1 GOLD picture on the dialog.
+// gold) tail is formatted into a 300-byte local and appended. Both forms
+// carry the price as an iResType1 GOLD picture on the dialog.
 VA(0x004a7250, 0x36F)
 DC_ADDRESS(0x096eec, 0x258)
 MAC_ADDRESS(0x0b40ac, 0x330)
@@ -3913,8 +3857,7 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
     short forceModifier = getForceModifier(strengthRatio);
 
     if (!g_game->m_setup.m_difficulty && humanPlayer) {
-        // DC 0x97466 retains min(int,int); Mac 0xb46f4..0xb4720
-        // expands its value-argument copies and reference selection.
+        // DC 0x97466 retains min(int,int).
         int cappedDiplomacy = min(diplomacy + 1, 3);
         diplomacy = cappedDiplomacy;
     }
@@ -4097,8 +4040,8 @@ void advManager::doEventWaterWheel(hero* currentHero, ExtraInfoUnion* cell,
 }
 
 // The eight-iteration teamInfo scan in the middle is game::SetInfoFlag
-// (Game.h:917) inlined; the flag index 27 is WateringHoleInfo, which is
-// what fixes the +0x4e35f byte as globalInfoFlags[27].
+// (Game.h:917) inlined; flag index 27 is WateringHoleInfo
+// (globalInfoFlags[27]).
 VA(0x004a7ea0, 0x111)
 DC_ADDRESS(0x097b7c, 0x130)
 MAC_ADDRESS(0x0b508c, 0x24c)
@@ -4153,10 +4096,8 @@ MAC_ADDRESS(0x0b5418, 0x334)
 void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
                                     bool humanPlayer)
 {
-    // Guard clauses preserve all four dialogs, with getSecondarySkill and
-    // getText retained.
-    // Mac retains separate dialogs for no skill, known skill, full skills,
-    // and learned skill at 0:0xb55b4, 0:0xb5634, 0:0xb56b0, 0:0xb5724.
+    // Guard clauses keep all four dialogs, with getSecondarySkill and getText
+    // retained.
     int skill = cell->getWitchSkill();
 
     cell->setCellVisited(currentHero->m_owner);
@@ -4262,8 +4203,8 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
     g_advManager->teleportTo(currentHero, point, "telptout.wav", 0, 1, 0);
 }
 
-// NewmapCell now has its CodeView-proven ExtraInfoUnion base. Event
-// handlers take that base directly; the old cellExtra cast wrapper is gone.
+// NewmapCell has its CodeView-proven ExtraInfoUnion base; event handlers
+// take that base directly.
 DC_ADDRESS(0x093d34, 0x7a)
 MAC_ADDRESS(0x0af094, 0x114)
 inline void advManager::doEventLighthouse(NewmapCell* cell,
@@ -4977,9 +4918,7 @@ void advManager::doEvent(NewmapCell* eventCell, type_point point)
 // BACKWARDS (the anchor is the bottom-right cell), and every cell that
 // falls off the map is skipped rather than clamped. Inside, the cell's
 // own four-byte object list is searched for this object's index and the
-// hit is spliced out with Dinkumware vector::erase - the copy-down loop
-// and the `--_Last` are both inlined, and the element is POD so _Destroy
-// vanishes.
+// hit is spliced out with vector::erase.
 
 // The 0x18-byte CMCEraseObject goes out through SendMapChange, and the
 // final SetEnvironmentOrigin re-centres on the radar origin offset by the
@@ -5156,8 +5095,8 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
     checkEndGame(0);
 }
 
-// DC events.cpp:5397 retains game::GetMine. Naming its result in the mine
-// arm keeps that source call and gives VC6 the retail body.
+// DC events.cpp:5397 retains game::GetMine; its result is named in the mine
+// arm.
 VA(0x004ab410, 0x632)
 DC_ADDRESS(0x09a288, 0x2a0)
 MAC_ADDRESS(0x0b85a8, 0x36c)
@@ -5308,7 +5247,7 @@ void advManager::eventSound(int eventID, int extraInfo)
 }
 
 // Original: advManager::RecruitEvent; events.cpp:5568
-// The ordinary helper is expanded into Complete's refugee-camp handler.
+// Inlined into Complete's refugee-camp handler.
 DC_ADDRESS(0x09a528, 0x86)
 MAC_ADDRESS(0x0b8914, 0xa8)
 short advManager::recruitEvent(hero* who, TCreatureType creature, short available)
@@ -5732,16 +5671,10 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
     return result;
 }
 
-// The owner byte is READ INTO A LOCAL before Deallocate runs and only
-// spent afterwards, because the hero record does not survive the call;
-// that ordering is what puts it in a frame slot rather than a register
-// rematerialization.
+// The owner byte is read into a local before Deallocate runs and only spent
+// afterwards, because the hero record does not survive the call.
 
-// The whole fizzle is FizzleCenter (0x4acbb0) inlined - its own body sits
-// further down this file and is emitted anyway because the function has
-// external linkage, but this is its only call site, so /Ob2 expands it
-// here as well. That is also why the gCompleteDrawEnabled gate and the
-// sound switch appear inside this body rather than behind a call.
+// The whole fizzle is FizzleCenter inlined at its only call site.
 VA(0x004ac930, 0x163)
 DC_ADDRESS(0x09b3b4, 0x94)
 MAC_ADDRESS(0x0ba018, 0xd8)
@@ -5966,8 +5899,6 @@ int advManager::doNetCombat(CNetMsg* netMsg)
 // back-level file.
 const int g_netCombatSaveVersion = 42;
 
-// Mac 0xba8b4/0xbab44 stages each scalar independently; retain those
-// helper lifetimes in both serializers instead of shared scratch variables.
 VA(0x004ad1f0, 0x148)
 MAC_ADDRESS(0x0ba8b4, 0x290)  // anchor-vtable 0x63e508 slot 0; anchor-callee town::load + hero::load, retail-only
 unsigned char CCombatInitMsg::read(TAbstractFile* infile)
@@ -6023,13 +5954,11 @@ unsigned char CCombatInitMsg::write(TAbstractFile* outfile) const
     return 1;
 }
 
-// E:\gamedcs\events.cpp:6248/6261 ( / 0x9ceb0) - the RAII pause
-// DoCombat holds across a whole battle; the class shape lives in
-// events.h, the two bodies are this TU's own (their DC line numbers are
-// events.cpp's). Retail inlines both at DoCombat's entry and at each of
-// its two returns: Pause() plus the solo-seat marking on the way in;
-// Resume() plus the seat clearing - gated on this machine still being
-// the solo seat - on the way out.
+// E:\gamedcs\events.cpp:6248/6261 - the RAII pause DoCombat holds across a
+// whole battle; the class shape lives in events.h. Inlined at DoCombat's
+// entry and at each of its two returns: Pause() plus the solo-seat marking
+// on the way in; Resume() plus the seat clearing - gated on this machine
+// still being the solo seat - on the way out.
 // E:\gamedcs\events.cpp:6248
 DC_ADDRESS(0x09ce40, 0x70)
 inline CTurnDurationPause::CTurnDurationPause()
@@ -6042,7 +5971,7 @@ inline CTurnDurationPause::CTurnDurationPause()
 }
 
 // E:\gamedcs\events.cpp:6261
-// This is a written destructor; its retail copy belongs to this body.
+// This is a written destructor.
 VA(0x004ae9b0, 0x50)
 DC_ADDRESS(0x09ceb0, 0x74)
 MAC_ADDRESS(0x0bc600, 0xc0)
@@ -6479,10 +6408,8 @@ void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho
     }
 }
 
-// CWaitForRemoteBattleDlg has no user-declared destructor: retail's own
-// ??1CWaitForRemoteBattleDlg (0x4aea00) has no vtable store and expands all
-// three string teardowns - the synthesized shape (the inherited CAnimatedDlg
-// virtual destructor keeps it virtual).
+// CWaitForRemoteBattleDlg has no user-declared destructor (the inherited
+// CAnimatedDlg virtual destructor keeps it virtual).
 
 // COMDAT pairing: std::_Sort<ESpellId, spell_level_order>.
 VA_COMPGEN(0x004b00b0, 0x294, STD_SORT, ESpellId_spell_level_order)
@@ -6504,10 +6431,8 @@ MAC_COMPGEN_ADDRESS(0x0ba7cc, 0x90, IMPLICIT_DTOR, ccombatinitmsg)
 VA_COMPGEN(0x004aeb00, 0x4B, IMPLICIT_DTOR, clevelpickwaitdlg)
 MAC_COMPGEN_ADDRESS(0x0bc4dc, 0x6c, IMPLICIT_DTOR, clevelpickwaitdlg)
 
-// COMDAT pairing: vector<std::string>::insert(pos, n, val).
-// Its single-element sibling and retained cleanup/copy/fill chain are now
-// enrolled in seerhut, where their canonical <vector>/<algorithm> bodies
-// still emit. Retail creatureBankEvent and five quest dialogs share them.
+// COMDAT pairing: vector<std::string>::insert(pos, n, val); its
+// single-element sibling and cleanup/copy/fill chain are claimed in seerhut.
 VA_COMPGEN(0x004af550, 0x2A5, VECTOR_INSERT, string)
 
 // COMDAT pairing: std::_Construct<std::string>.
@@ -6520,7 +6445,7 @@ VA_COMPGEN(0x004af330, 0x13, VECTOR_SIZE, type_dialog_resource)
 
 VA_COMPGEN(0x0054cba0, 0x1C5, VECTOR_INSERT, type_dialog_resource)
 
-// COMDAT pairing: town's implicit destructor (74 bytes).
+// COMDAT pairing: town's implicit destructor.
 VA_COMPGEN(0x004ad0e0, 0x4A, IMPLICIT_DTOR, town)
 MAC_COMPGEN_ADDRESS(0x0ba85c, 0x58, IMPLICIT_DTOR, town)
 

@@ -92,15 +92,12 @@ std::string formatString(const char* format, ...);
 // clockwise order is north, north-east, east, south-east, south, south-west,
 // west, north-west, then centre.
 
-// Retail 0x56c3e0. Pull seerhut.txt out of the resource cache, fill both
+// Pull seerhut.txt out of the resource cache, fill both
 // three-column tables from it, then walk every row
 
-// Complete loads quest text from a spreadsheet; Dreamcast initializes a fixed table.
-// The name-row append is inferred from retail. Mac's lightly optimized build
-// confirms the source-shaped temporary string: its constructor, vector
-// push_back, and destructor are retained in order. Releasing the sheet
-// through ResourceManager's canonical inline helper gives VC6 retail's
-// retained string::assign.
+// Complete loads quest text from a spreadsheet; Dreamcast initializes a fixed
+// table. The name-row append is inferred from retail; Mac retains the
+// temporary string's constructor, push_back and destructor in order.
 // E:\gamedcs\seerhut.cpp:50
 VA(0x0056c3e0, 0x183)
 DC_ADDRESS(0x12cd28, 0x35c)
@@ -245,12 +242,8 @@ void type_quest::loadFromMap(TAbstractFile* file)
     m_completionText = readLengthPrefixedString(file);
 }
 
-// Mac retains this base writer at 0:0x16438c. All nine derived quest
-// writers call it after their own payload, including the folded be-hero save.
-// Mac swaps m_limit and each text length with stwbrx before writing;
-// writeLittleEndianValue supplies that file-format boundary while retaining
-// writeScalar/writeValue underneath. CodeWarrior retains this scalar wrapper
-// where native expands the operation.
+// Mac retains this base writer; all nine derived quest writers call it after
+// their own payload, including the folded be-hero save.
 VA(0x0056cf70, 0xCD)
 MAC_ADDRESS(0x16438c, 0x180)
 void type_quest::save(TAbstractFile* file)
@@ -274,10 +267,8 @@ void type_quest::save(TAbstractFile* file)
 
 // The base dialog getters append this deadline suffix. Retail reads the
 // row-wide time-limit column (51), without questType's per-kind offset.
-// getTextColumn and getCurrentTurn preserve that lookup and the signed-short
-// date result. This Complete-only caller has no Dreamcast source record;
-// the shared helper bodies and retail expansion support these source calls.
-// The text is constructed from the separator directly, as both retails show.
+// This Complete-only caller has no Dreamcast source record; the text is
+// constructed from the separator directly.
 VA(0x0056d040, 0x1F7)
 MAC_ADDRESS(0x16450c, 0x108)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
 std::string type_quest::getTimeLimitText()
@@ -324,8 +315,7 @@ std::string type_experience_quest::getRequirementText()
 }
 
 // All nine description getters use the fourth string in the selected quest
-// text group directly. VC6 reproduces their retail address calculation when
-// the source names m_text3; the generic column selector adds an extra step.
+// text group directly (m_text3).
 VA(0x0056d410, 0x72)
 MAC_ADDRESS(0x1647e0, 0x9c)
 std::string type_experience_quest::getQuestDescription()
@@ -503,10 +493,8 @@ void type_skill_quest::doProgressDialog(hero* currentHero)
 // Slot 5 presents one primary-skill picture for every positive requirement.
 // The picture class advances from 0x1f with the skill index, while the
 // qualifier packs the displayed value below a high-word one.
-// Mac Complete calls the shared skill-picture helper, and its temporary
-// progress string lives through that call before destruction: one direct
-// full-expression call. Windows expands the ordinary helper.
-// This Complete quest has no Dreamcast counterpart to settle the source form.
+// Mac calls the shared skill-picture helper with the progress string as a
+// temporary; this Complete quest has no Dreamcast counterpart.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056dd60, 0xF5)
 MAC_ADDRESS(0x165154, 0x54)  // anchor-vtable 0x6417c4 slot 5 + dialog picture rows, retail-only
@@ -683,9 +671,8 @@ void type_defeat_hero_quest::load(TAbstractFile* file, int version)
     type_quest::load(file, version);
 }
 
-// Retail vtable 0x641800 slot 12 shares 0x56edf0 with the experience and
-// monster quests: each reads a four-byte payload into its first derived field.
-// Mac retains this separate body before save at 0x165854.
+// The retail slot shares one body with the experience and monster quests:
+// each reads a four-byte payload into its first derived field.
 MAC_ADDRESS(0x165854, 0x68)
 void type_defeat_hero_quest::loadFromMap(TAbstractFile* file)
 {
@@ -740,9 +727,8 @@ type_monster_quest::type_monster_quest(bool flags)
     m_position.m_x = (m_monsterId = m_defeatedBy = -1);
 }
 
-// Mac 0x165b8c..0x165bb4 and 0x165c48..0x165c74 expand GetArmyName
-// with a plural count: the same 0..150 guard and creature-name lookup.
-// Keep the canonical helper in both quest text operations.
+// Both quest text operations use the canonical GetArmyName with a plural
+// count.
 VA(0x0056ea30, 0xF9)
 MAC_ADDRESS(0x165b7c, 0x54)
 std::string type_monster_quest::getRequirementText()
@@ -800,7 +786,6 @@ void type_monster_quest::notifyMonsterDefeated(TQuestPosition where,
 {
     if (m_defeatedBy >= 0)
         return;
-    // Mac 0:0x165dc8 combines the three point comparisons before this guard.
     if (m_position != where)
         return;
     m_defeatedBy = player;
@@ -826,8 +811,7 @@ void type_monster_quest::load(TAbstractFile* file, int version)
     type_quest::load(file, version);
 }
 
-// Retail vtable 0x64183c slot 12 also points to the folded 0x56edf0 body.
-// Mac retains the distinct monster reader at 0x165f38.
+// The retail slot points to the same folded reader.
 MAC_ADDRESS(0x165f38, 0x68)
 void type_monster_quest::loadFromMap(TAbstractFile* file)
 {
@@ -873,15 +857,10 @@ void type_monster_quest::save(TAbstractFile* file)
 // and describes the point by map third (plus an underground suffix). Those
 // two strings are the varargs for each of the three localized text columns.
 
-// The packed-point lookup and guarded plural-name lookup correspond to the
-// existing game::getCell and getArmyName helpers. Their declarations have
-// DC evidence; these Complete-only caller expansions are inferred from
-// retail. Keep the canonical calls and ordinary direction assignments.
-// The nine direction arms share one brace style: bracing every arm of the
-// two-level if/else ladder lets VC6 expand the middle-north arm's string
-// assign as retail does. The standalone guards stay unbraced. getArmyName's
-// plural selection remains the shared helper's conditional expression.
-// No Dreamcast body exists for this Complete code.
+// The packed-point lookup and guarded plural-name lookup are the existing
+// game::getCell and getArmyName helpers. Every arm of the nine-direction
+// if/else ladder is braced; the standalone guards stay unbraced. No
+// Dreamcast body exists for this Complete code.
 VA(0x0056ef20, 0x57C)
 MAC_ADDRESS(0x16604c, 0x490)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()
@@ -998,11 +977,9 @@ void type_artifact_quest::takePayment(hero* currentHero)
 }
 
 // Slot 4 filters the payload to missing artifacts and keeps both the id and
-// name vectors alive across the text choice. Mac retains calls from both
-// branches to the same artifact-picture helper at code offset 0x166b38;
-// CodeWarrior emits both source calls, while VC6 expands the helper here;
-// the ordinary helper and push_back stay (inline_depth, counted insert and
-// per-iteration resource construction are not source-backed).
+// name vectors alive across the text choice. Mac calls the same
+// artifact-picture helper from both branches; it is inlined here, with
+// push_back.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056f8a0, 0x313)
 MAC_ADDRESS(0x1668fc, 0x1e8)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
@@ -1033,10 +1010,9 @@ void type_artifact_quest::doProgressDialog(hero* currentHero)
     }
 }
 
-// Slot 5 calls that same helper with the full artifact payload, a direct
-// expression matching Mac's three calls; no Dreamcast counterpart exists.
-// VC6 expands the same helper; the picture kind is assigned inside its
-// loop, matching Mac 0x166b74.
+// Slot 5 calls that same helper with the full artifact payload; no
+// Dreamcast counterpart exists. The picture kind is assigned inside its
+// loop.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056fbc0, 0xE6)
 MAC_ADDRESS(0x166ae4, 0x54)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
@@ -1259,9 +1235,9 @@ void type_creature_quest::doProgressDialog(hero* currentHero)
 // in the joined stack list; otherwise it uses the base's dated proposal-text
 // getter. Picture qualifiers use the same unsigned 16|16 packing as slot 4.
 
-// Preserve the canonical questText proposal lookup and natural declaration
-// order. Both vectors are destroyed before text without an extra scope.
-// This Complete-only interface is inferred from retail.
+// The canonical questText proposal lookup; both vectors are destroyed before
+// text without an extra scope. This Complete-only interface is inferred
+// from retail.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570b80, 0x2D5)
 MAC_ADDRESS(0x1676c4, 0x2b8)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
@@ -1355,9 +1331,7 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
 }
 
 // Complete-only: the Dreamcast procedure roster has no creature-quest save
-// body. Retail's one-slot frame and reuse of the file parameter home for the
-// integer count identify the canonical by-value writeValue boundary; direct
-// staging uses two frame slots.
+// body. The count goes through the canonical by-value writeValue.
 VA(0x00571280, 0x137)
 MAC_ADDRESS(0x167be8, 0xe4)
 void type_creature_quest::save(TAbstractFile* file)
@@ -1510,10 +1484,8 @@ void type_resource_quest::doProposalDialog()
     extendedDialog(m_proposalText.c_str(), dialogResources, -1, -1, 0);
 }
 
-// These three serializers differ between retails: Windows 0x571b94,
-// 0x571bc4 and 0x571bf4 transfer the whole 28-byte resource array. Mac
-// 0x1684ac, 0x168528 and 0x1685a8 transfer seven 4-byte scalars with
-// byte swapping. A shared serialization-helper boundary remains unresolved.
+// These three serializers differ between retails: Windows transfers the
+// whole 28-byte resource array, Mac seven byte-swapped 4-byte scalars.
 VA(0x00571b80, 0x29)
 MAC_ADDRESS(0x168470, 0x80)
 void type_resource_quest::load(TAbstractFile* file, int version)
@@ -1539,9 +1511,7 @@ void type_resource_quest::save(TAbstractFile* file)
     type_quest::save(file);
 }
 
-// The canonical questTexts -> getTextColumn chain; branch returns in the
-// shared row selector keep the retained child call here (a
-// conditional-expression body over-expands it).
+// The canonical questTexts -> getTextColumn chain.
 VA(0x00571cc0, 0x23E)
 MAC_ADDRESS(0x1685e0, 0x1e0)
 void type_resource_quest::setDefaultText()
@@ -1639,9 +1609,9 @@ void type_be_hero_quest::loadFromMap(TAbstractFile* file)
     type_quest::loadFromMap(file);
 }
 
-// Mac 0:0x168b04 writes the hero id then calls type_quest::save at 0x168b50.
-// Windows vtable 0x64192c slot 13 folds onto the experience writer 0x56d630:
-// both save a short from the derived field at +0x40 before the base payload.
+// Mac writes the hero id then calls type_quest::save; the Windows slot folds
+// onto the experience writer (both save a short from the derived field at
+// +0x40 before the base payload).
 MAC_ADDRESS(0x168b04, 0x68)
 void type_be_hero_quest::save(TAbstractFile* file)
 {
@@ -1707,9 +1677,8 @@ VA(0x00572670, 0x19D)
 MAC_ADDRESS(0x168e58, 0xb4)
 std::string type_belong_to_player_quest::getQuestDescription()
 {
-    // Mac copies into a stack buffer with the ASCII-lowercase routine at
-    // 0:0x26afe8; Windows keeps a string and calls CRT tolower (0x572761).
-    // setDefaultText has the same port difference (Windows 0x5729d2).
+    // Platform difference: Mac lowercases into a stack buffer; Windows keeps
+    // a string and calls CRT tolower (setDefaultText likewise).
     std::string requirement = g_colors[m_requiredOwner];
     std::transform(requirement.begin(), requirement.end(),
                    requirement.begin(), ::tolower);
@@ -1735,8 +1704,8 @@ void type_belong_to_player_quest::load(TAbstractFile* file, int version)
     type_quest::load(file, version);
 }
 
-// Retail vtable 0x641968 slot 12 shares the 0x572230 one-byte reader with
-// type_be_hero_quest; Mac emits this own body at 0x168f88.
+// The retail slot shares the one-byte reader with type_be_hero_quest; Mac
+// emits this body on its own.
 MAC_ADDRESS(0x168f88, 0x64)
 void type_belong_to_player_quest::loadFromMap(TAbstractFile* file)
 {
@@ -1757,9 +1726,7 @@ void type_belong_to_player_quest::save(TAbstractFile* file)
     type_quest::save(file);
 }
 
-// The canonical questTexts -> getTextColumn chain; branch returns in the
-// shared row selector keep the retained child call here (a
-// conditional-expression body over-expands it).
+// The canonical questTexts -> getTextColumn chain.
 VA(0x00572940, 0x204)
 MAC_ADDRESS(0x169050, 0x168)
 void type_belong_to_player_quest::setDefaultText()
@@ -1787,10 +1754,8 @@ TQuestGuard::TQuestGuard()
     m_visitedPlayers = 0;
 }
 
-// Complete-only caller: retail expands the same expiry test retained in
-// hasExpired and the row selector retained at 0x52e6b0. Keep those canonical
-// calls. The predicate is used directly; an intermediate bool result adds a
-// conversion.
+// Complete-only caller of the hasExpired expiry test and the row selector;
+// the predicate is used directly.
 VA(0x00572b60, 0x1FE)
 MAC_ADDRESS(0x1691c8, 0x250)
 void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
@@ -1986,8 +1951,6 @@ int TSeerHut::getValue(hero* currentHero)
 {
     int value = m_reward.getValue(currentHero);
 
-    // The by-value max wrapper owns its argument temporaries only in this
-    // arm; retail reuses that stack slot for the active quest below.
     if (!playerHasInfo(currentHero->m_owner))
         return ::max(value, 20);
 
@@ -2005,18 +1968,13 @@ int TSeerHut::getValue(hero* currentHero)
 // reward application. A hut with no quest records the visit and shows one of
 // three randomized empty-hut lines to a human player.
 
-// Retail's null-quest branch (+0x24) and expired-deadline branch (+0x66)
-// both reach +0x2c7: record the visit, then show DoEmptyDialog to a human.
-// An expired quest must not return before that path. The empty arm comes
-// first in DC seerhut.cpp:151-154 and owns retail unwind states 0/1;
-// the completion temporary is state 2. FuncInfo 0x654048 has maxState 3,
-// unwind map 0x654068 and NO try blocks: no catch scope is missing.
+// The null-quest and expired-deadline branches both record the visit, then
+// show DoEmptyDialog to a human; an expired quest must not return before
+// that path. The empty arm comes first (DC seerhut.cpp:151-154).
 
 // Complete revised the human completion arm: declining returns, while an
 // accepted dialog and a sufficiently valuable AI visit converge on the same
-// payment/reward tail. This also puts the completion-text temporary in the
-// caller's EH state, after which VC6 naturally expands the retained
-// DoEmptyDialog source call and keeps all three retail `_Tidy` boundaries.
+// payment/reward tail.
 VA(0x00573670, 0x400)
 DC_ADDRESS(0x12d0e4, 0x74)
 MAC_ADDRESS(0x169bfc, 0x2d4)  // code plus two retail switch tables in the admitted row
@@ -2058,12 +2016,9 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
     }
 }
 
-// Dreamcast preserves this private helper and places it after
-// DoSeerEvent in the TU. Complete replaces its fixed-buffer sprintf with a
-// string-returning formatter, but retail's no-quest arm corroborates the
-// helper's name lookup followed by NormalDialog. Once the caller owns the
-// revised completion-text lifetime, VC6 naturally expands this source boundary
-// while retaining selected nested Dinkumware calls.
+// Dreamcast preserves this private helper and places it after DoSeerEvent
+// in the TU; Complete replaces its fixed-buffer sprintf with a
+// string-returning formatter. Inlined in the caller.
 DC_ADDRESS(0x12d158, 0x4e)
 void TSeerHut::doEmptyDialog()
 {
@@ -2108,9 +2063,9 @@ int TSeerHut::getRewardType()
     return m_reward.getRewardType();
 }
 
-// Mac DoSeerEvent 0x169e08 passes hut+5, the same reward receiver used by
-// GetRewardExtra. This body reads type+0 and payload+4; its position directly
-// after GetRewardExtra supports an ordinary reward-owned source definition.
+// Mac DoSeerEvent passes hut+5, the same reward receiver used by
+// GetRewardExtra; its position directly after GetRewardExtra supports an
+// ordinary reward-owned source definition.
 MAC_ADDRESS(0x16a4c4, 0xc4)
 int TSeerReward::getRewardType()
 {
@@ -2151,7 +2106,7 @@ int TSeerReward::getRewardType()
     }
 }
 
-// retail's real `AI_get_value_of_artifact(const type_artifact&, long)`
+// Uses the real `AI_get_value_of_artifact(const type_artifact&, long)`.
 VA(0x00573a70, 0x210)
 MAC_ADDRESS(0x169ed0, 0x268)
 int TSeerReward::getValue(const hero* currentHero)
@@ -2221,9 +2176,9 @@ int TSeerReward::getValue(const hero* currentHero)
     }
 }
 
-// DC TSeerHut::GiveReward (seerhut.cpp:266, dc0x12d4dc) owns the older
-// equivalent switch. Complete doSeerEvent passes this+5 at0x573919; the
-// retained body reads its type at+0, proving the separate TSeerReward owner.
+// DC TSeerHut::GiveReward (seerhut.cpp:266) owns the older equivalent
+// switch; Complete moved it to the separate TSeerReward owner (doSeerEvent
+// passes this+5).
 VA(0x00573c80, 0x290)
 MAC_ADDRESS(0x16a138, 0x290)
 void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
@@ -2325,9 +2280,8 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     }
 }
 
-// DC TSeerHut::GetRewardExtra (seerhut.cpp:373, dc0x12d6d8) queries the
-// same reward domain. Complete's completion offer passes this+5 to0x573f10,
-// which reads type+0/payload+4/+8: the interface moved to TSeerReward.
+// DC TSeerHut::GetRewardExtra (seerhut.cpp:373) queries the same reward
+// domain; the interface moved to TSeerReward.
 VA(0x00573f10, 0xBC)
 MAC_ADDRESS(0x16a3c8, 0xfc)
 int TSeerReward::getRewardExtra(const hero* thisHero)
@@ -2391,10 +2345,8 @@ int TSeerHut::save(TAbstractFile* outfile)
     }
 }
 
-// Mac 0x16a768..0x16a790 expands the signed name index, name-list lookup
-// and string-data access owned by getName (DC SeerHut.h:121). The same
-// expansion appears at 0x16a830..0x16a854 and in the quick-info twin.
-// Preserve that canonical boundary in all three text callers.
+// getName (DC SeerHut.h:121) stays the canonical boundary in all three text
+// callers.
 VA(0x00574070, 0x138)
 MAC_ADDRESS(0x16a6c4, 0x108)  // UpdateQuestLocator caller; HD twin 0x574440
 std::string TSeerHut::getSeerLogText()
@@ -2407,12 +2359,8 @@ std::string TSeerHut::getSeerLogText()
         getName());
 }
 
-// The TQuestGuard pair's TSeerHut twin, and it splits CROSSWISE: 0x5741b0
-// takes " " and is SetRolloverText's, 0x5743e0 takes "\n\n" and is
-// QuickInfo's. 556 B each and, again, byte-identical apart from that one
-// separator relocation.
-// Mac 0x16a828..0x16a854 / 0x16a978..0x16a9a4 expands GetName in these
-// builders; DC's older adventure callers retain that helper directly.
+// The TQuestGuard pair's TSeerHut twin: this one takes " " and is
+// SetRolloverText's; the next takes "\n\n" and is QuickInfo's.
 VA(0x005741b0, 0x22C)
 MAC_ADDRESS(0x16a7cc, 0x150)
 std::string TSeerHut::getRolloverText(int player) const
@@ -2453,9 +2401,8 @@ std::string TSeerHut::getQuickInfoText(int player) const
     return text;
 }
 
-// 0x574610, `ret 4` - the SeerHutList twin of TQuestGuard::read, reached
-// from readObject's SEER arm (mapcell.cpp:4191) on the temporary hut it has
-// just default-constructed. Three parts.
+// The SeerHutList twin of TQuestGuard::read, reached from readObject's SEER
+// arm on the temporary hut it has just default-constructed. Three parts.
 
 // The quest. Restoration of Erathia's map format has no quest record at all:
 // the seer hut carries one artifact ordinal, and the reader synthesises the
@@ -2475,17 +2422,11 @@ std::string TSeerHut::getQuickInfoText(int player) const
 // The name. Every hut takes an unused entry from gpSeerHutNames: a byte per
 // name, all set, then cleared for each name the map's existing huts already
 // hold, then a random one of what is left. The count subtracted from the
-// name total is the hut list's own size, recomputed from a fresh gpGame -
-// retail loads it twice and this transcribes both. VC6's vector<bool> is a
-// byte container: `_Allocate`'s own `if (_N < 0) _N = 0` clamp
-// and `_Construct`'s per-element null check are both in the bytes, and it
-// carries NO unwind action because nothing between its construction and its
-// destruction can throw - rand() is extern "C" and nothrow under /GX.
+// name total is the hut list's own size, recomputed from a fresh gpGame
+// (loaded twice).
 
-// The shared value reader keeps the retained type_quest constructor call in
-// the legacy arm.
-// Mac keeps this map-quest loader as a separate body at code0+0x16aa6c,
-// immediately before TSeerHut::read. Complete expands its sole source call.
+// Mac keeps this map-quest loader as a separate body before TSeerHut::read;
+// Complete inlines its sole call.
 MAC_ADDRESS(0x16aa6c, 0x7c)
 static type_quest* readQuestFromMap(TAbstractFile* infile,
                                     bool flags)
@@ -2503,9 +2444,8 @@ void TSeerHut::read(TAbstractFile* infile)
 {
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         int textRow = rand() % 3;
-        // Complete promotes the signed serialized ordinal before the sentinel
-        // guard (Mac 16ab54..16ab88; retail movsx/cmp at +4b). Keep that
-        // value for the artifact constructor rather than a byte local.
+        // The signed serialized ordinal is promoted before the sentinel guard
+        // and kept for the artifact constructor.
         int artifact = readValue<signed char>(infile);
         if (artifact == -1) {
             m_quest = 0;
@@ -2598,15 +2538,8 @@ void TSeerHut::read(TAbstractFile* infile)
 
     // Original DC TSeerHut::SetRandomName (seerhut.cpp:139, dc 0x12d084) drew
     // from one static TPickANumber(0,47). Complete replaces that body with
-    // this dynamic-name-table selection, and neither retail nor Mac
-    // 0x16aee0..0x16afec retains a call for it. VC6 places it in read itself:
-    // as a helper the depth-2 budget expands the legacy arm's vector
-    // constructor and calls vector<bool>::_Ufill, both opposite to retail.
-    // Mac agrees on placement: with this code in read, CodeWarrior emits
-    // retail's 29-call stream (0x16aae8).
-    // Mac uses packed vector<bool> fill and bit proxies (0x131708, 0xe73b8,
-    // 0x99fb8); VC6 selects its generic byte container for the same
-    // declaration, as in TPickANumber, so keep the native bool type.
+    // this dynamic-name-table selection, placed in read itself (neither
+    // retail nor Mac retains a call for it).
     std::vector<bool> nameAvailable(g_seerHutNameList.size());
     unsigned int name;
     for (name = 0; name < nameAvailable.size(); ++name)
@@ -2628,11 +2561,9 @@ void TSeerHut::read(TAbstractFile* infile)
     m_nameIndex = chosen;
 }
 
-// Complete reuses one byte scratch for every scalar read. Routing those reads
-// through the shared value reader keeps the constructor's retail inline
-// decisions; open-coded staging blocks expand it.
-// Dreamcast's older four-line body has one gzread and no comparable quest
-// representation.
+// Complete reuses one byte scratch for every scalar read, through the
+// shared value reader. Dreamcast's older four-line body has one gzread and
+// no comparable quest representation.
 VA(0x00574A90, 0x24A)
 DC_ADDRESS(0x12d8e4, 0x40)
 MAC_ADDRESS(0x16b01c, 0x27c)
@@ -2665,30 +2596,19 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
     }
 }
 
-// COMDAT pairing: Hstd on the char instantiation, mnemonic agreement 1.000.
+// COMDAT pairing: Hstd on the char instantiation.
 VA_COMPGEN(0x00574d10, 0x120, BASIC_STRING_CONCAT, char)
 
-// COMDAT pairing: basic_string<char>'s scalar deleting destructor (86
-// bytes). The body is _Tidy expanded in
-// place - the reference-count byte at `_Ptr[-1]`, saturating at 0xff, freed
-// when it reaches zero - ahead of the delete, which no other ??_G in the
-// image looks like.
+// COMDAT pairing: basic_string<char>'s scalar deleting destructor, with
+// _Tidy expanded in place ahead of the delete.
 VA_COMPGEN(0x004b7080, 0x56, SCALAR_DELETING_DTOR, basic_string)
 
-// COMDAT pairing: vector<basic_string<char>>::_Ufill (41 bytes).
+// COMDAT pairing: vector<basic_string<char>>::_Ufill.
 VA_COMPGEN(0x004af840, 0x29, VECTOR_UFILL, string)
 
-// The shared single-string insertion and its retained library helpers no
-// longer emit in events, but this TU naturally emits the same specializations.
-// Retail calls 0x4af350 from creatureBankEvent and five quest dialogs:
-// artifact/creature/resource proposals, creature progress and resource text.
-// The latter callers prove this consumer independently.
-// Allocation/deallocation, _Construct/_Ufill and the four calls within this
-// chain are retail's; size at 0x4af4e0 is byte-identical to the retained
-// string-vector size (also folded with vector<vector<hero> >). _Xran and
-// memmove are the
-// retail invalid-position throw and overlap-safe copy; npos/empty-string
-// data point to 0x63a60c/0x63a608. No template body or caller is manufactured.
+// The shared single-string insertion and its retained library helpers;
+// creatureBankEvent and five quest dialogs (artifact/creature/resource
+// proposals, creature progress and resource text) call it.
 VA_COMPGEN(0x004af350, 0x183, VECTOR_INSERT_SINGLE, string)
 
 VA_COMPGEN(0x004af500, 0x4D, VECTOR_DESTROY, string)

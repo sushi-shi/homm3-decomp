@@ -642,14 +642,12 @@ int oldmain()
 // E:\gamedcs\kb.cpp:3830
 #endif  // @carcass
 
-// E:\gamedcs\kb.cpp:481. Retail has no body of its own: a static with
-// ShutDown as its single call site, so /Ob2 expands it there (the
+// E:\gamedcs\kb.cpp:481. Inlined at its single call site, ShutDown (the
 // Dreamcast keeps it out of line). The delete order is the Dreamcast's
-// statement order exactly; Complete's combatManager and advManager have
-// compiler-generated destructors (both retained in kb.obj right after
-// ShutDown), soundManager's is the header inline, and the window, input,
-// town and executive managers plus the AI turn driver are trivially
-// destructible.
+// statement order exactly; combatManager and advManager have
+// compiler-generated destructors, soundManager's is the header inline, and
+// the window, input, town and executive managers plus the AI turn driver
+// are trivially destructible.
 DC_ADDRESS(0x0df6d0, 0x170)
 MAC_ADDRESS(0x10ee7c, 0x248)
 static void deleteMainClasses()
@@ -837,8 +835,8 @@ void lostGame()
     do {
         g_soundManager->serviceSounds();
         Sleep(100);
-        // Mac calls musicPlaying at 0x10fc78; Complete calls the Miles
-        // stream-status import at retail 0x4ee3aa.
+        // Complete calls the Miles stream-status import here (Mac calls
+        // musicPlaying).
         status = AIL_stream_status(g_mp3Stream);
     } while (g_mp3Stream && !done && status == AIL_STREAM_PLAYING);
 }
@@ -1934,10 +1932,8 @@ int nullHandler(message& msg)
 // E:\gamedcs\kb.cpp:2332
 // The dialog's forced answer: the default button for the message-box
 // type (a coin toss between the two choices of the choose dialogs), then
-// the standard OK-widget message. Expanded into both of the handler's
-// exits in retail, so it has no body of its own.
-// DC records message& and a zero-remainder first arm at kb.cpp:2345/2346;
-// retail expands the same branch order into NormalDialogHandler (+0x164).
+// standard OK-widget message. Inlined into both of the handler's exits. DC
+// records message& and a zero-remainder first arm at kb.cpp:2345/2346.
 DC_ADDRESS(0x0e1bf8, 0xd4)
 MAC_ADDRESS(0x111c64, 0xd4)
 static int exitNormalDialog(message& msg)
@@ -2015,20 +2011,11 @@ VA_COMPGEN(0x004f0ae0, 0x21, SCALAR_DELETING_DTOR, type_normal_dialog_frame)
 
 VA_COMPGEN(0x004f0b10, 0x5, IMPLICIT_DTOR, type_normal_dialog_frame)
 
-// E:\gamedcs\kb.cpp:2549
-// Every message the normal dialog's own widgets do not consume ends here.
-// An armed deadline that has run out answers DIALOG_RETURN_TIMEOUT for the
-// window; otherwise a deselect on one of the dialog's reply buttons is
-// turned into the window's answer.  The two picture choices of the
-// E:\gamedcs\kb.cpp:2452. Located in retail on body evidence: a
-// two-byte-argument `ret 8` virtual whose `this` carries an
-// EGameResource at +0x38 and a long qualifier at +0x3c, dispatched
-// through a 37-entry byte index over exactly the EGameResource domain
-// (WOOD=0 .. RES_SMALL_GOLD=0x24). Retail's jump table settles the arm
-// SET and the arm ORDER - it is a jump-table switch, so layout order is
-// source order - and the Dreamcast statement map (kb.cpp:2452..2538)
-// agrees arm for arm, down to the __divls/__modls pair the secondary
-// skill arm needs.
+// E:\gamedcs\kb.cpp:2452
+// The dialog picture's click handler: `this` carries an EGameResource at
+// +0x38 and a long qualifier at +0x3c, and the switch covers the whole
+// EGameResource domain (WOOD=0 .. RES_SMALL_GOLD=0x24), arm for arm as in
+// the Dreamcast statement map (kb.cpp:2452..2538).
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x004f0b20, 0x491)
 DC_ADDRESS(0x0e1e58, 0x214)
@@ -2272,15 +2259,10 @@ void playerDead(int whichPlayer)
 }
 
 // DC kb.cpp:2720..2808 names this source-static helper, its three entry
-// guards, temporary local control and seat/countdown walk. Retail 0x4f2ce0
-// expands that walk inside checkEndGame. Keep the ordinary helper boundary
-// and let VC6 eliminate its repeated guards in the guarded caller.
-// DC 2750 computes the player-record address before the 2752 joined
-// heroes/towns predicate, and retains that record through the 2776
-// countdown store. Retail likewise retains the countdown address across
-// the warning dialog. Keep the actual player reference through the loop.
-// Direct repeated g_game indexing differs; pointer/reference forms agree. The
-// joined predicate follows the DC scopes.
+// guards, temporary local control and seat/countdown walk; inlined inside
+// checkEndGame. DC 2750 computes the player-record address before the 2752
+// joined heroes/towns predicate and keeps that record through the 2776
+// countdown store.
 DC_ADDRESS(0x0e24a0, 0x366)
 MAC_ADDRESS(0x1129ec, 0x3e8)
 static void checkPlayerLoss()
@@ -2883,12 +2865,8 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
 }
 
 // DC kb.cpp:3419..3436 names this ordinary function and its nested
-// GetLocalPlayerGamePos/GetTeamMask calls. Retail expands the enemy scan in
-// checkEndGame. Retail initializes the counter before the team lookup,
-// reloads g_game after GetLocalPlayerGamePos, and tests a zero-extended
-// full-width mask. Keep the canonical GetTeamMask byte return and consume
-// it as int here; caching the receiver or keeping a byte local loses those
-// homes. No local type was recorded for this older DC helper.
+// GetLocalPlayerGamePos/GetTeamMask calls; inlined in checkEndGame.
+// GetTeamMask's byte return is consumed as int.
 DC_ADDRESS(0x0e34c4, 0x92)
 MAC_ADDRESS(0x114754, 0x1d0)
 int getEnemyCount()
@@ -2908,31 +2886,19 @@ int getEnemyCount()
 // E:\gamedcs\kb.cpp:3440. Dreamcast proves the reference parameters,
 // entry-time GetLocalPlayerGamePos (3442), separate town lookup (3460)
 // before formatting (3461), and explicit return branch (3559/3560).
-// The missing localPos debug record does not contradict the cached lookup.
 // Complete's three condition arms preserve the network helper boundaries
 // and add their retail dialogs.
 
-// Keep the member's default construction before the subsequent assignment:
+// The member is default-constructed before the subsequent assignment:
 // CPlayerLostMsg's DC netmsg.h:519 calls both base/member ctors, then 520
 // stores loser and 521 copies the condition.
-// Mac identity is verified at code0:0x114924..0x114cdc (952 B); sendPlayerLost
-// carries no inline qualifier, so Mac retains all three calls. Retain the
-// canonical getText source (an MSL-style begin route inlines all four text
-// lookups on Mac).
-// Original DC ?DisplayLCWinLoss@@YA_NAAULossConditionStruct@@AAH1_N@Z
-// proves bool return and remoteCheck, while gameWon/gameLost remain int&.
-// Both Complete callers pass a logical flag; Mac 0x114ca4..0x114cc4
-// returns the truth of the two integer outputs, preserving this interface.
-// DC GetTeam lines 866/868/872 retain the guard and separate return arms.
-// DC 3448/3452 and 3491/3493 record separate nested admission tests, not one
-// combined condition. DC 3467/3472 and 3519/3524 record coincident scope
-// pairs: both remote game-over arms are braced. DC 3473..3486 and
-// 3528..3538 each hold an empty braced else of the same-team test
-// (zero-length scope pairs at dc 0xe3604 and 0xe36c4), and CodeView keeps
-// the never-emitted local bShowedEndMessage; its stores and a release-form
-// check in each else emit nothing but give this caller the inline cost
-// (retail window 568..648) at which the loss constructor expands at all three
-// sites. The check's text is not recovered.
+// Original DC ?DisplayLCWinLoss@@YA_NAAULossConditionStruct@@AAH1_N@Z proves
+// bool return and remoteCheck, while gameWon/gameLost remain int&. DC
+// 3448/3452 and 3491/3493 record separate nested admission tests; both
+// remote game-over arms are braced (DC 3467/3472, 3519/3524), and DC
+// 3473..3486 and 3528..3538 each hold an empty braced else of the same-team
+// test, where CodeView keeps the never-emitted local bShowedEndMessage (its
+// stores and check emit nothing).
 VA(0x004f2960, 0x37E)
 DC_ADDRESS(0x0e3558, 0x228)
 MAC_ADDRESS(0x114924, 0x3b8)  // decorated identity (kb.h) + anchor-caller (CheckEndGame)
@@ -3172,7 +3138,6 @@ void game::showLuckInfo(hero* thisHero, int mbType)
     }
 
     std::string modifiers = thisHero->getLuckDescription();
-    // Mac keeps separate append calls at 0x1153d8 and 0x1153e8.
     if (modifiers.length() == 0)
         strcat(g_text, g_luckInfo[18]);
     else
@@ -3275,8 +3240,7 @@ VA_COMPGEN(0x004f3940, 0xA9, IMPLICIT_DTOR, combatManager)
 
 VA_COMPGEN(0x004f39f0, 0x6D, IMPLICIT_DTOR, advManager)
 
-// E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h). Mac retains
-// a one-instruction body at 0:0x115f68, called from executive::shutDownSystem.
+// E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h).
 DC_ADDRESS(0x0e4530, 0x78)
 MAC_ADDRESS(0x115f68, 0x4)
 void earlyShutDownSystem()
@@ -3729,8 +3693,8 @@ int gameUnsaved()
 }
 
 // These menu cheats perform the same game/campaign marking operation as
-// both chat handlers and the combat cheat worker. Keep their canonical
-// free helper, including its second global load for the campaign store.
+// both chat handlers and the combat cheat worker, through the canonical free
+// helper.
 VA(0x004f4350, 0x7F2)
 DC_ADDRESS(0x0e49b0, 0x79c)
 int handleAppSpecificMenuCommands(int idItem)
@@ -3947,15 +3911,14 @@ void cleanUpMenus()
 }
 
 // E:\gamedcs\kb.cpp:4781.  DC supplies the public identity and signature;
-// retail independently proves the modulo-eight walk, IsHuman call, disabled
-// flag at game+0x1f636 and the stop when the scan wraps to its starting seat.
+// The walk is modulo eight, calls IsHuman, honours the disabled flag at
+// game+0x1f636 and stops when the scan wraps to its starting seat.
 VA(0x004f4ba0, 0x5F)
 DC_ADDRESS(0x0e519c, 0x76)
 MAC_ADDRESS(0x1163f0, 0xcc)  // anchor-caller (remote 0x556780)
 int getNextHumanPlayer(int start)
 {
-    // DC r8 and Mac r28 mutate the incoming seat while r9/r29 preserve it;
-    // there is no separate player local.
+    // The incoming seat is mutated; there is no separate player local.
     int checked = 0;
     int originalStart = start;
     start = (start + 1) % 8;
@@ -4565,9 +4528,7 @@ void getQuickviewSize(const char* text, int* width, int* height)
     *height = dialogInfo.m_height;
 }
 
-// DC kb.cpp:5478..5479 returns gpNormalDialogWindow. EventWindowHandler's
-// retail loads at 0x4f0fc0 corroborate the same getter expansion. Keep the
-// ordinary helper in its owning TU and the DC source order after sizing.
+// DC kb.cpp:5478..5479 returns gpNormalDialogWindow.
 DC_ADDRESS(0x0e5f60, 0x6)
 MAC_ADDRESS(0x117eb0, 0x8)
 TDialogBox* getCurrentNormalDialog()
@@ -4638,13 +4599,9 @@ void pollSound();
 int normalDialogHandler(message& msg);
 static int waitHandler(message& msg);
 
-// The implicit copy constructor of type_dialog_icon, emitted because
-// DoNormalDialog takes its TNormalDialogInfo BY VALUE and the aggregate's
-// own implicit copy is expanded at every caller while the element boundary
-// is retained. extended_dialog below calls this one eight times in a row
-// (0x4f78dd) building that by-value argument; the body copies the two
-// selectors, both std::strings and the nine trailing dwords, and returns
-// `this` with `ret 4`, which is exactly the generated form.
+// The implicit copy constructor of type_dialog_icon: DoNormalDialog takes
+// its TNormalDialogInfo BY VALUE, and extended_dialog calls this one eight
+// times building that by-value argument.
 VA_COMPGEN(0x004f6810, 0x179, IMPLICIT_COPY_CTOR, type_dialog_icon)
 MAC_COMPGEN_ADDRESS(0x118134, 0xac, IMPLICIT_COPY_CTOR, type_dialog_icon)
 
@@ -4961,17 +4918,12 @@ static int waitHandler(message& msg)
 }
 
 // E:\gamedcs\kb.cpp:5909. The Dreamcast supplies the identity, the exact
-// parameter list and the eight-icon paging shape. Retail fixes the Complete
-// geometry (256x128 with the text widget at 25,30), the NORMAL_DIALOG_DEFAULT
-// type and the -1 special, and proves that the two text-widget extents and
-// the expansion flag are left for CalculateNormalDialogSize to fill in - they
-// are never written here and are read straight out of the block when the
-// by-value argument is built.
-// DC records the page index as long i; Mac 0x1194d8 advances it separately
-// from the eight-icon slot index. Complete publishes timeout before the
-// geometry: native0x119574 stores timeout, then0x119584/0x119594 stores x/y.
-// The implicit icon and string copy identities remain ordinary generated
-// members; no authored constructor or helper call is substituted.
+// parameter list and the eight-icon paging shape. Complete uses 256x128 with
+// the text widget at 25,30, the NORMAL_DIALOG_DEFAULT type and the -1
+// special, and leaves the two text-widget extents and the expansion flag for
+// CalculateNormalDialogSize to fill in. DC records the page index as long i,
+// separate from the eight-icon slot index; timeout is stored before the
+// geometry.
 VA(0x004f7690, 0x312)
 DC_ADDRESS(0x0e6cf0, 0x13a)
 MAC_ADDRESS(0x1194d8, 0x254)  // anchor-global + dc parameter list
@@ -5003,8 +4955,7 @@ void extendedDialog(const char* text,
             dialogInfo.m_icons[icon].set(static_cast<EGameResource>(resources[i].m_resource) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resources[i].m_qualifier);
             ++i;
         }
-        // DC 5943 advances the index before set; retail VC6 advances the
-        // icon pointer before the same call.
+        // DC 5943 advances the index before set.
         while (icon < 8)
             dialogInfo.m_icons[icon++].set(const_no_resource, -1);
 
