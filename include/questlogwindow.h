@@ -22,9 +22,8 @@ public:
     // Scroll offset of the topmost listed quest: zeroed by the constructor,
     // untouched by the destructor, and read by UpdateQuestLocator (0x52e270)
     // as the base of the row index it then uses to select out of
-    // seerHutLogList, bailing when the sum reaches size(). Both lanes
-    // reached that role off the same body; the spelling is a house
-    // placeholder, no dump names it.
+    // seerHutLogList, bailing when the sum reaches size(). The spelling is
+    // a house placeholder; no dump names it.
     int m_firstVisibleQuest;  // +0x70
 
     virtual ~TQuestLogWindow();

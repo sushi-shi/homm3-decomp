@@ -72,12 +72,11 @@ VA_COMPGEN(0x00575260, 0x21, SCALAR_DELETING_DTOR, CHotspotWidget)  // vtbl 0x64
 // same hotspot mouse handler border::Main runs one file over: a field_2C
 // asleep guard, a not-active bail to widget::Main, and a jump-table switch on
 // msg->id with the disabled DOWN/UP arms falling through to their right-button
-// twins. mouseX/mouseY are int (heroWindow::x/y are int, +8.9 over short).
+// twins. mouseX/mouseY are int (heroWindow::x/y are int).
 
 // The right-button-up arm tests the selected state positively, performs
 // deselection inside that arm, then returns zero if unselected. This natural
-// branch form lets VC6 share the earlier zero-return epilogue: all 21 retail
-// blocks and four returns match. No goto or extra source operation is needed.
+// branch form lets VC6 share the earlier zero-return epilogue.
 VA(0x00575290, 0x179)
 DC_ADDRESS(0x12dea8, 0x100)
 MAC_ADDRESS(0x16bab8, 0x1a4)  // anchor-vtable CHotspotWidget vtbl 0x6419a4 slot2 (Main override), ret 4
@@ -590,10 +589,9 @@ void TRandomMapProgress::setTotal(int totalSteps)
     updateProgressBar();
 }
 
-// COMDAT pairing: vector<widget*>::_Ucopy, agreement 0.978. Same caller-set
-// argument as the insert above: 0x174ce0 is reached from TAdventureMapWindow's
-// constructor and SetSleepImage, and from TTownGateWindow::AddTown's expanded
-// insert - cross-unit reach that only a shared COMDAT has. dialogbox 0x8dba0
-// (49 B, identical similarity) is reached only from unresolved labels inside
-// its own two segments.
+// COMDAT pairing: vector<widget*>::_Ucopy. Same caller-set argument as the
+// insert above: 0x174ce0 is reached from TAdventureMapWindow's constructor
+// and SetSleepImage, and from TTownGateWindow::AddTown's expanded insert -
+// cross-unit reach that only a shared COMDAT has. dialogbox 0x8dba0 (49 B)
+// is reached only from unresolved labels inside its own two segments.
 VA_COMPGEN(0x00574ce0, 0x2F, VECTOR_UCOPY, widget)

@@ -345,8 +345,7 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 // the two four-bit offsets together, `test cl,0x1f` for terrain, `test
 // ecx,0x1fe0` for river and road together, and `test dl,1` for diggable.
 // has_grail and visible are deliberately NOT compared.
-// Native DC ??8type_AI_puzzle_tile@@QBA_NABU0@@Z proves const bool return;
-// restoring that interface preserves Windows matchPuzzle 95.1081%.
+// Native DC ??8type_AI_puzzle_tile@@QBA_NABU0@@Z proves const bool return.
 DC_ADDRESS(0x1156bc, 0xc0)
 MAC_ADDRESS(0x147d08, 0x178)
 bool type_AI_puzzle_tile::operator==(
@@ -368,8 +367,8 @@ bool type_AI_puzzle_tile::operator==(
 // row at byte offset 2112 beyond its 1089-byte allocation. A clipped bottom
 // puzzle row can similarly form visible+324 beyond visible[17*19]. These
 // final cursors are not dereferenced, but their formation is not valid portable
-// C++. The earlier guarded repair scored 60.63%; bounded offset alternatives
-// remain non-exact. No extra allocation or padding guarantee is claimed.
+// C++. Guarded or bounded-offset alternatives do not match retail. No extra
+// allocation or padding guarantee is claimed.
 VA(0x0052c8b0, 0xFC)
 DC_ADDRESS(0x11577c, 0xbc)
 MAC_ADDRESS(0x147e80, 0xf0)  // bracketed between tile ctor and AI attempt
@@ -471,7 +470,7 @@ static void createAIPuzzleMap(long player, unsigned char* visible,
 // Mac 0x148b4c..0x148b8c initializes the result at this first-use boundary;
 // direct construction keeps its canonical point constructor and avoids a copy.
 // Retail loads current before storing best; DC 668/669 spans support the
-// point assignment before that scalar update (Windows 99.22 -> 100).
+// point assignment before that scalar update.
 VA(0x0052c9b0, 0x55B)
 DC_ADDRESS(0x115f64, 0x3e4)
 MAC_ADDRESS(0x1489fc, 0x428)  // anchor-caller
@@ -671,6 +670,5 @@ static type_point matchPuzzle(long player, type_AI_puzzle_tile (&puzzleMap)[19][
     return result;
 }
 
-// COMDAT pairing: bitset<48>::test, agreement 1.000 at an exactly equal
-// 52-byte extent.
+// COMDAT pairing: bitset<48>::test, at an exactly equal 52-byte extent.
 VA_COMPGEN(0x005067e0, 0x34, BITSET_TEST, Bitset48)

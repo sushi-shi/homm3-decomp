@@ -82,8 +82,8 @@ Bitmap816::~Bitmap816()
         delete[] map;
 }
 
-// The initial EH state (retail 1, ours was 2) was a CLEANUP-COUNT fact, not
-// a spelling. Retail's unwind map for this body has exactly two entries and
+// The initial EH state (retail 1) is a CLEANUP-COUNT fact, not a spelling.
+// Retail's unwind map for this body has exactly two entries and
 // the funclets say which: 0x628600 is `mov ecx,[ebp-0x10]; jmp ~resource`
 // and 0x628608 is `add ecx,0x34; jmp ~TPalette16`. There is no
 // `add ecx,0x250; jmp ~TPalette24` funclet - although the Bitmap816
@@ -92,8 +92,7 @@ Bitmap816::~Bitmap816()
 // say (a) this body's delete cannot throw - the TU sees <new>'s
 // `operator delete(void*) _THROW0()` rather than the implicit, throwing
 // declaration - and (b) the ~TPalette24 call CAN, which is why that
-// destructor carries no exception specification. Measured: empty body -> 1
-// entry; <new> alone -> 1; <new> plus a throwing ~TPalette24 -> 2, retail.
+// destructor carries no exception specification.
 // The map editor's and campaign editor's copies (h3maped 0x4e36e0,
 // h3ccmped 0x449610) keep a third state around the delete: their Libraries
 // compile had no <new>, so the delete itself can throw.

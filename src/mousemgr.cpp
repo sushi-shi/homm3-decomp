@@ -109,8 +109,8 @@ public:
     // Retail proves the invariant's IL cost: checkUpdate's nested hidePointer
     // expansion keeps this constructor as a call (0x50d890) at budget 21,
     // which requires cb > 40. The plain store+call body costs 39 (free, so
-    // always expanded; checkUpdate 96.73%); the release-build assert's two
-    // tuples make 41. Its text is not recovered.
+    // always expanded); the release-build assert's two tuples make 41. Its
+    // text is not recovered.
     VA(0x0050d890, 0x19)  // byte-identified out-of-line copy
     DC_ADDRESS(0x0ff7e0, 0x20)
     TCSLock(CRITICAL_SECTION* criticalSection) {
@@ -254,19 +254,13 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
 }
 
 // E:\gamedcs\mousemgr.cpp:526
-// RETAIL-RECONSTRUCTED 2026-08-09. The 72-block CFG now agrees exactly,
-// including both early-return families, overlap/non-overlap selection, all
-// four clipping ladders and the final cleanup. SaveAndDraw and
-// RestoreUnderlying are ordinary members whose expansions retain their
-// argument homes and private RECTs in retail's Update stack frame.
+// SaveAndDraw and RestoreUnderlying are ordinary members whose expansions
+// retain their argument homes and private RECTs in retail's Update stack
+// frame.
 
 // DC mousemgr.cpp:639/700 and 648/708 prove separate branch-local
 // window_origin POINTs and ddsd descriptors. Keep those scopes, substituting
 // the retail-proven Windows v1 descriptor for DC's Surface4 descriptor.
-// The 32-state helper/scope family reproduced 32 distinct objects and ten
-// elites with every sibling exact. Rectangle-copy initialization and ordinary
-// helpers reach 99.8420 with the old shared origin, 99.7141 with the proven
-// origins retained; old forced/interleaved construction was 94.1675.
 VA(0x0050cd90, 0x770)
 DC_ADDRESS(0x0fec54, 0x5d8)
 MAC_ADDRESS(0x217120, 0x62c)  // anchor-global
@@ -461,8 +455,7 @@ void mouseManager::mouseCoords(int& x, int& y)
 // E:\gamedcs\mousemgr.cpp:798 (). The signature proves const
 // RECT&, and lines 805/809 construct save_rect then copy it into src_rect
 // (the SH4 copy reads save_rect.right). Retail expands this ordinary helper;
-// no forced-inline keyword is needed. Independent rectangle constructions
-// score below the copy in the bounded family (all callers measured).
+// no forced-inline keyword is needed.
 DC_ADDRESS(0x0ff268, 0xbe)
 MAC_ADDRESS(0x2177f4, 0x150)
 void mouseManager::saveAndDraw(
@@ -560,9 +553,6 @@ void mouseManager::checkUpdate()
     // keeps the on-screen reset in a separate else block. Retail's EH map
     // agrees: state 1 is the live hidePointer lock from the first expansion
     // and state 2 is the null entry left by the second, dead expansion.
-    // Residual (99.88%): retail tests the second guard bit through a
-    // register (mov al,2; test al,cl) where this compile uses immediates;
-    // a single two-declarator static declaration was byte-flat.
     if (IsIconic(g_hwndApp))
         return;
     if (GameTime::isPast(updateTime) && !isBusy()) {

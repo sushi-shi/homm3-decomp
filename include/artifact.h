@@ -156,7 +156,7 @@ extern const TArtifactSlotTraits (&akArtifactSlotTraits)[19];
 // The richer hero member also checks displaced/combination artifacts.
 // Retain the const mask reference: it preserves the retail exception-path
 // value lifetime. Direct nested indexing expands _Eos instead of retaining
-// its call (92.66% caller); this canonical reference form matches100%.
+// its call.
 // DC public ?artifactAllowedInSlot@@YA_NW4TArtifact@@W4TArtifactSlot@@@Z
 // proves bool; preserve the original header inline body.
 DC_ADDRESS(0x037d88, 0x2c)

@@ -13,8 +13,8 @@ extern const float g_afUpgradeCostFactor[7];
 // Retail vtable 0x63eb68 has heroWindow's nine-slot shape; the constructor
 // invokes heroWindow directly and installs that derived vptr.
 
-// PROVEN layout (2026-08-14). The Dreamcast fieldlist 0x5209 gives the tail
-// as slot[560 B] @68, totalCost @628, UpgradeAllButtonState @656,
+// PROVEN layout. The Dreamcast fieldlist 0x5209 gives the tail as slot[560 B]
+// @68, totalCost @628, UpgradeAllButtonState @656,
 // RolloverWidget @660, size 664 - i.e. base + 7*80 + 7*4 + 4 + 4 over a
 // 68-byte STLport heroWindow. Retail's heroWindow is 0x4c (the Dinkumware
 // vector is four bytes wider), and every offset then falls out of the

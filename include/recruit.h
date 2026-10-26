@@ -53,8 +53,8 @@ enum ERecruitCreatureSlot {
 // first. The constructor, add_creature_widgets, Open and Update now close
 // TRecruitWindow's own 0x20-byte tail exactly.
 
-// Three widget handles ARE now byte-proven, by recruitUnit::Update's
-// enable pass (0x550306..0x5503b7): +0x50 is enabled only when
+// Three widget handles are byte-proven, by recruitUnit::Update's enable pass
+// (0x550306..0x5503b7): +0x50 is enabled only when
 // numberToBuy != 0 && maxAvail > 0 && !view_only (the confirm
 // control), +0x54 on maxAvail > 0 && !view_only, and +0x58 is the
 // dialog's slider - the same pass drives its SetResolution/SetState

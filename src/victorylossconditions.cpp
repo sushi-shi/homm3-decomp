@@ -46,13 +46,9 @@ static const int g_angelicAllianceSecondMap = 9;
 // GetTeam/IsHumanTeam calls (DC line 41). The ordinary path rejects the wrong
 // condition, an absent current player, and a disabled player separately.
 // DC's first guard returns from a braced block (line 34, two nested scopes).
-// With those guard scopes VC6 expands out_of_range's constructor inside
-// bitset::test while retaining logic_error, matching retail +0x4c1. Joining
-// the guards emits the same game logic but leaves out_of_range out of line.
-// That expansion needs a final test-site budget of 181..183 (inline trace):
-// unbraced guards leave 177 since getHero's DC else-arm; bracing all three, 189.
-// Component predicate spelling and discarding erase's result did not close
-// that boundary; the complete separated-guard body matches Windows exactly.
+// With those separate guard scopes VC6 expands out_of_range's constructor
+// inside bitset::test while retaining logic_error, matching retail +0x4c1;
+// that needs a final test-site budget of 181..183.
 // Original DC public CheckForArtifactWin@@QAA_NXZ proves a bool result;
 // the dossier's primitive 0x20 display is lowered-byte metadata.
 VA(0x005f1610, 0x4FE)
@@ -693,18 +689,12 @@ unsigned char LossConditionStruct::heroKilled(const hero* loser)
     return 0;
 }
 
-// Mac is byte-exact with the early type guard, returned-location temporary
-// as the equality operand, and stored loss member as the result. A named
-// location local delays field extraction; an explicit result assignment
-// adds another copy. Windows stays 99.8429% with only the two stack homes
-// exchanged; keep the canonical constructor, getLocation and operator==.
+// The early type guard, the returned-location temporary as the equality
+// operand and the stored loss member as the result follow Mac; keep the
+// canonical constructor, getLocation and operator==.
 // Original DC public CheckForDefeatedTownLoss@@QAA_NHPBVtown@@@Z proves
 // bool and const town*; a displayed primitive 0x20 does not prove byte source.
 // Dreamcast 510/511 store the loser and flag in place (no recordLoss).
-// The in-place stores exchange the stack homes of the target point and the
-// getLocation() temporary (99.84%); named locals, either compare order, a
-// returned true, const, an explicit cast or a braced guard keep it, and the
-// stores swapped cost more (97.97%).
 VA(0x005f2e40, 0xD9)
 DC_ADDRESS(0x19074c, 0x70)
 MAC_ADDRESS(0x1ff304, 0x140)

@@ -90,8 +90,7 @@ bool type_university_skill_button::handleClick(
 }
 
 // DC 124/133/236 use TTextResource::operator[] for all four text lookups.
-// E:\gamedcs\university_window.cpp:102. Exact with the original helper
-// calls and recovered pointer lifetimes. DC records widget* new_widget;
+// E:\gamedcs\university_window.cpp:102. DC records widget* new_widget;
 // the typed background/exit/cancel locals below are inferred from retail's
 // derived-to-base argument temporaries, not recovered local names. Direct
 // skill-array access restores the cancel hotkey's vector<int>::insert
@@ -101,18 +100,6 @@ bool type_university_skill_button::handleClick(
 // calls push_back twice; unlike 187/188, 247/248 and 255/256, there is no
 // back() call at this site. Complete adds the townUniversity image arm;
 // its third parameter is proven by both retail callers and the branch.
-//
-// Negative controls: the 54-state access/lifetime family leaves cached
-// record references/pointers at 88.1141..88.1533%, versus 95.1581..95.2402%
-// for direct indexing (four objects, four reproduced). The next 54-state
-// typed-local family reaches 98.9215% (18 objects, ten reproduced). In the
-// final 33-state family, reading the stored skill stays at 99.5480% and
-// using back() for the second background at 99.3736%; restoring both is
-// exact for all eight tested scope/declaration combinations (five objects,
-// five reproduced). All other TU functions stay unchanged in these tests.
-// The apparent +4 coordinate-load differences are the same addresses:
-// g_topBarPositions+4 and retail const_243b64. All 154 calls agree after
-// verifying the six folded vector-helper aliases against their retail bodies.
 VA(0x005ef500, 0x1252)
 DC_ADDRESS(0x18e790, 0xb68)
 MAC_ADDRESS(0x1fa79c, 0x1e68)  // Univers1.pcx + two call-site modes
@@ -405,12 +392,6 @@ void type_university_window::skillClick(TSecondarySkill skill)
         m_currentHero->getPlayer()->m_resources[GOLD] >= TUITION);
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
-
-// Earlier skillClick controls at 98.3269%: naming a button pointer was
-// byte-flat and moving the selected-skill store below setSkill fell to
-// 98.2560%. Retaining the named skill string and canonical setSkill/show/
-// hide calls is exact in the current TU; the old register-only diagnosis
-// no longer describes this object.
 
 // E:\gamedcs\university_window.cpp:404
 // DC 405/407/408/411 proves the base-handler result guard followed by

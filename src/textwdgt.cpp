@@ -33,16 +33,8 @@ VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 // parameter is read nowhere in the body - retail carries it dead, exactly as
 // the header's declarator does.
 
-// Residual (99.9130%): ONE instruction, and it is inside the inlined
-// `basic_string::assign(const char*)`, not in this body. Retail terminates
-// the copy with `mov byte ptr [ecx+eax], 0` - SIB base `_Ptr`, index `_Len` -
-// where this compile emits the same store with the two registers exchanged
-// (`[eax+ecx]`). All 16 blocks, 9 branches, 7 calls and 9 relocations agree
-// exactly; the operand roles are chosen inside a vendored Dinkumware header
-// this TU may not respell.
-
-// The three trailing member stores WERE reachable, +0.05: retail emits them
-// backColor -> 0x48, justify -> 0x4c, color -> 0x44, and VC6 rotates the
+// The three trailing member stores: retail emits them backColor -> 0x48,
+// justify -> 0x4c, color -> 0x44, and VC6 rotates the
 // emitted run one place left against source order, so the source has to be
 // written `Color; BackColor; Justify;` to land retail's order.
 VA(0x005bc280, 0x12D)
@@ -284,10 +276,6 @@ bitmapBackedTextWidget::bitmapBackedTextWidget(
 // textWidget and bitmapBackedTextWidget slot 3 (0x642dbc, 0x642df4) both
 // target this `ret 8`; DC independently proves the two-argument const
 // signatures and empty bodies. Other classes share this ICF representative.
-// Full VC6 checkpoint: both text claims and widget::OnSetFocus are exact;
-// both text vtables remain 14 slots with the proven overrides at 3 and 8.
-// The shared const interface moves unchanged CEnterNameEdit::OnKillFocus
-// CUR 100 -> 99.8710; its MAX/HIST stay 100 and no banked peak is lost.
 #if 0  // @carcass
 
 VA(0x005bc7e0, 0x3)

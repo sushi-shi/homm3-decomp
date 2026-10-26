@@ -1490,11 +1490,10 @@ void TAdventureMapWindow::onSleepChange(unsigned char on)
     }
 }
 
-// UNCLAIMED IN SPAN, RESOLVED 2026-09-06 (claim lane 31): 0x404690 is NOT a
-// basic_string destructor - it stores logic_error's vtable 0x6455bc and
-// tail-calls ~exception, so it is `??1logic_error`, and it is claimed in
+// 0x404690 is NOT a basic_string destructor - it stores logic_error's vtable
+// 0x6455bc and tail-calls ~exception, so it is `??1logic_error`, claimed in
 // objecttype.cpp with the rest of that COMDAT group (0x404640 / 0x404660 /
-// 0x4046e0). events' 0x4ad0e0 is still open.
+// 0x4046e0).
 
 // COMDAT pairing: basic_string<char>::_Eos, 20 B against this compiland's
 // single 20-byte COMDAT.

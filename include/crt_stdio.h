@@ -4,10 +4,9 @@
 // Why this header exists rather than the real CRT headers: the
 // include-set sensitivity class (initialize_game_data precedent,
 // byte-proven) makes the COUNT OF USER-DEFINED TYPE DEFINITIONS visible
-// in a TU a real codegen input, with no semantic change anywhere. A
-// measurement in this tree on 2026-08-08 cost initialize_game_data
-// 100.0 -> 96.09 for a single added type definition in a shared
-// header's closure. <stdio.h> would add its own definitions to every
+// in a TU a real codegen input, with no semantic change anywhere: a single
+// added type definition in a shared header's closure changes
+// initialize_game_data. <stdio.h> would add its own definitions to every
 // TU that needs so much as fopen.
 
 // A bare `struct _iobuf;` FORWARD declaration is in the proven-inert

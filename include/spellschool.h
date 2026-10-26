@@ -22,10 +22,7 @@
 // bit 2 with +0xd7 (14, Fire), bit 8 with +0xda (17, Earth), bit 4
 // with +0xd9 (16, Water).
 // No retail byte is claimed for the SPELLING - this is DC naming
-// evidence over an int-sized domain, and it changes no codegen:
-// A/B-measured 2026-08-08 against the `typedef int` it replaced, ZERO
-// of the 977 scored functions in all 52 units moved by so much as a
-// byte.
+// evidence over an int-sized domain, and it changes no codegen.
 enum TSpellSchool {
     const_invalid_school = 0,
     eSchoolAir = 1,

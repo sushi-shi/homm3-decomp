@@ -204,8 +204,7 @@ void BinkManager::restartBink()
 
 // Like nextSmackerFrame, publish the complete readiness predicate in the
 // real dirty-state byte before testing it. BinkWait precedes the store and
-// paused frames remain dirty. This recovers the retail shared exit layout;
-// separate true/false stores, readiness scopes and terminal guards did not.
+// paused frames remain dirty. This gives the retail shared exit layout.
 // E:\gamedcs\binkmanager.cpp:252
 VA(0x0044DAA0, 0x21A)
 DC_ADDRESS(0x050a90, 0x4)
@@ -283,9 +282,8 @@ void BinkManager::closeBink()
 // E:\gamedcs\binkmanager.cpp:376 is a platform stub.
 // Retail matches with the canonical playingBINK aggregate and ushort screen
 // pointer. Enable sound before capturing dimensions, then publish centered
-// coordinates before saving the redraw position. Fragmented globals reached
-// 98.37%; scalar/POINT locals and byte-offset spellings did not recover the
-// final coordinate registers. The aggregate and getMap call do.
+// coordinates before saving the redraw position. The aggregate and getMap
+// call give the final coordinate registers.
 namespace BinkManager {
 static unsigned char playBinkCore(int id, int x, int y, int w, int h);
 }

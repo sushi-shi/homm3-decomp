@@ -48,8 +48,8 @@ inline int classifyTownAlignment(int townType)
 // literal count so each singular/plural selection folds at its call site.
 // DC 299..307 keeps the else arm (row 303 is its own jump); the guard-return
 // spelling costs /Ob2 more and pushed getArmyHelpText's appends out of line.
-// Loki's range assert (DC leaves 297..298 unrecorded) costs combatMessage
-// 100 -> 98.07; not ported (docs/vc6/inliner.md).
+// Loki's range assert (DC leaves 297..298 unrecorded) is not ported: it
+// changes combatMessage (docs/vc6/inliner.md).
 VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup
 DC_ADDRESS(0x01ef94, 0x5c)
 inline const char* getArmyName(int type, int count)

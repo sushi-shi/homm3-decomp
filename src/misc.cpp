@@ -68,14 +68,9 @@ void generateUniqueSystemID()
 // DC misc.cpp:172..206 and Mac 0x130e74..0x130f6c preserve the flag order,
 // including the second animateSpellBook mask. The final four are window
 // menu/fullscreen, first-time, then first-install (DC 201/202/204/206;
-// Mac 0x130f40/0x130f4c/0x130f58/0x130f64). Restoring that tail order
-// raises Windows 92.7784% to 100%, with all 24 retail blocks matching.
-// Expanding every compound mask into x = x & 1 is byte-flat in both compilers.
-// A shared settings reference is also Windows-flat; its Mac comparison
-// remains unavailable, so the ordinary direct global access is retained.
-// Restoring DC configStruct's windowConfig subrecord and plain-char
-// bFirstInstall preserves the field layout and is Windows-byte-flat;
-// those type facts are independent of the recovered statement order.
+// Mac 0x130f40/0x130f4c/0x130f58/0x130f64). The settings are direct global
+// accesses. DC configStruct's windowConfig subrecord and plain-char
+// bFirstInstall fix the field layout.
 // Mac config storage also differs: First Time is inside it at +0x54,
 // followed by windowConfig at +0x58;
 // army-info/name/combat-speed are +0x74/+0x94/+0x98 (Win +0x70/+0x90/+0x94).
@@ -782,12 +777,8 @@ void sRand(int seed)
 // CodeView proves both degenerate-range returns, then rand at line 805 and
 // the inclusive remainder at 806. Restore this ordinary source body instead
 // of three caller-local adapters to Random. Retail callers reach 0x50b230,
-// whose guards/rand/remainder also implement Random; the identical-body
-// comparison is checked separately from ownership. No second RVA is claimed.
-// VC6 verification: `sema compare 0x50b230 --unit misc --symbol
-// ?sRandom@@YIHHH@Z --no-build --why-bytes` agrees in every view, including
-// the rand relocation. The two source bodies can therefore share retail's
-// retained code without replacing SRandom's implementation with an adapter.
+// whose guards/rand/remainder also implement Random; the two source bodies
+// share retail's retained code, and no second RVA is claimed.
 // E:\gamedcs\misc.cpp:796
 DC_ADDRESS(0x0fe0d0, 0x3c)
 MAC_ADDRESS(0x1314b4, 0x6c)

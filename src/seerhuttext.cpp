@@ -46,8 +46,7 @@ DATA(0x0069faa8) std::vector<std::string> g_seerHutNames;
 // The tables above are defined before the loader, as retail's order shows:
 // the two 39/23-byte initializer pairs and the vector initializer pair at
 // 0x56bd90..0x56c0b0 precede 0x56c120. Compiled after them, the loader
-// receives C2's phase flag as 1 (docs/vc6/phase-flag.md); compiled first in
-// the TU it kept the fourth inlined _Eos store as `[eax + ecx]` (99.9621%).
+// receives C2's phase flag as 1 (docs/vc6/phase-flag.md).
 VA(0x0056c120, 0x2A3)
 MAC_ADDRESS(0x2543f0, 0x1fc)  // anchor-string(seerhut.txt caller 0x56c3e0) + anchor-callee(basic_string::assign) + retail-only
 void loadSeerHutTextColumn(TSpreadsheetResource* sheet,

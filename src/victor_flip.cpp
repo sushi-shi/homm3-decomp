@@ -2,8 +2,8 @@
 // is unknown; this filename is a provisional semantic grouping.
 // Retail retains both validation calls, the dimension call and all four
 // bit-range calls. Compiling with their bodies in victor.cpp under /Ob2
-// expands all seven boundaries and scores 0%. The palette initializer needs
-// /Ob2 with its upload helper visible, so that proven pair stays together.
+// expands all seven boundaries. The palette initializer needs /Ob2 with its
+// upload helper visible, so that proven pair stays together.
 // This unit keeps canonical shared declarations and ordinary helper calls.
 #include "va.h"
 

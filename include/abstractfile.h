@@ -13,8 +13,8 @@ public:
     // also emit it out of line, identical in bytes AND vftable relocation
     // to the implicit stream/resource-adapter destructors folded at
     // 0x487e00. A retained copy therefore does not imply an ordinary
-    // declaration. Defining it only in customcampaign.cpp is the negative
-    // control: the two derived destructors call it and fall to 80/87.69%.
+    // declaration. Defined only in customcampaign.cpp, it would be called by
+    // the two derived destructors instead.
     virtual ~TAbstractFile() {}
     virtual int read(void* data, int size) = 0;
     virtual int write(const void* data, int size) = 0;

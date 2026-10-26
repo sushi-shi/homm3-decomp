@@ -86,8 +86,6 @@ public:
 // The shared inclusive rectangle used by the adventure and combat drawing
 // code. Dreamcast CodeView fixes the four names, offsets, and 16-byte extent;
 // retail's combat drawing wrappers read the same four dwords in this order.
-// Its type-handle collateral is banked in score history rather than hidden
-// behind consumer-specific declarations.
 struct SLimitData {
 public:
     int m_minX;

@@ -31,12 +31,11 @@
 
 // E:\gamedcs\fly.cpp:58
 // E:\gamedcs\fly.cpp:76
-// RECONSTRUCTED 2026-08-13. The 761 retail bytes are FOUR copies of the
-// same six-step adjacency scan, which is exactly the two private DC
-// find_flyer_attack_cell member overloads expanded by /Ob2. Their source
-// bodies stay ordinary member definitions even though retail retained no
-// out-of-line copy. Removing the explicit inline keywords preserves all five
-// exact targets; expansion alone does not recover original lexical spelling.
+// The 761 retail bytes are FOUR copies of the same six-step adjacency scan,
+// which is exactly the two private DC find_flyer_attack_cell member
+// overloads expanded by /Ob2. Their source bodies stay ordinary member
+// definitions (no inline keyword) even though retail retained no
+// out-of-line copy.
 
 // WHAT THE FOUR COPIES VARY. The pair (start, target) walks
 // (this hex, enemy hex), (this second hex, enemy hex),
@@ -145,7 +144,6 @@ int army::flyTo(int destIndex, bool restoreFacing)
 // The typed m_saveScreenPostGrid bitmap restores the previous draw bounds.
 // Keep the by-value frame extent and the canonical renderer calls: Complete's
 // fixed-viewport header helpers eliminate ScrollTo and expand UpdateCombatArea.
-// No extra block is needed around the outer loop; its removal is byte-flat.
 VA(0x004b4a40, 0x44E)
 DC_ADDRESS(0x0a1590, 0x40e)
 MAC_ADDRESS(0x0c82a0, 0x5dc)

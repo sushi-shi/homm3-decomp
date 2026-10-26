@@ -108,9 +108,9 @@ resource* GetFromCache(const char* name);
 // retail 0x559510. No explicit calling convention: the game's thirteen
 // getter call sites pass registers (/Gr), the editor's push the arguments
 // (h3maped 0x4dc3d6). Its body is reconstructed; no PC symbol source
-// survives, so the source name remains explicitly provisional. Use ordinary C++ linkage:
-// the bootstrap extern "C" suppressed VC6's exception cleanup in both
-// reporters; removing it restores the retail fs:[0] registration and unwind
+// survives, so the source name remains explicitly provisional. It has
+// ordinary C++ linkage: extern "C" would suppress VC6's exception cleanup
+// in both reporters, where retail has the fs:[0] registration and unwind
 // states.
 void reportMissingTypedResource(const char* caller,
                                 int resourceType,

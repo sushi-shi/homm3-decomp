@@ -160,27 +160,11 @@ void soundManager::initializeSamples()
 // fallback, Smacker/Bink binding and twelve-handle allocation here.
 
 // Retail retry at +0x1ba returns to the common sample-rate test instead of
-// exiting directly. Continuing through the existing rate guard restores
-// that edge and raises Open from 84.5280% to 94.32%. All middleware calls
-// and initializeSamples remain canonical; the Mac channel setup is a
-// platform rewrite. The remaining Windows difference is 30 vs 31 blocks,
-// chiefly the shared preference/exit tails; helper calls are preserved.
-// A conditional while-loop with a preinitialized null result scores 92.07%;
-// the guarded infinite loop retains the stronger 94.32% comparison.
-// Separate initial/bottom guards in a do/while score 91.79%; a failure-first
-// nested preference arm scores 77.34%. Neither restores the shared tail.
-// A direct-call condition plus while(1) scores 82.85%; the SDK S32 result
-// local is byte-flat. The guarded do loop with a shared driverReady join
-// restores all 31 blocks and reaches 95.21%. A common retry label is flat;
-// branch-local preference tails score 87.94%. The same driver join inside
-// an infinite loop returns to 94.32%; its common rate guard is shared.
-// A separate success phase followed by `if (openResult && getPreference)`
-// is byte-flat at 95.21%; VC6 folds it back to the same retry layout.
-// Retail's failure arm branches into quality downgrade only when the
-// preference is set; its zero result falls into the common wave fallback.
-// The explicit guarded fallback recovers that complete phase at 99.44%.
-// A single rate-guarded while with the uninitialized driver-result join
-// closes Open at 100%: all 31 blocks, 17 calls and 47 references agree.
+// exiting directly: one rate-guarded while loop with the uninitialized
+// driver-result join. Retail's failure arm branches into quality downgrade
+// only when the preference is set; its zero result falls into the common
+// wave fallback. All middleware calls and initializeSamples remain
+// canonical; the Mac channel setup is a platform rewrite.
 VA(0x005997d0, 0x2BF)
 DC_ADDRESS(0x14b240, 0x30)
 MAC_ADDRESS(0x218578, 0x160)  // vtable slot + Device: string
@@ -454,10 +438,9 @@ void soundManager::modifySample(ds_memsample* inSample, short functionId, long v
 // every other operation retains the initialized zero result.
 VA(0x0059a030, 0x87)
 MAC_ADDRESS(0x218b48, 0xac)
-// Combining the three early guards is not a callback fix: the retained
-// helper drops from 100% to 70.33%, while waitEndSampleThread stays 92%.
-// Moving its zero-result initialization across the early guards also loses
-// the retained exact body without improving the callback.
+// The three early guards stay separate and the zero-result initialization
+// stays after them; combining or moving them does not help the callback
+// (waitEndSampleThread).
 int soundManager::getSampleInfo(ds_memsample* inSample, short operation)
 {
     if (g_noSound)

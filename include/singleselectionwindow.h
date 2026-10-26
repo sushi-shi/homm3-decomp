@@ -272,7 +272,7 @@ public:
     FileTime m_fileTime;  // +0x6f8
     SavedGameHeader m_saved;  // +0x700
 
-    VA(0x00578E00, 0x25F)  // retained retail body; formerly enrolled by CLASS_CTOR
+    VA(0x00578E00, 0x25F)  // retained retail body
     DC_ADDRESS(0x1474b8, 0xbc)
     GameSelectionHeadersStruct()
     {

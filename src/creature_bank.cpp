@@ -179,10 +179,6 @@ static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 // type_creature_bank& (parameter sp+0x34). Windows and Mac 0x897a0 pass
 // its address and access the bank unconditionally; neither contradicts
 // that interface. A generated decorated name is not retail type evidence.
-// The pre-edit retail comparison is 100%; the reference spelling preserves
-// all 880 emitted VC6 bytes including padding. Focused creature_bank/game
-// builds preserve their available Mac comparisons. Before delink refresh,
-// the old pointer target name cannot bind this renamed reference definition.
 VA(0x0047ad90, 0x36E)
 DC_ADDRESS(0x0712d0, 0x210)
 MAC_ADDRESS(0x0897a0, 0x348)

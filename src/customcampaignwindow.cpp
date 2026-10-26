@@ -190,15 +190,7 @@ bool CampaignHeaderPointerLess::operator()(
 // the list, and mirrors the selection into the name text and the
 // description scroller.
 
-// Residual (93.80%): `this` and `i` are homed ebx/edi where retail has
-// edi/ebx; every block is otherwise identical. The swap arrived with the
-// header vector's retype (void* -> CampaignHeaderStruct*, worth +8 on
-// LoadCampaignList) and no local spelling moves it - measured flat: the
-// loop counter's declaration form and signedness, the condition order,
-// pre-increment, the compare operand order, the tail's local/polarity
-// (the `>=` else-first form IS retail's layout, +11), raw send_message
-// against show()/hide(), and hoisting the name widget above the colour
-// branch (loses 1.2). Include-set class.
+// The tail's `>=` else-first form is retail's layout.
 VA(0x00483330, 0x281)
 MAC_ADDRESS(0x21f884, 0x21c)  // LoadCampaignList's tail callee, retail-only
 void TCustomCampaignWindow::updateList()
@@ -337,6 +329,5 @@ VA_COMPGEN(0x00483AA0, 0xA0, INSERTION_SORT_1,
            CampaignHeaderPointerLess)
 
 // COMDAT pairing: std::_Sort<CampaignHeaderStruct*, CampaignHeaderPointerLess>
-// - agreement 0.972 and the only object in the image emitting that
-// instantiation is this one.
+// - the only object in the image emitting that instantiation.
 VA_COMPGEN(0x00483940, 0x151, STD_SORT, campaignheaderstruct_ptr)

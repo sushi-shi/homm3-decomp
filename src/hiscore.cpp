@@ -580,8 +580,7 @@ static const char* highScoreCreatureImageName(int index, int scoreType)
 // Four controls precede two 11-icon score families. Mac code 0x10b084 calls
 // the retained source-local image-name helper at 0x10b024 for each family.
 // VC6 inlines that ordinary helper into both loops; naming its score and
-// monster-type locals restores the retail second-loop register order. The
-// Windows constructor then reaches MAX 100% with 46 matching CFG blocks.
+// monster-type locals gives the retail second-loop register order.
 // E:\gamedcs\hiscore.cpp:858
 VA(0x004e9880, 0x506)
 DC_ADDRESS(0x0d7e3c, 0x5c4)
@@ -666,9 +665,8 @@ void THighScoreWindow::doModal()
     g_windowManager->doDialog(this, highScoreWindowHandler, 0);
 }
 
-// DC 0xd92c8 proves destructor -> conditional operator-delete.  Retail's
-// 33-byte wrapper matches all 3 CFG blocks exactly; compiler-generated /Z7
-// output carries no classic source-line records.
+// DC 0xd92c8 proves destructor -> conditional operator-delete;
+// compiler-generated /Z7 output carries no classic source-line records.
 VA_COMPGEN(0x004e9d90, 0x21, SCALAR_DELETING_DTOR, THighScoreWindow)
 
 VA(0x004e9dc0, 0x81)

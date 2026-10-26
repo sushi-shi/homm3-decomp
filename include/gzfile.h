@@ -19,8 +19,8 @@
 // which exists in both builds.
 //
 // The handle is a member initializer: the retained constructor stores the
-// base vptr before gzopen and its own vptr afterward. A body assignment
-// reversed that observed boundary in the prior 92.76% control.
+// base vptr before gzopen and its own vptr afterward; a body assignment
+// would reverse that boundary.
 class TGzFile : public TAbstractFile {
 public:
     // Retail RTTI at 0x677d48 and its two-entry catchable-type array prove

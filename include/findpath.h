@@ -301,16 +301,16 @@ private:
     // `[result._First]` and immediately reads `word [that + 8]`,
     // pathCell::last_point.
     std::vector<pathCell*> m_result;
-    // ELEMENT TYPE PROVEN, 2026-08-14, by PushPoint (0x4b1a70) - the one
-    // located body that touches it. Its tail inserts into this vector with
+    // ELEMENT TYPE PROVEN by PushPoint (0x4b1a70) - the one located body that
+    // touches it. Its tail inserts into this vector with
     // the four-byte stride (`sub ecx,eax; sar ecx,2` for the capacity test,
     // `add ebx,4` / `add edx,4` in the copy loops) and the value it hands
     // the insert is `lea edx,[ebp+0x14]`, the frame slot holding the
     // get_cell() result - i.e. a pathCell*. The DC fieldlist prints all
     // three of these as std::vector<pathCell...> and the dump truncates the
-    // argument list at the comma, which is why the admitted placeholder was
-    // `int`; queue is pinned by its 30-byte stride, result and this one by
-    // their 4-byte strides plus what retail stores through them.
+    // argument list at the comma; queue is pinned by its 30-byte stride,
+    // result and this one by their 4-byte strides plus what retail stores
+    // through them.
     std::vector<pathCell*> m_visitedPoints;
     // One byte per combat hex, indexed by a SIGN-EXTENDED hex
     // (`movsx edx, si; cmp byte [edx + eax], 0` in move_toward

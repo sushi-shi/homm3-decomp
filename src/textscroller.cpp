@@ -198,8 +198,7 @@ void type_text_scroller::refresh(int firstLine)
 // the slider is re-ranged or hidden from the resulting line count.
 // The final font release uses ResourceManager's canonical inline disposal
 // wrapper. That source call steers VC6's earlier empty-line push expansion
-// and closes the last block (99.4444% -> exact) while
-// retaining push_back and the same 17 ordered retail calls.
+// while retaining push_back.
 VA(0x005BA6E0, 0x1EF)
 MAC_ADDRESS(0x25b8d8, 0x1dc)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::setText(const char* text)

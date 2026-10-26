@@ -231,9 +231,9 @@ void heroWindow::removeAndDeleteWidget(int id)
 
 // E:\gamedcs\window.cpp:381
 // DC's message& parameter and GetWidget(m_focusId) call at 391 are canonical.
-// The two-state helper control preserves all retained function bytes; retail
-// expands GetWidget's tailWidget/prevWidget walk here. DC413's combat-over
-// handling is absent from Complete's 94-byte body: retail goes directly from
+// Retail expands GetWidget's tailWidget/prevWidget walk here. DC413's
+// combat-over handling is absent from Complete's 94-byte body: retail goes
+// directly from
 // the focused widget's result to the ordinary widget traversal.
 // The /Ob2 witness: this body recurs inlined inside the 4-int
 // overload and both WidgetSet/ClearStatus while the out-of-line copy
@@ -529,8 +529,7 @@ void heroWindow::setFocus(int id)
 
 // E:\gamedcs\window.cpp:934
 // Retail's handler sits at 0x5ff500 between setFocus and deleteWidgets;
-// doModal passes its address to the window manager. The function census
-// row was admitted from that reference and the complete emitted body.
+// doModal passes its address to the window manager.
 // The twelve bytes decode as:
 //   mov eax,ecx / push eax / mov ecx,[eax+0x1c] / mov edx,[ecx] /
 //   call [edx+0xc] / ret
@@ -538,7 +537,7 @@ void heroWindow::setFocus(int id)
 // fieldlist marks it as - message::window at +0x1c, and heroWindow
 // vtable slot 3, which independently corroborates handle_message's
 // slot in the roster in window.h. Defined here so that DoModal's
-// address-take resolves; that claim is what scores the pair.
+// address-take resolves.
 VA(0x005ff500, 0xC)
 DC_ADDRESS(0x197c74, 0x18)
 MAC_ADDRESS(0x20bc1c, 0x34)

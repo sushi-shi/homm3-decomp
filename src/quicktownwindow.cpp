@@ -32,12 +32,7 @@ DATA(0x006823b8) static int g_quickTownArmyPositions[armyGroup::ARMY_GROUP_SLOT_
 // E:\gamedcs\quicktownwindow.cpp:39
 // DC 0x117fda loads HasBuilding into r11 for all seven hall, silo and
 // fort tests. The capitol test is represented by isCapitol's nested call.
-// Earlier inliner probes replaced late push_back calls with insert/end
-// through a vector pointer (96.3088 -> 98.4193); those spellings were
-// superseded by the canonical helper calls below. An enum loop variable
-// and inline_depth(1) were score-flat. Named bonus objects retain the
-// allocation result's retail stack home; nesting every allocation in
-// push_back or naming unrelated early widgets was worse.
+// Named bonus objects retain the allocation result's retail stack home.
 VA(0x00530120, 0x67D)
 DC_ADDRESS(0x117e48, 0x570)
 MAC_ADDRESS(0x14be1c, 0xa90)  // townqvbk/itpt literals + town helpers
@@ -108,8 +103,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
             // DC94/95,97/98 and104/105 separate each allocation from its
             // push_back. Retail also homes these raw new results in the dead
             // thisTown parameter slot used by the converted widget pointer.
-            // Named bonus objects recover that home; moving every allocation
-            // into push_back or naming unrelated early widgets was worse.
+            // Named bonus objects give that home.
             if (resourceCount == DOUBLE_RESOURCE_BONUS) {
                 iconWidget* firstBonus = new iconWidget(
                     15, 86, 20, 18, RESOURCE_BONUS_ID, "smalres.def",

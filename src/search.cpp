@@ -14,9 +14,8 @@
 #include "terrain.h"
 
 // DC struct.h proves the const-reference comparison operators. Their canonical
-// definitions now live in struct.h; use them directly instead of TU-local
-// duplicate free helpers. The direct != body preserves retail's three tests;
-// negating operator== instead scored 64.78% in the earlier buildPath probe.
+// definitions live in struct.h. The direct != body gives retail's three
+// tests; negating operator== does not.
 
 // E:\gamedcs\search.cpp:32
 // Native 0x1616a4 and 0x1616bc clear the point-mismatch and unvisited paths
@@ -27,9 +26,8 @@
 // from the hero's coordinates, not through getLocation/getTarget, and lines
 // 42/96 call vector::clear directly (search.cpp rows, not FindPath.h's
 // ClearPath). Those spellings set retail's /Ob2 frontier: the entry and
-// unvisited clears expand erase while the other arms call it. The direct
-// points raise 79.52 to 98.76%; initializing flying before the previous-cost
-// local makes it exact. Routing the clears through clearPath() gives 85.35%.
+// unvisited clears expand erase while the other arms call it. flying is
+// initialized before the previous-cost local.
 VA(0x0056a0d0, 0x282)
 DC_ADDRESS(0x12b2e0, 0x110)
 MAC_ADDRESS(0x161498, 0x41c)  // anchor-global
@@ -139,8 +137,8 @@ bool check_adjacent_monster(const hero* current_hero,
 // value; liths 100 per exit. DC records list and entry_point as references;
 // the three native callers pass their existing vector/cell addresses.
 // Native Mac 0x161a1c goes directly to the for-loop test; there is no
-// separate count guard outside it. Restore DC's post-count monster lifetime
-// and let the loop own its bounds test: the retained Windows body is exact.
+// separate count guard outside it. DC's post-count monster lifetime stands,
+// and the loop owns its bounds test.
 VA(0x0056a400, 0x32F)
 DC_ADDRESS(0x12b4a8, 0x34c)
 MAC_ADDRESS(0x161998, 0x3e4)  // exhaustive search.obj order-map
@@ -252,10 +250,9 @@ void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 // into the barrier; the normal search only routes through built gates.
 // A town with a visiting hero cannot receive. Retail's min temporaries put
 // gates first, and its destination loop loads each town ID once.
-// DC records const pathCell&; restoring the reference keeps Windows bytes
-// unchanged. DC lines 352-354 copy the destination town's x/y/z into the
-// new cell's point field by field rather than through town::getLocation;
-// that removes the location return slot and makes the body exact.
+// DC records const pathCell&. DC lines 352-354 copy the destination town's
+// x/y/z into the new cell's point field by field rather than through
+// town::getLocation, which removes the location return slot.
 VA(0x0056a850, 0x27E)
 DC_ADDRESS(0x12b988, 0x240)
 MAC_ADDRESS(0x16202c, 0x35c)  // exhaustive search.obj order-map MAC_ABSTRACTION_FROM(tokens1:599c6f83f8ff,39.8402): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.

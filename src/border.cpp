@@ -158,9 +158,8 @@ void coloredBorder::draw() const
         m_y + m_parentWindow->m_y, m_width, m_height, m_color);
 }
 
-// E:\gamedcs\border.cpp:201 - located in retail 2026-08-14, the
-// constructor the earlier sdd note asked for. `ret 0x1c` is seven stack
-// dwords; six of them go to widget::initialize in x,y,w,h,id,style order
+// E:\gamedcs\border.cpp:201. `ret 0x1c` is seven stack dwords; six of them go
+// to widget::initialize in x,y,w,h,id,style order
 // and the ODD one out - [ebp+0x1c], the sixth argument - is the dword
 // stored to [this+0x30], which is what fixes the DC parameter order
 // (..., int color_, int style) and colour's int width. [this+0x34] is
@@ -494,6 +493,6 @@ int bitmapBorder16::main(message& msg)
     return border::main(msg);
 }
 
-// COMDAT pairing: bitset<10>::_Xran, agreement 0.901 at an exactly equal
-// 203-byte extent, and the only bitset width this object instantiates.
+// COMDAT pairing: bitset<10>::_Xran, at an exactly equal 203-byte extent,
+// and the only bitset width this object instantiates.
 VA_COMPGEN(0x00404410, 0xCB, BITSET_XRAN, Bitset10)

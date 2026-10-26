@@ -81,8 +81,8 @@ int viewWorldUndergroundHandler(message& msg);
 // advManager::ViewWorld IS that writer - it raises the latch on entry and
 // drops it just before the closing UpdateRadar - and 0x6aac3c sits inside
 // viewwrld.obj's own .bss run (0x6aab68 .. 0x6aac3c), so this compiland
-// owns the definition. The claim is left where it stands rather than moved
-// across lanes; this is the declaration its writer compiles against.
+// owns the definition. The claim stays in advmgr.cpp; this is the
+// declaration its writer compiles against.
 extern int g_inViewWorld;
 // cmbtmgr.h's modal-screen latch (retail .bss 0x698a18). ViewWorld parks
 // it at 2 for the life of the view-world dialog, which is what kb.cpp's

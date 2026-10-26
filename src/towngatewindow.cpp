@@ -238,12 +238,8 @@ void TTownGateWindow::doModal()
 // it past the CANCEL arm while retail lets the OK arm fall straight into
 // it and reaches it from CANCEL with a backward jmp; the duplicate leaves
 // the first copy single-predecessor, and the cross-jumper then merges the
-// shared tail into retail's exact layout. This also dissolved what a
-// standing note here called a pure register permutation (retail homes msg
-// in ESI, `this` in EDI, the zero in EBX): the whole allocation falls into
-// line behind the block order. 69.8969 -> 100.0000, 2026-09-05. A `goto`
-// into the OK arm expresses the same merge and is byte-flat with the
-// unduplicated form - only the duplicate moves it.
+// shared tail into retail's layout; retail's allocation (msg in ESI, `this`
+// in EDI, the zero in EBX) follows from that block order.
 VA(0x005c2840, 0x13B)
 DC_ADDRESS(0x169ae0, 0xc6)
 MAC_ADDRESS(0x1b8a28, 0x154)  // anchor-vtable (slot 9) + CAdvPopup::WindowHandler

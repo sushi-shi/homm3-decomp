@@ -161,7 +161,7 @@ MAC_COMPGEN_ADDRESS(0x064044, 0x228, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
 VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, HeroId)
 
 // Both native Mac body order and DC lines 392/437/452 put these helpers
-// after Select. VC6 still expands both; all Windows TU scores are unchanged.
+// after Select. VC6 expands both.
 // E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
 // description as a second widget message; Complete hands it to the
 // scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
@@ -402,11 +402,9 @@ void TCampaignBrief::addBonusIcons()
 // GetWidget path. Complete directly owns the widened widget arrays instead.
 // Retail snapshots the selected scenario index before the vector lookup, uses
 // branch-local border receivers for the status update, and snapshots the live
-// campaign pointer at the following virtual call. Those lifetimes reproduce
-// all 34 CFG blocks, 16 branches, 24 calls, and every instruction row.
-// The scenario count query retains the owned-pointer accessor as a nested
-// call. Two separate calls in the loop condition suppress VC6 rotation
-// (88.022%); the canonical query restores all 663 retail bytes.
+// campaign pointer at the following virtual call. The scenario count query
+// retains the owned-pointer accessor as a nested call; two separate calls in
+// the loop condition suppress VC6's loop rotation.
 VA(0x00458d40, 0x297)
 DC_ADDRESS(0x058c00, 0x1ac)
 MAC_ADDRESS(0x0650a4, 0x2f0)  // Select callee, dc-order-map after AddBonusIcons
@@ -872,8 +870,7 @@ MAC_COMPGEN_ADDRESS(0x0670cc, 0x60, IMPLICIT_DTOR, map)
 VA_COMPGEN(0x0045bcd0, 0x295, VECTOR_COPY_ASSIGN, type_map_hero_identity)
 
 // The same map's two-argument constructor - `map(const key_compare&, const
-// allocator_type&)`, the form the copy path builds through. Byte-verified
-// against the emitted COMDAT at 0.984 mnemonic agreement over 190 bytes.
+// allocator_type&)`, the form the copy path builds through.
 VA_COMPGEN(0x0045bf70, 0xBE, CLASS_CTOR, map)
 
 VA_COMPGEN(0x0045c740, 0x165, TREE_COPY, type_map_hero_info)
@@ -897,8 +894,7 @@ VA_COMPGEN(0x0045d270, 0xFF, TREE_COPY_NODE, type_map_hero_info)
 VA_COMPGEN(0x0045D370, 0xA3, TREE_CONST_ITERATOR_INC, type_map_hero_info)
 
 // type_map_hero_identity's implicit copy-assign, the element operation the
-// map's node copy drives. Byte-verified against the emitted COMDAT at 0.973
-// mnemonic agreement over 343 bytes.
+// map's node copy drives.
 VA_COMPGEN(0x0045d8e0, 0x157, IMPLICIT_COPY_ASSIGN, type_map_hero_identity)
 
 // The vector copy-assignment above and both TPlayerSlotAttributes assignment
@@ -1243,8 +1239,8 @@ std::string getCampaignName()
     return header->getCampaignName();
 }
 
-// COMDAT pairing: the unit's own std::_Construct<type_map_hero_identity> COMDAT,
-// mnemonic agreement 1.000 over all 142 instructions.
+// COMDAT pairing: the unit's own std::_Construct<type_map_hero_identity>
+// COMDAT.
 VA_COMPGEN(0x0045d420, 0x170, STD_CONSTRUCT, type_map_hero_identity)
 
 VA_COMPGEN(0x0045d700, 0x1D6, STD_CONSTRUCT, CampaignScenarioPreview)
@@ -1252,8 +1248,8 @@ VA_COMPGEN(0x0045d700, 0x1D6, STD_CONSTRUCT, CampaignScenarioPreview)
 // COMDAT pairing: _Tree<int, type_map_hero_info>::erase(first, last), 0.961.
 VA_COMPGEN(0x0045c070, 0x12B, TREE_ERASE_RANGE, type_map_hero_info)
 
-// COMDAT pairing: std::_Construct<pair<const int, type_map_hero_info>>, 0.993
-// against a 368 B object; newgame's two candidates are 347 and 343 B.
+// COMDAT pairing: std::_Construct<pair<const int, type_map_hero_info>>, a
+// 368 B body; newgame's two candidates are 347 and 343 B.
 VA_COMPGEN(0x0045d590, 0x16E, STD_CONSTRUCT, type_map_hero_info_pair)
 
 // COMDAT pairing: basic_string<char>::_Refcnt, 15 B against this

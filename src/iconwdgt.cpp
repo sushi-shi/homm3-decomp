@@ -192,8 +192,8 @@ void iconWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 }
 
 // E:\gamedcs\iconwdgt.cpp:257
-// Located in retail 2026-08-08 on four independent corroborations:
-// the row is inside iconwdgt.obj's own carve span, it holds the DC
+// Four independent corroborations: the row is inside iconwdgt.obj's own carve
+// span, it holds the DC
 // roster's handle_click slot in order (immediately before GetRealWidth
 // and GetRealHeight, exactly as at 0x4eab20 / 0x4eab30), the iconWidget
 // vtable at 0x63ec48 stores it in slot 13, and the body's `ret 8`

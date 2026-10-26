@@ -222,36 +222,15 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap,
 // indexes spec[] with the character zero-extended, while the bearing
 // VALUE that follows indexes with the plain (signed) char - `and
 // eax,0xff` against `movsx`, in three separate places.
-// Lever found here: NAMING the scanned character costs 10 points. A
-// `char c = str[pos];` local gets a stack home and a reload at every
-// use (VC6 homes char locals far more eagerly than ints); writing
-// `str[pos]` at each use lets the same load stay in `al` exactly as
-// retail does. 86.9% -> 96.3% for that change alone.
-// The claim that this was "register allocation only" was WRONG until
-// 2026-08-08: `--branches` reported a TOPOLOGY retarget, the
-// wrap-backtrack's `pos < lineStart` exit landing one block past
-// retail's. Spelling the backtrack as `for (;;) { if (str[pos] == ' ')
-// break; if (pos < lineStart) break; ... }` - the same two-break shape
-// that closed LongestWrappedLineWidth - routes BOTH exits through the
-// shared `if (pos <= lineStart)` instead of letting VC6 jump-thread
-// the lineStart exit straight to the assignment (96.33 -> 96.81, and
-// the branch sequences now AGREE). `while (str[pos] != ' ' &&
-// pos >= lineStart)` scores the same; `pos <= lineStart` as the break
-// condition is worse (96.59).
-// The plain bottom-justification `total` is retained. Overflow-only recovery
-// locals preserve the canonical wrapping helpers. Separately initialize
-// currY before strlen and pos after it: Windows is exact (2026-09-27).
-// Twelve declaration/lifetime spellings reproduce Windows exact; this order
-// also improves the unresolved Mac comparison (30.20 -> 30.71%, 980/968 bytes).
-// A prior volatile probe raised the banked MAX to 98.7864 by
-// aligning the scratch-register family, but retail keeps `total` in EAX;
-// the qualifier itself forces three non-retail stack-memory instructions.
-// Reusing the later-overwritten iHeight or width local is byte-identical
-// to the plain block local, so it supplies no independent lever. Tried
-// and rejected: volatile `limit`
-// (98.28 but one duplicated loop guard), the first `total` (97.24),
-// register/long/initializer/address-taken spellings (96.81), and removing
-// or bypassing the loop guard (95-96% allocation cascades).
+// The scanned character is NOT named: a `char c = str[pos];` local gets a
+// stack home and a reload at every use, while `str[pos]` at each use keeps
+// the load in `al` as retail does. The wrap backtrack is
+// `for (;;) { if (str[pos] == ' ') break; if (pos < lineStart) break; ... }`,
+// the two-break shape LongestWrappedLineWidth also uses: both exits route
+// through the shared `if (pos <= lineStart)` instead of VC6 jump-threading
+// the lineStart exit to the assignment. The plain bottom-justification
+// `total` is retained (retail keeps it in EAX), and currY is initialized
+// before strlen, pos after it.
 VA(0x004b5490, 0x308)
 DC_ADDRESS(0x0a2108, 0x316)
 MAC_ADDRESS(0x0c9238, 0x3c8)  // anchor-global
@@ -556,10 +535,10 @@ int font::LongestWrappedLineWidth(const char* str, int boxWidth) const
 // the space width is `fs.abc[' ']` read as this+0x1bc/0x1c0/0x1c4 - and
 // NH3API corroborates the name and the parameter shape only.
 // Mac 0xc9d04..0xc9d08 adds line width before subtracting word width;
-// 0xc9d74..0xc9d7c counts pending spaces down. Both source forms restore
-// the Windows retail body while retaining every string/vector helper.
-// Mac's local register order also fixes the entry declarations below: p,
-// wordEnd, wordWidth, lineWidth, spaceCount, spaceWidth. Windows stays exact.
+// 0xc9d74..0xc9d7c counts pending spaces down; the source follows both and
+// keeps every string/vector helper. Mac's local register order also fixes
+// the entry declarations below: p, wordEnd, wordWidth, lineWidth,
+// spaceCount, spaceWidth.
 VA(0x004b5b90, 0x3A5)
 MAC_ADDRESS(0x0c9b78, 0x270)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
 void font::fillLinesVector(const char* str, int boxWidth,

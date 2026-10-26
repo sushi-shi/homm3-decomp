@@ -19,8 +19,8 @@
 
 // A datum whose rva already carries a src DATA() claim in another TU is
 // defined here WITHOUT one: the model allows a single claim per address
-// and moving those claims would edit files this lane does not own.  The
-// owning site is named in the comment above each such definition.
+// and the claims stay at their owning sites. The owning site is named in
+// the comment above each such definition.
 
 DATA(0x006a5328)
 TTextResource* g_resourceNamesResource;

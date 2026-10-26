@@ -330,8 +330,8 @@ void TCampaignWindow::doModal()
 DATA(0x0066cad8) static int g_lastCampaignHoverId = -1;
 
 // Mac 0x6aea0/0x6aea8 retains separate exit assignments for selecting
-// a campaign and cancelling. Keeping the two switch breaks also reproduces
-// the Windows dispatcher (88.2203% to 100%); neither arm falls through.
+// a campaign and cancelling; the two switch breaks stay, and neither arm
+// falls through.
 // E:\gamedcs\campaignwindow.cpp:291
 VA(0x0045f2f0, 0x26C)
 DC_ADDRESS(0x05bd94, 0x1b0)

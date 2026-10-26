@@ -52,8 +52,7 @@ TDimensionDoorWindow::~TDimensionDoorWindow()
 // its hover test is `cell->type == BOAT && cell->is_trigger` instead of the
 // dimension-door passability mask, and it arms cursor 42 instead of 41.
 
-// FOUR SPELLINGS ARE LOAD-BEARING HERE, each measured on the way up from
-// 73.11:
+// FOUR SPELLINGS ARE LOAD-BEARING HERE:
 
 // E:\gamedcs\dimensiondoorwindow.cpp:100
 VA(0x00491900, 0x1B9)
@@ -193,8 +192,7 @@ TSkuttleBoatWindow::~TSkuttleBoatWindow()
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:280
-// DC uses the same exit-flag/common message tail. Restoring it removes
-// two gotos at 100%; duplicated direct exits score 81.9421%.
+// DC uses the same exit-flag/common message tail, with no gotos.
 VA(0x00491d00, 0x1A9)
 DC_ADDRESS(0x082d14, 0x1bc)
 MAC_ADDRESS(0x0a3244, 0x248)  // vtable slot 9 + source order

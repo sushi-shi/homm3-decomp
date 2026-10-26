@@ -196,9 +196,8 @@ TPalette16::~TPalette16()
 // Preserve that source order while matching the retail inline expansions.
 // DC lines 211/224-226/228-229 retain the p16 destination pointer, indexed
 // RGB reads, and three independent extu.w truncations before the final OR.
-// The 72-state family distinguishes actual channel-value lifetimes from casts:
-// named ushort channels give both callers 100%; inline casts alone leave
-// 94.8548/94.9365. The destination-pointer form preserves the recorded p16.
+// Named ushort channels (not inline casts) give both callers' retail bytes.
+// The destination-pointer form preserves the recorded p16.
 DC_ADDRESS(0x10a910, 0x88)
 MAC_ADDRESS(0x13bb20, 0xa0)
 void TPalette16::Convert24to16(const unsigned char* p24, int rbits, int rshift,

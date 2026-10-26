@@ -100,7 +100,7 @@ SIZE(CHeroSessions, 0x14);
 // (the ten screen buttons), slider* (gameSlider), textEntryWidget* (player
 // name) and textWidget* (headers). Retail's constructor converts each derived
 // pointer into a widget* temporary for push_back, which a base-typed member
-// cannot reproduce (83.92% -> 99.95%).
+// cannot reproduce.
 class TMultiPlayerWindow : public CHeroWindowEx {
 public:
     enum EWidgetId {

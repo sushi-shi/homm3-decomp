@@ -6,22 +6,14 @@
 // ~/scalar-deleting, Add, Get, Put, Delete, Insert, GetCount - in four
 // admitted vtables.
 
-// UNIFIED 2026-09-05. This template was carried TWICE, once in dxplay.h and
-// once in multiplayerwindow.h, with a per-TU macro keeping the two apart -
-// and the two bodies genuinely disagreed: opposite Insert algorithms,
-// opposite bounds tests in Get/Delete, `delete` against `delete []`, an
-// extra SetStep, in-class against out-of-class definitions. Each copy had
-// been tuned to whichever instantiation its own TU is scored on, and neither
-// TU ever saw the other. Retail arbitrates member by member, because the two
-// instantiations that carry claimed rows are complementary:
+// One template serves both instantiations that carry claimed rows, and
+// retail arbitrates member by member because they are complementary:
 //   dxplay.obj      CAutoArray<CDPlayAddressElement>  ~ 0x499f00, Destroy
 //                   0x499f60, Get 0x499fc0, Put 0x499fe0, GetCount 0x49a010
 //   multiplayer     CAutoArray<CDPlaySession>         Destroy 0x512570,
 //                   Delete 0x5125d0, Insert 0x512610
-// Every one of those rows is EXACT, and the two units' Add/Delete/Insert
-// instantiations ICF-fold onto each other in the retail link, so one body
-// has to satisfy both - which is exactly the constraint the two-copy model
-// was hiding.
+// The two units' Add/Delete/Insert instantiations ICF-fold onto each other
+// in the retail link, so one body has to satisfy both.
 #ifndef HOMM3_ARRAY_H
 #define HOMM3_ARRAY_H
 

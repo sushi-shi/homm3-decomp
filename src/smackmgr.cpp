@@ -920,8 +920,8 @@ MAC_ADDRESS(0x25f6e4, 0x264)
 // That split needs both the SmackManagerStruct member accesses here (caller
 // IL) and videoResume's implicit pause-count tests (callee IL, 112 against a
 // nested budget of 114). With them the two plain descriptor subscripts give
-// retail's id*20 index; the former const-reference row (76.24%) put a
-// pointer on the frame instead.
+// retail's id*20 index; a const-reference row would put a pointer on the
+// frame instead.
 void openSmackerVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
                bool advance)
 {
@@ -1157,9 +1157,8 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
 }  // namespace SmackManager
 
 // COMDAT pairing: basic_string<char>::append(size_t, char) - the fill form,
-// which the mangled suffix `@ID@Z` separates from the already-modelled
-// pointer form `@PBDI@Z`. Agreement 0.994 here against 0.834 for the
-// pointer-form objects, so the suffix and the score agree.
+// which the mangled suffix `@ID@Z` separates from the pointer form
+// `@PBDI@Z`.
 VA_COMPGEN(0x004b5f40, 0xCF, BASIC_STRING_APPEND_COUNT, char)
 
 // COMDAT pairing: basic_string<char>::assign(size_t, char) - `ret 8` for its

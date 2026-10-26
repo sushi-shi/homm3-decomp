@@ -210,9 +210,9 @@ extern HSTREAM g_mp3Stream;
 // ResumeSamples clear all 14 entries with one `rep stosd`.
 extern int g_sampleWasPlaying[14];
 
-// The per-channel slot ranges MemorySample allocates out of. PROVEN
-// (2026-08-07): MemorySample indexes this table with sample::field_28
-// through `lea eax,[ch+2*ch]; lea edi,[4*eax + 0x684ab8]`, i.e. a
+// The per-channel slot ranges MemorySample allocates out of. PROVEN:
+// MemorySample indexes this table with sample::field_28 through `lea
+// eax,[ch+2*ch]; lea edi,[4*eax + 0x684ab8]`, i.e. a
 // 12-byte stride, and reads three ints from it. The retail image holds
 // exactly four rows - {0,1,0} {1,2,1} {2,6,2} {6,14,6} - after which
 // 0x684ae8 starts the terrain-music name table, so the channel domain

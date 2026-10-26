@@ -86,9 +86,10 @@ static const int g_adventureObjectEnterableFromNorthIds[] = {
 // them through a function-local TAutoArrayPtr<char> at 0x691688, and
 // re-points each row's name into it.
 
-// vftable - while keeping gzinflatebuf's 0x4d6b80 COMDAT. The shared header
-// supplies body visibility to both callers; expansion does not establish
-// the original inline qualifier. Moving the body to exceptions.h closed it (98.9899 -> 100.0000) and left gzinflatebuf's own
+// Its throw expands the shared derived-exception initialization (the
+// derived vftable) while gzinflatebuf keeps its 0x4d6b80 COMDAT; the body
+// lives in exceptions.h so both callers see it. Expansion does not
+// establish the original inline qualifier.
 VA(0x0041b500, 0x28B)
 MAC_ADDRESS(0x21d350, 0x6dc)
 void InitializeAdvObjectTypeTraitsTable()
