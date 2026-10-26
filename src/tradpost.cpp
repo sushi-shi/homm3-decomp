@@ -48,8 +48,7 @@ DATA(0x006aaabc) static TSellCreatureWindow* g_sellCreatureWindow;
 // gap just below this bracket). Each constructor is proven by the derived
 // vtable it stores - 0x6439f8/0x643a34/0x643a70/0x643aac/0x643ae8 - which is
 // the same one-to-one map tradpost.h derives from the PCX each ctor names.
-// They are 8 KB EH-bearing rows, claimed here in image order with deferred
-// @stub bodies (no member is modelled yet).
+// They are 8 KB EH-bearing rows, claimed here in image order.
 
 // Every one of the five destructors is the same body: store the derived
 // vptr, delete each non-null entry of heroWindow::Widgets, then run the
@@ -1353,10 +1352,8 @@ DATA(0x0067839c) float g_creatureSaleEfficency[11] = {
 // E:\gamedcs\tradpost.cpp:618
 // The retail entry points expand this file-local helper: count every owned
 // town whose Marketplace bit is active, then cap the efficiency index at ten.
-// DC row 621 calls GetTown then HasBuilding(14, true). Keep both canonical
-// calls and let VC6 expand this ordinary helper at its original source position.
-// The four declaration/query controls preserve the entire object section bytes
-// and relocation destinations; an explicit inline keyword is unnecessary.
+// DC row 621 calls GetTown then HasBuilding(14, true). VC6 expands this
+// ordinary helper at its original source position without an inline keyword.
 DC_ADDRESS(0x1883f0, 0x62)
 MAC_ADDRESS(0x1f4ad4, 0xcc)
 static void countMarkets()
@@ -2203,15 +2200,12 @@ void TGiveResourceWindow::update(bool update)
 // inlined ratio math, selection highlight). The final repaint is bUpdate-gated.
 // The inlined SetWidgetOn/Off/Disabled helpers expand to the status broadcasts.
 // Mac 0x1f6bf8..0x1f6c44 first chooses qty, then performs one of two
-// singular/plural lookups; nested wording emits a third native lookup path.
-// Ordinary text indexing retains getText through operator[] and reproduces
-// Mac's vector-index accessor frontier. Mac 0x1f6ca0..0x1f6cf0 retains
+// singular/plural lookups (nested wording emits a third lookup path); qty is
+// named, as Mac's retained r24 value is. Mac 0x1f6ca0..0x1f6cf0 retains
 // separate sprintf calls for the two idle titles; Windows merges their tails.
 // Mac 0x1f7014..0x1f708c also puts the resource message fields before
 // formatting its count. Mac 0x1f6f28 and 0x1f6fa4 preserve the common icon
 // command before the column split and its repeated second-column assignment.
-// These phases reproduce Windows exactly. Removing qty
-// re-evaluates its condition across calls, unlike Mac's retained r24 value.
 VA(0x005eb6a0, 0x7d9)
 DC_ADDRESS(0x189aac, 0x580)
 MAC_ADDRESS(0x1f6b6c, 0x774)  // ordermap clean run + arity ret 4
@@ -2568,9 +2562,8 @@ void TSellArtifactWindow::update(bool update)
 // count) and each buy-resource button (icon, exchange ratio, highlight). The
 // final repaint is gated by bUpdate.
 // Mac 0x1f7d3c sets the icon message before the column split and 0x1f7dcc
-// repeats that store in the resource column. Windows retains the same repeat
-// before the resource-column broadcast; preserving it also restores the
-// shared constant register choice.
+// repeats that store in the resource column; Windows retains the same repeat
+// before the resource-column broadcast.
 VA(0x005ec550, 0x7ba)
 DC_ADDRESS(0x18a550, 0x63a)
 MAC_ADDRESS(0x1f7964, 0x7e0)  // ordermap clean run + arity ret 4
@@ -2862,8 +2855,7 @@ void TGiveResourceWindow::computeTradeRatios(int inLeftResource,
 
 // Original: TBuyArtifactWindow::ComputeTradeRatios; tradpost.cpp:2209
 // Both DC's double pool at 0x18b10c and Complete's fadd at 0x5ebd51 /
-// 0x5edccf use 0.5. The formerly flattened handler used 0.999, hidden by
-// relocation masking despite a 100% instruction match.
+// 0x5edccf use 0.5.
 DC_ADDRESS(0x18aef4, 0xe0)
 MAC_ADDRESS(0x1f8368, 0xf4)
 void TBuyArtifactWindow::computeTradeRatios(int inLeftResource,
@@ -3216,11 +3208,7 @@ void TTradeResourceWindow::setRolloverText(int codeY)
 // is a networked human, transmits the gift message. Hover copies the rollover.
 // Mac initializes exit/update flags at 0x1f8f84/0x1f8f88, dispatches the
 // sparse message-ID switch at 0x1f8f8c, and sets update only in its five
-// successful arms before the common phase at 0x1f921c. Restore that complete
-// source model: Windows stays 97.00%; native ordered helper calls differ
-// only because the compiler expands the canonical playerData::isHuman here.
-// Thirteen natural recipient/flag lifetime models emit one identical VC6
-// object; changing those scopes does not recover the retained isHuman call.
+// successful arms before the common phase at 0x1f921c.
 VA(0x005ed550, 0x2f1)
 DC_ADDRESS(0x18b8d4, 0x26c)
 MAC_ADDRESS(0x1f8f50, 0x314)  // anchor-vtable 0x643a34 slot 9

@@ -843,9 +843,8 @@ MAC_ADDRESS(0x0a581c, 0x5d8)
 // SaveExtent and both recorded int locals; no enclosing array block occurs
 // in the lexical records. Keep that lifetime and the ordinary rectangle
 // member calls. UpdateCombatArea expands through the matching UpdateScreen
-// call; the const-reference Windows extent overload removes the by-value
-// copy that held this body at 96.3415%, and it now reproduces retail.
-// Keep the DC-proven vector<long> and canonical clear().
+// call with the const-reference Windows extent overload. Keep the DC-proven
+// vector<long> and canonical clear().
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     std::vector<long>& hexes,
                                     unsigned char forceUpdate)
@@ -970,39 +969,22 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // combat area or the accumulated creature-effect extent. Dreamcast's line
 // table preserves the three small helper boundaries which retail /Ob2 folds
 // into these walks.
-// DC1165 groups the three chat reset assignments. The source chain
-// limitCreatureEffect = limitDraw = limitToExtent = 0 reproduces the
-// retail B7 store/test schedule and raises 99.9453 to 99.9807. The 48-state
-// reset/step/local-order family emits seven objects and reproduces all seven;
-// independent field-first stores give the same winning object. Preserve the
-// chain because DC also converts the int zero before copying the byte flags.
-// Changing the column-step operand order or the three local declarations
-// does not move its remaining priority-loop reload schedule. All 28 exact
-// siblings survive. Reversing the canonical GetHexIndex sum was byte-flat
-// across drawing, cmbtmgr and spells (two states, one reproduced object).
+// DC1165 groups the three chat reset assignments: the source chain
+// limitCreatureEffect = limitDraw = limitToExtent = 0 gives retail's store
+// schedule (DC also converts the int zero before copying the byte flags).
 // DrawObstacle, DrawObstacleAt, DrawDeadOccupants and both GetHexIndex source
-// calls remain canonical. GetHexIndex is a static header member; the audit's
-// unmatched call-name lead does not denote an absent source call.
-// The reused row (and side in the two later animation helpers) now has an
-// explicit enclosing declaration, preserving VC6's old for-scope lifetime.
-// This is byte-flat and allows Clang to check all five recorded local types.
-// The last priority-loop reload exchange is recovered by sharing one column
-// counter between the underlay and priority walks, reinitialized at each
-// loop. Six counter-lifetime states produce two reproduced objects: shared
-// columns reach 100%, separate columns leave 99.9807%, independently of
-// the priority declaration's placement. The five named DC locals remain.
-// DC1205/1207 and1303/1305/1307 prove both walks, but do not name their
-// counters, so sharing is a retail-tested lifetime hypothesis.
+// calls (DC drawing.cpp:1207/1307) remain canonical; GetHexIndex is a static
+// header member. The reused row (and side in the two later animation
+// helpers) has an explicit enclosing declaration, preserving VC6's old
+// for-scope lifetime. The underlay and priority walks share one column
+// counter, reinitialized at each loop: DC1205/1207 and 1303/1305/1307 prove
+// both walks but do not name their counters, so the sharing is inferred
+// from retail's reload schedule.
 // DrawFrame's DC public symbol ends _N00H00: five native Boolean flags.
-// DC drawing.cpp:1207/1307 names GetHexIndex in both grid walks. The two
-// canonical lowercase calls remain in the authored loops below; the audit
-// does not resolve their spelling to the older decorated name.
 // DC1153 constructs temp_limits with the empty default constructor, but
 // DC1378/1380 clips and passes the member rectangle directly (this+0x13408),
-// as Mac 0xa6600..0xa6684 also does. Do not invent a temp_limits copy for
-// that operation. Direct member calls without provisional reference aliases
-// and the const-reference Windows update overload reproduce retail; the
-// by-value copy's scratch selection had added an EDI save (98.0274%).
+// as Mac 0xa6600..0xa6684 also does; there is no temp_limits copy for that
+// operation. The update goes through the const-reference Windows overload.
 // Preserve the canonical helper instead of pasting its four arguments.
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5)
@@ -1329,8 +1311,8 @@ void combatManager::drawWallAt(int hexIndex, int dx)
 
 // Dreamcast drawing.cpp:1581. Complete's /Ob2 build folds the corpse walk
 // into DrawFrame; retaining the helper keeps the original local lifetime and
-// statement boundary visible to the compiler. Ordinary auto-inlining retains
-// all exact callers; no explicit inline keyword is needed or evidenced.
+// statement boundary visible to the compiler. No explicit inline keyword is
+// needed or evidenced.
 DC_ADDRESS(0x0857d4, 0x70)
 MAC_ADDRESS(0x0a6ae4, 0x84)
 void combatManager::drawDeadOccupants(int index)

@@ -701,15 +701,10 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                                        int height, int fadeTime)
 {
     // DC locals: DEFAULT_FADE_TIME and factor are const int; src/odst
-    // are read-only row pointers. Initialize target, screen, then source:
-    // the complete lifetime model raises Windows94.84 ->99.91 (2026-09-27).
-    // CFG27 blocks,14 branches and10 named calls agree; one pointer reload
-    // order remains. Six cursor increment orders emit identical bytes.
-    // All six row-pointer declaration orders, with either column scope,
-    // produce only the current object or a lower-scoring register variant.
-    // DC 1389..1394 reads the old/new red, green, then blue channels;
-    // 1396..1402 interpolates and combines them in that order. Restoring
-    // this RGB spelling also aligns all 17 retail references (99.91%).
+    // are read-only row pointers. Target, screen, then source are
+    // initialized in that order. DC 1389..1394 reads the old/new red,
+    // green, then blue channels; 1396..1402 interpolates and combines them
+    // in that order.
     const int defaultFadeTime = 33;
     if (g_completeDrawEnabled) {
         if (startX < 0) {
@@ -803,7 +798,7 @@ void heroWindowManager::releaseFizzleSource()
 }
 
 // E:\gamedcs\winmgr.cpp:1707 - the fade-out. Located by anchor-caller:
-// the already-exact FadeScreen calls this at 0x602c78.
+// FadeScreen calls this at 0x602c78.
 
 // The three colour masks are widened into both halves of a dword so one
 // pass handles two 16-bit pixels; the fade itself is three passes that
@@ -812,14 +807,6 @@ void heroWindowManager::releaseFizzleSource()
 // - the pacing is the fixed 50 ms per pass below - but the parameter is
 // real: FadeScreen forwards it and `ret 8` fixes the frame at two
 // dwords.
-
-// Residual (88.51%): one register-allocation choice in the pixel loop,
-// and its cascade. Retail keeps the loop's shift count in ebx and the
-// SOURCE pointer in edi, hoists `pDst - pSrc` into a per-row delta slot
-// and addresses the store as `[delta + src - 4]`; our CL puts the shift
-// in edi, the source pointer in ebx, and keeps a second live dst
-// pointer instead of the delta. Frame layout, every mask/counter/timer
-// slot displacement and the whole post-loop tail are byte-identical.
 
 // Original: heroWindowManager::NextFlashFrame; winmgr.cpp:1455
 DC_ADDRESS(0x19bbd4, 0x80)
@@ -977,7 +964,7 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
 // DC names const unsigned pixel masks, a read-only pixel source and the
 // fade period; the ordinary Windows body retains those types and helpers.
 // The source row owner also stays const across pitch advances (DC FadeFrom
-// 19c450/19c468/19c502). Restoring this qualifier is Windows byte-flat.
+// 19c450/19c468/19c502).
 // DC locals: bmpFadeSource, red_mask_2, green_mask_2, blue_mask_2,
 // next_fade_time and time1. The spelling below normalizes the underscores.
 // Mac uses separate gamma/bitmap paths; these native comparisons remain
@@ -1054,8 +1041,7 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 // Unrecorded row 1975 is the source increment, folded into SH4's @r4+
 // load. Reading `*pixelSrc` and incrementing it after the store gives
 // retail's single src induction variable with dst addressed as
-// [dst - src + src_next - 4] (both fades 100%; `*pixelSrc++` keeps a
-// separate dst pointer, and declaring the dst walker first falls to 86.90%).
+// [dst - src + src_next - 4]; `*pixelSrc++` keeps a separate dst pointer.
 VA(0x006032e0, 0x1E5)
 DC_ADDRESS(0x19c3b8, 0x230)
 MAC_ADDRESS(0x20ea78, 0x26c)  // anchor-caller

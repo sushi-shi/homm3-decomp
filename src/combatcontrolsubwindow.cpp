@@ -151,19 +151,12 @@ type_combat_sub_window::~type_combat_sub_window()
 // temporary for push_back, which only the derived-to-widget* conversion
 // can explain. Same test as TBottomViewNewTurn::backdrop.
 //
-// The two arrows' handlers are ADDRESS-TAKEN ONLY. They were absent from the
-// original carve but are now promoted at 0x472df0/0x472e40 in combatwindow.obj
-// under their Dreamcast-attested static TCombatWindow names.
+// The two arrows' handlers are ADDRESS-TAKEN ONLY: 0x472df0/0x472e40 in
+// combatwindow.obj, under their Dreamcast-attested static TCombatWindow names.
 //
-// Exact after restoring the canonical setDisabledFrame calls. DC191
-// names the setter, and DC199 calls the same retained r10 address. The
-// 24-state setter/max family emits sixteen objects; all ten retained elites
-// reproduce. The up-arrow setter alone closes 96.3990 to 100; restoring only
-// the down-arrow setter is byte-flat. Both proven source calls are retained.
-// The old direct stores had changed scheduling inside the adjacent setHotkey
-// expansions. Moving those stores before/after the hotkeys was a failed
-// hypothesis (90.91/92.72), not proof that the setter boundary was irrelevant.
-// Original vector local new_widgets; its scope and lifetime are unchanged.
+// DC191 names setDisabledFrame and DC199 calls the same retained r10
+// address: both arrows use the canonical setter, not direct stores.
+// Original vector local new_widgets.
 
 // DC136/140 and their retained publics prove these empty virtual methods.
 // Retail base-table slots 1/2 fold to 0x485d80 (ret 4) and 0x5bc7e0
@@ -535,25 +528,12 @@ void TCombatHeroSubWindow::unShow()
 // spellText append. Retail fixes the Complete-only compact-stat labels,
 // every widget argument, the three-iteration standing-spell loops, and the
 // full derived layout at +0x34..+0x6c.
-// Exact with named text-resource arguments at DC573/578/583/588/593/598.
-// The local names are inferred; DC records the operator[] then sprintf
-// order, but no local names. Capturing each caption before formatting
-// preserves that order and all allocation/member/push_back boundaries.
-// All 130 retail blocks and 105 positional calls agree (STL empty-body,
-// pointer-size and pointer/int _Ufill names are existing ICF aliases).
-//
-// Negative controls: the original direct resource arguments retain one
-// extra vector::size call in the compact spell-icon append (99.1290%).
-// A 64-state argument-capture family emitted seven objects, all reproduced:
-// five or six named arguments recover the exact expansion, fewer do not.
-// The consistent six-caption form is retained. A separate 64-state typed
-// caption-result family and 47-state scope follow-up reach only 99.9957%:
-// they restore that expansion but put allocation temporaries at EBP+1c
-// instead of retail EBP+18. Their 64 and 17 objects are not adopted.
-// Earlier 54-state compact conversion/loop-birth controls also leave the
-// size call unresolved. Folding DC-separated member assignments into
-// push_back loses the exact reserve/full-arm lowering (97.27%); keep the
-// canonical vector interface and both proven loop bodies.
+// DC573/578/583/588/593/598 pass named text-resource arguments. The local
+// names are inferred; DC records the operator[] then sprintf order, but no
+// local names. Capturing each caption before formatting preserves that order;
+// direct resource arguments retain an extra vector::size call in the compact
+// spell-icon append. DC-separated member assignments stay apart from
+// push_back, which the reserve/full-arm lowering needs.
 VA(0x0046ceb0, 0xCD1)
 DC_ADDRESS(0x065dbc, 0x824)
 MAC_ADDRESS(0x079b2c, 0x10ec)  // roster order + vtable 0x63d444 + CCrPop/SpellInf

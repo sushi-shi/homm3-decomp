@@ -379,9 +379,9 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
 // surface. Retail 0x6003c0 has the same recovery sequence, with the PC
 // windowed-mode/clipper path in the source region elided by WinCE. Its body
 // follows DDBlit, which calls it on both DDERR_WRONGMODE paths: the retained
-// source-static emission pattern. This identifies the earlier provisional
-// name DDResetDisplayMode as DDRestoreFrontBuffer, rather than a PC-only
-// helper. DC's mutable tagRECT& parameter fits the retail OffsetRect use.
+// source-static emission pattern, so it is DC's DDRestoreFrontBuffer rather
+// than a PC-only helper. DC's mutable tagRECT& parameter fits the retail
+// OffsetRect use.
 // GetDesktopInfo remains an ordinary same-TU call expanded by VC6.
 // E:\gamedcs\wingraph.cpp:719
 VA(0x006003c0, 0x22D)  // recovery sequence + first-caller static emission
@@ -1380,23 +1380,15 @@ void resizeWindow(int windowX, int windowY)
 
 // Two things worth reading twice. GetDesktopInfo is EXPANDED here (its
 // GetDC / three GetDeviceCaps / ReleaseDC block and the `== 16` compare
-// are inline) exactly as it is in DDResetDisplayMode; and the colour-mask
+// are inline) exactly as it is in ddRestoreFrontBuffer; and the colour-mask
 // triple is saved BEFORE the teardown and compared AFTER the rebuild, so
 // the remap only runs when DirectDraw came back in a different pixel
 // format - which is what bitmap16.h's own note about `0x7e0 ? 6 : 5`
 // describes from the other end.
-// Residual (94.58%): register allocation only - all 14 branches and all 31
-// calls agree, and 23 of 28 blocks are byte-exact. What is left is which
-// scratch register each of the three mask compares and the Grab/Draw
-// argument loads land in (retail runs Width through ESI where we use ECX,
-// and rotates EAX/ECX/EDX one place through the mask block), plus the
-// resulting `push esi` save point. Three source levers were measured and
-// two paid: hoisting GetDesktopInfo into a named local, which is what makes
-// the desktop query UNCONDITIONAL and puts iStatus in its own frame slot
-// (85.4440 -> 91.8531, and it is what closes every branch); reading
-// iWindowX/iWindowY into locals ABOVE the `if (!bWindowedMode)`, which is
-// where retail loads them (91.8567 -> 94.5813); and declaring the three
-// saved masks red/green/blue rather than blue/green/red, worth 0.0036.
+// GetDesktopInfo's result is a named local, which makes the desktop query
+// unconditional and puts iStatus in its own frame slot; iWindowX/iWindowY
+// are read into locals above the `if (!bWindowedMode)`, where retail loads
+// them; and the three saved masks are declared red/green/blue.
 VA(0x00601a00, 0x31C)  // anchor-caller (SetFullScreenStatus) + dc order
 DC_ADDRESS(0x19a234, 0x1ac)
 unsigned char ddSetFullScreenStatus(int newStatus)

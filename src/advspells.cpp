@@ -139,23 +139,8 @@ void advManager::castSpell(SpellID whichSpell)
 // the current view, which is why the first fizzle block carries no sample
 // and the second one does.
 
-// Residual (91.1002%): two classes, both recorded rather than ground.
-//  * The three refusal blocks. Retail gives each dialog its OWN epilogue
-//    and sends every silent (not-a-local-human) exit to the function's
-//    final one; our CL cross-jumps them onto one shared block placed after
-//    the first dialog, which shifts the whole later block layout. This is
-//    the merged-return class. Writing `return;` INSIDE the `if` as well as
-//    after it is byte-flat, so it is not source-reachable from here.
-//  * `[ebp+8]` reloads inside the radar-window test: retail keeps the
-//    extracted origin in ECX across `movsx edx,dx` and stores it back,
-//    where we spill and re-read - one extra instruction in each of two
-//    blocks. Register pressure, not a spelling.
-// A foundWater flag removes the search goto and improves the current
-// 91.1018% to 91.5769%; putting the refusal inside an infinite loop's
-// exhaustion arm reaches 91.3281%. The older direction==COUNT post-loop
-// test scored 91.4864% with an extra comparison. The flag records the
-// actual successful cell test while preserving search order and refusal
-// side effects; no new helper is inferred from that flag.
+// The foundWater flag records the actual successful cell test while
+// preserving search order and refusal side effects.
 VA(0x0041c8a0, 0x54D)
 DC_ADDRESS(0x021b84, 0x4d0)
 MAC_ADDRESS(0x01d364, 0x650)  // anchor-callee hero::find_summonable_boat + game::CreateBoat
@@ -411,32 +396,22 @@ void advManager::dimensionDoor(TSkillMastery level)
 // record through game::GetTown, whose -1 arm survives as the
 // `inc/neg/sbb/and` mask even though the index can never be -1 here.
 
-// The AddTown call is the row src/towngatewindow.cpp currently claims as
-// VA_COMPGEN(0x005c2400, VECTOR_INSERT, widget): retail reaches it
+// The AddTown call is TTownGateWindow::addTown (0x5c2400): retail reaches it
 // THISCALL on the window with ONE stack argument and its body works on
 // `this + 0x60`, i.e. TTownGateWindow::Towns with push_back expanded into
-// it. That is AddTown, not a free vector COMDAT - see the lane report.
+// it, not a free vector COMDAT.
 
 // DC records const movement_cost[4], const traits by reference, GetCurrHero,
-// and one-argument GetManaCost. The joint helper family restores them without
-// moving the 99.0386% result. DistanceSquared now retains its proven const-
-// reference interface (struct.h:120, dc 0x22fe4); both callers pass the local
-// town location directly. The final 24-state helper/caller family emits
-// six objects and reproduces all six. X-before-Y locals in the canonical
-// DistanceSquared helper close all seven scored advspells functions.
-// Its DC121/124/122 line entries are nonmonotonic and record no named
-// locals; the earlier assumption that Y-first was proven was incorrect.
-// Y-first leaves four stack displacements at 99.9914; direct arithmetic
-// inside the same helper gives 95.7232. Both source calls remain intact.
-// Negative controls isolate the max facade: using its template selector
-// directly returns TownGate to 91.81, while changing only text[] to the
-// older accessor leaves the bytes unchanged. Retain both proven boundaries.
+// and one-argument GetManaCost. DistanceSquared keeps its proven
+// const-reference interface (struct.h:120, dc 0x22fe4) with X-before-Y
+// locals (its DC121/124/122 line entries are nonmonotonic and name no
+// locals); both callers pass the local town location directly. The max
+// facade and text[] keep their proven boundaries.
 // DC549 initializes nearest distance before DC552 heroLocation; DC564
 // stores closest_distance_2 before DC565 stores closest_town.
 // DC 561 tests DistanceSquared and DC 564 stores it again with no local
 // between them; retail expands both calls (see struct.h). Mac's single
-// evaluation is its own lowering; a named distance local had lowered
-// Windows to 90.50%.
+// evaluation is its own lowering.
 // Original local names: TGWindow, closest_town, closest_distance_2,
 // hero_loc, town_loc; normalized below without changing their scopes.
 VA(0x0041d360, 0x5C8)

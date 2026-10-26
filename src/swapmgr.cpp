@@ -836,12 +836,9 @@ int swapManager::drawSwapWin()
 // two-by-eight widget walk and final network-handler lifetime. Retail fixes
 // the Complete widget-id shifts and replaces swap_side() with Update().
 // Retail passes the portrait pointer directly through the four-argument
-// broadcastMessage ABI; assigning it to msg.m_extraText adds an absent store
-// and changes downstream register allocation. The direct pointer-to-int ABI
-// cast restores this whole Windows body from 95.7482% to 100%; all other
-// Windows and scored Mac callers remain unchanged.
-// DC line 703 uses TTextResource::operator[] for the hero-name format;
-// restoring that source call is VC6 byte-flat.
+// broadcastMessage ABI (a pointer-to-int cast); assigning it to
+// msg.m_extraText adds an absent store. DC line 703 uses
+// TTextResource::operator[] for the hero-name format.
 VA(0x005ae750, 0x3A2)
 DC_ADDRESS(0x15c66c, 0x3d8)
 MAC_ADDRESS(0x1a61d8, 0x478)  // full retail body +  dossier
@@ -1306,14 +1303,11 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, bool shif
 // Dreamcast proves the two source locals and the get/view/remove/equip/
 // Update/SetPointer/Reset helper order. Complete retains that shared shape
 // and adds combination-artifact handling plus the campaign scenario guard.
-// Windows closes from 93.4161% to 100% when the spellbook warning has
-// an explicit else for the remaining right-click actions, followed by the
-// shared right-click return. This selects retail's physical warning tail
-// without flattening any helper. Mac retains both viewArtifact calls at
-// 0x1a735c/0x1a7370; merging those into one source call is a separate control,
-// not the recovered branch model. A broader outer action ladder was flat.
+// The spellbook warning has an explicit else for the remaining right-click
+// actions, followed by the shared right-click return: retail's physical
+// warning tail. Mac retains both viewArtifact calls at 0x1a735c/0x1a7370.
 // DC lines 1118/1124 use TTextResource::operator[] for the two trade
-// warnings; those calls are restored and VC6 byte-flat.
+// warnings.
 VA(0x005af590, 0x3F7)
 DC_ADDRESS(0x15d150, 0x190)
 MAC_ADDRESS(0x1a71a4, 0x450)  // Main roster/callees + full retail body
@@ -1521,34 +1515,13 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // Mac initializes three separate 0x14-byte packets before GetOtherHero;
 // Windows retail evaluates GetOtherHero before packet initialization.
 // Explicit if/else modifier assignments reproduce Mac's two true/false
-// branch pairs; a Boolean expression is branchless under CW, while an
-// initial zero plus an if has only one branch per flag. Windows is byte-flat.
-// Full-expression packet temporaries permit both argument evaluation orders
-// and raise Windows 84.0502% to 86.82% without changing other scored rows.
-// The current CodeWarrior compile still retains the packet constructor;
-// its expansion and message/flag register choices remain to be recovered.
-// A temporary inline-constructor control is Windows byte-flat and makes CW
-// schedule packet stores before GetOtherHero, as native does. This confirms
-// that execution order alone does not distinguish one full expression from
-// two statements; the control does not prove the original inline qualifier.
-// Combining the sixteen left/right skill case labels and selecting hero
-// plus skill index in one scope removes the shared-skill jump, but scores
-// 83.1641% (left-first) or 83.4984% (right-first), against 84.0502%. Both
-// preserve the named skill and dialog calls; the dispatch layout remains open.
-// Keeping separate left/right selector assignments and a shared skill-
-// requested result after the switch scores 71.6782% (bool/byte/int).
-// A combined inner selector scores 80.3929%; conditional left/right forms
-// reach 83.6259%/83.4984%, below 84.0502%. Canonical helper order is retained.
-// Fresh native-call review at 86.81%: the apparent main/$L inliner
-// differences are EH funclet labels. The remaining extra call is sprintf:
-// Complete shares the right experience/mana sprintf tail, whereas Mac keeps
-// all four experience/mana sprintf sites. Complete also shares the expired
-// return with the final ExitSwapManager tail; DC explicitly returns at 1245.
-// Mac 0x1a809c/0x1a8338 and retail preserve each level across
-// getExperience. Case-owned level snapshots recover 86.81 -> 98.33,
-// including natural shared exits, with existing interfaces unchanged.
-// Mac 0x1a7fa4 (left count) precedes 0x1a7fd8 (right icon),
-// as retail does; retain that complete guarded case order.
+// branch pairs. Full-expression packet temporaries permit both argument
+// evaluation orders. Complete shares the right experience/mana sprintf tail
+// (Mac keeps all four sites) and shares the expired return with the final
+// ExitSwapManager tail (DC returns explicitly at 1245). Mac
+// 0x1a809c/0x1a8338 and retail preserve each level across getExperience, so
+// the level snapshots are case-owned. Mac 0x1a7fa4 (left count) precedes
+// 0x1a7fd8 (right icon), as retail does.
 VA(0x005afdf0, 0xABB)
 DC_ADDRESS(0x15d4ac, 0x986)
 MAC_ADDRESS(0x1a7954, 0xdc0)  // full retail dispatcher + DC dossier
@@ -1657,10 +1630,7 @@ int swapManager::main(message& msg)
 
                 // DC lines 1311-1338 expose two side/index assignments and
                 // one shared GetNthSS/string/dialog scope. Retail's B32/B34
-                // assignments converge on the same B35 tail. Negative
-                // controls: duplicating the two scopes falls to 82.58%, a
-                // volatile side local to 82.62%, and a byte local to 83.43%;
-                // the shared int form retains the coherent 84.05% shape.
+                // assignments converge on the same B35 tail.
                 show_secondary_skill:
                     if (skillIndex < m_heroes[skillHero]->m_skillCount)
                     {
@@ -2175,15 +2145,6 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverLeftSkill2: case kSwapRolloverLeftSkill3:
     case kSwapRolloverLeftSkill4: case kSwapRolloverLeftSkill5:
     case kSwapRolloverLeftSkill6: case kSwapRolloverLeftSkill7:
-        // The last residual here is one SIB byte in each skill arm:
-        // retail encodes `movsx eax, [eax + edx + 0xc9]` (hero as base,
-        // skill as index) where we emit `[edx + eax + 0xc9]`. Caching
-        // `m_heroes[n]` in a local to bias the allocator makes it much
-        // worse (99.98 -> 96.52): the pointer then lives in a callee-saved
-        // register across getNthSS and the whole arm re-schedules. DC
-        // records no stack locals here and calls already agree, so `skill`
-        // is a register temp and the base/index choice is allocator state,
-        // not a spelling we have evidence for.
         if (codeY - kSwapRolloverLeftSkill0 < m_heroes[0]->m_skillCount) {
             int skill = m_heroes[0]->getNthSS(
                 codeY - kSwapRolloverLeftSkill0);
@@ -2420,10 +2381,8 @@ void swapManager::handleHeroUpdateMsg(CNetMsg* netMsg)
 // DC attributes each packet construction, GetOtherHero and transmission
 // to one source row and records no named locals. Mac constructs before
 // GetOtherHero, while Windows retail schedules the accessor first.
-// Unnamed full-expression packets preserve both allowed argument orders.
-// Applying this to the trade case and canonical onReceiveFromAlly restores
-// Windows' separate 0x14-byte packet homes (0x28 frame) and the entire body
-// from 88.4550% to 100%; all other scored Windows/Mac rows stay unchanged.
+// Unnamed full-expression packets preserve both allowed argument orders and
+// give Windows' separate 0x14-byte packet homes (0x28 frame).
 VA(0x005b10d0, 0x2A8)
 DC_ADDRESS(0x15ec58, 0x1a0)
 MAC_ADDRESS(0x1a9998, 0x234)  // switch ids/callees + ret 8
@@ -2540,12 +2499,9 @@ MAC_ADDRESS(0x1a9ca4, 0x110)
 bool swapManager::canModHero(int whichHero)
 {
     // Complete lowers this helper as false guards followed by one true tail in
-    // handle_backpack_click, HandleMonster and SwapMons.  Restoring the older
-    // Dreamcast direct-return expressions is the negative control: backpack,
-    // monster, swap and artifact callers fall 99.90->94.31, 100->91.19,
-    // 90.98->86.12 and 93.42->87.81.  The calls, predicates and statement
-    // order remain the DC-proved ones; only the Complete-era hot-seat return
-    // spelling differs.
+    // handle_backpack_click, HandleMonster and SwapMons; the older Dreamcast
+    // direct-return expressions do not. The calls, predicates and statement
+    // order are the DC-proved ones.
     if (g_mpNetProtocol == MP_HOTSEAT) {
         if (!g_game->onSameTeam(
                 m_heroes[whichHero]->m_owner,

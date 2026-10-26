@@ -184,7 +184,8 @@ unsigned char initImmMouse(void* instance, void* hwnd)
     }
 }
 
-// the whole of `~t_initializer` into it, so the 58 bytes are the two
+// immMouse's atexit destructor thunk, with the whole of `~t_initializer`
+// inlined into it.
 VA_COMPGEN(0x004b6910, 0x3A, STATIC_DTOR, immMouse)
 
 // ImmMouseWindowMoved: re-derives the client origin via
@@ -283,8 +284,7 @@ void TImmMouseEffect::stop()
 }
 
 // Dinkumware red-black-tree members the insert above and the holder
-// teardown reach, and all three sizes are exactly the ones the
-// claimed below in this same compiland.
+// teardown reach, claimed below in this same compiland.
 VA_COMPGEN(0x004b6f60, 0xBE, CLASS_CTOR, map)
 
 VA_COMPGEN(0x004b7020, 0x13, IMPLICIT_DTOR, CImmEnclosure_auto_ptr)
@@ -300,15 +300,13 @@ VA_COMPGEN(0x004b7040, 0x10, IMPLICIT_DTOR, char_auto_ptr)
 
 VA_COMPGEN(0x004b7050, 0x21, IMPLICIT_DTOR, CImmProject_auto_ptr)
 
-// COMDAT pairing: basic_filebuf<char>::close, the one <fstream> member of
-// this TU with no claim key until now. t_initializer's constructor reads
-// H3Shad.ifr through an ifstream, and 0x4b7400 is the `close` that ends it:
+// COMDAT pairing: basic_filebuf<char>::close, the one <fstream> member of this
+// TU. t_initializer's constructor reads H3Shad.ifr through an ifstream, and
+// 0x4b7400 is the `close` that ends it:
 // `fclose` on the FILE* at +0x50, then basic_streambuf::_Init()'s six
 // self-referential pointer stores (+0xc->+4, +0x1c->+0x14, +0x20->+0x18,
 // +0x10->+8, +0x2c->+0x24, +0x30->+0x28) zeroed through, then the two
-// locale words from the shared _Stinit. Agreement 0.625 against this
-// object's own `?close@?$basic_filebuf@D...` COMDAT, which nothing else in
-// the unit resembles.
+// locale words from the shared _Stinit.
 VA_COMPGEN(0x004b7400, 0x9C, FILEBUF_CLOSE, char)
 
 VA_COMPGEN(0x004b70e0, 0x115, TREE_INSERT, CImmEnclosure)
@@ -324,11 +322,11 @@ VA_COMPGEN(0x004b7db0, 0xB3, TREE_CONST_ITERATOR_DEC, CImmEnclosure)
 // `?_Construct@std@@...` COMDAT, so the pairing is unambiguous.
 VA_COMPGEN(0x004b7fe0, 0x14, STD_CONSTRUCT, CImmEnclosure_pair)
 
-// COMDAT pairing: map<CImmEnclosure*, RECT>::erase, both overloads, newly
-// emitted by the TImmMouseEffect destructor above. The chain is closed on
-// both sides: the range overload at 0x4b7200 is reached from that destructor
-// (0x4b6eea) and from the already-claimed tree destructor at 0x4b61f0
-// (0x4b6204, `erase(begin(), end())`), and it is the ONLY caller of 0x4b74a0
+// COMDAT pairing: map<CImmEnclosure*, RECT>::erase, both overloads, emitted
+// by the TImmMouseEffect destructor above. The chain is closed on both
+// sides: the range overload at 0x4b7200 is reached from that destructor
+// (0x4b6eea) and from the tree destructor at 0x4b61f0 (0x4b6204,
+// `erase(begin(), end())`), and it is the ONLY caller of 0x4b74a0
 // (0x4b72fd) - exactly `while (_F != _L) erase(_F++)`. Sizes corroborate
 // independently: resourcemanager's TCacheMapKey tree, the other pointer-keyed
 // map in the tree, carries this same pair at 0x50F and 0x121.

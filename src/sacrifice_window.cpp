@@ -860,10 +860,9 @@ long sacrificeValue(TCreatureType creature)
 // +0x788 rows of gpGeneralText's pointer table.
 // DC's parameter record names type_creature_offering& creature. Every native
 // caller supplies an owned offering; keep the reference and its source calls.
-// Complete's three return paths are source returns. Keeping the rollover-help
-// arm as a straight-line tail, rather than nesting it under a positive frame
-// test, makes VC6 keep `result` at retail's [ebp-0x40] stack slot. The nested
-// form is otherwise instruction-identical but colors `result` at [ebp-0x30].
+// Complete's three return paths are source returns. The rollover-help arm is
+// a straight-line tail, not nested under a positive frame test; that keeps
+// `result` at retail's [ebp-0x40] stack slot.
 VA(0x00562da0, 0x3a2)
 DC_ADDRESS(0x125e08, 0x25a)
 MAC_ADDRESS(0x159614, 0x3a8)  // dc order/name/signature + retail field graph
@@ -1287,25 +1286,14 @@ int type_sacrifice_window::emptyBackpack(message& msg)
 // E:\gamedcs\sacrifice_window.cpp:1365
 // The all-artifacts callback first offers each of the sixteen admissible doll
 // slots, then expands empty_backpack to fill whatever offering slots remain.
-// NOT A MEMBER-OFFSET BUG (checked 2026-09-06): the `[eax+0x2e4]` against
-// retail's `[eax+0x350]` that a census flagged here is the SWITCH INDEX
-// TABLE - `mov dl, byte ptr [eax + <fn>+0x350]` / `jmp [4*edx + <fn>+0x33c]`
-// - whose base is the function's own end.  Retail's body is 0x6c bytes
-// longer than ours by exactly the update_backpack expansion below, so the
-// two tables sit 0x6c apart.  No hero/type_sacrifice_window member is
-// involved.
 // /Ob2 model (docs/vc6/inliner.md), z = vector<offering>::size (42), costs
 // A addArtifact, S set, U updateArtifactOffering, E emptyBackpack,
 // B updateBackpack. Retail expands updateBackpack after emptyBackpack's
 // nested addArtifact, but keeps that copy's set/U and updateBackpack's size
-// calls out of line: 0 <= 832 - 2A - S - U - E - B <= 41. backpackClick's
-// putDownArtifact must keep calling updateAllSlots, which pins B >= 145.
-// Was A164 S155 U67 E149 B145 (-12, 86.78%). Now A162 (unbraced loop body;
-// DC emptyBackpack shows loop bodies do not add a compound scope, so its
-// coincident for-loop pair does not decide braces), S147
-// (`m_value *=`), U66 (DC const-reference update_offering) => +1, 100%.
-// The other callers (setArtifactMode, the three clicks, emptyBackpack,
-// sacrifice) keep their exact decisions; set/updateOffering bytes unchanged.
+// calls out of line: 0 <= 832 - 2A - S - U - E - B <= 41, with B >= 145
+// (backpackClick's putDownArtifact keeps calling updateAllSlots). The
+// unbraced emptyBackpack loop body, `m_value *=` and the const-reference
+// updateOffering give A162 S147 U66.
 VA(0x00564340, 0x35f)
 DC_ADDRESS(0x1269ac, 0xc4)
 MAC_ADDRESS(0x15a6e0, 0x154)  // callback address-take + dc name/signature/order
@@ -1751,8 +1739,8 @@ int type_sacrifice_window::windowHandler(message& msg)
 // artifact to its original equipped slot where possible, then tries an
 // arbitrary equipped slot, the backpack, and finally the arbitrary equipped
 // path once more before closing the modal dialog.
-// DC line 1866 calls return_artifact. The existing ordinary returnArtifact
-// expands naturally here and preserves 100% while removing three failure joins.
+// DC line 1866 calls return_artifact; the ordinary returnArtifact expands
+// here.
 VA(0x00565430, 0x80)
 DC_ADDRESS(0x1274bc, 0x38)
 MAC_ADDRESS(0x15b7c8, 0x70)  // anchor-vtable slot 14
@@ -1811,10 +1799,7 @@ type_transformer_slot::type_transformer_slot(
 // 0x5654f0 - so neither row is an /OPT:ICF fold.
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
-// DC proves push_back; its text subscripts forward to getText. At 98.3508%,
-// the final rollover append's growth path retains an extra vector::size.
-// Removing the vector alias or binding its pointer argument locally does
-// not recover that nested expansion; keep the canonical container call.
+// DC proves push_back; its text subscripts forward to getText.
 VA(0x005654f0, 0xA3C)
 DC_ADDRESS(0x1275c0, 0x448)
 MAC_ADDRESS(0x15b900, 0x99c)
@@ -1834,7 +1819,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         g_game->getLocalPlayerGamePos());
     m_widgets.push_back(background);
 
-    // Retail-exact only as an end insert through a reference; DC shows push_back.
+    // Retail needs an end insert through a reference; DC shows push_back.
     std::vector<widget*>& widgets = m_widgets;
     widgets.insert(widgets.end(), new textWidget(
         25, 21, 257, 18,

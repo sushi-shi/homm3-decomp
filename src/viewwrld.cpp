@@ -1145,21 +1145,6 @@ void advManager::vwDrawGround(int srcX, int srcY, int z, int destX, int destY)
 // adds the two address-taken surface/underground controls. Retail corroborates
 // every revised row through the 45 operator-new EH states and constructor-call
 // stream. The ViewWorld caller's adjacent stack local proves sizeof(*this)=0x78.
-// Residual (96.4425%) PRICED AS CALLER MASS, polish 16, and the direction is
-// DOWN.  The visible defect is an UNDER-inline: at the first two widget sites
-// retail expands `vector<widget*>::push_back` into its `insert(_Last, 1, x)`
-// call (`push edx / push 1 / push eax`) where this compile CALLS the
-// out-of-line `push_back` COMDAT with one argument, which is the /Ob2
-// `budget / sites-remaining` quotient starving the EARLIEST sites. The
-// textbook fix is to grow caller_cb, and it does not work here: an `if (0)`
-// carrier after `Widgets.reserve(NWIDGETS)` - the measuring instrument, not a
-// fix, and deliberately not shipped - gives
-//   N = 1,2,3,5 -> 96.30 | 10 -> 96.09 | 20 -> 90.59 | 30 -> 90.31 |
-//   40 -> 84.95
-// monotone down with no plateau anywhere, so more mass over-inlines faster
-// than it recovers push_back. The lever this body wants is the numerator from
-// the other side (SHRINK the caller), and the Dreamcast roster names no helper
-// to lift these blocks into, so it is out of reach without invented source.
 VA(0x005fa600, 0x1726)
 DC_ADDRESS(0x1952b8, 0x80c)
 MAC_ADDRESS(0x2067dc, 0x2594)  // caller stack extent + vtable 0x643c54
@@ -1276,9 +1261,7 @@ TViewWorldWindow::TViewWorldWindow()
     // RETAIL BOUNDARY: TViewWorldWindow::TViewWorldWindow ->
     // vector<widget*>::insert. Dreamcast 0x1952b8 proves the ordered widget
     // append family; Complete adds this puzzle row and retail retains its
-    // insert call at ctor+0xfd0. The old 88.42% flattening control belonged
-    // to an earlier source state: removing this pin now improves the ctor
-    // from 97.1358% to 97.3652% with no tracked-TU losses (2026-09-09).
+    // insert call at ctor+0xfd0.
     m_widgets.push_back(new button(
         612, 538, 66, 32, 19, "VWPuz.def", 0, 1, 0, 25, 2));
 
@@ -1295,10 +1278,9 @@ TViewWorldWindow::TViewWorldWindow()
     m_widgets.push_back(m_undergroundButton);
     m_widgets.push_back(m_surfaceButton);
 
-    // DC lines 1370 and 1373 prove these are push_back calls too. Together
-    // with both DC Widget.h::hide helpers below, the natural source reproduces
-    // the complete 215-block retail constructor exactly; no depth pin or
-    // direct vector::insert spelling is needed.
+    // DC lines 1370 and 1373 prove these are push_back calls too; with both
+    // DC Widget.h::hide helpers below, no depth pin or direct vector::insert
+    // spelling is needed.
     m_widgets.push_back(new bitmapBorder(
         725, 537, 68, 34, -1, "box66x32.pcx", 0x800));
     button* ok = new button(
@@ -1480,12 +1462,10 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 // and the two clamped extents are compared against MAP_WIDTH/MAP_HEIGHT
 // for EQUALITY: a map that exactly fills the view keeps the origin at
 // (0, 0, new_center.z) with no clamping at all.
-// iSkipLevel's DECLARATION SITE is worth 13.5 points (83.37 -> 96.87):
-// retail issues the `fdiv` after both integer divisions, so the float
-// local is declared BELOW the two extent assignments, not above them.
-// The inlined ftol helper's double temporary occupies retail [ebp-8], with
-// skipLevel at [ebp-0xc] and its magic constant at [ebp-0x10]. The earlier
-// union spelling allocated four extra bytes and held this body at 98.8939%.
+// iSkipLevel is declared BELOW the two extent assignments: retail issues the
+// `fdiv` after both integer divisions. The inlined ftol helper's double
+// temporary occupies retail [ebp-8], with skipLevel at [ebp-0xc] and its
+// magic constant at [ebp-0x10].
 VA(0x005fc240, 0x274)
 DC_ADDRESS(0x195d30, 0x2ca)
 MAC_ADDRESS(0x20929c, 0x514)  // anchor-caller ViewWorld, anchor-callee UpdateRadar

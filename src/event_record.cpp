@@ -412,8 +412,8 @@ void type_record_claim_town::undo()
 // two independent snapshot loads corroborate the revised constructor inputs.
 // DC retains this constructor at 0x8ce74 and Mac recordHideBoat calls 0xbfce0;
 // VC6 expands the ordinary same-TU helper in both Windows boat callers.
-// Mac reloads m_currentBoat before each snapshot. Keeping those member reads
-// also restores the retail vector expansion in recordHideBoat (88.9253 -> 100).
+// Mac reloads m_currentBoat before each snapshot; those member reads also give
+// recordHideBoat's retail vector expansion.
 MAC_ADDRESS(0x0bfce0, 0x80)
 type_record_hide_boat::type_record_hide_boat(boat* currentBoat,
                                                     unsigned char occupied,
@@ -597,10 +597,7 @@ void type_record_show_boat::undo()
     m_currentBoat->m_z = m_previousLocation.m_z;
 }
 
-// DC cpp:533 defaults m_location before the line-534 assignment. Spelling
-// that default as `: m_location()` or spelling the base initializer explicitly
-// is byte-flat at recordEraseObject (88.7023%). The ordinary definition is
-// also byte-flat; nested vector _Ufill still gets budget 55 against cost 56.
+// DC cpp:533 defaults m_location before the line-534 assignment.
 DC_ADDRESS(0x08d220, 0x70)
 MAC_ADDRESS(0x0c0534, 0x74)
 type_record_erase::type_record_erase(type_point location,
@@ -1258,9 +1255,8 @@ void game::setVisibility(const int startX, const int startY, const int z,
 // DC line 1199's double distance is range+0.5, not the sqrt result; lines
 // 1206..1209 fill tagRECT rect. Both dc 0x8e624 and retail +0x18e skip the
 // write when unchanged, so line 1224's store belongs inside the inequality.
-// Recovering that store reaches 97.8326%; canonical push_back (line 1232)
-// removes the inline-depth pin and reaches 99.9070%; RECT ownership closes
-// the frame and reaches 100%. Direct and named per-cell deltas reproduce it.
+// Canonical push_back (line 1232) and the tagRECT rect local give retail's
+// frame.
 VA(0x0049d3d0, 0x260)
 DC_ADDRESS(0x08e54c, 0x1e4)
 MAC_ADDRESS(0x0c274c, 0x39c)  // anchor-global (0x63df7c + GetMapExtraPtr)
