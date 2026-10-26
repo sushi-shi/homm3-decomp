@@ -1186,16 +1186,35 @@ def derive(log=print, want_suggestions=False):
         if body not in variants[name]:
             variants[name].append(body)
 
+    def calls_agree(relocs, target):
+        """No call of the body reaches an address that retail's call at the
+        same site contradicts: a callee placed elsewhere, or a retail callee
+        another name holds (TRefCountingPtr<T>::get for three T differ only
+        in the _split each calls)."""
+        for site, (ref, kind) in relocs.items():
+            if kind != REL32:
+                continue
+            value = word(target + site)
+            if value is None:
+                return False
+            callee = (target + site + 4 + value) & 0xFFFFFFFF
+            placed = names.get(ref, set())
+            if (placed and callee not in placed) or (named_at[callee] - {ref}):
+                return False
+        return True
+
     def equal_at(name, target):
         """Whether one of `name`'s compiled bodies equals retail at the
-        census start `target`, relocation fields masked."""
+        census start `target`, relocation fields masked and its calls
+        consistent with what is placed."""
         for body, relocs in variants.get(name, ()):
             if functions.get(target) != len(body):
                 continue
             mask = bytearray(len(body))
             for site in relocs:
                 mask[site:site + 4] = b"\1\1\1\1"
-            if all(m or x == y for x, y, m in zip(blob(target, len(body)), body, mask)):
+            if (all(m or x == y for x, y, m in zip(blob(target, len(body)), body, mask))
+                    and calls_agree(relocs, target)):
                 return True
         return False
 
