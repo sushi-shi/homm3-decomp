@@ -345,7 +345,7 @@ bool CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
         -1, 1, 0, 8));
     add(new CSpriteWidget((m_width - town->GetWidth()) / 2, 60, town, frame));
     add(new textWidget(10, 95, m_width - 20, 18,
-        townManager::getTownTypeName(townType), "smalfont.fnt", font::PRIMARY,
+        townManager::getTownTypeName(H3_IDX(townType)), "smalfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
     add(new textWidget(10, 127, m_width - 20, 36,
         g_generalText->GetText(GENERAL_TEXT_SCENARIO_ASSOCIATED_CREATURES_CAPTION), "medfont.fnt", font::PRIMARY,

@@ -91,7 +91,7 @@ TObjectPaletteWnd::TObjectPaletteWnd(CWnd* pParent, TObjectPaletteWndClient* pCl
              (it = find_if(it, kObjectTypeTable.m_objectTypes.end(), pred)) != kObjectTypeTable.m_objectTypes.end();
              it++) {
             if (g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH || it->getType() != TOWN
-                || it->getExtra() < TOWN_CONFLUX)
+                || it->getExtra() < H3_IDX(eTownConflux))
                 _m_aSlotInfo[slot].m_objTypes.push_back(&*it);
         }
     }
@@ -461,7 +461,7 @@ BOOL TObjectPaletteWnd::OnToolTipNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResu
         text = THero::s_akClassTraits[pObjType->getExtra()].m_name;
         break;
     case TOWN:
-        assert(pObjType->getExtra() >= 0 && pObjType->getExtra() < kNumTownTypes);
+        assert(pObjType->getExtra() >= 0 && pObjType->getExtra() < H3_IDX(kNumTownTypes));
         text = TTown::s_akTypeTraits[pObjType->getExtra()].m_pName;
         break;
     case MONSTER:

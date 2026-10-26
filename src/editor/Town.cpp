@@ -120,7 +120,7 @@ TTown::TTown(const TObjectType& objType, TPlayer owner)
       _m_alignment(ePlayerNone)
 {
     assert(objType.getType() == TOWN || objType.getType() == RANDOM_TOWN);
-    assert(objType.getType() == RANDOM_TOWN || getTownType() >= 0 && getTownType() < kNumTownTypes);
+    assert(objType.getType() == RANDOM_TOWN || getTownType() >= eTownCastle && getTownType() < kNumTownTypes);
     _m_aBuildingState[eBuildingFort].setBBuilt(true);
 }
 
@@ -135,7 +135,7 @@ TTown::TTown(const TObjectType& objType, TRawIStream* pIStream, int version)
     : TGameObject(objType), TLinkableObject(objType), TPlayableObject(objType), _m_pVisitingHero(NULL)
 {
     assert(objType.getType() == TOWN || objType.getType() == RANDOM_TOWN);
-    assert(objType.getType() == RANDOM_TOWN || getTownType() >= 0 && getTownType() < kNumTownTypes);
+    assert(objType.getType() == RANDOM_TOWN || getTownType() >= eTownCastle && getTownType() < kNumTownTypes);
     if (version >= 15)
         TLinkableObject::read(pIStream, version);
     TPlayableObject::read(pIStream, version);
@@ -201,7 +201,7 @@ TTown::TTown(const TObjectType& objType, TRawIStream* pIStream, int version)
         if (spellsMask[spell]
             && ((akSpellTraits[spell].m_flags & 0x2000) || akSpellTraits[spell].m_school == const_invalid_school
                 || !typeTraits.hasMageGuildLevel(akSpellTraits[spell].m_level - 1)
-                || type < kNumTownTypes && akSpellTraits[spell].m_townGetsItChance[type] <= 0))
+                || type < kNumTownTypes && H3_AT(akSpellTraits[spell].m_townGetsItChance, type) <= 0))
             spellsMask[spell] = false;
     }
     setDisabledSpellsMask(spellsMask);

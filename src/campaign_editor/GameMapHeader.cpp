@@ -169,7 +169,7 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
                 std::bitset<8> townTypes;
                 readBitset(stream, &townTypes);
                 std::copy(TBitsetIterator<8>(townTypes, 0), TBitsetIterator<8>(townTypes, 8),
-                          TBitsetIterator<kNumTownTypes>(slot.m_townTypes, 0));
+                          TBitsetIterator<H3_IDX(kNumTownTypes)>(slot.m_townTypes, 0));
             }
             slot.m_bRandomTown = readValue<signed char>(stream) != 0;
         }

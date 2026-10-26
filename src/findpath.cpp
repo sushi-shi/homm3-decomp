@@ -1136,13 +1136,13 @@ bool searchArray::findCombatPath(const army* currentArmy,
                 || g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP)
             siegePressure = 1;
         if (currentArmy->getTotalHitPoints(0)
-                <= g_moatDamage[
-                        g_combatManager->m_defendingTown->m_type] * 4)
+                <= H3_AT(g_moatDamage,
+                        g_combatManager->m_defendingTown->m_type) * 4)
             siegePressure = 1;
         if (siegePressure
                 && currentArmy->getTotalHitPoints(0)
-                    > g_moatDamage[
-                            g_combatManager->m_defendingTown->m_type] * 40)
+                    > H3_AT(g_moatDamage,
+                            g_combatManager->m_defendingTown->m_type) * 40)
             siegePressure = 0;
     }
 

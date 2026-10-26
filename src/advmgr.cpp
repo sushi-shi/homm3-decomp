@@ -7164,7 +7164,7 @@ void advManager::townQuickView(int townId, int x, int y,
                 if (!first)
                     msg += ", ";
                 first = 0;
-                msg += getBuildingName(thisTown->m_type, building);
+                msg += getBuildingName(H3_IDX(thisTown->m_type), building);
             }
         }
 
@@ -8834,7 +8834,7 @@ void advManager::viewPuzzle()
     demobilizeCurrHero(0, 1);
     int pos = g_game->getLocalPlayerGamePos();
     g_game->setupPuzzlePieces(pos, 0);
-    TPuzzleWindow puzzle(g_game->getPlayerAlignment(pos));
+    TPuzzleWindow puzzle(H3_IDX(g_game->getPlayerAlignment(pos)));
     SAMPLE2 sample2 = loadPlaySample("Obelisk.wav");
     puzzle.updatePuzzle(1);
     drawAdventureMapGems();

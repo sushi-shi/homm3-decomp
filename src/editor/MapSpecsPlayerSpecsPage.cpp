@@ -23,59 +23,59 @@
 VA(0x00472f6a, 0x8)
 void TMapSpecsPlayerSpecsPage::OnCastleCheck()
 {
-    _onTownTypeCheck(TOWN_CASTLE);
+    _onTownTypeCheck(H3_IDX(eTownCastle));
 }
 
 VA(0x00472f72, 0x8)
 void TMapSpecsPlayerSpecsPage::OnRampartCheck()
 {
-    _onTownTypeCheck(TOWN_RAMPART);
+    _onTownTypeCheck(H3_IDX(eTownRampart));
 }
 
 VA(0x00472f7a, 0x8)
 void TMapSpecsPlayerSpecsPage::OnTowerCheck()
 {
-    _onTownTypeCheck(TOWN_TOWER);
+    _onTownTypeCheck(H3_IDX(eTownTower));
 }
 
 VA(0x00472f82, 0x8)
 void TMapSpecsPlayerSpecsPage::OnInfernoCheck()
 {
-    _onTownTypeCheck(TOWN_INFERNO);
+    _onTownTypeCheck(H3_IDX(eTownInferno));
 }
 
 VA(0x00472f8a, 0x8)
 void TMapSpecsPlayerSpecsPage::OnNecropolisCheck()
 {
-    _onTownTypeCheck(TOWN_NECROPOLIS);
+    _onTownTypeCheck(H3_IDX(eTownNecropolis));
 }
 
 VA(0x00472f92, 0x8)
 void TMapSpecsPlayerSpecsPage::OnDungeonCheck()
 {
-    _onTownTypeCheck(TOWN_DUNGEON);
+    _onTownTypeCheck(H3_IDX(eTownDungeon));
 }
 
 VA(0x00472f9a, 0x8)
 void TMapSpecsPlayerSpecsPage::OnStrongholdCheck()
 {
-    _onTownTypeCheck(TOWN_STRONGHOLD);
+    _onTownTypeCheck(H3_IDX(eTownStronghold));
 }
 
 VA(0x00472fa2, 0x8)
 void TMapSpecsPlayerSpecsPage::OnFortressCheck()
 {
-    _onTownTypeCheck(TOWN_FORTRESS);
+    _onTownTypeCheck(H3_IDX(eTownFortress));
 }
 
 VA(0x00472faa, 0x8)
 void TMapSpecsPlayerSpecsPage::OnConfluxCheck()
 {
-    _onTownTypeCheck(TOWN_CONFLUX);
+    _onTownTypeCheck(H3_IDX(eTownConflux));
 }
 
 DATA(0x0053ac08)
-static const int g_akTownTypeCheckIDs[kNumTownTypes] = { IDC_CASTLE_CHECK, IDC_RAMPART_CHECK, IDC_TOWER_CHECK, IDC_INFERNO_CHECK, IDC_NECROPOLIS_CHECK, IDC_DUNGEON_CHECK, IDC_STRONGHOLD_CHECK, IDC_FORTRESS_CHECK, IDC_CONFLUX_CHECK };
+static const int g_akTownTypeCheckIDs[H3_IDX(kNumTownTypes)] = { IDC_CASTLE_CHECK, IDC_RAMPART_CHECK, IDC_TOWER_CHECK, IDC_INFERNO_CHECK, IDC_NECROPOLIS_CHECK, IDC_DUNGEON_CHECK, IDC_STRONGHOLD_CHECK, IDC_FORTRESS_CHECK, IDC_CONFLUX_CHECK };
 
 VA(0x00472fb2, 0x4c)
 static const char* getBehaviorTypeName(TPlayerInfo::TBehaviorType behaviorType)
@@ -232,11 +232,11 @@ void TMapSpecsPlayerSpecsPage::_enableCustomTownTypes(bool bCustom)
     _m_townTypes = bCustom ? _m_customTownTypes : _m_defaultTownTypes;
     _m_randomTownCheck.EnableWindow(bCustom);
     int townType;
-    for (townType = 0; townType < kNumTownTypes; townType++)
+    for (townType = 0; townType < H3_IDX(kNumTownTypes); townType++)
         _m_aTownTypeChecks[townType].EnableWindow(_m_bCustomTownTypes);
     if (_m_townTypes.m_bRandom) {
         _m_randomTownCheck.SetCheck(1);
-        for (townType = 0; townType < kNumTownTypes; townType++) {
+        for (townType = 0; townType < H3_IDX(kNumTownTypes); townType++) {
             _m_townTypes.m_mask.set(townType, true);
             _m_aTownTypeChecks[townType].SetCheck(1);
             if (_m_bCustomTownTypes)
@@ -244,7 +244,7 @@ void TMapSpecsPlayerSpecsPage::_enableCustomTownTypes(bool bCustom)
         }
     } else {
         _m_randomTownCheck.SetCheck(0);
-        for (townType = 0; townType < kNumTownTypes; townType++)
+        for (townType = 0; townType < H3_IDX(kNumTownTypes); townType++)
             _m_aTownTypeChecks[townType].SetCheck(_m_townTypes.m_mask[townType]);
     }
     _m_numTownTypes = _m_townTypes.m_mask.count();
@@ -264,7 +264,7 @@ void TMapSpecsPlayerSpecsPage::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_MAIN_TOWN_COMBO, _m_mainTownCombo);
     DDX_Control(pDX, IDC_GENERATE_HERO_CHECK, _m_generateHeroCheck);
     DDX_Control(pDX, IDC_PLAYER_COMBO, _m_playerCombo);
-    for (int townType = 0; townType < kNumTownTypes; townType++)
+    for (int townType = 0; townType < H3_IDX(kNumTownTypes); townType++)
         DDX_Control(pDX, g_akTownTypeCheckIDs[townType], _m_aTownTypeChecks[townType]);
 }
 
@@ -483,16 +483,16 @@ void TMapSpecsPlayerSpecsPage::OnRandomTownCheck()
         if (!_m_townTypes.m_bRandom) {
             if (_m_numTownTypes == 0)
                 _m_pParentSheet->onEnableOK();
-            for (townType = 0; townType < kNumTownTypes; townType++) {
+            for (townType = 0; townType < H3_IDX(kNumTownTypes); townType++) {
                 _m_townTypes.m_mask.set(townType, true);
                 _m_aTownTypeChecks[townType].SetCheck(1);
                 _m_aTownTypeChecks[townType].EnableWindow(FALSE);
             }
-            _m_numTownTypes = kNumTownTypes;
+            _m_numTownTypes = H3_IDX(kNumTownTypes);
             _m_townTypes.m_bRandom = true;
         }
     } else if (_m_townTypes.m_bRandom) {
-        for (townType = 0; townType < kNumTownTypes; townType++)
+        for (townType = 0; townType < H3_IDX(kNumTownTypes); townType++)
             _m_aTownTypeChecks[townType].EnableWindow(TRUE);
         _m_townTypes.m_bRandom = false;
     }

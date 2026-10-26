@@ -465,8 +465,8 @@ void generator::removeBonus()
         return;
 
     playerData& player = g_game->m_players[m_playerOwner];
-    int alignment = g_game->getAlignment(m_type[0]);
-    if (alignment == -1)
+    H3_ENUM_STORAGE(TTownType, int) alignment = g_game->getAlignment(m_type[0]);
+    if (alignment == eTownNeutral)
         return;
 
     for (long i = 0; i < player.m_numTowns; i++) {
@@ -486,8 +486,8 @@ inline void generator::updateBonus()
 
     playerData& player = g_game->m_players[m_playerOwner];
     int creature = m_type[0];
-    int townType = g_game->getAlignment(creature);
-    if (townType == -1)
+    H3_ENUM_STORAGE(TTownType, int) townType = g_game->getAlignment(creature);
+    if (townType == eTownNeutral)
         return;
 
     for (int index = 0; index < player.m_numTowns; index++) {
@@ -639,7 +639,7 @@ void game::calculateProduction()
         if (currentTown.getArmy().getCreatureTotal(CREATURE_CRYSTAL_DRAGON) > 0)
             crystalDragonIncome[currentTown.m_owner] = 1;
 
-        if (currentTown.m_type == TOWN_RAMPART && m_day == 1) {
+        if (currentTown.m_type == eTownRampart && m_day == 1) {
             if (currentTown.hasBuilding(EXTRA_1_ID, true))
                 production[GOLD] += currentPlayer.m_resources[GOLD] / 10;
             if (currentTown.hasBuilding(SPECIAL_BUILDING_ID, true)
@@ -1724,7 +1724,7 @@ int playerData::buildingsOwned(int townType, int buildingId, int mageLevel)
     int count = 0;
     for (int i = 0; i < m_numTowns; ++i) {
         town* currentTown = g_game->getTown(m_townIds[i]);
-        if (buildingId < DWELLING_0_ID || currentTown->m_type == townType) {
+        if (buildingId < DWELLING_0_ID || H3_IDX(currentTown->m_type) == townType) {
             if (buildingId == MAGE_GUILD_ID) {
                 if (currentTown->hasBuilding(MAGE_GUILD_ID, false)
                     && currentTown->m_mageLevel == mageLevel)
@@ -2042,39 +2042,39 @@ HeroId game::getStartingHeroId(TTownType alignment, int playerPos, int mapPositi
     THeroClass heroClass2 = classCleric;
 
     switch (alignment) {
-    case TOWN_CASTLE:
+    case eTownCastle:
         heroClass1 = classKnight;
         heroClass2 = classCleric;
         break;
-    case TOWN_RAMPART:
+    case eTownRampart:
         heroClass1 = classDruid;
         heroClass2 = classRanger;
         break;
-    case TOWN_TOWER:
+    case eTownTower:
         heroClass1 = classWizard;
         heroClass2 = classAlchemist;
         break;
-    case TOWN_INFERNO:
+    case eTownInferno:
         heroClass1 = classPagan;
         heroClass2 = classHeretic;
         break;
-    case TOWN_NECROPOLIS:
+    case eTownNecropolis:
         heroClass1 = classDeathKnight;
         heroClass2 = classNecromancer;
         break;
-    case TOWN_DUNGEON:
+    case eTownDungeon:
         heroClass1 = classOverlord;
         heroClass2 = classWarlock;
         break;
-    case TOWN_STRONGHOLD:
+    case eTownStronghold:
         heroClass1 = classBarbarian;
         heroClass2 = classBattleMage;
         break;
-    case TOWN_FORTRESS:
+    case eTownFortress:
         heroClass1 = classBeastmaster;
         heroClass2 = classWitch;
         break;
-    case TOWN_CONFLUX:
+    case eTownConflux:
         heroClass1 = classPlanesWalker;
         heroClass2 = classElementalist;
         break;
@@ -2150,7 +2150,7 @@ HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
          heroClass = THeroClass(heroClass + 1)) {
         weights[heroClass] =
-            akHeroClassTraits[heroClass].m_foundInTownType[alignment];
+            H3_AT(akHeroClassTraits[heroClass].m_foundInTownType, alignment);
     }
 
     for (heroId = HeroId(0); heroId < HERO_COUNT; heroId = HeroId(heroId + 1)) {
@@ -2172,7 +2172,7 @@ HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
 
     if (g_game->m_gameVersion >= 2
         && g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
-        && alignment != TOWN_CONFLUX
+        && alignment != eTownConflux
         && counts[classPlanesWalker] + counts[classElementalist]
             < totalCount) {
         if (preferredClass != classPlanesWalker)
@@ -3501,12 +3501,12 @@ void game::giveTroopsToNeutralTown(int townId)
         roll -= g_neutralTownLevelWeights[monsterLevel];
     }
 
-    int townType = currentTown->m_type;
+    H3_ENUM_STORAGE(TTownType, int) townType = currentTown->m_type;
     armyGroup& townArmy = currentTown->getArmy();
     TCreatureType creature;
     TCreatureType upgradedCreature;
-    TCreatureType upgradedValue = g_dwellingType[townType][monsterLevel + TOWN_DWELLING_COUNT];
-    creature = g_dwellingType[townType][monsterLevel];
+    TCreatureType upgradedValue = H3_AT(g_dwellingType, townType)[monsterLevel + TOWN_DWELLING_COUNT];
+    creature = H3_AT(g_dwellingType, townType)[monsterLevel];
     upgradedCreature = upgradedValue;
     if (townArmy.getCreatureTotal(upgradedCreature))
         creature = upgradedCreature;
@@ -3873,38 +3873,38 @@ void game::newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
             case NEW_MAP_BONUS_RESOURCE: {
                 int amount = random(3, 6);
                 switch (m_setup.m_alignment[setupPlayer]) {
-                case TOWN_CASTLE: {
+                case eTownCastle: {
                     amount = random(5, 10);
                     m_players[setupPlayer].m_resources[WOOD] += amount;
                     m_players[setupPlayer].m_resources[ORE] += amount;
                     break;
                 }
-                case TOWN_RAMPART:
+                case eTownRampart:
                     m_players[setupPlayer].m_resources[CRYSTAL] += amount;
                     break;
-                case TOWN_TOWER:
+                case eTownTower:
                     m_players[setupPlayer].m_resources[GEMS] += amount;
                     break;
-                case TOWN_INFERNO:
-                case TOWN_CONFLUX:
+                case eTownInferno:
+                case eTownConflux:
                     m_players[setupPlayer].m_resources[MERCURY] += amount;
                     break;
-                case TOWN_NECROPOLIS: {
+                case eTownNecropolis: {
                     amount = random(5, 10);
                     m_players[setupPlayer].m_resources[WOOD] += amount;
                     m_players[setupPlayer].m_resources[ORE] += amount;
                     break;
                 }
-                case TOWN_DUNGEON:
+                case eTownDungeon:
                     m_players[setupPlayer].m_resources[SULFUR] += amount;
                     break;
-                case TOWN_STRONGHOLD: {
+                case eTownStronghold: {
                     amount = random(5, 10);
                     m_players[setupPlayer].m_resources[WOOD] += amount;
                     m_players[setupPlayer].m_resources[ORE] += amount;
                     break;
                 }
-                case TOWN_FORTRESS: {
+                case eTownFortress: {
                     amount = random(5, 10);
                     m_players[setupPlayer].m_resources[WOOD] += amount;
                     m_players[setupPlayer].m_resources[ORE] += amount;
@@ -6528,7 +6528,7 @@ void game::claimTown(int townId, int newPlayerOwner, bool isRemoteMove, bool che
         setVisibility(m_towns[townId].m_mapX, m_towns[townId].m_mapY,
                       m_towns[townId].m_mapZ, newPlayerOwner, 5, 0);
 
-        if (thisTown->m_type == TOWN_TOWER) {
+        if (thisTown->m_type == eTownTower) {
             if (thisTown->hasBuilding(EXTRA_0_ID, false))
                 g_game->setVisibility(thisTown->m_mapX, thisTown->m_mapY,
                                       thisTown->m_mapZ, newPlayerOwner,
@@ -6670,7 +6670,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     if (thisTown && getAlignment(armyType) == thisTown->m_type) {
         int i = DWELLING_0_ID;
         for (;;) {
-            if (g_dwellingType[thisTown->m_type][i - DWELLING_0_ID]
+            if (H3_AT(g_dwellingType, thisTown->m_type)[i - DWELLING_0_ID]
                     == armyType
                 && thisTown->hasBuilding(town::upgradedDwellingID(i), true)) {
                 upgradeToType = upgradedCreatureType(armyType);
@@ -7026,7 +7026,7 @@ bool game::growCoverOfDarkness()
 {
     bool changed = false;
     for (int i = 0; i < m_towns.size(); ++i) {
-        if (m_towns[i].m_type == TOWN_NECROPOLIS
+        if (m_towns[i].m_type == eTownNecropolis
             && m_towns[i].hasBuilding(SPECIAL_BUILDING_ID, false)) {
             g_game->resetVisibility(m_towns[i].m_mapX, m_towns[i].m_mapY,
                                     m_towns[i].m_mapZ, m_towns[i].m_owner,
@@ -7052,7 +7052,7 @@ void game::resetAllPlayerVisibility()
 
     for (i = 0; i < m_towns.size(); ++i) {
         int range = 5;
-        if (m_towns[i].m_type == TOWN_TOWER
+        if (m_towns[i].m_type == eTownTower
             && m_towns[i].hasBuilding(EXTRA_0_ID, false)) {
             range = 20;
         }
@@ -7061,7 +7061,7 @@ void game::resetAllPlayerVisibility()
             setVisibility(m_towns[i].m_mapX, m_towns[i].m_mapY, m_towns[i].m_mapZ,
                           m_towns[i].m_owner, range, 0);
             if (m_day == 1 && m_week == 1 && m_month == 1
-                && m_towns[i].m_type == TOWN_TOWER
+                && m_towns[i].m_type == eTownTower
                 && m_towns[i].hasBuilding(HOLY_GRAIL_ID, false)) {
                 setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0,
                               m_towns[i].m_owner, g_mapWidth, 0);
@@ -7158,7 +7158,7 @@ void game::perDay()
     if (m_day == 1) {
         for (long townId = 0; townId < m_towns.size(); ++townId) {
             town& currentTown = m_towns[townId];
-            if (currentTown.m_type == TOWN_RAMPART
+            if (currentTown.m_type == eTownRampart
                 && currentTown.hasBuilding(SPECIAL_BUILDING_ID, true)) {
                 currentTown.m_pondResource = g_resources[random(0, 3)];
                 currentTown.m_pondAmount = random(1, 4);
@@ -7397,7 +7397,7 @@ void game::perWeek()
 
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
-            if (getAlignment(align) != -1
+            if (getAlignment(align) != eTownNeutral
                 && akCreatureTypeTraits[align].level >= 0)
                 ++i;
         }
@@ -7405,14 +7405,14 @@ void game::perWeek()
         i = rand() % i;
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
-            if (getAlignment(align) != -1
+            if (getAlignment(align) != eTownNeutral
                 && akCreatureTypeTraits[align].level >= 0) {
                 if ((m_gameVersion
                      || align == CREATURE_AIR_ELEMENTAL
                      || align == CREATURE_EARTH_ELEMENTAL
                      || align == CREATURE_FIRE_ELEMENTAL
                      || align == CREATURE_WATER_ELEMENTAL
-                     || akCreatureTypeTraits[align].townType != TOWN_CONFLUX)
+                     || akCreatureTypeTraits[align].townType != eTownConflux)
                     && i-- <= 0)
                     break;
             }
@@ -7422,7 +7422,7 @@ void game::perWeek()
     }
 
     for (i = 0; i < m_towns.size(); ++i) {
-        if (m_towns[i].m_type == TOWN_INFERNO
+        if (m_towns[i].m_type == eTownInferno
             && m_towns[i].hasBuilding(HOLY_GRAIL_ID, false)) {
             g_weekType = weekTypeInfernoGrail;
             bonusCreature = CREATURE_IMP;
@@ -7570,7 +7570,7 @@ void game::perMonth()
             if (growth > 0) {
                 if (g_monthType == g_monthEffectCreature
                     && g_weekType != weekTypeInfernoGrail
-                    && g_dwellingType[currTown->m_type][j]
+                    && H3_AT(g_dwellingType, currTown->m_type)[j]
                        == g_monthTypeExtra) {
                     currTown->m_population[j] *= 2;
                 }
@@ -8471,7 +8471,7 @@ void game::processOnMapTowns()
 
                     if (tempCell->m_type == RANDOM_TOWN) {
                         tempCell->m_type = TOWN;
-                        tempCell->m_objectIndex = townExtra->m_townType;
+                        tempCell->m_objectIndex = H3_IDX(townExtra->m_townType);
                         convertObject(tempCell);
                     }
 
@@ -8479,7 +8479,7 @@ void game::processOnMapTowns()
                         currTown->m_name = townExtra->m_name;
                     else
                         currTown->m_name =
-                            getRandomTownName(townExtra->m_townType);
+                            getRandomTownName(H3_IDX(townExtra->m_townType));
 
                     currTown->initialize(townExtra);
                     convertObject(tempCell);
@@ -9391,7 +9391,7 @@ int game::getNumThievesGuilds(int whichPlayer)
         const game& gameState = *g_game;
         const town* currentTown = gameState.getTown(m_players[whichPlayer].m_townIds[i]);
         if (currentTown->hasBuilding(TAVERN_ID, false) ||
-            (currentTown->m_type == TOWN_CASTLE &&
+            (currentTown->m_type == eTownCastle &&
              currentTown->hasBuilding(EXTRA_1_ID, false))) {
             count++;
         }
@@ -9455,7 +9455,7 @@ void game::setSummoningGenerators()
             playerData* player = &m_players[i];
             for (int j = 0; j < player->m_numTowns; ++j) {
                 town* currentTown = getTown(player->m_townIds[j]);
-                if (currentTown->m_type == TOWN_DUNGEON
+                if (currentTown->m_type == eTownDungeon
                     && currentTown->hasBuilding(EXTRA_1_ID, false))
                     currentTown->setSummoningGenerator();
             }

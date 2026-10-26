@@ -253,7 +253,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
     const town* ourTown = g_game->getTown(startTown);
     if (!g_game->onSameTeam(ourTown->m_owner, currentHero->m_owner))
         return;
-    if (ourTown->m_type != TOWN_INFERNO)
+    if (ourTown->m_type != eTownInferno)
         return;
     long barrierValue = 0;
     int gates = 0;
@@ -283,7 +283,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
         if (townId == startTown)
             continue;
         town* otherTown = g_game->getTown(townId);
-        if (otherTown->m_type != TOWN_INFERNO)
+        if (otherTown->m_type != eTownInferno)
             continue;
         if (otherTown->m_visitingHeroId >= 0)
             continue;

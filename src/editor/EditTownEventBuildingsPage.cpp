@@ -17,7 +17,7 @@ TEditTownEventBuildingsPage::TEditTownEventBuildingsPage(const TTown::TTimedEven
       _m_townType(townType),
       _m_bModified(false)
 {
-    assert(townType >= 0 && townType <= kNumTownTypes);
+    assert(townType >= 0 && townType <= H3_IDX(kNumTownTypes));
     m_psp.pszTitle = m_strCaption = kBuildingsPageCaptionStr;
     m_psp.dwFlags |= PSP_USETITLE;
 }
@@ -37,7 +37,7 @@ void TEditTownEventBuildingsPage::_createTree(TBuilding parentBuilding, HTREEITE
 {
     assert(parentBuilding >= eBuildingNone && parentBuilding < kNumBuildings);
     const TTown::TBuildingTraits (&akBuildingTraits)[kNumBuildings] =
-        TTown::s_akTypeTraits[_m_townType].m_akBuildingTraits;
+        H3_AT(TTown::s_akTypeTraits, _m_townType).m_akBuildingTraits;
     for (unsigned int building = 0; building < kNumBuildings; building++) {
         if (!akBuildingTraits[building].isDisallowed() && akBuildingTraits[building].m_building == parentBuilding) {
             assert(parentBuilding != building);

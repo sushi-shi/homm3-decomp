@@ -400,7 +400,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
         (g_game->m_campaign.m_currentCampaign == g_creatureBonusTownCampaignB &&
          g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioB)) {
         int creature = m_creature;
-        int faction = g_game->getAlignment(creature);
+        H3_ENUM_STORAGE(TTownType, int) faction = g_game->getAlignment(creature);
         for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
             town* garrison = g_game->getTown(player->m_townIds[townIndex]);
             if (garrison->m_type == faction) {
@@ -3338,15 +3338,15 @@ void SCampaign::applyBriefingChoice(int option)
     m_assignedCarryover.clear();
     if (m_currentCampaign == ALIGNMENT_CHOICE_CAMPAIGN_A
         && m_currentMap == ALIGNMENT_CHOICE_MAP)
-        g_game->m_setup.m_alignment[2] = TOWN_INFERNO;
+        g_game->m_setup.m_alignment[2] = eTownInferno;
     if (m_currentCampaign == ALIGNMENT_CHOICE_CAMPAIGN_B
         && m_currentMap == ALIGNMENT_CHOICE_MAP) {
         switch (option) {
         case BRIEFING_CHOICE_FIRST:
-            g_game->m_setup.m_alignment[2] = TOWN_INFERNO;
+            g_game->m_setup.m_alignment[2] = eTownInferno;
             break;
         case BRIEFING_CHOICE_SECOND:
-            g_game->m_setup.m_alignment[2] = TOWN_DUNGEON;
+            g_game->m_setup.m_alignment[2] = eTownDungeon;
             break;
         }
     }

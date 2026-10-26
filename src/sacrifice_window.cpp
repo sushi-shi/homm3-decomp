@@ -293,10 +293,10 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_rolloverText);
 
-    int townType = akHeroClassTraits[m_currentHero->m_heroClass].m_townType;
+    H3_ENUM_STORAGE(TTownType, int) townType = akHeroClassTraits[m_currentHero->m_heroClass].m_townType;
     m_canSacrificeArtifacts =
-        !(townType > TOWN_TOWER && townType < TOWN_STRONGHOLD);
-    m_canSacrificeCreatures = townType > TOWN_TOWER;
+        !(townType > eTownTower && townType < eTownStronghold);
+    m_canSacrificeCreatures = townType > eTownTower;
     m_totalExperience = 0;
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {

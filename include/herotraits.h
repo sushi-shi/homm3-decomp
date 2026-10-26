@@ -81,7 +81,7 @@ SIZE(THeroTraits, 0x5c);
 // class extent.
 struct THeroClassTraits {
 public:
-    int m_townType;  // +0x00
+    H3_ENUM_STORAGE(TTownType, int) m_townType;  // +0x00
     const char* m_name;  // +0x04
     float m_aggression;  // +0x08
     signed char m_initialPrimarySkill[H3_IDX(kNumPrimarySkills)];  // +0x0c

@@ -308,7 +308,7 @@ extern int& g_videoGameState;
 class CNetPlayerHandlerPlayer : public CNetPlayerInfo {
 public:
     int m_heroIndex;  // +0x20
-    int m_townIndex;  // +0x24
+    H3_ENUM_STORAGE(TTownType, int) m_townIndex;  // +0x24
 
 public:
     int m_availableHeroesCount;  // +0x28
@@ -333,7 +333,7 @@ public:
     CNetPlayerHandlerPlayer()
     {
         m_heroIndex = -1;
-        m_townIndex = -1;
+        m_townIndex = eTownNeutral;
         m_availableHeroesCount = 0;
         m_startBonusIndex = 3;
         m_playerPos = -1;
@@ -358,7 +358,7 @@ public:
     {
         m_dpid = 0;
         m_playerPos = -1;
-        m_townIndex = -1;
+        m_townIndex = eTownNeutral;
         m_heroIndex = -1;
     }
 
@@ -368,7 +368,7 @@ public:
     DC_ADDRESS(0x147610, 0x1a)
     void resetAdvancedOptions()
     {
-        m_townIndex = -1;
+        m_townIndex = eTownNeutral;
         m_playerPos = -1;
         m_heroIndex = -1;
     }

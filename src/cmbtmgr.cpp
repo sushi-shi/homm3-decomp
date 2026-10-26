@@ -823,11 +823,11 @@ void combatManager::loadIcons()
         DATA_COMPGEN(0x0066ff10, numberWindowName, "CmNumWin.pcx"));
 
     if (m_fortificationLevel > 0) {
-        TWallTraits* traits = s_wallTraits[m_defendingTown->m_type];
+        TWallTraits* traits = H3_AT(s_wallTraits, m_defendingTown->m_type);
         for (int wall = 0; wall < kNumWallSections; wall++) {
             for (int icon = 0; icon < 5; icon++) {
                 if ((g_game->m_gameVersion >= 2
-                        || m_defendingTown->m_type != TOWN_STRONGHOLD
+                        || m_defendingTown->m_type != eTownStronghold
                         || wall != WALL_TRAITS_ROW_MOAT)
                         && traits[wall].m_filenames[icon] != 0)
                     m_wallImages[wall][icon] = ResourceManager::GetBitmap816(
@@ -845,8 +845,8 @@ void combatManager::loadIcons()
         cmbtHeroFrameIndex[side] = 0;
         if (m_heroes[side]) {
             cmbtHero[side] = ResourceManager::GetSprite(
-                g_combatHeroSprites[
-                    akHeroClassTraits[m_heroes[side]->m_heroClass].m_townType][
+                H3_AT(g_combatHeroSprites,
+                    akHeroClassTraits[m_heroes[side]->m_heroClass].m_townType)[
                     akHeroTraits[m_heroes[side]->m_id].m_sex].m_defName);
             cmbtHeroFlag[side] = ResourceManager::GetSprite(side == 0
                 ? DATA_COMPGEN(0x0066ff04, leftFlagSpriteName, "CmFlagL.def")
@@ -1080,16 +1080,16 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
             m_moatOn = 0;
         } else if (rightTown->hasBuilding(CASTLE_CITADEL_ID, false)) {
             m_fortificationLevel = eFortificationCitadel;
-            m_moatOn = rightTown->m_type != TOWN_TOWER
-                         && (rightTown->m_type != TOWN_STRONGHOLD
+            m_moatOn = rightTown->m_type != eTownTower
+                         && (rightTown->m_type != eTownStronghold
                              || g_game->m_gameVersion >= 2);
-            m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
+            m_moatIsWide = rightTown->m_type == eTownFortress;
         } else if (rightTown->hasBuilding(CASTLE_CASTLE_ID, false)) {
             m_fortificationLevel = eFortificationCastle;
-            m_moatOn = rightTown->m_type != TOWN_TOWER
-                         && (rightTown->m_type != TOWN_STRONGHOLD
+            m_moatOn = rightTown->m_type != eTownTower
+                         && (rightTown->m_type != eTownStronghold
                              || g_game->m_gameVersion >= 2);
-            m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
+            m_moatIsWide = rightTown->m_type == eTownFortress;
         } else {
             m_fortificationLevel = eFortificationNone;
             m_moatIsWide = 0;
@@ -1160,24 +1160,24 @@ void combatManager::initNonVisualVars()
 
         if (m_defendingTown) {
             switch (m_defendingTown->m_type) {
-            case TOWN_TOWER:
+            case eTownTower:
                 if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, false))
                     m_heroes[1]->m_mana = static_cast<short>(
                         m_heroes[1]->m_mana + 150);
                 break;
-            case TOWN_INFERNO:
+            case eTownInferno:
                 if (m_defendingTown->hasBuilding(EXTRA_0_ID, true))
                     m_heroes[1]->adjustPrimarySkill(2, 2);
                 break;
-            case TOWN_DUNGEON:
+            case eTownDungeon:
                 if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, false))
                     m_heroes[1]->adjustPrimarySkill(2, 12);
                 break;
-            case TOWN_STRONGHOLD:
+            case eTownStronghold:
                 if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, false))
                     m_heroes[1]->adjustPrimarySkill(0, 20);
                 break;
-            case TOWN_FORTRESS:
+            case eTownFortress:
                 if (m_defendingTown->hasBuilding(EXTRA_0_ID, true))
                     m_heroes[1]->adjustPrimarySkill(0, 2);
                 if (m_defendingTown->hasBuilding(EXTRA_1_ID, true))
@@ -1437,7 +1437,7 @@ const char* combatManager::getBackgroundName()
 {
     const char* background;
     if (m_fortificationLevel > 0) {
-        background = g_townCombatBackgrounds[m_defendingTown->m_type];
+        background = H3_AT(g_townCombatBackgrounds, m_defendingTown->m_type);
     } else {
         int magicTerrain = m_magicTerrain;
         if (magicTerrain != -1 && magicTerrain != 0) {
@@ -2212,7 +2212,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                 continue;
 
             if (g_game->m_gameVersion < 2 && m_fortificationLevel >= 2
-                    && m_defendingTown->m_type == TOWN_STRONGHOLD) {
+                    && m_defendingTown->m_type == eTownStronghold) {
                 int wallColumn = g_castleWallColumns[row];
                 if (wallColumn == COMBAT_HEX_GATE)
                     wallColumn = 0x5d;
@@ -2264,7 +2264,7 @@ void combatManager::setupAndLoadObstacles()
     if (m_fortificationLevel > eFortificationNone) {
         for (int wall = 0; wall < kNumWallSections; wall++)
             m_wallLevel[wall] =
-                s_wallTraits[m_defendingTown->m_type][wall].m_hitpoints;
+                H3_AT(s_wallTraits, m_defendingTown->m_type)[wall].m_hitpoints;
         m_wallLevel[17] = 1;
         m_wallLevel[16] = 1;
         m_wallLevel[15] = 1;
@@ -2286,7 +2286,7 @@ void combatManager::setupAndLoadObstacles()
         // greater of the town's own moat figure and what the defending
         // hero's Land Mine would do.
         if (m_fortificationLevel >= eFortificationCitadel
-                && m_defendingTown->m_type == TOWN_TOWER) {
+                && m_defendingTown->m_type == eTownTower) {
             for (int row = 0; row < 11; row++) {
                 if (row == COMBAT_GATE_ROW)
                     continue;
@@ -2294,7 +2294,7 @@ void combatManager::setupAndLoadObstacles()
 
                 long damage;
                 if (g_game->m_gameVersion >= 2) {
-                    damage = g_moatDamage[TOWN_TOWER];
+                    damage = H3_AT(g_moatDamage, eTownTower);
                     if (m_heroes[1]) {
                         long cast = computeSpellDamage(
                             SPELL_LAND_MINE, m_spellPower[1],
@@ -2333,7 +2333,7 @@ void combatManager::setupAndLoadObstacles()
 
         if (g_game->m_gameVersion >= 2)
             return;
-        if (m_defendingTown->m_type != TOWN_STRONGHOLD)
+        if (m_defendingTown->m_type != eTownStronghold)
             return;
         if (m_fortificationLevel < eFortificationCitadel)
             return;
@@ -2352,7 +2352,7 @@ void combatManager::setupAndLoadObstacles()
 
     int budget;
     if (m_fortificationLevel >= eFortificationCitadel
-            && m_defendingTown->m_type == TOWN_STRONGHOLD)
+            && m_defendingTown->m_type == eTownStronghold)
         budget = sRandom(10, 16);
     else
         budget = sRandom(5, 12);
@@ -2365,7 +2365,7 @@ void combatManager::setupAndLoadObstacles()
         terrainMask = 1 << m_terrainType;
 
     if ((m_fortificationLevel < eFortificationCitadel
-                || m_defendingTown->m_type != TOWN_STRONGHOLD)
+                || m_defendingTown->m_type != eTownStronghold)
             && sRandom(1, 100) <= 40)
         budget -= placeLargeObstacle(terrainMask, specialTerrainMask) / 2;
 
@@ -2500,7 +2500,7 @@ void combatManager::initializeArchers()
     if (m_fortificationLevel < eFortificationCitadel)
         return;
 
-    const TArcherTraits& info = s_archerTraits[m_defendingTown->m_type];
+    const TArcherTraits& info = H3_AT(s_archerTraits, m_defendingTown->m_type);
     TArcherLoadState locals;
     locals.m_spriteName =
         akCreatureTypeTraits[info.m_creatureType].m_sprite_name;
@@ -2682,7 +2682,7 @@ void combatManager::testRaiseDoor()
     if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
             || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
         return;
-    if (m_defendingTown->m_type == TOWN_FORTRESS
+    if (m_defendingTown->m_type == eTownFortress
             && (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
                 || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex))
         return;
@@ -3718,7 +3718,7 @@ bool combatManager::isInMoat(int hex, int* index)
                 return 1;
             }
         }
-        if (m_defendingTown->m_type == TOWN_FORTRESS) {
+        if (m_defendingTown->m_type == eTownFortress) {
             for (int row = 0; row < 11; row++) {
                 if (g_innerMoatHexes[row] == hex
                         && (m_drawbridgeState == DRAWBRIDGE_UP
@@ -3744,10 +3744,10 @@ unsigned char combatManager::applyMoatDamage(
         if (playSound)
             stack->stopSample(army::WALK_SAMPLE);
 
-        int damage = g_moatDamage[m_defendingTown->m_type];
+        int damage = H3_AT(g_moatDamage, m_defendingTown->m_type);
         if (damage) {
             int killed = stack->damage(damage);
-            damageMessage(g_moatDamageMessages[m_defendingTown->m_type], 1,
+            damageMessage(H3_AT(g_moatDamageMessages, m_defendingTown->m_type), 1,
                            damage, stack, killed);
             powEffect(eSpellEffectNone, 1);
             if (stack->m_numTroops > 0 && playSound)

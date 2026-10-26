@@ -191,7 +191,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
         owner->applyCreatureStatBonuses(type, traits);
     if (g_combatManager->m_magicTerrain
             != COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS
-        && townManager::getNativeTerrain(m_monInfo.townType)
+        && townManager::getNativeTerrain(H3_IDX(m_monInfo.townType))
                == g_combatManager->m_terrainType)
         m_onNativeTerrain = 1;
     else

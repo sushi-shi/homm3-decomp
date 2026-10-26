@@ -112,7 +112,7 @@ public:
         bool m_bComputerPlayable;
         TPlayerInfo::TBehaviorType m_behaviorType;
         bool m_bCustomTownTypes;
-        std::bitset<kNumTownTypes> m_townTypes;
+        std::bitset<H3_IDX(kNumTownTypes)> m_townTypes;
         bool m_bRandomTown;
         bool m_bHasMainTown;
         bool m_bGenerateHero;

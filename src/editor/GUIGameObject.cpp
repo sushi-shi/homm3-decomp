@@ -728,7 +728,7 @@ const CSprite* TGUITown::_getPSprite() const
         TResourcePtr<CSprite> m_pCastle;
         TResourcePtr<CSprite> m_pCapitol;
     };
-    DATA(0x00535818) static const char* const akSpriteNames[kNumTownTypes + 1][3] = {
+    DATA(0x00535818) static const char* const akSpriteNames[H3_IDX(kNumTownTypes) + 1][3] = {
         { "avccast0.def", "avccasx0.def", "avccasz0.def" },
         { "avcramp0.def", "avcramx0.def", "avcramz0.def" },
         { "avctowr0.def", "avctowx0.def", "avctowz0.def" },
@@ -742,34 +742,34 @@ const CSprite* TGUITown::_getPSprite() const
     };
     DATA_COMPGEN_GUARD(0x0059e638, townSpritesGuard, aSprites)
     VA_COMPGEN(0x00441a55, 0x14, STATIC_DTOR, aSprites)
-    DATA(0x0059e548) static TSprites aSprites[kNumTownTypes + 1];
+    DATA(0x0059e548) static TSprites aSprites[H3_IDX(kNumTownTypes) + 1];
 
     TTownType townType = getTownType();
     if (_hasCapitol()) {
-        if (!aSprites[townType].m_pCapitol.get()) {
-            CSprite* pSprite = ResourceManager::GetSprite(akSpriteNames[townType][2]);
+        if (!H3_AT(aSprites, townType).m_pCapitol.get()) {
+            CSprite* pSprite = ResourceManager::GetSprite(H3_AT(akSpriteNames, townType)[2]);
             if (!pSprite)
                 throw TRuntimeError();
-            aSprites[townType].m_pCapitol = TResourcePtr<CSprite>(pSprite);
+            H3_AT(aSprites, townType).m_pCapitol = TResourcePtr<CSprite>(pSprite);
         }
-        return aSprites[townType].m_pCapitol.get();
+        return H3_AT(aSprites, townType).m_pCapitol.get();
     }
     if (_hasCastle()) {
-        if (!aSprites[townType].m_pCastle.get()) {
-            CSprite* pSprite = ResourceManager::GetSprite(akSpriteNames[townType][1]);
+        if (!H3_AT(aSprites, townType).m_pCastle.get()) {
+            CSprite* pSprite = ResourceManager::GetSprite(H3_AT(akSpriteNames, townType)[1]);
             if (!pSprite)
                 throw TRuntimeError();
-            aSprites[townType].m_pCastle = TResourcePtr<CSprite>(pSprite);
+            H3_AT(aSprites, townType).m_pCastle = TResourcePtr<CSprite>(pSprite);
         }
-        return aSprites[townType].m_pCastle.get();
+        return H3_AT(aSprites, townType).m_pCastle.get();
     }
-    if (!aSprites[townType].m_pTown.get()) {
-        CSprite* pSprite = ResourceManager::GetSprite(akSpriteNames[townType][0]);
+    if (!H3_AT(aSprites, townType).m_pTown.get()) {
+        CSprite* pSprite = ResourceManager::GetSprite(H3_AT(akSpriteNames, townType)[0]);
         if (!pSprite)
             throw TRuntimeError();
-        aSprites[townType].m_pTown = TResourcePtr<CSprite>(pSprite);
+        H3_AT(aSprites, townType).m_pTown = TResourcePtr<CSprite>(pSprite);
     }
-    return aSprites[townType].m_pTown.get();
+    return H3_AT(aSprites, townType).m_pTown.get();
 }
 
 // An object of game class T with nothing to add but its edit dialog.

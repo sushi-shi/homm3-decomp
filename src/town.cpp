@@ -238,7 +238,7 @@ int town::load(TAbstractFile* infile, int saveVersion)
     m_threateningHeroes = charBuffer;
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
-    m_type = charBuffer;
+    m_type = H3_ENUM_DECODE(TTownType, charBuffer);
     if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
         return -1;
     m_mapX = ucharBuffer;
@@ -365,7 +365,7 @@ int town::save(TAbstractFile* outfile)
     if (outfile->write(&charBuffer, sizeof(charBuffer))
         < sizeof(charBuffer))
         return -1;
-    charBuffer = m_type;
+    charBuffer = H3_IDX(m_type);
     if (outfile->write(&charBuffer, sizeof(charBuffer))
         < sizeof(charBuffer))
         return -1;
@@ -461,9 +461,9 @@ int town::getPortraitFrame(bool isSmall) const
 {
     int frame;
     if (hasBuilding(CASTLE_FORT_ID, true))
-        frame = m_type * 2;
+        frame = H3_IDX(m_type) * 2;
     else
-        frame = m_type * 2 + 18;
+        frame = H3_IDX(m_type) * 2 + 18;
 
     if (m_builtThisTurn)
         frame++;
@@ -519,7 +519,7 @@ MAC_ADDRESS(0x1b2b88, 0x700)
 // The bitset proxy is compared with zero rather than negated.
 void town::applySpecialBuildingEffect(hero* townHero)
 {
-    if (m_type == TOWN_DUNGEON && m_manaVortexFull
+    if (m_type == eTownDungeon && m_manaVortexFull
         && hasBuilding(EXTRA_0_ID, false)) {
         int maxMana = townHero->getMaxMana() * 2;
         if (townHero->m_mana < maxMana) {
@@ -531,7 +531,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         }
     }
 
-    if (m_type == TOWN_CASTLE && hasBuilding(EXTRA_0_ID, false)
+    if (m_type == eTownCastle && hasBuilding(EXTRA_0_ID, false)
         && !(townHero->m_flags & 2)) {
         townHero->m_flags |= 2;
         townHero->m_maxMovePoints += g_stablesMovementBonus;
@@ -541,7 +541,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 
-    if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, false)
+    if (m_type == eTownTower && hasBuilding(EXTRA_2_ID, false)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(H3_IDX(ePriSkillKnowledge), 1);
@@ -551,7 +551,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
                 1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
     }
 
-    if (m_type == TOWN_INFERNO && hasBuilding(EXTRA_2_ID, false)
+    if (m_type == eTownInferno && hasBuilding(EXTRA_2_ID, false)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(H3_IDX(ePriSkillPower), 1);
@@ -560,7 +560,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
                          1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
     }
 
-    if (m_type == TOWN_DUNGEON && hasBuilding(EXTRA_2_ID, false)
+    if (m_type == eTownDungeon && hasBuilding(EXTRA_2_ID, false)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         int experience = static_cast<int>(
             townHero->getExperienceBonusFactor() * 1000.0f);
@@ -572,7 +572,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         townHero->giveExperience(experience, 1, 1);
     }
 
-    if (m_type == TOWN_STRONGHOLD && hasBuilding(EXTRA_2_ID, false)
+    if (m_type == eTownStronghold && hasBuilding(EXTRA_2_ID, false)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
@@ -582,7 +582,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         townHero->adjustPrimarySkill(H3_IDX(ePriSkillAttack), 1);
     }
 
-    if (m_type == TOWN_FORTRESS && hasBuilding(SPECIAL_BUILDING_ID, false)
+    if (m_type == eTownFortress && hasBuilding(SPECIAL_BUILDING_ID, false)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
@@ -598,7 +598,7 @@ DC_ADDRESS(0x166408, 0xa8)
 MAC_ADDRESS(0x1b3288, 0xd0)
 town::town()
 {
-    m_type = 0;
+    m_type = eTownCastle;
     m_pondAmount = 0;
     m_pondResource = -1;
     m_id = 0;
@@ -680,7 +680,7 @@ void town::giveSpells(hero* forceHero) const
         if (currentHero) {
             if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
                 if (hasBuilding(MAGE_GUILD_ID, true)) {
-                    if (m_type == TOWN_CONFLUX
+                    if (m_type == eTownConflux
                         && (hasBuilding(HOLY_GRAIL_ID, true))) {
                         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                             if (!SpellDisabledMask.test(spell)
@@ -846,7 +846,7 @@ void town::initializeSpells(const TownExtra* townSetup)
                 if (!prohibited[spell]
                     && akSpellTraits[spell].m_level == level) {
                     totalWeight +=
-                        akSpellTraits[spell].m_townGetsItChance[m_type];
+                        H3_AT(akSpellTraits[spell].m_townGetsItChance, m_type);
                     if (townSetup->m_fixedSpells[spell]) {
                         m_mageGuildSpells[level - 1][slot] =
                             static_cast<ESpellId>(spell); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
@@ -866,7 +866,7 @@ void town::initializeSpells(const TownExtra* townSetup)
             for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                 if (!prohibited[spell]
                     && akSpellTraits[spell].m_level == level) {
-                    roll -= akSpellTraits[spell].m_townGetsItChance[m_type];
+                    roll -= H3_AT(akSpellTraits[spell].m_townGetsItChance, m_type);
                     if (roll <= 0)
                         break;
                 }
@@ -894,7 +894,7 @@ void town::setSpellsAvailable()
     memset(m_mageGuildSpellCounts, 0, sizeof(m_mageGuildSpellCounts));
     for (int level = 1; level <= m_mageLevel; level++) {
         int count = g_mageGuildBaseSpellCounts[level - 1];
-        if (m_type == TOWN_TOWER && hasBuilding(EXTRA_1_ID, true))
+        if (m_type == eTownTower && hasBuilding(EXTRA_1_ID, true))
             count++;
         while (count > 0
                && m_mageGuildSpells[level - 1][count - 1] == -1)
@@ -916,10 +916,10 @@ type_building_id town::createBuilding(type_building_id building)
     short dwelling;
     type_building_id built = building;
     m_populationMask |= g_bitNumber[building];
-    m_populationMask &= ~s_includedBuildings[m_type][building];
+    m_populationMask &= ~H3_AT(s_includedBuildings, m_type)[building];
 
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
-        dwelling = s_constHordeEffects[m_type][slot].m_dwelling;
+        dwelling = H3_AT(s_constHordeEffects, m_type)[slot].m_dwelling;
         if (building == g_hordeBuildings[slot]) {
             m_populationMask &= ~g_bitNumber[DWELLING_0_ID + dwelling];
             if (dwelling < TOWN_DWELLING_COUNT
@@ -942,7 +942,7 @@ type_building_id town::createBuilding(type_building_id building)
 
     if (building >= DWELLING_0_ID && building <= DWELLING_6_ID) {
         short slot = building - DWELLING_0_ID;
-        m_population[slot] = akCreatureTypeTraits[g_dwellingType[m_type][slot]].growthRate;
+        m_population[slot] = akCreatureTypeTraits[H3_AT(g_dwellingType, m_type)[slot]].growthRate;
     }
     if (building >= DWELLING_0_UPG_ID && building <= DWELLING_6_UPG_ID) {
         short slot = building - DWELLING_0_UPG_ID;
@@ -951,8 +951,8 @@ type_building_id town::createBuilding(type_building_id building)
         m_population[slot] = 0;
     }
 
-    if (m_type == TOWN_RAMPART || m_type == TOWN_NECROPOLIS
-        || m_type == TOWN_CONFLUX) {
+    if (m_type == eTownRampart || m_type == eTownNecropolis
+        || m_type == eTownConflux) {
         switch (building) {
         case HALL_VILLAGE_ID:
             createBuilding(EXTRA_2_ID);
@@ -1046,7 +1046,7 @@ type_building_id town::buildBuilding(int buildingId,
         m_mageLevel = buildingId + 1;
         setSpellsAvailable();
     }
-    if (m_type == TOWN_TOWER && buildingId == EXTRA_1_ID) {
+    if (m_type == eTownTower && buildingId == EXTRA_1_ID) {
         setSpellsAvailable();
     }
     giveSpells(0);
@@ -1059,7 +1059,7 @@ type_building_id town::buildBuilding(int buildingId,
     if (g_game->m_mapHeader.m_victoryCondition.checkForUpgradedTown())
         checkEndGame(0);
 
-    if (m_type == TOWN_TOWER) {
+    if (m_type == eTownTower) {
         if (buildingId == EXTRA_0_ID) {
             g_game->setVisibility(m_mapX, m_mapY, m_mapZ, m_owner, 20, 0);
         }
@@ -1203,7 +1203,7 @@ type_building_id town::getHorde(long dwelling) const
         return MAX_BUILDING_TYPE;
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
         if (hasBuilding(g_hordeBuildings[slot], true)) {
-            if (s_constHordeEffects[m_type][slot].m_dwelling == dwelling)
+            if (H3_AT(s_constHordeEffects, m_type)[slot].m_dwelling == dwelling)
                 return g_hordeBuildings[slot];
         }
     }
@@ -1222,8 +1222,8 @@ long town::getHordeBonus(long dwelling) const
     long bonus = 0;
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
         if (hasBuilding(g_hordeBuildings[slot], true)) {
-            if (s_constHordeEffects[m_type][slot].m_dwelling == dwelling)
-                bonus = s_constHordeEffects[m_type][slot].m_bonus;
+            if (H3_AT(s_constHordeEffects, m_type)[slot].m_dwelling == dwelling)
+                bonus = H3_AT(s_constHordeEffects, m_type)[slot].m_bonus;
         }
     }
     return bonus;
@@ -1236,7 +1236,7 @@ long town::getAssembledLegionBonus(long dwelling) const
 {
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(ARTIFACT_STATUE_OF_LEGION)) {
-        TCreatureType creature = g_dwellingType[m_type][dwelling];
+        TCreatureType creature = H3_AT(g_dwellingType, m_type)[dwelling];
         long growth = akCreatureTypeTraits[creature].growthRate;
         bonus = getCastleGrowthBonus(creature);
         bonus += growth;
@@ -1333,7 +1333,7 @@ short town::getGrowthRate(short dwelling) const
         && hasBuilding(DWELLING_0_UPG_ID + dwellingIndex, true))
         return 0;
 
-    TCreatureType creature = g_dwellingType[m_type][dwellingIndex];
+    TCreatureType creature = H3_AT(g_dwellingType, m_type)[dwellingIndex];
     short growth = akCreatureTypeTraits[creature].growthRate;
     growth += getCastleGrowthBonus(creature);
 
@@ -1345,8 +1345,8 @@ short town::getGrowthRate(short dwelling) const
     for (short slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
         // Retail retains this hasBuilding call; DC also names the helper.
         if (hasBuilding(g_hordeBuildings[slot], true)
-            && s_constHordeEffects[m_type][slot].m_dwelling == dwelling) {
-            growth += s_constHordeEffects[m_type][slot].m_bonus;
+            && H3_AT(s_constHordeEffects, m_type)[slot].m_dwelling == dwelling) {
+            growth += H3_AT(s_constHordeEffects, m_type)[slot].m_bonus;
             break;
         }
     }
@@ -1367,7 +1367,7 @@ void town::increasePopulation(TCreatureType bonusCreature,
         short growth = getGrowthRate(dwelling);
         if (growth > 0) {
             TCreatureType creature =
-                g_dwellingType[m_type][dwelling];
+                H3_AT(g_dwellingType, m_type)[dwelling];
             if (creature == bonusCreature || creature == alternateBonus)
                 growth += bonusAmount;
             if (m_owner == -1)
@@ -1384,7 +1384,7 @@ void town::changeGeneratorBonus(TCreatureType creature, long change)
 {
     int slot;
     for (slot = 0; slot < TOWN_DWELLING_SLOTS; slot++) {
-        if (g_dwellingType[m_type][slot]
+        if (H3_AT(g_dwellingType, m_type)[slot]
             == creature)
             break;
     }
@@ -1426,7 +1426,7 @@ void showBuildingRewards(const town* thisTown,
             else
                 text += ", ";
         }
-        text += getBuildingName(thisTown->m_type, rewards[i].m_qualifier);
+        text += getBuildingName(H3_IDX(thisTown->m_type), rewards[i].m_qualifier);
     }
     text = formatString(g_generalText->GetText(GENERAL_TEXT_EVENT_BUILDINGS_FORMAT),
                          thisTown->m_name.c_str(), text.c_str());
@@ -1483,12 +1483,12 @@ void town::giveEventReward(const TTownEvent& thisEvent)
     int i;
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (thisEvent.m_buildBuildings & g_bitNumber[i])
-            grantable |= g_bitNumber[g_eventBuildingIds[m_type][i]];
+            grantable |= g_bitNumber[H3_AT(g_eventBuildingIds, m_type)[i]];
     }
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (g_townEligibleBuildMask[m_type] & g_bitNumber[i]) {
+        if (H3_AT(g_townEligibleBuildMask, m_type) & g_bitNumber[i]) {
             if (grantable & g_bitNumber[i])
-                mask |= s_includedBuildings[m_type][i];
+                mask |= H3_AT(s_includedBuildings, m_type)[i];
         } else {
             mask |= g_bitNumber[i];
         }
@@ -1502,7 +1502,7 @@ void town::giveEventReward(const TTownEvent& thisEvent)
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (grantable & g_bitNumber[i]) {
             buildBuilding(i, 0, 1);
-            reward.m_resource = m_type + 0x16;
+            reward.m_resource = H3_IDX(m_type) + RES_BUILDING_TT_0;
             reward.m_qualifier = i;
             rewards.push_back(reward);
             if (rewards.size() == g_rewardDialogBatch)
@@ -1520,14 +1520,14 @@ void town::giveEventReward(const TTownEvent& thisEvent)
                 reward.m_resource = 0x15;
                 reward.m_qualifier = (thisEvent.m_generatorBonuses[i] << 16)
                     | static_cast<unsigned short>(
-                          g_dwellingType[m_type][i + TOWN_DWELLING_COUNT]);
+                          H3_AT(g_dwellingType, m_type)[i + TOWN_DWELLING_COUNT]);
                 rewards.push_back(reward);
             } else if (hasBuilding(DWELLING_0_ID + i, true)) {
                 m_population[i] += thisEvent.m_generatorBonuses[i];
                 reward.m_resource = 0x15;
                 reward.m_qualifier = (thisEvent.m_generatorBonuses[i] << 16)
                     | static_cast<unsigned short>(
-                          g_dwellingType[m_type][i]);
+                          H3_AT(g_dwellingType, m_type)[i]);
                 rewards.push_back(reward);
             }
         }
@@ -1560,7 +1560,7 @@ static void initializeBuildings(town* currentTown, const TownExtra* townSetup)
 
     currentTown->boatX = -1;
     currentTown->boatY = -1;
-    if (!(g_townEligibleBuildMask[currentTown->m_type] & g_bitNumber[DOCK_ID])
+    if (!(H3_AT(g_townEligibleBuildMask, currentTown->m_type) & g_bitNumber[DOCK_ID])
         || (!checkShipyardSquare(currentTown, currentTown->m_mapX - 1,
                                    currentTown->m_mapY + 2)
             && !checkShipyardSquare(currentTown, currentTown->m_mapX + 1,
@@ -1572,7 +1572,7 @@ static void initializeBuildings(town* currentTown, const TownExtra* townSetup)
         for (i = 0; i < TOWN_EVENT_BUILDING_SLOTS; i++) {
             if (townSetup->m_buildingDisabledMask & g_bitNumber[i])
                 disabledBuildings |= g_bitNumber[
-                    g_eventBuildingIds[currentTown->m_type][i]];
+                    H3_AT(g_eventBuildingIds, currentTown->m_type)[i]];
         }
         if (disabledBuildings & g_bitNumber[HORDE_ID])
             disabledBuildings |= g_bitNumber[HORDE_UPG_ID];
@@ -1583,9 +1583,9 @@ static void initializeBuildings(town* currentTown, const TownExtra* townSetup)
         __int64 builtMask = 0;
         for (i = 0; i < TOWN_EVENT_BUILDING_SLOTS; i++) {
             if (townSetup->m_buildingBuiltMask & g_bitNumber[i])
-                builtMask |= town::s_includedBuildings[currentTown->m_type][
-                        g_eventBuildingIds[currentTown->m_type][i]]
-                    | g_bitNumber[g_eventBuildingIds[currentTown->m_type][i]];
+                builtMask |= H3_AT(town::s_includedBuildings, currentTown->m_type)[
+                        H3_AT(g_eventBuildingIds, currentTown->m_type)[i]]
+                    | g_bitNumber[H3_AT(g_eventBuildingIds, currentTown->m_type)[i]];
         }
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
             if ((builtMask & g_bitNumber[i])
@@ -1636,7 +1636,7 @@ static void initializeArmy(town* currentTown, const TownExtra* townSetup)
                     int tier = (-2 - troop) / 2;
                     if (troop & 1)
                         tier += TOWN_DWELLING_COUNT;
-                    troop = g_dwellingType[currentTown->m_type][tier];
+                    troop = H3_AT(g_dwellingType, currentTown->m_type)[tier];
                 }
                 currentTown->getArmy().m_armies[slot] = troop;
             } else {
@@ -1651,7 +1651,7 @@ static void initializeArmy(town* currentTown, const TownExtra* townSetup)
         if (currentTown->m_owner < 0) {
             for (int tier = 0; tier < 4; tier++) {
                 if (random(1, 100) <= g_townInitArmyChance[tier]) {
-                    int creature = g_dwellingType[currentTown->m_type][tier];
+                    int creature = H3_AT(g_dwellingType, currentTown->m_type)[tier];
                     currentTown->getArmy().add(creature,
                         random(g_townInitArmyLow[tier], g_townInitArmyHigh[tier]),
                         -1);
@@ -1719,7 +1719,7 @@ void town::updateFullBuildingMask()
     m_fullBuildingMask = m_populationMask;
     for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (hasBuilding(i, false)) {
-            m_fullBuildingMask |= s_includedBuildings[m_type][i];
+            m_fullBuildingMask |= H3_AT(s_includedBuildings, m_type)[i];
         }
     }
 }
@@ -1739,11 +1739,11 @@ bool town::canBuild(short buildingId) const
                 return canBuildDock();
             if (buildingId == HALL_CAPITOL_ID)
                 return !g_game->m_players[m_owner].hasCapitol();
-            char townType = m_type;
-            __int64 requirements = g_hierarchyMask[townType][buildingId];
+            H3_ENUM_STORAGE(TTownType, char) townType = m_type;
+            __int64 requirements = H3_AT(g_hierarchyMask, townType)[buildingId];
             __int64 buildingMask = getBuildingMask();
             if (g_game->m_isTutorial && buildingId == DWELLING_2_ID
-                && townType == TOWN_CASTLE)
+                && townType == eTownCastle)
                 requirements &= ~g_bitNumber[BLACKSMITH_ID];
             if (!(buildingMask & g_bitNumber[buildingId])
                 && (buildingMask & requirements) == requirements)
@@ -1766,7 +1766,7 @@ bool town::canEverBuild(int buildingId) const
             return canBuildDock();
         if (!(buildingId == HALL_CAPITOL_ID
               && g_game->m_players[m_owner].hasCapitol())) {
-            __int64 requirements = g_hierarchyMask[m_type][buildingId];
+            __int64 requirements = H3_AT(g_hierarchyMask, m_type)[buildingId];
             if (((getBuildingMask() | m_legalBuildings) & requirements) == requirements)
                 return 1;
         }
@@ -1784,9 +1784,9 @@ __int64 town::getBuildableMask() const
     __int64 activeMask = getBuildingMask();
     __int64 mask = 0;
     for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
-        __int64 requirements = g_hierarchyMask[m_type][building];
+        __int64 requirements = H3_AT(g_hierarchyMask, m_type)[building];
         if (g_game->m_isTutorial && building == DWELLING_2_ID
-            && m_type == TOWN_CASTLE)
+            && m_type == eTownCastle)
             requirements &= ~g_bitNumber[BLACKSMITH_ID];
         if (!(activeMask & g_bitNumber[building])
             && (activeMask & requirements) == requirements)
@@ -1808,8 +1808,8 @@ int* town::getBuildCostArray(type_building_id building) const
     if (building < SPECIAL_BUILDING_ID)
         return s_neutralBuildingCosts[building];
     if (building < DWELLING_0_ID)
-        return s_specialBuildingCosts[m_type][building - SPECIAL_BUILDING_ID];
-    return s_dwellingCosts[m_type][building - DWELLING_0_ID];
+        return H3_AT(s_specialBuildingCosts, m_type)[building - SPECIAL_BUILDING_ID];
+    return H3_AT(s_dwellingCosts, m_type)[building - DWELLING_0_ID];
 }
 
 VA(0x005c10f0, 0x8A)
@@ -1851,7 +1851,7 @@ type_horde_effect* town::getHordeEffect(type_building_id building) const
     }
     if (slot >= TOWN_HORDE_SLOTS)
         return 0;
-    return &s_constHordeEffects[m_type][slot];
+    return &H3_AT(s_constHordeEffects, m_type)[slot];
 }
 
 VA(0x005c1280, 0x15)
@@ -1859,7 +1859,7 @@ DC_ADDRESS(0x1689dc, 0x10)
 MAC_ADDRESS(0x1b6dc8, 0x18)
 int* town::getSiloIncome() const
 {
-    return g_siloIncome[m_type];
+    return H3_AT(g_siloIncome, m_type);
 }
 
 VA(0x005c12a0, 0x39)
@@ -1875,7 +1875,7 @@ DC_ADDRESS(0x168a10, 0x3e)
 MAC_ADDRESS(0x1b6e20, 0x38)
 void town::setLegalBuildings(__int64 disabledBuildings)
 {
-    m_legalBuildings = g_townEligibleBuildMask[m_type] & ~disabledBuildings;
+    m_legalBuildings = H3_AT(g_townEligibleBuildMask, m_type) & ~disabledBuildings;
 }
 
 // Original: town::is_disabled; town.cpp:2300
@@ -1884,7 +1884,7 @@ bool town::isDisabled(type_building_id building) const
 {
     if (isLegalBuilding(building))
         return 0;
-    return (g_townEligibleBuildMask[m_type] & g_bitNumber[building]) != 0;
+    return (H3_AT(g_townEligibleBuildMask, m_type) & g_bitNumber[building]) != 0;
 }
 
 // Dreamcast town.cpp:2328 calls town::PlaceInMap. Complete's recruit
@@ -1924,7 +1924,7 @@ DC_ADDRESS(0x168ba0, 0x16)
 MAC_ADDRESS(0x1b6fa4, 0x1c)
 TTerrainType town::getNativeTerrain() const
 {
-    return townManager::getNativeTerrain(m_type);
+    return townManager::getNativeTerrain(H3_IDX(m_type));
 }
 
 VA(0x005c1450, 0xC)
@@ -1932,7 +1932,7 @@ DC_ADDRESS(0x168bb8, 0x16)
 MAC_ADDRESS(0x1b6fc0, 0x1c)
 const char* town::getTypeName() const
 {
-    return townManager::getTownTypeName(m_type);
+    return townManager::getTownTypeName(H3_IDX(m_type));
 }
 
 // Original: town::get_army; town.cpp:2375

@@ -494,7 +494,7 @@ void type_AI_player::calculateDemand()
                 creature.m_amount += currentTown->getGrowthRate(dwelling);
             }
             if (creature.m_amount > 0) {
-                creature.m_type = g_dwellingType[currentTown->m_type][dwelling];
+                creature.m_type = H3_AT(g_dwellingType, currentTown->m_type)[dwelling];
                 creatures[creature.m_type].m_amount += creature.m_amount;
             }
         }
@@ -866,7 +866,7 @@ void type_AI_player::calculateReserve()
         dwelling = 0;
         for (; dwelling < 14; dwelling++) {
             if (currentTown->m_population[dwelling] > 0) {
-                creature_info.m_type = g_dwellingType[currentTown->m_type][dwelling];
+                creature_info.m_type = H3_AT(g_dwellingType, currentTown->m_type)[dwelling];
                 short amount = currentTown->m_population[dwelling];
                 creature_info.m_amount = amount;
                 short value = amount * akCreatureTypeTraits[creature_info.m_type].AI_value;
@@ -906,7 +906,7 @@ static long sumPlayerDwellings(long playerId)
         for (int dwelling = 0; dwelling < 14; ++dwelling) {
             long growth = currentTown->getGrowthRate(dwelling);
             if (growth > 0) {
-                TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
+                TCreatureType creature = H3_AT(g_dwellingType, currentTown->m_type)[dwelling];
                 value += akCreatureTypeTraits[creature].AI_value * growth;
             }
         }
@@ -933,7 +933,7 @@ void fillProhibitedArray(playerData* player, bool* prohibited)
         for (dwelling = 0; dwelling < 14; ++dwelling) {
             short growth = currentTown->getGrowthRate(dwelling);
             if (growth > 0) {
-                TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
+                TCreatureType creature = H3_AT(g_dwellingType, currentTown->m_type)[dwelling];
                 getMonsterCost(creature, resources);
                 for (short resource = 0; resource < NUM_RESOURCES; ++resource) {
                     income[resource] -= resources[resource] * growth;
@@ -1360,7 +1360,7 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
                                          extraCost);
     default:
         switch (currentTown->m_type) {
-        case TOWN_RAMPART:
+        case eTownRampart:
             if (building == EXTRA_1_ID) {
                 if (g_game->m_day == g_aiDayOfWeekSunday)
                     return static_cast<long>(
@@ -1370,17 +1370,17 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
                 return 2 * player->m_ai.m_averageResourceValue;
             }
             break;
-        case TOWN_TOWER:
+        case eTownTower:
             if (building == EXTRA_0_ID)
                 return 100;
             break;
-        case TOWN_STRONGHOLD:
+        case eTownStronghold:
             if (building == SPECIAL_BUILDING_ID
                 && currentTown->m_threateningHeroes
                 && currentTown->m_garrisonHeroId >= 0)
                 return 5000;
             break;
-        case TOWN_NECROPOLIS:
+        case eTownNecropolis:
             if (building == EXTRA_0_ID) {
                 long value = 0;
                 for (int i = 0; i < player->m_numHeroes; ++i) {
@@ -1393,7 +1393,7 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
                 return 10;
             }
             break;
-        case TOWN_FORTRESS:
+        case eTownFortress:
             if ((building == EXTRA_0_ID || building == EXTRA_1_ID)
                 && currentTown->m_threateningHeroes)
                 // Mac valueOfBuilding calls the mutable getArmy at 0x1b6fdc;
@@ -1434,7 +1434,7 @@ static __int64 getRequirements(const town* currentTown,
             if (!currentTown->isLegalBuilding(H3_ENUM_DECODE(type_building_id, k)))
                 return 0;
             seen |= g_bitNumber[k];
-            requirements |= g_hierarchyMask[currentTown->m_type][k];
+            requirements |= H3_AT(g_hierarchyMask, currentTown->m_type)[k];
             requirements &= ~currentTown->getBuildingMask();
             requirements &= ~seen;
             k = 0;
@@ -1610,7 +1610,7 @@ DC_ADDRESS(0x02f4b0, 0x96)
 MAC_ADDRESS(0x02cc84, 0x138)
 long valueOfDwelling(town* currentTown, short dwelling, bool* prohibited, int* extraCost)
 {
-    TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
+    TCreatureType creature = H3_AT(g_dwellingType, currentTown->m_type)[dwelling];
     if (prohibited[creature])
         return -1;
     const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
@@ -1628,8 +1628,8 @@ MAC_ADDRESS(0x02cdbc, 0x190)
 long valueOfDwellingUpgrade(town* currentTown, short dwelling, int* extraCost)
 {
     short baseDwelling = dwelling - 7;
-    TCreatureType creature = g_dwellingType[currentTown->m_type][baseDwelling];
-    TCreatureType upgraded = g_dwellingType[currentTown->m_type][dwelling];
+    TCreatureType creature = H3_AT(g_dwellingType, currentTown->m_type)[baseDwelling];
+    TCreatureType upgraded = H3_AT(g_dwellingType, currentTown->m_type)[dwelling];
     long amount = currentTown->m_population[baseDwelling];
     if (g_game->m_day >= 5)
         amount += currentTown->getGrowthRate(baseDwelling);
@@ -1659,7 +1659,7 @@ int valueOfCastleUpgrade(town* currentTown, int* extraCost)
     if (g_game->m_day >= 5) {
         for (short dwelling = 0; dwelling < 14; ++dwelling) {
             if (currentTown->getGrowthRate(dwelling) > 0) {
-                int creature = g_dwellingType[currentTown->m_type][dwelling];
+                int creature = H3_AT(g_dwellingType, currentTown->m_type)[dwelling];
                 const TCreatureTypeTraits* traits =
                     akCreatureTypeTraits + creature;
                 for (int i = 0; i < NUM_RESOURCES; ++i)
@@ -1858,7 +1858,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     for (int building = DWELLING_0_ID;
          building <= DWELLING_6_ID; building++) {
         if (buildMask & g_bitNumber[building]) {
-            creature = g_dwellingType[currentTown->m_type][building - DWELLING_0_ID];
+            creature = H3_AT(g_dwellingType, currentTown->m_type)[building - DWELLING_0_ID];
             traits = &akCreatureTypeTraits[creature];
             int* cost = currentTown->getBuildCostArray(
                 static_cast<type_building_id>(building));
@@ -2266,7 +2266,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
         int groupedAlignment;
         const TCreatureTypeTraits& traits = akCreatureTypeTraits[m_army->m_armyTypes[slot]];
         if (checkAlignments) {
-            int alignment = g_game->getAlignment(m_army->m_armyTypes[slot]);
+            int alignment = H3_IDX(g_game->getAlignment(m_army->m_armyTypes[slot]));
             groupedAlignment = normalizeAlignment(alignment);
             if (m_alignments[groupedAlignment + 1] != 1)
                 continue;
@@ -2317,7 +2317,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     bool badMorale = false;
     long moraleArmyValue = 0;
 
-    int alignment = g_game->getAlignment(type);
+    int alignment = H3_IDX(g_game->getAlignment(type));
     alignment = normalizeAlignment(alignment);
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
@@ -2332,7 +2332,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
             minimumMorale = 1;
         } else {
             minimumMorale = 2;
-            if (traits->townType != TOWN_NECROPOLIS)
+            if (traits->townType != eTownNecropolis)
                 minimumMorale = 1;
         }
 
@@ -2465,7 +2465,7 @@ void type_AI_creature_purchaser::set(town* currentTown)
     int remaining = 14;
     short* population = currentTown->m_population;
     for (; remaining; ++dwelling, ++population, --remaining) {
-        TCreatureType type = g_dwellingType[currentTown->m_type][dwelling];
+        TCreatureType type = H3_AT(g_dwellingType, currentTown->m_type)[dwelling];
         short amount = *population;
         if (amount > 0) {
             m_creatures.push_back(type_creature_source(type, population, 0));
@@ -4875,7 +4875,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
         int dwelling = m_bonus;
         if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, true))
             dwelling += TOWN_DWELLING_COUNT;
-        TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
+        TCreatureType creature = H3_AT(g_dwellingType, currentTown->m_type)[dwelling];
         return akCreatureTypeTraits[creature].AI_value * m_growthBonus;
     }
 
@@ -4886,7 +4886,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
         int dwelling = m_bonus;
         if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, true))
             dwelling += TOWN_DWELLING_COUNT;
-        TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
+        TCreatureType creature = H3_AT(g_dwellingType, currentTown->m_type)[dwelling];
         value = max(
             value, akCreatureTypeTraits[creature].AI_value * m_growthBonus);
     }
@@ -4949,7 +4949,7 @@ long type_angelic_alliance_artifact::getValue(
             int creature = currentHero->m_army.m_armies[heroSlot];
             if (creature == CREATURE_NONE)
                 continue;
-            int alignment = g_game->getAlignment(creature);
+            int alignment = H3_IDX(g_game->getAlignment(creature));
             if (alignment != -1 && alliedAlignments.test(alignment)) {
                 total += akCreatureTypeTraits[creature].AI_value
                          * currentHero->m_army.m_numTroops[heroSlot];
@@ -4967,7 +4967,7 @@ long type_angelic_alliance_artifact::getValue(
             int creature = townArmy.m_armies[townSlot];
             if (creature == CREATURE_NONE)
                 continue;
-            int alignment = g_game->getAlignment(creature);
+            int alignment = H3_IDX(g_game->getAlignment(creature));
             if (alignment != -1 && alliedAlignments.test(alignment)) {
                 total += akCreatureTypeTraits[creature].AI_value
                          * townArmy.m_numTroops[townSlot];
@@ -5046,7 +5046,7 @@ long type_statue_of_legion_artifact::getValue(
                 & g_bitNumber[DWELLING_0_UPG_ID + dwelling]) {
                 dwellingSlot += TOWN_DWELLING_COUNT;
             }
-            TCreatureType creature = g_dwellingType[currentTown->m_type][dwellingSlot];
+            TCreatureType creature = H3_AT(g_dwellingType, currentTown->m_type)[dwellingSlot];
             long growth = akCreatureTypeTraits[creature].growthRate;
             growth += currentTown->getCastleGrowthBonus(creature);
             total += akCreatureTypeTraits[creature].AI_value * growth / 2;

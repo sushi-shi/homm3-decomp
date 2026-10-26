@@ -138,7 +138,7 @@ public:
             return lhs.m_mask == rhs.m_mask && lhs.m_bRandom == rhs.m_bRandom;
         }
 
-        std::bitset<kNumTownTypes> m_mask;
+        std::bitset<H3_IDX(kNumTownTypes)> m_mask;
         bool m_bRandom;
     };
 

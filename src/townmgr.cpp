@@ -989,7 +989,7 @@ void townObject::draw(int incFrame, bool drawHotspots)
 {
     if (m_visible) {
         town* currTown = g_townManager->m_townToView;
-        if (currTown->m_type == TOWN_DUNGEON && m_objId == EXTRA_0_ID) {
+        if (currTown->m_type == eTownDungeon && m_objId == EXTRA_0_ID) {
             if (currTown->hasBuilding(MAGE_GUILD5_ID, false)) {
                 m_objIcon->Draw(0, GUILD_LIT_FIRST_FRAME, 0, 0,
                               m_objIcon->GetWidth(), m_objIcon->GetHeight(),
@@ -1018,7 +1018,7 @@ void townObject::draw(int incFrame, bool drawHotspots)
                 }
             }
         } else {
-            if (currTown->m_type == TOWN_CASTLE
+            if (currTown->m_type == eTownCastle
                 && (m_objId == DOCK_ID || m_objId == DOCK_WITH_BOAT_ID)) {
                 if (currTown->hasBuilding(CASTLE_CITADEL_ID, true))
                     m_currFrame = 1;
@@ -1111,19 +1111,19 @@ void townManager::setupExtraStuff()
     if (g_buildAllBuildings) {
         for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
             if (!(m_townToView->hasBuilding(i, true))
-                && (g_townEligibleBuildMask[m_townToView->m_type] & g_bitNumber[i]))
+                && (H3_AT(g_townEligibleBuildMask, m_townToView->m_type) & g_bitNumber[i]))
                 m_townToView->buildBuilding(i, 0, 1);
         }
     } else {
         switch (m_townToView->m_type) {
-        case TOWN_CASTLE:
-        case TOWN_FORTRESS:
+        case eTownCastle:
+        case eTownFortress:
             m_townToView->createBuilding(EXTRA_2_ID);
             break;
-        case TOWN_STRONGHOLD:
+        case eTownStronghold:
             m_townToView->createBuilding(EXTRA_3_ID);
             break;
-        case TOWN_CONFLUX:
+        case eTownConflux:
             m_townToView->createBuilding(EXTRA_1_ID);
             break;
         }
@@ -1490,7 +1490,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             if (currTown->hasBuilding(DWELLING_0_UPG_ID + i, true))
                 slot = i + TOWN_DWELLING_COUNT;
 
-            creature = g_dwellingType[currTown->m_type][slot];
+            creature = H3_AT(g_dwellingType, currTown->m_type)[slot];
             long growth = akCreatureTypeTraits[creature].growthRate;
             offsetToMon = currTown->getGrowthRate(slot) - growth;
             const char* name = getArmyName(creature, 1);
@@ -1505,13 +1505,13 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                 if (currTown->getCastleGrowthBonus(creature) > 0) {
                     const char* buildingName;
                     if (currTown->hasBuilding(CASTLE_CASTLE_ID, false))
-                        buildingName = getBuildingName(currTown->m_type,
+                        buildingName = getBuildingName(H3_IDX(currTown->m_type),
                                                        CASTLE_CASTLE_ID);
                     else if (currTown->hasBuilding(CASTLE_CITADEL_ID, false))
-                        buildingName = getBuildingName(currTown->m_type,
+                        buildingName = getBuildingName(H3_IDX(currTown->m_type),
                                                        CASTLE_CITADEL_ID);
                     else
-                        buildingName = getBuildingName(currTown->m_type,
+                        buildingName = getBuildingName(H3_IDX(currTown->m_type),
                                                        CASTLE_FORT_ID);
                     rightText += formatString(
                         DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
@@ -1564,7 +1564,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                     int hordeBuilding = currTown->getHorde(slot);
                     rightText += formatString(
                         DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
-                        getBuildingName(currTown->m_type, hordeBuilding),
+                        getBuildingName(H3_IDX(currTown->m_type), hordeBuilding),
                         currTown->getHordeBonus(slot));
                     offsetToMon -= currTown->getHordeBonus(slot);
                 }
@@ -1578,7 +1578,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                 if (offsetToMon > 0 && currTown->hasBuilding(HOLY_GRAIL_ID, true))
                     rightText += formatString(
                         DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
-                        getBuildingName(currTown->m_type, HOLY_GRAIL_ID),
+                        getBuildingName(H3_IDX(currTown->m_type), HOLY_GRAIL_ID),
                         offsetToMon);
             }
 
@@ -1597,7 +1597,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
         }
     }
 
-    if (currTown->m_type == TOWN_DUNGEON
+    if (currTown->m_type == eTownDungeon
         && currTown->hasBuilding(EXTRA_1_ID, false)) {
         if (currTown->m_summoningType == CREATURE_NONE)
             currTown->setSummoningGenerator();
@@ -1909,20 +1909,20 @@ void townManager::setupTown(bool fade)
     if (!fade)
         m_townWindow->drawWindow(0, 148, 150);
 
-    if (m_loadedTownType != m_townToView->m_type) {
+    if (m_loadedTownType != H3_IDX(m_townToView->m_type)) {
         if (m_loadedTownType != -1)
             unloadTown();
 
         m_resourceDisplay->update(1, 0);
-        sprintf(g_text, "%sBack.pcx", g_townBackgroundPrefix[m_townToView->m_type]);
+        sprintf(g_text, "%sBack.pcx", H3_AT(g_townBackgroundPrefix, m_townToView->m_type));
         m_panorama = new bitmapBorder16(0, 0, 800, 374, 147, g_text, 0x800);
         m_townObjectCount = 0;
         for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-            objToLoad = g_townBuildOrder[m_townToView->m_type][i];
+            objToLoad = H3_AT(g_townBuildOrder, m_townToView->m_type)[i];
             if (objToLoad != -1) {
                 m_townObjects[m_townObjectCount] = new townObject(
-                    m_townToView->m_type, objToLoad,
-                    g_townBuildingSprites[m_townToView->m_type][objToLoad]);
+                    H3_IDX(m_townToView->m_type), objToLoad,
+                    H3_AT(g_townBuildingSprites, m_townToView->m_type)[objToLoad]);
                 if (!m_townObjects[m_townObjectCount])
                     memError();
                 if (m_townObjects[m_townObjectCount]->m_objBorder) {
@@ -1943,7 +1943,7 @@ void townManager::setupTown(bool fade)
     } else {
         m_townObjectCount = 0;
         for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-            objToLoad = g_townBuildOrder[m_townToView->m_type][i];
+            objToLoad = H3_AT(g_townBuildOrder, m_townToView->m_type)[i];
             if (objToLoad != -1) {
                 if (m_townObjects[m_townObjectCount]->m_objBorder) {
                     if (!(m_townToView->hasBuilding(objToLoad, false))) {
@@ -1969,10 +1969,10 @@ void townManager::setupTown(bool fade)
     }
 
     static_cast<TTownScreenWindow*>(m_townWindow)->updateTownLocators();
-    g_soundManager->startMP3(g_townMusic[m_townToView->m_type], 0, 1);
+    g_soundManager->startMP3(H3_AT(g_townMusic, m_townToView->m_type), 0, 1);
     newStrips();
 
-    m_loadedTownType = m_townToView->m_type;
+    m_loadedTownType = H3_IDX(m_townToView->m_type);
     m_destStrip = 0;
     m_srcStrip = 0;
     m_currStrip = 0;
@@ -1986,7 +1986,7 @@ void townManager::setupTown(bool fade)
         else
             m_currentDwellingIdOff[slot] = slot;
         m_monPix[slot] = ResourceManager::GetSprite(
-            akCreatureTypeTraits[g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[slot]]]
+            akCreatureTypeTraits[H3_AT(g_dwellingType, m_townToView->m_type)[m_currentDwellingIdOff[slot]]]
                 .m_sprite_name);
     }
 
@@ -2324,13 +2324,13 @@ void townManager::setCommandAndText(message& msg)
         break;
     case HORDE_ID:
     case HORDE_UPG_ID: {
-        TCreatureType creature = g_dwellingType[m_townToView->m_type][g_hordeDwellingSlot[m_townToView->m_type][code - HORDE_ID]];
+        TCreatureType creature = H3_AT(g_dwellingType, m_townToView->m_type)[H3_AT(g_hordeDwellingSlot, m_townToView->m_type)[code - HORDE_ID]];
         sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
     case HORDE_2_ID:
     case HORDE_2_UPG_ID: {
-        TCreatureType creature = g_dwellingType[m_townToView->m_type][g_horde2DwellingSlot[m_townToView->m_type][code - HORDE_2_ID]];
+        TCreatureType creature = H3_AT(g_dwellingType, m_townToView->m_type)[H3_AT(g_horde2DwellingSlot, m_townToView->m_type)[code - HORDE_2_ID]];
         sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
@@ -2340,7 +2340,7 @@ void townManager::setCommandAndText(message& msg)
     case EXTRA_2_ID:
     case HOLY_GRAIL_ID:
         strcpy(m_statusText,
-               g_specialBuildingNames[m_townToView->m_type][code - 17]);
+               H3_AT(g_specialBuildingNames, m_townToView->m_type)[code - 17]);
         break;
     case TTownScreenWindow::CREST_ID:
     case TTownScreenWindow::GARRISON_PORTRAIT_ID:
@@ -2431,7 +2431,7 @@ void townManager::setCommandAndText(message& msg)
     case DWELLING_4_UPG_ID:
     case DWELLING_5_UPG_ID:
     case DWELLING_6_UPG_ID: {
-        TCreatureType creature = g_dwellingType[m_townToView->m_type][code - DWELLING_0_ID];
+        TCreatureType creature = H3_AT(g_dwellingType, m_townToView->m_type)[code - DWELLING_0_ID];
         sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
@@ -2900,8 +2900,8 @@ THallWindow::THallWindow(int which)
 
     m_widgets.reserve(77);
 
-    switch (which) {
-    case TOWN_CASTLE:
+    switch (H3_ENUM_DECODE(TTownType, which)) {
+    case eTownCastle:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkCs.pcx", 0x800));
         for (i = 0; i < 16; i++) {
@@ -2919,7 +2919,7 @@ THallWindow::THallWindow(int which)
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
-    case TOWN_RAMPART:
+    case eTownRampart:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkRm.pcx", 0x800));
         for (i = 0; i < 17; i++) {
@@ -2937,7 +2937,7 @@ THallWindow::THallWindow(int which)
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
-    case TOWN_TOWER:
+    case eTownTower:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
@@ -2955,7 +2955,7 @@ THallWindow::THallWindow(int which)
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
-    case TOWN_INFERNO:
+    case eTownInferno:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
@@ -2973,7 +2973,7 @@ THallWindow::THallWindow(int which)
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
-    case TOWN_NECROPOLIS:
+    case eTownNecropolis:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
@@ -2991,7 +2991,7 @@ THallWindow::THallWindow(int which)
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
-    case TOWN_DUNGEON:
+    case eTownDungeon:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
@@ -3009,7 +3009,7 @@ THallWindow::THallWindow(int which)
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
-    case TOWN_STRONGHOLD:
+    case eTownStronghold:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
@@ -3027,7 +3027,7 @@ THallWindow::THallWindow(int which)
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
-    case TOWN_FORTRESS:
+    case eTownFortress:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkRm.pcx", 0x800));
         for (i = 0; i < 17; i++) {
@@ -3045,7 +3045,7 @@ THallWindow::THallWindow(int which)
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
-    case TOWN_CONFLUX:
+    case eTownConflux:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkRm.pcx", 0x800));
         for (i = 0; i < 17; i++) {
@@ -3114,7 +3114,7 @@ TMageGuildWindow::TMageGuildWindow()
                                          "TPMage.pcx", 0x800));
     m_widgets.push_back(new bitmapBorder(
         332, 76, 141, 217, 1,
-        g_mageGuildDefNames[g_townManager->m_townToView->m_type], 0x800));
+        H3_AT(g_mageGuildDefNames, g_townManager->m_townToView->m_type), 0x800));
 
     m_widgets.push_back(new iconWidget(222, 445, 83, 61, 10, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
@@ -3256,10 +3256,10 @@ void TMageGuildWindow::setRolloverText(int codeY)
         town* thisTown = g_townManager->m_townToView;
         int level = cell / 6;
         int slot = cell % 6;
-        if (thisTown->m_type == TOWN_CONFLUX
+        if (thisTown->m_type == eTownConflux
             && (thisTown->hasBuilding(HOLY_GRAIL_ID, true))) {
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
-                    getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID));
+                    getBuildingName(H3_IDX(eTownConflux), HOLY_GRAIL_ID));
         } else if (slot >= thisTown->m_mageGuildSpellCounts[level]) {
             strcpy(g_text, "");
         } else {
@@ -3342,12 +3342,12 @@ int TMageGuildWindow::windowHandler(message& msg)
                 town* thisTown = g_townManager->m_townToView;
                 int level = slot / 6;
                 int column = slot % 6;
-                if (thisTown->m_type == TOWN_CONFLUX
+                if (thisTown->m_type == eTownConflux
                     && thisTown->hasBuilding(HOLY_GRAIL_ID, true)) {
                     normalDialog(
                         formatString(
                             g_generalText->GetText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
-                            getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
+                            getBuildingName(H3_IDX(eTownConflux), HOLY_GRAIL_ID))
                             .c_str(),
                         qualifier ? 4 : 1, -1, -1, -1, 0, -1, 0, -1, 0,
                         -1, 0);
@@ -3983,7 +3983,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
     : CAdvPopup(235, 106, 329, 388, 0x12)
 {
     int cost = akCreatureTypeTraits[g_blacksmithMachines[inTownType]].cost[6];
-    m_townType = inTownType;
+    m_townType = H3_ENUM_DECODE(TTownType, inTownType);
     ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:5218
     m_widgets.reserve(12);
 
@@ -3991,7 +3991,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
                                        "TPSmith.pcx", 0x800));
 
     sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_BUILD_NEW_FORMAT),
-            akCreatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
+            akCreatureTypeTraits[H3_AT(g_blacksmithMachines, m_townType)].m_name);
     m_widgets.push_back(new textWidget(0, 15, m_width, 30, g_text, "bigfont.fnt",
                                      font::HEADING, 1, 1, 0, 8));
     m_widgets.push_back(new textWidget(0, 210, m_width, 30, 0, "medfont.fnt",
@@ -4006,7 +4006,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
                                        "tpsmitbk.pcx", 0x800));
     m_machineIcon = new iconWidget(
         64, 50, 200, 150, 6,
-        akCreatureTypeTraits[g_blacksmithMachines[m_townType]].m_sprite_name,
+        akCreatureTypeTraits[H3_AT(g_blacksmithMachines, m_townType)].m_sprite_name,
         0, 2, 0, 0, 0x12);
     m_widgets.push_back(m_machineIcon);
 
@@ -4044,7 +4044,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
 
     hero* visitor = g_game->getHero(g_townManager->m_townToView->m_visitingHeroId);
     if (g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[6] < cost
-        || visitor->hasArtifact(g_blacksmithArtifacts[m_townType].m_artifactId)) {
+        || visitor->hasArtifact(H3_AT(g_blacksmithArtifacts, m_townType).m_artifactId)) {
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_codeY = BUY_BUTTON_ID;
         msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
@@ -4077,7 +4077,7 @@ DC_ADDRESS(0x173a88, 0x78)
 MAC_ADDRESS(0x1cdf9c, 0x9c)
 void TBlacksmithWindow::setRightClickText(int id)
 {
-    type_artifact machine = g_blacksmithArtifacts[m_townType];
+    type_artifact machine = H3_AT(g_blacksmithArtifacts, m_townType);
     normalDialog(machine.getDescription().c_str(), 4, -1, 28,
                  -1, 0, -1, 0, -1, 0, -1, 0);
 }
@@ -4094,11 +4094,11 @@ void TBlacksmithWindow::setRolloverText(int id)
     switch (id) {
     case CANCEL_BUTTON_ID:
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_DO_NOT_BUILD_FORMAT),
-                akCreatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
+                akCreatureTypeTraits[H3_AT(g_blacksmithMachines, m_townType)].m_name);
         break;
     case BUY_BUTTON_ID:
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_BUILD_FORMAT),
-                akCreatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
+                akCreatureTypeTraits[H3_AT(g_blacksmithMachines, m_townType)].m_name);
         break;
     default:
         strcpy(g_text, "");
@@ -4396,7 +4396,7 @@ DC_ADDRESS(0x17484c, 0x144)
 MAC_ADDRESS(0x1cf63c, 0x188)
 void townManager::doHall()
 {
-    dialogWindow = new THallWindow(m_townToView->m_type);
+    dialogWindow = new THallWindow(H3_IDX(m_townToView->m_type));
     if (!dialogWindow)
         memError();
     setupCastle(dialogWindow, 0);
@@ -4457,7 +4457,7 @@ MAC_ADDRESS(0x1cf8f0, 0x208)
 char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includeTitle, unsigned char extended)
 {
     char buffer[400];
-    int type = thisTown->m_type;
+    int type = H3_IDX(thisTown->m_type);
 
     if (buildingId < SPECIAL_BUILDING_ID) {
         if (buildingId == BLACKSMITH_ID)
@@ -4509,7 +4509,7 @@ void townManager::showBuildingInfo(int buildingId, unsigned char rightClick)
 {
     std::string info(getBuildingInfo(m_townToView, buildingId, 1, 1));
     normalDialog(info.c_str(), rightClick ? 4 : 1, -1, -1,
-                 m_townToView->m_type + 0x16, buildingId,
+                 H3_IDX(m_townToView->m_type) + RES_BUILDING_TT_0, buildingId,
                  -1, 0, -1, 0, -1, 0);
 }
 
@@ -4740,12 +4740,12 @@ int townManager::main(message& msg)
         g_pendingTownBuild = -1;
         if (build == TTownScreenWindow::TOWN_CHEAT_BUILD_ALL) {
             for (build = 0; build < MAX_BUILDING_TYPE; build++) {
-                if ((g_townEligibleBuildMask[m_townToView->m_type]
+                if ((H3_AT(g_townEligibleBuildMask, m_townToView->m_type)
                      & (1 << build))
                     || build == TTownScreenWindow::TOWN_CHEAT_BUILD_EXTRA)
                     buildObj(build);
             }
-        } else if ((g_townEligibleBuildMask[m_townToView->m_type]
+        } else if ((H3_AT(g_townEligibleBuildMask, m_townToView->m_type)
                     & (1 << build))
                    || build == TTownScreenWindow::TOWN_CHEAT_BUILD_EXTRA) {
             buildObj(build);
@@ -4803,12 +4803,12 @@ int townManager::main(message& msg)
                 if (rclick) {
                     quickViewRecruit(
                         m_townToView,
-                        g_hordeDwellingSlot[m_townToView->m_type]
+                        H3_AT(g_hordeDwellingSlot, m_townToView->m_type)
                                           [code - HORDE_ID]);
                 } else {
                     g_recruitUnit = new recruitUnit(
                         m_townToView,
-                        g_hordeDwellingSlot[m_townToView->m_type]
+                        H3_AT(g_hordeDwellingSlot, m_townToView->m_type)
                                           [code - HORDE_ID],
                         1);
                     if (!g_recruitUnit)
@@ -4823,12 +4823,12 @@ int townManager::main(message& msg)
                 if (rclick) {
                     quickViewRecruit(
                         m_townToView,
-                        g_horde2DwellingSlot[m_townToView->m_type]
+                        H3_AT(g_horde2DwellingSlot, m_townToView->m_type)
                                            [code - HORDE_2_ID]);
                 } else {
                     g_recruitUnit = new recruitUnit(
                         m_townToView,
-                        g_horde2DwellingSlot[m_townToView->m_type]
+                        H3_AT(g_horde2DwellingSlot, m_townToView->m_type)
                                            [code - HORDE_2_ID],
                         1);
                     if (!g_recruitUnit)
@@ -4905,7 +4905,7 @@ int townManager::main(message& msg)
                         MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
                         TTownScreenWindow::EXIT_BUTTON_ID, 0x4008);
                     if (g_game->getBoatsBuilt() < 0x40) {
-                        doShipyard(m_townToView->m_type);
+                        doShipyard(H3_IDX(m_townToView->m_type));
                         m_resourceDisplay->update(1, 1);
                         if (g_windowManager->m_dialogReturn
                             == TShipWindow::BUY_BUTTON_ID) {
@@ -4953,7 +4953,7 @@ int townManager::main(message& msg)
                     sprintf(text,
                             getBuildingInfo(m_townToView, MARKETPLACE_SILO_ID,
                                             1, 1));
-                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(text, 1, -1, -1, H3_IDX(m_townToView->m_type) + RES_BUILDING_TT_0,
                                  MARKETPLACE_SILO_ID, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -4962,7 +4962,7 @@ int townManager::main(message& msg)
                     goto building_popup;
                 else {
                     doBlacksmith(m_townToView->m_visitingHeroId,
-                                 m_townToView->m_type);
+                                 H3_IDX(m_townToView->m_type));
                     m_resourceDisplay->update(1, 1);
                 }
                 break;
@@ -4970,12 +4970,12 @@ int townManager::main(message& msg)
                 if (rclick) {
                     showBuildingInfo(code, 1);
                 } else switch (m_townToView->m_type) {
-                case TOWN_STRONGHOLD:
+                case eTownStronghold:
                     doFreelancersGuild(m_townToView);
                     m_resourceDisplay->update(1, 1);
                     resetStrips();
                     break;
-                case TOWN_CONFLUX:
+                case eTownConflux:
                     doUniversity();
                     m_resourceDisplay->update(1, 1);
                     break;
@@ -4990,11 +4990,11 @@ int townManager::main(message& msg)
                     goto building_popup;
                 else {
                     switch (m_townToView->m_type) {
-                    case TOWN_CASTLE:
+                    case eTownCastle:
                         doTownTavern();
                         redrawTownScreen();
                         break;
-                    case TOWN_INFERNO:
+                    case eTownInferno:
                         if (m_townToView->m_visitingHeroId == -1)
                             normalDialog(g_generalText->GetText(GENERAL_TEXT_TOWN_GATE_VISITING_HERO_ONLY), 1,
                                          -1, -1, -1, 0, -1, 0, -1, 0,
@@ -5002,14 +5002,14 @@ int townManager::main(message& msg)
                         else
                             doTownGate();
                         break;
-                    case TOWN_STRONGHOLD:
+                    case eTownStronghold:
                         doBlacksmith(m_townToView->m_visitingHeroId, 0);
                         m_resourceDisplay->update(1, 1);
                         break;
-                    case TOWN_NECROPOLIS:
+                    case eTownNecropolis:
                         doSkeletonTransformer();
                         break;
-                    case TOWN_DUNGEON:
+                    case eTownDungeon:
                         doPortalOfSummoning();
                         redrawTownScreen();
                         break;
@@ -5018,7 +5018,7 @@ int townManager::main(message& msg)
                                getBuildingInfo(m_townToView, EXTRA_1_ID,
                                                1, 1));
                         normalDialog(text, 1, -1, -1,
-                                     m_townToView->m_type + 0x16, EXTRA_1_ID,
+                                     H3_IDX(m_townToView->m_type) + RES_BUILDING_TT_0, EXTRA_1_ID,
                                      -1, 0, -1, 0, -1, 0);
                         break;
                     }
@@ -5026,10 +5026,10 @@ int townManager::main(message& msg)
                 break;
             case EXTRA_2_ID:
                 switch (m_townToView->m_type) {
-                case TOWN_TOWER:
-                case TOWN_INFERNO:
-                case TOWN_DUNGEON:
-                case TOWN_STRONGHOLD:
+                case eTownTower:
+                case eTownInferno:
+                case eTownDungeon:
+                case eTownStronghold:
                     if (rclick)
                         goto building_popup;
                     else {
@@ -5037,7 +5037,7 @@ int townManager::main(message& msg)
                                getBuildingInfo(m_townToView, EXTRA_2_ID,
                                                1, 1));
                         normalDialog(text, 1, -1, -1,
-                                     m_townToView->m_type + 0x16, EXTRA_2_ID,
+                                     H3_IDX(m_townToView->m_type) + RES_BUILDING_TT_0, EXTRA_2_ID,
                                      -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -5046,9 +5046,9 @@ int townManager::main(message& msg)
             case SPECIAL_BUILDING_ID:
                 if (rclick)
                     goto building_popup;
-                else if (m_townToView->m_type == TOWN_TOWER
-                         || m_townToView->m_type == TOWN_DUNGEON
-                         || m_townToView->m_type == TOWN_CONFLUX) {
+                else if (m_townToView->m_type == eTownTower
+                         || m_townToView->m_type == eTownDungeon
+                         || m_townToView->m_type == eTownConflux) {
                     doArtifactMerchants();
                     m_resourceDisplay->update(1, 1);
                     resetStrips();
@@ -5056,7 +5056,7 @@ int townManager::main(message& msg)
                     strcpy(text,
                            getBuildingInfo(m_townToView, SPECIAL_BUILDING_ID,
                                            1, 1));
-                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(text, 1, -1, -1, H3_IDX(m_townToView->m_type) + RES_BUILDING_TT_0,
                                  SPECIAL_BUILDING_ID, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -5064,11 +5064,11 @@ int townManager::main(message& msg)
                 if (rclick) {
 building_popup:
                     strcpy(text, getBuildingInfo(m_townToView, code, 1, 1));
-                    normalDialog(text, 4, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(text, 4, -1, -1, H3_IDX(m_townToView->m_type) + RES_BUILDING_TT_0,
                                  code, -1, 0, -1, 0, -1, 0);
                 } else {
                     strcpy(text, getBuildingInfo(m_townToView, code, 1, 1));
-                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(text, 1, -1, -1, H3_IDX(m_townToView->m_type) + RES_BUILDING_TT_0,
                                  code, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -5174,7 +5174,7 @@ building_popup:
                         building = HALL_CAPITOL_ID;
                     strcpy(text,
                            getBuildingInfo(m_townToView, building, 1, 1));
-                    normalDialog(text, 4, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(text, 4, -1, -1, H3_IDX(m_townToView->m_type) + RES_BUILDING_TT_0,
                                  building, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -5184,7 +5184,7 @@ building_popup:
                         strcpy(text, getBuildingInfo(m_townToView,
                                                      CASTLE_FORT_ID, 1, 1));
                         normalDialog(text, 4, -1, -1,
-                                     m_townToView->m_type + 0x16,
+                                     H3_IDX(m_townToView->m_type) + RES_BUILDING_TT_0,
                                      CASTLE_FORT_ID, -1, 0, -1, 0, -1, 0);
                     } else if (m_townToView->hasBuilding(CASTLE_CITADEL_ID,
                                                        false)) {
@@ -5192,7 +5192,7 @@ building_popup:
                                getBuildingInfo(m_townToView,
                                                CASTLE_CITADEL_ID, 1, 1));
                         normalDialog(text, 4, -1, -1,
-                                     m_townToView->m_type + 0x16,
+                                     H3_IDX(m_townToView->m_type) + RES_BUILDING_TT_0,
                                      CASTLE_CITADEL_ID, -1, 0, -1, 0,
                                      -1, 0);
                     } else if (m_townToView->hasBuilding(CASTLE_CASTLE_ID,
@@ -5201,7 +5201,7 @@ building_popup:
                                getBuildingInfo(m_townToView,
                                                CASTLE_CASTLE_ID, 1, 1));
                         normalDialog(text, 4, -1, -1,
-                                     m_townToView->m_type + 0x16,
+                                     H3_IDX(m_townToView->m_type) + RES_BUILDING_TT_0,
                                      CASTLE_CASTLE_ID, -1, 0, -1, 0,
                                      -1, 0);
                     }
@@ -5671,11 +5671,11 @@ TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int id)
                                        "TPuBuild.pcx", 0x800));
     m_widgets.push_back(new iconWidget(
         124, 49, 150, 70, 2,
-        g_townBuildingSpriteNames[g_townManager->m_townToView->m_type], m_buildingId,
+        H3_AT(g_townBuildingSpriteNames, g_townManager->m_townToView->m_type), m_buildingId,
         0, 0, 0, 0x10));
 
     sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_BUILD_FORMAT),
-            getBuildingName(g_townManager->m_townToView->m_type, m_buildingId));
+            getBuildingName(H3_IDX(g_townManager->m_townToView->m_type), m_buildingId));
     m_widgets.push_back(new textWidget(0, 20, m_width, 30, g_text,
                                      "bigfont.fnt", font::HEADING, 3, 1, 0, 8));
 
@@ -5819,9 +5819,9 @@ MAC_ADDRESS(0x1d3224, 0x380)  // order-map(~TBuyBuildWindow 0x5d5b70 .. BuyBuild
 void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
 {
     int count = 0;
-    __int64 mask = g_hierarchyMask[currentTown->m_type][building];
+    __int64 mask = H3_AT(g_hierarchyMask, currentTown->m_type)[building];
 
-    if (g_game->m_isTutorial && building == DWELLING_2_ID && currentTown->m_type == 0)
+    if (g_game->m_isTutorial && building == DWELLING_2_ID && currentTown->m_type == eTownCastle)
         mask &= ~g_bitNumber[BLACKSMITH_ID];
 
     // DC line 7281 retains this header helper.
@@ -5829,7 +5829,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
 
     for (int i = 0; i < MAX_BUILDING_TYPE; ++i) {
         if ((g_bitNumber[i] & mask) != 0 && i != HORDE_ID && i != HORDE_2_ID)
-            mask &= ~town::s_includedBuildings[currentTown->m_type][i];
+            mask &= ~H3_AT(town::s_includedBuildings, currentTown->m_type)[i];
     }
 
     char* lineStart = g_text;
@@ -5851,7 +5851,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
             }
             ++count;
             namePos = lineStart + strlen(lineStart);
-            strcat(g_text, getBuildingName(currentTown->m_type, j));
+            strcat(g_text, getBuildingName(H3_IDX(currentTown->m_type), j));
             if (currentFont->get_string_width(lineStart) > m_rolloverText->m_width) {
                 namePos[-1] = '\n';
                 lineStart = namePos;
@@ -6001,12 +6001,12 @@ void TBuyBuildWindow::setRolloverText(int codeY)
     switch (codeY) {
     case BUY_BUTTON_ID:
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_BUILD_FORMAT),
-                getBuildingName(g_townManager->m_townToView->m_type,
+                getBuildingName(H3_IDX(g_townManager->m_townToView->m_type),
                                 m_buildingId));
         break;
     case CANCEL_BUTTON_ID:
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_DO_NOT_BUILD_FORMAT),
-                getBuildingName(g_townManager->m_townToView->m_type,
+                getBuildingName(H3_IDX(g_townManager->m_townToView->m_type),
                                 m_buildingId));
         break;
     default:
@@ -6143,8 +6143,8 @@ void townManager::buildObj(int buildingId)
     }
 
     SAMPLE2 sample;
-    if ((m_townToView->m_type == TOWN_RAMPART
-         || m_townToView->m_type == TOWN_NECROPOLIS)
+    if ((m_townToView->m_type == eTownRampart
+         || m_townToView->m_type == eTownNecropolis)
         && buildingId > HALL_VILLAGE_ID && buildingId <= HALL_CAPITOL_ID) {
         int extraIndex = -1;
         int extraId;
@@ -6180,7 +6180,7 @@ void townManager::buildObj(int buildingId)
     } else {
         // Dungeon's Mage Guild 5 raises the Portal of Summoning's own
         // object by ten frames once that extra is standing.
-        if (m_townToView->m_type == TOWN_DUNGEON
+        if (m_townToView->m_type == eTownDungeon
             && newBuilding == MAGE_GUILD5_ID
             && (m_townToView->hasBuilding(EXTRA_0_ID, false)))
             m_townObjects[19]->m_currFrame += 10;
@@ -6250,7 +6250,7 @@ void townManager::setupMage(heroWindow* mageWin)
     for (int level = 0; level < 5; level++) {
         for (int slot = 0; slot < 6; slot++) {
             int state = g_mageGuildBaseSpellCounts[level];
-            if (m_townToView->m_type == TOWN_TOWER
+            if (m_townToView->m_type == eTownTower
                 && (m_townToView->hasBuilding(EXTRA_1_ID, true)))
                 state++;
             {
@@ -6286,7 +6286,7 @@ void townManager::setupMage(heroWindow* mageWin)
             } else {
                 msg.m_codeY = 40 + level * 6 + slot;
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-                if (m_townToView->m_type == TOWN_CONFLUX
+                if (m_townToView->m_type == eTownConflux
                     && (m_townToView->hasBuilding(HOLY_GRAIL_ID, true)))
                     msg.m_extra = 70;
                 else
@@ -6764,7 +6764,7 @@ void townManager::doTownGate()
     for (i = 0; i < player->m_numTowns; i++) {
         int townId = player->m_townIds[i];
         town* otherTown = g_game->getTown(townId);
-        if (otherTown != m_townToView && otherTown->m_type == TOWN_INFERNO
+        if (otherTown != m_townToView && otherTown->m_type == eTownInferno
             && (otherTown->hasBuilding(EXTRA_1_ID, true))
             && otherTown->m_visitingHeroId < 0)
             gateWindow->addTown(townId);
@@ -6837,12 +6837,12 @@ TCastleWindow::TCastleWindow()
     // Removing the formerly assumed release VERIFY is byte-flat at 95.6830%.
     m_widgets.reserve(156);
 
-    if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
+    if (g_townManager->m_townToView->m_type == eTownDungeon
         && (g_townManager->m_townToView->hasBuilding(EXTRA_1_ID, false))
         && g_townManager->m_townToView->m_summoningType == -1)
         g_townManager->m_townToView->setSummoningGenerator();
 
-    if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
+    if (g_townManager->m_townToView->m_type == eTownDungeon
         && (g_townManager->m_townToView->hasBuilding(EXTRA_1_ID, false))
         && g_townManager->m_townToView->m_summoningType != -1) {
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl8.pcx", 0x800));
@@ -6883,7 +6883,7 @@ TCastleWindow::TCastleWindow()
         m_widgets.push_back(new bitmapBorder(467, 424, 23, 121, -1, "TPCaInfo.pcx",
                                        0x800));
 
-    int whichTown = g_townManager->m_townToView->m_type;
+    int whichTown = H3_IDX(g_townManager->m_townToView->m_type);
     strcpy(g_text, g_townCastleDefNames[whichTown + 1]);
 
     m_widgets.push_back(new bitmapBorder(169, 26, 100, 120, -1, g_text, 0x800));
@@ -6895,8 +6895,8 @@ TCastleWindow::TCastleWindow()
     if (m_use8) {
         m_widgets.push_back(new bitmapBorder(169, 425, 100, 120, -1, g_text, 0x800));
         strcpy(g_text, g_townCastleDefNames[
-                   g_game->getAlignment(
-                       g_townManager->m_townToView->m_summoningType) + 1]);
+                   H3_IDX(g_game->getAlignment(
+                       g_townManager->m_townToView->m_summoningType)) + 1]);
         m_widgets.push_back(new bitmapBorder(563, 425, 100, 120, -1, g_text, 0x800));
     } else
         m_widgets.push_back(new bitmapBorder(365, 425, 100, 120, -1, g_text, 0x800));
@@ -6916,7 +6916,7 @@ TCastleWindow::TCastleWindow()
     if (m_use8) {
         m_widgets.push_back(new textWidget(14, 514, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0xf, 1, 0, 8));
-        m_widgets.push_back(new textWidget(408, 514, 150, 20, getBuildingName(TOWN_DUNGEON, EXTRA_1_ID), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(408, 514, 150, 20, getBuildingName(H3_IDX(eTownDungeon), EXTRA_1_ID), "smalfont.fnt",
                                      font::PRIMARY, 0x10, 1, 0, 8));
     } else
         m_widgets.push_back(new textWidget(210, 514, 150, 20, 0, "smalfont.fnt",
@@ -7403,7 +7403,7 @@ void TCastleWindow::setRolloverText(message& msg)
         int dwelling = g_townManager->m_currentDwellingIdOff[code - 0x11];
         if (g_townManager->m_townToView->hasBuilding(DWELLING_0_ID + dwelling, true)) {
             sprintf(g_text, "%s %s", (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
-                    getArmyName(g_dwellingType[g_townManager->m_townToView->m_type][dwelling], 2));
+                    getArmyName(H3_AT(g_dwellingType, g_townManager->m_townToView->m_type)[dwelling], 2));
         } else {
             strcpy(g_text, "");
         }
@@ -7672,7 +7672,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
-        sprintf(g_text, getBuildingName(m_townToView->m_type,
+        sprintf(g_text, getBuildingName(H3_IDX(m_townToView->m_type),
                                        DWELLING_0_ID + m_currentDwellingIdOff[i]));
         msg.m_codeY = i + 9;
         msg.m_extraText = g_text;
@@ -7687,7 +7687,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         }
         msg.m_codeY = i + 0x19;
         TCreatureType rowCreature =
-            g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[i]];
+            H3_AT(g_dwellingType, m_townToView->m_type)[m_currentDwellingIdOff[i]];
         const char* creatureName;
         if (rowCreature >= 0 && rowCreature <= g_creatureTypeLast)
             creatureName = akCreatureTypeTraits[rowCreature].m_plural_name;
@@ -7720,7 +7720,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
 
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         TCreatureTypeTraits monInfo =
-            akCreatureTypeTraits[g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[i]]];
+            akCreatureTypeTraits[H3_AT(g_dwellingType, m_townToView->m_type)[m_currentDwellingIdOff[i]]];
         sprintf(g_text, "%d", monInfo.attackSkill);
         textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,

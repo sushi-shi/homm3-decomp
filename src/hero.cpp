@@ -2808,7 +2808,7 @@ void hero::offerCombinationArtifactAssembly(long slot)
 // it described, and the tail prints GetMorale's own answer MINUS that
 // sum as the "other modifiers" line. The opening flag arm assigns rather
 // than appends. DC hero.cpp:2989 names town::HasBuilding at the Grail guard,
-// which credits TOWN_CASTLE.
+// which credits eTownCastle.
 VA(0x004dc320, 0x793)
 DC_ADDRESS(0x0ce260, 0x3e8)
 MAC_ADDRESS(0x0f88cc, 0x5dc)  // anchor-caller (armyGroup::get_morale_description)
@@ -2915,12 +2915,12 @@ std::string hero::getMoraleDescription() const
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:2989 names town::HasBuilding here.
             if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1)
-                && ownedTown->m_type == TOWN_CASTLE) {
+                && ownedTown->m_type == eTownCastle) {
                 // An explicit LF preserves Mac retail's 0a byte; CodeWarrior
                 // interprets an ordinary \n escape as Mac CR here.
                 result += formatString(
                     "\x0A%s +2",
-                    getBuildingName(TOWN_CASTLE, HOLY_GRAIL_ID));
+                    getBuildingName(H3_IDX(eTownCastle), HOLY_GRAIL_ID));
                 morale += 2;
                 break;
             }
@@ -2943,7 +2943,7 @@ std::string hero::getMoraleDescription() const
 // hero::GetLuck's describer, the exact shape of the morale twin. FOUR of
 // the flag rungs carry a SIGN as a format argument instead of their own
 // line: they share ONE carrier format, gLuckTexts[10], and pass the literals
-// "-1"/"+1"/"+2"/"+3". The Grail arm credits TOWN_RAMPART.
+// "-1"/"+1"/"+2"/"+3". The Grail arm credits eTownRampart.
 
 // DC hero.cpp:3028 and :3149 name the text and town helpers.
 VA(0x004dcac0, 0x7E0)
@@ -3045,11 +3045,11 @@ std::string hero::getLuckDescription() const
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:3149 names town::HasBuilding here.
             if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1)
-                && ownedTown->m_type == TOWN_RAMPART) {
+                && ownedTown->m_type == eTownRampart) {
                 // An explicit LF, as in the shared Mac Grail format.
                 result += formatString(
                     "\x0A%s +2",
-                    getBuildingName(TOWN_RAMPART, HOLY_GRAIL_ID));
+                    getBuildingName(H3_IDX(eTownRampart), HOLY_GRAIL_ID));
                 luck += 2;
                 break;
             }
@@ -5244,7 +5244,7 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
-                ownedTown->m_type == TOWN_RAMPART) {
+                ownedTown->m_type == eTownRampart) {
                 luck += 2;
                 break;
             }
@@ -5292,7 +5292,7 @@ int hero::getMorale(const hero* otherHero, bool onCursedGround,
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
-                ownedTown->m_type == TOWN_CASTLE) {
+                ownedTown->m_type == eTownCastle) {
                 morale += 2;
                 break;
             }
@@ -5344,7 +5344,7 @@ float hero::getNecromancyFactor(unsigned char applyLimit) const
             playerData& player = *getPlayer();
             for (int i = 0; i < player.m_numTowns; i++) {
                 town* ownedTown = g_game->getTown(player.m_townIds[i]);
-                if (ownedTown->m_type == TOWN_NECROPOLIS) {
+                if (ownedTown->m_type == eTownNecropolis) {
                     if (ownedTown->hasBuilding(EXTRA_0_ID, true))
                         factor += 0.1f;
                     if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true))
@@ -5647,7 +5647,7 @@ int hero::getMobility(bool seaMovement) const
             mobility += g_moveConstants.m_lighthouseBonus;
 
         for (unsigned int t = 0; t < g_game->m_towns.size(); t++) {
-            if (g_game->m_towns[t].m_type == TOWN_CASTLE &&
+            if (g_game->m_towns[t].m_type == eTownCastle &&
                 g_game->m_towns[t].hasBuilding(SPECIAL_BUILDING_ID, false))
                 mobility += g_moveConstants.m_lighthouseBonus;
         }

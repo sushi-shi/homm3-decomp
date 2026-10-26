@@ -180,8 +180,8 @@ public:
 
 class TTownTypePattern : public TSingleTypeSingleExtraPattern {
 public:
-    TTownTypePattern(int townType)
-        : TSingleTypeSingleExtraPattern(TTown::s_akTypeTraits[townType].m_pName, TOWN, townType) {}
+    TTownTypePattern(H3_ENUM_PARAM(TTownType, int) townType)
+        : TSingleTypeSingleExtraPattern(H3_AT(TTown::s_akTypeTraits, townType).m_pName, TOWN, H3_IDX(townType)) {}
 };
 
 // The find list, built on first use.
@@ -838,15 +838,15 @@ TPatterns::TPatterns()
     };
     VA_COMPGEN(0x0041d713, 0x14, STATIC_DTOR, akTownTypePatterns)
     DATA(0x0059b028) static const TTownTypePattern akTownTypePatterns[] = {
-        TTownTypePattern(TOWN_CASTLE),
-        TTownTypePattern(TOWN_RAMPART),
-        TTownTypePattern(TOWN_TOWER),
-        TTownTypePattern(TOWN_INFERNO),
-        TTownTypePattern(TOWN_NECROPOLIS),
-        TTownTypePattern(TOWN_DUNGEON),
-        TTownTypePattern(TOWN_STRONGHOLD),
-        TTownTypePattern(TOWN_FORTRESS),
-        TTownTypePattern(TOWN_CONFLUX)
+        TTownTypePattern(eTownCastle),
+        TTownTypePattern(eTownRampart),
+        TTownTypePattern(eTownTower),
+        TTownTypePattern(eTownInferno),
+        TTownTypePattern(eTownNecropolis),
+        TTownTypePattern(eTownDungeon),
+        TTownTypePattern(eTownStronghold),
+        TTownTypePattern(eTownFortress),
+        TTownTypePattern(eTownConflux)
     };
 
 

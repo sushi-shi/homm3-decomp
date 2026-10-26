@@ -1235,7 +1235,7 @@ int oldmain()
                 campaignBrief.startScenario(currentMap, briefingChoice);
             } else {
                 for (int j = 0; j < NUM_PLAYERS; ++j) {
-                    if ((1 << alignment[j])
+                    if ((1 << H3_IDX(alignment[j]))
                         & g_game->m_mapHeader.m_playerSlotAttributes[j]
                               .m_legalAlignments) {
                         g_game->m_setup.m_alignment[j] = alignment[j];

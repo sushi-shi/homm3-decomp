@@ -15,7 +15,7 @@ TEditTownEventSheet::TEditTownEventSheet(CWnd* pParentWnd, const TPlayerMask& pl
     : CPropertySheet(kEditTimedEventSheetCaptionStr, pParentWnd),
       _m_event(event)
 {
-    assert(townType >= 0 && townType <= kNumTownTypes);
+    assert(townType >= 0 && townType <= H3_IDX(kNumTownTypes));
     m_psh.dwFlags |= PSH_NOAPPLYNOW;
     _m_pGeneralPage = std::auto_ptr<TEditTimedEventGeneralPage>(
         new TEditTimedEventGeneralPage(this, _m_event, playersPresent, mapVersion));

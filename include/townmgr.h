@@ -546,7 +546,7 @@ public:
     // omission here: the first hover simply compares against whatever
     // the allocation left behind.
     int m_lastHover;  // +0x60
-    int m_townType;  // +0x64  selects the machine and its artifact
+    H3_ENUM_STORAGE(TTownType, int) m_townType;  // +0x64  selects the machine and its artifact
     int m_field68;  // +0x68  cleared by the constructor
     iconWidget* m_machineIcon;  // +0x6c
 

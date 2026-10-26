@@ -52,7 +52,7 @@ TTownType pickAlignment(int legalAlignments, bool getFirstAvail)
             }
         }
     }
-    return TOWN_CASTLE;
+    return eTownCastle;
 }
 
 // The three map formats InitNewGame accepts, in the order retail tests them.

@@ -216,7 +216,7 @@ public:
 
     // The faction: the object type's subtype for a town (0x4c2a24).
     TTownType getTownType() const;
-    const TTypeTraits& getTownTypeTraits() const { return s_akTypeTraits[getTownType()]; }
+    const TTypeTraits& getTownTypeTraits() const { return H3_AT(s_akTypeTraits, getTownType()); }
     bool getBIsBuildingDisabled(TBuilding building) const;
     bool getBCustomName() const { return _m_bCustomName; }
     void setBCustomName(bool bCustomName) { _m_bCustomName = bCustomName; }

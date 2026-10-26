@@ -130,14 +130,14 @@ std::string TGenerator::getTypeName() const
 VA(0x0043e3bc, 0x59)
 TAbstractRandomlyAlignedGenerator::TAbstractRandomlyAlignedGenerator(const TObjectType& objType)
     : TGameObject(objType), _m_townLinkID(TLinkableObject::s_kNoLinkID),
-      _m_alignments(std::bitset<kNumTownTypes>().set())
+      _m_alignments(std::bitset<H3_IDX(kNumTownTypes)>().set())
 {
 }
 
 VA(0x0043e415, 0xd8)
 TAbstractRandomlyAlignedGenerator::TAbstractRandomlyAlignedGenerator(const TObjectType& objType,
                                                                      TRawIStream* pIStream, int version)
-    : TGameObject(objType), _m_alignments(std::bitset<kNumTownTypes>().set())
+    : TGameObject(objType), _m_alignments(std::bitset<H3_IDX(kNumTownTypes)>().set())
 {
     unsigned int townLinkID;
     *pIStream >> townLinkID;
@@ -150,12 +150,12 @@ TAbstractRandomlyAlignedGenerator::TAbstractRandomlyAlignedGenerator(const TObje
         std::bitset<8> alignments;
         readBitset(*pIStream, alignments);
         std::copy(TBitsetIterator<8>(alignments, 0), TBitsetIterator<8>(alignments, 8),
-                  TBitsetIterator<kNumTownTypes>(_m_alignments, 0));
+                  TBitsetIterator<H3_IDX(kNumTownTypes)>(_m_alignments, 0));
     }
 }
 
 VA(0x0043e4ed, 0xc)
-void TAbstractRandomlyAlignedGenerator::setAlignments(const std::bitset<kNumTownTypes>& newAlignments)
+void TAbstractRandomlyAlignedGenerator::setAlignments(const std::bitset<H3_IDX(kNumTownTypes)>& newAlignments)
 {
     _m_alignments = newAlignments;
 }
@@ -171,7 +171,7 @@ void TAbstractRandomlyAlignedGenerator::write(TRawOStream* pOStream, int version
 VA(0x0043e528, 0x48)
 bool TAbstractRandomlyAlignedGenerator::isCustomized() const
 {
-    return _m_townLinkID != TLinkableObject::s_kNoLinkID || _m_alignments != ~std::bitset<kNumTownTypes>();
+    return _m_townLinkID != TLinkableObject::s_kNoLinkID || _m_alignments != ~std::bitset<H3_IDX(kNumTownTypes)>();
 }
 
 namespace {
@@ -269,7 +269,7 @@ void TAbstractRandomlyLeveledGenerator::setMaxLevel(int newMaxLevel)
 }
 
 namespace {
-DATA(0x0059e4f8) TRandomlyLeveledGenerator::TTypeTraits aRandomlyLeveledTypeTraitsImp[kNumTownTypes];
+DATA(0x0059e4f8) TRandomlyLeveledGenerator::TTypeTraits aRandomlyLeveledTypeTraitsImp[H3_IDX(kNumTownTypes)];
 }
 
 DATA(0x0058445c) const TRandomlyLeveledGenerator::TTypeTraits* TRandomlyLeveledGenerator::s_akTypeTraits
@@ -283,13 +283,13 @@ void TRandomlyLeveledGenerator::initializeTypeTraitsTable()
     DATA(0x0059e4a0) static TAutoArrayPtr<char> apLeveledNames;
     unsigned int namesSize = 0;
     int type;
-    for (type = 0; type < kNumTownTypes; ++type)
+    for (type = 0; type < H3_IDX(kNumTownTypes); ++type)
         namesSize += TFormattedStdString(kRandomTownDwellingFmtStr, TTown::s_akTypeTraits[type].m_pName).length() + 1;
     apLeveledNames = TAutoArrayPtr<char>(new char[namesSize]);
     if (!apLeveledNames.get())
         throw TAllocationFailure();
     char* pName = apLeveledNames.get();
-    for (type = 0; type < kNumTownTypes; ++type) {
+    for (type = 0; type < H3_IDX(kNumTownTypes); ++type) {
         TFormattedStdString name(kRandomTownDwellingFmtStr, TTown::s_akTypeTraits[type].m_pName);
         memcpy(pName, name.c_str(), name.length() + 1);
         aRandomlyLeveledTypeTraitsImp[type].m_name = pName;

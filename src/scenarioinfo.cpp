@@ -313,7 +313,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
             m_townPix, i + SCENARIO_INFO_PLAYER_ROW_FIRST_ID);
         row->setPlayerInfo(rowPosition, g_game->m_players[i].m_name,
             g_handiText[g_game->m_setup.m_handicap[i]], g_humanCpu[playerType],
-            m_panels[i], m_flags[i], g_game->m_setup.m_alignment[i],
+            m_panels[i], m_flags[i], H3_IDX(g_game->m_setup.m_alignment[i]),
             m_bonusSprite, g_game->m_setup.m_startingBonus[i], startingHero);
         m_widgets.push_back(row);
 
@@ -449,7 +449,7 @@ void CScenarioPlayerInfoWidget::draw() const
         bonusFrame = 8;
         break;
     case NEW_MAP_BONUS_RESOURCE:
-        bonusFrame = m_townType == TOWN_CONFLUX ? 3 : m_townType;
+        bonusFrame = m_townType == H3_IDX(eTownConflux) ? 3 : m_townType;
         break;
     case NEW_MAP_BONUS_RANDOM:
     case NEW_MAP_BONUS_NONE:
@@ -593,12 +593,12 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
     case SCENARIO_INFO_TOWN_FIRST_ID + 5:
     case SCENARIO_INFO_TOWN_FIRST_ID + 6:
     case SCENARIO_INFO_TOWN_FIRST_ID + 7: {
-        int townType =
+        TTownType townType =
             g_game->m_setup.m_alignment[id - SCENARIO_INFO_TOWN_FIRST_ID];
-        if (townType != -1) {
+        if (townType != eTownNeutral) {
             CTownDlg dlg(0);
             dlg.createWin(
-                m_townPix, townType * 2 + 2,
+                m_townPix, H3_IDX(townType) * 2 + 2,
                 static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             dlg.doModal(0);
         }
@@ -663,14 +663,14 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
         case NEW_MAP_BONUS_RESOURCE:
             // Conflux shares Inferno's icon frame exactly as it shares
             // Inferno's text row in GetResourceBonusCaption.
-            frame = TOWN_INFERNO;
-            if (g_game->m_setup.m_alignment[playerPosition] != TOWN_CONFLUX)
-                frame = g_game->m_setup.m_alignment[playerPosition];
+            frame = H3_IDX(eTownInferno);
+            if (g_game->m_setup.m_alignment[playerPosition] != eTownConflux)
+                frame = H3_IDX(g_game->m_setup.m_alignment[playerPosition]);
             title = g_generalText->GetText(GENERAL_TEXT_RESOURCE_BONUS);
             botTitle = getResourceBonusCaption(
-                g_game->m_setup.m_alignment[playerPosition]);
+                H3_IDX(g_game->m_setup.m_alignment[playerPosition]));
             description = getResourceBonusDescription(
-                g_game->m_setup.m_alignment[playerPosition]);
+                H3_IDX(g_game->m_setup.m_alignment[playerPosition]));
             break;
         case NEW_MAP_BONUS_RANDOM:
             frame = 10;

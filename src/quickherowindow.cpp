@@ -135,11 +135,11 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
             int creature = g_game->getGameVersion() ? kNumCreatureTypes : 118;
             while (creature--) {
                 int owner = thisHero->m_owner;
-                int townType = g_game->getAlignment(creature);
+                H3_ENUM_STORAGE(TTownType, int) townType = g_game->getAlignment(creature);
 
-                int alignment = owner >= 0
+                H3_ENUM_STORAGE(TTownType, int) alignment = owner >= 0
                     ? g_game->m_setup.m_alignment[owner]
-                    : -1;
+                    : eTownNeutral;
                 if (townType == alignment &&
                     (disguiseCreature == CREATURE_NONE ||
                      akCreatureTypeTraits[creature].AI_value >

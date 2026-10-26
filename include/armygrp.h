@@ -11,6 +11,9 @@
 #include "struct.h"
 #include "terrain_type.h"
 
+// town_type.h owns the town domain; the creature traits row only names it.
+H3_ENUM_FORWARD(TTownType);
+
 // The seven primary resources (wood .. gold), the width of every cost
 // row; town.h's EGameResource names the columns. Dreamcast's complete
 // EGameResource carries no count, so this enum stands beside it.
@@ -740,7 +743,7 @@ enum EMagicTerrain {
 // AI_value @0x40 from the same bodies; field names are the NH3API
 // roster, which lands exactly on those offsets with cost[7].
 struct TCreatureTypeTraits {
-    int townType;
+    H3_ENUM_STORAGE(TTownType, int) townType;
     int level;
     const char* cSamplePrefix;
     const char* m_sprite_name;

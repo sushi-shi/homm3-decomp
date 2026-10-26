@@ -136,8 +136,8 @@ private:
     bool _m_bModified;
     std::vector<TMapObjectRef> _m_aTownRef;
     int _m_sameAsTown;
-    std::bitset<kNumTownTypes> _m_alignments;
-    CButton _m_aAlignmentCheck[kNumTownTypes];
+    std::bitset<H3_IDX(kNumTownTypes)> _m_alignments;
+    CButton _m_aAlignmentCheck[H3_IDX(kNumTownTypes)];
     CButton _m_sameAsTownRadio;
     CListBox _m_townList;
 };
@@ -324,55 +324,55 @@ bool TTownDistanceLess::operator()(const TMapObjectRef& lhs, const TMapObjectRef
 VA(0x004b058e, 0x8)
 void TRandomGeneratorAlignmentDlg::OnCastleCheck()
 {
-    _onAlignmentCheck(TOWN_CASTLE);
+    _onAlignmentCheck(H3_IDX(eTownCastle));
 }
 
 VA(0x004b0596, 0x8)
 void TRandomGeneratorAlignmentDlg::OnRampartCheck()
 {
-    _onAlignmentCheck(TOWN_RAMPART);
+    _onAlignmentCheck(H3_IDX(eTownRampart));
 }
 
 VA(0x004b059e, 0x8)
 void TRandomGeneratorAlignmentDlg::OnTowerCheck()
 {
-    _onAlignmentCheck(TOWN_TOWER);
+    _onAlignmentCheck(H3_IDX(eTownTower));
 }
 
 VA(0x004b05a6, 0x8)
 void TRandomGeneratorAlignmentDlg::OnInfernoCheck()
 {
-    _onAlignmentCheck(TOWN_INFERNO);
+    _onAlignmentCheck(H3_IDX(eTownInferno));
 }
 
 VA(0x004b05ae, 0x8)
 void TRandomGeneratorAlignmentDlg::OnNecropolisCheck()
 {
-    _onAlignmentCheck(TOWN_NECROPOLIS);
+    _onAlignmentCheck(H3_IDX(eTownNecropolis));
 }
 
 VA(0x004b05b6, 0x8)
 void TRandomGeneratorAlignmentDlg::OnDungeonCheck()
 {
-    _onAlignmentCheck(TOWN_DUNGEON);
+    _onAlignmentCheck(H3_IDX(eTownDungeon));
 }
 
 VA(0x004b05be, 0x8)
 void TRandomGeneratorAlignmentDlg::OnStrongholdCheck()
 {
-    _onAlignmentCheck(TOWN_STRONGHOLD);
+    _onAlignmentCheck(H3_IDX(eTownStronghold));
 }
 
 VA(0x004b05c6, 0x8)
 void TRandomGeneratorAlignmentDlg::OnFortressCheck()
 {
-    _onAlignmentCheck(TOWN_FORTRESS);
+    _onAlignmentCheck(H3_IDX(eTownFortress));
 }
 
 VA(0x004b05ce, 0x8)
 void TRandomGeneratorAlignmentDlg::OnConfluxCheck()
 {
-    _onAlignmentCheck(TOWN_CONFLUX);
+    _onAlignmentCheck(H3_IDX(eTownConflux));
 }
 
 VA(0x004b05d6, 0x6)
@@ -423,7 +423,7 @@ void TRandomGeneratorAlignmentDlg::_onAlignmentCheck(int townType)
 {
     _m_alignments[townType] = _m_aAlignmentCheck[townType].GetCheck() != 0;
     if (_m_alignments.count() == 0) {
-        townType = (townType + 1) % kNumTownTypes;
+        townType = (townType + 1) % H3_IDX(kNumTownTypes);
         _m_aAlignmentCheck[townType].SetCheck(1);
         _onAlignmentCheck(townType);
     }
@@ -445,13 +445,13 @@ TAbstractRandomlyAlignedGenerator* TRandomGeneratorAlignmentDlg::_getNewGenerato
 VA(0x004b0940, 0x69)
 void TRandomGeneratorAlignmentDlg::DoDataExchange(CDataExchange* pDX)
 {
-    DATA(0x00540e48) static const int akAlignmentCheckID[kNumTownTypes] = {
+    DATA(0x00540e48) static const int akAlignmentCheckID[H3_IDX(kNumTownTypes)] = {
         IDC_ALIGNMENT_CASTLE_CHECK,     IDC_ALIGNMENT_RAMPART_CHECK, IDC_ALIGNMENT_TOWER_CHECK,
         IDC_ALIGNMENT_INFERNO_CHECK,    IDC_ALIGNMENT_NECROPOLIS_CHECK, IDC_ALIGNMENT_DUNGEON_CHECK,
         IDC_ALIGNMENT_STRONGHOLD_CHECK, IDC_ALIGNMENT_FORTRESS_CHECK, IDC_ALIGNMENT_CONFLUX_CHECK
     };
     DDX_Radio(pDX, IDC_ANY_ALIGNMENT_RADIO, _m_sameAsTown);
-    for (unsigned int townType = 0; townType < kNumTownTypes; townType++)
+    for (unsigned int townType = 0; townType < H3_IDX(kNumTownTypes); townType++)
         DDX_Control(pDX, akAlignmentCheckID[townType], _m_aAlignmentCheck[townType]);
     DDX_Control(pDX, IDC_SAME_AS_TOWN_RADIO, _m_sameAsTownRadio);
     DDX_Control(pDX, IDC_TOWN_LIST, _m_townList);
@@ -476,7 +476,7 @@ BOOL TRandomGeneratorAlignmentDlg::OnInitDialog()
     _m_sameAsTown = _m_pNewGenerator->getTownLinkID() != TLinkableObject::s_kNoLinkID;
     _m_alignments = _m_pNewGenerator->getAlignments();
     CDialog::OnInitDialog();
-    for (unsigned int townType = 0; townType < kNumTownTypes; townType++)
+    for (unsigned int townType = 0; townType < H3_IDX(kNumTownTypes); townType++)
         _m_aAlignmentCheck[townType].SetCheck(_m_alignments[townType]);
     for (unsigned int i = 0; i < _m_aTownRef.size(); i++) {
         const TMapObjectRef& ref = _m_aTownRef[i];
@@ -488,7 +488,7 @@ BOOL TRandomGeneratorAlignmentDlg::OnInitDialog()
         _m_townList.SetItemData(_m_townList.AddString(name), i);
     }
     if (_m_sameAsTown) {
-        for (int townType = 0; townType < kNumTownTypes; townType++)
+        for (int townType = 0; townType < H3_IDX(kNumTownTypes); townType++)
             _m_aAlignmentCheck[townType].EnableWindow(FALSE);
         int index;
         for (index = 0;; index++) {
@@ -535,7 +535,7 @@ void TRandomGeneratorAlignmentDlg::OnAlignmentRadio()
     UpdateData(TRUE);
     if (_m_sameAsTown) {
         if (!bWasSameAsTown) {
-            for (unsigned int townType = 0; townType < kNumTownTypes; townType++) {
+            for (unsigned int townType = 0; townType < H3_IDX(kNumTownTypes); townType++) {
                 if (!_m_aAlignmentCheck[townType].GetCheck()) {
                     _m_aAlignmentCheck[townType].SetCheck(1);
                     _m_alignments.set(townType);
@@ -548,7 +548,7 @@ void TRandomGeneratorAlignmentDlg::OnAlignmentRadio()
     } else if (bWasSameAsTown) {
         _m_townList.SetCurSel(-1);
         _m_townList.EnableWindow(FALSE);
-        for (int townType = 0; townType < kNumTownTypes; townType++)
+        for (int townType = 0; townType < H3_IDX(kNumTownTypes); townType++)
             _m_aAlignmentCheck[townType].EnableWindow(TRUE);
     }
 }

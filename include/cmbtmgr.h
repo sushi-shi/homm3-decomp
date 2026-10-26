@@ -1958,7 +1958,7 @@ extern const TSpellEffectTraits g_spellEffectTraits[kNumSpellEffects];
 
 // The moat's per-town base damage, at .rdata 0x63bd18 and indexed by
 // town type: SetupAndLoadObstacles folds [0x63bd20] for the Tower,
-// which is 0x63bd18 + 4*TOWN_TOWER. searchArray::set_moat (0x4b3290)
+// which is 0x63bd18 + 4*eTownTower. searchArray::set_moat (0x4b3290)
 // and mark_firewalls (0x4215e0) read the same table with a live index.
 // Name is a BOOTSTRAP INVENTION - no roster attests it.
 extern const int g_moatDamage[];

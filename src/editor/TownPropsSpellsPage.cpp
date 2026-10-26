@@ -61,7 +61,7 @@ void TTownPropsSpellsPage::_fillSpellLists(unsigned int level)
                 _m_obligatorySpellsList.Enable(index, FALSE);
             index = _m_disabledSpellsList.AddString(traits.m_name);
             _m_disabledSpellsList.SetItemData(index, spell);
-            if (townType < kNumTownTypes && traits.m_townGetsItChance[townType] <= 0) {
+            if (townType < kNumTownTypes && H3_AT(traits.m_townGetsItChance, townType) <= 0) {
                 _m_disabledSpellsList.SetCheck(index, 0);
                 _m_disabledSpellsList.Enable(index, FALSE);
             } else

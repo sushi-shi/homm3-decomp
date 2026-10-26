@@ -482,12 +482,12 @@ public:
 
     unsigned int getTownLinkID() const { return _m_townLinkID; }
     void setTownLinkID(unsigned int townLinkID) { _m_townLinkID = townLinkID; }
-    const std::bitset<kNumTownTypes>& getAlignments() const { return _m_alignments; }
-    void setAlignments(const std::bitset<kNumTownTypes>& newAlignments);
+    const std::bitset<H3_IDX(kNumTownTypes)>& getAlignments() const { return _m_alignments; }
+    void setAlignments(const std::bitset<H3_IDX(kNumTownTypes)>& newAlignments);
 
 private:
     unsigned int _m_townLinkID;
-    std::bitset<kNumTownTypes> _m_alignments;
+    std::bitset<H3_IDX(kNumTownTypes)> _m_alignments;
 };
 
 // A random dwelling whose level is drawn from a range (RTTI

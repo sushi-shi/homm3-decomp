@@ -1369,7 +1369,7 @@ void doArtifactMerchants()
 {
     if (g_townManager->m_townToView->m_visitingHeroId == -1) {
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_VISITING_HERO_ONLY_FORMAT],
-                g_specialBuildingNames[g_townManager->m_townToView->m_type][0]);
+                H3_AT(g_specialBuildingNames, g_townManager->m_townToView->m_type)[0]);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         return;
@@ -1405,7 +1405,7 @@ void doFreelancersGuild(town* currentTown)
 {
     if (currentTown->m_visitingHeroId == -1) {
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_VISITING_HERO_ONLY_FORMAT),
-                g_specialBuildingNames[currentTown->m_type][4]);
+                H3_AT(g_specialBuildingNames, currentTown->m_type)[4]);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         return;
@@ -1880,8 +1880,8 @@ void TTradeResourceWindow::update(bool update)
 
     if (g_marketSource == MARKET_SOURCE_TRADING_POST || g_marketHero == 0 ||
         g_marketSource == MARKET_SOURCE_FREELANCER ||
-        (g_townManager->m_townToView->m_type != TOWN_TOWER &&
-         g_townManager->m_townToView->m_type != TOWN_DUNGEON) ||
+        (g_townManager->m_townToView->m_type != eTownTower &&
+         g_townManager->m_townToView->m_type != eTownDungeon) ||
         !g_townManager->m_townToView->hasBuilding(17, false)) {
         setWidgetOff(MARKET_RIGHT_LABEL_ID);
     } else {
@@ -1890,7 +1890,7 @@ void TTradeResourceWindow::update(bool update)
 
     if (g_marketSource == MARKET_SOURCE_TRADING_POST || g_marketHero == 0 ||
         g_marketSource == MARKET_SOURCE_FREELANCER ||
-        g_townManager->m_townToView->m_type != TOWN_STRONGHOLD ||
+        g_townManager->m_townToView->m_type != eTownStronghold ||
         !g_townManager->m_townToView->hasBuilding(21, false)) {
         setWidgetOff(MARKET_TITLE_ID);
     } else {
@@ -2069,8 +2069,8 @@ void TGiveResourceWindow::update(bool update)
 
     if (g_marketSource != MARKET_SOURCE_TRADING_POST && g_marketHero
         && g_marketSource != MARKET_SOURCE_FREELANCER
-        && (g_townManager->m_townToView->m_type == TOWN_TOWER
-            || g_townManager->m_townToView->m_type == TOWN_DUNGEON)
+        && (g_townManager->m_townToView->m_type == eTownTower
+            || g_townManager->m_townToView->m_type == eTownDungeon)
         && g_townManager->m_townToView->hasBuilding(17, false)) {
         setWidgetOn(MARKET_RIGHT_LABEL_ID);
     } else {

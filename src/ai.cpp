@@ -241,7 +241,7 @@ bool combatManager::aiCheckRetreat()
             if (count
                 && (count != 1 || sideFV != 1 || !besiegedTownOnly)
                 && (!m_defendingTown || sideFV != 1
-                    || (m_defendingTown->m_type == TOWN_STRONGHOLD
+                    || (m_defendingTown->m_type == eTownStronghold
                         && m_defendingTown->hasBuilding(SPECIAL_BUILDING_ID, true)))) {
                 if (failedSiege())
                     return 1;
@@ -1636,7 +1636,7 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
         long hex = g_moatHexes[row];
         if (m_drawbridgeState == DRAWBRIDGE_UP
                 || hex != COMBAT_HEX_GATE_MOAT) {
-            long damage = g_moatDamage[m_defendingTown->m_type];
+            long damage = H3_AT(g_moatDamage, m_defendingTown->m_type);
             enemyAttacks[hex] -= currentArmy->getLossCombatValue(
                     estimate->m_lowestAttack, estimate->m_lowestAttack, 0,
                     damage, estimate->m_killsOnly);
@@ -1649,7 +1649,7 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
         long hex = g_innerMoatHexes[row];
         if (m_drawbridgeState == DRAWBRIDGE_UP
                 || hex != COMBAT_HEX_OUTER_MOAT) {
-            long damage = g_moatDamage[m_defendingTown->m_type];
+            long damage = H3_AT(g_moatDamage, m_defendingTown->m_type);
             enemyAttacks[hex] -= currentArmy->getLossCombatValue(
                     estimate->m_lowestAttack, estimate->m_lowestAttack, 0,
                     damage, estimate->m_killsOnly);

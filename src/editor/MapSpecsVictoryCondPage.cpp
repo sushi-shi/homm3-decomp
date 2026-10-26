@@ -550,8 +550,8 @@ bool isCreatureBefore(TCreatureType lhs, TCreatureType rhs)
 {
     TCreatureTypeTraits lhsTraits = akCreatureTypeTraits[lhs];
     TCreatureTypeTraits rhsTraits = akCreatureTypeTraits[rhs];
-    int lhsTown = lhsTraits.townType == eTownNeutral ? kNumTownTypes : lhsTraits.townType;
-    int rhsTown = rhsTraits.townType == eTownNeutral ? kNumTownTypes : rhsTraits.townType;
+    int lhsTown = lhsTraits.townType == eTownNeutral ? H3_IDX(kNumTownTypes) : H3_IDX(lhsTraits.townType);
+    int rhsTown = rhsTraits.townType == eTownNeutral ? H3_IDX(kNumTownTypes) : H3_IDX(rhsTraits.townType);
     if (lhsTown != rhsTown)
         return lhsTown < rhsTown;
     if (lhsTraits.level != rhsTraits.level)

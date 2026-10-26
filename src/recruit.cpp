@@ -310,7 +310,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
 {
     m_widgets.push_back(new bitmapBorder(startX, startY, 100, 130,
         slot + 0x21e,
-        g_creatureBackgroundNames[g_game->getAlignment(creature) + 1],
+        g_creatureBackgroundNames[H3_IDX(g_game->getAlignment(creature)) + 1],
         0x800));
 
     m_creatureWidgets[slot] = new iconWidget(startX, startY, 100, 130,
@@ -1116,7 +1116,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     m_inTownMainScreen = inInTownMainScreen;
     m_type = RECRUIT_SOURCE_TOWN;
     m_thisHero = 0;
-    m_monsterType = g_dwellingType[newTown->m_type][newDwellingIndex];
+    m_monsterType = H3_AT(g_dwellingType, newTown->m_type)[newDwellingIndex];
     m_numAvail = &newTown->m_population[newDwellingIndex];
     m_currArmyGroup = &newTown->getArmy();
     m_currArmyGroupIsTownGarrison = 1;
@@ -1131,7 +1131,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     m_available[2] = 0;
     m_available[3] = 0;
     if (newDwellingIndex >= TOWN_DWELLING_COUNT) {
-        m_monType2 = g_dwellingType[newTown->m_type][newDwellingIndex - TOWN_DWELLING_COUNT];
+        m_monType2 = H3_AT(g_dwellingType, newTown->m_type)[newDwellingIndex - TOWN_DWELLING_COUNT];
         m_available[1] = m_numAvail;
     }
     g_timers[0] = GameTime::get() + 100;
@@ -1167,7 +1167,7 @@ MAC_ADDRESS(0x150b70, 0x48)
 void quickViewRecruit(town* newTown, int newDwellingIndex)
 {
     quickViewRecruit(
-        g_dwellingType[newTown->m_type][newDwellingIndex],
+        H3_AT(g_dwellingType, newTown->m_type)[newDwellingIndex],
         &newTown->m_population[newDwellingIndex]);
 }
 
@@ -1223,7 +1223,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
 
     recruitWindow->addWidget(new bitmapBorder(30, 44, 100, 130, 0x21e,
-        g_creatureBackgroundNames[g_game->getAlignment(monType) + 1],
+        g_creatureBackgroundNames[H3_IDX(g_game->getAlignment(monType)) + 1],
         0x800), -1);
     recruitWindow->addWidget(new iconWidget(30, 44, 100, 130, 0x216,
         akCreatureTypeTraits[monType].m_sprite_name,

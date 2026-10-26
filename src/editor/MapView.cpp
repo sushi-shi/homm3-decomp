@@ -551,8 +551,8 @@ bool TMapView::onToolkitCanCreateObject(TToolkitWnd* pToolkitWnd, const TObjectT
 {
     assert(pToolkitWnd == _m_pToolkitWnd);
     if (!g_gameContextFeatures[g_videoGameState].test(GAME_VERSION_AB)
-        && (objType.getType() == HERO && THero::s_akClassTraits[objType.getExtra()].m_townType == TOWN_CONFLUX
-            || objType.getType() == TOWN && objType.getExtra() == TOWN_CONFLUX))
+        && (objType.getType() == HERO && THero::s_akClassTraits[objType.getExtra()].m_townType == eTownConflux
+            || objType.getType() == TOWN && objType.getExtra() == H3_IDX(eTownConflux)))
         return false;
     return getPDocument()->getPMap()->canCreate(objType, _m_currentPlayer);
 }
@@ -562,8 +562,8 @@ void TMapView::onToolkitGrabObject(TToolkitWnd* pToolkitWnd, const TObjectType& 
 {
     assert(pToolkitWnd == _m_pToolkitWnd);
     if (!g_gameContextFeatures[g_videoGameState].test(GAME_VERSION_AB)
-        && (objType.getType() == HERO && THero::s_akClassTraits[objType.getExtra()].m_townType == TOWN_CONFLUX
-            || objType.getType() == TOWN && objType.getExtra() == TOWN_CONFLUX)) {
+        && (objType.getType() == HERO && THero::s_akClassTraits[objType.getExtra()].m_townType == eTownConflux
+            || objType.getType() == TOWN && objType.getExtra() == H3_IDX(eTownConflux))) {
         MessageBeep(-1);
         MessageBox(kObjectNeedsABInstalledStr);
         return;

@@ -2712,7 +2712,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     unsigned char spellBuf[9];
 
     townObject->m_extraInfo = g_game->m_scenarioTowns.size();
-    tempTown.m_townType = m_objectTypes[townObject->m_typeIndex].m_extra;
+    tempTown.m_townType = H3_ENUM_DECODE(TTownType, m_objectTypes[townObject->m_typeIndex].m_extra);
 
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         tempTown.m_objRef = 0;
@@ -3189,7 +3189,7 @@ void NewfullMap::resolveRandomDwellings()
     for (unsigned int index = 0; index < m_randomDwellings.size(); ++index) {
         RandomDwellingData& dwelling = m_randomDwellings[index];
 
-        int alignment;
+        H3_ENUM_STORAGE(TTownType, int) alignment;
         if (dwelling.m_castleId) {
             int townIndex = g_game->m_scenarioTowns.size();
             while (townIndex--) {
@@ -3202,7 +3202,7 @@ void NewfullMap::resolveRandomDwellings()
             alignment = pickAlignment(dwelling.m_factionMask, 0);
         }
 
-        TCreatureType creature = g_dwellingType[alignment][random(dwelling.m_minLevel, dwelling.m_maxLevel)];
+        TCreatureType creature = H3_AT(g_dwellingType, alignment)[random(dwelling.m_minLevel, dwelling.m_maxLevel)];
 
         int generatorType;
         if (creature == CREATURE_STONE_GOLEM) {

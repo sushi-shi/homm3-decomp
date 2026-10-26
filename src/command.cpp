@@ -2187,7 +2187,7 @@ void combatManager::getControl()
 
             if (!m_heroes[m_currentSide]
                     || (m_currentSide == 1 && m_defendingTown
-                        && (m_defendingTown->m_type != TOWN_STRONGHOLD
+                        && (m_defendingTown->m_type != eTownStronghold
                             || !m_defendingTown->hasBuilding(
                                 SPECIAL_BUILDING_ID, true))))
                 m_combatWindow->widgetSetStatus(
@@ -2760,12 +2760,12 @@ std::string combatManager::getTowerString(TWallSection wall, long archers,
     if (m_wallLevel[wall] <= 0) {
         return formatString(
             g_generalText->GetText(GENERAL_TEXT_COMBAT_WALL_DESTROYED_FORMAT),
-            s_wallTraits[m_defendingTown->m_type][wall].m_name);
+            H3_AT(s_wallTraits, m_defendingTown->m_type)[wall].m_name);
     }
 
     return formatString(
         g_generalText->GetText(GENERAL_TEXT_COMBAT_WALL_STATUS_FORMAT),
-        s_wallTraits[m_defendingTown->m_type][wall].m_name,
+        H3_AT(s_wallTraits, m_defendingTown->m_type)[wall].m_name,
         skill, archers * 2, archers * 3);
 }
 

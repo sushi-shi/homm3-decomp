@@ -115,7 +115,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
         1, 1, 0, 8));
 
     strcpy(g_text, g_creatureBackgroundNames[
-        g_game->getAlignment(m_creature) + 1]);
+        H3_IDX(g_game->getAlignment(m_creature)) + 1]);
 
     m_widgets.push_back(new bitmapBorder(
         20, 54, 100, 130, -1, g_text, 0x800));
@@ -361,11 +361,11 @@ const std::bitset<TOWN_TYPE_COUNT>& getAngelicAllianceAlignments()
     DATA(0x00693890)
     static unsigned char groupedAlignmentsBuilt = 0;
     if (!groupedAlignmentsBuilt) {
-        groupedAlignments[TOWN_CASTLE] = true;
-        groupedAlignments[TOWN_RAMPART] = true;
-        groupedAlignments[TOWN_TOWER] = true;
-        groupedAlignments[TOWN_FORTRESS] = true;
-        groupedAlignments[TOWN_STRONGHOLD] = true;
+        H3_AT(groupedAlignments, eTownCastle) = true;
+        H3_AT(groupedAlignments, eTownRampart) = true;
+        H3_AT(groupedAlignments, eTownTower) = true;
+        H3_AT(groupedAlignments, eTownFortress) = true;
+        H3_AT(groupedAlignments, eTownStronghold) = true;
         groupedAlignmentsBuilt = 1;
     }
     return groupedAlignments;
@@ -684,7 +684,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
         if (traits.attributes & g_ctaSiegeWeapon)
             continue;
-        int alignment = g_game->getAlignment(creature);
+        int alignment = H3_IDX(g_game->getAlignment(creature));
         alignments[alignment + 1]++;
     }
     int count = 0;
@@ -905,7 +905,7 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
     if (ownerTown) {
         if (ownerTown->hasBuilding(TAVERN_ID, false))
             morale++;
-        if (ownerTown->m_type == TOWN_CASTLE
+        if (ownerTown->m_type == eTownCastle
             && ownerTown->hasBuilding(EXTRA_1_ID, true))
             morale += 2;
     }
@@ -972,7 +972,7 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
         && (otherGroup->isMember(CREATURE_DEVIL)
             || otherGroup->isMember(CREATURE_ARCH_DEVIL)))
         luck--;
-    if (ownerTown && ownerTown->m_type == TOWN_RAMPART
+    if (ownerTown && ownerTown->m_type == eTownRampart
         && ownerTown->hasBuilding(EXTRA_0_ID, true))
         luck += 2;
     if (applyLimits)
@@ -1273,11 +1273,11 @@ std::string armyGroup::getMoraleDescription(
     if (ownerTown) {
         if (ownerTown->hasBuilding(TAVERN_ID, false))
             result += formatString(
-                "\n%s +1", getBuildingName(ownerTown->m_type, TAVERN_ID));
-        if (ownerTown->m_type == TOWN_CASTLE
+                "\n%s +1", getBuildingName(H3_IDX(ownerTown->m_type), TAVERN_ID));
+        if (ownerTown->m_type == eTownCastle
             && ownerTown->hasBuilding(EXTRA_1_ID, true))
             result += formatString(
-                "\n%s +2", getBuildingName(TOWN_CASTLE, EXTRA_1_ID));
+                "\n%s +2", getBuildingName(H3_IDX(eTownCastle), EXTRA_1_ID));
     }
 
     if (creature == CREATURE_MINOTAUR
@@ -1362,11 +1362,11 @@ std::string armyGroup::getLuckDescription(
     }
 
     if (ourTown) {
-        char ourTownType = ourTown->m_type;
-        if (ourTownType == TOWN_RAMPART
+        H3_ENUM_STORAGE(TTownType, char) ourTownType = ourTown->m_type;
+        if (ourTownType == eTownRampart
             && ourTown->hasBuilding(EXTRA_0_ID, true)) {
             result += formatString(
-                "\n%s +2", getBuildingName(TOWN_RAMPART, EXTRA_0_ID));
+                "\n%s +2", getBuildingName(H3_IDX(eTownRampart), EXTRA_0_ID));
         }
     }
 
@@ -1392,7 +1392,7 @@ TTerrainType armyGroup::getNativeTerrain() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        int alignment = g_game->getAlignment(m_armies[i]);
+        int alignment = H3_IDX(g_game->getAlignment(m_armies[i]));
         TTerrainType terrain = townManager::getNativeTerrain(alignment);
         if (native != TERRAIN_NONE) {
             if (terrain != native)

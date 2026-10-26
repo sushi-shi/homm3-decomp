@@ -411,7 +411,7 @@ void combatManager::combatMessage(int command)
         for (wall = 0; wall < WALL_TARGET_COUNT; wall++) {
             if (currentArmy->indexToAttack == s_wallTargets[wall].m_targetHex) {
                 sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_ATTACK_FORMAT),
-                        s_wallTraits[m_defendingTown->m_type]
+                        H3_AT(s_wallTraits, m_defendingTown->m_type)
                                     [s_wallTargets[wall].m_wall].m_name);
                 break;
             }
@@ -780,7 +780,7 @@ void combatManager::drawBackground()
 
     if (m_fortificationLevel > eFortificationNone && m_moatOn) {
         TWallTraits* traits =
-            &s_wallTraits[m_defendingTown->m_type][WALL_TRAITS_ROW_MOAT];
+            &H3_AT(s_wallTraits, m_defendingTown->m_type)[WALL_TRAITS_ROW_MOAT];
         Bitmap816* bitmap = m_wallImages[WALL_TRAITS_ROW_MOAT][0];
         if (bitmap) {
             bitmap->Draw(
@@ -788,7 +788,7 @@ void combatManager::drawBackground()
                 traits->m_x, traits->m_y, true);
         }
 
-        traits = &s_wallTraits[m_defendingTown->m_type]
+        traits = &H3_AT(s_wallTraits, m_defendingTown->m_type)
                               [WALL_TRAITS_ROW_MOAT + 1];
         bitmap = m_wallImages[WALL_TRAITS_ROW_MOAT + 1][0];
         if (bitmap) {
@@ -1023,7 +1023,7 @@ void combatManager::drawFrame(bool update,
 
     if (m_fortificationLevel > eFortificationNone) {
         const TWallTraits& traits =
-            s_wallTraits[m_defendingTown->m_type][eWallSectionBackWall];
+            H3_AT(s_wallTraits, m_defendingTown->m_type)[eWallSectionBackWall];
         drawObject(m_wallImages[eWallSectionBackWall][0],
                    traits.m_x, traits.m_y);
     }
@@ -1053,7 +1053,7 @@ void combatManager::drawFrame(bool update,
                 && row == COMBAT_GATE_ROW
                 && m_drawbridgeState != DRAWBRIDGE_UP) {
             const TWallTraits& traits =
-                s_wallTraits[m_defendingTown->m_type][eWallSectionDoor];
+                H3_AT(s_wallTraits, m_defendingTown->m_type)[eWallSectionDoor];
             drawObject(m_wallImages[eWallSectionDoor][m_drawbridgeState],
                        traits.m_x, traits.m_y);
         }
@@ -1096,7 +1096,7 @@ void combatManager::drawFrame(bool update,
                 && m_drawbridgeState == DRAWBRIDGE_DOWN
                 && m_wallImages[eWallSectionDoorRope][1]) {
             const TWallTraits& traits =
-                s_wallTraits[m_defendingTown->m_type][eWallSectionDoorRope];
+                H3_AT(s_wallTraits, m_defendingTown->m_type)[eWallSectionDoorRope];
             drawObject(m_wallImages[eWallSectionDoorRope][1],
                        traits.m_x, traits.m_y);
         }
@@ -1161,7 +1161,7 @@ DC_ADDRESS(0x085478, 0x35a)
 MAC_ADDRESS(0x0a6778, 0x36c)
 void combatManager::drawWallAt(int hexIndex, int dx)
 {
-    const TWallTraits* const wtTable = s_wallTraits[m_defendingTown->m_type];
+    const TWallTraits* const wtTable = H3_AT(s_wallTraits, m_defendingTown->m_type);
 
     for (int wall = eWallSectionDoor; wall < kNumWallSections; wall++) {
         const TWallTraits& traits = wtTable[wall];
@@ -1610,7 +1610,7 @@ int combatManager::drawMoatOverlay(int index)
 {
     const hexcell& cell = m_cells[index];
     const TWallTraits& traits =
-        s_wallTraits[m_defendingTown->m_type][WALL_TRAITS_ROW_MOAT];
+        H3_AT(s_wallTraits, m_defendingTown->m_type)[WALL_TRAITS_ROW_MOAT];
     SLimitData moatExtent(cell.m_hexUlx, cell.m_hexUly + 36,
                            cell.m_hexUlx + 43, cell.m_hexUly + 41);
     moatExtent.clip(combatManager::s_combatAreaLimits);

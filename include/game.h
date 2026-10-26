@@ -573,7 +573,7 @@ public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_name;
     // A char in the Dreamcast record, a DWORD here: readTownData assigns it
     // from CObjectType::extra and from setup.alignment[], both int.
-    int m_townType;
+    H3_ENUM_STORAGE(TTownType, int) m_townType;
     char m_isGrouped;
     // The map's per-town spell masks: Dreamcast SpellDisabledMask (spells
     // the guild may not offer), then Complete's obligatory spells.
@@ -1299,7 +1299,7 @@ public:
     // i.e. an eight-entry hero-ID array of pre-chosen starting heroes that
     // overrides GetStartingHeroId for human players.
     void createTownHeroes(HeroId* startingHeroIds);
-    int getAlignment(int creature) const;
+    H3_ENUM_RETURN(TTownType, int) getAlignment(int creature) const;
     TTownType getPlayerAlignment(int playerId) const;
     void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
     // Original ClaimTown public ends in _N0: both latches are bool.
@@ -2027,11 +2027,11 @@ inline bool game::isHumanAlly(int playerNum) const
 // semantics; the name is inferred (DC get_alignment is the separate player
 // accessor below).
 VA(0x004c6690, 0x43)
-inline int game::getAlignment(int creature) const
+inline H3_ENUM_RETURN(TTownType, int) game::getAlignment(int creature) const
 {
     if (m_gameVersion == 0) {
         if (isBaseElemental(creature))
-            return -1;
+            return eTownNeutral;
     }
     return akCreatureTypeTraits[creature].townType;
 }

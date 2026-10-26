@@ -1537,7 +1537,7 @@ void TRmgZone::chooseCreatureTownType(unsigned char expanded)
         // even though no table entry can satisfy both equalities.
         while (count < 4 &&
             (g_rmgTerrainTownChoices[m_terrain][count] != -1 || expanded ||
-             g_rmgTerrainTownChoices[m_terrain][count] != TOWN_CONFLUX))
+             g_rmgTerrainTownChoices[m_terrain][count] != H3_IDX(eTownConflux)))
             ++count;
         if (count == 0)
             m_creatureTownType = -1;
@@ -2628,7 +2628,7 @@ MAC_ADDRESS(0x231f04, 0x6c)
 int type_black_box_creature_def::getValue(
     TRmgZone* zone, type_random_map_generator* generator)
 {
-    int alignment = akCreatureTypeTraits[m_creatureType].townType;
+    int alignment = H3_IDX(akCreatureTypeTraits[m_creatureType].townType);
     if (alignment != zone->m_creatureTownType)
         return -1;
     int value = akCreatureTypeTraits[m_creatureType].AI_value * m_creatureCount;
@@ -2744,13 +2744,13 @@ int type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* g
 {
     const TCreatureTypeTraits& creature =
         akCreatureTypeTraits[g_creatureGenerator1Types[m_subtype]];
-    if (creature.townType != zone->m_creatureTownType)
+    if (H3_IDX(creature.townType) != zone->m_creatureTownType)
         return -1;
 
     int value = creature.growthRate * creature.AI_value;
     int zoneCount = 0;
-    if (creature.townType != -1)
-        zoneCount = generator->m_primaryTownZoneCountsByAlignment[creature.townType];
+    if (creature.townType != eTownNeutral)
+        zoneCount = H3_AT(generator->m_primaryTownZoneCountsByAlignment, creature.townType);
     if (generator->m_primaryTownZoneCount > 0)
         value += zoneCount * value / generator->m_primaryTownZoneCount;
     return value + creature.AI_value * zoneCount / 2;
@@ -4724,8 +4724,8 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
     int size = slot->m_size;
     if ((slot->m_kind == RMG_TEMPLATE_HUMAN ||
          slot->m_kind == RMG_TEMPLATE_COMPUTER) &&
-        position.m_z == 1 && zone->m_alignment != TOWN_INFERNO &&
-        zone->m_alignment != TOWN_NECROPOLIS && zone->m_alignment != TOWN_DUNGEON)
+        position.m_z == 1 && zone->m_alignment != H3_IDX(eTownInferno) &&
+        zone->m_alignment != H3_IDX(eTownNecropolis) && zone->m_alignment != H3_IDX(eTownDungeon))
         return 0;
     int zoneIndex = slot->m_zoneIndex;
     for (int other = 0; other < m_zones.size(); ++other) {
@@ -6857,7 +6857,7 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
         const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
         if ((traits.wanderingHigh + traits.wanderingLow) / 2 * traits.AI_value <= value
             && value <= traits.AI_value * RMG_GUARD_MAXIMUM_COUNT
-            && traits.level >= 0 && allowed[traits.townType + 1]) {
+            && traits.level >= 0 && allowed[H3_IDX(traits.townType) + 1]) {
             ++eligibleCount;
         } else {
             prototypeIndices[creature] = -1;
@@ -11636,7 +11636,7 @@ ERandomMapResult TRandomMapRequest::generateToFile(TAbstractFile* outfile, type_
     for (int seat = 0; seat < 8; ++seat) {
         if (m_isHumanSeat[seat])
             generator.setHumanPlayer(seat);
-        generator.setTownChoice(seat, m_townChoices[seat]);
+        generator.setTownChoice(seat, H3_IDX(m_townChoices[seat]));
     }
     if (!generator.generate())
         return RANDOM_MAP_GENERATION_FAILED;

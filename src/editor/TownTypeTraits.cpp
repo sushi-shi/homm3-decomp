@@ -534,7 +534,7 @@ VA_COMPGEN_AT(h3ccmped, 0x004365a0, 0x15, STATIC_CTOR, randomGenerator7)
 DATA(0x00544acc) const TTownGeneratorTraits* const apRandomGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
     &randomGenerator1, &randomGenerator2, &randomGenerator3, &randomGenerator4, &randomGenerator5, &randomGenerator6, &randomGenerator7
 };
-DATA(0x005a6540) TTown::TTypeTraits aTownTypeTraitsImp[kNumTownTypes + 1] = {
+DATA(0x005a6540) TTown::TTypeTraits aTownTypeTraitsImp[H3_IDX(kNumTownTypes) + 1] = {
     TTown::TTypeTraits(aCastleBuildingTraits, apCastleGeneratorTraits),
     TTown::TTypeTraits(aRampartBuildingTraits, apRampartGeneratorTraits),
     TTown::TTypeTraits(aTowerBuildingTraits, apTowerGeneratorTraits),
@@ -572,13 +572,13 @@ void InitializeTownTypeTraitsTable()
             throw TRuntimeError();
         int size = 0;
         unsigned int i;
-        for (i = 0; i < kNumTownTypes; i++)
+        for (i = 0; i < H3_IDX(kNumTownTypes); i++)
             size += strlen(pTextResource->GetText(i)) + 1;
         pTypeNames = TAutoArrayPtr<char>(new char[size]);
         if (!pTypeNames.get())
             throw TAllocationFailure();
         char* p = pTypeNames.get();
-        for (i = 0; i < kNumTownTypes; i++) {
+        for (i = 0; i < H3_IDX(kNumTownTypes); i++) {
             const char* text = pTextResource->GetText(i);
             int length = strlen(text) + 1;
             memcpy(p, text, length);
@@ -591,7 +591,7 @@ void InitializeTownTypeTraitsTable()
     if (!pRandomName.get())
         throw TAllocationFailure();
     strcpy(pRandomName.get(), kRandomTownStr);
-    aTownTypeTraitsImp[kNumTownTypes].m_pName = pRandomName.get();
+    aTownTypeTraitsImp[H3_IDX(kNumTownTypes)].m_pName = pRandomName.get();
 
     enum TTextTableID {
         eTextTableNone = -1,
@@ -641,7 +641,7 @@ void InitializeTownTypeTraitsTable()
         TTextTableID m_tableID;
         unsigned int m_index;
     };
-    DATA(0x00544b00) static const TBuildingTextRef akBuildingTextRef[kNumTownTypes + 1][kNumBuildings] = {
+    DATA(0x00544b00) static const TBuildingTextRef akBuildingTextRef[H3_IDX(kNumTownTypes) + 1][kNumBuildings] = {
         {   // Castle
             { eTextTableNeutral, 11 }, { eTextTableNeutral, 12 }, { eTextTableNeutral, 13 },
             { eTextTableNeutral, 7 }, { eTextTableNeutral, 8 }, { eTextTableNeutral, 9 },
@@ -802,12 +802,12 @@ void InitializeTownTypeTraitsTable()
             { eTextTableDwelling, 131 }, { eTextTableDwelling, 138 }, { eTextTableDwelling, 132 },
             { eTextTableDwelling, 139 }
         }    };
-    DATA(0x005457d0) static TTown::TBuildingTraits (* const apBuildingTraits[kNumTownTypes + 1])[kNumBuildings] = {
+    DATA(0x005457d0) static TTown::TBuildingTraits (* const apBuildingTraits[H3_IDX(kNumTownTypes) + 1])[kNumBuildings] = {
         &aCastleBuildingTraits, &aRampartBuildingTraits, &aTowerBuildingTraits, &aInfernoBuildingTraits,
         &aNecropolisBuildingTraits, &aDungeonBuildingTraits, &aStrongholdBuildingTraits, &aFortressBuildingTraits,
         &aConfluxBuildingTraits, &aRandomBuildingTraits
     };
-    for (unsigned int type = 0; type < kNumTownTypes + 1; type++) {
+    for (unsigned int type = 0; type < H3_IDX(kNumTownTypes) + 1; type++) {
         TTown::TBuildingTraits* const aBuildingTraits = *apBuildingTraits[type];
         const TBuildingTextRef* const akTypeTextRef = akBuildingTextRef[type];
         for (unsigned int building = 0; building < kNumBuildings; building++) {

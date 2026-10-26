@@ -30,7 +30,7 @@ TEditTownEventCreaturesPage::TEditTownEventCreaturesPage(const TTown::TTimedEven
       _m_townType(townType),
       _m_bModified(false)
 {
-    assert(townType >= 0 && townType <= kNumTownTypes);
+    assert(townType >= 0 && townType <= H3_IDX(kNumTownTypes));
     m_psp.pszTitle = m_strCaption = kCreaturesPageCaptionStr;
     m_psp.dwFlags |= PSP_USETITLE;
 }
@@ -70,7 +70,7 @@ BOOL TEditTownEventCreaturesPage::OnInitDialog()
     for (unsigned int i = 0; i < TTown::s_kNumGeneratorTypes; i++) {
         CString nameFormat;
         _m_aGeneratorControls[i].m_nameStatic.GetWindowText(nameFormat);
-        const TTownGeneratorTraits* pTraits = TTown::s_akTypeTraits[_m_townType].m_apGeneratorTraits[i];
+        const TTownGeneratorTraits* pTraits = H3_AT(TTown::s_akTypeTraits, _m_townType).m_apGeneratorTraits[i];
         CString name;
         name.Format(nameFormat, pTraits->getBaseCreatureName(), pTraits->getUpgradeCreatureName());
         _m_aGeneratorControls[i].m_nameStatic.SetWindowText(name);

@@ -414,7 +414,7 @@ MAC_ADDRESS(0x147f70, 0x148)
 static unsigned char markAIPuzzle(long player, unsigned char* visible)
 {
     long puzzle;
-    if (player < 0 || (puzzle = g_game->m_setup.m_alignment[player]) == -1)
+    if (player < 0 || (puzzle = H3_IDX(g_game->m_setup.m_alignment[player])) == -1)
         puzzle = 0;
     if (g_game->m_ultimateArtifactX < 0 || !g_game->m_ultimateArtifactPresent)
         return 0;

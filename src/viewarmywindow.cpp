@@ -267,7 +267,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     // DC line 159 passes the literal 2 to GetArmyName for a plural name.
     createNameWidget(getArmyName(m_armyType, 2));
 
-    int townType = g_game->getAlignment(m_armyType);
+    H3_ENUM_STORAGE(TTownType, int) townType = g_game->getAlignment(m_armyType);
     createPortraitWidget(traits.m_sprite_name, static_cast<TTownType>(townType), /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
                            group->m_numTroops[iarmy]);
 
@@ -353,7 +353,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     createBackgroundWidget(0);
     createNameWidget(traits->m_plural_name);
 
-    int townType = g_game->getAlignment(armyType);
+    H3_ENUM_STORAGE(TTownType, int) townType = g_game->getAlignment(armyType);
     createPortraitWidget(traits->m_sprite_name, static_cast<TTownType>(townType), 0); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
 
     createAttackWidget(traits->attackSkill, traits->attackSkill);
@@ -717,7 +717,7 @@ void TViewArmyWindow::createPortraitWidget(const char* spriteName,
 {
     m_widgets.push_back(new bitmapBorder(
         21, 48, 100, 130, SPRITE_BACKGROUND_ID,
-        g_creatureBackgroundNames[townType + 1],
+        g_creatureBackgroundNames[H3_IDX(townType) + 1],
         0x800));
 
     m_spriteWidget = new iconWidget(

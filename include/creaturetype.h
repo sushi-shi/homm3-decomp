@@ -23,20 +23,20 @@ enum {
     moralAlignmentEvil = 3
 };
 
-inline int classifyTownAlignment(int townType)
+inline int classifyTownAlignment(H3_ENUM_PARAM(TTownType, int) townType)
 {
     switch (townType) {
-    case TOWN_CASTLE:
-    case TOWN_RAMPART:
-    case TOWN_TOWER:
+    case eTownCastle:
+    case eTownRampart:
+    case eTownTower:
         return moralAlignmentGood;
-    case TOWN_INFERNO:
-    case TOWN_NECROPOLIS:
-    case TOWN_DUNGEON:
+    case eTownInferno:
+    case eTownNecropolis:
+    case eTownDungeon:
         return moralAlignmentEvil;
-    case TOWN_STRONGHOLD:
-    case TOWN_FORTRESS:
-    case TOWN_CONFLUX:
+    case eTownStronghold:
+    case eTownFortress:
+    case eTownConflux:
         return moralAlignmentNeutral;
     default:
         return moralAlignmentNone;
@@ -82,7 +82,7 @@ inline TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr)
 {
     assert(townType != eTownNeutral);
     assert(baseCreatureNbr >= 0 && baseCreatureNbr < TOWN_DWELLING_COUNT);
-    return g_dwellingType[townType][baseCreatureNbr];
+    return H3_AT(g_dwellingType, townType)[baseCreatureNbr];
 }
 
 #endif  /* HOMM3_CREATURETYPE_H */

@@ -3783,7 +3783,7 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
     int armyCount = 0;
     TCreatureType like;
 
-    if (g_game->getAlignment(creature) == -1) {
+    if (g_game->getAlignment(creature) == eTownNeutral) {
         like = CREATURE_NONE;
     } else {
         like = g_game->upgradedCreatureType(creature);

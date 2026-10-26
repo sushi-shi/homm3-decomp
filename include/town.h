@@ -418,7 +418,7 @@ public:
     // Faction id (armyGroup::GetLuck gates the Fountain of Fortune on
     // type == 1, Rampart).
     // Before normalization (Dreamcast): townType.
-    char m_type;
+    H3_ENUM_STORAGE(TTownType, char) m_type;
     // +5..+7, the town's map cell. can_take_town (0x428410) widens all
     // three with movzx from these bytes and packs them into a
     // type_point (x &0x3ff, y &0x3ff, z &0xf) before asking
@@ -753,9 +753,9 @@ enum ETownConstants {
     // Nine town types x 44 building-id slots, byte-derived from
     // initialize_game_data's mask walks (0x160 row stride, rows 0..8,
     // building ids to 43 in the requirement tables).
-    TOWN_TYPE_COUNT = TOWN_CONFLUX + 1,
+    TOWN_TYPE_COUNT = H3_IDX(eTownConflux) + 1,
     // Restoration of Erathia has the first eight; Conflux came later.
-    TOWN_TYPE_ROE_COUNT = TOWN_CONFLUX,
+    TOWN_TYPE_ROE_COUNT = 8,
     TOWN_BUILDING_SLOTS = MAX_BUILDING_TYPE,
     // The four horde columns of a const_horde_effects row - also the
     // length of gHordeBuildings, which get_horde_effect scans.

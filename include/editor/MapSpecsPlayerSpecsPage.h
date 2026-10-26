@@ -92,7 +92,7 @@ private:
     TPlayerInfo::TTownTypes _m_defaultTownTypes;
     TPlayerInfo::TTownTypes _m_townTypes;
     unsigned int _m_numTownTypes;
-    CButton _m_aTownTypeChecks[kNumTownTypes];
+    CButton _m_aTownTypeChecks[H3_IDX(kNumTownTypes)];
 };
 
 #endif  /* HOMM3_EDITOR_MAPSPECSPLAYERSPECSPAGE_H */

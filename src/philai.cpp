@@ -276,11 +276,11 @@ static void upgradeCreatures(hero* currentHero, const town* currentTown)
                 DWELLING_0_UPG_ID + dwelling, true))
             continue;
 
-        TCreatureType upgrade = g_dwellingType[currentTown->m_type][dwelling + TOWN_DWELLING_COUNT];
+        TCreatureType upgrade = H3_AT(g_dwellingType, currentTown->m_type)[dwelling + TOWN_DWELLING_COUNT];
 
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
             if (currentHero->m_army.m_armyTypes[slot]
-                    != g_dwellingType[currentTown->m_type][dwelling])
+                    != H3_AT(g_dwellingType, currentTown->m_type)[dwelling])
                 continue;
 
             // DC :232/:236 retains base_cost and upgrade_cost as pointers
@@ -417,7 +417,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
         || g_game->townAlreadyBuiltOn(currentTown->m_id))
         return;
     switch (currentTown->m_type) {
-    case TOWN_TOWER: {
+    case eTownTower: {
         if (!currentTown->canBuild(EXTRA_2_ID))
             break;
         int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
@@ -426,7 +426,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             currentTown->buyBuilding(EXTRA_2_ID);
         break;
     }
-    case TOWN_INFERNO: {
+    case eTownInferno: {
         if (!currentTown->canBuild(EXTRA_2_ID))
             break;
         int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
@@ -435,7 +435,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             currentTown->buyBuilding(EXTRA_2_ID);
         break;
     }
-    case TOWN_DUNGEON: {
+    case eTownDungeon: {
         if (!currentTown->canBuild(EXTRA_2_ID))
             break;
         int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
@@ -444,7 +444,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             currentTown->buyBuilding(EXTRA_2_ID);
         break;
     }
-    case TOWN_STRONGHOLD: {
+    case eTownStronghold: {
         if (!currentTown->canBuild(EXTRA_2_ID))
             break;
         int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
@@ -455,7 +455,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             currentTown->buyBuilding(EXTRA_2_ID);
         break;
     }
-    case TOWN_FORTRESS: {
+    case eTownFortress: {
         if (!currentTown->canBuild(SPECIAL_BUILDING_ID))
             break;
         int* cost = currentTown->getBuildCostArray(SPECIAL_BUILDING_ID);
@@ -466,7 +466,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             currentTown->buyBuilding(SPECIAL_BUILDING_ID);
         break;
     }
-    case TOWN_CONFLUX: {
+    case eTownConflux: {
         if (!currentTown->canBuild(EXTRA_0_ID))
             break;
         type_university university;
@@ -2044,14 +2044,14 @@ void aiEnterTown(hero* currentHero, town* currentTown)
             }
 
             buySiegeEngine(currentHero, currentTown, BLACKSMITH_ID,
-                           g_blacksmithArtifacts[currentTown->m_type].m_artifactId);
-            if (currentTown->m_type == TOWN_STRONGHOLD)
+                           H3_AT(g_blacksmithArtifacts, currentTown->m_type).m_artifactId);
+            if (currentTown->m_type == eTownStronghold)
                 buySiegeEngine(currentHero, currentTown, EXTRA_1_ID,
                                  ARTIFACT_BALLISTA);
         }
     }
 
-    if (currentTown->m_type == TOWN_CONFLUX) {
+    if (currentTown->m_type == eTownConflux) {
         if (currentTown->hasBuilding(EXTRA_0_ID, 1)) {
             type_university university;
             university.initializeMagicSkills();
@@ -2073,8 +2073,8 @@ DC_ADDRESS(0x10db74, 0x150)
 MAC_ADDRESS(0x13debc, 0x1e0)  // MAC_ABSTRACTION_FROM(tokens1:7356389b5c96,99.7917): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void buyArtifacts(hero* currentHero, town* currentTown)
 {
-    if (currentTown->m_type != TOWN_TOWER
-        && currentTown->m_type != TOWN_DUNGEON)
+    if (currentTown->m_type != eTownTower
+        && currentTown->m_type != eTownDungeon)
         return;
 
     long marketCount = 0;
@@ -2960,7 +2960,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
                == VICTORY_CONDITION_FLAG_ALL_GENERATORS
         && !g_game->onSameTeam(currentGenerator.getOwner(),
                                g_netLocalGamePos)
-        && g_game->getAlignment(currentGenerator.m_type[0]) != -1) {
+        && g_game->getAlignment(currentGenerator.m_type[0]) != eTownNeutral) {
         value += 5000000 / g_game->m_generators.size();
     }
     return value;
@@ -3010,7 +3010,7 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
                 dwelling);
 
         if (population > 0) {
-            creature = g_dwellingType[enemyTown->m_type][dwelling];
+            creature = H3_AT(g_dwellingType, enemyTown->m_type)[dwelling];
             getMonsterCost(creature, creatureCost);
             long profit = akCreatureTypeTraits[creature].AI_value
                 - aiResourceCost(player, creatureCost);
@@ -3518,7 +3518,7 @@ MAC_ADDRESS(0x145000, 0x390)  // anchor-callee {type_university ctor, value_of_u
 long valueOfTownVisitBonuses(const hero* currentHero, town* currentTown)
 {
     long value = 0;
-    if (currentTown->m_type == TOWN_CONFLUX
+    if (currentTown->m_type == eTownConflux
         && currentTown->hasBuilding(EXTRA_0_ID, true)) {
         type_university university;
         university.initializeMagicSkills();
@@ -3551,28 +3551,28 @@ long valueOfTownVisitBonuses(const hero* currentHero, town* currentTown)
         return value;
 
     switch (currentTown->m_type) {
-    case TOWN_TOWER:
+    case eTownTower:
         if (currentTown->hasBuilding(EXTRA_2_ID, true))
             value += currentHero->getValueOfKnowledge();
         break;
-    case TOWN_INFERNO:
+    case eTownInferno:
         if (currentTown->hasBuilding(EXTRA_2_ID, true))
             value += currentHero->getValueOfPower();
         break;
-    case TOWN_DUNGEON:
+    case eTownDungeon:
         if (currentTown->hasBuilding(EXTRA_2_ID, true))
             value = static_cast<long>(
                 currentHero->m_turnExperienceToRvRatio * 1000.0f
                 + static_cast<float>(value));
         break;
-    case TOWN_STRONGHOLD:
+    case eTownStronghold:
         if (currentTown->hasBuilding(EXTRA_2_ID, true))
             value = static_cast<long>(
                 static_cast<float>(currentHero->getExperienceIncrement())
                 * currentHero->m_turnExperienceToRvRatio
                 + static_cast<float>(value));
         break;
-    case TOWN_FORTRESS:
+    case eTownFortress:
         if (currentTown->hasBuilding(SPECIAL_BUILDING_ID, true))
             value = static_cast<long>(
                 static_cast<float>(currentHero->getExperienceIncrement())

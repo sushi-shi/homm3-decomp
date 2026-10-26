@@ -141,7 +141,7 @@ BOOL TTownPropsGeneralPage::OnInitDialog()
     _m_bModified = false;
     _m_bVisitingHeroModified = false;
     TTown* pNewTown = _getNewTown();
-    _m_townType = TTown::s_akTypeTraits[pNewTown->getTownType()].m_pName;
+    _m_townType = H3_AT(TTown::s_akTypeTraits, pNewTown->getTownType()).m_pName;
     _m_bCustomName = pNewTown->getBCustomName();
     _m_customName = pNewTown->getName().c_str();
     _m_name = _m_bCustomName ? _m_customName : CString(kUnknownStr);

@@ -370,15 +370,15 @@ DC_ADDRESS(0x12f6d4, 0xbc)
 MAC_ADDRESS(0x16d4f4, 0xb0)
 const char* getResourceBonusCaption(int townType)
 {
-    switch (townType) {
-    case TOWN_RAMPART:
+    switch (H3_ENUM_DECODE(TTownType, townType)) {
+    case eTownRampart:
         return g_generalText->GetText(GENERAL_TEXT_RESOURCE_BONUS_RAMPART_CAPTION);
-    case TOWN_TOWER:
+    case eTownTower:
         return g_generalText->GetText(GENERAL_TEXT_RESOURCE_BONUS_TOWER_CAPTION);
-    case TOWN_INFERNO:
-    case TOWN_CONFLUX:
+    case eTownInferno:
+    case eTownConflux:
         return g_generalText->GetText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_CAPTION);
-    case TOWN_DUNGEON:
+    case eTownDungeon:
         return g_generalText->GetText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_CAPTION);
     default:
         return g_generalText->GetText(GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_CAPTION);
@@ -391,15 +391,15 @@ DC_ADDRESS(0x12f790, 0xbc)
 MAC_ADDRESS(0x16d5a4, 0xb0)
 const char* getResourceBonusDescription(int townType)
 {
-    switch (townType) {
-    case TOWN_RAMPART:
+    switch (H3_ENUM_DECODE(TTownType, townType)) {
+    case eTownRampart:
         return g_generalText->GetText(GENERAL_TEXT_RESOURCE_BONUS_RAMPART_DESCRIPTION);
-    case TOWN_TOWER:
+    case eTownTower:
         return g_generalText->GetText(GENERAL_TEXT_RESOURCE_BONUS_TOWER_DESCRIPTION);
-    case TOWN_INFERNO:
-    case TOWN_CONFLUX:
+    case eTownInferno:
+    case eTownConflux:
         return g_generalText->GetText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_DESCRIPTION);
-    case TOWN_DUNGEON:
+    case eTownDungeon:
         return g_generalText->GetText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_DESCRIPTION);
     default:
         return g_generalText->GetText(GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_DESCRIPTION);
@@ -1211,7 +1211,7 @@ bool CNetPlayerHandler::setNextPlayer(int pos)
             m_assignedPos = m_humanPlayers[i].m_playerPos;
             m_humanPlayers[i].m_playerPos = pos;
             m_humanPlayers[i].m_heroIndex = -1;
-            m_humanPlayers[i].m_townIndex = -1;
+            m_humanPlayers[i].m_townIndex = eTownNeutral;
             return 1;
         }
         ++i;
@@ -3259,9 +3259,9 @@ void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
 
     for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
         m_players.m_humanPlayers[j].m_heroIndex = -1;
-        m_players.m_humanPlayers[j].m_townIndex = -1;
+        m_players.m_humanPlayers[j].m_townIndex = eTownNeutral;
         m_players.m_computerPlayers[j].m_heroIndex = -1;
-        m_players.m_computerPlayers[j].m_townIndex = -1;
+        m_players.m_computerPlayers[j].m_townIndex = eTownNeutral;
     }
     setHumanSlot();
     makeHeroFilter();
@@ -3799,14 +3799,14 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
     case SSW_TOWN_DETAIL_FIRST + 6:
     case SSW_TOWN_DETAIL_LAST: {
         int gamePos = id - SSW_TOWN_DETAIL_FIRST;
-        int townType;
+        TTownType townType;
         if (m_loadMode)
             townType = g_game->m_setup.m_alignment[gamePos];
         else {
             townType = getDisplayTown(gamePos);
         }
 
-        if (townType == -1) {
+        if (townType == eTownNeutral) {
             CBonusDlg dlg(!m_saveMode && !m_loadMode);
             dlg.createWin((*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_TOWN_CAPTION], m_randomTownBmp,
                           (*g_generalText)[GENERAL_TEXT_RANDOM_HERO],
@@ -3814,8 +3814,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
             dlg.doModal(0);
         } else {
             CTownDlg dlg(!m_saveMode && !m_loadMode);
-            dlg.createWin(m_townPix, townType * 2 + 2,
-                          static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            dlg.createWin(m_townPix, H3_IDX(townType) * 2 + 2, townType);
             dlg.doModal(0);
         }
         displayChat();
@@ -3838,7 +3837,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
         const char* bonusEx = "";
         const char* desc = "";
         int bonus = NEW_MAP_BONUS_RANDOM;
-        int townType = 0;
+        TTownType townType = eTownCastle;
 
         if (m_loadMode) {
             bonus = g_game->m_setup.m_startingBonus[id - SSW_BONUS_DETAIL_FIRST];
@@ -3867,11 +3866,11 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
             break;
         case NEW_MAP_BONUS_RESOURCE:
             header = (*g_generalText)[GENERAL_TEXT_RESOURCE_BONUS];
-            sprite = townType;
-            if (sprite == TOWN_CONFLUX)
-                sprite = TOWN_INFERNO;
-            bonusEx = getResourceBonusCaption(townType);
-            desc = getResourceBonusDescription(townType);
+            sprite = H3_IDX(townType);
+            if (sprite == H3_IDX(eTownConflux))
+                sprite = H3_IDX(eTownInferno);
+            bonusEx = getResourceBonusCaption(H3_IDX(townType));
+            desc = getResourceBonusDescription(H3_IDX(townType));
             break;
         case NEW_MAP_BONUS_RANDOM:
             header = (*g_generalText)[GENERAL_TEXT_RANDOM_BONUS];
@@ -4238,42 +4237,42 @@ void TSingleSelectionWindow::makeHeroFilter()
         if (!player)
             continue;
         town = getDisplayTown(i);
-        if (town == -1)
+        if (town == eTownNeutral)
             continue;
         switch (town) {
-        case TOWN_RAMPART:
+        case eTownRampart:
             heroClass1 = classDruid;
             heroClass2 = classRanger;
             break;
-        case TOWN_TOWER:
+        case eTownTower:
             heroClass1 = classWizard;
             heroClass2 = classAlchemist;
             break;
-        case TOWN_INFERNO:
+        case eTownInferno:
             heroClass1 = classPagan;
             heroClass2 = classHeretic;
             break;
-        case TOWN_NECROPOLIS:
+        case eTownNecropolis:
             heroClass1 = classDeathKnight;
             heroClass2 = classNecromancer;
             break;
-        case TOWN_DUNGEON:
+        case eTownDungeon:
             heroClass1 = classOverlord;
             heroClass2 = classWarlock;
             break;
-        case TOWN_STRONGHOLD:
+        case eTownStronghold:
             heroClass1 = classBarbarian;
             heroClass2 = classBattleMage;
             break;
-        case TOWN_FORTRESS:
+        case eTownFortress:
             heroClass1 = classBeastmaster;
             heroClass2 = classWitch;
             break;
-        case TOWN_CONFLUX:
+        case eTownConflux:
             heroClass1 = classPlanesWalker;
             heroClass2 = classElementalist;
             break;
-        case TOWN_CASTLE:
+        case eTownCastle:
             heroClass1 = classKnight;
             heroClass2 = classCleric;
             break;
@@ -5009,9 +5008,9 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
         updateGameVars();
         for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
             m_players.m_humanPlayers[i].m_heroIndex = -1;
-            m_players.m_humanPlayers[i].m_townIndex = -1;
+            m_players.m_humanPlayers[i].m_townIndex = eTownNeutral;
             m_players.m_computerPlayers[i].m_heroIndex = -1;
-            m_players.m_computerPlayers[i].m_townIndex = -1;
+            m_players.m_computerPlayers[i].m_townIndex = eTownNeutral;
         }
         setHumanSlot();
         makeHeroFilter();
@@ -5355,11 +5354,11 @@ TTownType pickPrevAlignment(int legalAlignments, TTownType type)
 {
     do {
         type = static_cast<TTownType>(type - 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-        if (type < -1)
-            type = TOWN_CONFLUX;
-        else if (type == -1)
+        if (type < eTownNeutral)
+            type = eTownConflux;
+        else if (type == eTownNeutral)
             break;
-    } while (!(legalAlignments & (1 << type)));
+    } while (!(legalAlignments & (1 << H3_IDX(type))));
     return type;
 }
 
@@ -5370,9 +5369,9 @@ TTownType pickNextAlignment(int legalAlignments, TTownType type)
 {
     do {
         type = static_cast<TTownType>(type + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-        if (type >= TOWN_CONFLUX + 1)
-            type = static_cast<TTownType>(-1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-    } while (type != -1 && !(legalAlignments & (1 << type)));
+        if (type >= kNumTownTypes)
+            type = eTownNeutral;
+    } while (type != eTownNeutral && !(legalAlignments & (1 << H3_IDX(type))));
     return type;
 }
 
@@ -5883,7 +5882,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             if (thisPlayer->m_startBonusIndex < 0
                     || (thisPlayer->m_startBonusIndex == 0 && noHero))
                 thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_RANDOM;
-            if (getDisplayTown(i) == -1
+            if (getDisplayTown(i) == eTownNeutral
                     && thisPlayer->m_startBonusIndex == NEW_MAP_BONUS_RESOURCE)
                 thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_GOLD;
             if (g_remoteOn) {
@@ -5915,7 +5914,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                 (thisPlayer->m_startBonusIndex + 1) % 4;
             if (thisPlayer->m_startBonusIndex == 0 && noHero)
                 thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_GOLD;
-            if (getDisplayTown(i) == -1
+            if (getDisplayTown(i) == eTownNeutral
                     && thisPlayer->m_startBonusIndex == NEW_MAP_BONUS_RESOURCE)
                 thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_RANDOM;
             if (g_remoteOn) {
@@ -6264,7 +6263,7 @@ void TSingleSelectionWindow::updatePlayerPositions(bool updateCurPlayer)
                 g_game->m_setup.m_startingBonus[i] =
                     static_cast<signed char>(player->m_startBonusIndex);
                 g_game->m_setup.m_startingHero[i] = -1;
-                if (player->m_townIndex != -1)
+                if (player->m_townIndex != eTownNeutral)
                     g_game->m_setup.m_alignment[i] = TTownType(player->m_townIndex);
                 else if (player->isHuman())
                     g_game->m_setup.m_alignment[i] =
@@ -7435,7 +7434,7 @@ void TSingleSelectionWindow::onPlayerPosClick(int pos)
             setup->m_playerPos[pos] = pos;
             player->m_playerPos = pos;
             player->m_heroIndex = -1;
-            player->m_townIndex = -1;
+            player->m_townIndex = eTownNeutral;
             makeHeroFilter();
         }
     }
@@ -7927,7 +7926,7 @@ unsigned char TSingleSelectionWindow::canChooseHero(int gamePos)
     if (!isHotSeat && player->isHuman()
             && player->m_dpid != g_thisNetPlayerInfo.m_dpid)
         return 0;
-    if (getDisplayTown(gamePos) == -1)
+    if (getDisplayTown(gamePos) == eTownNeutral)
         return 0;
     if (!player->isHuman())
         return 0;
@@ -8142,11 +8141,11 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
     if (p == 0)
         p = m_players.getCompPlayerInPos(playerPos);
     if (m_loadMode != 0) {
-        int townType = g_game->m_setup.m_alignment[playerPos];
-        m_townPix->Draw(0, townType * 2 + 2, 0, 0, m_townPix->GetWidth(),
+        TTownType townType = g_game->m_setup.m_alignment[playerPos];
+        m_townPix->Draw(0, H3_IDX(townType) * 2 + 2, 0, 0, m_townPix->GetWidth(),
                         m_townPix->GetHeight(), g_windowManager->m_screenBitmap,
                         176, position * 50 + 130, 0, 1);
-        g_tinyFont->DrawBoundedString(townManager::getTownTypeName(townType),
+        g_tinyFont->DrawBoundedString(townManager::getTownTypeName(H3_IDX(townType)),
             g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16, font::WHITE, 5, -1);
         int face = getDisplayFace(playerPos);
         if (face != -1) {
@@ -8174,7 +8173,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             sprite = 8;
             break;
         case NEW_MAP_BONUS_RESOURCE:
-            sprite = townType == TOWN_CONFLUX ? 3 : townType;
+            sprite = townType == eTownConflux ? 3 : H3_IDX(townType);
             break;
         case NEW_MAP_BONUS_RANDOM:
             sprite = 10;
@@ -8208,7 +8207,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             left->hide();
             rite->hide();
         }
-        if (town == -1) {
+        if (town == eTownNeutral) {
             m_randomTownBmp->Draw(0, 0, m_randomHeroBmp->GetWidth(),
                 m_randomHeroBmp->GetHeight(), g_windowManager->m_screenBitmap,
                 176, position * 50 + 130, 0);
@@ -8216,10 +8215,10 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         } else {
-            m_townPix->Draw(0, town * 2 + 2, 0, 0, m_townPix->GetWidth(),
+            m_townPix->Draw(0, H3_IDX(town) * 2 + 2, 0, 0, m_townPix->GetWidth(),
                 m_townPix->GetHeight(), g_windowManager->m_screenBitmap, 176,
                 position * 50 + 130, 0, 1);
-            g_tinyFont->DrawBoundedString(townManager::getTownTypeName(town),
+            g_tinyFont->DrawBoundedString(townManager::getTownTypeName(H3_IDX(town)),
                 g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         }
@@ -8244,7 +8243,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         if (face == -1) {
             if (!hasRandomHero(playerPos) && !hasNonRandomHero(playerPos))
                 noHero = 1;
-            if (canChooseHero == 0 && (town != -1 || noHero != 0)
+            if (canChooseHero == 0 && (town != eTownNeutral || noHero != 0)
                     && !hasRandomHero(playerPos)) {
                 m_noHeroBmp->Draw(0, 0, m_noHeroBmp->GetWidth(), m_noHeroBmp->GetHeight(),
                     g_windowManager->m_screenBitmap, 252, position * 50 + 130, 0);
@@ -8282,10 +8281,10 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             frame = 8;
             break;
         case NEW_MAP_BONUS_RESOURCE:
-            if (town == TOWN_CONFLUX)
+            if (town == eTownConflux)
                 frame = 3;
-            else if (town != -1)
-                frame = town;
+            else if (town != eTownNeutral)
+                frame = H3_IDX(town);
             else {
                 p->m_startBonusIndex = NEW_MAP_BONUS_RANDOM;
                 bonus = NEW_MAP_BONUS_RANDOM;
@@ -8308,7 +8307,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             m_resource->GetHeight(), g_windowManager->m_screenBitmap, 328,
             position * 50 + 130, 0, 1);
         unsigned char townChosen = 1;
-        if (town == -1)
+        if (town == eTownNeutral)
             townChosen = 0;
         if (getThisPlayerGamePos() == playerPos
                 || (isHost()
@@ -8626,7 +8625,7 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
                 CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(pos);
                 if (!player)
                     player = m_players.getCompPlayerInPos(pos);
-                if (player && getDisplayTown(pos) == TOWN_CONFLUX) {
+                if (player && getDisplayTown(pos) == eTownConflux) {
                     player->m_townIndex = eTownNeutral;
                     // Mac 0:0x1863d8 passes the stored town, not a literal.
                     updateTown(pos, H3_ENUM_DECODE(TTownType, player->m_townIndex), 0);
