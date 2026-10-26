@@ -55,14 +55,12 @@ public:
     static TCheckMarkBmp& getCheckMark()
     {
         DATA_COMPGEN_GUARD(0x005aa690, checkMarkGuard, checkMark)
-        VA_COMPGEN(0x0043fb65, 0xa, STATIC_DTOR, checkMark)
         DATA(0x005aa6a0) static TCheckMarkBmp checkMark(false);
         return checkMark;
     }
     static TCheckMarkBmp& getSmallCheckMark()
     {
         DATA_COMPGEN_GUARD(0x005aa674, smallCheckMarkGuard, smallCheckMark)
-        VA_COMPGEN(0x0043fb5b, 0xa, STATIC_DTOR, smallCheckMark)
         DATA(0x005aa680) static TCheckMarkBmp smallCheckMark(true);
         return smallCheckMark;
     }
