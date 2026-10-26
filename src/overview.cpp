@@ -796,9 +796,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 }
 
 // E:\gamedcs\overview.cpp:1170. The DC name/locals and HoMM2 lineage give
-// the source vocabulary; the Complete body proves the changed player fields,
-// slider update, two-message protocol, per-mode title counts, and geometry.
-// E:\gamedcs\overview.cpp:1170
+// the source vocabulary; Complete changes the player fields, slider update,
+// two-message protocol, per-mode title counts, and geometry.
 VA(0x0051e330, 0x33A)
 DC_ADDRESS(0x1069fc, 0x31a)
 MAC_ADDRESS(0x135d54, 0x3d4)
@@ -822,9 +821,8 @@ void game::setupNewOverviewType(int whichType, bool update)
         g_overviewSlider->setResolution(1);
     }
 
-    // Dreamcast constructs this message after the slider branch. Complete
-    // overwrites all eight fields before the first use, so that lifetime also
-    // lets VC6 remove the constructor's zero stores.
+    // Dreamcast constructs this message after the slider branch; Complete
+    // overwrites all eight fields before the first use.
     message msg;
     msg.m_codeY = 195 + (g_overviewType != 1);
     msg.m_qualifier = 0;
@@ -840,7 +838,7 @@ void game::setupNewOverviewType(int whichType, bool update)
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     g_overWin->broadcastMessage(msg);
 
-    // DC names two-dimensional X/width tables; Mac copies each as 12 bytes.
+    // DC names two-dimensional X/width tables.
     unsigned short titleXOffs[2][3] = {
         {28, 435, 459}, {28, 266, 499}
     };
@@ -966,17 +964,13 @@ void TOverviewWindow::doFlaggableButtons(int which)
 }
 
 // The five allocations are ten times the size the clear and teardown loops
-// walk - 0x2bc0 / 0x2bc0 / 0x2bc0 / 0x140 / 0x1e0 bytes against four rows of
-// 70/70/70/2/3 pointers - so the source allocates for forty rows and only
-// ever uses four. The four-row 70/2/3 geometry is the same one
-// SetupDynamicStuff walks above.
+// walk, so the source allocates for forty rows and only ever uses four.
+// The four-row 70/2/3 geometry is the same one SetupDynamicStuff walks
+// above.
 
-// The widget-id bands are byte-proven and unnamed in either symbol stream:
-// codeY 20..26 are the seven mine-count texts (one per resource, filled from
-// the mine pool scan) and codeY 27 is the daily-income text. They are left
-// as literals rather than grown into EOverviewIconId because overview.h is
-// this TU's private header and the enum's declarator count is an
-// include-set input to the four large bodies around this one.
+// codeY 20..26 are the seven mine-count texts (one per resource, filled
+// from the mine pool scan) and codeY 27 is the daily-income text; neither
+// symbol stream names them.
 VA(0x0051e8d0, 0x57B)
 DC_ADDRESS(0x106e90, 0x7d6)
 MAC_ADDRESS(0x1363e4, 0x8cc)
@@ -1167,8 +1161,7 @@ void updateBackpack(int slot)
     hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
     int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;
     type_artifact artifact;
-    // DC 0x1076c4 calls the default message constructor at 0x2d58.
-    // Retail 0x522470 initializes the same zero fields before id/codeX.
+    // DC 0x1076c4 calls the default message constructor.
     message msg;
 
     msg.m_id = MESSAGE_WIDGET;
@@ -1192,8 +1185,8 @@ void updateBackpack(int slot)
     g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
 }
 
-// Complete retains this body even though its same-TU callers expand it.
-// External linkage reproduces that emission; Dreamcast labels the older body static.
+// Complete retains this body even though its same-TU callers inline it;
+// Dreamcast labels the older body static.
 VA(0x005225d0, 0x55)
 DC_ADDRESS(0x1078e8, 0x8c)
 MAC_ADDRESS(0x136e7c, 0x90)
@@ -1919,8 +1912,8 @@ TOverviewWindow::TOverviewWindow()
 
 VA_COMPGEN(0x00520d60, 0x21, SCALAR_DELETING_DTOR, TOverviewWindow)
 
-// Mac 0x139e2c..0x139e6c deletes the vector's widgets without clearing it.
-// This differs from deleteWidgets(), whose additional clear is not present.
+// The vector's widgets are deleted without clearing it, unlike
+// deleteWidgets().
 VA(0x00520d90, 0x9C)
 DC_ADDRESS(0x108f74, 0x68)
 MAC_ADDRESS(0x139e00, 0xe4)
