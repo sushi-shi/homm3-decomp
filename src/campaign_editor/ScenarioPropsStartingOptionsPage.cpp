@@ -297,7 +297,7 @@ void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusSpellScroll& b
 VA(0x0042e6d0, 0x127)
 void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusPrimarySkill& bonus)
 {
-    const TArray<unsigned int, kNumPrimarySkills>& quantities = bonus.getSkills();
+    const TArray<unsigned int, H3_IDX(kNumPrimarySkills)>& quantities = bonus.getSkills();
     CString skills;
     unsigned int skill;
     for (skill = 0; quantities[skill] <= 0; skill++)

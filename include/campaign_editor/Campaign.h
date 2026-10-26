@@ -191,7 +191,7 @@ class TScenarioBonusPrimarySkill : public TScenarioHeroBonus {
 public:
     TScenarioBonusPrimarySkill(int hero, const TArray<unsigned int, H3_IDX(kNumPrimarySkills)>& skills);
 
-    const TArray<unsigned int, kNumPrimarySkills>& getSkills() const { return m_skills; }
+    const TArray<unsigned int, H3_IDX(kNumPrimarySkills)>& getSkills() const { return m_skills; }
 
     virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
 
