@@ -37,6 +37,6 @@ SIZE(TQuestLogWindow, 0x74);
 // Defined in src/questlogwindow.cpp. Declared here for its second
 // consumer: THeroScreenWindow::WindowHandler's quest-log button arm calls
 // it with the current hero's owner (/Gr, the id in ecx).
-void doQuestLog(int player);
+void __fastcall doQuestLog(int player);
 
 #endif  /* HOMM3_QUESTLOGWINDOW_H */

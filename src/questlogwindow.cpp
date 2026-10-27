@@ -161,12 +161,10 @@ int TQuestLogWindow::windowHandler(message& msg)
 }
 
 // E:\gamedcs\questlogwindow.cpp:142
-// Residual: `test al,dl` operand order and the push_back receiver schedule.
-// Commuting playerHasInfo's mask operands is byte-flat across all units.
 VA(0x0052e430, 0x27E)
 DC_ADDRESS(0x116ccc, 0x15c)
 MAC_ADDRESS(0x14a280, 0x3e0)  // ; Complete adds QuestGuardList
-void doQuestLog(int player)
+void __fastcall doQuestLog(int player)
 {
     message msg;
 
@@ -179,14 +177,14 @@ void doQuestLog(int player)
     int numberSeerHuts = g_game->m_worldMap.m_seerHutList.size();
     int i;
     for (i = 0; i < numberSeerHuts; ++i) {
-        if (g_game->m_worldMap.m_seerHutList[i]
-                .questActiveforPlayer(player))
+        TSeerHut& hut = g_game->m_worldMap.m_seerHutList[i];
+        if (hut.questActiveforPlayer(player))
             g_questLogWindow->m_seerHutLogList.push_back(i);
     }
 
     for (i = 0; i < g_game->m_worldMap.m_questGuardList.size(); ++i) {
-        if (g_game->m_worldMap.m_questGuardList[i]
-                .questActiveforPlayer(player))
+        TQuestGuard& guard = g_game->m_worldMap.m_questGuardList[i];
+        if (guard.questActiveforPlayer(player))
             g_questLogWindow->m_seerHutLogList.push_back(numberSeerHuts + i);
     }
 
