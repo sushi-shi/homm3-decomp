@@ -654,14 +654,12 @@ void __cdecl waitEndSampleThread(void* arglist)
     ++g_sampleWorkerCount;
     LaunchedSample* launched = static_cast<LaunchedSample*>(arglist);
     int elapsed = 0;
-    if (launched->m_sample2.m_playSample && !g_shutDownDone) {
-        while (g_soundManager->getSampleInfo(
+    if (launched->m_sample2.m_playSample) {
+        while (!g_shutDownDone && g_soundManager->getSampleInfo(
                    launched->m_sample2.m_playSample, soundManager::SAMPLE_INFO_PLAYING)
                && elapsed < launched->m_maxTime) {
             Sleep(100);
             elapsed += 100;
-            if (g_shutDownDone)
-                break;
         }
     }
     clearMemSample(launched->m_sample2);
