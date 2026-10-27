@@ -1390,6 +1390,18 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
+template <size_t N>
+static void writePackedBits(TAbstractFile* outfile, const std::bitset<N>& value)
+{
+    unsigned char bits[(N + 7) / 8];
+    std::fill_n(bits, sizeof(bits), 0);
+    for (unsigned int bit = 0; bit < N; bit++) {
+        if (value.test(bit))
+            bits[bit >> 3] |= 1 << (bit & 7);
+    }
+    outfile->write(bits, sizeof(bits));
+}
+
 // E:\gamedcs\game.cpp:1548
 // The write side of load, minus the version remap: a saver only ever
 // emits the current format. The tavern pair is written longhand here
@@ -1519,14 +1531,7 @@ int playerData::save(TAbstractFile* outfile)
         return -1;
 
     // Mac passes the bitset and index directly to test; no mutable proxy.
-    unsigned char bits[2];
-    const std::bitset<12>* combinations = &m_assembledCombinations;
-    std::fill_n(bits, sizeof(bits), 0);
-    for (unsigned int bit = 0; bit < 12; bit++) {
-        if (combinations->test(bit))
-            bits[bit >> 3] |= 1 << (bit & 7);
-    }
-    outfile->write(bits, sizeof(bits));
+    writePackedBits(outfile, m_assembledCombinations);
     return 0;
 }
 
