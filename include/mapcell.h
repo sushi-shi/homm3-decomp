@@ -1078,11 +1078,11 @@ SIZE(MonsterData, 0x30);
 // it finishes, together with the save version, and it returns at once unless
 // that version is below 25; older saves go through a seven-arm jump table on
 // the cell's object type that repacks extraInfo's bitfields into their current
-// positions. The body is enrolled as a documented compiler wall.
+// positions.
 
 // A free function, so /Gr makes it __fastcall - which is what retail emits:
 // the cell in ECX, the save version in EDX.
-void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion);
+void __fastcall upgradeCellExtraInfo(NewmapCell* cell, int saveVersion);
 
 // Retail .rdata 0x660428 stores a pointer to sixteen bytes per adventure-
 // object type. can_land proves byte zero as the trigger-object landing veto;

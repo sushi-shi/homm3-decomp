@@ -1025,111 +1025,87 @@ union LegacyUpgradeExtraInfo {
     LegacyTombInfo m_tombInfo;
 };
 
-union CurrentUpgradeExtraInfo {
-    unsigned long m_value;
-    CurrentArtifactInfo m_artifactInfo;
-    type_skeleton_info m_skeletonInfo;
-    MonsterInfo m_monsterInfo;
-    type_pyramid_info m_pyramidInfo;
-    TreasureInfo m_treasureInfo;
-    CurrentUpgradeWagonInfo m_wagonInfo;
-    type_tomb_info m_tombInfo;
-    CurrentVisitedInfo m_visitedInfo;
-};
-
 // Retail-only compatibility pass called once for every loaded map cell.
 // The seven non-default lookup-table entries are object ids 5, 22, 54, 63,
 // 101, 105 and 108; the case spellings below are therefore byte-proven.
-
-// Residual (96.26%, compiler register-allocation wall): base and retail have
-// the same 14-block flow, and the ARTIFACT, DEAD_GUY and PYRAMID arms are
-// instruction-exact. MONSTER, TREASURE_CHEST, WAGON and WARRIOR_TOMB perform
-// the same masked field transfers but assign the source/result roles to
-// EAX/EDX/ESI differently. That makes the code one byte longer and moves the
-// otherwise-identical lookup/jump tables by the following four-byte
-// alignment boundary.
-
-// The legacy dword must be a distinct value: viewing old and new layouts as
-// aliases lets C2 delete the identity field copies and scores 69.53%. One
-// snapshot before the switch scores 92.55%; reversing the byte-indicated
-// monster index conversion scores 94.52%; case-local storage, `register`,
-// and declaration-order probes are byte-flat. The separate per-arm snapshot
-// below is the best source-faithful form measured.
+// Each arm snapshots the old packed value before writing through the cell's
+// current typed view because the source and destination share one dword.
 VA(0x004fe6c0, 0x254)
 MAC_ADDRESS(0x1203e8, 0x2d8)  // caller loadMapLayer; v25 gate + seven-arm bitfield upgrade
-void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion)
+void __fastcall upgradeCellExtraInfo(NewmapCell* cell, int saveVersion)
 {
     if (saveVersion >= 25)
         return;
 
     LegacyUpgradeExtraInfo legacy;
-    CurrentUpgradeExtraInfo* current =
-        static_cast<CurrentUpgradeExtraInfo*>(static_cast<void*>(cell));
 
     switch (cell->m_type) {
     case ARTIFACT:
         legacy.m_value = cell->m_extraInfo;
-        current->m_artifactInfo.m_custom = legacy.m_artifactInfo.m_custom;
-        if (!current->m_artifactInfo.m_custom) {
-            current->m_artifactInfo.m_guard = legacy.m_artifactInfo.m_guard;
-            current->m_artifactInfo.m_resourcePrice =
-                legacy.m_artifactInfo.m_resourcePrice;
-            current->m_artifactInfo.m_guardQty =
+        cell->m_artifactInfo.m_custom = legacy.m_artifactInfo.m_custom;
+        if (!cell->m_artifactInfo.m_custom) {
+            cell->m_artifactInfo.m_guard =
+                static_cast<TCreatureType>(legacy.m_artifactInfo.m_guard);
+            cell->m_artifactInfo.m_resourcePrice =
+                static_cast<EGameResource>(legacy.m_artifactInfo.m_resourcePrice);
+            cell->m_artifactInfo.m_guardQty =
                 legacy.m_artifactInfo.m_guardQty;
         }
         break;
 
     case DEAD_GUY:
         legacy.m_value = cell->m_extraInfo;
-        current->m_skeletonInfo.m_artifact = legacy.m_skeletonInfo.m_artifact;
-        current->m_skeletonInfo.m_hasTreasure =
+        cell->m_skeletonInfo.m_artifact = legacy.m_skeletonInfo.m_artifact;
+        cell->m_skeletonInfo.m_hasTreasure =
             legacy.m_skeletonInfo.m_hasTreasure;
-        current->m_skeletonInfo.m_id = legacy.m_skeletonInfo.m_id;
+        cell->m_skeletonInfo.m_id = legacy.m_skeletonInfo.m_id;
         break;
 
     case MONSTER:
         legacy.m_value = cell->m_extraInfo;
-        current->m_monsterInfo.m_qty = legacy.m_monsterInfo.m_qty;
-        current->m_monsterInfo.m_disposition = legacy.m_monsterInfo.m_disposition;
-        current->m_monsterInfo.m_neverFlee = legacy.m_monsterInfo.m_neverFlee;
-        current->m_monsterInfo.m_dontGrow = legacy.m_monsterInfo.m_dontGrow;
-        current->m_monsterInfo.m_index = legacy.m_monsterInfo.m_index;
-        current->m_monsterInfo.m_unused27 = 0;
-        current->m_monsterInfo.m_custom = legacy.m_monsterInfo.m_custom;
+        cell->m_monsterInfo.m_qty = legacy.m_monsterInfo.m_qty;
+        cell->m_monsterInfo.m_disposition = legacy.m_monsterInfo.m_disposition;
+        cell->m_monsterInfo.m_neverFlee = legacy.m_monsterInfo.m_neverFlee;
+        cell->m_monsterInfo.m_dontGrow = legacy.m_monsterInfo.m_dontGrow;
+        cell->m_monsterInfo.m_index = legacy.m_monsterInfo.m_index;
+        cell->m_monsterInfo.m_unused27 = 0;
+        cell->m_monsterInfo.m_custom = legacy.m_monsterInfo.m_custom;
         break;
 
     case PYRAMID:
         legacy.m_value = cell->m_extraInfo;
-        current->m_pyramidInfo.m_guarded = legacy.m_pyramidInfo.m_guarded;
-        current->m_visitedInfo.m_visitedBits =
+        cell->m_pyramidInfo.m_guarded = legacy.m_pyramidInfo.m_guarded;
+        cell->m_cellVisitedInfo.m_visited =
             legacy.m_pyramidInfo.m_visitedBits;
-        current->m_pyramidInfo.m_spell = legacy.m_pyramidInfo.m_spell;
+        cell->m_pyramidInfo.m_spell = legacy.m_pyramidInfo.m_spell;
         break;
 
     case TREASURE_CHEST:
         legacy.m_value = cell->m_extraInfo;
-        current->m_treasureInfo.m_artifact = legacy.m_treasureInfo.m_artifact;
-        current->m_treasureInfo.m_hasArtifact =
+        cell->m_treasureInfo.m_artifact = legacy.m_treasureInfo.m_artifact;
+        cell->m_treasureInfo.m_hasArtifact =
             legacy.m_treasureInfo.m_isArtifact;
-        current->m_treasureInfo.m_gold = legacy.m_treasureInfo.m_goldAmount;
+        cell->m_treasureInfo.m_gold = legacy.m_treasureInfo.m_goldAmount;
         break;
 
     case WAGON:
         legacy.m_value = cell->m_extraInfo;
-        current->m_wagonInfo.m_artifact = legacy.m_wagonInfo.m_artifact;
-        current->m_wagonInfo.m_full = legacy.m_wagonInfo.m_full;
-        current->m_wagonInfo.m_hasArtifact = legacy.m_wagonInfo.m_hasArtifact;
-        current->m_wagonInfo.m_resource = legacy.m_wagonInfo.m_resource;
-        current->m_wagonInfo.m_resourceAmount =
+        cell->m_wagonInfo.m_artifact =
+            static_cast<TArtifact>(legacy.m_wagonInfo.m_artifact);
+        cell->m_wagonInfo.m_full = legacy.m_wagonInfo.m_full;
+        cell->m_wagonInfo.m_hasArtifact = legacy.m_wagonInfo.m_hasArtifact;
+        cell->m_wagonInfo.m_resource =
+            static_cast<EGameResource>(legacy.m_wagonInfo.m_resource);
+        cell->m_wagonInfo.m_resourceAmount =
             legacy.m_wagonInfo.m_resourceAmount;
-        current->m_visitedInfo.m_visitedBits = legacy.m_wagonInfo.m_visitedBits;
+        cell->m_cellVisitedInfo.m_visited = legacy.m_wagonInfo.m_visitedBits;
         break;
 
     case WARRIOR_TOMB:
         legacy.m_value = cell->m_extraInfo;
-        current->m_tombInfo.m_hasArtifact = legacy.m_tombInfo.m_full;
-        current->m_visitedInfo.m_visitedBits = legacy.m_tombInfo.m_visitedBits;
-        current->m_tombInfo.m_artifact = legacy.m_tombInfo.m_artifact;
+        cell->m_tombInfo.m_hasArtifact = legacy.m_tombInfo.m_full;
+        cell->m_cellVisitedInfo.m_visited = legacy.m_tombInfo.m_visitedBits;
+        cell->m_tombInfo.m_artifact = legacy.m_tombInfo.m_artifact;
         break;
     }
 }
