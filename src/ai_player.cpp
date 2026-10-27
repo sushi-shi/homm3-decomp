@@ -3958,7 +3958,8 @@ static unsigned char attemptTeleport(hero* current_hero,
         }
     } while (pathIndex < destination_index);
 
-    g_advManager->teleportTo(current_hero, path[destination_index].m_point, 0,
+    start_point = path[destination_index].m_point;
+    g_advManager->teleportTo(current_hero, start_point, 0,
                              0, 1, 0);
     current_hero->useSpell(mana_cost);
     ++current_hero->m_dWalkSpellsCast;
