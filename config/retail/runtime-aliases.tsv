@@ -1,0 +1,5 @@
+# MANUALLY MANAGED - extra COFF names proven at one retail code address.
+# GAME/<object>.obj denotes an authored game object whose VA claim and VC6
+# symbol prove the decorated identity for the raw model label at that address.
+rva	name	library	member
+0x0015c7b0	?GetSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	GAME	resourcemanager.obj

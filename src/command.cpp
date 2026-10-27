@@ -370,19 +370,12 @@ process_action:
 }
 
 // E:\gamedcs\command.cpp:475. Build twelve legal approach records around
-// the target hex. Keep the canonical CanFit, IsMoat, OffsetToFront,
-// NeedToTurn and swap calls. DC562's ?swap@std@@YAXAA_N0@Z public proves
-// bool validity flags despite their lowered CodeView byte records.
-// DC573-578 selects one valid candidate by clearing a flag before DC580's
-// final writes; Mac0x82bac..0x82be0 preserves that same state transition.
-// Recovering these statements from the combined selection condition is
-// Windows-flat at 91.3686%. The rectangle-independent residual is validity
-// materialization, local/register allocation and NeedToTurn's range guard.
-// A <=2/equality spelling of NeedToTurn raises this caller to 92.4744%,
-// but alters the exact walk, attackHex, doAttack(int), and getAttackDirection
-// callers. Retain its native >=3/inequality expression. A controlled 16-state
-// helper/validity family also rejects direct flag initialization and ternary
-// helper bodies; none improves this caller while preserving those callers.
+// the target hex. DC562's ?swap@std@@YAXAA_N0@Z public proves bool validity
+// flags despite their lowered CodeView byte records. DC573-578 selects one
+// valid candidate by clearing a flag before DC580's final writes;
+// Mac0x82bac..0x82be0 preserves that same state transition. Complete
+// materializes both validity tests through if/else, tests the facing relation
+// inline, and reuses attackAngle for the fallback pass.
 VA(0x00474690, 0x36B)
 DC_ADDRESS(0x06b66c, 0x410)
 MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map
@@ -400,7 +393,6 @@ void combatManager::setCombatDirections(int hex)
     int targetGroup;
     army* currentArmy;
     bool firstIsValid;
-    long closest;
     long secondHex;
 
     currentArmy = getCurrentArmy();
@@ -424,11 +416,12 @@ void combatManager::setCombatDirections(int hex)
         firstHex = m_adjacentCells[hex][targetIndex];
         if (!validHex(firstHex))
             continue;
-        firstIsValid = 0;
         if (m_cells[firstHex].m_validMove
                 && currentArmy->canFit(firstHex, 0, 0)
                 && !g_searchArray->isMoat(firstHex))
             firstIsValid = 1;
+        else
+            firstIsValid = 0;
         if (firstIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
                     firstHex + currentArmy->offsetToFront(-1)))
@@ -444,11 +437,12 @@ void combatManager::setCombatDirections(int hex)
             continue;
 
         secondHex = firstHex - currentArmy->offsetToFront(-1);
-        secondIsValid = 0;
         if (m_cells[secondHex].m_validMove
                 && currentArmy->canFit(secondHex, 0, 0)
                 && !g_searchArray->isMoat(secondHex))
             secondIsValid = 1;
+        else
+            secondIsValid = 0;
         if (secondIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
                     secondHex + currentArmy->offsetToFront(-1)))
@@ -465,7 +459,8 @@ void combatManager::setCombatDirections(int hex)
             continue;
         }
 
-        if (currentArmy->needToTurn(targetIndex)) {
+        if ((currentArmy->m_facing == 0)
+                == (targetIndex <= 2)) {
             std::swap(firstHex, secondHex);
             std::swap(firstIsValid, secondIsValid);
         }
@@ -488,21 +483,24 @@ void combatManager::setCombatDirections(int hex)
         }
     }
 
-    { for (long i = 0; i < COMBAT_ATTACK_ANGLE_COUNT; i++) {
-            if (m_combatDirections[0][i])
+    { for (attackAngle = COMBAT_ATTACK_ANGLE_0;
+           attackAngle < COMBAT_ATTACK_ANGLE_COUNT; attackAngle++) {
+            if (m_combatDirections[0][attackAngle])
                 continue;
 
-            closest = COMBAT_ATTACK_ANGLE_COUNT;
+            long closest = COMBAT_ATTACK_ANGLE_COUNT;
             for (long j = 0; j < COMBAT_ATTACK_ANGLE_COUNT; j++) {
-                if (i == j)
+                if (attackAngle == j)
                     continue;
-                long distance = abs(i - j);
+                long distance = abs(attackAngle - j);
                 if (distance > 6)
                     distance = 6 - distance;
                 if (m_combatDirections[0][j] && distance < closest) {
                     closest = distance;
-                    m_combatDirections[0][i] = m_combatDirections[0][j];
-                    m_combatDirections[1][i] = m_combatDirections[1][j];
+                    m_combatDirections[0][attackAngle] =
+                        m_combatDirections[0][j];
+                    m_combatDirections[1][attackAngle] =
+                        m_combatDirections[1][j];
                 }
             }
         }

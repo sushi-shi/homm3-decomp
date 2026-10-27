@@ -1030,8 +1030,9 @@ void combatManager::checkNativeTerrain()
 {
     for (int side = 0; side < 2; side++) {
         m_onNativeTerrain[side] = 0;
-        for (int slot = 0; slot < m_numArmies[side]; slot++) {
-            if (m_armies[side][slot].m_onNativeTerrain) {
+        army* stack = &m_armies[side][0];
+        for (int slot = 0; slot < m_numArmies[side]; slot++, stack++) {
+            if (stack->m_onNativeTerrain) {
                 m_onNativeTerrain[side] = 1;
                 break;
             }
@@ -1135,10 +1136,8 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
 // retain the byte load and high-bound-first clamp / byte add that retail
 // expands; a generic int clamp instead widens too early and loses three
 // conditional branches.
-// Residual (99.9631%): all 56 blocks, 26 branches and seven calls agree.
-// The only code difference is the commutative SIB encoding in the inlined
-// CheckNativeTerrain loop: [eax+edi] here versus [edi+eax] in retail. Keep
-// the Dreamcast-shaped m_numArmies[side] loop instead of reverse indexing.
+// CheckNativeTerrain advances a pointer across each side's contiguous army
+// array; the cursor form preserves that address order when it is expanded here.
 VA(0x00463c60, 0x43C)
 DC_ADDRESS(0x05e690, 0x2b8)
 MAC_ADDRESS(0x06f3e8, 0x484)  // anchor-callee
