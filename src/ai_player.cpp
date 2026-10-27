@@ -2489,23 +2489,9 @@ void type_AI_creature_purchaser::set(TCreatureType newType,
 // the three-quarter cap on the cost penalty that selects the best source.
 // Original DC ?do_best_purchase@type_AI_creature_purchaser@@IAAJ_N@Z
 // proves bool tradeAllowed; its byte debug primitive is lowered bool.
-// Its callback `slot` and `best_slot` are function-scope shorts;
-// restoring slot's scope raises
-// Windows 97.27% to 97.29% while leaving Mac 81.10% byte-flat. The remaining
-// Windows delta is VC6 stack-slot coloring around the best-source state.
-// Census 2026-09-04: base 217 vs retail 219; the two surplus retail rows are
-// a dword copy of best_number out of its recycled [ebp+8] parameter home into
-// a fresh [ebp-0x8] slot, which frees [ebp+8] to carry the resource loop's
-// counter (we keep best_number in [ebp+8] and colour that counter onto
-// [ebp-0x1c], the first loop's slot). Both spellings that name the copy in
-// source - a fresh `short count` from MaxBuyableCreatures, and `short count =
-// best_number` after the assignment - are byte-flat at 97.2740, so the extra
-// slot is the allocator's, not a source local.
-// Native Mac retains all nine named calls and unrolls resource deduction.
-// The short resource counter gives Windows 97.29%; int lowers it to96.76.
-// Mac stack-slot agreement alone does not establish the Windows local type.
-// A separate final quantity is byte-flat; a shared function-scope creature
-// type changes the native prefix, so neither probe is retained.
+// Its callback `slot` and `best_slot` are function-scope shorts; retail uses
+// a short resource counter for the final deductions. Free and paid purchases
+// consume source stock after their paths rejoin.
 VA(0x0042d420, 0x264)
 DC_ADDRESS(0x032038, 0x250)
 MAC_ADDRESS(0x030a08, 0x2a0)  // DC method/callgraph + exact retail caller;
@@ -2570,8 +2556,8 @@ long type_AI_creature_purchaser::doBestPurchase(
                 m_funds, type, m_creatures[bestSource].m_number);
             for (short resource = 0; resource < NUM_RESOURCES; ++resource)
                 m_funds[resource] -= resourceCost[resource] * bestNumber;
-            m_creatures[bestSource].m_number -= bestNumber;
         }
+        m_creatures[bestSource].m_number -= bestNumber;
     }
     return bestValue;
 }
