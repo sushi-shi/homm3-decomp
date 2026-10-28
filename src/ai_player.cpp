@@ -1986,15 +1986,17 @@ type_AI_creature_swapper::type_AI_creature_swapper()
 MAC_ADDRESS(0x02f990, 0x78)
 int type_AI_creature_swapper::normalizeAlignment(int alignment) const
 {
+    int normalizedAlignment = alignment;
     if (m_hasAngelicAlliance) {
         const std::bitset<TOWN_TYPE_COUNT>& alliedAlignments = getAngelicAllianceAlignments();
         if (alliedAlignments.test(alignment)) {
-            alignment = 0;
-            while (!alliedAlignments.test(alignment))
-                ++alignment;
+            int firstAlignment = 0;
+            while (!alliedAlignments.test(firstAlignment))
+                ++firstAlignment;
+            normalizedAlignment = firstAlignment;
         }
     }
-    return alignment;
+    return normalizedAlignment;
 }
 
 VA(0x0042c060, 0xC3)
@@ -2209,26 +2211,8 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // adds the Complete elemental-alignment gate and exposes both shooter-policy
 // predicates: preserve a sole shooter, but replace a shooter once there are
 // already more than three. Alignment checking admits only a singleton group.
-// DC's two flags are unsigned char, not bool; retail reads their low bytes.
-// Restoring the declared types is byte-flat at 88.3357%, including its caller.
-// Residual (88.34%): all policy/filter calls and 135 of retail's 140
-// instructions are present across 41 versus 42 blocks. The remaining split
-// is a VC6 register-role permutation in the Complete alignment fold;
-// `why-reg` measures distance 119. Making the grouped alignment volatile
-// improves that internal distance but worsens the real objdiff score to
-// 86.33%, and declaration/reference/condition spellings are flat or worse.
-// Re-measured 2026-09-20: the permutation is rooted at `this`. Retail copies it
-// into EDI at entry and reads m_army through it; ours leaves it in ECX, spills
-// it, and reloads, which frees EDI for shooterCount and cascades into every
-// later binding - the traits address spilling instead of staying live, the
-// checkAlignments byte loaded to BL on retail's side and compared in memory on
-// ours, and the reverse for g_game->m_gameVersion. why-reg's model says the value
-// that must move first is `this`, and the front end proves that unreachable:
-// `il-locals` gives isShooter 0xca55, checkAlignments 0xca56, this 0xca58, then
-// shooterCount 0xca5a and the rest, and handle-order.md measures
-// params < `this` < locals as parse-FIXED. Retail binds shooterCount to ESI and
-// `this` to EDI, which needs shooterCount created first - no declaration order
-// reaches it. Same verdict and same root as get_simple_attack_effect.
+// normalizeAlignment is inlined here; its separate input/output lifetimes
+// determine VC6's register assignment for the Complete alignment fold.
 // The former direct alignment gate was byte-flat; Mac expands the same
 // game::getAlignment body here before normalizeAlignment.
 // Original DC ?choose_weakest_army@type_AI_creature_swapper@@IAAJ_N0@Z
@@ -2291,20 +2275,14 @@ long type_AI_creature_swapper::chooseWeakestArmy(
 // A new singleton alignment is rejected when its morale loss outweighs the
 // incoming stack; slowing the army also subtracts the proportional movement
 // loss before an existing, empty, or weakest slot is selected.
-// Residual (89.09%): the 67/68-block and 287/292-instruction forms have the
-// same substantive exits, calls, morale census and movement calculation.
-// `why-reg` leaves distance 155; its best volatile-value probe moves that
-// metric by only five and does not improve objdiff, while the measured
-// pointer/reference, declaration and expression variants are flat or worse.
 // Original DC ?value_of_adding_army@type_AI_creature_swapper@@IAAJW4TCreatureType@@FAAF_N@Z
 // proves bool must_replace_creature; the byte debug primitive is lowered bool.
 // All five Complete call sites pass true/false and retain the short& slot.
 // DC records the min(int,int) wrapper at line 2404. Retail copies the current
 // minimum and creature speed to separate temporary homes before choosing
-// their addresses. Restoring min instead of the reference-only cppMin
-// recovers 89.0856% from 86.1781%.
+// their addresses.
 // DC lines 2351/2352 place traits and value before the morale locals;
-// restoring that declaration order is byte-flat at the recovered peak.
+// retain that declaration order.
 VA(0x0042c830, 0x33F)
 DC_ADDRESS(0x031af4, 0x346)
 MAC_ADDRESS(0x0302b0, 0x3d4)  // DC method/callgraph + retail Complete body;
@@ -2321,20 +2299,13 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     alignment = normalizeAlignment(alignment);
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
-        // Complete gives the base elementals the lower threshold in a
-        // version-0 game before the Necropolis test (Windows 94.24%;
-        // the Mac-only getCreatureAlignment spelling scored 82.42%). The Mac body
-        // (0x30354..0x30390) has no game-version arm and re-expands
-        // getCreatureAlignment instead: a platform/edition difference, Mac 22.10%.
+        // getAlignment carries the version-0 elemental exception; only a
+        // Necropolis stack uses the higher morale threshold.
         int minimumMorale;
-        if (g_game->m_gameVersion == 0
-            && isBaseElemental(type)) {
-            minimumMorale = 1;
-        } else {
+        if (g_game->getAlignment(type) == TOWN_NECROPOLIS)
             minimumMorale = 2;
-            if (traits->townType != TOWN_NECROPOLIS)
-                minimumMorale = 1;
-        }
+        else
+            minimumMorale = 1;
 
         if (m_army->getMorale(0, 0, 0, 0, 0,
                            m_hasAngelicAlliance, 0)
