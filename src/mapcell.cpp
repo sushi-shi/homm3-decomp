@@ -2171,7 +2171,13 @@ DC_ADDRESS(0x0ef7c8, 0x3f0)
 MAC_ADDRESS(0x1255f0, 0xe8)
 int NewfullMap::readSeerData(TAbstractFile* infile, CObject* seerObject)
 {
+#ifdef _WINDOWS
+#pragma inline_depth(0)
+#endif
     TSeerHut seerData;
+#ifdef _WINDOWS
+#pragma inline_depth()
+#endif
     seerData.read(infile);
     m_seerHutList.push_back(seerData);
     seerObject->m_extraInfo = m_seerHutList.size() - 1;
@@ -3331,9 +3337,15 @@ void NewfullMap::readRandomDwellingFactionData(TAbstractFile* infile,
     char padding[3];
     infile->read(padding, 3);
 
-    dwelling.m_castleId = 0;
+#ifdef _WINDOWS
     dwelling.m_factionMask = static_cast<unsigned short>(
         1 << m_objectTypes[object->m_typeIndex].m_extra);
+#endif
+    dwelling.m_castleId = 0;
+#ifndef _WINDOWS
+    dwelling.m_factionMask = static_cast<unsigned short>(
+        1 << m_objectTypes[object->m_typeIndex].m_extra);
+#endif
 
     dwelling.m_minLevel = readValue<char>(infile);
     dwelling.m_maxLevel = readValue<char>(infile);
@@ -3423,9 +3435,9 @@ void NewfullMap::readHeroPlaceholderData(TAbstractFile* infile, CObject* tempObj
 // versus direct two-argument insert at 60.0594%; no sibling score moves.
 // Both guard/data insertion workers still expand where retail calls the
 // two-argument bodies, so this does not close that native-vector frontier.
-// Current residual (59.40%): readSeerData expands with its owned temporary,
-// read and pool insertion. VC6 also expands the temporary TSeerHut constructor
-// that retail retains; other map-reader call/expansion differences remain.
+// On Windows, readSeerData fences construction of its owned temporary while
+// leaving the wrapper available for caller expansion. The random-dwelling
+// faction reader also keeps its independent stores in the VC6 source order.
 VA(0x00502e00, 0x832)
 DC_ADDRESS(0x0f16c8, 0x454)
 MAC_ADDRESS(0x125ebc, 0x3ac)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined
@@ -3966,23 +3978,9 @@ std::vector<int> g_invalidPlacementList;
 // counterpart.  Retail's two calls prove the later helper boundary directly,
 // and fatal caller contracts preserve it against re-inlining.
 
-// Wall (99.88535%, 2026-08-22): all 32 blocks, all 32 edges, the 157
-// instructions and their register bindings agree.  The only code delta is
-// one post-RA reload schedule after the inlined string comparison: retail
-// restores ESI before EAX/EDI, while this compile restores it after them.
-// `why-reg --model` classifies the two unpaired slots as the B16/C3/C4
-// schedule family, not a register-binding defect.  Direct/reference/pointer
-// candidate spellings, && versus split conditions, compare() versus ==,
-// signed/unsigned and reused/block-scoped loop counters, and every adjacent
-// declaration-order mutation either preserve this transpose or get worse.
-// Rechecked 2026-08-30: binding objectTypes[i] to a CObjectType& and splitting
-// the short-circuit into an explicit continue are byte-flat at 99.88535%;
-// declaring extra after typeIndex keeps the 421-byte size but falls to
-// 95.93630%.  The coherent original spelling remains the peak.
-// The other asm-report row is cosmetic: this TU's Dinkumware `_Nullstr`
-// COFF symbol and the target's source-owned pooled empty-literal symbol both
-// resolve to 0x63a608; no DATA_COMPGEN binding exists in mapcell.obj because
-// the literal's physical owner is another compiland.
+// Bind the source image name before constructing reverse-search state. The
+// declaration order is semantically neutral, but preserves VC6's intended
+// post-comparison reload schedule without changing the helper boundary.
 // Mac 0:0x1270c0..0x127278 is the same later helper: it clears 232 per-class
 // lists, scans 0x38-byte types backwards by extra and image name, and has the
 // same two reader calls. Declaration order, equality operand order and
@@ -4003,11 +4001,12 @@ void NewfullMap::rebuildObjectTypeIndex()
     for (int i = 0; i < m_objectTypes.size(); ++i) {
         int objectClass = m_objectTypes[i].m_objectType;
         int extra = m_objectTypes[i].m_extra;
+        const std::string& imageName = m_objectTypes[i].m_imageName;
         int typeIndex = m_objectTypeIndex[objectClass].size();
         while (typeIndex--) {
             CObjectType& candidate = m_objectTypeIndex[objectClass][typeIndex];
             if (candidate.m_extra == extra
-                && candidate.m_imageName == m_objectTypes[i].m_imageName)
+                && candidate.m_imageName == imageName)
                 break;
         }
         if (typeIndex >= 0)
