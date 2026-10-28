@@ -198,7 +198,14 @@ public:
     // Retail stores the preceding flag as one byte; these three bytes
     // align the following integer payload to a four-byte boundary.
     char m_paddingBeforeExtras[3];
-    int m_extras[8];            // +0x1e4, the window's +0x18a0 run
+    int m_mapSize;
+    int m_mapLevels;
+    int m_humanPlayerCount;
+    int m_humanTeamCount;
+    int m_computerPlayerCount;
+    int m_computerTeamCount;
+    int m_waterContent;
+    int m_monsterStrength;
 
     CNewSetupInfoMsg(SGameSetupOptions* setup);
 };
@@ -3928,33 +3935,20 @@ int TSingleSelectionWindow::getFileSpecNbr()
 }
 
 // Mac retains this source choice; inlined in getHeaders and onMapFileNameMsg.
+// VC6's caller inline budget depends on the control-flow spelling here.
 MAC_ADDRESS(0x175674, 0x48)
 char* TSingleSelectionWindow::getHeaderDirectory()
 {
-    return const_cast<char*>(m_randomMapMode
-        ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
-        : (m_loadMode || m_saveMode
-               ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
-               : DATA_COMPGEN(0x006772d0, mapsDir, "maps")));
+    if (m_randomMapMode)
+        return const_cast<char*>(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"));
+    if (m_loadMode || m_saveMode)
+        return const_cast<char*>(DATA_COMPGEN(0x00677d70, gamesDir, "games"));
+    return const_cast<char*>(DATA_COMPGEN(0x006772d0, mapsDir, "maps"));
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3475
-// Residual (87.0700%, polish-45 - first full evidence pass on this row):
-// pure OVER-inline, two sites, both one level deeper than retail.
-//   * `pHeaders->clear()` lowers to `copy(end(),end(),begin())` + `_Destroy`
-//     + `_Last = _S`.  Retail CALLS `vector<GameSelectionHeadersStruct>::
-//     _Destroy(_S,_Last)` (retail's reference at call slot 8); this compile
-//     expands that loop in line, which is the whole 40-vs-37 block and
-//     24-vs-22 conditional-branch gap.
-//   * `temp`'s destructor: retail CALLS `~NewSMapHeader`, this compile
-//     expands it into two `basic_string::_Tidy` calls plus `~CMapHeaderData`
-//     - the two base-only calls at +0x2e3 and +0x2f4.
-// Everything else pairs 22/22 (the six "different" rows are the delinker's
-// ICF twins under another instantiation's name; the ratchet runs at
-// function_reloc_diffs=none and ignores them).  Per docs/vc6/inliner.md the
-// over-inline direction means this caller presents a LARGER front-end cb or
-// fewer candidate sites than retail's, so the levers are caller mass and site
-// count - not a `clear()`/`erase()` spelling and not a pragma.
+// The guarded helper keeps the intended destructor call boundaries when VC6
+// inlines it into this caller.
 VA(0x00582B40, 0x345)
 DC_ADDRESS(0x137da8, 0x916)
 MAC_ADDRESS(0x17a914, 0x204)  // anchor-global dir ternary m_randomMapMode/64/65 over "random_maps"(0x6836ac)/"maps"(0x6772d0)/"games"(0x677d70) + _chdir - the directory-scan opener; order-map GetHeaders..MakeHeroFilter onto 0x582b40..0x583890 (GetFileSpecNbr excluded by arity below), size 0.36x
@@ -6764,14 +6758,14 @@ unsigned char TSingleSelectionWindow::sendSetupInfo(
 {
     CNewSetupInfoMsg msg(&g_game->m_setup);
     msg.m_flag = m_randomMapSelected;
-    msg.m_extras[0] = m_randomMapOptions[0];
-    msg.m_extras[1] = m_randomMapOptions[1];
-    msg.m_extras[2] = m_randomMapOptions[2];
-    msg.m_extras[3] = m_randomMapOptions[3];
-    msg.m_extras[4] = m_randomMapOptions[4];
-    msg.m_extras[5] = m_randomMapOptions[5];
-    msg.m_extras[6] = m_randomMapOptions[6];
-    msg.m_extras[7] = m_randomMapOptions[7];
+    msg.m_mapSize = m_randomMapOptions[0];
+    msg.m_mapLevels = m_randomMapOptions[1];
+    msg.m_humanPlayerCount = m_randomMapOptions[2];
+    msg.m_humanTeamCount = m_randomMapOptions[3];
+    msg.m_computerPlayerCount = m_randomMapOptions[4];
+    msg.m_computerTeamCount = m_randomMapOptions[5];
+    msg.m_waterContent = m_randomMapOptions[6];
+    msg.m_monsterStrength = m_randomMapOptions[7];
     transmitRemoteDataDPID(&msg, dpid, false, true);
     return 1;
 }
@@ -6871,14 +6865,14 @@ bool TSingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
     CNewSetupInfoMsg* msg = static_cast<CNewSetupInfoMsg*>(netMsg);
     g_game->m_setup = msg->m_setup;
     m_randomMapSelected = msg->m_flag;
-    m_randomMapOptions[0] = msg->m_extras[0];
-    m_randomMapOptions[1] = msg->m_extras[1];
-    m_randomMapOptions[2] = msg->m_extras[2];
-    m_randomMapOptions[3] = msg->m_extras[3];
-    m_randomMapOptions[4] = msg->m_extras[4];
-    m_randomMapOptions[5] = msg->m_extras[5];
-    m_randomMapOptions[6] = msg->m_extras[6];
-    m_randomMapOptions[7] = msg->m_extras[7];
+    m_randomMapOptions[0] = msg->m_mapSize;
+    m_randomMapOptions[1] = msg->m_mapLevels;
+    m_randomMapOptions[2] = msg->m_humanPlayerCount;
+    m_randomMapOptions[3] = msg->m_humanTeamCount;
+    m_randomMapOptions[4] = msg->m_computerPlayerCount;
+    m_randomMapOptions[5] = msg->m_computerTeamCount;
+    m_randomMapOptions[6] = msg->m_waterContent;
+    m_randomMapOptions[7] = msg->m_monsterStrength;
     m_durationIndex = g_game->m_setup.m_turnDuration;
     m_durationSlider->setState(m_durationIndex);
     drawWindow(0, 0xffff0001, 0xffff);
@@ -8576,13 +8570,8 @@ VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // d
 // Flattening both helpers was 68.8219; restoring only GetDisplayTown is
 // 71.87 and retains HasMultipleTowns while expanding CheckFaces. Both real
 // source calls are needed to recover retail's natural nested decisions.
-// Residual (98.89%): the instruction sequence before +0x2cc agrees aside
-// from branch displacements and folded symbols. After UpdateTown the
-// candidate emits `mov ebx,esi; jmp` instead of joining retail's common
-// `mov ebx,[ebp-4]` loop tail. Nested seat guards vs continues and a positive
-// level-change scope vs the early return are byte-flat controls. Restoring
-// UpdateTown's GetCompPlayerInPos call is also byte-flat, including its
-// independently exact retained body.
+// Keeping each one-use feature index inside its bitset expression preserves
+// VC6's shared loop tail after updateTown.
 VA(0x0058e700, 0x2F9)
 DC_ADDRESS(0x13b178, 0xb4)
 MAC_ADDRESS(0x186224, 0x1e8)  // header-declared identity + anchor-callee AddNewPlayer/TurnOffAdvancedOptions, retail-only
@@ -8602,18 +8591,18 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
 
     if (m_loadMode) {
         int gameVersion = m_currentHeader->m_saved.m_gameVersion;
-        int required = gameVersion == GAME_VERSION_SOD
-                       ? 2 : gameVersion == GAME_VERSION_AB;
-        if (!g_gameContextFeatures[m_commonGameVersion][required])
+        if (!g_gameContextFeatures[m_commonGameVersion][
+                gameVersion == GAME_VERSION_SOD
+                    ? 2 : gameVersion == GAME_VERSION_AB])
             turnOffAdvancedOptions();
         return;
     }
 
     if (!m_randomMapSelected) {
         int mapVersion = g_game->m_mapHeader.m_version;
-        int required = mapVersion > MAP_FORMAT_ARMAGEDDONS_BLADE
-                       ? 2 : mapVersion > MAP_FORMAT_RESTORATION_OF_ERATHIA;
-        if (!g_gameContextFeatures[m_commonGameVersion][required])
+        if (!g_gameContextFeatures[m_commonGameVersion][
+                mapVersion > MAP_FORMAT_ARMAGEDDONS_BLADE
+                    ? 2 : mapVersion > MAP_FORMAT_RESTORATION_OF_ERATHIA])
             turnOffAdvancedOptions();
     }
     if (!m_inAdvancedOptions)
