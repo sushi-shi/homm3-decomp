@@ -201,19 +201,8 @@ const int g_townNameFixedLength = 13;
 // generatorBonus, mageGuildSpellCounts, the three building masks, the
 // mage-guild spell grid, a 70-BYTE buffer unpacked one BIT at a time into
 // the bitset<70>, and a packed byte that splits three ways.
-// Retail reuses dead parameter homes for the byte-read buffer and town-name
-// length. Separating the address-taken length buffer from its decoded short
-// reaches 99.9718%; four stack-offset differences remain. Local reordering
-// and wider buffer types do not close them. An artificial scope that ends
-// before name assignment reaches 100%, but has no supported source purpose.
-// Both the existing readLittleEndianValue<unsigned short> call and a reader
-// owning one scalar through readValue(infile, value) reproduce 97.3173%:
-// the short buffer lifetime fits, but _Grow's max_size remains out of line.
-// Short/int/unsigned decoded lengths without redundant masks are byte-flat.
-// The combined reader models were measured across all five consumer units.
-// Mac 0x1b1f70..0x1b2010 shows scalar read/byte swap, payload read/NUL and
-// ordinary string assignment in each version arm; it supplies no distinct
-// string wrapper to justify another lifetime or inline-budget boundary.
+// Keep the address-taken stored length scoped to the read and decode while
+// the decoded length remains live for the payload read and assignment.
 // DC locals: char_buffer, uchar_buffer, and inBuf[70].
 VA(0x005bcd60, 0x586)
 DC_ADDRESS(0x165628, 0x360)
@@ -269,27 +258,12 @@ int town::load(TAbstractFile* infile, int saveVersion)
     m_isGrouped = charBuffer;
 
     if (saveVersion >= g_saveVersionTownNameString) {
-        // Keep the address-taken file buffer separate from the decoded
-        // length retained across the next virtual read (Mac 0x1b1f90..1b1fc0).
-        // Residual: retail's buffer has a shorter lifetime than this local.
-        // A bare block around the read reproduces it exactly but is no source
-        // evidence; the matching inline readers (readLittleEndianValue<unsigned
-        // short>, or readValue with LITTLE_ENDIAN_SHORT) cost VC6's budget and
-        // leave m_name's assignment out of line (97.32%; it needs this
-        // caller at cb >= 987, the reader gives 978). Mac also argues for the
-        // decode in the caller: retail zero-extends the lhbrx result into the
-        // unsigned short local (clrlwi, then r26), which the reader's return
-        // folds away (Mac 88.32% -> 56.43%).
-        // Probe (2026-10-25): DC rows put each read call and its compare on
-        // separate lines, like game::save's DC-named `count = gzwrite(...)`
-        // idiom. Spelling every checked read here as `count = read(...);
-        // if (count < size)` raises this caller to cb 1103 and is byte-flat
-        // on both targets (99.97% / Mac 88.32%); with it the value reader
-        // above reaches Windows 100%, but Mac still falls to 56.43% (the
-        // inlined reader's local gets its own slot: frame 0xc0 vs 0xb0).
-        unsigned short storedNameLength;
-        infile->read(&storedNameLength, sizeof(storedNameLength));
-        unsigned short nameLength = LITTLE_ENDIAN_SHORT(storedNameLength);
+        unsigned short nameLength;
+        {
+            unsigned short storedNameLength;
+            infile->read(&storedNameLength, sizeof(storedNameLength));
+            nameLength = LITTLE_ENDIAN_SHORT(storedNameLength);
+        }
         infile->read(g_text, nameLength & 0xffff);
         g_text[nameLength & 0xffff] = 0;
         m_name = g_text;
@@ -1311,16 +1285,8 @@ long town::getLegionBonus(long dwelling) const
 // The assembled getter's const qualifier is inferred from this const caller;
 // both retained bonus helpers remain exact with that connected interface.
 //
-// The conditional return in getCastleGrowthBonus reduces its VC6 cost from
-// 84 to 72. Its nested hasBuilding then receives 68 instead of 53 budget
-// units, enough for the 62-unit body: getGrowthRate reaches 97.8947%.
-// All 28 blocks and three retained calls agree. The six residual instruction
-// rows are the generator-bonus load width and associated operand scheduling.
-// Twelve promoted/narrow/named bonus consumers and eight Grail return forms
-// do not close that tail; the register model finds no transposed local pair.
-// Thirty-six caller/assembled-helper lifetime forms alone also gave no gain.
-// Nine consistent short-contribution forms and the DC-proven long generator
-// storage likewise leave the tail unchanged; retain the recovered field type.
+// Read the generator bonus directly from its recovered long storage; the
+// accessor changes VC6's load width and operand schedule.
 VA(0x005bfb60, 0x266)
 DC_ADDRESS(0x167748, 0xfe)
 MAC_ADDRESS(0x1b5414, 0x1fc)
@@ -1351,7 +1317,7 @@ short town::getGrowthRate(short dwelling) const
         }
     }
 
-    growth += getGeneratorBonus(dwellingIndex);
+    growth += m_generatorBonus[dwellingIndex];
     if (hasBuilding(HOLY_GRAIL_ID, true))
         growth += growth / 2;
     return growth;
