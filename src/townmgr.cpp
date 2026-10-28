@@ -3646,29 +3646,19 @@ type_garrison_base_window::~type_garrison_base_window()
 // The command slot is cleared to -2 on the way IN, before the dispatch,
 // so an arm that sets nothing leaves the page with no command.
 
-// Both seven-slot runs call the DC-proven ArmyCommand member. Complete
-// expands its group/ownership gates and retains SetArmyCommand/selectArmy.
-// Recovering that boundary improves 95.6856% to 98.8384% with all 34 CFG
-// blocks and the named call sequence agreeing. Four instruction rows remain
-// different, beginning with the register used for the manager load.
-// Earlier flattened-arm control: moving thisStrip/mgr before qualifier
-// worsened 95.6856% to 95.4367%; that did not recover ArmyCommand.
-// DC 0x172bfa passes count 2 to GetArmyName in the divide status arm.
-// Mac 0x1cc788 and retail use the plural traits field (+0x18), not the
-// singular field (+0x14). With that argument restored, all 34 block sizes,
-// ten calls and 29 relocations agree; only four prefix instruction rows
-// differ (manager register and command-store ordering). On default
-// 94fe82954 this restores CUR 98.838425 -> 98.8428%; no other townmgr
-// function moves in the focused comparison.
+// Cache the message code once for dispatch and slot arithmetic. This keeps
+// the intended VC6 value lifetime and register choice without changing the
+// selected command.
 // DC declares message&; Complete passes the same one-word address.
 VA(0x005d05f0, 0x31B)
 DC_ADDRESS(0x172af0, 0x178)
 MAC_ADDRESS(0x1cc620, 0x1ac)  // anchor-caller(the page's WindowHandler 0x5d0910, its only caller) + anchor-callee(SetArmyCommand/select_army) + arity(ret 4)
 void type_garrison_base_window::setCommandAndText(message& msg)
 {
+    int code = msg.m_codeY;
     g_townManager->m_command = -2;
 
-    switch (msg.m_codeY) {
+    switch (code) {
     case TOP_SLOT_FIRST_ID + 0:
     case TOP_SLOT_FIRST_ID + 1:
     case TOP_SLOT_FIRST_ID + 2:
@@ -3677,7 +3667,7 @@ void type_garrison_base_window::setCommandAndText(message& msg)
     case TOP_SLOT_FIRST_ID + 5:
     case TOP_SLOT_FIRST_ID + 6: {
         g_townManager->armyCommand(g_townManager->m_garrisonStrip,
-            msg.m_codeY - TOP_SLOT_FIRST_ID,
+            code - TOP_SLOT_FIRST_ID,
             msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS, m_isJoinDialog);
         break;
     }
@@ -3696,7 +3686,7 @@ void type_garrison_base_window::setCommandAndText(message& msg)
     case BOTTOM_SLOT_FIRST_ID + 5:
     case BOTTOM_SLOT_FIRST_ID + 6: {
         g_townManager->armyCommand(g_townManager->m_heroStrip,
-            msg.m_codeY - BOTTOM_SLOT_FIRST_ID,
+            code - BOTTOM_SLOT_FIRST_ID,
             msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS, m_isJoinDialog);
         break;
     }
@@ -6810,11 +6800,11 @@ void townManager::moveHero(town* fromTown, town* toTown)
 
 // Retail retains getText at 0x5cc8d0 for the 54 general-text lookups below;
 // operator[] adds a distinct wrapper and is not the native call target.
-// Residual 99.7962%: one nested vector::insert remains at the single-value
-// overload where retail expands it into the counted overload, plus EBX/EDI
-// transposition from the sprite collection loop through the tail. A named
-// base-widget sprite local and unsigned index are byte-flat. A while-form
-// final widget traversal does not recover that boundary. Keep push_back.
+// Keep the castle-tier stores in assignment-valued ternary arms. This
+// preserves the three stores while changing VC6's statement cost enough to
+// retain the later vector expansion shape. Keep push_back; a conventional
+// if/else changes that compiler decision. The direct getText call remains
+// intentional.
 // DC 8622..8628, Mac retail and Windows retail all register the widgets in
 // place (retail calls vector begin/end, addWidget and memError here), not
 // through heroWindow::addWidgetsToMessageStream. Dreamcast's scopes record
@@ -6822,8 +6812,8 @@ void townManager::moveHero(town* fromTown, town* toTown)
 // arm has two) and no separate summoned-type statement before the strcpy
 // (8311..8314); restoring both lowers the root cb from 16062 to 16017, and
 // the in-place loop then keeps retail's calls (99.6416 -> 99.9657).
-// Residual: one insert-nested begin (trace site 481) still expands; the
-// replayed window is 15917..16003. Loop spelling (iterator type,
+// The assignment-valued ternary is intentional compiler shaping.
+// Loop spelling (iterator type,
 // post-increment, unbraced body) is cb-flat.
 VA(0x005d86f0, 0x445A)
 DC_ADDRESS(0x17b48c, 0x3c68)
@@ -6852,12 +6842,11 @@ TCastleWindow::TCastleWindow()
         m_use8 = 0;
     }
 
-    if (g_townManager->m_townToView->hasBuilding(CASTLE_FORT_ID, false))
-        m_castleType = CASTLE_FORT_ID;
-    else if (g_townManager->m_townToView->hasBuilding(CASTLE_CITADEL_ID, false))
-        m_castleType = CASTLE_CITADEL_ID;
-    else
-        m_castleType = CASTLE_CASTLE_ID;
+    g_townManager->m_townToView->hasBuilding(CASTLE_FORT_ID, false)
+        ? (m_castleType = CASTLE_FORT_ID)
+        : g_townManager->m_townToView->hasBuilding(CASTLE_CITADEL_ID, false)
+            ? (m_castleType = CASTLE_CITADEL_ID)
+            : (m_castleType = CASTLE_CASTLE_ID);
 
     m_widgets.push_back(new textWidget(0, 0, 800, 30, g_neutralBuildingNames[m_castleType],
                                  "bigfont.fnt", font::PRIMARY, 0, 1, 0, 8));
