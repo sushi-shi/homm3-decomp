@@ -663,7 +663,7 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
         && g_game->createBoat(
                cell->m_shipyardInfo.boatX,
                cell->m_shipyardInfo.boatY,
-               boatPoint.m_z, g_netLocalGamePos, 0, 1) != -1) {
+               point.m_z, g_netLocalGamePos, 0, 1) != -1) {
         g_game->m_players[g_netLocalGamePos].m_resources[GOLD] -= 1000;
         g_game->m_players[g_netLocalGamePos].m_resources[WOOD] -= 10;
     }
@@ -1640,21 +1640,8 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
 // rollover-name tables pick generator_name, the guarded prompt is a
 // block-scoped string destroyed before the combat, and the AI tail hands
 // an owned-or-unowned dwelling to AI_PurchaseCreatures.
-// [2026-08-27] Residual (99.0902%): our CL keeps `&guards` (lea ebx+0x1c)
-// live in EDI across the HasCreatures call and reuses it for the scan
-// loop; retail recomputes the lea at both sites and stores the prompt's
-// EH state as an immediate. why-reg: bindings agree at every first def,
-// divergence past them (allocator CSE state, 11 slots). The
-// generatorType/index locals, the inverted CREATURE_GENERATOR_1 arm and
-// the shared GeneratorEvent tail above are measured (74.81 -> 99.09).
-// Fresh 2026-09-01 source/structure comparison localizes the first mismatch
-// to that same pair: retail passes `&guards` in ECX then recomputes its LEA
-// after prompt construction, while this compile keeps it in EDI. The other
-// 114/115 blocks are an alignment cascade from this one allocator choice,
-// not evidence for a source control-flow rewrite.
-// Naming the HasCreatures result (94.82%) or the guards reference (90.78%)
-// worsens VC6; naming getOwner scores 99.07%, and a typed generator pointer
-// is byte-flat. Keep the canonical calls and current reference lifetime.
+// Keep the ownership recheck after the hostile-owner block; its scope is
+// compiler-significant even though the extra friendly-path test is redundant.
 VA(0x004a18b0, 0x79A)
 DC_ADDRESS(0x092814, 0x52a)
 MAC_ADDRESS(0x0acbec, 0x7c8)  // dc-bracket forced, ret 0x10=p5
@@ -1701,10 +1688,10 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                          &currentGenerator.m_guards, -1, 1, 0))
                 return;
         }
-        if (!g_game->onSameTeam(currentGenerator.getOwner(),
-                                g_netLocalGamePos))
-            g_game->claimGenerator(id, g_netLocalGamePos);
     }
+    if (!g_game->onSameTeam(currentGenerator.getOwner(),
+                            g_netLocalGamePos))
+        g_game->claimGenerator(id, g_netLocalGamePos);
 
     if (humanPlayer) {
         if (generatorCount != CREATURE_GENERATOR_1) {

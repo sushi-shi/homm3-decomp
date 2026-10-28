@@ -9148,4 +9148,19 @@ VA_COMPGEN(0x004040F0, 0x4B, BASIC_STRING_TIDY, char)
 
 VA_COMPGEN(0x00404150, 0xA1, BASIC_STRING_ASSIGN_PTR_SIZE, char)
 
+// COMDAT pairing: basic_string<char>::_Eos, 20 B against this compiland's
+// single 20-byte COMDAT.
+#if 0  // @carcass: Dinkumware instantiations emitted by this compiland
+
+VA(0x00404a70, 0x14)  // COMDAT pairing (unique 20 B in this obj)
+void std::basic_string<char>::_Eos(unsigned n)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
+// COMDAT pairing: _Grow on the char instantiation.
+VA_COMPGEN(0x00404a90, 0x122, BASIC_STRING_GROW, char)
+
 VA_COMPGEN(0x0041bc00, 0xD, LOGIC_ERROR_WHAT, char)

@@ -60,27 +60,9 @@ DATA(0x0063bc00) static const short g_campaignSetExitRect[4] = { 576, 464, 126, 
 // when it is absent. `Widgets.reserve(4)` is retail's - one short of the
 // five plates, which is why the vector still grows.
 
-// Residual (99.9458%): ONE BYTE, the `sub esp` immediate - retail reserves
-// 0xc and we reserve 8. Both sides use the same 26 temporary slots and the
-// same eleven EH-state transitions; retail's allocator ALTERNATES its two
-// four-byte temporaries between [ebp-0x10] (14 uses) and [ebp-0x14] (12),
-// spilling `this` into a third slot at [ebp-0x18], while ours coalesces the
-// pair onto [ebp-0x10] (26 uses) and puts `this` at [ebp-0x14]. Every
-// displacement is masked by the comparison, so the frame size is the whole
-// reported residual. This score therefore understates the differing frame
-// operands; raw instructions must also agree before this body is closed.
-// Pointer-lifetime control: 66 states varied all five actual plate pointers
-// between button and type_func_button, separate block lifetimes, and one
-// shared pointer. Three emitted objects and all retained candidates reproduce;
-// none exceeds 99.9458%, and no exact sibling changes. These source forms do
-// not recover the extra frame slot; no pointer or scope change is retained.
-// Container-entry control: all 243 combinations of implicit widget* conversion,
-// insertion-scoped widget* locals and enclosing-block const pointer locals
-// preserve all nine exact siblings. The best reproduced candidates reach
-// 99.9639% and allocate retail's frame, but raw review of all 243 still finds
-// at least ten wrong temporary-slot operands. A named ROE entry alone is
-// enough to reach that plateau; it does not explain retail's alternating
-// allocation/reserve, widget-entry and hotkey homes. No such local is retained.
+// Each allocation belongs inside its push_back expression. Nesting keeps
+// the allocation and widget-conversion temporaries in distinct scratch homes
+// under VC6.
 VA(0x00456ec0, 0x337)
 MAC_ADDRESS(0x21e104, 0x4cc)  // anchor-string CSSsod.def + anchor-vtable 0x63bc08 + DoCampaignWindow's stack object, retail-only
 TCampaignSetWindow::TCampaignSetWindow()
@@ -89,46 +71,42 @@ TCampaignSetWindow::TCampaignSetWindow()
     m_widgets.reserve(4);
 
     int widgetId = SOD_PLATE_ID;
+    type_func_button* plate;
 
-    type_func_button* sodPlate = new type_func_button(
+    m_widgets.push_back(plate = new type_func_button(
         534, 8, 201, 119, widgetId++,
         DATA_COMPGEN(0x00660dfc, campaignSetSodSprite, "CSSsod.def"),
-        campaignSetSodHandler, 0, 1);
-    m_widgets.push_back(sodPlate);
-    sodPlate->setHotkey(0x1f);
+        campaignSetSodHandler, 0, 1));
+    plate->setHotkey(0x1f);
 
     if (g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
-        type_func_button* armPlate = new type_func_button(
+        m_widgets.push_back(plate = new type_func_button(
             486, 242, 305, 119, widgetId++,
             DATA_COMPGEN(0x00660df0, campaignSetArmSprite, "CSSarm.def"),
-            campaignSetArmHandler, 0, 1);
-        m_widgets.push_back(armPlate);
-        armPlate->setHotkey(0x1e);
+            campaignSetArmHandler, 0, 1));
+        plate->setHotkey(0x1e);
     }
 
-    type_func_button* roePlate = new type_func_button(
+    m_widgets.push_back(plate = new type_func_button(
         g_campaignSetRoeRect[0], g_campaignSetRoeRect[1],
         g_campaignSetRoeRect[2], g_campaignSetRoeRect[3], widgetId++,
         DATA_COMPGEN(0x00660de4, campaignSetRoeSprite, "CSSroe.def"),
-        campaignSetRoeHandler, 0, 1);
-    m_widgets.push_back(roePlate);
-    roePlate->setHotkey(0x13);
+        campaignSetRoeHandler, 0, 1));
+    plate->setHotkey(0x13);
 
-    type_func_button* cusPlate = new type_func_button(
+    m_widgets.push_back(plate = new type_func_button(
         g_campaignSetCusRect[0], g_campaignSetCusRect[1],
         g_campaignSetCusRect[2], g_campaignSetCusRect[3], widgetId++,
         DATA_COMPGEN(0x00660dd8, campaignSetCusSprite, "CSScus.def"),
-        campaignSetCusHandler, 0, 1);
-    m_widgets.push_back(cusPlate);
-    cusPlate->setHotkey(0x2e);
+        campaignSetCusHandler, 0, 1));
+    plate->setHotkey(0x2e);
 
-    type_func_button* exitPlate = new type_func_button(
+    m_widgets.push_back(plate = new type_func_button(
         g_campaignSetExitRect[0], g_campaignSetExitRect[1],
         g_campaignSetExitRect[2], g_campaignSetExitRect[3], widgetId,
         DATA_COMPGEN(0x00660dcc, campaignSetExitSprite, "CSSexit.def"),
-        campaignSetExitHandler, 0, 1);
-    m_widgets.push_back(exitPlate);
-    exitPlate->setHotkey(1);
+        campaignSetExitHandler, 0, 1));
+    plate->setHotkey(1);
 
     addWidgetsToMessageStream();
 }

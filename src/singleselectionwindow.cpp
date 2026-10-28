@@ -3369,11 +3369,9 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 // widget declarations into the loop, or moving the adjacent `i, nextColor`
 // pair below those declarations, is byte-flat; retain their current scope.
 // All 24 declaration orders of the four icon pointers in their DC block are
-// byte-flat (99.98%), so the slot swap is not declaration order.
-// The residual is a four-home rotation among nextColor, playerType, nameEdit,
-// and an induction temporary. Naming the duration isHost result and declaring
-// compatibilityMessage before gameType symmetrically are byte-flat. why-reg's
-// seven catalog mutations were flat or worse; none reduced the divergence.
+// byte-flat. VC6's store order is heroIcon, townIcon, heroRight, heroLeft.
+// Naming the duration isHost result and declaring compatibilityMessage before
+// gameType symmetrically are byte-flat.
 // Direct ordinary text indexing restores the retail branch-local table loads;
 // caching the table across both message arms had lowered Windows to 97.24%.
 // Both authored message lifetimes remain; Windows recovers 99.80%, and Mac
@@ -3512,10 +3510,10 @@ void TSingleSelectionWindow::setupAdvancedOptions()
             widget* heroIcon = getWidget(i + 247);
             widget* heroLeft = getWidget(i + 239);
             widget* heroRight = getWidget(i + 255);
-            townIcon->m_y = nextColor * 50 + 133;
             heroIcon->m_y = nextColor * 50 + 133;
-            heroLeft->m_y = nextColor * 50 + 133;
+            townIcon->m_y = nextColor * 50 + 133;
             heroRight->m_y = nextColor * 50 + 133;
+            heroLeft->m_y = nextColor * 50 + 133;
         }
 
         playerName->m_y = nextColor * 50 + 151;

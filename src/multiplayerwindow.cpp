@@ -1458,29 +1458,12 @@ bool TMultiPlayerWindow::onTCP()
 // their folded general-text indices (459, 463, 456, then GetErrorDesc), and
 // the Dreamcast xref graph independently records exactly four NormalDialog
 // calls plus JoinSession, InitRemote, CAutoArray::Destroy and CHourGlass.
-// `homm3 vc6 reach` (2026-10-07): retail keeps all five ~CMPInputDlg calls.
-// The first (cb 55) is admitted with 131 left after the 1017-cost
-// constructor, yet initRemote (119) right after it still expands in retail.
-// So the target is the destructor's cost (above 131), not the root budget.
 VA(0x00511660, 0x666)  // caller slot + complete TCP search flow
 DC_ADDRESS(0x10196c, 0x294)
 // Native OnSearch public QAA_NXZ (DC file 0x5aceb7); protocol and
 // session helpers likewise return bool, including forwarded Host/Join arms.
 bool TMultiPlayerWindow::onSearch()
 {
-    // Current 89.766%, banked MAX 91.324%: all 13 retail branch tests are
-    // present, but C1 feeds
-    // the allocator the first two call-crossing pseudos in the opposite order:
-    // candidate ESI=this/EDI=-1 versus retail EDI=this/ESI=-1. Reusing ESI for
-    // the saved DirectPlay error therefore spills this, grows the frame by four
-    // bytes, and lets VC6 merge the two late false cleanup tails (3 emitted
-    // returns versus retail's 4). DC proves the saved error precedes dialog 456
-    // and scopes sErr inside the join-failure block. DC and the retail branch
-    // direction both prove the retained negative JoinSession guard with the
-    // failure body preceding the final success return; the higher positive-
-    // guard spelling omitted that source fact. Naming/parameterizing the -1
-    // sentinel is copy-propagated byte-flat, as the register model predicts;
-    // the remaining role swap is not a statement-level lever.
     CMPInputDlg searchDlg(20, 20);
     searchDlg.m_header1->setText(g_generalText->GetText(GENERAL_TEXT_NETWORK_HOST_ADDRESS_PROMPT));
     searchDlg.m_header2->setText(g_generalText->GetText(GENERAL_TEXT_PASSWORD_OPTIONAL));
@@ -1511,14 +1494,15 @@ bool TMultiPlayerWindow::onSearch()
         return 0;
     }
 
-    if (!joinSession(m_sessions->get(0), 0)) {
-        // Original DC local name: sErr.
-        char errorText[256];
+    CDPlaySession* session = m_sessions->get(0);
+    if (!joinSession(session, 0)) {
         long lastError = g_dPlay->getLastError();
         normalDialog(g_generalText->GetText(GENERAL_TEXT_SESSION_CONNECTION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        g_dPlay->getErrorDesc(lastError, errorText);
-        normalDialog(errorText, 1, -1, -1,
+        // Original DC local name: sErr.
+        char sErr[256];
+        g_dPlay->getErrorDesc(lastError, sErr);
+        normalDialog(sErr, 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
         initRemote(MP_TCP, 0, 0);

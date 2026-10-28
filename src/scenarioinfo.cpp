@@ -54,8 +54,8 @@ public:
     // heroPortrait.  The store sits INSIDE the new-expression's
     // allocation-succeeded arm, so it is the constructor's, not the caller's.
     CScenarioPlayerInfoWidget(CSprite* town, int widgetId)
-        : m_townSprite(town)
     {
+        m_townSprite = town;
         m_townType = 0;
         m_panel = 0;
         m_flag = 0;
@@ -106,9 +106,6 @@ public:
 SIZE(CScenarioPlayerInfoWidget, 0x60);
 
 // E:\gamedcs\scenarioinfo.cpp:258
-// 2026-10-07 trace: retail expands one nested size() in each of the last two
-// button push_backs; ours sees depth-4 budgets 10/15 against cost 42, the
-// same late-budget class as TAdventureMapWindow's constructor.
 VA(0x00567290, 0x2109)
 DC_ADDRESS(0x129db4, 0xcbc)
 MAC_ADDRESS(0x15ddc0, 0x2640)  // anchor CAdvPopup ctor + GSelPop1.pcx + DC source shape
@@ -118,10 +115,6 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     : CAdvPopup((WINDOW_SCREEN_WIDTH - 763) / 2,
                 (WINDOW_SCREEN_HEIGHT - 585) / 2, 763, 585, 2)
 {
-    // Residual: 99.4649%; the last two button appends retain one vector::size
-    // call each that retail expands. Before recovering the setter, all 24
-    // buffer declaration orders were byte-flat; moving the setter before the
-    // constructor is byte-flat. DC records no widget-vector local.
     char tempText[256];
     char lossText[1024];
     char tempName[256];
@@ -342,16 +335,21 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         loss->setIconFrame(3);
     m_widgets.push_back(loss);
 
-    m_widgets.push_back(new button(
-        503, 450, 30, 46, 107, "gspbut3.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        535, 450, 30, 46, 108, "gspbut4.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        567, 450, 30, 46, 109, "gspbut5.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        599, 450, 30, 46, 110, "gspbut6.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        631, 450, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2));
+    button* difficultyButton = new button(
+        503, 450, 30, 46, 107, "gspbut3.def", 0, 1, 0, 0, 2);
+    m_widgets.push_back(difficultyButton);
+    difficultyButton = new button(
+        535, 450, 30, 46, 108, "gspbut4.def", 0, 1, 0, 0, 2);
+    m_widgets.push_back(difficultyButton);
+    difficultyButton = new button(
+        567, 450, 30, 46, 109, "gspbut5.def", 0, 1, 0, 0, 2);
+    m_widgets.push_back(difficultyButton);
+    difficultyButton = new button(
+        599, 450, 30, 46, 110, "gspbut6.def", 0, 1, 0, 0, 2);
+    m_widgets.push_back(difficultyButton);
+    difficultyButton = new button(
+        631, 450, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2);
+    m_widgets.push_back(difficultyButton);
 
     addWidgetsToMessageStream();
     updateAllyEnemyFlags();

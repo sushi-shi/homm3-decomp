@@ -7982,7 +7982,8 @@ void game::convertObject(NewmapCell* tempCell)
     }
 
     int oldType = objectType->m_objectType;
-    objectType->m_imageName = tempText;
+    std::string& imageName = objectType->m_imageName;
+    imageName = tempText;
     objectType->m_objectType = type;
     objectType->m_extra = tempCell->m_objectIndex;
     CSprite* tempSprite =

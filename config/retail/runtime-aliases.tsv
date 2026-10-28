@@ -1,0 +1,17 @@
+# MANUALLY MANAGED - extra COFF names proven at one retail code address.
+# GAME/<object>.obj identifies the authored object whose VC6 symbol and
+# byte-identical body prove an additional name for a retail function.
+rva	name	library	member
+0x00002450	?checkAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	GAME	adventuremapwindow.obj
+0x00057280	?campaignSetSodHandler@@YIHAAVmessage@@@Z	GAME	campaign.obj
+0x000572f0	?campaignSetArmHandler@@YIHAAVmessage@@@Z	GAME	campaign.obj
+0x00057360	?campaignSetCusHandler@@YIHAAVmessage@@@Z	GAME	campaign.obj
+0x000573d0	?campaignSetExitHandler@@YIHAAVmessage@@@Z	GAME	campaign.obj
+0x00057440	?campaignSetRoeHandler@@YIHAAVmessage@@@Z	GAME	campaign.obj
+0x000f6570	?normalDialog@@YIXPBDHHHHHHHHHHH@Z	GAME	kb.obj
+0x00127b00	?aiPurchaseCreatures@@YIXPAVhero@@PAVgenerator@@@Z	GAME	philai.obj
+0x0014d120	?insert@?$vector@PAVCSprite@@V?$allocator@PAVCSprite@@@std@@@std@@QAEXPAPAVCSprite@@IABQAV3@@Z	GAME	game.obj
+0x0015a800	?GetBitmap816@ResourceManager@@YIPAVBitmap816@@PBD@Z	GAME	resourcemanager.obj
+0x0015c7b0	?GetSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	GAME	resourcemanager.obj
+0x001960d0	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@H_N@Z	GAME	slider.obj
+0x001d2720	?doShipyard@@YIXH@Z	GAME	townmgr.obj

@@ -453,7 +453,7 @@ TAdventureMapWindow::TAdventureMapWindow()
 
 // Defined at its retail address below; SendChat is its only caller and
 // precedes it in the retail link order.
-void checkAdvCheatCode(std::string& chatString);
+static void checkAdvCheatCode(std::string& chatString);
 
 // E:\gamedcs\adventuremapwindow.cpp:261. The adventure editor's chat sink,
 // In a single-player game the line first goes through the cheat
@@ -467,29 +467,6 @@ void checkAdvCheatCode(std::string& chatString);
 // The preference fields are the misc.obj block at 0x698758 whose registry
 // names prefs.h records; the five combat toggles are its +0x3c..+0x4c run.
 
-// Residual (77.49%): ONE over-inline, and everything else is downstream of
-// it. Retail CALLS basic_string::assign(const char*, unsigned) to build
-// `chatString`; our compile expands it into _Grow + _Eos + an inline
-// rep movsd, which is 36 bytes of surplus body and the register pressure that
-// then costs the shared `1` constant retail keeps in EBX across the
-// GetLocalPlayerGamePos call (retail stores `bl` and five `ebx`, we
-// re-materialise). The call multiset is otherwise identical, 6 of 7 calls
-// pair and the statement order matches. Measured and byte-flat: the explicit
-// `std::string chatString(sChat)` ctor (77.49); measured and 0.07 higher but
-// less faithful to retail's _Tidy-then-assign shape: default construction
-// followed by `chatString = sChat` or by `assign(sChat, strlen(sChat))`
-// (77.56 both).
-// Passive trace (2026-09-07, identical 400-byte candidate): caller cb=184,
-// initial budget=1000 and four top-level candidates. The string constructor
-// receives 250; nested assign(const char*, size) receives 82 for cost 69 and
-// expands. Restoring DC's CheckAdvCheatCode-before-SendChat definition order
-// is byte-identical at 77.4872%, so source order does not explain this site.
-// DC 262 proves the retained const-char-pointer constructor; default-string
-// assignment controls do not recover that source boundary.
-// 2026-10-07 trace: the constructor is depth-1 site 1 of 4 (op==, c_str,
-// ~string follow); its nested assign keeps cost 69 only once five sites
-// remain ((1000 - 61) / 5 - 152 < 69). Mac 0x3e74 and DC 262..311 show the
-// same calls; DC's unrecorded 288..308 band does not identify a fifth.
 VA(0x004022e0, 0x167)
 DC_ADDRESS(0x00330c, 0x108)
 MAC_ADDRESS(0x003e74, 0x118)  // anchor-string("gosolo") + anchor-callee(CheckAdvCheatCode)
@@ -523,7 +500,7 @@ void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)
 VA(0x00402450, 0x5D3)
 DC_ADDRESS(0x0003b0, 0x4ec)
 MAC_ADDRESS(0x0002ac, 0x69c)  // anchor-global
-void checkAdvCheatCode(std::string& chatString)
+static void checkAdvCheatCode(std::string& chatString)
 {
     // Every cheat code is its own array in source order (the combat copies
     // of shared codes are separate objects).
@@ -1487,21 +1464,6 @@ void TAdventureMapWindow::onSleepChange(unsigned char on)
 // 0x6455bc and tail-calls ~exception, so it is `??1logic_error`, claimed in
 // objecttype.cpp with the rest of that COMDAT group (0x404640 / 0x404660 /
 // 0x4046e0).
-
-// COMDAT pairing: basic_string<char>::_Eos, 20 B against this compiland's
-// single 20-byte COMDAT.
-#if 0  // @carcass: Dinkumware instantiations emitted by this compiland
-
-VA(0x00404a70, 0x14)  // COMDAT pairing (unique 20 B in this obj)
-void std::basic_string<char>::_Eos(unsigned n)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
-// COMDAT pairing: _Grow on the char instantiation.
-VA_COMPGEN(0x00404a90, 0x122, BASIC_STRING_GROW, char)
 
 VA_COMPGEN(0x00404BD0, 0x108, BASIC_STRING_COPY, char)
 
