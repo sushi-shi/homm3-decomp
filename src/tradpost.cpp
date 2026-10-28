@@ -2087,6 +2087,7 @@ void TGiveResourceWindow::update(bool update)
                 msg.m_codeX = 3;
                 msg.m_codeY = 4;
                 msg.m_extraText = g_text;
+                int quantityPerTrade = g_giveQuantity;
                 if (g_ratioInverted)
                     sprintf(g_text,
                             DATA_COMPGEN(0x00660a1c, decimalFormat,
@@ -2096,7 +2097,7 @@ void TGiveResourceWindow::update(bool update)
                     sprintf(g_text,
                             DATA_COMPGEN(0x00660a1c, decimalFormat,
                                          "%d"),
-                            g_rightAmount * g_giveQuantity);
+                            g_rightAmount * quantityPerTrade);
             } else {
                 msg.m_extra = m_slotPlayerColor[g_leftResource];
                 msg.m_codeY = 13;
