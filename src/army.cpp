@@ -1722,10 +1722,8 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // all calls to the single-swing helper remain inside army. Mac forwards
 // CheckSpecialAttack's byte result, replacing it with true for fresh blind.
 // Mac 0x4d3e8, 0x4d488 and 0x4d4e4 load the same full-width side
-// returned by getOwningSide at each marking site. Missing retained DC calls
-// do not disprove those expansions. Restoring the three canonical calls is
-// byte-flat at 99.9232%; the residual is two effect-address decompositions
-// and the independent EDI/EBX reload order after the hydra call.
+// returned by getOwningSide at each marking site. Stage all three side/index
+// pairs through one reused local pair to preserve VC6's register lifetimes.
 VA(0x00441610, 0x6A0)
 DC_ADDRESS(0x046bec, 0x3c2)
 MAC_ADDRESS(0x04d288, 0x638)  // corroborates
@@ -1763,7 +1761,9 @@ bool army::doAttack(army* armyToAttack, int direction)
         }
     }
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(getOwningSide(), index);
+    int markedSide = getOwningSide();
+    int markedIndex = index;
+    g_combatManager->markCreatureEffect(markedSide, markedIndex);
     checkLuck();
     int damage = 0;
     int killed = 0;
@@ -1775,11 +1775,14 @@ bool army::doAttack(army* armyToAttack, int direction)
         doMultiHeadAttack(attackMask, &damage, &killed,
                              &fireDamage);
     } else {
-        g_combatManager->markCreatureEffect(armyToAttack->getOwningSide(),
-                                            armyToAttack->index);
-        if (behind)
-            g_combatManager->markCreatureEffect(behind->getOwningSide(),
-                                                behind->index);
+        markedSide = armyToAttack->getOwningSide();
+        markedIndex = armyToAttack->index;
+        g_combatManager->markCreatureEffect(markedSide, markedIndex);
+        if (behind) {
+            markedSide = behind->getOwningSide();
+            markedIndex = behind->index;
+            g_combatManager->markCreatureEffect(markedSide, markedIndex);
+        }
         totalLife = armyToAttack->getTotalHitPoints(0);
         fireDamage = damageEnemy(armyToAttack, &damage, &killed, 0);
         if (fireDamage > 0)
