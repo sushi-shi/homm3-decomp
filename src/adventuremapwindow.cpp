@@ -243,12 +243,12 @@ void TAdventureMapWindow::close(unsigned char update)
     heroWindow::close(update);
 }
 
-// 2026-10-07 trace: the only residual is the m_chatEdit push_back's nested
-// insert, whose first size() sees depth-4 budget 38 against cost 42 (retail
-// expands it). The counterfactual simulator flips it if the chat-edit
-// constructor chain costs about 38 less (CAdventurMapChatEdit <= 80). Natural
-// for-loops for the three icon rows fall to 96.36%; scoping unusedText before
-// the chat edit overshoots (91.66%).
+// Keep the hero-movement, hero-mana, and town icon rows in separate scopes.
+// Each row initializes its counter in the for statement and decrements it
+// after constructing the widget. The positive compile-time counts preserve
+// the row cardinality while retaining the constructor's source lifetimes for
+// y, widgetId, and remaining.
+// The loop form is intentional compiler-specific source shaping.
 VA(0x00401510, 0xCB5)
 DC_ADDRESS(0x00089c, 0x300)
 MAC_ADDRESS(0x000a34, 0x15e0)
@@ -369,28 +369,26 @@ TAdventureMapWindow::TAdventureMapWindow()
     {
         int y = 213;
         int widgetId = HERO_MOVEMENT_0_ID;
-        int remaining = NUM_HERO_BUTTONS;
-        do {
+        for (int remaining = NUM_HERO_BUTTONS; remaining; --remaining) {
             m_widgets.push_back(new iconWidget(
                 610, y, 8, 32, widgetId,
                 DATA_COMPGEN(0x0065F348, adventureImobil, "imobil.def"),
                 0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
             ++widgetId;
             y += 32;
-        } while (--remaining);
+        }
     }
     {
         int y = 213;
         int widgetId = HERO_MANA_0_ID;
-        int remaining = NUM_HERO_BUTTONS;
-        do {
+        for (int remaining = NUM_HERO_BUTTONS; remaining; --remaining) {
             m_widgets.push_back(new iconWidget(
                 666, y, 8, 32, widgetId,
                 DATA_COMPGEN(0x0065F33C, adventureImana, "imana.def"),
                 0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
             ++widgetId;
             y += 32;
-        } while (--remaining);
+        }
     }
 
     m_widgets.push_back(new button(
@@ -405,15 +403,14 @@ TAdventureMapWindow::TAdventureMapWindow()
     {
         int y = 212;
         int widgetId = TOWN_0_ID;
-        int remaining = NUM_TOWN_BUTTONS;
-        do {
+        for (int remaining = NUM_TOWN_BUTTONS; remaining; --remaining) {
             m_widgets.push_back(new iconWidget(
                 747, y, 48, 32, widgetId,
                 DATA_COMPGEN(0x0065F318, adventureItpa, "itpa.def"),
                 0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
             ++widgetId;
             y += 32;
-        } while (--remaining);
+        }
     }
 
     m_rolloverTextWidget = new bitmapBackedTextWidget(
