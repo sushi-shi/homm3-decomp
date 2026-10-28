@@ -3945,25 +3945,19 @@ void game::newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
 // Its two callers pass a directory, filename, optional eight-hero override,
 // and game-version selector; the body constructs the zlib stream and hands
 // exactly those latter two values to the stream-based NewMap overload.
-// WALL 99.4%: all 100 explicit instructions, all three returns and the whole
-// try/catch funclet graph agree.  The sole byte-level residual is VC6's hidden
-// try-state zero at ebp-4: retail reuses the already-zero EAX (`mov [ebp-4],
-// eax`), while rebuilding the same source emits the equivalent immediate-zero
-// store.  This is compiler EH bookkeeping, not an unrecovered source action.
-// Four stream/exit-lifetime candidates produced three reproduced objects:
-// a separate stream scope and success after try remain 99.4000%; a shared
-// success local drops to 85.4000%. No source alternative is adopted.
+// Keep path construction outside the try: only opening and using TGzFile
+// participates in the TOpenFailure catch and its VC6 EH state.
 VA(0x004c0520, 0x106)
 MAC_ADDRESS(0x0d6350, 0xc0)  // anchor-callers + contiguous catch funclets, retail-only
 unsigned char game::newMap(const char* mapPath, const char* mapName,
                            HeroId* playerHeroFaces, int gameVersion)
 {
-    try {
-        strcpy(g_text, mapPath);
-        strcat(g_text,
-               DATA_COMPGEN(0x00677dac, newMapPathSeparator, "\\"));
-        strcat(g_text, mapName);
+    strcpy(g_text, mapPath);
+    strcat(g_text,
+           DATA_COMPGEN(0x00677dac, newMapPathSeparator, "\\"));
+    strcat(g_text, mapName);
 
+    try {
         TGzFile mapFile(
             g_text, DATA_COMPGEN(0x00677d6c, newMapGzReadMode, "rb"));
         newMap(&mapFile, playerHeroFaces, NULL, gameVersion);
