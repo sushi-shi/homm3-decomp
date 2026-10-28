@@ -3020,9 +3020,11 @@ TRmgTreasureGroup::TRmgTreasureGroup()
 // clears map-cell state, then sets every surface cell to dirt/frame zero.
 // Complete-only role and ownership proven by 0x547360 and 0x5466e0.
 // Reading the dimensions through getWidth()/getHeight() gives two more /Ob2
-// sites that keep both _Destroy calls out of line here; their product
-// without width/height locals costs 130, so discard still expands this body
-// in assembleTreasureGroup and placeZoneTreasures. The canonical
+// sites that keep both _Destroy calls out of line here. Keep height before
+// width in the product; the order is semantically neutral but controls VC6's
+// saved-value load order when reset expands into callers. Keeping the product
+// direct costs 130, so discard still expands this body in assembleTreasureGroup
+// and placeZoneTreasures. The canonical
 // two-coordinate lookup expands here but is called by retail reset copies at
 // 0x547625/0x547717. Keep its one ordinary body in this TU.
 VA(0x00535040, 0xC6)
@@ -3035,7 +3037,7 @@ void TRmgTreasureGroup::reset()
     m_hasGuard = 0;
     m_ready = 0;
     TRmgMapItem* item = m_map.getMapItem(0, 0);
-    int count = m_map.getWidth() * m_map.getHeight();
+    int count = m_map.getHeight() * m_map.getWidth();
     while (count--) {
         item->setTerrain(eTerrainDirt, 0, 0, 0);
         ++item;
@@ -5026,8 +5028,9 @@ void type_random_map_generator::calculateZoneBounds()
 // Direct table expressions preserve retail's unusual sentinel/version loop;
 // caching one town entry lets VC6 fold it away. Named scaled-width/height
 // locals are flat. The retained chooseCreatureTownType call is restored.
-// Residual: vector erase expands here but is retained in retail, and the
-// dimension products / bounds normalization exchange operand scheduling.
+// Residual: vector erase expands here but is retained in retail. Keep the
+// horizontal span first in max(); operand order is semantically neutral but
+// affects VC6 register scheduling.
 VA(0x0053BCB0, 0x33B)
 MAC_ADDRESS(0x23cd84, 0x458)
 void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
@@ -5067,7 +5070,7 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     }
     int minimumY, minimumX, maximumY, maximumX;
     getInitialZoneBounds(minimumY, minimumX, maximumY, maximumX);
-    int span = max(maximumY - minimumY, maximumX - minimumX);
+    int span = max(maximumX - minimumX, maximumY - minimumY);
     int size = max(m_map.m_mapWidth, m_map.m_mapHeight);
     minimumY = (minimumY - span + maximumY) / 2;
     minimumX = (minimumX - span + maximumX) / 2;
