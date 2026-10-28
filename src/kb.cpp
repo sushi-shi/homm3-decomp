@@ -346,7 +346,7 @@ void InitializeAdvObjectTypeTraitsTable();
 unsigned char initializeExtraInfoText();
 unsigned char initializeHeroSpecificAbilitiesTable();
 unsigned char initializeCampaignMusicTable();
-int interpretCommandLine();
+int __fastcall interpretCommandLine();
 bool initializeAdventureEventText();
 unsigned char InitializeSpellTraitsTable();
 unsigned char InitializeHeroTraitsTable();
@@ -903,7 +903,7 @@ void showCongrats(int hsType);
 static int doNewGame();
 static unsigned char doCampaignWindow();
 static int doCampaignWindow(bool newGame, int campaignSet);
-static int doSinglePlayerWindow();
+static int __fastcall doSinglePlayerWindow();
 static int doMultiPlayerWindow();
 static int doLoadGame();
 static int pickLoadGame();
@@ -1677,12 +1677,12 @@ static unsigned char doCampaignWindow()
 // E:\gamedcs\kb.cpp:1988. Complete retains this static helper out of line
 // at 0x4f0490. Retail independently proves the modal object's 0x1970 size,
 // the cancel/okay pair, the map-header refresh, and the final boolean.
-// An explicit empty CANCEL case plus OK case scores 94.92%: VC6 drops the
-// empty case and emits cmp, where retail keeps sub/je/dec/jne.
+// Keep adjacent CANCEL and OK switch arms plus a shared result label; this
+// preserves the switch lowering and one final dialog-result reload.
 VA(0x004f0490, 0xFB)
 DC_ADDRESS(0x0e1630, 0x110)
 MAC_ADDRESS(0x11171c, 0xec)
-static int doSinglePlayerWindow()
+static int __fastcall doSinglePlayerWindow()
 {
     g_game->m_isTutorial = 0;
     {
@@ -1690,25 +1690,20 @@ static int doSinglePlayerWindow()
         singleSelectionWindow.doModal(0);
     }
 
-    // DC and Windows normalize the adjacent cancel/okay results. The Mac
-    // explicit-case switch raises its score to 66.5323% but lowers Windows
-    // to 94.9296%; a normalized switch scores 98.5915% Windows and 42.4603%
-    // Mac. An unused post-decrement of dialogResult is byte-flat on both;
-    // a consumed pre-decrement adds a VC6 test after dec (98.5915% Windows)
-    // and scores 89.8305% Mac, even when nested in a separate scope.
-    // Capturing the window manager before the modal call scores 58.8983% Mac.
-    // Keep this six-block Windows form. Mac loads g_game once for the
-    // map-header call's three arguments, then reloads it after the call.
-    int dialogResult =
-        g_windowManager->m_dialogReturn - DIALOG_RETURN_CANCEL;
-    if (dialogResult && dialogResult == 1) {
+    switch (g_windowManager->m_dialogReturn) {
+    case DIALOG_RETURN_CANCEL:
+        goto singlePlayerResult;
+    case DIALOG_RETURN_OK: {
         game* currentGame = g_game;
         if (!currentGame->m_mapHeader.get(currentGame->m_setup.m_path,
                                         currentGame->m_setup.m_filename, 0)
             && g_game->m_mapHeader.m_minNumHumanPlayers <= g_numHumanPlayers)
             strcpy(g_mapName, g_game->m_setup.m_filename);
+        break;
+    }
     }
 
+singlePlayerResult:
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
@@ -1841,27 +1836,15 @@ static int g_useWaveout;
 // `/NWCGRAIL` unlocks the developer menu set EarlySetup loads at the end.
 // Every switch checks the characters it needs are still inside the string
 // before reading them. The return is unconditionally 1.
-// Residual (99.63%): one encoding choice - retail zeroes the gbMPlayer
-// BYTE with an immediate (`mov byte ptr [mem], 0`) while our compile
-// spends the already-zeroed EBX on it (`mov byte ptr [mem], bl`), one
-// byte shorter. Everything else - blocks, branches, calls and every
-// other store - is identical. Store position is not the handle:
-// measured 2026-09-06, `gbMPlayer = 0;` moved to the head of the run is
-// byte-flat at 99.6273 and moved to its foot is 99.5983. Restoring the
-// Dreamcast-proven `bool` declaration (and spelling the value `false`) also
-// leaves this one-byte encoding choice unchanged. Starting showUsage at the
-// scan instead of entry introduces a second zeroing move (98.29%); making
-// that local bool changes register assignments (99.47%). Neither reproduces
-// the native register use, so the entry declaration remains.
-// The DC/Mac reset order, copying the default name before the resets, and
-// their combination also fail to close it (four source states, three objects).
-// The register diagnostic's 42 catalog probes find no closer encoding.
+// Declare showUsage with the parser locals, then initialize it in the reset
+// sequence. The delayed store preserves VC6 register allocation without
+// changing its value before the command-line scan.
 VA(0x004f0690, 0x238)
 DC_ADDRESS(0x0e1990, 0x1fe)
 MAC_ADDRESS(0x111b1c, 0x84)  // anchor-caller (EarlySetup) + gcCommandLine walk
-int interpretCommandLine()
+int __fastcall interpretCommandLine()
 {
-    int showUsage = 0;
+    int showUsage;
     int i;
     int length;
 
@@ -1872,6 +1855,7 @@ int interpretCommandLine()
     g_debugLevel = 0;
     g_noSound = 0;
     g_limitPlayer = 0;
+    showUsage = 0;
     strcpy(g_mapName, (*g_generalText)[GENERAL_TEXT_DEFAULT_MAP_FILENAME]);
     length = strlen(g_commandLine);
     strupr(g_commandLine);
