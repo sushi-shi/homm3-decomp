@@ -40,11 +40,10 @@
 // Text subscripts keep the public operator[] -> getText -> vector[] chain.
 // Native Mac 0x1ab964 onward retains the vector indexer; DC names the
 // outer operator on the corresponding label and confirmation statements.
-// `homm3 vc6 reach` (2026-10-07): expanding reserve's final size() (budget
-// 0, cost 42) moves the strict stream 0.935 -> 0.998. Reserve's share is
-// (8970 - 169) / 58 depth-1 sites; it needs 193, i.e. at most 45 sites or a
-// root budget 2393 larger. DC's 37 push_back/12 operator[] lack Windows'
-// video-quality widgets, so DC does not supply the missing site count.
+// Reuse one status-widget ID across disjoint groups and pass slider
+// coordinates directly. These source choices preserve the intended VC6
+// lifetime and expression shape without changing behavior. Keep the
+// canonical widget helpers.
 // E:\gamedcs\systemoptionswindow.cpp:43
 VA(0x005b1790, 0x187C)
 DC_ADDRESS(0x15f588, 0x10ac)
@@ -74,23 +73,15 @@ TSystemOptionsWindow::TSystemOptionsWindow()
         DIALOG_RETURN_SPLIT_ACCEPT, "soretrn.def", 1, 0, 0, 1, 2));
 
     // Retail indexes both slider rows by slot and derives the x coordinate.
-    // Keep each real coordinate as a local before allocation: with the
-    // canonical widget helpers this recovers 76.1093 -> 76.5135; folding
-    // either coordinate into its constructor argument loses that gain.
-    // The remaining differences are nested vector expansions. Historical
-    // inline-depth and dead-code diagnostics did not recover those sites;
-    // no artificial caller work belongs here.
     for (int musicSlot = 0; musicSlot < 10; musicSlot++) {
-        int musicX = 29 + musicSlot * 19;
         m_widgets.push_back(new iconWidget(
-            musicX, 359, 18, 36, musicSlot + MUSIC_VOLUME_0_ID, "syslb.def",
+            29 + musicSlot * 19, 359, 18, 36, musicSlot + MUSIC_VOLUME_0_ID, "syslb.def",
             0, 0, 0, 0, 0x10));
     }
 
     for (int effectsSlot = 0; effectsSlot < 10; effectsSlot++) {
-        int effectsX = 29 + effectsSlot * 19;
         m_widgets.push_back(new iconWidget(
-            effectsX, 425, 18, 36, effectsSlot + EFFECTS_VOLUME_0_ID,
+            29 + effectsSlot * 19, 425, 18, 36, effectsSlot + EFFECTS_VOLUME_0_ID,
             "syslb.def", 0, 0, 0, 0, 0x10));
     }
 
@@ -189,31 +180,32 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // none comes from this compiland. Retail pushes both constants ahead of
     // each getWidget call, as a direct send does; the setVisible spelling
     // pushed after it (76.55 -> 98.31).
-    for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
-        getWidget(music)->sendMessage(
+    int widgetId;
+    for (widgetId = MUSIC_VOLUME_0_ID; widgetId <= MUSIC_VOLUME_9_ID; ++widgetId)
+        getWidget(widgetId)->sendMessage(
             widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
     getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
     getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
 
-    for (int effects = EFFECTS_VOLUME_0_ID; effects <= EFFECTS_VOLUME_9_ID;
-         ++effects)
-        getWidget(effects)->sendMessage(
+    for (widgetId = EFFECTS_VOLUME_0_ID; widgetId <= EFFECTS_VOLUME_9_ID;
+         ++widgetId)
+        getWidget(widgetId)->sendMessage(
             widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
     getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
     getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
 
-    for (int walk = HERO_SPEED_WALK_ID; walk <= HERO_SPEED_JUMP_ID; ++walk)
-        getWidget(walk)->sendMessage(widget::WIDGET_CLEAR_STATUS,
+    for (widgetId = HERO_SPEED_WALK_ID; widgetId <= HERO_SPEED_JUMP_ID; ++widgetId)
+        getWidget(widgetId)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
     getWidget(g_config.m_walkSpeed[1] + MUSIC_TYPE_MIDI_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
-    for (int ai = AI_SPEED_CANTER_ID; ai <= AI_SPEED_NONE_ID; ++ai)
-        getWidget(ai)->sendMessage(widget::WIDGET_CLEAR_STATUS,
+    for (widgetId = AI_SPEED_CANTER_ID; widgetId <= AI_SPEED_NONE_ID; ++widgetId)
+        getWidget(widgetId)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
     getWidget(g_config.m_walkSpeed[0]
             + HERO_SPEED_GALLOP_ID)->sendMessage(
@@ -249,16 +241,16 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     getWidget(ANIMATE_SPELLBOOK_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_animateSpellBook);
 
-    for (int scroll = WINDOW_SCROLL_SLOW; scroll <= WINDOW_SCROLL_FAST;
-         ++scroll)
-        getWidget(scroll)->sendMessage(widget::WIDGET_CLEAR_STATUS,
+    for (widgetId = WINDOW_SCROLL_SLOW; widgetId <= WINDOW_SCROLL_FAST;
+         ++widgetId)
+        getWidget(widgetId)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
     getWidget(g_config.m_windowScrollSpeed
             + WINDOW_SCROLL_SLOW)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
-    for (int video = VIDEO_QUALITY_LOW; video <= VIDEO_QUALITY_HIGH; ++video)
-        getWidget(video)->sendMessage(widget::WIDGET_CLEAR_STATUS,
+    for (widgetId = VIDEO_QUALITY_LOW; widgetId <= VIDEO_QUALITY_HIGH; ++widgetId)
+        getWidget(widgetId)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
     getWidget(g_config.m_binkVideo + VIDEO_QUALITY_LOW)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
