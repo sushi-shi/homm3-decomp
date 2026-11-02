@@ -319,6 +319,8 @@ TObjectType& TObjectType::_setTriggerMask(const std::bitset<OBJECT_MASK_CELLS>& 
             for (unsigned x = 0; x < 8; ++x) {
                 if (_m_triggerMask[_getBitPos(x, y)]) {
                     _m_triggerLoc = TTilePoint(x, y);
+                    // A direct return is game-exact but lowers the map editor
+                    // from 100% to 98.72%; retain the shared search exit.
                     goto found;
                 }
             }

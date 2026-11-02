@@ -43,6 +43,7 @@ extern bool g_updateScreen;
 extern bool g_needsUpdate;
 extern bool g_playingSmacker;
 void drawSmackerFrame();  // 0x598e80
+void nextSmackerFrame();  // 0x598eb0
 void restartSmacker();
 int playSmacker(int id, int x, int y, int w, int h);
 void gotoSmackerFrame(unsigned long frame);  // 0x5990a0
@@ -124,7 +125,11 @@ enum EVideoPixelFormat {
 void videoSoundOnOff(int on);  // 0x5971b0; Complete carries an unused flag
 void videoRealignBuffers();    // 0x5971f0
 int videoPlay(int id, int x, int y, int w, int h);   // 0x5972d0
-void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);  // 0x597570
+void videoOpen(int id, int x, int y, int w, int h, int loop, bool autoDraw,
+               bool advance);  // 0x597570
+// Shared with remote.cpp's transfer animation; smackmgr.cpp owns the body.
+void openSmackerVideo(int id, int x, int y, int w, int h, int loop,
+                      bool autoDraw, bool advance);  // 0x598af0
 void videoClose();             // 0x5975f0
 void videoNextFrame();         // 0x5976e0
 void videoDrawCurrentFrame();  // 0x597740
@@ -136,7 +141,9 @@ bool videoNeedsUpdate();  // 0x597930
 bool videoPlaying();      // 0x597990
 void videoDrawRects();         // 0x5979d0
 void videoShutDown();          // 0x597c70
+unsigned char loadSoundHeaders();  // 0x5984a0; kb.cpp startup consumer
 void deleteSoundHeaders();
+unsigned char loadAnimHeaders();   // 0x598210; kb.cpp startup consumer
 void deleteAnimHeaders();      // 0x598440
 
 // The video-archive directory record. LoadAnimHeaders (0x598210) sizes its

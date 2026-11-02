@@ -1766,9 +1766,8 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         for (x = 0; x < number; ++x) {
             if (g_game->m_mapHeader.m_version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                signed char narrow;
-                infile->read(&narrow, sizeof(narrow));
-                thisBox.m_artifacts[x] = TArtifact(narrow);
+                thisBox.m_artifacts[x] =
+                    TArtifact(readValue<signed char>(infile));
             } else {
                 short wide;
                 wide = readLittleEndianValue<short>(infile);

@@ -1519,14 +1519,7 @@ int playerData::save(TAbstractFile* outfile)
         return -1;
 
     // Mac passes the bitset and index directly to test; no mutable proxy.
-    unsigned char bits[2];
-    const std::bitset<12>* combinations = &m_assembledCombinations;
-    std::fill_n(bits, sizeof(bits), 0);
-    for (unsigned int bit = 0; bit < 12; bit++) {
-        if (combinations->test(bit))
-            bits[bit >> 3] |= 1 << (bit & 7);
-    }
-    outfile->write(bits, sizeof(bits));
+    writePackedBits(outfile, m_assembledCombinations);
     return 0;
 }
 
@@ -8540,7 +8533,7 @@ void game::processOnMapHeroes()
 
 // Retail corrections: +0xa6 tests status 1 (active); +0x21c/+0x247 call
 // fileError on compression failure, as DC lines 10215/10222 also do. Only
-// the initial removal calls File::deleteFile. At +0x39f, idiv uses the quotient
+// the initial removal calls File::Delete. At +0x39f, idiv uses the quotient
 // totalBlocks as dividend and fileSize as divisor. DC line 10289 also passes
 // those operands to __modls: preserve totalBlocks % fileSize despite its
 // unusual behavior; fileSize % payloadSize is a different algorithm.
@@ -8630,18 +8623,18 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
 
     if (inGame) {
         File file;
-        if (file.open(DATA_COMPGEN(0x00677fb0, xferOriginalFilename,
+        if (file.Open(DATA_COMPGEN(0x00677fb0, xferOriginalFilename,
                                   "data\\orig.dat"), modeRead)) {
             unsigned long oldSize = file.getLength();
             unsigned char* old = new unsigned char[oldSize];
             file.read(old, oldSize);
-            file.close();
+            file.Close();
 
-            file.open(fileName, modeRead);
+            file.Open(fileName, modeRead);
             unsigned long newSize = file.getLength();
             unsigned char* newValue = new unsigned char[newSize];
             file.read(newValue, newSize);
-            file.close();
+            file.Close();
 
             CDiffMaker diffMaker(old, oldSize, newValue, newSize);
             CDiffFile* diff = diffMaker.makeDiff(diffSize);
@@ -8650,7 +8643,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
 
             const char* diffFilename = DATA_COMPGEN(
                 0x00677fa0, xferDiffFilename, "data\\diff.dat");
-            File::deleteFile(diffFilename);
+            File::Delete(diffFilename);
             int returnValue;
             try {
                 TGzFile compressedFile(diffFilename,
@@ -9157,17 +9150,19 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
         File file;
         const char* diffFilename = DATA_COMPGEN(
             0x00677fa0, xferDiffFilename, "data\\diff.dat");
-        File::deleteFile(diffFilename);
-        if (!file.open(diffFilename, modeWrite)) {
+        File::Delete(diffFilename);
+        // Mac checks path creation and data-fork opening separately, with a
+        // fileError call for each. Windows File::Open has one error path.
+        if (!file.Open(diffFilename, modeWrite)) {
             fileError(diffFilename);
             shutDown(0);
         }
         if (!file.write(data, fileSize)) {
-            file.close();
+            file.Close();
             fileError(diffFilename);
             shutDown(0);
         }
-        file.close();
+        file.Close();
         delete[] data;
 
         unsigned char* newSave = new unsigned char[diffSize];
@@ -9189,7 +9184,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
 
         const char* origFilename = DATA_COMPGEN(
             0x00677fb0, xferOriginalFilename, "data\\orig.dat");
-        if (!file.open(origFilename, modeRead)) {
+        if (!file.Open(origFilename, modeRead)) {
             fileError(origFilename);
             shutDown(0);
         }
@@ -9200,11 +9195,11 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
         }
         unsigned char* orig = new unsigned char[size];
         if (!file.read(orig, size)) {
-            file.close();
+            file.Close();
             fileError(origFilename);
             shutDown(0);
         }
-        file.close();
+        file.Close();
 
         CDiffFile* diffFile =
             static_cast<CDiffFile*>(static_cast<void*>(newSave));

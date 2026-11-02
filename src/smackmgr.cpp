@@ -176,19 +176,14 @@ DATA(0x006839b8) char g_archiveDriveLetter = 'd';
 
 // The drive letter the misc.obj install scan settled on. It is WRITTEN at
 // 0x50c278 inside that scan (still unclaimed) and READ only there and by
-// GetDriveArchivePath below, which is why the definition is left with its
-// owning TU: 0x6839b8's .data neighbours are singleselectionwindow's and
+// GetDriveArchivePath below. This definition currently lives with the
+// recovered archive consumers; its original owner remains unresolved.
+// 0x6839b8's .data neighbours are singleselectionwindow's and
 // spellbookwindow's blocks, not smackmgr's. Retail initialises it to 'd'.
 
 
 // The Smack/Bink handle views and import declarations come from the SDK
 // headers included by smackmgr.h / binkmanager.h.
-
-void openSmackerVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
-namespace SmackManager {
-void nextSmackerFrame();
-void closeSmacker();
-}
 
 // smackmgr.obj .bss cluster 0x69fdf5..0x69fe5c. Raw DC file-static
 // records prove Red/Green/BlueBits/Shift, bSmackSound, insideNextFrame and
@@ -306,16 +301,20 @@ int videoPlay(int id, int x, int y, int w, int h)
 VA(0x00597570, 0x75)
 DC_ADDRESS(0x14ac3c, 0x4)
 MAC_ADDRESS(0x25e5e4, 0x7c)
-void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8)
+// The WinCE stub records no parameter names. These last three names follow
+// the unchanged arguments' loop, screen-update and frame-advance stores in
+// openSmackerVideo; Bink consumes the same loop and screen-update policy.
+void videoOpen(int id, int x, int y, int w, int h, int loop, bool autoDraw,
+               bool advance)
 {
     if (id >= VIDEO_ID_FIRST_TABLED
         && (!g_videoDescriptors[id].m_useBink || !g_config.m_binkVideo
             || (id == VIDEO_ID_STATE_GATED
                 && g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
                 && g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
-        openSmackerVideo(id, x, y, w, h, a6, a7, a8);
+        openSmackerVideo(id, x, y, w, h, loop, autoDraw, advance);
     else
-        BinkManager::openBink(id, x, y, w, h, a6, a7);
+        BinkManager::openBink(id, x, y, w, h, loop, autoDraw);
 }
 
 // The canonical helper chain:
@@ -1074,29 +1073,31 @@ void gotoSmackerFrame(unsigned long frame)
         SmackGoto(SmackManager::g_playingSmack.m_smack, frame);
 }
 
-// Mac retains this body; inlined through playSmacker on Windows.
+// Mac 0:0x25fd84 retains this body; Windows expands it through playSmacker.
+// The project-derived view extent and video origin names describe the
+// centering calculation and final redraw; no native local names survive.
 MAC_ADDRESS(0x25fd84, 0x24c)
 static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
 {
-    POINT pos;
-    int vw, vh;
+    POINT videoPosition;
+    int viewWidth, viewHeight;
     unsigned char result;
     unsigned char aborted;
-    vh = h;
-    vw = w;
-    openSmackerVideo(id, x, y, vw, vh, 0, 0, 1);
+    viewHeight = h;
+    viewWidth = w;
+    openSmackerVideo(id, x, y, viewWidth, viewHeight, 0, 0, 1);
     if (!SmackManager::g_playingSmack.m_smack) {
         result = 0;
     } else {
         g_mouseManager->hidePointer();
-        if (vw < 0)
-            vw = SmackManager::g_playingSmack.m_smack->Width;
-        if (vh < 0)
-            vh = SmackManager::g_playingSmack.m_smack->Height;
-        SmackManager::g_playingSmack.m_x = x + (vw - SmackManager::g_playingSmack.m_smack->Width) / 2;
-        SmackManager::g_playingSmack.m_y = y + (vh - SmackManager::g_playingSmack.m_smack->Height) / 2;
-        pos.x = SmackManager::g_playingSmack.m_x;
-        pos.y = SmackManager::g_playingSmack.m_y;
+        if (viewWidth < 0)
+            viewWidth = SmackManager::g_playingSmack.m_smack->Width;
+        if (viewHeight < 0)
+            viewHeight = SmackManager::g_playingSmack.m_smack->Height;
+        SmackManager::g_playingSmack.m_x = x + (viewWidth - SmackManager::g_playingSmack.m_smack->Width) / 2;
+        SmackManager::g_playingSmack.m_y = y + (viewHeight - SmackManager::g_playingSmack.m_smack->Height) / 2;
+        videoPosition.x = SmackManager::g_playingSmack.m_x;
+        videoPosition.y = SmackManager::g_playingSmack.m_y;
         SmackToBuffer(SmackManager::g_playingSmack.m_smack, SmackManager::g_playingSmack.m_x, SmackManager::g_playingSmack.m_y,
             g_windowManager->m_screenBitmap->GetPitch(),
             g_windowManager->m_screenBitmap->GetHeight(),
@@ -1133,7 +1134,7 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
         if (aborted && g_videoDescriptors[id].m_fadeOnAbort)
             g_windowManager->fadeScreen(1, 4, 0);
         else
-            g_windowManager->updateScreen(pos.x, pos.y, vw, vh);
+            g_windowManager->updateScreen(videoPosition.x, videoPosition.y, viewWidth, viewHeight);
         g_mouseManager->showPointer(0);
         result = !aborted;
     }

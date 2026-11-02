@@ -48,9 +48,12 @@ int __stdcall pcxinfo(const char* filename, PcxData* data)
 
 // Complete-only PCX palette reader, called by loadpcx. Version 2/5 palettes
 // are accepted except planar RGB. A missing extended palette marker falls
-// back to the 16 header entries (the marker branch sets the header colour
-// count itself). OpenFile's strictly-positive test and the returned color
-// count on open failure are original.
+// back to the 16 header entries. OpenFile's strictly-positive test and
+// returned color count on open failure are preserved from retail.
+// An extended palette jumps straight to the conversion; a missing marker
+// sets the header colour count itself, which VC5 shares with the clamp.
+// A colors != victorPcxExtendedColors header-read guard scores 98.12%
+// versus 100%; it does not establish an equivalent native source boundary.
 VA(0x006043d0, 0x13c)  // anchor-caller loadpcx + PCX palette marker/seek offsets
 int __stdcall victorReadPcxPalette(const char* filename, RGBQUAD* palette)
 {

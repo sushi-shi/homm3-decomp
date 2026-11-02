@@ -20,6 +20,7 @@ iterate on a function.
 
 ## Reconstruction
 
+- [Source cleanup review](cleanup/README.md): H1/H2 precedent, five dedicated lanes, evidence and retained cases
 - [Field layout evidence](reconstruction/field-layouts.md)
 - [Game source models](reconstruction/game-source-models.md), [RMG source models](reconstruction/rmg-source-models.md), [historical match recovery](reconstruction/historical-matches.md)
 - [Address arithmetic](reconstruction/address-arithmetic-audit.md), [owner pointers](reconstruction/owner-pointer-audit.md), [pointer boundaries](reconstruction/pointer-boundary-repairs.md)

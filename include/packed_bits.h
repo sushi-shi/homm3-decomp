@@ -3,6 +3,7 @@
 
 #include "abstractfile.h"
 #include <bitset>
+#include <algorithm>
 
 // Decode into an existing mask; the stream reader below owns its returned
 // value and packed buffer. Both loops are expanded in the Mac callers.
@@ -35,6 +36,27 @@ inline std::bitset<N> readPackedBits(TAbstractFile* infile)
     for (unsigned int index = 0; index < N; ++index)
         result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
     return result;
+}
+
+// The same LSB-first writer expands in playerData::save (Mac 0xcd1f0)
+// and hero::save (Mac 0xf3d84). Cross-TU use owns this shared header body.
+// Scalar output uses the canonical writeValue in abstractfile.h. The retained
+// editor writers at 0x4aed89..0x4af09b own their packed
+// bytes, checked bit tests and stream write, then return whether the complete
+// byte count was written. Loki's writeBitset independently keeps these three
+// operations in one helper. The former separate encoder had no native claim
+// or independent caller and incorrectly split that operation. All six editor
+// instances match retail with the counted zero fill also expanded by Mac.
+template <size_t N>
+int writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
+{
+    unsigned char packed[(N + 7) / 8];
+    std::fill_n(packed, sizeof(packed), 0);
+    for (unsigned int index = 0; index < N; ++index) {
+        if (bits[index])
+            packed[index >> 3] |= 1 << (index & 7);
+    }
+    return outfile->write(packed, sizeof(packed)) == sizeof(packed);
 }
 
 #endif

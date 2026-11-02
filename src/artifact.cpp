@@ -527,16 +527,16 @@ static inline void InitializeArtifactTraits(int id,
 
     const char* classCell = resource[21];
     if (classCell[0] == 'R')
-        traits.m_class = 16;
+        traits.m_class = ArtifactClassRelic;
     else if (classCell[0] == 'J')
-        traits.m_class = 8;
+        traits.m_class = ArtifactClassMajor;
     else if (classCell[0] == 'N')
-        traits.m_class = 4;
+        traits.m_class = ArtifactClassMinor;
     else if (classCell[0] == 'T')
-        traits.m_class = 2;
+        traits.m_class = ArtifactClassTreasure;
     else {
         assert(classCell[0] == 'S');
-        traits.m_class = 1;
+        traits.m_class = ArtifactClassSpecial;
     }
 }
 

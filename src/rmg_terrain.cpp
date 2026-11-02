@@ -1208,22 +1208,26 @@ b8 TRmgTerrainPainter::hasMultipleAdjSimilarSpans(const TTilePoint& point)
     u32 first = 0;
     u32 direction;
     while (matches[first]) {
-        if ((first = (first + 1) % TILE_DIR_COUNT) == 0)
+        first = (first + 1) % TILE_DIR_COUNT;
+        if (first == 0)
             return 0;
     }
     direction = first;
     do {
-        if ((direction = (direction + 1) % TILE_DIR_COUNT) == first)
+        direction = (direction + 1) % TILE_DIR_COUNT;
+        if (direction == first)
             return 0;
     } while (!matches[direction]);
     do {
-        if ((direction = (direction + 1) % TILE_DIR_COUNT) == first)
+        direction = (direction + 1) % TILE_DIR_COUNT;
+        if (direction == first)
             return 0;
     } while (matches[direction]);
     do {
         if (matches[direction])
             return 1;
-    } while ((direction = (direction + 1) % TILE_DIR_COUNT) != first);
+        direction = (direction + 1) % TILE_DIR_COUNT;
+    } while (direction != first);
     return 0;
 }
 

@@ -92,17 +92,18 @@ void type_artifact_offering::set(const type_artifact& artifact, TArtifactSlot sl
     m_source = slot;
     m_value = 0;
 
+    // These are the shared ARTRAITS.TXT masks, read directly from m_class.
     switch (artifactClass) {
-    case SACRIFICE_ARTIFACT_CLASS_TREASURE:
+    case ArtifactClassTreasure:
         m_value = 1000;
         break;
-    case SACRIFICE_ARTIFACT_CLASS_MINOR:
+    case ArtifactClassMinor:
         m_value = 1500;
         break;
-    case SACRIFICE_ARTIFACT_CLASS_MAJOR:
+    case ArtifactClassMajor:
         m_value = 3000;
         break;
-    case SACRIFICE_ARTIFACT_CLASS_RELIC:
+    case ArtifactClassRelic:
         m_value = 6000;
         break;
     }

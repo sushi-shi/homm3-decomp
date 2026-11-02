@@ -3823,39 +3823,14 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
 //     store. The ternary remains the wrong, merged CFG family below.
 // Measured and REJECTED: `int frames = sprite ? sprite->GetNumFrames(0)
 // : 0` (91.54 - the ternary merges the null test into GetNumFrames' own
-// zero returns and re-shapes the whole block), and `int anyDied` in
-// place of the byte (95.99), even though retail's own latch is a dword
-// (`xor edx,edx` / `mov edx,1` / `test edx,edx`) - the low-mass
-// inversion again.
+// zero returns and re-shapes the whole block).
 
-// Residual (96.3708%): all 60 branches and the return agree. In the second
-// animation walk retail shares an EBX zero between `numTroops <= 0` and the
-// currFrameIndex store, while this CL loads numTroops/currFrameType through
-// EBX and stores an immediate zero. A scoped named zero is byte-flat; direct
-// army subscripting collapses to 81.8094%. In the death sweep retail carries
-// the anyDied latch as dword EDX while the closest source type remains a byte
-// in AL: retesting `int anyDied` with the landed if/else scores 96.2663%, and
-// direct subscripting scores 84.1279%. why-reg reports identical first
-// bindings and a past-first-def divergence, so neither remainder is a B1
-// creation-order edit.
-// The wince/death latch loop's first divergence, measured 2026-09-06: retail
-// materialises the ZERO in EBX (`xor ebx,ebx / cmp [eax+numTroops],ebx`) and
-// spends it again on `currFrameIndex = 0`, which keeps EBX busy and stops the
-// `stack.currFrameType` CSE - retail re-reads `[eax]` at BOTH arm compares.
-// This compile loads numTroops into EBX, `test`s it, then recycles EBX for the
-// cached currFrameType and stores an immediate 0.  Both source levers for
-// putting the constant in a register are byte-flat at 96.3708: writing the
-// guard `0 >= stack.numTroops`, and naming one `int resetFrame = 0` shared by
-// the compare and the store (VC6 folds it back to an immediate either way).
-// DC records the non-const array reference. Mac 0x1976f0 reloads
-// m_powSprite after loadSpellEffect; these recoveries leave Windows bytes flat.
 // Original DC ?ShowMassSpell@combatManager@@QAAXAAY11BE@_NH_N@Z
 // proves bool [2][20] and bool showWince; CodeView's byte primitive is their
 // lowered encoding. All callers pass m_effected, preserving its bool domain.
 // DC records iMaxFrames in procedure scope, outside the animation block.
 // Its assignment follows LoadSpellEffect; it is not initialized on entry.
-// A bool anyDied latch inferred from its 0/1 writers and predicate-only use
-// is VC6 byte-flat at 96.3708%; native debug records do not prove its type.
+// Complete uses a dword death latch before clearing the vanish state.
 VA(0x005a67c0, 0x4AC)
 DC_ADDRESS(0x155b28, 0x3e2)
 MAC_ADDRESS(0x1976b8, 0x588)  // order-map+arity
@@ -3893,15 +3868,16 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
                 army& stack = m_armies[side][i];
                 if (showWince && effected[side][i]) {
                     if (stack.m_numTroops <= 0) {
-                        if (stack.m_currFrameType == cs_death)
-                            continue;
-                        stack.m_currFrameType = cs_death;
+                        if (stack.m_currFrameType != cs_death) {
+                            stack.m_currFrameType = cs_death;
+                            stack.m_currFrameIndex = 0;
+                        }
                     } else {
-                        if (stack.m_currFrameType == cs_wince)
-                            continue;
-                        stack.m_currFrameType = cs_wince;
+                        if (stack.m_currFrameType != cs_wince) {
+                            stack.m_currFrameType = cs_wince;
+                            stack.m_currFrameIndex = 0;
+                        }
                     }
-                    stack.m_currFrameIndex = 0;
                 }
             }
         } }
@@ -3933,9 +3909,9 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
         } }
     }
 
+    int anyDied = 0;
     memset(bCreatureVanish, 0, sizeof(bCreatureVanish));
     bSomeCreaturesVanish = 0;
-    unsigned char anyDied = 0;
     for (int side = 0; side < 2; side++) {
         for (int i = 0; i < m_numArmies[side]; i++) {
             army& stack = m_armies[side][i];

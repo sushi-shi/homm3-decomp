@@ -3,7 +3,7 @@
 # census, manifest or shared-source change.
 # generator: homm3.census.placements
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-10-26
+# date: 2026-11-02
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	kind	name	unit	linkage	evidence
 0x00001020	0x15d	func	??0runtime_error@std@@QAE@ABV01@@Z	gzinflatebuf	external	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0x9
@@ -4217,7 +4217,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000c83d8	0x8	data	_?pNames@?1??InitializePrimarySkillTraitsTable@@YAXXZ@4V?$TAutoArrayPtr@D@@A	PrimarySkillTraits	internal	referenced by ?InitializePrimarySkillTraitsTable@@YAXXZ at +0x2d
 0x000c83e0	0x10	data	?aHeroPrimarySkillTraitsImp@?A0xa9f2831508e54a8a@@3PAUTPrimarySkillTraits@THero@@A	PrimarySkillTraits	external	referenced by ?InitializePrimarySkillTraitsTable@@YAXXZ at +0x198
 0x000c83f0	0x1	data	_?$S273@?1??InitializePrimarySkillTraitsTable@@YAXXZ@4EA	PrimarySkillTraits	internal	referenced by ?InitializePrimarySkillTraitsTable@@YAXXZ at +0xf
-0x000c8740	0xc	data	?aHeroSkillMasteryTraitsImp@?A0x4645b7a5ec4771bc@@3PAUTSkillMasteryTraits@THero@@A	SkillMasteryTraits	external	referenced by ?InitializeSkillMasteryTraitsTable@@YAXXZ at +0x198
+0x000c8740	0x10	data	?aHeroSkillMasteryTraitsImp@?A0x4645b7a5ec4771bc@@3PAUTSkillMasteryTraits@THero@@A	SkillMasteryTraits	external	referenced by ?InitializeSkillMasteryTraitsTable@@YAXXZ at +0x198
 0x000c8750	0x8	data	_?pNames@?1??InitializeSkillMasteryTraitsTable@@YAXXZ@4V?$TAutoArrayPtr@D@@A	SkillMasteryTraits	internal	referenced by ?InitializeSkillMasteryTraitsTable@@YAXXZ at +0x2d
 0x000c8758	0x1	data	_?$S273@?1??InitializeSkillMasteryTraitsTable@@YAXXZ@4EA	SkillMasteryTraits	internal	referenced by ?InitializeSkillMasteryTraitsTable@@YAXXZ at +0xf
 0x000c875c	0x1	data	_?$S10@?1??initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	spelldefs	internal	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x18
@@ -4258,7 +4258,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000c9a08	0x10	data	_dungeonGenerator4	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator4 at +0x2
 0x000c9a18	0x1ec	data	?aConfluxBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aConfluxBuildingTraits at +0xa
 0x000c9c08	0x10	data	_dungeonGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator3 at +0x2
-0x000c9c18	0xc	data	_fortressGenerator5	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$fortressGenerator5 at +0x2
+0x000c9c18	0x10	data	_fortressGenerator5	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$fortressGenerator5 at +0x2
 0x000c9c28	0x10	data	_dungeonGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator1 at +0x2
 0x000c9c38	0x1f0	data	?aFortressBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aFortressBuildingTraits at +0x8
 0x000c9e28	0x10	data	_dungeonGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator2 at +0x2
@@ -4293,7 +4293,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000ca1d8	0x10	data	_towerGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$towerGenerator2 at +0x2
 0x000ca1e8	0xc	data	_strongholdGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$strongholdGenerator3 at +0x2
 0x000ca1f4	0x1c	data	?_s_akUpgradeName@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@0PAPBDA	TownTypeTraits	external	referenced by 0x00032b40 at +0x1de
-0x000ca210	0xc	data	_castleGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator7 at +0x2
+0x000ca210	0x10	data	_castleGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator7 at +0x2
 0x000ca220	0x10	data	_rampartGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$rampartGenerator6 at +0x2
 0x000ca230	0x10	data	_necropolisGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator3 at +0x2
 0x000ca240	0x10	data	_towerGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$towerGenerator1 at +0x2

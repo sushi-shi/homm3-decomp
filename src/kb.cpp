@@ -365,8 +365,6 @@ void aiInitialize();
 void readPrefs();
 void writePrefs();
 int setupCDDrive();
-unsigned char loadAnimHeaders();
-unsigned char loadSoundHeaders();
 namespace ResourceManager {
 bool Open(bool openSprites, bool openBitmaps, int* errorCode);
 }

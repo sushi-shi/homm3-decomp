@@ -863,14 +863,7 @@ int hero::save(TAbstractFile* outfile)
 
     writeValue(outfile, static_cast<unsigned char>(m_isSleeping));
 
-    const std::bitset<48>& granted = m_townSpecialGrantedMask;
-    unsigned char outBuf[6];
-    memset(outBuf, 0, sizeof(outBuf));
-    for (unsigned int i = 0; i < 48; ++i) {
-        if (granted.test(i))
-            outBuf[i >> 3] |= 1 << (i & 7);
-    }
-    outfile->write(outBuf, sizeof(outBuf));
+    writePackedBits(outfile, m_townSpecialGrantedMask);
     return 0;
 }
 

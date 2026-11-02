@@ -2633,6 +2633,8 @@ void CEnterNameEdit::onKillFocus()
     textEntryWidget::onKillFocus();
 }
 
+// Replacing the shared rejection with a direct return (keeping GetKeyState)
+// scores 97.54% versus 100%; the earlier goto audit records the same result.
 VA(0x0057cfe0, 0xCF)
 DC_ADDRESS(0x1493c8, 0x14c)
 MAC_ADDRESS(0x186b1c, 0xec)

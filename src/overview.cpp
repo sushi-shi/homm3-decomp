@@ -1715,6 +1715,9 @@ void overviewSliderCallback(int state, heroWindow* parentWindow)
 // Probes: indexing the shipyard player directly in the loop condition
 // (99.12%) and comparing `localPlayer != owner` in the garrison pass
 // (99.53%) are both worse; the player reference stays.
+// Moving the Windows generator-class assignment before a field test scores
+// 93.19% (extra vector indexing); unconditional assignment/add with Mac-only
+// fallback scores 95.73%, versus 99.56%. Preserve the documented assignment.
 VA(0x0051fa40, 0x1311)
 DC_ADDRESS(0x1084f0, 0xa84)
 MAC_ADDRESS(0x137ed0, 0x1e48)  // exhaustive ctor/callback/dtor identity
