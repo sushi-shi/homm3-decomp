@@ -407,10 +407,18 @@ bool TMapValidationFunc::_playerMayBeHuman(TPlayer whichPlayer) const
 
 // Complete passes the map's width as both dimensions to the neighbour
 // test (Loki passes the height second); the editor's maps are square.
+// Cleanup probe: flag-tested breaks at the direction/column/row boundaries
+// change 44 retail blocks to 48 and score 89.96%. Retain the shared exit
+// without native evidence for those additional search tests.
 VA(0x0047dac4, 0x3fe)
 void TMapValidationFunc::_checkForUnreachableObjects()
 {
-    DATA(0x0053d9ac) static const int akDirOrder[] = { 2, 3, 4, 5, 6, 7, 0, 1 };
+    // The first five directions approach from the east through the south
+    // to the west; objects entered from the north admit all neighbours.
+    DATA(0x0053d9ac) static const int akDirOrder[] = {
+        TILE_DIR_EAST, TILE_DIR_SOUTHEAST, TILE_DIR_SOUTH, TILE_DIR_SOUTHWEST,
+        TILE_DIR_WEST, TILE_DIR_NORTHWEST, TILE_DIR_NORTH, TILE_DIR_NORTHEAST
+    };
 
     unsigned int numLayers = _m_map.isTwoLayer() ? 2 : 1;
     for (unsigned int i = 0; i < numLayers; ++i) {
@@ -420,7 +428,7 @@ void TMapValidationFunc::_checkForUnreachableObjects()
             if (!obj.hasTrigger() || obj.getType() == EYE_OF_MAGI)
                 continue;
             TTilePoint objMapLoc = layer.getObjectLoc(*iter);
-            unsigned int numDirs = akAdvObjectTypeTraits[obj.getType()].m_enterableFromNorth ? 8 : 5;
+            unsigned int numDirs = akAdvObjectTypeTraits[obj.getType()].m_enterableFromNorth ? TILE_DIR_COUNT : 5;
             bool bReachable = false;
             for (unsigned int objY = 0; objY < obj.getHeight(); ++objY) {
                 for (unsigned int objX = 0; objX < obj.getWidth(); ++objX) {
@@ -430,7 +438,7 @@ void TMapValidationFunc::_checkForUnreachableObjects()
                     assert(triggerMapLoc.x() < _m_map.getWidth());
                     assert(triggerMapLoc.y() < _m_map.getHeight());
                     bool bTriggerOnWater = layer.getCell(triggerMapLoc).getTerrainType() == eTerrainWater;
-                    bool abAdjDir[8];
+                    bool abAdjDir[TILE_DIR_COUNT];
                     computeAdjacentDirs(_m_map.getWidth(), _m_map.getWidth(), triggerMapLoc.x(), triggerMapLoc.y(),
                                         abAdjDir);
                     for (unsigned int k = 0; k < numDirs; ++k) {
@@ -457,7 +465,8 @@ void TMapValidationFunc::_checkForUnreachableObjects()
                                 int adjObjType = adjObj.getType();
                                 if (akAdvObjectTypeTraits[adjObjType].m_blocksLanding
                                     || (!akAdvObjectTypeTraits[adjObjType].m_enterableFromNorth
-                                        && (dir == 3 || dir == 4 || dir == 5)))
+                                        && (dir == TILE_DIR_SOUTHEAST || dir == TILE_DIR_SOUTH
+                                            || dir == TILE_DIR_SOUTHWEST)))
                                     break;
                             } else if (!adjObj.getBCellPassable(adjObjX, adjObjY))
                                 break;
