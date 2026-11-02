@@ -116,3 +116,8 @@ The [supplemental Mac review](mac-review.md) covers the remaining thirteen
 Windows-checked candidates and the rejected #192, with full availability
 limits. It identifies further preservation issues in #205, #206 and #209;
 those PRs remain open. The final game and both editor gate sets pass.
+
+Published via `homm3 land --mac` at `feadd0b994`: all Windows/editor gates
+and the 1,546-pair Mac preservation gate pass. GitHub confirms #191, #193,
+#194, #195 and #215 merged; #192 remains open. See the review documents
+for corrections, retained gotos, unavailable Mac comparisons and open findings.

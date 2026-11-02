@@ -15,6 +15,20 @@ See the [supplemental Mac review](mac-review.md) for all available-pair
 comparisons, the later #192/#205/#206/#209 findings, and changed-target
 coverage gaps. No unavailable target is counted as verified.
 
+## Published outcome
+
+The serialized landing cycle published `feadd0b994` after every Windows game,
+map-editor and campaign-editor gate passed. Its final Mac gate preserved all
+1,546 scored pairs with no unreviewed regression. GitHub confirms #191, #193,
+#194, #195 and #215 merged; #192 remains open. All other reviewed PRs remain
+for the user's review, including the preservation findings in #205/#206/#209.
+
+The five-worker cleanup ran on SSD worktrees. Six game functions and #215's
+editor counterpart reach 100%. Supported enums, native Boolean interfaces,
+declaration ownership and four condition-assignment cleanups are retained.
+All tested goto removals were rejected after their image-specific comparisons;
+the original exits and concise failed-probe evidence remain in source.
+
 ## Dispositions
 
 This table records source/native review. Compiler results and landing state
