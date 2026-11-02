@@ -1,6 +1,12 @@
 # Goto reconstruction audit
 
-The current inventory is **31 goto statements in 12 functions across 10 files**.
+This document records the historical checkpoints named below. The renewed
+H1/H2-style review and current dispositions are in
+[the control-flow cleanup](../cleanup/control-flow.md); later matching work
+has changed the surviving inventory, including reintroducing an RMG gap-scan
+exit. The old totals and probe scores are retained as historical evidence.
+
+The recorded inventory is **31 goto statements in 12 functions across 10 files**.
 That is **285 fewer than the initial 316 (90.2%)**, across 117 functions;
 111 original functions and 45 files no longer contain gotos. Every surviving
 statement has an individual disposition below. The latest 23 removals preserve

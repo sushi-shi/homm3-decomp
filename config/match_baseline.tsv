@@ -2804,7 +2804,7 @@ objecttype	?_Tidy@?$_Tidyfac@V?$ctype@D@std@@@std@@SAXXZ	100.0000	100.0000	100.0
 objecttype	?_Tidy@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAXXZ	100.0000	100.0000	100.0000	0x11b170	-
 objecttype	?_Xinv@?$bitset@$08@std@@ABEXXZ	100.0000	100.0000	100.0000	0x117680	-
 objecttype	?_Xinv@?$bitset@$0DA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x116e40	-
-objecttype	?_setTriggerMask@TObjectType@@QAEAAU1@ABV?$bitset@$0DA@@std@@@Z	100.0000	100.0000	100.0000	0x114a60	tokens1:d24a3cc849fd
+objecttype	?_setTriggerMask@TObjectType@@QAEAAU1@ABV?$bitset@$0DA@@std@@@Z	100.0000	100.0000	100.0000	0x114a60	tokens1:64f0adcd3b05
 objecttype	?clear@?$basic_ios@DU?$char_traits@D@std@@@std@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x117af0	-
 objecttype	?compare@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEHABV12@@Z	100.0000	100.0000	100.0000	0x11b8b0	-
 objecttype	?compare@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEHIIPBDI@Z	100.0000	100.0000	100.0000	0x11b910	-
@@ -3596,7 +3596,7 @@ rmg_terrain	?getTileGroundShape@TRockTraits@@UAEHH@Z	100.0000	100.0000	100.0000	
 rmg_terrain	?getTransitionStrength@TRmgTerrainPainter@@QAEHABV?$TPoint@I@@H@Z	100.0000	100.0000	100.0000	0x1b6fd0	tokens1:98d7520f1ff2
 rmg_terrain	?hasDifferentOuterAxisNeighbour@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@ABUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b6e00	tokens1:27a70d318049
 rmg_terrain	?hasMatchingDiagonalNeighbour@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@ABUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b6ba0	tokens1:cacb4ce3a7f7
-rmg_terrain	?hasMultipleAdjSimilarSpans@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x1b6810	tokens1:07050ae5324b
+rmg_terrain	?hasMultipleAdjSimilarSpans@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x1b6810	tokens1:285ef4985f8e
 rmg_terrain	?hasSpecialTiles@TNormalTerrainTypeTraits@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3840	tokens1:d0e06ba30027
 rmg_terrain	?hasSpecialTiles@TRockTraits@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3a40	tokens1:2454ea236ec9
 rmg_terrain	?initializePackedCell@TRmgTerrainPainter@@QAEXABV?$TPoint@I@@I@Z	100.0000	100.0000	100.0000	0x1b3dd0	tokens1:a8f53ad3e77d
