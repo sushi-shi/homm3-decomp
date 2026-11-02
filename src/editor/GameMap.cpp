@@ -53,9 +53,9 @@ bool isBeachBorder(const TGameMap::TLayer& layer, const TTilePoint& loc)
 {
     if (layer.getCell(loc).getTerrainType() == eTerrainWater)
         return false;
-    bool abAdjacent[8];
+    bool abAdjacent[TILE_DIR_COUNT];
     computeAdjacentDirs(layer.getWidth(), layer.getHeight(), loc.x(), loc.y(), abAdjacent);
-    for (unsigned int dir = 0; dir < 8; dir++) {
+    for (unsigned int dir = 0; dir < TILE_DIR_COUNT; dir++) {
         if (!abAdjacent[dir])
             continue;
         TTilePoint adjLoc = TPoint<int>(loc) + akAdjOffset[dir];
@@ -1459,9 +1459,9 @@ bool TGameMap::_TImpl::onTerrainTypeChanged(bool bSecondLayer, unsigned int x, u
         }
     }
     if (oldTerrainType == eTerrainWater) {
-        bool abAdjacent[8];
+        bool abAdjacent[TILE_DIR_COUNT];
         computeAdjacentDirs(layer.getWidth(), layer.getHeight(), x, y, abAdjacent);
-        for (unsigned int dir = 0; dir < 8; dir++) {
+        for (unsigned int dir = 0; dir < TILE_DIR_COUNT; dir++) {
             if (!abAdjacent[dir])
                 continue;
             TTilePoint adjLoc = TPoint<int>(x, y) + akAdjOffset[dir];
@@ -1696,6 +1696,9 @@ void TGameMap::_TImpl::addSecondLayer()
 
 // One edition at a time. Armageddon's Blade enables the heroes Restoration
 // lacked, moves hero 4 to its new id 144 and disables the heroes it lacks.
+// Cleanup probes: a heroMoved flag with nested breaks flips the layer-loop
+// branch; putting the flag in its condition scores 89.67%. No native evidence
+// establishes that extra flag, so retain the shared search exit.
 VA(0x00421319, 0x1d1)
 void TGameMap::_TImpl::setVersion(EGameVersion newVersion)
 {
