@@ -105,3 +105,9 @@ introduce source changes to steer that row back.
 These are game comparisons. Shared-source editor checks belong to the
 coordinator's integration gate; this lane does not claim independently
 verified editor or Mac scores.
+
+## Integration ownership check
+
+The full cleanliness gate caught the new guard-count enum in the source file.
+It now lives beside the other creature-bank domains in `creature_bank.h`;
+its inferred meaning and distinct guard/level domains are unchanged.

@@ -24,6 +24,13 @@ enum type_creature_bank_type {
     CREATURE_BANK_COUNT
 };
 
+// The spreadsheet names at most four guard types. The loader adds
+// one CREATURE_NONE terminator; this count is independent of bank levels
+// and of armyGroup's seven stack slots. The count name is inferred.
+enum ECreatureBankGuardTypeCount {
+    CREATURE_BANK_GUARD_TYPE_COUNT = 4
+};
+
 // The three guard shapes initialize_creature_bank's splitter knows, named
 // because they are switch labels and the tree cases on enumerators. Retail
 // dispatches on armyGroup::GetNumArmies() and handles exactly these three -

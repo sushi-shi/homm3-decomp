@@ -307,3 +307,9 @@ ledgers were refreshed with no remaining source-edit MAX loss. The same
 full editor comparison independently raises #215 recenterZone from
 91.4699% to 100%, while the shared packed-bit writer preserves its RMG
 editor consumers. Publication remains subject to the restarted full gates.
+
+The next full pass preserved MAX and passed both editor gate sets. The game
+source gate exposed the moved writer's stale reconciliation path, which was
+updated from `src/rmg.cpp` to `include/packed_bits.h` without adding a new
+exemption or changing its native-evidence basis. The cleanliness gate also
+moved the new guard-count enum into its owning creature-bank header.

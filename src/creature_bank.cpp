@@ -25,13 +25,6 @@ DATA(0x0067029c)
 const type_creature_bank_traits* g_constCreatureBankTraits =
     g_creatureBankTraits;
 
-// The spreadsheet names at most four guard types. guardTypes below adds
-// one CREATURE_NONE terminator; this count is independent of bank levels
-// and of armyGroup's seven stack slots. The count name is inferred.
-enum ECreatureBankGuardTypeCount {
-    CREATURE_BANK_GUARD_TYPE_COUNT = 4
-};
-
 // E:\gamedcs\creature_bank.cpp:25
 // Mac array-construction descriptor at TOC-0x75bc names this member ctor.
 DC_ADDRESS(0x07152c, 0x1c)

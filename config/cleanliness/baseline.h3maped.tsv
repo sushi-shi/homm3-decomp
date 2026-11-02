@@ -12,7 +12,7 @@ cpp extern decls	0
 .cpp-local enums	19
 casts to enum types	0
 magic case labels	0
-unnamed domain compares	29
+unnamed domain compares	26
 view preprocessor artifacts	0
 per-TU preprocessor scaffolds	0
 sanctioned feature switches	0
