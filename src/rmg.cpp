@@ -11,6 +11,7 @@
 #include "va.h"
 #include "includes.h"
 #include "bitset_iterator.h"
+#include "packed_bits.h"
 #include "homm3_minmax.h"
 
 #include <algorithm>
@@ -5455,14 +5456,9 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
 // Mac 0x23e97c..0x23e9c0 gives the total and a scan position the zone's
 // level, zeroes the sums and passes the scan position by value to
 // getMapItem; the map editor stores that level before the zeros.
-// Residual: the entry still needs its index lookup interleaved with the
-// position copy, and separate zero registers for count and totals. Copy,
-// declaration, zero/store order and counter lifetime families do not close
-// it; the bounds accessor is neutral. An ordinary zone-index accessor before
-// the position copy recovers its pointer chain but moves the copy to ECX and
-// saves row Y too early; TRmgPoint/three-axis scans and reuse of the position
-// do not repair that. Keep the existing accessor contracts and the
-// three-coordinate total.
+// Declaring the existing position and zoneIndex before the zeroed total
+// preserves their independent lifetimes and reproduces the retail entry.
+// Earlier accessor and counter-reuse probes did not recover this ordering.
 VA(0x0053D0D0, 0xE3)
 MAC_ADDRESS(0x23e928, 0x184) // anchor-callee 0x53e6e8; thiscall, ret 4
 VA_AT(h3maped, 0x004a2ffa, 0xc8)
@@ -10547,25 +10543,6 @@ unsigned char type_random_map_generator::generate()
     createRoads();
     createRivers();
     return 1;
-}
-
-// Scalar output uses the canonical writeValue in abstractfile.h. The retained
-// editor writers at 0x4aed89..0x4af09b own their packed
-// bytes, checked bit tests and stream write, then return whether the complete
-// byte count was written. Loki's writeBitset independently keeps these three
-// operations in one helper. The former separate encoder had no native claim
-// or independent caller and incorrectly split that operation. All six editor
-// instances match retail with the counted zero fill also expanded by Mac.
-template <size_t N>
-int writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
-{
-    unsigned char packed[(N + 7) / 8];
-    std::fill_n(packed, sizeof(packed), 0);
-    for (unsigned int index = 0; index < N; ++index) {
-        if (bits[index])
-            packed[index >> 3] |= 1 << (index & 7);
-    }
-    return outfile->write(packed, sizeof(packed)) == sizeof(packed);
 }
 
 // The shared artifact enum has no enumerator for the Vial of Dragon Blood.

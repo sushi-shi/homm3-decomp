@@ -2489,9 +2489,10 @@ void type_AI_creature_purchaser::set(TCreatureType newType,
 // the three-quarter cap on the cost penalty that selects the best source.
 // Original DC ?do_best_purchase@type_AI_creature_purchaser@@IAAJ_N@Z
 // proves bool tradeAllowed; its byte debug primitive is lowered bool.
-// Its callback `slot` and `best_slot` are function-scope shorts; retail uses
-// a short resource counter for the final deductions. Free and paid purchases
-// consume source stock after their paths rejoin.
+// Its callback `slot` and `best_slot` are function-scope shorts. Reusing
+// slot for the final resource deductions reproduces retail; the optimized
+// counter alone does not prove its original source type. Free and paid
+// purchases consume source stock after their paths rejoin.
 VA(0x0042d420, 0x264)
 DC_ADDRESS(0x032038, 0x250)
 MAC_ADDRESS(0x030a08, 0x2a0)  // DC method/callgraph + exact retail caller;
@@ -3823,9 +3824,9 @@ DATA(0x00660500) static long g_constThresholds[6] = {
 // local. The single mana-source Boolean expression also recovers the Mac
 // flag lifetime. Keep the recorded DC local spellings; the naming-only
 // control is byte-flat.
-// Residual (99.98%): retail loads the mana-cost argument after teleportTo
-// into EDX where VC6 uses EAX. A named point copy reproduced all 1217
-// bytes but has no native support, so it is not kept.
+// Reusing the existing start_point for the destination copy reproduces
+// all 1217 retail bytes. The older extra-local probe also did so but added
+// an unsupported destination local; that distinct probe remains rejected.
 DC_ADDRESS(0x034630, 0x44a)
 static unsigned char attemptTeleport(hero* current_hero,
                                       std::vector<pathCell>& path,
