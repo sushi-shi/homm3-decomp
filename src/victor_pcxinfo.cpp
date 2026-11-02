@@ -52,6 +52,8 @@ int __stdcall pcxinfo(const char* filename, PcxData* data)
 // returned color count on open failure are preserved from retail.
 // An extended palette jumps straight to the conversion; a missing marker
 // sets the header colour count itself, which VC5 shares with the clamp.
+// A colors != victorPcxExtendedColors header-read guard scores 98.12%
+// versus 100%; it does not establish an equivalent native source boundary.
 VA(0x006043d0, 0x13c)  // anchor-caller loadpcx + PCX palette marker/seek offsets
 int __stdcall victorReadPcxPalette(const char* filename, RGBQUAD* palette)
 {

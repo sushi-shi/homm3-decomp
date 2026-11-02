@@ -337,12 +337,11 @@ TObjectType& TObjectType::_setTriggerMask(const std::bitset<OBJECT_MASK_CELLS>& 
             for (unsigned x = 0; x < 8; ++x) {
                 if (_m_triggerMask[_getBitPos(x, y)]) {
                     _m_triggerLoc = TTilePoint(x, y);
-                    goto found;
+                    // The successful scan has no work after the location store.
+                    return *this;
                 }
             }
         }
-    found:
-        ;
     } else {
         _m_triggerLoc = TTilePoint(kMaxObjWidth, kMaxObjHeight);
     }

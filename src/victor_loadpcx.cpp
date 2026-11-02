@@ -29,6 +29,8 @@ DATA(0x0068d2d0) unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
 // precedes its read index, the refill counts precede both). The refill
 // point is the buffered count less two encoded rows, unless that is not
 // positive.
+// Giving the nibble case its own memcpy/break scores 84.17% versus 100%;
+// retain the shared row copy until a supported structured form reproduces it.
 VA(0x00603e00, 0x494)  // anchor-caller PCX importers + RLE/plane/palette helper sequence
 int __stdcall loadpcx(const char* filename, imgdes* image)
 {
