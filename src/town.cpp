@@ -353,6 +353,10 @@ int town::load(TAbstractFile* infile, int saveVersion)
 // hoisting the spell loop counter to function scope, and block-scoping
 // char_buffer around its whole run. VC6 hands the recycled home to the
 // widest local that fits, and no declaration form observed here changes it.
+// The mutable counted writer preserves Windows 100%. Mac remains available,
+// 64.6164 -> 64.5503%, with the same linked extent and named call sites; the
+// one-byte score residual is not waived. Both versions retain memset where
+// native calls bzero; both retain the native mutable-proxy path to test<70>.
 VA(0x005bd2f0, 0x402)
 DC_ADDRESS(0x165988, 0x3d4)
 MAC_ADDRESS(0x1b2290, 0x5e8)  // carcass promotion; anchor-callee armyGroup::save; caller game::Save's town pool
@@ -443,12 +447,10 @@ int town::save(TAbstractFile* outfile)
         < sizeof(m_mageGuildSpells))
         return -1;
 
-    memset(spellBuf, 0, sizeof(spellBuf));
-    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-        if (SpellDisabledMask[spell])
-            spellBuf[spell / 8] |= 1 << (spell % 8);
-    }
-    if (outfile->write(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
+    // The saved-game format writes all 70 bytes, including 61 zero padding
+    // bytes: Mac 0x1b2718/0x1b278c; DC town.cpp:728..738 names outBuf[70].
+    if (writePackedBitsCount(outfile, SpellDisabledMask, hero::NUM_SPELLS,
+            spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
 
     charBuffer = static_cast<char>(
