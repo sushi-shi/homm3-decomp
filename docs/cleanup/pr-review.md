@@ -11,6 +11,10 @@ limited scope/risk triage, not the exhaustive matching-diff review used for
 posted. This document consolidates the five workers' source/native reviews
 and independent compiler results; author descriptions are not compiler evidence.
 
+See the [supplemental Mac review](mac-review.md) for all available-pair
+comparisons, the later #192/#205/#206/#209 findings, and changed-target
+coverage gaps. No unavailable target is counted as verified.
+
 ## Dispositions
 
 This table records source/native review. Compiler results and landing state
@@ -35,11 +39,11 @@ are recorded separately below; “no static blocker” does not mean byte-verifi
 | [#202](https://github.com/sushi-shi/homm3-decomp/pull/202) | [5304445fa962](https://github.com/sushi-shi/homm3-decomp/commit/5304445fa9623127eea6e330bf9d2a55067bc135) | Verified isolated target at 100%; ordinary countdown loops in existing scopes. |
 | [#203](https://github.com/sushi-shi/homm3-decomp/pull/203) | [ca740ddc8589](https://github.com/sushi-shi/homm3-decomp/commit/ca740ddc858977cdbd5c1ab397e32655d469e70c) | Verified isolated target at 100%; native names and ordinary pointer reuse. |
 | [#204](https://github.com/sushi-shi/homm3-decomp/pull/204) | [8c00622c85a9](https://github.com/sushi-shi/homm3-decomp/commit/8c00622c85a962e6f568052d141fd9595f684b7c) | Blocked: committed inline_depth(0) and unsupported platform store-order fork. |
-| [#205](https://github.com/sushi-shi/homm3-decomp/pull/205) | [f79ca22a26db](https://github.com/sushi-shi/homm3-decomp/commit/f79ca22a26db43077d6ddb28082cc654717d0629) | Two isolated targets reach 100%; canonical getAlignment reuse and supported normalization. |
-| [#206](https://github.com/sushi-shi/homm3-decomp/pull/206) | [6fd55e1fc74e](https://github.com/sushi-shi/homm3-decomp/commit/6fd55e1fc74e19df8f54ccfc7026fb43c031532c) | Two isolated targets reach 100%; natural assignment-result reference and index reuse. |
+| [#205](https://github.com/sushi-shi/homm3-decomp/pull/205) | [f79ca22a26db](https://github.com/sushi-shi/homm3-decomp/commit/f79ca22a26db43077d6ddb28082cc654717d0629) | Windows targets reach 100%; Mac valueOfAddingArmy drops 23.3806 to18.9484. Hold pending source-backed preservation resolution; retain supported getAlignment recovery. |
+| [#206](https://github.com/sushi-shi/homm3-decomp/pull/206) | [6fd55e1fc74e](https://github.com/sushi-shi/homm3-decomp/commit/6fd55e1fc74e19df8f54ccfc7026fb43c031532c) | Windows targets reach 100%; Mac completeCurrentMap drops 68.2190 to67.8105. Hold full candidate pending correction. |
 | [#207](https://github.com/sushi-shi/homm3-decomp/pull/207) | [d1c7d737633b](https://github.com/sushi-shi/homm3-decomp/commit/d1c7d737633bdf41a06d94ed9925292742e48752) | Three isolated targets reach 100%; payload layout retained and Mac-supported guarded returns. |
 | [#208](https://github.com/sushi-shi/homm3-decomp/pull/208) | [51bc31aca836](https://github.com/sushi-shi/homm3-decomp/commit/51bc31aca836fffe7fe797c42d6f1c5917b8dd3c) | Verified isolated target at 100%; ordinary coordinates and widget-ID reuse. |
-| [#209](https://github.com/sushi-shi/homm3-decomp/pull/209) | [a4747241e2ee](https://github.com/sushi-shi/homm3-decomp/commit/a4747241e2ee6a41f69552d230384ce1cca49d27) | Verified isolated target at 100%; meaningful snapshot, original local still a hypothesis. |
+| [#209](https://github.com/sushi-shi/homm3-decomp/pull/209) | [a4747241e2ee](https://github.com/sushi-shi/homm3-decomp/commit/a4747241e2ee6a41f69552d230384ce1cca49d27) | Windows target reaches 100%; edited Mac update drops 35.7732 to35.7216. Hold pending correction. |
 | [#210](https://github.com/sushi-shi/homm3-decomp/pull/210) | [82ab38093585](https://github.com/sushi-shi/homm3-decomp/commit/82ab38093585f3f67ed81319701ddaee430b1e1c) | Two isolated targets reach 100%; pure operand ordering retains dimension helpers. |
 | [#211](https://github.com/sushi-shi/homm3-decomp/pull/211) | [2c81723e8d53](https://github.com/sushi-shi/homm3-decomp/commit/2c81723e8d53fbe23bb8f5bbd59b6bb368c01d53) | Blocked: recovered getGeneratorBonus removed; known bare lifetime probe reinstated. |
 | [#212](https://github.com/sushi-shi/homm3-decomp/pull/212) | [5b35a5e11aa0](https://github.com/sushi-shi/homm3-decomp/commit/5b35a5e11aa022609955962753996fbc0bf5ccce) | Revise constructor: discarded assignment ternary justified only by compiler budget. |

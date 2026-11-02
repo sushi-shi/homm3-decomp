@@ -111,3 +111,8 @@ Final publication excludes #192: its Windows-exact local reuse lowers the Mac
 comparison and contradicts the stronger direct-argument evidence. The original
 call is retained; the PR remains for review. Its provisional integration
 history is preserved on the SSD branch, not included as a publication parent.
+
+The [supplemental Mac review](mac-review.md) covers the remaining thirteen
+Windows-checked candidates and the rejected #192, with full availability
+limits. It identifies further preservation issues in #205, #206 and #209;
+those PRs remain open. The final game and both editor gate sets pass.
