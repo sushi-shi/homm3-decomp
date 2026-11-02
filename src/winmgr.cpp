@@ -63,8 +63,7 @@ int heroWindowManager::open(int newPriority)
     if (m_screenBitmap == 0)
         memError();
 
-    // DC winmgr.cpp:112 calls these four InitWin accessors. Retail expands
-    // them into reads at 0x6aac94/98/9c/a0 within the bitmap at 0x6aac70.
+    // DC winmgr.cpp:112 calls these four InitWin accessors.
     m_screenBitmap->reference(g_initWin.GetWidth(), g_initWin.GetHeight(),
                             g_initWin.GetPitch(), g_initWin.GetMap(0, 0));
     m_screenBitmap->FillRect(0, 0, 800, 600, 0);
@@ -147,9 +146,8 @@ int heroWindowManager::broadcastMessage(int msgId, int msgCodeX, int msgCodeY, i
     return main(msg);
 }
 
-// Original DC public AddWindow ends PAVheroWindow@@H_N: update is bool.
-// Mac 20d4d8..20d4ec forwards it directly to the virtual window opener;
-// retail likewise forwards the stack argument without byte normalization.
+// Original DC public AddWindow ends PAVheroWindow@@H_N: update is bool,
+// forwarded directly to the virtual window opener.
 VA(0x006023b0, 0xE7)
 DC_ADDRESS(0x19aa64, 0x1b0)
 MAC_ADDRESS(0x20d468, 0x154)
@@ -229,13 +227,9 @@ void heroWindowManager::removeWindow(heroWindow* killWindow)
 }
 
 // E:\gamedcs\winmgr.cpp:461
-// FOUR try levels, read off the unwind funclets the carve split out at
-// 0x602735 / 0x60274e / 0x60276d / 0x602780 - each re-runs one cleanup
-// and then tail-calls _CxxThrowException(0,0), a RETHROW. Innermost
-// first they are: RemoveWindow, the SleepAllWidgets(0) walk,
-// gbInDialog = 0, and the nest-count decrement, which fixes both the
-// nesting and where each try opens (the [ebp-4] walk 0/1/2/3 lands
-// exactly on those four boundaries).
+// FOUR try levels, each re-running one cleanup and rethrowing. Innermost
+// first they are: RemoveWindow, the SleepAllWidgets(0) walk, gbInDialog =
+// 0, and the nest-count decrement.
 VA(0x00602520, 0x280)
 DC_ADDRESS(0x19ad18, 0x1dc)
 MAC_ADDRESS(0x20d6c0, 0x308)  // anchor-global
@@ -322,15 +316,11 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
 }
 
 // E:\gamedcs\winmgr.cpp:645
-// DoDialog's sibling, same four try levels (funclets 0x6029cf /
-// 0x6029e8 / 0x602a07 / 0x602a1a). Four deliberate divergences from
-// DoDialog, all byte-forced: the draw callback runs once before the
-// fade; the window's CONSUME verdict does NOT short-circuit the
-// handler; the level-2 body flushes the input queue after RemoveWindow;
-// and the handler's verdict is a SWITCH, not an if/else chain - the
-// chain lays the WIDGET_END_DIALOG arm out first and falls into it,
-// while retail sinks it past the redraw arm behind a forward `je`,
-// which is exactly VC6's two-case switch layout.
+// DoDialog's sibling, with the same four try levels. Four deliberate
+// divergences from DoDialog: the draw callback runs once before the fade;
+// the window's CONSUME verdict does NOT short-circuit the handler; the
+// level-2 body flushes the input queue after RemoveWindow; and the
+// handler's verdict is a two-case SWITCH, not an if/else chain.
 VA(0x006027a0, 0x29A)
 DC_ADDRESS(0x19aef4, 0x208)
 MAC_ADDRESS(0x20d9c8, 0x340)  // anchor-global
@@ -500,9 +490,9 @@ void heroWindowManager::updateScreen(int x, int y, int width, int height)
 }
 
 // Original: heroWindowManager::BlitToScreenWithPointer; winmgr.cpp:964
-// Complete UpdateScreen0x602bd0 expands this rectangle construction and calls
-// RobAppBlit0x5ffe70, as do FadeToBlack0x6030e0 and FadeIn0x6032e0.
-// The older DC DDAppBlit(const RECT&) null/global-mdr1 wrapper is console-only.
+// Inlined in UpdateScreen, FadeToBlack and FadeIn, which call RobAppBlit.
+// The older DC DDAppBlit(const RECT&) null/global-mdr1 wrapper is
+// console-only.
 DC_ADDRESS(0x19b3c4, 0x2a)
 MAC_ADDRESS(0x20dfc8, 0x74)
 void heroWindowManager::blitToScreenWithPointer(int x, int y, int w, int h)
@@ -550,8 +540,8 @@ void heroWindowManager::screenShot()
 }
 
 // Original: heroWindowManager::SaveFizzleSource; winmgr.cpp:1085
-// The ordinary non-X interface shares the saved bitmap with the retained X
-// family. Neither debug nor retail evidence proves a distinct Complete body.
+// The ordinary non-X interface shares the saved bitmap with the X family;
+// no distinct Complete body is claimed.
 DC_ADDRESS(0x19b4bc, 0x104)
 void heroWindowManager::saveFizzleSource(int startX, int startY, int width, int height)
 {
@@ -692,8 +682,7 @@ void heroWindowManager::fizzleForward(int startX, int startY, int width,
 // the same view Bitmap16Bit::Draw uses; the manager's colour cycling is
 // latched off for the whole fade and restored with the saved source.
 
-// Mac retains BlitToScreenWithPointer at both update sites. The Windows
-// optimizer expands the same helper's rectangle setup into this caller.
+// Mac retains BlitToScreenWithPointer at both update sites; inlined here.
 VA(0x00602dc0, 0x2F7)
 DC_ADDRESS(0x19b8fc, 0x2aa)
 MAC_ADDRESS(0x20e200, 0x3e0)  // anchor-import + exhaustive tail order
@@ -701,15 +690,10 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                                        int height, int fadeTime)
 {
     // DC locals: DEFAULT_FADE_TIME and factor are const int; src/odst
-    // are read-only row pointers. Initialize target, screen, then source:
-    // the complete lifetime model raises Windows94.84 ->99.91 (2026-09-27).
-    // CFG27 blocks,14 branches and10 named calls agree; one pointer reload
-    // order remains. Six cursor increment orders emit identical bytes.
-    // All six row-pointer declaration orders, with either column scope,
-    // produce only the current object or a lower-scoring register variant.
-    // DC 1389..1394 reads the old/new red, green, then blue channels;
-    // 1396..1402 interpolates and combines them in that order. Restoring
-    // this RGB spelling also aligns all 17 retail references (99.91%).
+    // are read-only row pointers. Target, screen, then source are
+    // initialized in that order. DC 1389..1394 reads the old/new red,
+    // green, then blue channels; 1396..1402 interpolates and combines them
+    // in that order.
     const int defaultFadeTime = 33;
     if (g_completeDrawEnabled) {
         if (startX < 0) {
@@ -786,7 +770,7 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
             blitToScreenWithPointer(startX, startY, width, height);
 
             m_colorCyclingOn = savedColorCycling;
-            // DC line 1434 calls the ordinary helper; Complete expands it.
+            // DC line 1434 calls the ordinary helper; inlined.
             releaseFizzleSource();
         }
     }
@@ -802,24 +786,14 @@ void heroWindowManager::releaseFizzleSource()
     m_bmpFizzleSource = 0;
 }
 
-// E:\gamedcs\winmgr.cpp:1707 - the fade-out. Located by anchor-caller:
-// the already-exact FadeScreen calls this at 0x602c78.
+// E:\gamedcs\winmgr.cpp:1707 - the fade-out, FadeScreen's first call.
 
 // The three colour masks are widened into both halves of a dword so one
 // pass handles two 16-bit pixels; the fade itself is three passes that
 // shift every component right by the pass index and re-mask it into its
-// own field, so pass 0 is a plain copy. `speed` is dropped on the floor
-// - the pacing is the fixed 50 ms per pass below - but the parameter is
-// real: FadeScreen forwards it and `ret 8` fixes the frame at two
-// dwords.
-
-// Residual (88.51%): one register-allocation choice in the pixel loop,
-// and its cascade. Retail keeps the loop's shift count in ebx and the
-// SOURCE pointer in edi, hoists `pDst - pSrc` into a per-row delta slot
-// and addresses the store as `[delta + src - 4]`; our CL puts the shift
-// in edi, the source pointer in ebx, and keeps a second live dst
-// pointer instead of the delta. Frame layout, every mask/counter/timer
-// slot displacement and the whole post-loop tail are byte-identical.
+// own field, so pass 0 is a plain copy. `speed` is dropped on the floor -
+// the pacing is the fixed 50 ms per pass below - but the parameter is real:
+// FadeScreen forwards it.
 
 // Original: heroWindowManager::NextFlashFrame; winmgr.cpp:1455
 DC_ADDRESS(0x19bbd4, 0x80)
@@ -877,8 +851,8 @@ void heroWindowManager::flash(int startX, int startY, int width, int height,
 
 // Original: heroWindowManager::FadeBlit; winmgr.cpp:1545
 // DC records separate transparent/opaque loops, palette lookup and three
-// component interpolation. Complete's bitmap/palette interfaces retain those
-// operations, but no standalone address is claimed for this older entry point.
+// component interpolation; no standalone address is claimed for this older
+// entry point.
 DC_ADDRESS(0x19be28, 0x394)
 void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
                                  const Bitmap816* srcBitmap, int dx, int dy,
@@ -971,17 +945,12 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
     }
 }
 
-// Mac checks its display mode to choose gamma or bitmap fade paths
-// (0x20e650 and 0x20ea8c). Their extra bitmap, blit and delay
-// calls are platform paths, not missing helpers in the Windows fade.
-// DC names const unsigned pixel masks, a read-only pixel source and the
-// fade period; the ordinary Windows body retains those types and helpers.
-// The source row owner also stays const across pitch advances (DC FadeFrom
-// 19c450/19c468/19c502). Restoring this qualifier is Windows byte-flat.
-// DC locals: bmpFadeSource, red_mask_2, green_mask_2, blue_mask_2,
-// next_fade_time and time1. The spelling below normalizes the underscores.
-// Mac uses separate gamma/bitmap paths; these native comparisons remain
-// unavailable rather than pretending that the Windows body is a Mac port.
+// Mac checks its display mode to choose gamma or bitmap fade paths; those
+// are platform paths, not missing helpers in the Windows fade. DC names
+// const unsigned pixel masks, a read-only pixel source and the fade period,
+// and the source row owner stays const across pitch advances (DC FadeFrom
+// 19c450/19c468/19c502). DC locals: bmpFadeSource, red_mask_2,
+// green_mask_2, blue_mask_2, next_fade_time and time1.
 VA(0x006030e0, 0x1F9)
 DC_ADDRESS(0x19c1bc, 0x1fa)
 MAC_ADDRESS(0x20e634, 0x444) // MAC_ABSTRACTION_FROM(tokens1:a24615a82ad2,6.7766): restore bitmap Grab/Draw wrappers; Mac 0x20e6a8/0x20e7b8 and 0x20e8c8/0x20ea54 expand them in its separate fade paths.
@@ -994,9 +963,8 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
     Bitmap16Bit bmpFadeSource(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
     bmpFadeSource.Grab(m_screenBitmap, 0, 0);
 
-    // DC winmgr.cpp:1793 calls mouseManager::Disable after Grab. That
-    // recovered header helper only reads the disable count, so VC6 elides
-    // this unused result in the Complete release build.
+    // DC winmgr.cpp:1793 calls mouseManager::Disable after Grab; its result
+    // is unused.
     g_mouseManager->disable();
 
     for (int shift = 0; shift < 3; shift++) {
@@ -1038,8 +1006,8 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
     }
 }
 
-// E:\gamedcs\winmgr.cpp:1866 - the fade-in, FadeScreen's second call at
-// 0x602c91. The mirror of FadeToBlack: the same three-pass shift walked
+// E:\gamedcs\winmgr.cpp:1866 - the fade-in, FadeScreen's second call. The
+// mirror of FadeToBlack: the same three-pass shift walked
 // DOWNWARDS from 2 and stopping before 0, so the last pass is the
 // half-brightness frame and the full-brightness image is restored by
 // the Draw below rather than by a pass of its own.
@@ -1051,11 +1019,8 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 // (unsigned int* / const unsigned int*, advanced by the byte pitch), here
 // the pixel-pair and byte views of Bitmap16MapPointer; the row's pixel
 // walkers are register locals, src's loaded first (1962/1965).
-// Unrecorded row 1975 is the source increment, folded into SH4's @r4+
-// load. Reading `*pixelSrc` and incrementing it after the store gives
-// retail's single src induction variable with dst addressed as
-// [dst - src + src_next - 4] (both fades 100%; `*pixelSrc++` keeps a
-// separate dst pointer, and declaring the dst walker first falls to 86.90%).
+// Unrecorded row 1975 is the source increment: `*pixelSrc` is read and
+// incremented after the store.
 VA(0x006032e0, 0x1E5)
 DC_ADDRESS(0x19c3b8, 0x230)
 MAC_ADDRESS(0x20ea78, 0x26c)  // anchor-caller
@@ -1104,10 +1069,9 @@ void heroWindowManager::fadeFromBlack(int speed)
                             WINDOW_SCREEN_HEIGHT);
 }
 
-// Mac retains this shared window-state helper at code 0+0x20ece4. DoDialog,
-// DoDialogDraw and DoQuickView each call it for the initial sleep and both
-// normal and exception cleanup paths. The Windows loops were expanded in
-// those callers. Dreamcast records the caller layouts but no helper name.
+// Mac retains this shared window-state helper; DoDialog, DoDialogDraw and
+// DoQuickView call it for the initial sleep and both normal and exception
+// cleanup paths, and Windows inlines it there.
 MAC_ADDRESS(0x20ece4, 0x70)
 void heroWindowManager::sleepAllWindows(unsigned char sleep)
 {

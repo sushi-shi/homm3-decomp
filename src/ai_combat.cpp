@@ -70,13 +70,9 @@ long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const her
 }
 
 // E:\gamedcs\ai_combat.cpp:56
-// RECONSTRUCTED FROM ITS INLINED COPIES - retail has no
-// out-of-line row: /Ob2 expands both uses (0x425c65 and 0x425d8d
-// inside cast_enchantment). Preserve the ordinary TU helper; an unused
-// emitted copy does not require a retail address claim. Bytes prove the shape:
-// the pre-image
-// total_hit_points*damage_modifier is taken BEFORE the update, the
-// per-creature delta is a 64-bit imul/__alldiv, and damage_modifier is
+// Reconstructed from its two inlined copies inside cast_enchantment: the
+// pre-image total_hit_points*damage_modifier is taken BEFORE the update,
+// the per-creature delta is a 64-bit division, and damage_modifier is
 // rewritten as the new total over that pre-image.
 DC_ADDRESS(0x029a30, 0x162)
 MAC_ADDRESS(0x025f6c, 0x10c)
@@ -118,9 +114,8 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
 }
 
 // E:\gamedcs\ai_combat.cpp:110
-// Retail expands this helper at cast_spell's selected target and emits no
-// out-of-line row. The Dreamcast supplies the helper boundary/name; the
-// statements below are reconstructed from the retail expansion.
+// Inlined at cast_spell's selected target; the Dreamcast supplies the
+// helper boundary/name.
 DC_ADDRESS(0x029cac, 0x32)
 MAC_ADDRESS(0x0261d4, 0x54)
 void type_monster_data::castResurrection(
@@ -149,7 +144,6 @@ long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, c
     damage = const_cast<hero*>(castingHero)->modifySpellDamage(spell, damage, 0);
     if (damage == 0)
         return 0;
-    // Mac 0x026228 keeps damage in memory: min selects it by reference.
     damage *= m_combatValuePerHit;
     return min(damage, m_totalValue);
 }
@@ -228,10 +222,9 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
 }
 
 // E:\gamedcs\ai_combat.cpp:221
-// DC places these six named locals in the outer scope (its record
-// order does not prove declaration order). Line 222 copies base_modifier
-// before the tactics stores; retail likewise copies both dwords at entry.
-// Preserve that initializer and the actual vector begin/end sort interface.
+// DC places these six named locals in the outer scope (its record order
+// does not prove declaration order). Line 222 copies base_modifier before
+// the tactics stores. The sort takes the vector's begin/end.
 VA(0x00424120, 0x66E)
 DC_ADDRESS(0x029f58, 0x518)
 MAC_ADDRESS(0x02662c, 0x48c)  // dc-callgraph unique
@@ -276,10 +269,9 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
     if (m_currentHero)
         speedBonus = m_currentHero->getCombatSpeedBonus();
 
-    // DC263's nullary hit-point bonus precedes DC264's speed bonus. Retail
-    // instead calls GetCombatSpeedBonus before this loop and the newer
-    // GetHitPointBonus(int) per creature at 0x4242de. The audit's source-order
-    // lead is this platform/ABI difference, not an omitted shared call.
+    // DC263's nullary hit-point bonus precedes DC264's speed bonus; Complete
+    // calls GetCombatSpeedBonus before this loop and the newer
+    // GetHitPointBonus(int) per creature.
     m_totalCombatValue = 0;
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         TCreatureType creature = m_currentArmy->m_armyTypes[i];
@@ -371,10 +363,8 @@ void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
 }
 
 // E:\gamedcs\ai_combat.cpp:381
-// DC proves the const receiver and this source position. Retail
-// expands the one call in initializeCreatures; that is not evidence for an
-// explicit inline keyword. All eight declaration/order controls are score-
-// flat; keep the ordinary canonical helper and its real read-only interface.
+// DC proves the const receiver and this source position; inlined in
+// initializeCreatures.
 DC_ADDRESS(0x02a52c, 0x5c)
 MAC_ADDRESS(0x026bf0, 0x64)
 type_speed_catagory type_AI_combat_data::getCatagory(
@@ -459,9 +449,8 @@ long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_
 }
 
 // E:\gamedcs\ai_combat.cpp:498
-// RECONSTRUCTED FROM ITS ONE INLINED COPY - no retail row:
-// /Ob2 expands the single call site (get_damage_spell_value 0x424e69).
-// This is an ordinary TU helper, the value-side mirror of cast_chain_lightning.
+// Reconstructed from its one inlined copy in get_damage_spell_value; the
+// value-side mirror of cast_chain_lightning.
 DC_ADDRESS(0x02a764, 0x80)
 MAC_ADDRESS(0x026ef8, 0xb4)
 void type_AI_combat_data::getChainLightningValue(type_spell_choice& choice, const type_AI_combat_data& defender, long damage) const
@@ -498,14 +487,10 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
     }
 }
 
-// DC 0x2a8b6/0x2a8b8 reads both heroes at +32 directly, as do the chain,
-// area and cast siblings below, while DoAftermath in the same module keeps
-// jsr calls to get_hero/get_army. The SH build retained those accessor calls,
-// so these valuation bodies used the fields themselves. Mac 0x270c4/0x270cc
-// expands an identical owner+0x20 load and cannot distinguish the two forms.
-// Mac stores target before value (DC 569/570) and retains the reverse
-// postdecrement traversal (Mac 0x270e8..0x270f4, retail +0x5b..+0x63).
-// The direct reads restore the retail register homes and size() branch.
+// DC reads both heroes at +32 directly, as do the chain, area and cast
+// siblings below, while DoAftermath in the same module calls get_hero and
+// get_army. Target is stored before value (DC 569/570), with the reverse
+// postdecrement traversal.
 VA(0x00424d20, 0x290)
 DC_ADDRESS(0x02a868, 0xce)
 MAC_ADDRESS(0x027064, 0x12c)
@@ -517,7 +502,7 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
                                                            defender.m_currentHero, damage);
         if (value > choice.m_value) {
-            choice.m_target = i;  // Mac0x270e0 stores target before value.
+            choice.m_target = i;  // Target before value, as in DC 569/570.
             choice.m_value = value;
         }
     }
@@ -589,8 +574,8 @@ void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_com
     long value = defender.m_creatures[choice.m_target].getSpellDamage(
         choice.m_spell, m_currentHero, defender.m_currentHero, damage);
     defender.m_totalCombatValue -= defender.m_creatures[choice.m_target].takeDamage(value);
-    // The five-arm jump table at 0x4253cc: 0x13 chains, 0x14/0x15/0x17
-    // hit one extra target, 0x16 hits two.
+    // The five-arm switch: 0x13 chains, 0x14/0x15/0x17 hit one extra target,
+    // 0x16 hits two.
     switch (choice.m_spell) {
     case SPELL_CHAIN_LIGHTNING:
         castChainLightning(choice, defender, damage);
@@ -607,9 +592,7 @@ void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_com
 }
 
 // E:\gamedcs\ai_combat.cpp:694; original has_creature
-// Retail 0x425bd0 expands this const predicate before the one mana update.
-// Keep the ordinary helper and source call; the previous pasted scan enlarged
-// castSpell and changed its later mass-damage expansion decisions.
+// Inlined before the one mana update.
 DC_ADDRESS(0x02ab3c, 0x4c)
 MAC_ADDRESS(0x02744c, 0x4c)
 unsigned char type_AI_combat_data::hasCreature(TCreatureType creature) const
@@ -635,10 +618,7 @@ long type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, const he
 }
 
 // E:\gamedcs\ai_combat.cpp:731
-// Retail expands this helper inside cast_spell and emits no out-of-line row.
-// Its first nested get_mass_damage_value expands while the defender-side
-// call stays out of line. DC proves the const receiver; the ordinary
-// body retains that natural split without an invented inline qualifier.
+// Inlined inside cast_spell; DC proves the const receiver.
 DC_ADDRESS(0x02ac18, 0x3e)
 MAC_ADDRESS(0x027538, 0x84)
 void type_AI_combat_data::getMassDamageValue(
@@ -652,18 +632,9 @@ void type_AI_combat_data::getMassDamageValue(
 }
 
 // E:\gamedcs\ai_combat.cpp:747
-// Original cast_mass_damage_spell: one ordinary helper, two
-// castSpell calls. Line 758 assigns take_damage's return to the running value;
-// retail 0x425bd0 does so in both expansions (ESI/EDI <- EAX), then subtracts
-// that capped value. Separate subscripts also reproduce retail's vector reload
-// across getSpellDamage. The inherited cloned loops incorrectly carried the
-// uncapped sum. Never restore that dataflow or a caller-specific clone for score.
-// The 48-state boundary family and 96-state hasCreature follow-up exhausted
-// cloned/canonical, retained/removed fences and the three dataflow/lifetime
-// facts. Correct ordinary/unfenced + hasCreature scores castSpell 86.7910;
-// keeping the first inherited fence scores 88.5664. Both old fences are
-// removed. The remaining nested decisions close when castSpell recovers
-// its separate getSummoningValue boundary, as documented below.
+// Original cast_mass_damage_spell: one ordinary helper, two castSpell calls.
+// Line 758 assigns take_damage's return to the running value, which then
+// subtracts that capped value. Separate subscripts across getSpellDamage.
 DC_ADDRESS(0x02ac58, 0x8a)
 MAC_ADDRESS(0x0275bc, 0xbc)
 void type_AI_combat_data::castMassDamageSpell(
@@ -682,10 +653,8 @@ void type_AI_combat_data::castMassDamageSpell(
 }
 
 // E:\gamedcs\ai_combat.cpp:768
-// RECONSTRUCTED FROM ITS FOUR INLINED COPIES - no retail
-// row: /Ob2 inlined all four call sites in the two-side overload below
-// and OPT:REF dropped the body. The const signature and ordinary definition
-// preserve all four expansions; emission alone does not prove source inline.
+// Reconstructed from its four inlined copies in the two-side overload
+// below; the const signature is DC's.
 DC_ADDRESS(0x02ace4, 0x72)
 MAC_ADDRESS(0x027678, 0xa8)
 void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero) const
@@ -722,8 +691,8 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
         getEnchantmentValue(choice, m_currentHero);
         if (choice.m_mastery < eMasteryAdvanced)
             return;
-        // retail copies the whole 0x24-byte record with one rep movsd
-        // (0x4256b7) and compares the ourChoice value after the second pass
+        // The whole 0x24-byte record is copied, and the ourChoice value is
+        // compared after the second pass
         type_spell_choice ourChoice = choice;
         defender.getEnchantmentValue(choice, m_currentHero);
         if (choice.m_mastery != eMasteryAdvanced)
@@ -788,8 +757,7 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_com
 // The const receiver and reference choice are positive CodeView facts.
 // DC912 dispatches 38/39 to resurrection and 60/66..69 to no-op exits;
 // 924 scans downward, 926 gets the value, 927 compares strictly, and
-// 929/930 store value before target. Retail expands this ordinary helper
-// in castSpell; VC6 reduces its switch to the signed 38..39 range there.
+// 929/930 store value before target. Inlined in castSpell.
 DC_ADDRESS(0x02afb8, 0x7e)
 MAC_ADDRESS(0x027a6c, 0xb8)
 void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
@@ -815,9 +783,8 @@ void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
     }
 }
 
-// DC943 has the same no-op/resurrection dispatch and 955 calls the
-// selected monster's cast_resurrection. Preserve this ordinary boundary
-// even though retail expands it and retains no separate body.
+// DC943 has the same no-op/resurrection dispatch and 955 calls the selected
+// monster's cast_resurrection; inlined.
 DC_ADDRESS(0x02b038, 0x5a)
 MAC_ADDRESS(0x027b24, 0x64)
 void type_AI_combat_data::castSummoning(type_spell_choice& choice)
@@ -836,12 +803,10 @@ void type_AI_combat_data::castSummoning(type_spell_choice& choice)
     }
 }
 
-// Reading the defender's m_currentArmy and m_currentHero fields directly
-// (not through getArmy/getHero) fixes the last register homes: 99.7461% ->
-// exact, with Mac rising 89.90% -> 93.02%.
-// Mac retains the same 18 direct game calls in the same order, including both
-// getDamageSpellValue arms and the four cast helpers. A seven-mutation VC6
-// register probe on this body found no closer binding than the current one.
+// The defender's m_currentArmy and m_currentHero fields are read directly
+// (not through getArmy/getHero). Mac retains the same 18 direct game calls
+// in the same order, including both getDamageSpellValue arms and the four
+// cast helpers.
 // E:\gamedcs\ai_combat.cpp:965
 VA(0x00425bd0, 0x593)
 DC_ADDRESS(0x02b094, 0x296)
@@ -936,9 +901,8 @@ void type_AI_combat_data::castSpell(
 }
 
 // E:\gamedcs\ai_combat.cpp:1082
-// Retail inlines every use; these statements are reconstructed from the
-// repeated retail expansions. The Dreamcast contributes only the helper's
-// name/signature and retains an out-of-line body in that build.
+// Reconstructed from its inlined uses; the Dreamcast contributes the
+// helper's name/signature and keeps it out of line.
 DC_ADDRESS(0x02b32c, 0x52)
 MAC_ADDRESS(0x027f48, 0xa8)
 void type_AI_combat_data::castSpells(
@@ -956,9 +920,8 @@ void type_AI_combat_data::castSpells(
 
 // Original: type_AI_combat_data::inflict_catagory_damage; ai_combat.cpp:1100
 // The single-category operation is distinct from inflictMeleeDamage's
-// proportional distribution over a range. Both DC inflict_damage and Complete
-// 0x426300 use that range operation; retain this ordinary source interface
-// without claiming a separate retail body or substituting it into that path.
+// proportional distribution over a range, which both DC inflict_damage and
+// Complete use; no separate retail body.
 DC_ADDRESS(0x02b380, 0x88)
 long type_AI_combat_data::inflictCatagoryDamage(long damage,
                                                type_speed_catagory catagory)
@@ -1060,9 +1023,8 @@ long type_AI_combat_data::getFinalMeleeValue() const
 }
 
 // E:\gamedcs\ai_combat.cpp:1224
-// Retail inlines every use; these statements are reconstructed from the
-// repeated retail expansions. The Dreamcast contributes only the helper's
-// name/signature and retains an out-of-line body in that build.
+// Reconstructed from its inlined uses; the Dreamcast contributes the
+// helper's name/signature and keeps it out of line.
 DC_ADDRESS(0x02b890, 0x3a)
 MAC_ADDRESS(0x0284f4, 0x84)
 void type_AI_combat_data::doRangedCombat(
@@ -1075,7 +1037,7 @@ void type_AI_combat_data::doRangedCombat(
 }
 
 // E:\gamedcs\ai_combat.cpp:1240
-// Retail inlines every use; the Dreamcast body survives out of line.
+// Inlined at every use; the Dreamcast body survives out of line.
 DC_ADDRESS(0x02b8cc, 0x3e)
 MAC_ADDRESS(0x028578, 0x8c)
 void type_AI_combat_data::doMeleeCombat(
@@ -1089,7 +1051,7 @@ void type_AI_combat_data::doMeleeCombat(
 }
 
 // E:\gamedcs\ai_combat.cpp:1255
-// Retail inlines every use; the Dreamcast body survives out of line.
+// Inlined at every use; the Dreamcast body survives out of line.
 DC_ADDRESS(0x02b90c, 0x3a)
 MAC_ADDRESS(0x028604, 0x84)
 void type_AI_combat_data::doMeleeCombat(
@@ -1101,10 +1063,9 @@ void type_AI_combat_data::doMeleeCombat(
     defender.inflictDamage(ourAttack, 0);
 }
 
-// DC class 0x5a07's constructor method list 0x5a0f gives the copy constructor
-// attributes 0x003 (explicit), unlike its 0x103 compiler-generated assignment
-// and destructor. Preserve this memberwise source boundary. The native vector
-// member owns its own separate retained copy constructor at 0x4276c0.
+// DC's class record marks the copy constructor explicit (attributes 0x003),
+// unlike its compiler-generated assignment and destructor; a memberwise
+// source boundary. The vector member keeps its own copy constructor.
 DC_ADDRESS(0x02c6b4, 0x54)
 inline type_AI_combat_data::type_AI_combat_data(
     const type_AI_combat_data& other)
@@ -1264,11 +1225,8 @@ static void doEagleEye(hero* winner, hero* loser)
 }
 
 // E:\gamedcs\ai_combat.cpp:1424
-// The DC `short amount` prototype does not survive retail bytes. The second
-// (edx) argument is an armyGroup the
-// body walks slot by slot - armies[i] at [esi], numTroops[i] at
-// [esi+0x1c], esi stepping by 4 over seven iterations (0x426e36
-// .. 0x426e89) - i.e. the losing side's stacks.
+// The DC `short amount` prototype does not survive: the second argument is
+// an armyGroup the body walks slot by slot, i.e. the losing side's stacks.
 VA(0x00426df0, 0xED)
 DC_ADDRESS(0x02bd6c, 0xe8)
 MAC_ADDRESS(0x028ccc, 0x130)  // corroborates (hd-crossbuild + ida)
@@ -1312,8 +1270,7 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
     if (m_currentHero)
         m_currentHero->m_mana = static_cast<short>(m_mana);
     if (defeatedHero)
-        // Retail reads the low word directly here; the long-returning getter
-        // makes VC6 issue a dword load. Keep getMana for its other callers.
+        // The mana's low word is read directly here.
         defeatedHero->m_mana = static_cast<short>(defender.m_mana);
 
     if (m_totalCombatValue > 0) {
@@ -1360,9 +1317,8 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
 }
 
 // E:\gamedcs\ai_combat.cpp:1511
-// EH-bearing: the two stack-local type_AI_combat_data objects give the
-// function a /GX frame (push -1 / push <ehfuncinfo> / mov eax,fs:[0])
-// and the two `mov [ebp-4], state` writes between the constructors.
+// The two stack-local type_AI_combat_data objects give the function its EH
+// frame.
 VA(0x004270c0, 0x149)
 DC_ADDRESS(0x02c004, 0x13c)
 MAC_ADDRESS(0x029000, 0x158)  // anchor-global
@@ -1387,7 +1343,7 @@ bool aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendin
 }
 
 // E:\gamedcs\ai_combat.cpp:1539
-// EH-bearing, same shape as AI_quick_combat.
+// Same EH shape as AI_quick_combat.
 VA(0x00427210, 0x113)
 DC_ADDRESS(0x02c140, 0x13c)
 MAC_ADDRESS(0x029158, 0x144)  // anchor-global
@@ -1510,7 +1466,7 @@ long aiApproximateStrength(const hero* currentHero)
 }
 
 // E:\gamedcs\ai_combat.cpp:1674
-// LOCATED (hd-crossbuild + ida): same body with the group in edx.
+// Same body as DC's, with the group in edx.
 VA(0x00427690, 0x2F)
 DC_ADDRESS(0x02c628, 0x40)
 MAC_ADDRESS(0x029710, 0x80)  // corroborates (hd-crossbuild + ida)
@@ -1530,13 +1486,11 @@ VA_COMPGEN(0x00427750, 0x21, VECTOR_SIZE, type_monster_data)
 // links Dinkumware. Their exclusions live in config/source/dc_only_generated.tsv.
 
 // push_back on the combat AI's monster table retains Dinkumware's
-// three-argument vector::insert specialization in ai_combat.obj. Byte-
-// verified against the emitted COMDAT at 0.987 mnemonic agreement over 740
-// bytes - the largest single row the COMDAT pass recovered.
+// three-argument vector::insert specialization in ai_combat.obj.
 VA_COMPGEN(0x00427780, 0x2E4, VECTOR_INSERT, type_monster_data)
 
-// COMDAT pairing: std::_Sort<type_monster_data>, agreement 0.983.
+// COMDAT pairing: std::_Sort<type_monster_data>.
 VA_COMPGEN(0x00427a90, 0x19B, STD_SORT, type_monster_data)
 
-// COMDAT pairing: std::_Unguarded_partition<type_monster_data>, 0.913.
+// COMDAT pairing: std::_Unguarded_partition<type_monster_data>.
 VA_COMPGEN(0x00427c30, 0x64, STD_UNGUARDED_PARTITION, type_monster_data)

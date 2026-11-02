@@ -137,11 +137,9 @@ void TQuestLogWindow::updateQuestLocator(int i)
     }
 }
 
-// Dreamcast preserves this helper as a 12-row loop.  Complete expands the
-// same source boundary into DoQuestLog after increasing the visible list to
-// 16 rows; the singular retail callee and loop schedule prove the revision.
-// Keep the ordinary source helper (questlogwindow.cpp:105..107); retail's
-// expansions in DoQuestLog and QuestSliderCallback do not prove `inline`.
+// Dreamcast preserves this helper as a 12-row loop (questlogwindow.cpp:
+// 105..107); Complete inlines it into DoQuestLog and QuestSliderCallback
+// after increasing the visible list to 16 rows.
 DC_ADDRESS(0x116c78, 0x2a)
 MAC_ADDRESS(0x14a1f4, 0x4c)
 void TQuestLogWindow::updateQuestLocators()

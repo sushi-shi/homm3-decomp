@@ -36,9 +36,9 @@ int __stdcall enumPlayersCallback(unsigned long, unsigned long, const DPNAME*, u
 // (0x4988ca/0x4988d9).
 DATA(0x006969d8) static unsigned char g_coInitialized = 0;
 
-// E:\gamedcs\dxplay.cpp:66 - the CDPlay base ctor has no standalone retail body;
-// it is emitted only inlined into the CDPlayLobby (and CDPlayHeroes) ctors. The
-// process is CoInitialized once, guarded by a file-scope flag.
+// E:\gamedcs\dxplay.cpp:66 - inlined into the CDPlayLobby (and CDPlayHeroes)
+// constructors. The process is CoInitialized once, guarded by a file-scope
+// flag.
 DC_ADDRESS(0x08a074, 0x70)
 CDPlay::CDPlay()
 {
@@ -693,8 +693,7 @@ unsigned char CDPlay::sysMsgCreatePlayerOrGroup(DPMSG_CREATEPLAYERORGROUP* sysMs
 }
 
 // Original: CDPlay::SysMsgDestroyPlayerOrGroup; dxplay.cpp:890
-// Both base/lobby vtables slot57 fold this ordinary return-true body to
-// the neighboring CreatePlayerOrGroup implementation0x4981e0.
+// Shares the return-true CreatePlayerOrGroup body.
 DC_ADDRESS(0x08af4c, 0x4)
 unsigned char CDPlay::sysMsgDestroyPlayerOrGroup(
     DPMSG_DESTROYPLAYERORGROUP* sysMsg, unsigned long toID)
@@ -1120,9 +1119,9 @@ unsigned char CDPlayLobby::connect()
 
 // Original: CDPlayLobby::SendStandardLobbyMsg; dxplay.cpp:1476
 // The ordinary lobby-message APIs use the same interface and HRESULT state
-// as Complete's retained connection-setting wrappers. DC1478/1479 proves
-// the null-lobby guard and SendLobbyMessage flags2. They have no separately
-// claimed retail entries or invented callers.
+// as Complete's connection-setting wrappers. DC1478/1479 proves the
+// null-lobby guard and SendLobbyMessage flags2; no separate retail entries
+// are claimed.
 DC_ADDRESS(0x08b808, 0x5c)
 unsigned char CDPlayLobby::sendStandardLobbyMsg(
     unsigned long appId, void* data, unsigned long size)
@@ -1323,8 +1322,7 @@ CDPlayConnection* CDPlayLobby::createSerialConnection(char* name, _DPCOMPORTADDR
 }
 
 // Original: CDPlayLobby::HandleSystemLobbyMsg; dxplay.cpp:1802
-// Complete's lobby vtable0x63dd20 slot71 folds this return-true default
-// into the identical ordinary body0x4981e0 (mov al,1; ret8).
+// Shares the return-true body.
 DC_ADDRESS(0x08b960, 0x4)
 unsigned char CDPlayLobby::handleSystemLobbyMsg(unsigned long appId, CDPlayMsg* msg)
 {

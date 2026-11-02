@@ -19,8 +19,8 @@
 
 // A datum whose rva already carries a src DATA() claim in another TU is
 // defined here WITHOUT one: the model allows a single claim per address
-// and moving those claims would edit files this lane does not own.  The
-// owning site is named in the comment above each such definition.
+// and the claims stay at their owning sites. The owning site is named in
+// the comment above each such definition.
 
 DATA(0x006a5328)
 TTextResource* g_resourceNamesResource;
@@ -801,9 +801,9 @@ unsigned char initializeTentColorText()
 }
 
 // Read each window's run of rollover/right-click text pairs in file order,
-// skipping two rows between runs. DC 0x161b14..0x1622f0 checks each
-// section label with CheckSpreadsheetResource; the final check uses i,
-// whereas the section headers use i - 1. Its release body is empty.
+// skipping two rows between runs. DC checks each section label with
+// CheckSpreadsheetResource; the final check uses i, whereas the section
+// headers use i - 1. Its release body is empty.
 VA(0x005b98b0, 0x405)
 DC_ADDRESS(0x161ae4, 0x822)
 MAC_ADDRESS(0x1ae700, 0x830)

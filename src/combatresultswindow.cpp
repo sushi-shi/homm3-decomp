@@ -466,8 +466,7 @@ int combatResultsWindowHandler(message& msg)
             exitFlag = 1;
     }
 
-    // DC445 calls IsPast; retail 0x471bc5 expands Get/sub/js. Preserve
-    // the canonical helper, including its ElapsedSince delegation.
+    // DC445 calls IsPast, with its ElapsedSince delegation.
     unsigned long deadline = g_dialogDeadline;
     if (deadline > 0
         && GameTime::isPast(deadline)) {

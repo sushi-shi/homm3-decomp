@@ -43,11 +43,9 @@ DATA(0x00694cb0)
 BinkManager::BinkManagerStruct BinkManager::g_playingBink;
 
 // DC SetPixelFormat(ulong, ulong, ulong), binkmanager.cpp:123, is a
-// four-byte no-op. No retail body is identified. Windows selects Bink's
-// format with BinkDDSurfaceType in openBink and videoRealignBuffers;
-// display-mask dispatch calls only ResourceManager and SmackManager.
-// Keep the active empty definition as the canonical positive DC source body;
-// Complete can fold or discard it because no Windows caller survives.
+// four-byte no-op with no Windows caller. Windows selects Bink's format with
+// BinkDDSurfaceType in openBink and videoRealignBuffers; display-mask
+// dispatch calls only ResourceManager and SmackManager.
 // E:\gamedcs\binkmanager.cpp:123
 DC_ADDRESS(0x050a80, 0x4)
 void BinkManager::setPixelFormat(unsigned long redMask, unsigned long greenMask,
@@ -58,8 +56,8 @@ void BinkManager::setPixelFormat(unsigned long redMask, unsigned long greenMask,
 // BINKFILEHANDLE is Bink's counterpart of smackmgr's
 // SMACKOPEN_FROM_ARCHIVE and makes BinkOpen take the already-open archive
 // HANDLE in place of a file name.
-// Retail retains four serviceSounds calls. The Windows body is source-local
-// to soundmgr.cpp; its platform evidence comment explains that visibility.
+// Four serviceSounds calls; the Windows body is source-local to
+// soundmgr.cpp, whose comment explains that visibility.
 VA(0x0044d5a0, 0x283)
 DC_ADDRESS(0x050a7c, 0x4)
 MAC_ADDRESS(0x25d430, 0x27c)
@@ -169,8 +167,7 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
 }
 
 // smackmgr.cpp's VideoDrawCurrentFrame uses this namespace-qualified call.
-// Mac 25d8b4/25d90c retain a copy in each selected-track branch; Windows
-// 44da47 shares the copy tail. Keep both source calls and their own handles.
+// Each selected-track branch keeps its own call and handle.
 VA(0x0044d9e0, 0x6E)
 DC_ADDRESS(0x050a88, 0x4)
 MAC_ADDRESS(0x25d848, 0xe8)
@@ -204,8 +201,7 @@ void BinkManager::restartBink()
 
 // Like nextSmackerFrame, publish the complete readiness predicate in the
 // real dirty-state byte before testing it. BinkWait precedes the store and
-// paused frames remain dirty. This recovers the retail shared exit layout;
-// separate true/false stores, readiness scopes and terminal guards did not.
+// paused frames remain dirty.
 // E:\gamedcs\binkmanager.cpp:252
 VA(0x0044DAA0, 0x21A)
 DC_ADDRESS(0x050a90, 0x4)
@@ -283,9 +279,8 @@ void BinkManager::closeBink()
 // E:\gamedcs\binkmanager.cpp:376 is a platform stub.
 // Retail matches with the canonical playingBINK aggregate and ushort screen
 // pointer. Enable sound before capturing dimensions, then publish centered
-// coordinates before saving the redraw position. Fragmented globals reached
-// 98.37%; scalar/POINT locals and byte-offset spellings did not recover the
-// final coordinate registers. The aggregate and getMap call do.
+// coordinates before saving the redraw position. The aggregate and getMap
+// call give the final coordinate registers.
 namespace BinkManager {
 static unsigned char playBinkCore(int id, int x, int y, int w, int h);
 }

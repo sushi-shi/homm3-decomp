@@ -26,25 +26,9 @@ textWidget::textWidget() : widget(0, 0, 0, 0, 0, 0)
 VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 
 // E:\gamedcs\textwdgt.cpp:62 - the twelve-argument constructor the whole
-// image builds its labels with. `ret 0x2c` is eleven stack dwords, which is
-// exactly this declarator; the base call is
-// `??0widget@@QAE@FFFFFF@Z(x, y, w, h, id, 8)` with the style argument a
-// LITERAL 8, and the vtable store names 0x642db0. The trailing `style`
-// parameter is read nowhere in the body - retail carries it dead, exactly as
-// the header's declarator does.
-
-// Residual (99.9130%): ONE instruction, and it is inside the inlined
-// `basic_string::assign(const char*)`, not in this body. Retail terminates
-// the copy with `mov byte ptr [ecx+eax], 0` - SIB base `_Ptr`, index `_Len` -
-// where this compile emits the same store with the two registers exchanged
-// (`[eax+ecx]`). All 16 blocks, 9 branches, 7 calls and 9 relocations agree
-// exactly; the operand roles are chosen inside a vendored Dinkumware header
-// this TU may not respell.
-
-// The three trailing member stores WERE reachable, +0.05: retail emits them
-// backColor -> 0x48, justify -> 0x4c, color -> 0x44, and VC6 rotates the
-// emitted run one place left against source order, so the source has to be
-// written `Color; BackColor; Justify;` to land retail's order.
+// image builds its labels with. The base call is widget(x, y, w, h, id, 8)
+// with the style argument a LITERAL 8; the trailing `style` parameter is
+// read nowhere in the body.
 VA(0x005bc280, 0x12D)
 DC_ADDRESS(0x164c80, 0xa4)
 MAC_ADDRESS(0x1b149c, 0xb4)  // anchor-vtable 0x642db0 + ret 0x2c
@@ -56,9 +40,8 @@ textWidget::textWidget(int x, int y, int w, int h, const char* text,
              static_cast<short>(id), 8)
 {
     m_font = ResourceManager::GetFont(fontName);
-    // DC textwdgt.cpp:64..65 records the conditional body's lexical scope.
-    // Removing these braces leaves this constructor's bytes unchanged, but
-    // makes VC6 expand it in bitmapBackedTextWidget (retail call 0x5bc7ab).
+    // DC textwdgt.cpp:64..65 records the conditional body's lexical scope;
+    // the braces stay.
     if (text) {
         m_text = text;
     }
@@ -263,8 +246,8 @@ bitmapBackedTextWidget::bitmapBackedTextWidget() : m_image(0) {}
 VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 
 // E:\gamedcs\textwdgt.cpp:320
-// CodeView dc 0x1653b0: CV_fldattr_t.compgenx marks this destructor
-// as implicit. Its retained retail body performs only base/member teardown.
+// CodeView dc 0x1653b0: CV_fldattr_t.compgenx marks this destructor as
+// implicit.
 VA_COMPGEN(0x005bc6d0, 0x8A, IMPLICIT_DTOR, bitmapBackedTextWidget)
 MAC_COMPGEN_ADDRESS(0x1b1a7c, 0x60, IMPLICIT_DTOR, bitmapBackedTextWidget)
 
@@ -284,10 +267,6 @@ bitmapBackedTextWidget::bitmapBackedTextWidget(
 // textWidget and bitmapBackedTextWidget slot 3 (0x642dbc, 0x642df4) both
 // target this `ret 8`; DC independently proves the two-argument const
 // signatures and empty bodies. Other classes share this ICF representative.
-// Full VC6 checkpoint: both text claims and widget::OnSetFocus are exact;
-// both text vtables remain 14 slots with the proven overrides at 3 and 8.
-// The shared const interface moves unchanged CEnterNameEdit::OnKillFocus
-// CUR 100 -> 99.8710; its MAX/HIST stay 100 and no banked peak is lost.
 #if 0  // @carcass
 
 VA(0x005bc7e0, 0x3)
@@ -298,8 +277,8 @@ void textWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 }
 #endif  // @carcass
 
-// E:\gamedcs\textwdgt.cpp:345. Dreamcast  proves a separate
-// ordinary empty override; retail folds it with textWidget's body above.
+// E:\gamedcs\textwdgt.cpp:345. Dreamcast proves a separate ordinary empty
+// override; it shares textWidget's body above.
 DC_ADDRESS(0x165254, 0x4)
 void bitmapBackedTextWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {

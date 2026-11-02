@@ -83,8 +83,7 @@ CDiffMaker::CDiffMaker(unsigned char* oldData, int oldSize,
 {
 }
 
-// E:\gamedcs\diff.cpp:115 Ordinary helper defined
-// before MakeDiff; Complete's /Ob2 chooses its caller expansion.
+// E:\gamedcs\diff.cpp:115. Ordinary helper defined before MakeDiff.
 DC_ADDRESS(0x08238c, 0x4c)
 MAC_ADDRESS(0x0a26b0, 0x5c)
 int CDiffMaker::countSameBytes(int oldOffset, int newOffset)
@@ -138,9 +137,7 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
 
 // E:\gamedcs\diff.cpp:174
 // DC lines 175 and 185 keep diffOffset as a zero-initialized local and then
-// advance it past the serialized size word. Collapsing those statements into
-// `int diffOffset = sizeof(unsigned int)` swaps retail's ESI/EDI roles and
-// gives 83.9593%; the distinct lifetime below reproduces all 447 retail bytes.
+// advance it past the serialized size word.
 // DC lines 204/211, 222/226 and 237 address the whole allocation plus
 // diffOffset. Lines 228, 248 and 252 prove the terminal break and the final
 // diffSize/m_numBytes stores outside the loop's lexical scopes. The changed

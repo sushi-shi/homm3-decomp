@@ -50,46 +50,16 @@ static const int g_combatActionFirstAid = 11;
 
 // E:\gamedcs\command.cpp:63
 // Dreamcast CodeView names this private nullary member and its two static
-// TWallTargetId arrays. Retail fixes the Complete-build fourth tower target,
-// and every branch below. Original automate_catapult@@AAA_NXZ proves bool;
-// AL alone does not distinguish bool from uchar. The first scan
-// rejects a siege with no live target. Trained Ballistics then aims at the
-// keep when the action is automatic; otherwise a basic catapult chooses a
-// random weakest wall, while the remaining cases prefer surviving towers.
-// Every successful arm writes the catapult order and its target combat hex.
-// Mac code0+0x81d04 retains validWallTarget(WALL_TARGET_3) at the keep check.
-// Keep that source call even though VC6 emits a longer boolean test here.
-// A chosen-target result guards the fallback wall/tower selection and
-// removes the shared-order goto at 99.8804%. Bool, unsigned-char and int
-// forms are neutral, as are two single-pass selection scopes. Copying the
-// final order stores and return into the keep arm scores 95.9569%. Preserve
-// the named calls and their conditional random draw.
-// DC100/102 keeps the manual-control and mastery guards nested.
-// Mac 0x81dc4..0x81df8 rejects manual positive-skill control first, then
-// tests the keep independently. Restoring that early guard raises Windows
-// 92.18% to 98.68% while preserving validWallTarget and every other helper.
-// A common-order jump is Windows byte-flat and matches Mac's direct keep
-// edge with target in r27 and saves starting at r26. The chosen-result flag
-// adds three CW instructions and an r25 save absent from native; remove that
-// provisional state while retaining the shared order stores.
-// Full native comparison now matches all 1016 Mac bytes: name the controller,
-// keep the typed mastery and signed four-wall count, and reuse one index
-// across the wall-array scans. Windows remains 98.6842%; every helper stays.
-// Restoring validWallTarget bool is byte-flat in this caller and Mac.
-// Original valid_wall_target@@QAA_NW4TWallTargetId@@@Z proves bool;
-// lowered CodeView byte primitives are not independent uchar evidence.
-// The coherent bool automation chain leaves the emitted catapult (688B),
-// first-aid (416B), wall predicate (80B), and main (1456B) bytes unchanged.
-// Catapult therefore retains its 98.6842% residual; renamed call/data symbols
-// require target rebinding before scoring these source interfaces.
-// The wall scans use ordinary loop bodies. Their extra enclosing scopes
-// survived 2bb943d19f's replacement of provisional loop-local indices with
-// the shared native index; no declaration remains in either outer scope.
-// Removing that scaffolding leaves Windows at 98.6842%, with 59 aligned
-// blocks, four calls and all 22 relocations unchanged.
-// DC 179..181 stores the order directly (action, grid index, then extra),
-// and Mac retail calls no order helper; those three stores close the last
-// Windows difference (98.76 -> 100%).
+// TWallTargetId arrays; Complete adds the fourth tower target. Original
+// automate_catapult@@AAA_NXZ proves bool. The first scan rejects a siege
+// with no live target. Trained Ballistics then aims at the keep when the
+// action is automatic; otherwise a basic catapult chooses a random weakest
+// wall, while the remaining cases prefer surviving towers. Every successful
+// arm writes the catapult order and its target combat hex. Manual
+// positive-skill control is rejected first, then the keep is tested
+// independently through validWallTarget(WALL_TARGET_3); one index is reused
+// across the wall-array scans. DC 179..181 stores the order directly
+// (action, grid index, then extra).
 VA(0x00473c00, 0x29F)
 DC_ADDRESS(0x06af98, 0x194)
 MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map
@@ -152,8 +122,7 @@ bool combatManager::automateCatapult()
             weakest = strength;
         }
 
-        // Dreamcast and Mac retain sRandom here. Complete binds its
-        // identical body to the shared random implementation.
+        // Dreamcast and Mac call sRandom here.
         long choice = sRandom(1, count);
         index = 0;
         for (; index < 4; index++) {
@@ -191,15 +160,10 @@ issueCatapultOrder:
 }
 
 // Original automate_first_aid_tent@@AAA_NXZ proves bool.
-// E:\gamedcs\command.cpp:193. The DC signature and sole local identify
-// the current-stack scan; retail fixes the target filters and command tuple.
-// The final two stores follow DC's separate statement groups: select and store
-// the target grid first, then clear field_40. Retail's Complete-only pointer
-// overload of is_computer_action is kept because its call relocation proves it.
-// Mac keeps a -1 creature-type register and regenerative-target checks at
-// 0x82194/0x821d8..0x8220c. A plain bestCreatureType = -1 local with those
-// checks folds away in both current compilers (Windows remains exact, Mac
-// remains 396 vs 440 bytes); its initialization boundary is still unresolved.
+// E:\gamedcs\command.cpp:193. The DC signature and sole local identify the
+// current-stack scan. The final two stores follow DC's separate statement
+// groups: store the target grid first, then clear field_40. The
+// Complete-only pointer overload of is_computer_action is used here.
 VA(0x00473ea0, 0x196)
 DC_ADDRESS(0x06b12c, 0x13c)
 MAC_ADDRESS(0x0820fc, 0x1b8)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map
@@ -272,9 +236,9 @@ void combatManager::doAnimations()
     }
 }
 
-// Mac 0:0x82384 retains this helper immediately before main and calls it
-// from main, processCombatMsg, and resetRound. Dreamcast's older source has
-// the equivalent statements at those call sites.
+// Mac retains this helper and calls it from main, processCombatMsg and
+// resetRound; Dreamcast's older source has the equivalent statements at
+// those call sites.
 MAC_ADDRESS(0x082384, 0x78)
 void combatManager::finishCreaturePlacement()
 {
@@ -298,8 +262,6 @@ int combatManager::main(message& msg)
     int result = 1;
     doAnimations();
 
-    // Complete tower and this accumulator share the logical domain of the
-    // original-public bool first-aid and catapult interfaces.
     bool automaticTurn = false;
     if (!isQuickCombat()
             && m_thisNetHasControl && (m_autoCombatOn || g_goSolo)) {
@@ -323,8 +285,6 @@ int combatManager::main(message& msg)
     if (!m_creaturePlacement && m_nextAction == 0 && m_thisNetHasControl) {
         automaticTurn = automateFirstAidTent();
 
-        // Mac accumulates the tower result before calling the catapult.
-        // A combined OR expression instead calls catapult first under CW.
         automaticTurn |= automateTower();
         automaticTurn |= automateCatapult();
     }
@@ -691,11 +651,8 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 }
 
 // E:\gamedcs\command.cpp:928
-// Mac 0x82ebc retains this wrapper at all thirteen command/drawing call sites.
-// Naming the current-army argument preserves the exact retained wrapper in
-// both builds and restores the retail register setup in its expanded callers:
-// getControl, resetRound and automateFirstAidTent become exact together.
-// The nested expression is the measured control; it loses those three matches.
+// Mac retains this wrapper at all thirteen command/drawing call sites. The
+// current-army argument is named.
 VA(0x00474ba0, 0x4A)
 DC_ADDRESS(0x06bebc, 0x1b4)
 MAC_ADDRESS(0x082ebc, 0x64)  // anchor-callee IsQuickCombat + current-army forwarding
@@ -711,9 +668,8 @@ bool combatManager::isComputerAction()
 // Complete adds this one-argument policy overload. CodeView's full class
 // field lists (method types 0x4354, 0x4ca2 and 0x6700) declare only the
 // nullary method above; that DC body obtains its stack through
-// get_current_army before applying the policy. Retail retains both entries:
-// the adapter calls this worker at 0x474bf0, whose `ret 4` and reads at
-// stack offsets +0x34, +0x288 and +0xf4 prove the explicit army argument.
+// get_current_army before applying the policy; the retail adapter calls
+// this worker with the explicit army argument.
 
 // THE OPTIONS ARE PREFERENCE FIELDS, NOT STANDALONE GLOBALS. All four
 // dwords this body reads land inside configStruct (retail .bss
@@ -732,14 +688,9 @@ bool combatManager::isComputerAction()
 // running" latch; neither reader constrains the other, so the name
 // stays soundmgr's.
 
-// CASE ORDER IS THE SOURCE'S, not the case values'. The jump table at
-// the tail maps 0x91..0x95 onto four blocks, and those blocks are
-// EMITTED in the order ballista/arrow-tower, catapult, first-aid tent,
-// default - so the switch was written with the artillery pair first.
-// Each of the three machine arms repeats the same three guards
-// verbatim; retail duplicates them rather than factoring, and the two
-// `return 1` epilogues (one shared, one tail-duplicated at the end of
-// each arm) are what that longhand costs.
+// CASE ORDER IS THE SOURCE'S, not the case values': ballista/arrow-tower,
+// catapult, first-aid tent, default. Each of the three machine arms repeats
+// the same three guards verbatim.
 
 // Only the artillery arm null-checks the owner. That asymmetry is
 // retail's, not a modelling gap: the catapult and first-aid arms
@@ -748,8 +699,6 @@ bool combatManager::isComputerAction()
 // Use the controlling player, which can change when a stack is hypnotized.
 VA(0x00474bf0, 0x188)
 MAC_ADDRESS(0x082f20, 0x28c)  // anchor-global + retained nullary caller, retail-only overload
-// The retained wrapper forwards this worker directly without normalization;
-// Complete preserves the bool result domain in the extracted policy worker.
 bool combatManager::isComputerAction(const army* currentArmy)
 {
     if (isQuickCombat())
@@ -1176,17 +1125,9 @@ int combatManager::processCombatMsg(message& msg)
 }
 
 // E:\gamedcs\command.cpp:1746. The DC statement table supplies the
-// round/stack/obstacle loop spine; Complete's retail body inserts the
-// placement-phase handoff in front and widens the stack rows to the retail
-// 0x548-byte army layout. The identity and extent are independently fixed by
-// the unique whole-body retail map and the exhaustive command order-map.
-// RESIDUAL (97.48472%): all 21 branches and both returns are exact. The 24
-// register-visible differences are confined to the placement message and the
-// inlined TurnOffHighlighter path; why-reg v2 classifies them as C1 front-end
-// scratch-pseudo ordering with the same callee-saved bindings. Named/value/
-// pointer remote-position locals, reversed endpoint spelling, and an explicit
-// highlighter expansion were measured and were byte-identical or worse. The
-// DC statement row independently requires the TurnOffHighlighter call here.
+// round/stack/obstacle loop spine; Complete inserts the placement-phase
+// handoff in front. The DC statement row requires the TurnOffHighlighter
+// call in the placement path.
 // Original: combatManager::GetHexXY; command.cpp:1638
 DC_ADDRESS(0x06ce2c, 0x32)
 void combatManager::getHexXY(int hex, int& x, int& y)
@@ -1231,8 +1172,8 @@ void combatManager::resetRound()
         m_turnSinceLastEnchanter[side]++;
         for (int slot = 0; slot < 20; slot++) {
             army* stack = &m_armies[side][slot];
-            // DC 1788 and retail +0x237 test creatureType at +0x34;
-            // gridIndex is the distinct field at +0x38.
+            // DC 1788 tests creatureType at +0x34; gridIndex is the distinct
+            // field at +0x38.
             if (stack->m_creatureType != CREATURE_NONE)
                 stack->resetRound();
         }
@@ -1266,9 +1207,9 @@ DC_ADDRESS(0x06d2c8, 0x168)
 MAC_ADDRESS(0x084084, 0x238)
 void combatManager::autoResolveCombat()
 {
-    // ai_combat.cpp's free function is __fastcall under the shared /Gr
-    // profile. Keep its one-use declaration at block scope: a file-scope
-    // declarator crosses command.obj's measured GetCommand handle wall.
+    // ai_combat.cpp's free function is __fastcall; its one-use declaration
+    // stays at block scope (a file-scope declarator changes command.obj's
+    // GetCommand).
     void aiAutoCombat(hero* attackingHero, hero* defendingHero,
                         armyGroup& attackingArmy, armyGroup& defendingArmy,
                         const town* defendingTown, NewmapCell* cell);
@@ -1342,12 +1283,9 @@ bool combatManager::isOutsidePlacementBoundry(int group, int index)
         < m_placementBoundaryDepth * 2 + 15;
 }
 
-// DC command.cpp:1941 selects the two castle-only targets; 1943/1944
-// checks their fortification level inside that guard. This nested source
-// form preserves the exact retained helper and all Windows caller scores.
-// Keep the final comparison return (DC cmp/pl/movt; Mac 0x8451c..0x8452c):
-// a positive/zero return ladder lowers this helper to 88.97% and its
-// catapult expansion to 91.17%.
+// DC command.cpp:1941 selects the two castle-only targets; 1943/1944 checks
+// their fortification level inside that guard, ending in one comparison
+// return.
 VA(0x00476440, 0x50)
 DC_ADDRESS(0x06d548, 0x42)
 MAC_ADDRESS(0x0844b0, 0x84)
@@ -1372,62 +1310,26 @@ bool combatManager::validWallTarget(TWallTargetId wall)
 // side has no hero at all. Then the two castle structures GetGridIndex
 // answers with pseudo-hexes for, then the real grid.
 
-// VALID_WALL_TARGET IS INLINED THREE TIMES, and its expansion is what
-// gives this body its two odd-looking shapes. (1) The fortification
-// guard is hoisted out ahead of the pseudo-hex test in the 255 and 254
-// arms - `cmp [this+0x132f4], 3` then `cmp newIndex, 0xff` - because
-// the same member load serves both arms (retail loads it ONCE at
-// 0x4764f6 and compares it against 3 and then 2), and inside each arm
-// the redundant `< CASTLE` / `< CITADEL` half of the inlined predicate
-// is folded away by the dominating test. (2) In the wall LOOP the
-// expansion keeps both halves, reading field_132f4 out of the ebx it
-// parked the value in, which is why the loop body carries the
-// `i == 0 || i == 6` / `i == 7` tier tests verbatim.
+// VALID_WALL_TARGET IS INLINED THREE TIMES: the fortification guard is
+// hoisted ahead of the pseudo-hex test in the 255 and 254 arms, and in the
+// wall loop both halves of the predicate are kept, which is why the loop
+// body carries the `i == 0 || i == 6` / `i == 7` tier tests verbatim.
 
-// TWO JUMP-THREADED COMPARES look like duplicated source and are not.
-// Retail tests `targetSide == currentSide` twice (0x476ff1 and
-// 0x47701f) and `bCreaturePlacement` twice (0x476a05 and 0x476a30); in
-// both pairs the FIRST test's failure edge jumps past the second test
-// entirely, which is exactly what VC6 does to two consecutive ifs on
-// the same condition. Writing them as one if with the arms merged
-// produces a different graph.
+// TWO COMPARES look duplicated and are not: `targetSide == currentSide` and
+// `bCreaturePlacement` are each tested twice, as two consecutive ifs on the
+// same condition.
 
-// THE WALL LOOP breaks on the first row whose hex matches, whether or
-// not that row is a legal target - retail's failure edges out of the
-// inlined valid_wall_target all land on the loop EXIT, not on the
-// increment.
+// THE WALL LOOP breaks on the first row whose hex matches, whether or not
+// that row is a legal target.
 
-// SEEDCOMBATPOSITION's `limit` argument is army+0xc4, the speed field
-// of the embedded traits record; its `in_placement_phase` is pushed as
-// a whole register whose low byte only is loaded, the ordinary
-// unsigned char argument form.
-// Dreamcast line rows 1972/2077 retain hexcell::HasArmy, 2033 retains
-// ValidHex/InInvisibleColumn, and 2080/2181 retain army::get_owning_side.
-// Using those existing helpers moves current VC6 similarity 92.57143%
-// to 92.53571%; Mac's reviewed span still has all 13 direct calls aligned.
-// Mac 0x84798..0x847c0 keeps one cell receiver in r28 and index in r27;
-// the same receiver feeds HasArmy, GetArmy, side/slot and move flags.
-// Keep that receiver local to the army branch; native 0x84a64..0x84a74
-// recomputes the later move flags from the index. Combined with the
-// positive shot-penalty guard and side-first declaration, this improves
-// Windows 92.5357 -> 100% and Mac 31.6621 -> 98.4765%. Declaring the cell
-// after clearing the target fields closes Windows' final scheduling gap.
-// Mac retains a 0x70 frame versus 0x80, indexed early HasArmy access and
-// a pointer-strength-reduced wall walk; explicit pointer walks do not
-// improve Windows. The wall arm writes
-// slot before side, as native 0x849cc/0x849d8 does.
-// Mac 0x84584..0x84618 fixes the positive HasArmy ternary and guarded
-// non-null hero returns. These four guard controls are VC6 byte-flat;
-// retaining the native forms improves the paired Mac body 31.66 -> 34.96%.
-// Native 0x84684/0x846ec writes newIndex into both tower slots. Those
-// source assignments are VC6 byte-flat and improve Mac to 61.67%.
-// At the current Windows 99.9464% plateau the first reported difference,
-// +0x124, loads the same wall-target datum under the source s_wallTargets
-// and retail wallTargets labels; four masked instruction rows still differ.
-// All nine Windows calls and thirteen Mac calls retain their named order.
-// DC command.cpp:2129 passes army::get_controlling_side into the older
-// ShotIsThroughWall signature. Complete's canonical helper takes the army
-// instead and reads its controlling side inside that retained body.
+// SEEDCOMBATPOSITION's `limit` argument is army+0xc4, the speed field of the
+// embedded traits record. Dreamcast line rows 1972/2077 retain
+// hexcell::HasArmy, 2033 retains ValidHex/InInvisibleColumn, and 2080/2181
+// retain army::get_owning_side. One cell receiver serves HasArmy, GetArmy,
+// side/slot and move flags; the wall arm writes slot before side, and
+// newIndex goes into both tower slots. DC command.cpp:2129 passes
+// army::get_controlling_side into the older ShotIsThroughWall signature;
+// Complete's helper takes the army instead.
 VA(0x00476490, 0x52A)
 DC_ADDRESS(0x06d58c, 0x3fa)
 MAC_ADDRESS(0x084534, 0x5a4)  // anchor-global
@@ -1535,11 +1437,8 @@ int combatManager::getCommand(int newIndex)
             && m_fortificationLevel > eFortificationNone
             && m_currentSide == 0
             && !m_creaturePlacement) {
-        // The counter is TWallTargetId-typed rather than a long with a
-        // cast at the call: the value IS a wall-target id everywhere it
-        // is used, both as wallTargets' subscript and as
-        // valid_wall_target's argument. Codegen is identical - retail's
-        // own counter is a plain dword in ecx.
+        // The counter is TWallTargetId-typed: it is a wall-target id
+        // everywhere it is used.
         for (TWallTargetId wall = WALL_TARGET_0; wall < WALL_TARGET_COUNT;
                 wall = TWallTargetId(wall + 1)) {
             if (newIndex == s_wallTargets[wall].m_targetHex) {
@@ -1573,8 +1472,8 @@ int combatManager::getCommand(int newIndex)
     return COMBAT_COMMAND_NONE;
 }
 
-// Mac retains separate ViewCastleBallista calls for wall target 7 and the
-// full-castle targets 0/6 at 0:0x84bf8 and 0:0x84ca8.
+// Wall target 7 and the full-castle targets 0/6 call ViewCastleBallista
+// separately.
 VA(0x004769c0, 0x207)
 DC_ADDRESS(0x06d988, 0x1f0)
 MAC_ADDRESS(0x084ad8, 0x200)
@@ -1802,9 +1701,7 @@ void combatManager::showLootedArtifacts(
     }
 }
 
-// DC command.cpp:2624 assigns min directly to the defender's mana. Keeping
-// that expression recovers the retail operand homes; separate mana/cap
-// snapshots leave 99.8293% despite an otherwise identical call sequence.
+// DC command.cpp:2624 assigns min directly to the defender's mana.
 // Complete darkens the screen after freeArmies; the older port's earlier
 // text drawing and extra results-dialog fade/surface setup are absent.
 VA(0x00477470, 0x58C)
@@ -1968,15 +1865,8 @@ void combatManager::doVictory(int winningGroup)
     g_dialogDeadline = 0;
 }
 
-// A named army-row base shared with checkGetAIMove is not the missing CSE:
-// it lowers this retained body from 100% to 86.44% and the caller from
-// 94.4335% to 93.50%. Mac reloads the side at 0x85b44 inside the walk.
-// Native 0x85b44 reloads m_currentSide inside each scan iteration. Restoring
-// that field access keeps the retained Windows body exact and raises its
-// CheckGetAIMove expansion 94.4335 -> 99.3038%. Dividing and multiplying
-// the accumulator before returning preserves the native r31 lifetime and
-// matches all 388 Mac bytes; a single return expression is only 83.2474%.
-// Both retained bodies are exact, with the factor helper still called.
+// m_currentSide is reloaded inside each scan iteration, and the accumulator
+// is divided and multiplied before returning.
 VA(0x00477a00, 0xB2)
 DC_ADDRESS(0x06e898, 0xf8)
 MAC_ADDRESS(0x085b14, 0x184)
@@ -2097,8 +1987,6 @@ void combatManager::checkChangeHighlighter(int currentIndex)
             currentArmy->m_currFrameType = cs_wait;
             currentArmy->m_currFrameIndex = 0;
         }
-        // Loading the slot before the accessor preserves Complete's argument
-        // registers without replacing the owning-side helper with field access.
         int slot = currentArmy->index;
         markCreatureEffect(currentArmy->getOwningSide(), slot);
     }
@@ -2126,17 +2014,9 @@ void combatManager::turnOffHighlighter(bool drawIt)
         drawFrame(1, 1, 0, 0, 1, 0);
 }
 
-// Complete-only bool is inferred from exclusively 0/1 returns and the
-// sole logical main accumulator; no original tower public survives.
-// Complete Mac retains this tower-turn helper at code 0:8627c. Its sole
-// caller is main, where Windows expands the decision between first aid and
-// catapult automation. An ordinary definition leaves an extra VC6 call;
-// this inline definition restores its retail expansion boundary.
-// Mac exits on a false computer-action policy before the AI/resetMouse tail.
-// That early guard restores main from 97.17% to an exact Windows body; the
-// positive-action if followed by return0 merges three retail false exits.
-// Mac places this body between turnOffHighlighter and checkGetAIMove;
-// restoring that source order is byte-flat in both compiler controls.
+// Complete-only bool is inferred from exclusively 0/1 returns. Mac retains
+// this tower-turn helper; its sole caller is main, which inlines it (hence
+// the inline definition). It exits early on a false computer-action policy.
 MAC_ADDRESS(0x08627c, 0x10c)
 inline bool combatManager::automateTower()
 {
@@ -2172,20 +2052,10 @@ inline bool combatManager::automateTower()
     return 1;
 }
 
-// E:\gamedcs\command.cpp:3038. Retail's command-order bracket leaves one
-// 997-byte body between TurnOffHighlighter and GetControl, exactly where the
-// Dreamcast roster places CheckGetAIMove. The direct call at 0x477f3d lands
-// in the Dreamcast AICheckRetreat statement slot. Complete inlines the
-// already exact get_surrender_cost body here, while retaining its standalone
-// copy at 0x477a00.
-// Mac reloads currentSide within getSurrenderCost's retained body. Restoring
-// those loads and the accumulator's divide/multiply assignments closes that
-// helper on both compilers; direct army-row indexing here then closes Windows
-// too. Earlier row-index probes against the incomplete helper model lowered
-// the score, so their results did not refute this complete source model.
-// IsActive and the canonical surrender helper remain source calls. Mac keeps
-// the surrender call; Windows expands it. FullUpdate after each dialog is
-// DC-only: Windows retail continues directly to the response checks.
+// E:\gamedcs\command.cpp:3038, the Dreamcast roster's CheckGetAIMove slot.
+// get_surrender_cost is inlined here (its standalone copy is retained);
+// IsActive and the canonical surrender helper remain source calls.
+// FullUpdate after each dialog is DC-only.
 VA(0x00477ee0, 0x3E5)
 DC_ADDRESS(0x06ee60, 0x338)
 MAC_ADDRESS(0x086388, 0x3c4)  // exhaustive command order-map + call graph
@@ -2275,8 +2145,7 @@ void combatManager::getControl()
 
     checkChangeSelector();
 
-    // Retail keeps a zero in EDI for the rest of this large state update;
-    // spelling the repeated integer zero once gives VC6 that allocation.
+    // The repeated integer zero is spelled once.
     int zero = 0;
 
     if (g_remoteOn != zero
@@ -2409,9 +2278,8 @@ void combatManager::resetMouse()
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
 }
 
-// Original process_move_then_attack, DC command.cpp:3365: message& msg.
-// Complete forwards that existing message to CheckWin; there is no null
-// message arm. Preserve the reference boundary and the sole caller's lvalue.
+// Original process_move_then_attack, DC command.cpp:3365: message& msg,
+// forwarded to CheckWin.
 VA(0x00478900, 0x290)
 DC_ADDRESS(0x06f664, 0x1c0)
 MAC_ADDRESS(0x086dac, 0x1f8)
@@ -2437,7 +2305,6 @@ unsigned char combatManager::processMoveThenAttack(message& msg)
 
     currentArmy->m_monInfo.attributes |= creatureDone;
     currentArmy->m_joustBonus = 0;
-    // Mac 0x86ec0..0x86f00 expands isIncapacitated in this return step.
     if (m_nextActionExtra != -1 && oldGridIndex != m_nextActionExtra
             && (currentArmy->m_creatureType == army::ARMY_CREATURE_HARPY
                 || currentArmy->m_creatureType
@@ -2496,22 +2363,17 @@ void combatManager::processFirstAid(army* currentArmy)
 }
 
 // E:\gamedcs\command.cpp:3461. The DC statement table fixes the local roles,
-// switch domain and source calls. Retail independently fixes all twelve
-// pending-action arms and shows that VC6 expanded ResetMouse,
-// ResetCycleTimers and CheckChangeSelector into this body.
-// Keep GetName -> GetArmyName, timer/selector calls, DC3653's max and the
-// text-resource getters. DC3653's max is the library's reference selector
-// (std::max); the by-value game max leaves the wait-arm string constructor's
-// _Tidy call (99.7272%). Mac default construction at 0x87888 (defend) and
-// 0x87a90 (wait) fixes both string lifetimes independently.
-// DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
-// Mac and Windows both retain testRaiseDoor in this caller (retail 0x4672e0).
-// Original DC public ?ProcessNextAction@combatManager@@QAAHAAUmessage@@_N@Z
-// proves bool automaticTurn despite the lowered byte CodeView primitive.
+// switch domain and source calls; ResetMouse, ResetCycleTimers and
+// CheckChangeSelector are inlined here. GetName -> GetArmyName,
+// timer/selector calls and the text-resource getters stay; DC3653's max is
+// the library's reference selector (std::max). DC3625's extra FullUpdate in
+// the surrender-error arm is absent in Complete, and testRaiseDoor is
+// called here. Original DC public
+// ?ProcessNextAction@combatManager@@QAAHAAUmessage@@_N@Z proves bool
+// automaticTurn.
 VA(0x00478d80, 0x1054)
 DC_ADDRESS(0x06f984, 0x82a)
 MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap
-// Original ProcessNextAction@@QAAHAAUmessage@@_N proves automaticTurn bool.
 int combatManager::processNextAction(message& msg, bool automaticTurn)
 {
     if (!isQuickCombat()) {
@@ -2799,8 +2661,8 @@ void combatManager::resetCycleTimers()
 }
 
 // Original: combatManager::SetCombatViewArmy; command.cpp:3819
-// Complete ProcessCombatMsg's F5 arm (0x474d80) expands this preference
-// write, frame refresh and WritePrefs sequence.
+// Inlined in ProcessCombatMsg's F5 arm: preference write, frame refresh and
+// WritePrefs.
 DC_ADDRESS(0x070398, 0x28)
 MAC_ADDRESS(0x087f14, 0x44)
 void combatManager::setCombatViewArmy(int newCombatViewArmy)
@@ -2843,10 +2705,7 @@ void combatManager::setCombatGrid(int combatShowEntireGrid,
 // left/top/right/bottom rectangle. The save/redraw/fizzle triple around
 // DrawFrame(0,0,0,0,1,0) is what makes a mid-combat summon appear.
 // DC command.cpp:3906/3910 calls WinMgr.h's const-SLimitData-reference
-// overloads (dc 0x70b40/0x70af0), which contain Width/Height. Restoring
-// those existing higher-level calls makes Windows 94.1419% -> 100%.
-// CodeWarrior still expands both wrappers into the native scalar fizzle
-// call sequence; its scored body remains 21.4474%. No helper is flattened.
+// overloads.
 VA(0x0047a100, 0x1CD)
 DC_ADDRESS(0x070474, 0x1dc)
 MAC_ADDRESS(0x088044, 0x2f0)

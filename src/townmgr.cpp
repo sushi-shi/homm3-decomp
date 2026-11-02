@@ -607,8 +607,7 @@ DATA(0x0067832c) int g_pendingTownBuild = -1;
 
 void startMouseThread();
 void stopMouseThread();
-// ai_combat.h owns this pair, but that header belongs to another lane's
-// closure and this compiland needs nothing else out of it.
+// ai_combat.h owns this pair; this compiland needs nothing else out of it.
 // SetupThievesGuild and GetCategoryStats rank heroes with it.
 long aiApproximateStrength(const hero* currentHero);
 long aiApproximateStrength(const hero* currentHero,
@@ -694,8 +693,6 @@ DATA(0x0068a340) static const char* g_boatDefNames[TOWN_TYPE_COUNT] = {
 // creature table land inside townmgr's bracket, so this compiland owns
 // it; the artifact table is also read from advmgr's town-event path
 // (0x525903), so it is a definition rather than a file-static.
-// (146 ballista, 147 first aid tent, 148 ammo cart - no enumerator for
-// the war machines exists yet and armygrp.h is not this lane's to grow.)
 
 // The artifact table is a table of RECORDS, not of int pairs:
 // SetRightClickText 0x5d1aa0 copies both dwords of a row into an 8-byte
@@ -717,39 +714,6 @@ void setWinText(heroWindow* win, int winId);
 
 char* getBuildingInfo(const town* thisTown, int buildingId,
                       unsigned char includeTitle, unsigned char extended);
-
-// The two unclaimed rows behind it, screened 2026-08-14 by CALLSITE.
-
-// 0x5d2da0 (488 B) IS a townManager method, and the body says so
-// outright: it opens `mov ecx,[ebx+0x38]` then reads +0x10 and +0xc off
-// that - this class's townToView, then its visiting and garrison hero
-// ids, the same three-load opening a dozen reconstructed rows here
-// share. It is EH-framed (0x11c of locals), has exactly ONE caller
-// (0x5d3af1), and is itself the first of GetBuildingInfo's fourteen
-// callers (0x5d2e50 is inside it). Worth claiming next lane; the
-// standing note that these rows are "not townManager methods" holds for
-// 0x5d2d80 only.
-
-// 0x5d2d80 (30 B) is NOT this compiland's code and stays unclaimed. It
-// is `mov eax,ecx` + four stores of 14,15,16,17 - the four elemental
-// magic-school secondary skills - + `ret`: an inline default
-// constructor, no frame, returning `this`. All THREE image-wide callers
-// sit in AI code far outside this bracket (0x5258aa and 0x525952 inside
-// 0x5253d0, and 0x52b21e inside 0x52b1e0), and each builds it as a
-// STACK object: `lea ecx,[ebp-0x30] / call / lea edx,[ebp-0x30]` feeding
-// a /Gr evaluator.
-
-// Cross-build callsite identity RAN and came back inconclusive, which is
-// itself the result. 0x5253d0 pairs with philai.obj's
-// `buy_special_building` on its whole callee multiset - can_build,
-// get_build_cost_array, buy_building, AI_resource_cost and
-// hero::GetExperienceIncrement, all five, and nothing else in the image
-// carries that set - but the Dreamcast build's copy of that function
-// calls no counterpart at the matching site: the SH4 build inlined it.
-// So no NAMED Dreamcast row can be its identity, and the DC townmgr.obj
-// roster is contiguous across the gap anyway (GetBuildingInfo 0x174f78
-// is followed directly by townManager::Main 0x175160). Guessing a name
-// here would be inventing one.
 
 // The selected entry of the town-locator row. Ten image-wide references,
 // every one inside townmgr's bracket, so this compiland owns it; only
@@ -904,9 +868,7 @@ class CTownNetMsgHandler : public CAdvMgrNetMsgHandler {
 public:
     TResourceDisplay* m_resourceDisplay;  // DC: pResourceDisplay, +0x0c
 
-    // The only retail construction site (townManager::Open) expands this
-    // constructor in place: CAdvMgrNetMsgHandler's constructor remains a
-    // call, followed by the derived vptr and resource-display stores.
+    // Inlined in townManager::Open.
     // E:\gamedcs\townmgr.cpp:1830
     DC_ADDRESS(0x181418, 0x50)
     CTownNetMsgHandler(TResourceDisplay* display)
@@ -914,10 +876,7 @@ public:
         setResourceDisplay(display);
     }
 
-    // Four bytes on the Dreamcast and no retail row of its own, so it
-    // is a source-local one-liner every caller expands: DoHall 0x5d27b0
-    // emits the bare `mov [handler+0xc], bar` at both of its two
-    // hand-over sites.
+    // Inlined at both DoHall hand-over sites.
     // E:\gamedcs\townmgr.cpp:1836
     DC_ADDRESS(0x181468, 0x4)
     void setResourceDisplay(TResourceDisplay* display)
@@ -928,7 +887,6 @@ public:
 };
 SIZE(CTownNetMsgHandler, 0x10);
 
-// spells.
 VA(0x005c2ea0, 0x147)
 DC_ADDRESS(0x16a0b0, 0xf4)
 MAC_ADDRESS(0x1b8d90, 0x1c4)
@@ -976,7 +934,7 @@ townObject::townObject(int townType, int objPos, const char* basename)
 
 // Original: townObject::~townObject; townmgr.cpp:1900
 // The border is owned outright; the icon, outline and hotspot are shared
-// ResourceManager objects. This ordinary destructor expands in UnloadTown.
+// ResourceManager objects. Inlined in UnloadTown.
 DC_ADDRESS(0x16a1a4, 0x80)
 MAC_ADDRESS(0x1b8f54, 0xcc)
 townObject::~townObject()
@@ -1024,11 +982,6 @@ void townObject::drawHotspot()
 // and a Castle's dock forces frame 1 or 0 off whether the Citadel is
 // ACTIVE (`active & bitNumber[8]`, the check_included == 1 arm) rather
 // than animating at all.
-
-// Every CSprite::Draw here is the Bitmap16Bit* header wrapper, which is
-// what puts screenBitmap's Width/Height/Pitch/map in retail's push
-// order; the sprite's own Width and Height are RE-READ through objIcon
-// at each site, which is why the pointer is reloaded into ecx per call.
 VA(0x005c2ff0, 0x31F)
 DC_ADDRESS(0x16a2b0, 0x2ea)
 MAC_ADDRESS(0x1b9104, 0x580)  // anchor-global 0x698784 ("Town Outlines") + anchor-callee CSprite::Draw/Bitmap816::Draw
@@ -1086,7 +1039,6 @@ void townObject::draw(int incFrame, bool drawHotspots)
                         m_currFrame = 0;
                 }
             } else {
-                // Mac retains separate calls at 0:0x1b95d4 and 0:0x1b9644.
                 if (m_numFrames == 0)
                     m_objIcon->Draw(0, 0, 0, 0,
                                   m_objIcon->GetWidth(), m_objIcon->GetHeight(),
@@ -1104,15 +1056,9 @@ void townObject::draw(int incFrame, bool drawHotspots)
     }
 }
 
-// The manager constructor, and with it the whole class layout. It is
-// the only body in the compiland that calls baseManager's constructor
-// and the only one that stores vtable 0x643720, whose three slots -
-// 0x5c63c0 Open, 0x5c71b0 Close, 0x5d3240 Main - are the three pure
-// slots baseManager introduces. Every member below +0x38 is written
-// here exactly once, which is what fixes the layout: two arrays cleared
-// by expanded zero fills (seven creature sprites at +0x40, forty-four
-// town objects at +0x5c), the -1 sentinels, and the two file-scope words.
-// Mac 0x1b9718/0x1b9724 retains the 28/176-byte clear calls.
+// The manager constructor, and with it the whole class layout: two arrays
+// cleared (seven creature sprites at +0x40, forty-four town objects at
+// +0x5c), the -1 sentinels, and the two file-scope words.
 VA(0x005c3310, 0xDF)
 DC_ADDRESS(0x16a59c, 0xa8)
 MAC_ADDRESS(0x1b9684, 0x154)
@@ -1184,10 +1130,6 @@ void townManager::setupExtraStuff()
     }
 }
 
-// Ten of the bodies are the tradpost body exactly - store the derived
-// vptr, delete every non-null heroWindow::Widgets entry, run the
-// CAdvPopup base - differing only in the vtable immediate and the EH
-// state table, which is also why /OPT:ICF could not fold them.
 // ---------------------------------------------------------------------
 VA(0x005c34d0, 0x23D2)
 DC_ADDRESS(0x16a72c, 0x6c4)
@@ -1526,26 +1468,7 @@ void TTownScreenWindow::updateTownLocators()
 // generator bonus and the Grail. DC records the locals
 // help_text/right_text/iOffsetToMon/i/creature. The neighbouring
 // DoTownKnob/bonus_right_click helpers serve townManager::main.
-// DC townmgr.cpp:2573 calls _memset; Mac 0x1bd924..0x1bd930 retains
-// memset(this + 0x90, -1, 0x20). Keep the library bulk initialization rather
-// than the counted-loop reconstruction: it improves Windows 87.6975 ->
-// 88.5786 while preserving the canonical growth and text helper calls.
-// DC2592 branches over the whole bonus breakdown to DC2666. Mac
-// 0x1bdac4..0x1bdeb8 and retail agree: only positive extra growth enters
-// the breakdown. Restoring this scope raises Windows to 94.8913%.
-// The remaining comparison has 88 vs 89 blocks and a 0xdc vs 0xd4 frame.
-// The dwelling-loop register joins differ; replacing its positive scope
-// with a negative guard and continue emits identical bytes, with or
-// without the recovered bonus scope. Continuing the display counter in
-// the cleanup loop and combining its stores with postfix increments also
-// emit the same bytes (eight source states, one object). All 70 call/jump
-// references now agree; the remaining loop join is not an inlining gap.
-// Selecting the dwelling with a conditional expression or explicit else
-// does not recover that join (four states, three objects; best unchanged).
-// DC names GetArmyName twice and six text lookups. Complete keeps its
-// existing getText calls; the army-name calls lift Windows to 88.50%.
-// DC places get_horde before get_legion_bonus, but Complete calls them
-// in the opposite order, so the Windows source follows retail.
+// Only positive extra growth enters the breakdown.
 // E:\gamedcs\townmgr.cpp:2562
 VA(0x005c5b40, 0x878)
 DC_ADDRESS(0x16b0e8, 0x630)
@@ -1579,8 +1502,6 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                 rightText += formatString((*g_generalText)[GENERAL_TEXT_BASIC_GROWTH_FORMAT],
                                             growth);
 
-                // Mac keeps one getBuildingName call in each arm at 0:0x1bdb68,
-                // 0:0x1bdbbc and 0:0x1bdbd4.
                 if (currTown->getCastleGrowthBonus(creature) > 0) {
                     const char* buildingName;
                     if (currTown->hasBuilding(CASTLE_CASTLE_ID, false))
@@ -1613,11 +1534,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                         // (0x76) .. eArtifactHeadOfLegion (0x7a) in DC
                         // enum order. The dispatch domain is the dwelling
                         // INDEX (tier - 1, town::getLegionBonus's dwelling%7+1
-                        // read backwards); retail's jump table is biased by
-                        // exactly that -1, so the labels spell it.
-                        // switch (i + 1) over the plain tier enumerators
-                        // measured 86.94 against 87.93 - the bias moves
-                        // into an lea and the dispatch drifts.
+                        // read backwards).
                         int artifact = -1;
                         switch (i) {
                         case TOWN_DWELLING_TIER_2 - 1:
@@ -1715,9 +1632,6 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
     }
 }
 
-// DC 0x16b734..0x16b768 draws GameText[727] and stops samples before
-// opening. Complete Mac 0x1be258..0x1be26c starts directly with input flush,
-// mouse-thread setup, hero consistency and polling; no busy-text draw remains.
 VA(0x005c63c0, 0x2E1)
 DC_ADDRESS(0x16b718, 0x2ca)
 MAC_ADDRESS(0x1be22c, 0x2f4)
@@ -1883,22 +1797,15 @@ void townManager::updateTownInfo()
 // that uses GetLocalPlayerGamePos instead. Transcribed faithfully, the
 // dead-call rule.
 
-// The two building masks are spelled straight off town.h's bitNumber
-// table rather than through town::HasBuilding, which is a Dreamcast
-// header inline with no retail body: the panorama arm tests `built`
-// (0x150) and the dwelling sweep tests `active` (0x158), which is
-// exactly what HasBuilding's `check_included` argument selects at the
-// two Dreamcast call sites. armygrp.h's GetMorale set the precedent.
+// The building masks are tested straight off town.h's bitNumber table: the
+// panorama arm tests `built`, the dwelling sweep `active`.
 
 // The last sweep is the fort page's seven creature pictures. Each row
 // shows the UPGRADED dwelling's creature when the town has that upgrade
 // built, which is what the +7 slot shift is, and the picture itself
 // comes from the creature-traits table's sprite name.
 
-// Ordinary members proven by the DC declarations and calls; Main
-// expands them in retail. DoTownKnob dc 0x16b074 calls UpdateTownLocators
-// inside the helper. Retail Main 0x5d47b5..0x5d4804 and 0x5d4931..0x5d49fd
-// preserve that sequence, using three visible towns instead of DC's two.
+// Ordinary members proven by the DC declarations and calls; inlined in Main.
 // E:\gamedcs\townmgr.cpp:2526
 DC_ADDRESS(0x16b030, 0x52)
 MAC_ADDRESS(0x1bd774, 0x90)
@@ -1915,7 +1822,7 @@ void TTownScreenWindow::doTownKnob(bool up)
     updateTownLocators();
 }
 
-// TTownScreenWindow::bonus_right_click (98 B, `(long id)`):
+// TTownScreenWindow::bonus_right_click (`(long id)`):
 // the growth-bonus popup, keyed by the BONUS INDEX (0..7), which is why
 // both the icon and the text row subtract their own first id.
 // E:\gamedcs\townmgr.cpp:2547
@@ -1935,9 +1842,7 @@ void TTownScreenWindow::bonusRightClick(long id)
 }
 
 // Original: townManager::ChangeTown; townmgr.cpp:2833
-// DC 0x16b9f2 first evicts the console sprite cache. Keep that call at
-// entry, as in open/unloadTown; the desktop helper is empty, so Mac
-// 0x1be53c and the Windows expansions start with StartMouseThread.
+// DC 0x16b9f2 first evicts the console sprite cache, as in open/unloadTown.
 DC_ADDRESS(0x16b9e4, 0xac)
 MAC_ADDRESS(0x1be520, 0xac)
 void townManager::changeTown(bool fade)
@@ -1954,19 +1859,7 @@ void townManager::changeTown(bool fade)
 }
 
 // E:\gamedcs\townmgr.cpp:2897
-// 2026-09-06: the WIDGET_SET_STATUS message writes `extra` BEFORE `codeY`.
-// Retail emits `[ebp-0x2c]=5 / [ebp-0x18]=0x1000 / [ebp-0x28]=0x9a`; every
-// other message block in this body writes codeY then extra and already
-// agreed, so the order is a fact of this one block.  Worth only +0.0082 in
-// score (the two stores are the same bytes transposed) but it moves the
-// first byte-level divergence from fn+0x134 to fn+0x499.
 // DC records one function-local `objToLoad`, reused by both building loops.
-// Complete reverses DC's StartMP3/UpdateTownLocators order. Retail becomes
-// exact when loadedTownType is recorded before the three strip pointers;
-// that source order lets VC6 schedule the shared -2 and dwelling cursor early.
-// DC 0x16bca8..0x16bcd2 draws GameText[727] before testing loadedTownType.
-// Complete Mac 0x1bea60..0x1bea88 goes directly from the conditional window
-// redraw to that test and unloadTown; the extra busy-text operation is absent.
 VA(0x005c6870, 0x59F)
 DC_ADDRESS(0x16bba4, 0x540)
 MAC_ADDRESS(0x1be888, 0x738)  // anchor-caller(Open 0x5c63c0 + Main) + anchor-callee(UnloadTown/NewStrips/RedrawTownScreen) + anchor-string %sBack.pcx
@@ -2198,11 +2091,6 @@ void townManager::unloadTown()
 // left here is the two windows the manager owns, the fade back to the
 // adventure map, and the network arm that hands the dialog pump's
 // helper back before dropping the popup it was driving.
-// DC additionally stops all samples and draws GameText[727] before unload,
-// then calls SwitchAmbientMusic with the adventure terrain track. Complete
-// Mac 0x1bf404..0x1bf51c starts with unloadTown and uses fadeScreen between
-// window disposal and network restoration; none of those three DC operations
-// remains in the retained Complete close body.
 VA(0x005c71b0, 0x9C)
 DC_ADDRESS(0x16c3e8, 0x130)
 MAC_ADDRESS(0x1bf404, 0x11c)
@@ -2289,23 +2177,9 @@ void townManager::setHeroCommand()
     strcpy(m_statusText, g_townCommand[9]);
 }
 
-// DC 0x16c752/0x16c7f0/0x16c826/0x16c868/0x16c8b8/0x16c908/0x16c910
-// retain the seven GetArmyName calls. Mac 0x1bf860..0x1bfba4 expands
-// their range guards and singular/plural selections in these same arms.
 VA(0x005c7400, 0x391)
 DC_ADDRESS(0x16c6a8, 0x296)
 MAC_ADDRESS(0x1bf77c, 0x454)
-// Mac 0x1bf860..0x1bf884 and six sibling arms expand GetArmyName:
-// 0..0x96 guard, empty fallback, and the singular/plural trait columns.
-// Keep those operations on the canonical header helper. VC6 now expands
-// the ordinary getNumArmies call that retail retains at +0x21: all seven
-// name helpers expand, and all other calls agree. This caller's C2 cost is
-// 710 (budget 1420); the recovered helper path measures 88.3501% versus
-// the old flattened caller's 100%. Preserve both canonical boundaries.
-// DC 3275/3277 places command initialization before native unsigned-char
-// restricted. Direct GetArmyName arguments follow DC 3297..3375. This source
-// family remains 88.3501%; a temporary depth-zero army-count arm reproduces
-// 100%, proving that getNumArmies admission is the sole remaining boundary.
 void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 {
     m_command = -1;
@@ -2391,19 +2265,8 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 // dwelling band, TTownScreenWindow widget ids above it - and every
 // plain arm picks a rollover cell for the shared strcpy; the hero,
 // army, divide and town-locator arms format or dispatch instead
-// (SetHeroCommand / SetArmyCommand / select_army). SetCommandAndText2
-// (dc 0x16ceb4) has no distinct retail carve row here. The tail is
-// the ordinary ShowText helper, which Complete expands at this call site.
-// Mac routes both no-hotspot (-1) and PANORAMA_ID (147) to 0:0x1bfe04,
-// separately from default at 0:0x1c057c. The complete label group restores
-// Windows' biased dispatch. With Mac's strip-before-index assignments,
-// this raises 99.03% to 99.9775%; separating -1 alone was incomplete.
-// DC 3599 reads the local player inside the getTownName statement; with no
-// separate player local the town-id address rows match too.
-// Original public ?SetCommandAndText@townManager@@QAAXAAUmessage@@@Z
-// proves message&. Both native and Complete pass one address; this ordinary
-// member is not a pointer-based callback or a virtual interface. Restoring
-// the reference leaves this full VC6 body and both caller bodies byte-flat.
+// (SetHeroCommand / SetArmyCommand / select_army). The tail is the
+// ordinary ShowText helper, inlined here.
 // E:\gamedcs\townmgr.cpp:3383
 VA(0x005c77a0, 0x8DD)
 DC_ADDRESS(0x16c940, 0x572)
@@ -2680,9 +2543,7 @@ void townManager::setCommandAndText(message& msg)
 // Slot ids past 150 fall back to the empty rollover string, which is
 // the same clamp the creature-traits table's own extent gives.
 
-// DC townmgr.cpp:3802 names GetArmyName. Mac 0x1c0618..0x1c0684
-// reloads the latched strip/index and expands its guarded name selection.
-// The canonical call preserves the exact Windows body.
+// DC townmgr.cpp:3802 names GetArmyName.
 VA(0x005c8080, 0x108)
 DC_ADDRESS(0x16d0dc, 0x104)
 MAC_ADDRESS(0x1c05b0, 0x154)
@@ -2716,10 +2577,8 @@ void townManager::selectArmy(strip* fromStrip, long slot,
     m_command = 0;
 }
 
-// DC townmgr.cpp:3825..3838 proves this ordinary member and
-// its SetArmyCommand/select_army calls. SetCommandAndText's two slot arms
-// call ArmyCommand at DC line 4951; Mac calls it at 0:0x1bfed4 and
-// 0:0x1bffac. Complete expands it in both arms.
+// DC townmgr.cpp:3825..3838 proves this ordinary member; inlined in both
+// SetCommandAndText slot arms.
 DC_ADDRESS(0x16d1e0, 0x5a)
 MAC_ADDRESS(0x1c0704, 0x88)
 void townManager::armyCommand(strip* whichStrip, int i, int shift,
@@ -2737,8 +2596,7 @@ void townManager::armyCommand(strip* whichStrip, int i, int shift,
 }
 
 // Original: townManager::ShowText; townmgr.cpp:3841
-// Complete's status bar occupies (7,555,734,19); DC's older town page
-// redraws a different rectangle. The message, draw and update boundary stays.
+// Complete's status bar occupies (7,555,734,19).
 DC_ADDRESS(0x16d23c, 0x5a)
 MAC_ADDRESS(0x1c078c, 0xd0)
 void townManager::showText()
@@ -2879,19 +2737,6 @@ DATA(0x006aa660) armyGroup g_creatureArmies[8];
 // GetBuildingInfo's 400-byte buffer ends at the next datum, 0x6aa9b0.
 DATA(0x006aa820) char g_infoText[400];
 
-// Dreamcast show_side (townmgr.cpp:3951, dc 0x16df0c) paginates one
-// player column with arrow widgets 42/43. It reads a scroll index at
-// this+0xbbc and visibility/widget-id arrays at +0x78/+0x2b8. Complete
-// instead constructs all eight columns in the 800x600 page above and
-// setupThievesGuild (0x5dda10) places their contents at 66-pixel intervals.
-// Its 0x84-byte object has owners[8] and the resource bar, without those
-// pagination arrays; windowHandler has no arrow-selection arms.
-
-// Mac 0x1c2bc0..0x1c2cd8 keeps the case bodies in source order: hero,
-// creature, four stat rows, exit and default. Its creature arm expands the
-// canonical getArmyName range check and plural lookup. The single switch
-// plus that helper reproduces Windows exactly; restoring only the helper
-// inside the old manually split dispatch does not.
 // E:\gamedcs\townmgr.cpp:4070
 VA(0x005c9710, 0x21F)
 DC_ADDRESS(0x16e2f4, 0x148)
@@ -2941,15 +2786,14 @@ void TThievesGuildWindow::setRolloverText(int codeY)
     g_windowManager->updateScreen(m_x + 8, m_y + 0x22c, 0x2e0, 0x12);
 }
 
-// The thieves' guild's message handler, reconstructed 2026-08-25 from the
-// prior lane's decode. Right-clicks (WIDGET_RIGHT_SELECT) on a rank cell open a
-// NormalDialog headed by the matching gStatDesc column; right-clicks on
+// The thieves' guild's message handler. Right-clicks (WIDGET_RIGHT_SELECT)
+// on a rank cell open a NormalDialog headed by the matching gStatDesc column;
+// right-clicks on
 // a hero or creature portrait open that unit's detail view, but only for the
 // local player's own column (owners[player] == GetLocalPlayerGamePos()). Mouse
 // moves refresh the rollover line through the window manager's hover latch.
-// The two big-value portrait rows dispatch through a second compressed switch;
-// the creature row hands game::ViewArmy a whole armyGroup out of the same
-// 0x6aa660 storage SetRolloverText reads one slot from.
+// The creature row hands game::ViewArmy a whole armyGroup out of the same
+// storage SetRolloverText reads one slot from.
 // E:\gamedcs\townmgr.cpp:4154
 VA(0x005c9930, 0x2AC)
 DC_ADDRESS(0x16e43c, 0x28e)
@@ -3020,17 +2864,6 @@ int TThievesGuildWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-// Rejected synthetic controls: seven/nine dead TRACE calls gave 93.2122,
-// ten gave 99.6605; a single ten-argument call stayed at 85.9895. Scalar
-// VERIFY comparisons stayed at 85.9895 and validation-helper variants at
-// 93.2122. These are observations about C2 budgeting, not recovered source.
-// Dreamcast townManager::show_hall_side (townmgr.cpp:5583, dc 0x174990)
-// clamps scroll_offset to 0..3, enables arrows 181/182 and moves a nine-slot
-// subset into a 3x3 page. Complete constructs the complete faction grid
-// here; the retail x/y tables are visible at 0x5c9c3c onward. Its manager
-// drops scroll_offset/lastHoverAK: currTown is at +0x38, where DC stored
-// scroll_offset. setupCastle (0x461190) updates the full grid and the
-// hall handler (0x461ab0) has no pagination actions.
 VA(0x005c9be0, 0x2CF0)
 DC_ADDRESS(0x16e6cc, 0x19f4)
 MAC_ADDRESS(0x1c3050, 0x351c)
@@ -3562,11 +3395,9 @@ void townManager::createPopupBank(heroWindow* parent)
 
 // The town page's mage guild button, and the spellbook toll in front of
 // it. The hero it asks about is the VISITING slot first and the garrison
-// slot second - ONE conditional expression over two game::GetHero
-// expansions, which is why the second expansion's null arm is the
-// `if (hero)` target rather than a branch of its own - and everything
-// below the offer is skipped when there is no hero, when the hero
-// already carries a spellbook, or when the acting player is not local.
+// slot second, and everything below the offer is skipped when there is no
+// hero, when the hero already carries a spellbook, or when the acting
+// player is not local.
 
 // The scripted refusal above the offer reuses hero::CheckLevel's
 // campaign/hero pair, and finding the SAME (campaign 14, hero 45) pair
@@ -3895,8 +3726,6 @@ void type_garrison_base_window::setCommandAndText(message& msg)
 }
 
 // Original: type_garrison_base_window::ShowText; townmgr.cpp:4998
-// Mac 0x1cc7cc retains broadcast, virtual draw and screen update together;
-// setCommandAndText calls this complete helper at 0x1cc7b4.
 DC_ADDRESS(0x172c68, 0x38)
 MAC_ADDRESS(0x1cc7cc, 0xe0)
 void type_garrison_base_window::showText()
@@ -3912,11 +3741,6 @@ void type_garrison_base_window::showText()
 }
 
 // Original: type_garrison_base_window::ViewArmy; townmgr.cpp:5012
-// Mac 0x1cc8c8/0x1cc90c reads the manager index for the test and call.
-// Mac also reads thisStrip->m_group independently for the troop test at
-// 0x1cc8cc and the view call at 0x1cc908. Keep those two property queries
-// rather than an invented group snapshot; the canonical helper then restores
-// its windowHandler caller from 98.8% to 100% (22 blocks, 10 calls, 23 relocs).
 DC_ADDRESS(0x172ca0, 0x52)
 MAC_ADDRESS(0x1cc8ac, 0x78)
 void type_garrison_base_window::viewArmy()
@@ -3936,18 +3760,12 @@ void type_garrison_base_window::viewArmy()
 // manager's dispatch on whatever command the last SetCommandAndText
 // left in field_19c, then rewrites the line. A RIGHT click is the info
 // panel - the slot is latched into the manager's selectedStrip/slot pair
-// and handed to game::ViewArmy with the strip's own hero. Both of those
-// run off a DENSE jump table over the 0x73..0x92 band, which is why they
-// are spelled as a switch here and as ranged compares in
-// SetCommandAndText above.
+// and handed to game::ViewArmy with the strip's own hero.
 
 // The divide button's deselect commits the split: it lights the divide
 // latch and repaints BOTH strips with the creature that is being divided.
 
 // E:\gamedcs\townmgr.cpp
-// Mac 0x1cc9e8/0x1ccaa0 retain distinct left-select and owner-right-select
-// dispatches. Windows jump tables 0x5d0af0/0x5d0b18 confirm owner 0x7c
-// on right-select and owner/frame ids 0x7b..0x7d on left-select.
 VA(0x005d0910, 0x228)
 DC_ADDRESS(0x172cf4, 0x240)
 MAC_ADDRESS(0x1cc924, 0x25c)  // anchor-vtable 0x643818 slot 9 + anchor-callee(SetCommandAndText 0x5d05f0 + DoCommand) + arity(ret 4)
@@ -4050,13 +3868,10 @@ int type_garrison_base_window::windowHandler(message& msg)
     return 1;
 }
 
-// Mac 0x1ccc20 uses a bounded slot scan; 0x1ccc58 expands getArmyName
-// before formatString. DC line 5149 also names GetArmyName. Preserve the
-// retail scan's i == 7 fallthrough when no occupied slot is found.
+// DC line 5149 names GetArmyName. With no occupied slot the scan ends at
+// i == 7.
 
-// The third parameter is a BYTE: retail tests it with `test al,al` off
-// [ebp+0x10], which an int parameter does not produce, and both entry
-// points push a literal 0 there so neither call site moves.
+// The third parameter is a byte; both entry points pass 0.
 
 // E:\gamedcs\townmgr.cpp:5136
 VA(0x005d0b40, 0x21F)
@@ -4092,8 +3907,7 @@ type_monster_join_window::type_monster_join_window(hero* inHero,
 
 VA_COMPGEN(0x005d0d60, 0x21, SCALAR_DELETING_DTOR, type_monster_join_window)
 
-// CodeView dc 0x181638: CV_fldattr_t.compgenx marks this destructor
-// as implicit. Its retained retail body performs only base/member teardown.
+// CodeView marks this destructor compiler-generated (dc 0x181638).
 VA_COMPGEN(0x005d0d90, 0x6B, IMPLICIT_DTOR, type_monster_join_window)
 
 VA(0x005d0e00, 0x28C)
@@ -4118,14 +3932,12 @@ TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrisonOwner,
 
 VA_COMPGEN(0x005d1090, 0x21, SCALAR_DELETING_DTOR, TGarrisonWindow)
 
-// CodeView dc 0x181684: CV_fldattr_t.compgenx marks this destructor
-// as implicit. Its retained retail body performs only base/member teardown.
+// CodeView marks this destructor compiler-generated (dc 0x181684).
 VA_COMPGEN(0x005d10c0, 0x6B, IMPLICIT_DTOR, TGarrisonWindow)
 
 // Three modal entry points that build one of the two garrison windows on
 // the stack, run it, and let the local's destructor - the empty derived
-// one two rows up, base inlined - tear it down. All three carry an
-// fs:[0] frame for exactly that.
+// one two rows up, base inlined - tear it down.
 VA(0x005d1130, 0x96)
 DC_ADDRESS(0x17320c, 0x2c)
 MAC_ADDRESS(0x1cd03c, 0x70)
@@ -4306,9 +4118,6 @@ void TBlacksmithWindow::setRolloverText(int id)
 // then one rollover line and one right-click line, then the war
 // machine's idle animation on every message that got that far.
 
-// The animation tick is the fort page's, to the instruction - including
-// the reference-returning `_cpp_max` the top of this file explains.
-
 // E:\gamedcs\townmgr.cpp:5323
 VA(0x005d1c60, 0xC2)
 DC_ADDRESS(0x173bc8, 0x116)
@@ -4359,11 +4168,8 @@ int TBlacksmithWindow::windowHandler(message& msg)
 // entries of the machine's cost row but subtracts every one of them
 // from GOLD (resources[6]), never from the matching resource. It is
 // harmless because a war machine costs gold and nothing else, so the
-// other six terms are zero - but it is what the bytes say, and the
-// fixed +0xb4 displacement inside the loop is the proof.
+// other six terms are zero.
 // Dreamcast lines 5364 and 5378 prove a text lookup and game::GetHero call.
-// Complete keeps getText; the canonical hero call restores retail's
-// purchase-arm argument and creature-table register schedule.
 
 // E:\gamedcs\townmgr.cpp:5361
 VA(0x005d1d30, 0x1BE)
@@ -4398,11 +4204,7 @@ void doBlacksmith(int heroId, int townType)
     }
 }
 
-// The shipyard dialog, same recipe as TBuyBuildWindow's above. The
-// carve names the row after its background (game_tpship_pcx_1d1ef0),
-// the vptr it stores is 0x643908 - the table whose slot 0 holds
-// ~TShipWindow two rows down - and `ret 4` agrees with the one town-type
-// parameter the boat-picture table is indexed by.
+// The shipyard dialog, same recipe as TBuyBuildWindow's above.
 
 // E:\gamedcs\townmgr.cpp:5394
 VA(0x005d1ef0, 0x60C)
@@ -4461,11 +4263,8 @@ TShipWindow::TShipWindow(int type)
 
     if (!(g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[6] >= 1000
         && g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[0] >= 10)) {
-        // Not the heroWindow::Widget*Status pair: those live in
-        // window.obj and VC6 cannot inline across a TU, while retail
-        // emits both message builds inline here and shares one record
-        // between them - only codeX and extra are re-stored for the
-        // second broadcast.
+        // Built inline rather than through heroWindow's Widget*Status
+        // pair; only codeX and extra are re-stored for the second broadcast.
         message msg;
         msg.m_qualifier = 0;
         msg.m_mouseX = 0;
@@ -4704,8 +4503,7 @@ char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includ
     return g_infoText;
 }
 
-// Mac retains this ordinary town-manager helper at 0:0x1cfaf8. The source
-// calls in doUniversity and the two EXTRA_0 arms expand in Windows retail.
+// Inlined in doUniversity and the two EXTRA_0 arms.
 MAC_ADDRESS(0x1cfaf8, 0xd4)
 void townManager::showBuildingInfo(int buildingId, unsigned char rightClick)
 {
@@ -4753,17 +4551,12 @@ void townManager::doUniversity()
 // works on ONE army: the visiting hero's if the town has one, the town
 // garrison's otherwise - and the garrison's regardless when the page's
 // selected strip is the town's own, which is the second, overriding
-// test. The window is a plain STACK local, 0x16c bytes of frame; its
-// scope end runs the destructor, which is why the body is EH-framed.
+// test. The window is a plain stack local.
 
 // Coming back, the page's whole selection is dropped: both remembered
 // strips have their current slot parked at -2, both live strips redraw
 // with nothing divided out, and the four selection members go back to
 // their idle values before the status widget is dimmed.
-// DC 0x174d90 polls sound once more after RedrawTownScreen. Both desktop
-// bodies return immediately after redraw (Windows 0x5d30ac, Mac 0x1cfe20).
-// DC 5713..5716 gives the garrison override a braced body (coincident scope
-// pair 0x174d60..0x174d68); the first if/else bodies are unbraced.
 // Wall (2026-10-07): retail keeps this body out of line in main, which needs
 // C1XX cost >= 176 (save cliff); this form costs 167 and is expanded there.
 // A diagnostic auto_inline(off) shows the retained call alone takes main
@@ -4839,32 +4632,15 @@ void townManager::handleHallClick()
     doHall();
 }
 
-// The town page's command dispatch, and a DENSE ten-entry jump table -
-// slot 6 points straight at the default arm, so the value space is 0..9
-// with six unused. Every arm ends in townManager::ResetStrips, which
-// retail EXPANDS here (it is 134 bytes and has other callers, so this is
-// an ordinary /Ob2 expansion, not the single-call-site rule), and VC6
-// then tail-merges the seven copies onto one. The selection arm is the
-// exception: it broadcasts and stops, and its else-branch broadcast is
-// the same statement ResetStrips ends on, which is why retail's `jne`
-// lands in the MIDDLE of the merged tail.
+// The town page's command dispatch over commands 0..9 (6 unused). Every
+// arm ends in townManager::ResetStrips; the selection arm broadcasts and
+// stops.
 
 // `lastHover` is cleared after the switch on every path that reaches it,
 // including the arms that refuse on IsLocalHuman; the three arms that
 // find no strip at all `return` outright and skip even that.
 
-// MoveHeroToGarrison remains an ordinary townManager member. Retail
-// DoCommand expands it with its own IsLocalHuman guard as well as the
-// arm's guard; MoveHeroFromGarrison retains its call at 0x5d5220.
-
-// The merge arm's `destGroup` local is load-bearing and is the last two
-// bytes of this row: written through `field_134->group` at both the
-// compare and the search, the row sits at 99.65 with the group load
-// scheduled AFTER the creature read and one register renamed; named
-// once ahead of the creature, retail's own schedule falls out and the
-// body goes exact. The armyGroup that is NOT named is the source one -
-// retail re-reads `field_12c->group` at every use, which is what the
-// four separate `mov edx,[eax+0x6c]` reloads in the merge tail are.
+// MoveHeroToGarrison remains an ordinary townManager member, inlined here.
 
 // ExitTownManager (original spelling) is an ordinary
 // free function called by both Main head checks. Retail merges its two
@@ -4900,13 +4676,13 @@ void townManager::swapHeroes()
     newStrips();
 }
 
-// townManager::DrawTown (118 B, `(int update, int incFrame,
+// townManager::DrawTown (`(int update, int incFrame,
 // bool drawHotspots)`): the panorama repaint. The DC body clears the
 // zBuffer only when hotspots are drawn, paints the border, then walks
 // the objects; `update` is unused there and flushes the panorama band
 // here - the PC build also polls the mixer between objects.
-// RedrawTownScreen dc 0x176eb0 calls DrawTown(0, 1, 1); retail
-// 0x5d5410..0x5d546a expands it. Main's pacing tick is (1, 1, 0).
+// RedrawTownScreen dc 0x176eb0 calls DrawTown(0, 1, 1); Main's pacing tick
+// is (1, 1, 0).
 // E:\gamedcs\townmgr.cpp:6931
 DC_ADDRESS(0x177044, 0x76)
 MAC_ADDRESS(0x1d25c4, 0xb8)
@@ -5614,9 +5390,6 @@ building_popup:
     return 1;
 }
 
-// DC 0x176718 sends the strip-selection status through the town window.
-// Mac 0x1d1b84/0x1d1ba0 uses the window-manager broadcast instead, retaining
-// the same clear/set-status commands and widget 154.
 VA(0x005d4c10, 0x53C)
 DC_ADDRESS(0x176634, 0x552)
 MAC_ADDRESS(0x1d1aa4, 0x5d8)
@@ -6033,13 +5806,12 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // own refusal lines; a building the town can never build gets the generic
 // refusal; otherwise the assembled list (or GetText(220) when nothing is
 // missing) becomes the rollover text.
-// DC calls a text lookup for both lines; Complete keeps getText without
-// changing VC6 bytes. Its is_legal_building check is older game
-// logic: Complete retains a call to canEverBuild, which also checks dock,
+// DC calls a text lookup for both lines; Complete keeps getText. Its
+// is_legal_building check is older game logic: Complete retains a call to
+// canEverBuild, which also checks dock,
 // capitol and hierarchy conditions.
 
-// Mac 0x1d33dc resets the line start after the heading; retaining that
-// assignment also recovers Windows' complete formatter at 0x5d5be0.
+// The line start is reset after the heading, as in Mac.
 // E:\gamedcs\townmgr.cpp:7272
 VA(0x005d5be0, 0x34C)
 DC_ADDRESS(0x179090, 0x324)
@@ -6052,7 +5824,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
     if (g_game->m_isTutorial && building == DWELLING_2_ID && currentTown->m_type == 0)
         mask &= ~g_bitNumber[BLACKSMITH_ID];
 
-    // DC line 7281 retains this header helper; VC6 expands its m_active read.
+    // DC line 7281 retains this header helper.
     mask &= ~currentTown->getBuildingMask();
 
     for (int i = 0; i < MAX_BUILDING_TYPE; ++i) {
@@ -6257,19 +6029,12 @@ void TBuyBuildWindow::setRightClickText(int)
 {
 }
 
-// The buy-a-building panel's handler, and the compiland's cleanest
-// vtable anchor: 0x643944 slot 9 IS this address, and slot 9 is
-// heroWindow::WindowHandler. It forwards to CAdvPopup's handler first,
-// then does one job of its own - the hover rollover line, refreshed only
-// when the widget under the cursor actually changes.
+// The buy-a-building panel's handler. It forwards to CAdvPopup's handler
+// first, then does one job of its own - the hover rollover line, refreshed
+// only when the widget under the cursor actually changes.
 
-// Both rollover helpers are ordinary townmgr.cpp members immediately before
-// their handlers in DC. Complete expands them at the hover-change calls.
-
-// Retail cross-jumps the two sprintf arms into one shared tail - the
-// format string and the two GetBuildingName arguments are set up per
-// arm and the call itself is written once - so the two cases are spelled
-// separately here and left to the compiler to merge, which it does.
+// Both rollover helpers are ordinary members, inlined at the hover-change
+// calls.
 
 // E:\gamedcs\townmgr.cpp:7513
 VA(0x005d6810, 0xFB)
@@ -6344,14 +6109,9 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
 // the reference-returning min/max pair below and fizzles with no time
 // cap. Everything else fizzles just its own object's box over 0x42 ms.
 
-// The three DrawTown calls survive in Mac (0x1d3e58, 0x1d4144,
-// 0x1d4250), while VC6 expands the same ordinary helper at each site.
-// The first call draws without hotspots and updates the screen; the
-// later calls draw with hotspots before their respective fizzle runs.
-// Mac 0x1d3fac..0x1d3fe8 initializes the search index to -1 but assigns
-// the extra building ID only in the three hall cases. Removing the
-// unsupported ID initializer reproduces Windows retail exactly (62 blocks,
-// 25 calls); the hall-upgrade path selects one of those three cases.
+// The first DrawTown call draws without hotspots and updates the screen;
+// the later calls draw with hotspots before their respective fizzle runs.
+// The extra building ID is assigned only in the three hall cases.
 
 // E:\gamedcs\townmgr.cpp:7564
 VA(0x005d6a80, 0x46F)
@@ -6493,8 +6253,6 @@ void townManager::setupMage(heroWindow* mageWin)
             if (m_townToView->m_type == TOWN_TOWER
                 && (m_townToView->hasBuilding(EXTRA_1_ID, true)))
                 state++;
-            // Retail passes the loop counter to IsLegalBuilding
-            // (`mov edx,[ebp-4]; push edx`) in the same representation.
             {
                 int storage;
                 storage = level;
@@ -6605,9 +6363,6 @@ TTavernWindow::~TTavernWindow()
     ResourceManager::del_Spr_from_Cache();
 }
 
-// DC broadcasts the rollover text and draws widgets 13..14 with update=1.
-// Windows 0x5d7b13/0x5d7b20 and Mac 0x1d5834/0x1d5854 instead call
-// the text widget directly, then draw the same range with update=0.
 VA(0x005d7920, 0x20A)
 DC_ADDRESS(0x17a7a0, 0x288)
 MAC_ADDRESS(0x1d5600, 0x270)
@@ -6840,9 +6595,8 @@ void doMapTavern(type_point point)
 
 // The visiting hero is fetched twice - once for the strip's owner
 // picture and once for the building effect at the end - and the first
-// fetch is dereferenced UNGUARDED (`mov al,[edi+0x34]` with no null
-// test), which is retail's own code and not a spelling artefact: the
-// hire two calls earlier is what makes the id non-negative.
+// fetch is dereferenced unguarded; the hire two calls earlier is what
+// makes the id non-negative.
 // The tavern chooser: builds the tavern window over the two recruitable
 // heroes the local player's tavern is currently offering
 // (playerData::recruits), broadcasts their portraits, the gold price and
@@ -6851,13 +6605,7 @@ void doMapTavern(type_point point)
 // pointing at whichever hero the panel is showing so DoMapTavern/DoTownTavern
 // can hire it. Returns whether the player confirmed (dialogReturn == recruit
 // widget 0xc). Human-only text is gated on IsLocalHuman for network play.
-// Capturing every roster read changed the portrait lookup semantics. Keep
-// the native id captures only for the selected-hero assignments below.
-// DC records text lookups for both formats; Complete keeps getText.
 // E:\gamedcs\townmgr.cpp:8055
-// Mac captures each offered id at 0x1d5e50/0x1d5f0c and retains it
-// for the selected-hero assignment; portrait lookups still read the roster.
-// The same local lifetimes recover Windows while preserving every getHero.
 VA(0x005d7ec0, 0x3EA)
 DC_ADDRESS(0x17ad8c, 0x35a)
 MAC_ADDRESS(0x1d5cdc, 0x4a4)  // anchor-caller(DoMapTavern 0x5d7e90) + anchor-callee(TTavernWindow ctor 0x5d70b0 + BroadcastMessage) + arity(bare ret)
@@ -6998,14 +6746,6 @@ void townManager::doTownTavern()
 // than the adventure-map spell.
 
 // Dreamcast calls MoveHero (dc 0x17b428) and ChangeTown (dc 0x16b9e4).
-// Keep those ordinary members and their source calls; their retail expansions
-// do not establish different declarations or authorize pasted caller bodies.
-// ChangeTown retains del_Spr_from_Cache through the canonical cache helper;
-// its desktop body is empty, so retail's redraw sequence emits no cache call.
-// Earlier flattened-caller probes reached 98.61%. Naming the selected town
-// before the guard erased GetTown's null arm (97.51%); reading dialogReturn
-// twice retained a redundant load (98.13%). Those results describe the old
-// expansion, not a reason to bypass the recovered members.
 
 // E:\gamedcs\townmgr.cpp:8203
 VA(0x005d8480, 0x261)
@@ -7578,58 +7318,9 @@ TCastleWindow::~TCastleWindow()
 }
 
 // ---------------------------------------------------------------------
-// townmgr.obj's TAIL, order-mapped 2026-08-14 against the DC roster
-// (rows 130..140 of `awk -F, '$5=="townmgr.obj"' functions.csv`) and the
-// carve. Every carve row in 0x5dcb50..0x5df1ff is accounted for; the
-// unclaimed ones are LOCATED, with the evidence class noted so the next
-// lane can promote in one step.
 
-//   0x5dcb50  0x21    TCastleWindow ??_G              CLAIMED, exact
-//   0x5dcb80  0x6b    TCastleWindow::~TCastleWindow   CLAIMED, exact
-//   0x5dcbf0  0x25a   TCastleWindow::SetRolloverText  body + order:
-//              `ret 4`, reads msg->codeY at [ebp+8]+8 and fills gText
-//              from it, and ends with ShowText INLINED (the vslot-0x14
-//              DrawWindow(0, 0x89, 0x8a) plus UpdateScreen(10, 0x22c,
-//              0x2d6, 0x13)) - which is also why the DC's separate
-//              ShowText has no retail row. Needs five
-//              unmodelled globals: 0x6a5c28 (six char*, the fort page's
-//              six cost columns, indexed (code - 0x39) / 8), 0x6a5c40
-//              (one char*, the format the 0x7800 arm prints
-//              gBuildingNamesCommon[castleType] with), 0x6a56e0 (stride
-//              8, first dword a char*), the .rdata int table at
-//              0x642e70 = {19,20,21,22,23,24,18,25} read twice - once
-//              as [code - 0x3e9] and once as [code - 0x3f1] - and
-//              0x691210, the 710-reference empty-string global
-//              combatwindow.h also names.
-//   0x5dce50  0x126   TCastleWindow::Recruit          CLAIMED, 96.4%
-//   0x5dcf80  0x401   TCastleWindow::WindowHandler    body + order:
-//              two nested byte-index/word jump tables (0x5dd318/0x5dd330
-//              and 0x5dd370/0x5dd378) whose arms all call ::Recruit with
-//              the code rebased by -0x39/-0x41/-0x49/-0x51/-0x59/-0x61;
-//              it will fight the magic-case-label floor.
-//   0x5dd390  0x67e   townManager::SetupWell          body + order:
-//              thiscall on townManager (reads townToView at +0x38 and
-//              currentDwellingIDOff at +0x1cc), one heroWindow* stack
-//              arg it broadcasts through, `ret 4` - the DC's 2 params
-//              and 5 locals exactly.
-//   0x5dda10  0x145f  TThievesGuildWindow::
-//                     SetupThievesGuild               DECLARED in
-//              townmgr.h. Two int[8][8] stack tables at ebp-0x15c and
-//              ebp-0x25c in a 0x270 frame, then the per-player
-//              statistics pass (AI_approximate_strength 0x427650,
-//              gpGame's town/hero rosters, the sort pair below).
-//   0x5dee70  0x2f0   GetCategoryStats                order + the pair
-//              it forms with SortStats, which is claimed below.
-//   0x5df160  0x9f    SortStats                       CLAIMED, exact
-//   0x5df200  0x20    excluded class (compiland tail)
-
-// Dreamcast TCastleWindow::show_scroller (townmgr.cpp:8642, dc 0x17f160)
-// uses scroll_offset at +0x58 and arrows 101/102 to reveal two dwelling
-// rows, moving twelve widget families. Complete's constructor at 0x5d86f0
-// places all seven/eight dwellings in two columns over four rows. The DC
-// field is removed: after Complete's 0x60-byte CAdvPopup base, use8 is
-// immediately at +0x60, then CastleBank at +0x64 and SpriteWidget at +0x68.
-// Its windowHandler at 0x5dcf80 has no scroll-arrow actions.
+// After Complete's 0x60-byte CAdvPopup base, use8 is at +0x60, then
+// CastleBank at +0x64 and SpriteWidget at +0x68.
 // ---------------------------------------------------------------------
 
 // Four .bss cells this page reads and nothing in the admitted surface
@@ -7652,8 +7343,6 @@ TCastleWindow::~TCastleWindow()
 // both long before this page does.
 
 // Original: TCastleWindow::ShowText; townmgr.cpp:8762
-// Complete retains the broadcast/draw sequence with its 19-pixel status bar;
-// the older DC screen uses a 21-pixel update rectangle.
 DC_ADDRESS(0x17f4f8, 0x54)
 MAC_ADDRESS(0x1e0bf8, 0xd0)
 void TCastleWindow::showText()
@@ -7745,13 +7434,8 @@ void TCastleWindow::setRolloverText(message& msg)
 // dwelling it currently shows is the manager's own column byte; the row
 // does nothing at all unless that dwelling is active in the town.
 // The dialog is built on the heap, run modally through the executive and
-// freed with a plain operator delete - recruitUnit has virtual slots but
-// no destructor, which is what makes the free a bare ??3 call - and then
-// the page's resource bar and this row's growth count are refreshed.
-
-// Mac 0x1e101c..0x1e1030 passes g_text directly through the four-int
-// broadcast overload after sprintf. The callee owns message construction;
-// no caller message temporary is needed. This retained source model stays exact.
+// freed with a plain operator delete, and then the page's resource bar and
+// this row's growth count are refreshed.
 VA(0x005dce50, 0x126)
 DC_ADDRESS(0x17f6e8, 0x130)
 MAC_ADDRESS(0x1e0f00, 0x148)  // anchor-callee(recruitUnit ctor 0x551560) + arity
@@ -7877,7 +7561,6 @@ int TCastleWindow::windowHandler(message& msg)
                 g_executive->doDialog(g_recruitUnit);
                 delete g_recruitUnit;
                 m_castleBank->update(1, 1);
-                // Mac 0x1e12b0..0x1e12c4 likewise forwards the buffer pointer.
                 sprintf(g_text, "%s %d", g_generalText->GetText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
                         g_townManager->m_townToView->m_summoningPopulation);
                 broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
@@ -7959,24 +7642,6 @@ int TCastleWindow::windowHandler(message& msg)
 // is the eighth row, and it is fixed: its codes are exactly the seven-row
 // ones at i == 7 - except the growth column, which the portal has none of.
 
-// The two `%s %d` lines expand TTextResource::GetText in place (the vector
-// row load `[Text._First + 4*218]`) where ::Recruit next door CALLS the
-// COMDAT copy - /Ob2 budget, not a spelling difference: this body is 1662
-// bytes and gets 2*cb, ::Recruit's 294 gets the 1000 floor.
-
-// Statement ORDER decides the second loop: the third line's codeY must be
-// assigned BEFORE the row creature is looked up. Written after it - the
-// order that reads naturally - VC6 cannot reach the saved i+0x21
-// and builds a THIRD induction base for i+0x19, which costs a frame dword
-// and 92.96 against 98.58.
-
-// Residual (98.6%): 493 instructions against retail's 493, schedule for
-// schedule, and every delta is one three-cycle scratch rotation
-// (ecx->eax x7, edx->ecx x7, eax->edx x6) starting at the growth-rate
-// `movsx`. why-reg finds no candidate mutation; naming the growth rate in
-// a local and naming the summoning creature in a local both measured
-// 98.58 exactly. The five remaining rows are relocation ADDENDS
-// (bitNumber reached at +0x128 / +0xf0), which the scorer does not count.
 VA(0x005dd390, 0x67E)
 DC_ADDRESS(0x17fd08, 0x4fa)
 MAC_ADDRESS(0x1e1580, 0x6c4)  // anchor-bracket + arity + townManager thiscall
@@ -8470,12 +8135,7 @@ void getCategoryStats(int whichCat, long* value, signed char* index)
 }
 
 // The compiland's last row: an in-place descending selection sort over a
-// value/index pair, the tail of the thieves-guild statistics build. Both
-// arguments arrive in registers, which is /Gr on a free function, and the
-// element count is re-read from gpGame on EVERY comparison rather than
-// cached - four separate loads in one 159-byte body.
-
-// The canonical signed game::numPlayers member matches these movsx bounds.
+// value/index pair, the tail of the thieves-guild statistics build.
 VA(0x005df160, 0x9F)
 DC_ADDRESS(0x181350, 0xb4)
 MAC_ADDRESS(0x1e3164, 0xa4)

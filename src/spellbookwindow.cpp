@@ -58,8 +58,8 @@ DATA(0x00641d94) static const char* const g_levelSprites[] = {
 
 // Complete indexes this four-pointer table directly, unlike the pointer
 // form attested for Dreamcast's gSecondarySkillLevels.
-// The positive mastery branch reads the three abbreviated labels owned
-// by text.cpp at 0x6a5d4c. Retail folds the -1 subscript into 0x6a5d48.
+// The positive mastery branch reads the three abbreviated labels owned by
+// text.cpp.
 
 // E:\gamedcs\spellbookwindow.cpp:82
 DC_ADDRESS(0x14d3a4, 0x28)
@@ -74,9 +74,9 @@ int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
     return 0;
 }
 
-// E:\gamedcs\spellbookwindow.cpp:103 Dreamcast retains
-// both calls from DisplayNewSchool; Mac expands both uses. VC6 expands the
-// ordinary source helper in its caller and still emits a separate body.
+// E:\gamedcs\spellbookwindow.cpp:103. Dreamcast retains both calls from
+// DisplayNewSchool; inlined in its caller, which still emits a separate
+// body.
 DC_ADDRESS(0x14d3cc, 0x12)
 TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
 {
@@ -95,10 +95,8 @@ void TSpellbookWindow::reset()
     g_lastSpellbookHeroId = -1;
 }
 
-// Dreamcast retains this source-private helper out of line;
-// Mac retains it immediately after reset at code0+0x18ada4. Complete /Ob2
-// folds it into getSpellDescription. The five adjacent TextResource rows and
-// the guarded pointer array are byte-proven by retail.
+// Dreamcast retains this source-private helper out of line, as does Mac;
+// inlined in getSpellDescription.
 DC_ADDRESS(0x14bc80, 0x74)
 MAC_ADDRESS(0x18ada4, 0xec)
 static const char* getLevelString(SpellID spell)
@@ -117,23 +115,14 @@ static const char* getLevelString(SpellID spell)
     };
     // DC117 initializes the five labels; DC119 reads the level, subtracts
     // one and indexes this table. Capture that actual index before lookup.
-    // Across 24 caller/helper states (nine emitted objects), this binding
-    // keeps all other scores and makes getSpellDescription's return copy
-    // exact. Flattening it back into the subscript leaves that caller at
-    // 96.8000% by expanding its final basic_string::_Tidy. A level value,
-    // trait pointer or trait reference also reproduces the exact caller.
+    // Binding it keeps getSpellDescription's return copy calling _Tidy as
+    // retail does; folded back into the subscript, that _Tidy expands.
     int index = akSpellTraits[spell].m_level - 1;
     return levelStrings[index];
 }
 
 // E:\gamedcs\spellbookwindow.cpp:128
-// Byte-exact with the ordinary getLevelString helper and its bound lookup
-// index. Both helpers' work and the returned string remain canonical; no
-// inline pin or extra substring is used. The previous flattened lookup
-// made the return copy expand _Tidy while retail calls it. Its verified C2
-// replay had root cb=388, budget=1000 and return-copy nested budget=152,
-// exactly _Tidy's cost. Meaningful helper value bindings recover the
-// caller boundary without changing its source or the other unit scores.
+// The ordinary getLevelString helper takes the bound lookup index.
 VA(0x0059baa0, 0x341)
 DC_ADDRESS(0x14bcf4, 0x194)
 MAC_ADDRESS(0x18ae90, 0x21c)  // retail widens DC's magic-plains byte to the Complete magic-terrain field at +0x6c;
@@ -199,7 +188,6 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
             0, 0, 620, 595, BACKGROUND_ID,
             DATA_COMPGEN(0x00684bcc, spellbookBackground, "Spelback.pcx"),
             0x800);
-        // Mac retains a call in each branch at 0:0x18b1bc and 0:0x18b1d8.
         if (h.m_owner >= 0)
             background->setPlayerPaletteColors(h.m_owner);
         else
@@ -374,8 +362,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
 VA_COMPGEN(0x0059c8c0, 0x21, SCALAR_DELETING_DTOR, TSpellbookWindow)
 
 // Dinkumware's _Insertion_sort_1 over TSpellbookEntry, the tail of the sort
-// that orders the open page's entries. The two mnemonic streams agree
-// EXACTLY over all 368 bytes against the COMDAT this object already emits.
+// that orders the open page's entries.
 VA_COMPGEN(0x0059def0, 0x170, INSERTION_SORT_1, TSpellbookEntry)
 
 VA(0x0059c8f0, 0x75)
@@ -407,11 +394,8 @@ void TSpellbookWindow::close(unsigned char update)
     heroWindow::close(update);
 }
 
-// DC uses push_back for the available-spell entry. Restoring that wrapper
-// leaves sort's _Unguarded_insert retained where retail expands it (88.8745%,
-// formerly exact with direct insert). Conditional or single-value school
-// selection does not recover it. Retail retains getSpellLevel here; DC's
-// older caller uses GetSpellSchoolLevel, so keep Complete's spell-id contract.
+// DC uses push_back for the available-spell entry. Complete uses
+// getSpellLevel here (DC's older caller uses GetSpellSchoolLevel).
 VA(0x0059c9a0, 0x691)
 DC_ADDRESS(0x14c904, 0x50c)
 MAC_ADDRESS(0x18c5d8, 0x5c4)
@@ -587,20 +571,12 @@ DATA(0x00641da4) static const int g_schoolToTab[] = {0, 2, 3, 1, 4};
 DATA(0x00641db8) static const int g_tabToSchool[] = {0, 3, 1, 2, 4};
 
 // E:\gamedcs\spellbookwindow.cpp:755
-// Byte-exact after repairing convertID2HelpID's two inlined lookup tables.
-// Preserve the widget dispatch (spells, schools, combat, adventure,
-// previous, next, cancel), real exit flag, mana-ok SpellMap re-subscript,
-// and rollover cache guard. Named spell and rolloverWidget locals plus
-// canonical previousPage/nextPage calls reproduce the string expansions.
-// The physical epilogue precedes the rollover code; the full carve and both
-// lookup pools are required because their addends affect the function bytes.
-// Failed controls: dialogReturn-before-id changed the shared exit tail;
-// early return on a rollover cache hit changed the lifetime/return paths.
-// DC 0x14d242..0x14d25e redraws the whole book on mouse movement when
-// gpCombatManager+52 equals 1. Complete 0x59d6c4 instead enters the cached
-// rollover path, drawing only widget 249 at 0x59daa1 and updating its
-// rectangle at 0x59dac8; Mac 0x18d660..0x18d800 does the same. Preserve
-// this later rollover behavior rather than adding the older full redraw.
+// The widget dispatch (spells, schools, combat, adventure, previous, next,
+// cancel), real exit flag, mana-ok SpellMap re-subscript, and rollover
+// cache guard. dialogReturn is stored after the id, and a rollover cache
+// hit does not return early. DC redraws the whole book on mouse movement
+// when gpCombatManager+52 equals 1; Complete instead enters the cached
+// rollover path, drawing only widget 249 and updating its rectangle.
 VA(0x0059d040, 0xBA0)
 DC_ADDRESS(0x14cecc, 0x3c2)
 MAC_ADDRESS(0x18cdb8, 0xaa0)  // anchor-callee: calls GotoPage/get_spell_description/GetManaCost/SetIconFrame, msg jump-table, ret 4; absorbs inlined DisplayNewSchool+convertID2HelpID;
@@ -840,9 +816,8 @@ bool TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookEntry& y) cons
     return strcmpi(traits->m_name, yTraits->m_name) < 0;
 }
 
-// COMDAT pairing: std::_Sort<TSpellbookEntry>, agreement 1.000 over all 235
-// instructions. Sits beside the unit's _Insertion_sort_1 over the same element.
+// COMDAT pairing: std::_Sort<TSpellbookEntry>.
 VA_COMPGEN(0x0059dc90, 0x260, STD_SORT, tspellbookentry)
 
-// COMDAT pairing: basic_string<char>::erase(size_t, size_t), agreement 0.984.
+// COMDAT pairing: basic_string<char>::erase(size_t, size_t).
 VA_COMPGEN(0x0041bdb0, 0x11C, BASIC_STRING_ERASE, char)

@@ -377,8 +377,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     m_heroSpecificAbility = ResourceManager::GetSprite("un44.def");
 }
 
-// Retail draws the player name with g_smallFont and every later label with
-// g_tinyFont (0x698a04).
+// The player name uses g_smallFont and every later label g_tinyFont.
 VA(0x005693a0, 0x394)
 MAC_ADDRESS(0x160de8, 0x4cc)
 void CScenarioPlayerInfoWidget::draw() const
@@ -478,7 +477,7 @@ void CScenarioPlayerInfoWidget::draw() const
     }
 }
 
-// Slot 0 of the Complete-only vtable 0x6416dc.
+// Slot 0 of the Complete-only vtable.
 VA_COMPGEN(0x00569740, 0x21, SCALAR_DELETING_DTOR,
            CScenarioPlayerInfoWidget)
 
@@ -555,9 +554,8 @@ void CScenarioInfoDlg::updateAllyEnemyFlags()
 }
 
 // E:\\gamedcs\\scenarioinfo.cpp:661
-// Dreamcast keeps this as an ordinary out-of-line member.
-// Complete's ctor at 0x567290 expands the same five-widget/message sequence,
-// so the declaration remains non-inline and VC6 /Ob2 owns the caller choice.
+// Dreamcast keeps this as an ordinary out-of-line member; inlined in
+// Complete's constructor (the five-widget/message sequence).
 DC_ADDRESS(0x12af90, 0x74)
 MAC_ADDRESS(0x160be0, 0xc4)
 void CScenarioInfoDlg::setDifficultyHiLite()
@@ -664,7 +662,7 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
             break;
         case NEW_MAP_BONUS_RESOURCE:
             // Conflux shares Inferno's icon frame exactly as it shares
-            // Inferno's text row in GetResourceBonusCaption (0x576e00).
+            // Inferno's text row in GetResourceBonusCaption.
             frame = TOWN_INFERNO;
             if (g_game->m_setup.m_alignment[playerPosition] != TOWN_CONFLUX)
                 frame = g_game->m_setup.m_alignment[playerPosition];

@@ -200,17 +200,9 @@ void game::getLossConditionText(char* text)
     }
 }
 
-// Residual: Windows MAX 98.58% has the same 83 CFG blocks and 12 calls.
-// DC records named anytown_loc and town_loc; Mac 0x132d28 constructs the
-// point and compares its coordinates to -1. Declaring townLoc before
-// anyTownLoc improves the Windows stack slots without changing the helper
-// calls. CodeWarrior's aligned shape and call sequence remain unchanged,
-// although the candidate stack offsets move; Mac is not exact.
-// DC newgame.cpp:721-725 records the separate anytown_loc/town_loc points;
-// lines 764/766 call GetArmyName with count 2, and its text lookups name
-// TTextResource::operator[]. The shared source calls are retained despite
-// VC6 falling from an earlier peak when the larger helper source entered
-// the inline budget. Mac O3 retains 38 direct calls on each side.
+// DC newgame.cpp:721-725 records the separate anytown_loc/town_loc points
+// (townLoc is declared before anyTownLoc). Lines 764/766 call GetArmyName
+// with count 2, and its text lookups name TTextResource::operator[].
 VA(0x005139e0, 0x64C)
 DC_ADDRESS(0x103a08, 0x5ac)
 MAC_ADDRESS(0x132a68, 0x820)

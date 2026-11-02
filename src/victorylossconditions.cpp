@@ -12,9 +12,8 @@ inline void LossConditionStruct::recordLoss(signed char player)
     m_gameLost = 1;
 }
 
-// The canonical team helper replaces the pasted scan. Both compilers expand
-// it and retain its nested isHuman call; the caller keeps explicit integer
-// success/failure returns, as Mac 0x1fd394 and 0x1fd3a8 do.
+// The canonical team helper, with its nested isHuman call; the caller
+// keeps explicit integer success/failure returns.
 VA(0x005f15a0, 0x63)
 DC_ADDRESS(0x18fdc4, 0x34)
 MAC_ADDRESS(0x1fd30c, 0xc0)
@@ -22,8 +21,6 @@ int VictoryConditionStruct::appliesToPlayer(long playerId) const
 {
     if (!m_appliesToComputer) {
         int team = g_game->getTeam(playerId);
-        // Mac 0x1fd35c..0x1fd3a8 expands isHumanTeam's negative-team
-        // guard and eight-player scan, retaining its nested isHuman call.
         if (g_game->isHumanTeam(team))
             return 1;
         return 0;
@@ -42,19 +39,12 @@ static const int g_angelicAllianceCampaign = 18;
 static const int g_angelicAllianceFirstMap = 8;
 static const int g_angelicAllianceSecondMap = 9;
 
-// Keep the campaign reference, native artifact-vector lifetime, and explicit
-// GetTeam/IsHumanTeam calls (DC line 41). The ordinary path rejects the wrong
-// condition, an absent current player, and a disabled player separately.
-// DC's first guard returns from a braced block (line 34, two nested scopes).
-// With those guard scopes VC6 expands out_of_range's constructor inside
-// bitset::test while retaining logic_error, matching retail +0x4c1. Joining
-// the guards emits the same game logic but leaves out_of_range out of line.
-// That expansion needs a final test-site budget of 181..183 (inline trace):
-// unbraced guards leave 177 since getHero's DC else-arm; bracing all three, 189.
-// Component predicate spelling and discarding erase's result did not close
-// that boundary; the complete separated-guard body matches Windows exactly.
-// Original DC public CheckForArtifactWin@@QAA_NXZ proves a bool result;
-// the dossier's primitive 0x20 display is lowered-byte metadata.
+// Keep the campaign reference, native artifact-vector lifetime, and
+// explicit GetTeam/IsHumanTeam calls (DC line 41). The ordinary path
+// rejects the wrong condition, an absent current player, and a disabled
+// player separately. DC's first guard returns from a braced block (line 34,
+// two nested scopes). Original DC public CheckForArtifactWin@@QAA_NXZ
+// proves a bool result.
 VA(0x005f1610, 0x4FE)
 DC_ADDRESS(0x18fdf8, 0x9e)
 MAC_ADDRESS(0x1fd3cc, 0x44c)  // MAC_ABSTRACTION_FROM(tokens1:db1ab8f0ef7c,61.2100): the DC-braced separate guards keep the Windows out_of_range expansion inside bitset::test (retail +0x4c1, exact); Mac joins them into one shared failure exit.
@@ -71,8 +61,8 @@ bool VictoryConditionStruct::checkForArtifactWin()
         if (!g_currentPlayer->isHuman())
             return 0;
 
-        // Native keeps the non-POD vector placement/copy path and takes these
-        // artifact constants by reference; the original type spelling is unknown.
+        // These artifact constants are taken by reference; the original type
+        // spelling is unknown.
         std::vector<TArtifact> pieces;
         pieces.reserve(3);
         if (campaign.m_currentCampaign == g_armorOfTheDamnedCampaign) {
@@ -258,8 +248,7 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    // Mac 0x1fde18 constructs the target before the loop; DC records
-    // the target and wildcard locals at the same outer lifetime.
+    // DC records the target and wildcard locals at the same outer lifetime.
     type_point anyTownLoc(-1, -1, -1);
     type_point grailTownLoc(m_townX, m_townY, m_townZ);
     int player = 0;
@@ -270,8 +259,6 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
                     g_game->m_players[player].m_townIds[j]);
                 type_point thisTownLoc = thisTown->getLocation();
                 bool hasGrail = false;
-                // Mac 0x1fdf0c..0x1fe024 expands the same coordinate and
-                // wildcard comparison as isGrailTarget at 0x1fe124.
                 if (isGrailTarget(thisTownLoc, grailTownLoc, anyTownLoc))
                     hasGrail = thisTown->hasBuilding(HOLY_GRAIL_ID, true);
                 if (hasGrail) {
@@ -447,8 +434,7 @@ unsigned char VictoryConditionStruct::checkForTimeSurvival()
     return 0;
 }
 
-// DC lines448..458 retain the positive point-match scope. Complete retail
-// needs the same scope to place the common failure epilogue after success.
+// DC lines448..458 retain the positive point-match scope.
 VA(0x005f2860, 0x1DE)
 DC_ADDRESS(0x190620, 0xb2)
 MAC_ADDRESS(0x1feba0, 0x2bc)
@@ -545,18 +531,10 @@ static const int g_lossPortrait146 = 0x92;
 // Original DC public CheckForDefeatedHeroLoss@@QAA_NPBVhero@@@Z proves bool
 // and const hero*. Keep that interface and the const hasArtifact calls.
 //
-// Mac 0x1feeb0..0x1ff25c retains one campaign base and keeps the map value
-// across the artifact calls before independently admitting maps 2, 3 and 4.
-// Retail +0x187/+0x18c compares maps 3 and 4 after the map-2 arm. Explicit
-// map equalities reproduce those tests; CodeWarrior folds them into the
-// native unsigned range check at 0x1ff044. Keep the component reference and
-// loop-local index: Mac assigns them r29 and r28 respectively.
-//
-// The final explicit ID branch and constant returns reproduce all retail
-// epilogues. Returning the comparison through a bool local changes merging
-// throughout the campaign switch (17 returns instead of retail's 19).
-// This is ordinary Boolean control flow, also present in DC lines 488..491;
-// it preserves the Complete separation between checking and recording loss.
+// Maps 3 and 4 are compared after the map-2 arm, with the map value kept
+// across the artifact calls. The final explicit ID branch and constant
+// returns are ordinary Boolean control flow, also present in DC lines
+// 488..491; Complete separates checking from recording the loss.
 // E:\gamedcs\victorylossconditions.cpp:463
 VA(0x005f2a40, 0x3C8)
 DC_ADDRESS(0x1906d4, 0x78)
@@ -623,8 +601,6 @@ bool LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
             }
             break;
         }
-        // Mac 0x1ff0bc..0x1ff13c continues through three independent map
-        // predicates; VC6 propagates the known map into direct failure exits.
         case g_lossCampaign15:
             map = campaign.m_currentMap;
             if (map == 1 && loser->m_id == g_lossHero22)
@@ -693,18 +669,10 @@ unsigned char LossConditionStruct::heroKilled(const hero* loser)
     return 0;
 }
 
-// Mac is byte-exact with the early type guard, returned-location temporary
-// as the equality operand, and stored loss member as the result. A named
-// location local delays field extraction; an explicit result assignment
-// adds another copy. Windows stays 99.8429% with only the two stack homes
-// exchanged; keep the canonical constructor, getLocation and operator==.
-// Original DC public CheckForDefeatedTownLoss@@QAA_NHPBVtown@@@Z proves
-// bool and const town*; a displayed primitive 0x20 does not prove byte source.
+// The early type guard, the returned-location temporary as the equality
+// operand and the stored loss member as the result. Original DC public
+// CheckForDefeatedTownLoss@@QAA_NHPBVtown@@@Z proves bool and const town*.
 // Dreamcast 510/511 store the loser and flag in place (no recordLoss).
-// The in-place stores exchange the stack homes of the target point and the
-// getLocation() temporary (99.84%); named locals, either compare order, a
-// returned true, const, an explicit cast or a braced guard keep it, and the
-// stores swapped cost more (97.97%).
 VA(0x005f2e40, 0xD9)
 DC_ADDRESS(0x19074c, 0x70)
 MAC_ADDRESS(0x1ff304, 0x140)
@@ -730,8 +698,8 @@ MAC_ADDRESS(0x1ff444, 0x78)
 bool LossConditionStruct::checkForTimeLimitExpired()
 {
     if (m_type == LOSS_CONDITION_TIME_LIMIT) {
-        // The time-limit check keeps the full unsigned calendar expression;
-        // getCurrentTurn() returns a short and would narrow it first.
+        // The full unsigned calendar expression; getCurrentTurn() returns a
+        // short and would narrow it.
         int days = (static_cast<unsigned short>(g_game->m_month) * 4
             + static_cast<unsigned short>(g_game->m_week) - 5) * 7
           + g_game->m_day;
@@ -744,8 +712,5 @@ bool LossConditionStruct::checkForTimeLimitExpired()
 }
 
 // COMDAT pairing: basic_string<char>::basic_string(const char*, const
-// allocator&). Same single-member-group argument as smackmgr's copy ctor
-// above: victorylossconditions.obj emits exactly one string constructor and
-// it is this overload. `ret 8` matches its two arguments, and the callers
-// reach hero, mapcell, rmg, this unit and three segments.
+// allocator&), this object's one string constructor.
 VA_COMPGEN(0x0048b370, 0xC1, CLASS_CTOR, basic_string)

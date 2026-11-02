@@ -98,7 +98,7 @@ public:
     }
 
     // Original: CSingleSelPopup::ExitDialog; singleselectionpopups.h:75
-    // handleMessage0x575430 expands both exits with this message rewrite.
+    // Inlined at both handleMessage exits with this message rewrite.
     DC_ADDRESS(0x12efc0, 0x1c)
     int exitDialog(message& msg)
     {
@@ -120,7 +120,7 @@ public:
 class CHotspotWidget : public widget {
 public:
     CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
-    virtual int main(message& msg);  // slot 2, retail 0x575290
+    virtual int main(message& msg);  // slot 2
 
     // Original: CHotspotWidget::zBufferDraw; singleselectionpopups.h:120
     DC_ADDRESS(0x12f010, 0x4)
@@ -197,9 +197,9 @@ public:
     virtual ~TRandomMapProgress();
     virtual void setTotal(int totalSteps);
 
-    // The retained vtable body and GenerateRandomMap's expanded final step
-    // share this operation. Header visibility is inferred from retail; this
-    // Complete-only class has no Dreamcast source-location evidence.
+    // The vtable body and GenerateRandomMap's inlined final step share this
+    // operation; this Complete-only class has no Dreamcast source-location
+    // evidence.
     VA(0x00577320, 0x31)
     MAC_ADDRESS(0x16dba8, 0x58)
     virtual void advance(int amount)

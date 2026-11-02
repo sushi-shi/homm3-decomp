@@ -59,8 +59,8 @@ class textWidget;
 class town;
 class TResourceDisplay;
 
-// IDENTIFIED 2026-08-14: the .bss cell recruit.h models as
-// SUnnamed6aacb0 is the game's 16-bit SYSTEM PALETTE. CycleOutline
+// The .bss cell recruit.h models as SUnnamed6aacb0 is the game's 16-bit SYSTEM
+// PALETTE. CycleOutline
 // walks the band data[128..134] out of it with an induction variable,
 // and the offset VC6 strength-reduces that walk to - 0x11c stepping by
 // 2 to 0x12a, `mov cx,[eax+edx]` with the pointer RELOADED every
@@ -479,8 +479,8 @@ public:
     // Dreamcast names thisHero at +0x58; retail constructor 0x5ce830
     // stores its inHero parameter at the corresponding PC +0x60.
     hero* m_thisHero;
-    // +0x64 / +0x68, NAMED 2026-08-21 by the page's own handler
-    // 0x5d0910: the hover pair the whole compiland's dialog family
+    // +0x64 / +0x68, named by the page's own handler 0x5d0910: the hover pair
+    // the whole compiland's dialog family
     // carries, tested together and refreshed together before the status
     // line is rewritten - the same shape TTavernWindow's pair has. The
     // handler reaches them through msg->window, not through `this`.
@@ -761,7 +761,7 @@ class townManager : public baseManager {
 public:
 
     // Original: townManager::SetTown; TownMgr.h:686
-    // town::view0x5be210 expands the assignment to Complete's +0x38 field.
+    // Inlined in town::view (Complete's +0x38 field).
     DC_ADDRESS(0x168e24, 0x6)
     void setTown(town* townToView) { m_townToView = townToView; }
 
@@ -793,8 +793,8 @@ public:
     // Dreamcast panorama at +0x44; retail background construction and
     // animation corroborate the corresponding PC pointer at +0x3c.
     bitmapBorder16* m_panorama;  // +0x3c
-    // +0x40, NAMED AND TYPED 2026-08-14. The Dreamcast fieldlist's
-    // `MonPix` is an LF_ARRAY of seven CSprite* at its own 72, which is
+    // +0x40. The Dreamcast fieldlist's `MonPix` is an LF_ARRAY of seven
+    // CSprite* at its own 72, which is
     // this offset under the same -8 shift that puts currTown/panorama/
     // objects/numObjects at +0x38/+0x3c/+0x5c/+0x10c. Retail agrees at
     // both ends: SetupTown 0x5c6870 fills the seven slots from

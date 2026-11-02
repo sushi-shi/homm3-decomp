@@ -130,7 +130,7 @@ MAC_ADDRESS(0x13d260, 0x8c)
 long army::getAdjacentHex(long hex, long direction) const
 {
     // Dreamcast path.cpp:271 calls OffsetToFront(-1) for the double-wide
-    // adjustment; retail expands its facing-dependent +/-1 result.
+    // adjustment.
     if (is(creatureDoubleWide)) {
         if (m_facing == 0) {
             if (direction >= 3)

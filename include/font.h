@@ -31,7 +31,7 @@ public:
         // the `field_0 < 0` leading-bearing test in DrawStringExecute),
         // `unsigned abcB` (the inked width DrawCharacter loops over), and
         // `int abcC` (right side bearing). The names are left as field_N
-        // because other lanes' sources already spell them that way; the
+        // because other sources already spell them that way; the
         // identity is recorded rather than renamed.
         struct myABC {
             int abcA;

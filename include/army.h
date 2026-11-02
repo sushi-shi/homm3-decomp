@@ -64,11 +64,7 @@ enum EAttackCriteria {
 
 // DECLARED HERE RATHER THAN IN cmbtmgr.h, WHICH IS WHERE IT READS: that
 // header INCLUDES this one, so a domain army's own members take by value
-// - attack_wall's `wall` - cannot be named there and seen here. The move
-// is include-set NEUTRAL for every TU that takes both headers (the same
-// nine enumerators, one file earlier in the same closure); hero.cpp is
-// the only consumer that gains them, and its rows were re-measured
-// unchanged.
+// - attack_wall's `wall` - cannot be named there and seen here.
 enum TWallTargetId {
     WALL_TARGET_0 = 0,
     WALL_TARGET_1 = 1,
@@ -102,7 +98,7 @@ enum EArmySpellCancelType {
 // ordinal past that pairing - no roster reaches the row.
 
 // Dreamcast's field list names this type in army's unconditional private
-// attack_wall overload. It therefore cannot remain a TU-view score control.
+// attack_wall overload.
 struct type_ballistics_traits {
     signed char m_chanceToHitMainBuilding;
     signed char m_chanceToHitTower;
@@ -129,8 +125,8 @@ SIZE(type_ballistics_traits, 8);
 // retail's read is an indirect load off 0x679c84 followed by an
 // 8-byte-strided index rather than a direct displacement. hero.cpp
 // OWNS the definition - the cell sits in .data, not .rdata, because
-// its initialize_ballistics_table (dc 0xca984, still a carcass) is
-// what binds the reference at startup, immediately before the
+// its initialize_ballistics_table (dc 0xca984) is what binds the reference at
+// startup, immediately before the
 // experience ladder at 0x679c88 - so no DATA claim is made here.
 // army.cpp is the only located reader.
 extern const type_ballistics_traits (&g_constBallisticsTraits)[4];
@@ -353,8 +349,7 @@ public:
     // 104/+0x68 in the pad. do_multi_head_attack (0x440310) clears it
     // once per head it lands, between the Damage call and the
     // fire-shield test, so the luck roll is spent by the first head and
-    // the rest of the sweep swings plain. Pad slice - the include-set
-    // canaries do not move for one.
+    // the rest of the sweep swings plain.
     int m_luckStatus;               // +0x70
     // +0x74 is an EMBEDDED copy of the creature's traits row - the
     // Dreamcast roster's `TCreatureTypeTraits sMonInfo` at 116, ADOPTED
@@ -384,14 +379,13 @@ public:
     // the one CRTRAITS.TXT column the Dreamcast port dropped, and it
     // sits exactly here at +0x68 in the row. Name provisional.
 
-    // This is an original class member, not a TU-specific score control.
-    // Hiding its declaration changed VC6's member-handle population and
-    // could manufacture a higher local score in unrelated consumers.
+    // An original class member: keep it declared in every TU (hiding it
+    // changes VC6's member-handle population).
     // -> sMonInfo.hasSpell        (+0xdc, row +0x68)
     // -> sMonInfo.wanderingLow/wanderingHigh (+0xe0/+0xe4)
     TCreatureTypeTraits m_monInfo;  // +0x74 .. +0xe8, 116 B
-    // NAMED 2026-08-15 from the Dreamcast member table: DC army@212 is
-    // show_fire_shield against this band's already-anchored +20 shift
+    // Named from the Dreamcast member table: DC army@212 is show_fire_shield
+    // against this band's already-anchored +20 shift
     // (DC hitByCreature 220 = retail +0xf0, six lines below).
     // do_multi_head_attack (0x440310) is the witness - it raises the
     // byte on the head it burned, and only when adjust_damage handed
@@ -461,11 +455,11 @@ public:
     // stack before the animation loop and raises it the frame a stack
     // falls back to cs_wait, which is what stops that stack advancing
     // for the rest of the sequence.
-    // An INT, not the byte the name suggests (byte-proven 2026-08-20):
+    // An INT, not the byte the name suggests (byte-proven):
     // PowEffect both TESTS and STORES it a dword wide -
     // `mov eax,[esi+0x108] / test eax,eax` and
     // `mov dword ptr [esi+0x108],1` - where a char field would emit
-    // `mov al` / `mov byte ptr`. Measured +0.03 on that body.
+    // `mov al` / `mov byte ptr`.
     int m_powSequenceComplete;      // +0x108
     char* m_yModify;                 // +0x10c
     // sMonFrameInfo.iMissileOffset (DC SMonFrameInfo@0, short[6] -
@@ -508,11 +502,10 @@ public:
     // exact three-part shape (numSequences at +0x28, validSeqMask at
     // +0x2c, s at +0x1c) against the CSprite layout csprite.h proves.
     // NOT A RAW POINTER - see the TResourceHandle note above the class.
-    // ADOPTED 2026-09-05 and byte-confirmed: army's compiler-generated copy
-    // constructor (0x437a00) now reproduces the whole refcount run -
-    // stdIcon, missileIcon, image_height's plain dword in the middle of it,
-    // and the eight-iteration armySample loop - instruction for instruction
-    // against retail, fn+0x192..fn+0x202.
+    // Retail's compiler-generated copy constructor (0x437a00) shows the
+    // whole refcount run - stdIcon, missileIcon, image_height's plain dword
+    // in the middle of it, and the eight-iteration armySample loop
+    // (fn+0x192..fn+0x202).
     TResourceHandle<CSprite> m_stdIcon;    // +0x164
     // DC army.missileIcon (members.csv army@340, right between stdIcon
     // @336 = +0x164 and image_height @344 = +0x16c). attack_wall
@@ -601,7 +594,7 @@ public:
     int m_curseAmount;              // +0x45c
     // DC army.antiMagicSpellLevel (members.csv army@1084, the slot
     // before bloodlustBonus 1088/+0x464 on the same +0x24 shift).
-    // PROVEN FROM BOTH SIDES, by two lanes independently:
+    // PROVEN FROM BOTH SIDES:
     //   * the WRITER - army::SetSpellInfluence (0x4448f0): its ANTI_MAGIC
     //     arm stores the per-mastery amount here and then cancels every
     //     standing spell whose traits level sits below it;
@@ -610,8 +603,7 @@ public:
     //     counter (spellInfluence[34], +0x220) is up AND the cast spell's
     //     own akSpellTraits level sits BELOW this dword.
     // That is Anti-Magic's rule from each end, and the same rounds/amount
-    // pairing the Bless and Curse fields above already carry. Retyped IN
-    // PLACE out of the pad, so the declarator count does not move.
+    // pairing the Bless and Curse fields above already carry.
     int m_antiMagicSpellLevel;      // +0x460
     // The two attack amounts get_adjusted_attack pairs with the
     // Bloodlust and Precision round counters above.
@@ -1035,17 +1027,15 @@ public:
         // 0x79 or 0x53 (the magic elemental against black dragons and
         // its own kind). NH3API spellings.
 
-        // These domain names are ordinary source facts. Their declaration
-        // changes VC6's class-source state, which is why hiding them once
-        // produced a higher local score; that measurement is not permission
-        // to replace the declarations with literals in selected TUs.
+        // These domain names are ordinary source facts; keep them declared
+        // everywhere (their declaration is part of VC6's class-source state).
         // The Pit Lord id is fixed by
         // arithmetic against ids the block above already proves - Demon
         // 0x30 opens the Inferno upgrade run and Efreet Sultan 0x35 /
         // Devil 0x36 / Arch Devil 0x37 close it, so 0x33 is the Pit
         // Lord - and the body corroborates it: this is exactly the id
         // that takes the DEMONIC resurrection arm, priced (in
-        // get_resurrection_size 0x447330, already exact) in
+        // get_resurrection_size 0x447330) in
         // akCreatureTypeTraits[0x30].hitPoints. NH3API spelling.
         ARMY_CREATURE_ARCHANGEL = 0x0d,
         ARMY_CREATURE_BLACK_DRAGON = 0x53,
@@ -1194,9 +1184,9 @@ inline int army::offsetToFront(int direction) const
     }
 
     // E:\gamedcs\Army.h:752 The older DC helper clears
-    // expectedDamage, target, time and value. Complete's x86 findAITargets
-    // at 0x422b20 and Mac at 0:0x25100 instead clear target, value,
-    // possibleTargets and time in this order, leaving expectedDamage intact.
+    // expectedDamage, target, time and value; Complete's findAITargets
+    // clears target, value, possibleTargets and time in this order, leaving
+    // expectedDamage intact.
 DC_ADDRESS(0x027ccc, 0x16)
 inline void army::clearAIValues()
     {
@@ -1267,15 +1257,8 @@ inline int army::getOwningSide() const
 
     // E:\gamedcs\Army.h:800
 // DC line 803 records the condition and line 804 the first owning-side
-// call. DC's lexical scopes close the if statement (0x27d48..0x27d5e,
-// with the nested arm 0x27d50..0x27d5e) before the second call, so that
-// call is a return after the if, not a conditional-expression arm.
-// Retail agrees: the guarded return makes army::chooseFaerieDragonSpell
-// index IsHuman as [g_combatManager + side] (exact), where a conditional
-// return gives [side + g_combatManager] (99.9248%). The nested budget that
-// once favoured the conditional return in getUnitCombatValue came from
-// helper calls DC does not have (getSpellTime/getOwningSide); without them
-// this body expands there too.
+// call. DC's lexical scopes close the if statement before the second call,
+// so that call is a return after the if, not a conditional-expression arm.
 VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
 DC_ADDRESS(0x027d44, 0x30)
 inline int army::getControllingSide() const
@@ -1301,15 +1284,13 @@ inline const char* army::getName(int count) const
 
     // SpellID is still represented by its retail-width int domain here.
     // E:\gamedcs\Army.h:820
-    // Mac's indexed reads (army + 0x198 + 4*spell) are what both this
-    // getter and a direct row read expand to, so Mac cannot place it.
-    // Dreamcast can: its army.obj and ai.obj call even tiny header inlines
-    // (get_owning_side, Is) out of line, yet only is_valid_caliph_spell
-    // calls get_spell_time in army.obj, and the is_incapacitated,
-    // can_retaliate and get_controlling_side copies read the rows directly.
-    // Army members with a DC counterpart therefore read m_spellInfluence;
-    // the getter belongs to the external readers DC records (ai, spells,
-    // findpath, path, command, viewarmywindow) and to Complete-only code.
+    // Dreamcast's army.obj and ai.obj call even tiny header inlines out of
+    // line, yet only is_valid_caliph_spell calls get_spell_time in army.obj;
+    // the is_incapacitated, can_retaliate and get_controlling_side copies
+    // read the rows directly. Army members with a DC counterpart therefore
+    // read m_spellInfluence; the getter belongs to the external readers DC
+    // records (ai, spells, findpath, path, command, viewarmywindow) and to
+    // Complete-only code.
 DC_ADDRESS(0x027d74, 0x12)
 inline long army::getSpellTime(int spell) const
     {
@@ -1355,9 +1336,9 @@ inline bool army::canRetaliate(const army& attacker) const
     }
 
     // E:\gamedcs\Army.h:855
-// Complete's inlined copy in consider_single_enchantment keeps the recovered
-// incapacity/attribute prefix but directly contradicts Dreamcast's final
-// Psychic/Magic Elemental pair: retail compares First Aid Tent and Ammo Cart.
+// Complete keeps the recovered incapacity/attribute prefix but replaces
+// Dreamcast's final Psychic/Magic Elemental pair with First Aid Tent and
+// Ammo Cart.
 DC_ADDRESS(0x027e1c, 0x54)
 inline bool army::cannotAttack() const
     {

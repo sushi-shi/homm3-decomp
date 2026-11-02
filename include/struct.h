@@ -63,14 +63,10 @@ public:
     }
 
     // E:\gamedcs\struct.h:120, and advspells.obj's own Dreamcast roster
-    // retains it out of line (0x2e B). Retail has no body:
-    // advManager::TownGate (0x41d360) is the admitted witness and EXPANDS
-    // it twice in one statement pair - once for the `< best` test and
-    // once for the store into `best`, each time as
-    // `(this->x - p2->x)^2 + (this->y - p2->y)^2` with the two 10-bit
-    // bitfields sign-extended through the shl/movsx/sar triple. The z
-    // plane takes no part, which is what makes it a MAP distance.
-    // DC struct.h:120 proves const type_point& p2.
+    // retains it out of line. Inlined twice in advManager::TownGate's
+    // statement pair (the `< best` test and the store). The z plane takes
+    // no part, which is what makes it a MAP distance. DC struct.h:120 proves
+    // const type_point& p2.
     DC_ADDRESS(0x022fe4, 0x2e)
     int distanceSquared(const type_point& p2) const
     {
@@ -86,8 +82,6 @@ public:
 // The shared inclusive rectangle used by the adventure and combat drawing
 // code. Dreamcast CodeView fixes the four names, offsets, and 16-byte extent;
 // retail's combat drawing wrappers read the same four dwords in this order.
-// Its type-handle collateral is banked in score history rather than hidden
-// behind consumer-specific declarations.
 struct SLimitData {
 public:
     int m_minX;
@@ -201,15 +195,9 @@ namespace GameTime {
     void delayTil(unsigned long time);  // 0x4f82f0
     void delay(int interval);        // 0x4f83c0
 
-    // DC struct.h:411 / :419 (dc 0x1eed4, 0x1ef04) - the other two
-    // header inlines of the same family; no retail out-of-line body
-    // exists for either. textEntryWidget::SetupDisplayString 0x5bb660
-    // is the expansion that proves the shape: the deadline argument is
-    // loaded into a callee-saved register BEFORE the Get() call (an
-    // argument evaluated ahead of its guard), and the result is tested
-    // with `sub eax, edi; js`, i.e. the SIGN of the difference - not
-    // the unsigned `cmp` a hand-spelled `Get() >= deadline` emits.
-    // The stop/start subtraction is retained by the upstream mouse timing helper.
+    // DC struct.h:411 / :419 - the other two header inlines of the same
+    // family, inlined everywhere. The deadline is tested by the SIGN of the
+    // difference, not an unsigned `Get() >= deadline`.
     DC_ADDRESS(0x01eec4, 0x10)
     inline long elapsed(unsigned long stop, unsigned long start)
     {
@@ -217,7 +205,6 @@ namespace GameTime {
     }
 
     // DC struct.h:412 explicitly calls Get then Elapsed(stop, start).
-    // Retain the canonical call even where retail expands the subtraction.
     DC_ADDRESS(0x01eed4, 0x30)
     inline long elapsedSince(unsigned long time)
     {
@@ -226,23 +213,17 @@ namespace GameTime {
 
     // DC public ?IsPast@GameTime@@YA_NK@Z proves native bool although
     // NB11 lowers its return record to T_UCHAR. DC struct.h:420 calls
-    // ElapsedSince then tests the sign, as retail caller expansions do.
+    // ElapsedSince then tests the sign.
     DC_ADDRESS(0x01ef04, 0x24)
     inline bool isPast(unsigned long time)
     {
         return elapsedSince(time) >= 0;
     }
 
-    // DC struct.h:438 (44 B on SH4) - the frame-pacing
-    // step, and a HEADER INLINE: no retail out-of-line body exists,
-    // /Ob2 expands it at every site. army::Fly (0x4b4a40) is the
-    // expansion that proves the shape - `this_frame` is homed to a
-    // stack slot BEFORE the Get() call and read back twice afterwards,
-    // which a hand-spelled `timer += lag` (two independent global
-    // loads) cannot produce, and the clamp compares `cmp interval, lag;
-    // jle`, i.e. the INTERVAL is the left operand.
-    // DC struct.h:439 calls ElapsedSince before the clamp/add at line442.
-    // The old direct subtraction erased that proven helper boundary.
+    // DC struct.h:438 - the frame-pacing step, a header inline expanded at
+    // every site. `this_frame` is read once and the clamp compares
+    // `interval` on the left. DC struct.h:439 calls ElapsedSince before the
+    // clamp/add at line442.
     DC_ADDRESS(0x04c994, 0x2c)
     inline unsigned long nextFrameTime(unsigned long thisFrame,
                                        long interval)

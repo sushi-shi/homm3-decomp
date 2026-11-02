@@ -39,41 +39,13 @@ DATA(0x006969d4) int g_combatGridPosted;
 // the flag as a full dword in this wrapper and the command-processing sites.
 DATA(0x006989ec) int g_processingCombatAction;
 
-// ARITY SCREEN over the located rows, run 2026-08-14 before reconstructing
-// anything here. `ret N` against the Dreamcast parameter count:
-
-//   0x4937d0 ret 4    SetupGridForArmy(const army*)          1  OK
-//   0x493930 ret 8    UpdateGrid(int, int)                   2  OK
-//   0x493cf0 ret      DrawBackground()                       0  OK
-//   0x494440 ret 0x18 DrawFrame(6)                           6  OK
-//   0x495650 ret      DrawCreatureAndHeroSubwindows()        0  OK (claimed)
-//   0x495bf0 ret      ComputeMaxExtent()                     0  OK
-//   0x495f50 ret 0x20 ComputeExtent(8)                       8  OK
-//   0x4960d0 ret      CycleCombatScreen()                    0  OK
-//   0x494c20 ret 8    DrawWallAt(int, int)                   2  OK
-//   0x494f40 ret 0xc  DrawOccupant(int, int, int)            3  OK
-//   0x495090 ret 0x20 DrawArcher(7)                          7  +1
-
-// 0x495090's extra argument is decoded: a byte that selects table index 0
-// vs 0x60 in the 16-bit table at [0x6aacb0 + 0x1c], i.e. a colour row.
-// Its only retail caller is the siege-wall/archer pass at 0x494c20, matching
-// the Dreamcast DrawWallAt -> DrawArcher edge and settling this row as
-// DrawArcher rather than neighbouring DrawCreatureAlpha. Complete therefore
-// added the trailing colour selector. The body forwards the other seven
-// arguments verbatim to ComputeExtent (0x495f50) plus the +0x13d2c limit
-// byte as SaveBiggestExtent, and the screen puts ComputeExtent at eight,
-// which is what makes the forwarding legible.
-
-// Every row here reads the combatManager limit band at +0x13d2c..+0x13d44
-// - a byte at +0x13d2c, then dwords at +0x13d30/+0x13d34 (two enables) and
-// +0x13d38/+0x13d3c/+0x13d40/+0x13d44 used as clip bounds compared in the
-// order (>= , <= , > , <) against SLimitData's four dwords at +0/+4/+8/+0xc.
-// cmbtmgr.h wants that band modelled before this TU is opened.
+// Complete's DrawArcher adds a trailing byte that selects the colour row
+// (table index 0 or 0x60); its only caller is the siege-wall/archer pass in
+// DrawWallAt.
 
 // E:\gamedcs\drawing.cpp:47. Dreamcast retains this file-static helper;
-// Complete's larger creature roster is expanded into CombatMessage, but the
-// ValidHex guard, controlling-side accessor and four shared cases prove that
-// the helper boundary survived at source level.
+// inlined in CombatMessage, whose ValidHex guard, controlling-side accessor
+// and four shared cases are the helper's.
 DC_ADDRESS(0x0831b4, 0x124)
 MAC_ADDRESS(0x0a3678, 0x624)
 static void getCreatureSpellMessage(char* buffer,
@@ -401,7 +373,7 @@ void combatManager::combatMessage(int command)
                     getEstimatedDamage(currentArmy, targetArmy, 1,
                                          distance).c_str());
         } else {
-            // Retail loads text row 297 (table displacement 0x4a4).
+            // Text row 297.
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_SHOOT_CURSOR_FORMAT), targetArmy->getName(),
                     currentArmy->m_monInfo.numShots,
                     getEstimatedDamage(currentArmy, targetArmy, 1,
@@ -453,8 +425,7 @@ void combatManager::combatMessage(int command)
 
     case COMBAT_COMMAND_FIRST_AID:
         // DC drawing.cpp:445 reads manager +0x12984, the same side used
-        // by get_current_army. Retail reuses actingSide * 21 from that
-        // earlier lookup; reading currentArmy->m_side adds another product.
+        // by get_current_army.
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_APPLY_FIRST_AID_TO_FORMAT),
                 m_armies[m_actingSide]
                     [m_cells[m_lastCellIndex].m_armySlot].getName());
@@ -477,8 +448,8 @@ void combatManager::combatMessage(int command)
 
 VA(0x004933d0, 0x27A)
 MAC_ADDRESS(0x0a3d7c, 0x208)
-// The tooltip's callers pass false/true shooting modes; retail forwards that
-// flag unchanged to adjustDamage, whose original DC public proves bool.
+// The tooltip's callers pass false/true shooting modes, forwarded unchanged
+// to adjustDamage, whose original DC public proves bool.
 static std::string getEstimatedDamage(const army* currentArmy,
                                         army* targetArmy,
                                         bool ranged,
@@ -637,7 +608,7 @@ void combatManager::setupGridForArmy(const army* thisArmy)
         return;
     if (thisArmy->m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
         return;
-    // DC 0x842c8 and retail +0x26 test gConfig+0x6c, the shade preference.
+    // DC 0x842c8 tests gConfig+0x6c, the shade preference.
     if (!g_config.m_combatShadeLevel && !m_creaturePlacement)
         return;
 
@@ -840,12 +811,9 @@ VA(0x00493ea0, 0x4ca)
 DC_ADDRESS(0x0849c4, 0x3d4)
 MAC_ADDRESS(0x0a581c, 0x5d8)
 // DC's offset_used[19] has procedure scope (record 12712), alongside
-// SaveExtent and both recorded int locals; no enclosing array block occurs
-// in the lexical records. Keep that lifetime and the ordinary rectangle
-// member calls. UpdateCombatArea expands through the matching UpdateScreen
-// call; the const-reference Windows extent overload removes the by-value
-// copy that held this body at 96.3415%, and it now reproduces retail.
-// Keep the DC-proven vector<long> and canonical clear().
+// SaveExtent and both recorded int locals. UpdateCombatArea goes through
+// the const-reference Windows extent overload. Keep the DC-proven
+// vector<long> and canonical clear().
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     std::vector<long>& hexes,
                                     unsigned char forceUpdate)
@@ -942,11 +910,8 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 
 VA(0x00494390, 0xA7)
 DC_ADDRESS(0x084dac, 0x80)
-// DC retains ValidHex and InInvisibleColumn; Mac 0xa5e38..0xa5ebc
-// expands both, including the latter's nested bounds check.
+// DC retains ValidHex and InInvisibleColumn; both inlined.
 MAC_ADDRESS(0x0a5df4, 0x178)
-// Mac 0xa5e38..0xa5eb8 expands ValidHex followed by InInvisibleColumn:
-// the latter repeats the bounds test before rejecting columns 0 and 16.
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     int allowDuringAction)
 {
@@ -968,42 +933,19 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // draws underlay obstacles, the eight-priority pass interleaves walls, corpses,
 // ordinary obstacles and living stacks, and the tail posts either the full
 // combat area or the accumulated creature-effect extent. Dreamcast's line
-// table preserves the three small helper boundaries which retail /Ob2 folds
-// into these walks.
-// DC1165 groups the three chat reset assignments. The source chain
-// limitCreatureEffect = limitDraw = limitToExtent = 0 reproduces the
-// retail B7 store/test schedule and raises 99.9453 to 99.9807. The 48-state
-// reset/step/local-order family emits seven objects and reproduces all seven;
-// independent field-first stores give the same winning object. Preserve the
-// chain because DC also converts the int zero before copying the byte flags.
-// Changing the column-step operand order or the three local declarations
-// does not move its remaining priority-loop reload schedule. All 28 exact
-// siblings survive. Reversing the canonical GetHexIndex sum was byte-flat
-// across drawing, cmbtmgr and spells (two states, one reproduced object).
-// DrawObstacle, DrawObstacleAt, DrawDeadOccupants and both GetHexIndex source
-// calls remain canonical. GetHexIndex is a static header member; the audit's
-// unmatched call-name lead does not denote an absent source call.
-// The reused row (and side in the two later animation helpers) now has an
-// explicit enclosing declaration, preserving VC6's old for-scope lifetime.
-// This is byte-flat and allows Clang to check all five recorded local types.
-// The last priority-loop reload exchange is recovered by sharing one column
-// counter between the underlay and priority walks, reinitialized at each
-// loop. Six counter-lifetime states produce two reproduced objects: shared
-// columns reach 100%, separate columns leave 99.9807%, independently of
-// the priority declaration's placement. The five named DC locals remain.
-// DC1205/1207 and1303/1305/1307 prove both walks, but do not name their
-// counters, so sharing is a retail-tested lifetime hypothesis.
-// DrawFrame's DC public symbol ends _N00H00: five native Boolean flags.
-// DC drawing.cpp:1207/1307 names GetHexIndex in both grid walks. The two
-// canonical lowercase calls remain in the authored loops below; the audit
-// does not resolve their spelling to the older decorated name.
-// DC1153 constructs temp_limits with the empty default constructor, but
-// DC1378/1380 clips and passes the member rectangle directly (this+0x13408),
-// as Mac 0xa6600..0xa6684 also does. Do not invent a temp_limits copy for
-// that operation. Direct member calls without provisional reference aliases
-// and the const-reference Windows update overload reproduce retail; the
-// by-value copy's scratch selection had added an EDI save (98.0274%).
-// Preserve the canonical helper instead of pasting its four arguments.
+// table preserves the three small helper boundaries, inlined into these
+// walks. DC1165 groups the three chat reset assignments as one chain
+// limitCreatureEffect = limitDraw = limitToExtent = 0. DrawObstacle,
+// DrawObstacleAt, DrawDeadOccupants and both GetHexIndex source calls (DC
+// drawing.cpp:1207/1307) remain canonical; GetHexIndex is a static header
+// member. The reused row (and side in the two later animation helpers) has
+// an explicit enclosing declaration (VC6's old for-scope lifetime). The
+// underlay and priority walks share one column counter, reinitialized at
+// each loop: DC1205/1207 and 1303/1305/1307 prove both walks but do not name
+// their counters. DrawFrame's DC public symbol ends _N00H00: five native
+// Boolean flags. DC1153 constructs temp_limits with the empty default
+// constructor, but DC1378/1380 clips and passes the member rectangle
+// directly; the update goes through the const-reference Windows overload.
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5)
 DC_ADDRESS(0x084e2c, 0x5c8)
@@ -1194,9 +1136,7 @@ void combatManager::drawFrame(bool update,
         m_limitToExtent = 0;
 }
 
-// Dreamcast drawing.cpp:1399. Complete's /Ob2 build folds this helper into
-// DrawFrame, but the source boundary and statement grouping remain positive
-// CodeView evidence.
+// Dreamcast drawing.cpp:1399; inlined in DrawFrame.
 DC_ADDRESS(0x0853f4, 0x84)
 MAC_ADDRESS(0x0a66c4, 0xb4)
 void combatManager::drawObstacleAt(int hexIndex)
@@ -1327,10 +1267,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
     }
 }
 
-// Dreamcast drawing.cpp:1581. Complete's /Ob2 build folds the corpse walk
-// into DrawFrame; retaining the helper keeps the original local lifetime and
-// statement boundary visible to the compiler. Ordinary auto-inlining retains
-// all exact callers; no explicit inline keyword is needed or evidenced.
+// Dreamcast drawing.cpp:1581; the corpse walk is inlined in DrawFrame.
 DC_ADDRESS(0x0857d4, 0x70)
 MAC_ADDRESS(0x0a6ae4, 0x84)
 void combatManager::drawDeadOccupants(int index)
@@ -1516,8 +1453,8 @@ int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
                       y + sprite->GetHeight() - 1);
     limits.clip(combatManager::s_combatAreaLimits);
 
-    // DC drawing.cpp:1809 calls ScrollTo before extent accumulation.
-    // Complete expands the fixed-viewport helper without emitted code.
+    // DC drawing.cpp:1809 calls ScrollTo before extent accumulation; the
+    // fixed-viewport helper emits no code.
     scrollTo(limits, true, true, true);
 
     if (m_saveBiggestExtent) {
@@ -1581,9 +1518,8 @@ int combatManager::drawCreatureAndHeroSubwindows()
     if (m_combatWindow->m_heroSubWindows[1]->isShown())
         m_combatWindow->m_heroSubWindows[1]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    // Complete adds four creature-panel tests at 0x49569b..0x495710.
-    // Mac checks the shown byte for all six panels in the same shape;
-    // the creature accessor is our name for the additional boundary.
+    // Complete adds four creature-panel tests (Mac checks the shown byte
+    // for all six panels); the creature accessor is our name.
     if (m_combatWindow->m_creatureSubWindows[0]->isShown())
         m_combatWindow->m_creatureSubWindows[0]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);

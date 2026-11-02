@@ -82,8 +82,8 @@ TQuickCreatureWindow::~TQuickCreatureWindow()
 }
 
 // Original: TQuickCreatureWindow::QuickWindowWait; quickinfowindow.cpp:88
-// Identical quick-window wrappers fold onto the retail 0x530d30 body.
-// Mac retains this ordinary wrapper at 0:0x14bc30.
+// Identical quick-window wrappers share one body. Mac retains this
+// ordinary wrapper.
 DC_ADDRESS(0x117b8c, 0x28)
 MAC_ADDRESS(0x14bc30, 0x2c)
 void TQuickCreatureWindow::quickWindowWait()

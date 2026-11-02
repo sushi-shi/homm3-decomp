@@ -60,11 +60,11 @@ DATA(0x0068c850) DDPIXELFORMAT g_pixelFormat = {
 // The two player-colour painters, the first rows of wingraph.obj. Both copy
 // the LAST 32 palette entries - the player-colour range - out of the
 // Players.pal resource oldmain loaded, indexed by player: 32 RGB555 words
-// for the 16-bit target, 32 RGB triples for the 24-bit one. The +0x1c source
-// bias is the resource head both TPalette16 and TPalette24 carry, and the
-// destination offsets (0x1c0 and 0x2bc) are what fix entry 224 as the range's
-// first colour in each layout. DC proves unsigned short* and TPalette24&
-// parameters; the retail offsets and fastcall argument locations agree.
+// for the 16-bit target, 32 RGB triples for the 24-bit one. The +0x1c
+// source bias is the resource head both TPalette16 and TPalette24 carry,
+// and the destination offsets (0x1c0 and 0x2bc) fix entry 224 as the
+// range's first colour in each layout. DC proves unsigned short* and
+// TPalette24& parameters.
 // E:\gamedcs\wingraph.cpp:72
 VA(0x005ffe20, 0x1E)
 DC_ADDRESS(0x198af4, 0x26)
@@ -87,9 +87,9 @@ void setPlayerPaletteColors(TPalette24& pal, int whichPlayer)
 
 // DDCreatePrimary and DDSetupClipper are ordinary source-static helpers.
 // DC DDInitGraphics calls them at 231/247, on opposite sides of the pixel
-// format publication. Retail 0x6014f0 expands these same surface/clipper
-// operations; its v1 interfaces replace the port's Surface4 API. The
-// WinCE DDSetupClipper body is empty, while the PC clipper calls are live.
+// format publication; inlined in ddInitGraphics, with v1 interfaces in place
+// of the port's Surface4 API. The WinCE DDSetupClipper body is empty, while
+// the PC clipper calls are live.
 // Original names: DDCreatePrimary, DDSetupClipper.
 // E:\gamedcs\wingraph.cpp:109
 DC_ADDRESS(0x198b48, 0x1e)
@@ -137,11 +137,9 @@ static void ddSetupClipper()
 
 }
 
-// Mac retains this opaque-only blit at 20ca9c; its only xrefs are the
-// cursor save/restore copies at 20c93c and 20ca84. Its display, readback
-// and offscreen paths expand ddBlit with transparency disabled (including
-// the copy-context lifetime). Windows uses DDBLT_WAIT for this operation.
-// The original helper name is unknown.
+// Mac retains this opaque-only blit for the cursor save/restore copies;
+// Windows inlines ddBlit with transparency disabled and uses DDBLT_WAIT. The
+// original helper name is unknown.
 MAC_ADDRESS(0x20ca9c, 0xf0)
 static void ddBlitOpaque(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
                         IDirectDrawSurface* srcSurface, const tagRECT& srcRect)
@@ -154,11 +152,8 @@ static void ddBlitOpaque(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
 // re-referenced to wherever it landed. When the damaged rectangle overlaps
 // the saved mouse rectangle the pointer has to be composited into the back
 // buffer first and lifted out again afterwards, which is the whole middle of
-// the body; the empty spin on the mouse manager's busy word is retail's, and
-// VC6 hoists its load out so the wait is one self-jump.
+// the body; the empty spin on the mouse manager's busy word is retail's.
 // E:\gamedcs\wingraph.cpp:260
-// Mac retains this rectangle/pointer composite at code 0+0x20c80c, using
-// Mac screen surfaces where this Windows body calls DirectDraw.
 VA(0x005ffe70, 0x35C)
 DC_ADDRESS(0x198d5c, 0x2d0)
 MAC_ADDRESS(0x20c80c, 0x290)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics
@@ -266,24 +261,19 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect);
 // Every surface-to-surface copy in the game goes through here, and the
 // whole body is three copies of one retry loop: blit, and while DirectDraw
 // answers DDERR_SURFACELOST, restore whatever was lost and blit again. The
-// three arms differ only in which surface is the primary - retail RELOADS
-// gpDDSPrimary at each of its six uses rather than naming it - and the two
-// arms that touch the primary take a LOCAL COPY of the rectangle that
-// belongs to it, because DDRestoreFrontBuffer re-origins that copy in place
-// when the mode changed underneath. The discarded GameTime::Get() before
-// each loop is retail's, not an artifact.
+// three arms differ only in which surface is the primary - gpDDSPrimary is
+// re-read at each of its six uses rather than named - and the two arms that
+// touch the primary take a LOCAL COPY of the rectangle that belongs to it,
+// because DDRestoreFrontBuffer re-origins that copy in place when the mode
+// changed underneath. The discarded GameTime::Get() before each loop is
+// retail's.
 //
-// DC's interface is IDirectDrawSurface4. Complete's DirectDrawCreate returns
-// IDirectDraw v1, and ddInitGraphics creates every primary/back/mouse surface
-// through its v1 CreateSurface without QueryInterface. Preserve DDBlit's
-// source interface and retry scopes, with the proven Windows surface type;
-// compatible vtable-prefix offsets do not justify casting COM interfaces.
-// DC's signature also proves both rectangles are const references
-// (udst_rect/usrc_rect), not nullable pointers. All callers pass real RECTs.
-//
+// DC's interface is IDirectDrawSurface4; Complete's DirectDrawCreate returns
+// IDirectDraw v1 and every surface comes from its v1 CreateSurface, so
+// DDBlit keeps its source interface and retry scopes with the Windows
+// surface type. DC's signature also proves both rectangles are const
+// references (udst_rect/usrc_rect), not nullable pointers.
 // E:\gamedcs\wingraph.cpp:931
-// Mac retains the five-argument blit interface at code 0+0x217e10 and
-// uses Mac surfaces for the six pointer-update calls from mousemgr.
 VA(0x006001d0, 0x1E1)
 DC_ADDRESS(0x199170, 0x140)
 MAC_ADDRESS(0x217e10, 0x1d0)  // anchor-caller(mousemgr, six sites) + header identification
@@ -376,13 +366,10 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
 //
 // DC DDRestoreFrontBuffer:725/729/733 calls SetCooperativeLevel,
 // SetDisplayMode and primary Restore in that order; :775 creates a primary
-// surface. Retail 0x6003c0 has the same recovery sequence, with the PC
-// windowed-mode/clipper path in the source region elided by WinCE. Its body
-// follows DDBlit, which calls it on both DDERR_WRONGMODE paths: the retained
-// source-static emission pattern. This identifies the earlier provisional
-// name DDResetDisplayMode as DDRestoreFrontBuffer, rather than a PC-only
-// helper. DC's mutable tagRECT& parameter fits the retail OffsetRect use.
-// GetDesktopInfo remains an ordinary same-TU call expanded by VC6.
+// surface. Complete has the same recovery sequence plus the PC
+// windowed-mode/clipper path WinCE elides. DC's mutable tagRECT& parameter
+// fits the OffsetRect use. GetDesktopInfo is an ordinary same-TU call,
+// inlined.
 // E:\gamedcs\wingraph.cpp:719
 VA(0x006003c0, 0x22D)  // recovery sequence + first-caller static emission
 DC_ADDRESS(0x1990e4, 0x86)
@@ -498,13 +485,12 @@ IDirectDrawSurface* ddCreateSurface(unsigned long width, unsigned long height,
     return surface;
 }
 
-// DC DDInitGraphics:248 and DDCleanUpWinGraphics:1524 retain these
-// ordinary source-static calls. Retail expands the three create/release
-// sequences in 0x6014f0/0x6018a0. DDSURFACEDESC (108 bytes) is the retail
-// v1 API replacement for DC's DDSURFACEDESC2 (124 bytes).
-// Original names: DDCreateMouseSurfaces, DDReleaseMouseSurfaces;
-// locals ddsd and color_key. DC:1256 calls RGBto16 separately for both key
-// endpoints; VC6 may eliminate the second expansion naturally.
+// DC DDInitGraphics:248 and DDCleanUpWinGraphics:1524 retain these ordinary
+// source-static calls; inlined in ddInitGraphics/ddCleanUpWinGraphics.
+// DDSURFACEDESC (108 bytes) is the v1 API replacement for DC's
+// DDSURFACEDESC2. Original names: DDCreateMouseSurfaces,
+// DDReleaseMouseSurfaces; locals ddsd and color_key. DC:1256 calls RGBto16
+// separately for both key endpoints.
 // E:\gamedcs\wingraph.cpp:1238
 DC_ADDRESS(0x199598, 0x134)
 static void ddCreateMouseSurfaces()
@@ -588,11 +574,10 @@ static void ddReleaseMouseSurfaces()
 }
 
 // The Dreamcast line table groups the re-entry test, RestoreDisplayMode,
-// error-name switch, formatter and shutdown into the same source statements
-// retained here.  Complete's x86 body independently proves the 200-byte
-// cTemp extent, every HRESULT case, one MessageBeep, the low-word error code
-// passed to wsprintfA, and the final guard reset.  The shared HoMM2 DDSD body
-// supplies the source lineage; its smaller error roster is not copied blindly.
+// error-name switch, formatter and shutdown into the same source
+// statements: a 200-byte cTemp, every HRESULT case, one MessageBeep, the
+// low-word error code passed to wsprintfA, and the final guard reset. The
+// shared HoMM2 DDSD body supplies the source lineage.
 // E:\gamedcs\wingraph.cpp:1313
 VA(0x006006E0, 0xCBF)  // DC DDSD identity + retail literals/CFG + HoMM2 lineage
 DC_ADDRESS(0x199724, 0x978)
@@ -1354,8 +1339,8 @@ unsigned char setFullScreenStatus(int fullScreenOn)
 // E:\gamedcs\wingraph.cpp:1691..1707. Original name: ResizeWindow.
 // The decorated DC signature is void(int, int), and DDSetFullScreenStatus
 // line 1791 passes the saved window coordinates. The WinCE body is empty;
-// retail 0x601a00 expands the windowed AdjustWindowRectEx/MoveWindow/WritePrefs
-// sequence. Keep this ordinary helper and its two argument evaluations.
+// Complete inlines the windowed AdjustWindowRectEx/MoveWindow/WritePrefs
+// sequence.
 DC_ADDRESS(0x19a20c, 0x28)
 void resizeWindow(int windowX, int windowY)
 {
@@ -1370,33 +1355,18 @@ void resizeWindow(int windowX, int windowY)
 
 }
 
-// E:\gamedcs\wingraph.cpp:1712 - the mode change itself, emitted straight
-// after its wrapper, which is the file-static emission pattern the header
-// note already records. The whole body is one linear sequence and the
-// retail bytes read it out: grab the screen into an 800x600 scratch,
-// tear DirectDraw down, re-query the desktop, restyle the window, bring
-// DirectDraw back up, remap and blit the scratch back, then reset the
-// pointer and, in full screen, re-place the window.
+// E:\gamedcs\wingraph.cpp:1712 - the mode change itself, one linear
+// sequence: grab the screen into an 800x600 scratch, tear DirectDraw down,
+// re-query the desktop, restyle the window, bring DirectDraw back up, remap
+// and blit the scratch back, then reset the pointer and, in full screen,
+// re-place the window.
 
-// Two things worth reading twice. GetDesktopInfo is EXPANDED here (its
-// GetDC / three GetDeviceCaps / ReleaseDC block and the `== 16` compare
-// are inline) exactly as it is in DDResetDisplayMode; and the colour-mask
-// triple is saved BEFORE the teardown and compared AFTER the rebuild, so
-// the remap only runs when DirectDraw came back in a different pixel
-// format - which is what bitmap16.h's own note about `0x7e0 ? 6 : 5`
-// describes from the other end.
-// Residual (94.58%): register allocation only - all 14 branches and all 31
-// calls agree, and 23 of 28 blocks are byte-exact. What is left is which
-// scratch register each of the three mask compares and the Grab/Draw
-// argument loads land in (retail runs Width through ESI where we use ECX,
-// and rotates EAX/ECX/EDX one place through the mask block), plus the
-// resulting `push esi` save point. Three source levers were measured and
-// two paid: hoisting GetDesktopInfo into a named local, which is what makes
-// the desktop query UNCONDITIONAL and puts iStatus in its own frame slot
-// (85.4440 -> 91.8531, and it is what closes every branch); reading
-// iWindowX/iWindowY into locals ABOVE the `if (!bWindowedMode)`, which is
-// where retail loads them (91.8567 -> 94.5813); and declaring the three
-// saved masks red/green/blue rather than blue/green/red, worth 0.0036.
+// GetDesktopInfo is inlined here (as in ddRestoreFrontBuffer), and the
+// colour-mask triple is saved BEFORE the teardown and compared AFTER the
+// rebuild, so the remap only runs when DirectDraw came back in a different
+// pixel format. GetDesktopInfo's result is a named local, iWindowX/iWindowY
+// are read into locals above the `if (!bWindowedMode)`, and the three saved
+// masks are declared red/green/blue.
 VA(0x00601a00, 0x31C)  // anchor-caller (SetFullScreenStatus) + dc order
 DC_ADDRESS(0x19a234, 0x1ac)
 unsigned char ddSetFullScreenStatus(int newStatus)

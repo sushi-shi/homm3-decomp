@@ -81,8 +81,7 @@ DATA(0x006830c8) static long g_constCreatureOfferings[2][2] = {
 VA(0x0055fc30, 0xab)
 DC_ADDRESS(0x123e8c, 0x7c)
 MAC_ADDRESS(0x1552ec, 0xe0)
-// DC records const type_artifact& and TArtifactSlot; native bodies use the
-// same pointer/dword ABI. Preserve that source boundary in both callers.
+// DC records const type_artifact& and TArtifactSlot.
 void type_artifact_offering::set(const type_artifact& artifact, TArtifactSlot slot,
                                  const hero* owner)
 {
@@ -108,14 +107,13 @@ void type_artifact_offering::set(const type_artifact& artifact, TArtifactSlot sl
         m_value = 6000;
         break;
     }
-    // DC 151 / Mac 0x155380 reload m_value after the factor call and
-    // multiply in single precision; the compound form keeps these bytes and
-    // costs 8 IL units less than an explicit cast (allArtifacts' budget).
+    // DC 151 reloads m_value after the factor call and multiplies in single
+    // precision, as the compound form does.
     m_value *= owner->getExperienceBonusFactor();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:170
-// All Complete calls are expanded into the artifact widget builder.
+// Inlined in the artifact widget builder.
 DC_ADDRESS(0x123f08, 0x80)
 MAC_ADDRESS(0x1553cc, 0x80)
 inline type_doll_slot_widget::type_doll_slot_widget(
@@ -127,7 +125,7 @@ inline type_doll_slot_widget::type_doll_slot_widget(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:204
-// All Complete calls are expanded into the artifact widget builder.
+// Inlined in the artifact widget builder.
 DC_ADDRESS(0x123fb0, 0x78)
 MAC_ADDRESS(0x15548c, 0x80)
 inline type_backpack_slot_widget::type_backpack_slot_widget(
@@ -139,7 +137,7 @@ inline type_backpack_slot_widget::type_backpack_slot_widget(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:235
-// All Complete calls are expanded into the artifact widget builder.
+// Inlined in the artifact widget builder.
 DC_ADDRESS(0x124050, 0x74)
 MAC_ADDRESS(0x15554c, 0x6c)
 inline type_artifact_offering_widget::type_artifact_offering_widget(
@@ -151,9 +149,9 @@ inline type_artifact_offering_widget::type_artifact_offering_widget(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:178
-// The doll-slot twin of the two below: one carve row ahead of them, in the
-// Dreamcast roster's own order (doll, backpack, offering, army), same 0x26
-// body shape, and forwarding to artifact_click - the equipped-slot handler.
+// The doll-slot twin of the two below, in the Dreamcast roster's own order
+// (doll, backpack, offering, army), forwarding to artifact_click - the
+// equipped-slot handler.
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fce0, 0x26)
 DC_ADDRESS(0x123f88, 0x28)
@@ -199,19 +197,17 @@ bool type_artifact_offering_widget::handleClick(
     return 0;
 }
 
-// Vtable 0x64165c slot 0 is the last of four slot-widget address-takers for
-// this ICF representative. Its call target is the 0x5654b0 representative
-// immediately before type_transformer_slot::handle_click, fixing the
-// canonical source identity despite the three earlier folded aliases.
+// The slot-widget handler several slot classes share; it forwards to
+// type_transformer_slot::handle_click.
 // E:\gamedcs\sacrifice_window.cpp:1894
 VA_COMPGEN(0x0055fd70, 0x21, SCALAR_DELETING_DTOR,
            type_transformer_slot)
 
 // E:\gamedcs\sacrifice_window.cpp:272
-// The army-slot member of the same family, 0x2a rather than 0x26 because it
-// forwards a THIRD value: the byte at +0x4c alongside the dword at +0x48.
-// That is creature_click's (slot, right_click, left_pane) exactly, and the
-// pair matches the Dreamcast constructor's (new_slot, _left_pane).
+// The army-slot member of the same family; it forwards a THIRD value, the
+// byte at +0x4c alongside the dword at +0x48: creature_click's (slot,
+// right_click, left_pane), matching the Dreamcast constructor's (new_slot,
+// _left_pane).
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fda0, 0x2a)
 DC_ADDRESS(0x12416c, 0x30)
@@ -228,9 +224,7 @@ bool type_army_slot_widget::handleClick(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:263
-// Complete expands both calls in create_creature_icons and retains no
-// separately claimable copy. The base constructor arguments and the three
-// trailing stores are byte-proven by those two expansions.
+// Inlined at both calls in create_creature_icons.
 DC_ADDRESS(0x1240ec, 0x80)
 MAC_ADDRESS(0x1555f8, 0x7c)
 type_army_slot_widget::type_army_slot_widget(
@@ -314,9 +308,8 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
     }
 }
 
-// These labels use the public text subscript, retaining its getText call.
-// Mac 0x1571b0/0x1572f0 and 0x157598/0x157850/0x157990 retain the
-// inner vector indexer; DC names operator[] in both widget builders.
+// These labels use the public text subscript (DC names operator[] in both
+// widget builders).
 // E:\gamedcs\sacrifice_window.cpp:360
 VA(0x00560380, 0xD67)
 DC_ADDRESS(0x1246b8, 0x7a8)
@@ -382,9 +375,8 @@ void type_sacrifice_window::createArtifactWidgets(
     long itemCount = 0;
     // Original local: artifact_offering; DC line 446 invokes the generated
     // default constructor, whose base call supplies TArtifact(-1). Line 444
-    // initializes item_count before that constructor. DC line 455 stores -1
-    // to the offering's id once more after construction; retail keeps only
-    // that later id store, so its payload -1 lands first. j is a
+    // initializes item_count before that constructor, and DC line 455 stores
+    // -1 to the offering's id once more after construction. j is a
     // function-scope local in DC's CodeView.
     type_artifact_offering artifactOffering;
     artifactOffering.m_artifactId = ARTIFACT_NONE;
@@ -681,8 +673,7 @@ long type_sacrifice_window::createCreatureIcons(
     return count;
 }
 
-// Vtable 0x641620 slot 0 is the canonical VC6 deleting wrapper for the
-// destructor below.
+// The deleting wrapper for the destructor below.
 VA_COMPGEN(0x00560350, 0x21, SCALAR_DELETING_DTOR,
            type_sacrifice_window)
 
@@ -846,8 +837,7 @@ void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
 }
 
 // E:\gamedcs\sacrifice_window.cpp:914
-// Inlined at both retail callers. The AI-value load at +0x40 and the signed
-// divide-by-forty reciprocal fix this integer value exactly.
+// Inlined at both callers: the AI value at +0x40 divided by forty.
 DC_ADDRESS(0x125de0, 0x28)
 MAC_ADDRESS(0x1595e0, 0x34)
 long sacrificeValue(TCreatureType creature)
@@ -856,15 +846,10 @@ long sacrificeValue(TCreatureType creature)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:924
-// Retail proves the record layout through its six widget loads and terminal
-// group/amount pair. The two general-text indices are the folded +0x1ec and
-// +0x788 rows of gpGeneralText's pointer table.
-// DC's parameter record names type_creature_offering& creature. Every native
-// caller supplies an owned offering; keep the reference and its source calls.
-// Complete's three return paths are source returns. Keeping the rollover-help
-// arm as a straight-line tail, rather than nesting it under a positive frame
-// test, makes VC6 keep `result` at retail's [ebp-0x40] stack slot. The nested
-// form is otherwise instruction-identical but colors `result` at [ebp-0x30].
+// The two general-text indices are rows 0x7b and 0x1e2 of gpGeneralText's
+// pointer table. DC's parameter record names type_creature_offering&
+// creature. Complete's three return paths are source returns, and the
+// rollover-help arm is a straight-line tail.
 VA(0x00562da0, 0x3a2)
 DC_ADDRESS(0x125e08, 0x25a)
 MAC_ADDRESS(0x159614, 0x3a8)  // dc order/name/signature + retail field graph
@@ -965,9 +950,8 @@ void type_sacrifice_window::setCreatureMode()
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1036
-// Retail expands this helper at the click sites. The DC line map fixes the
-// source order and argument ABI; the Complete mouse-pointer and refresh call
-// graph independently proves the body.
+// Inlined at the click sites; the DC line map fixes the source order and
+// argument ABI.
 DC_ADDRESS(0x1261e4, 0x70)
 MAC_ADDRESS(0x159bb0, 0xc4)
 void type_sacrifice_window::pickUpArtifact(
@@ -988,8 +972,8 @@ void type_sacrifice_window::pickUpArtifact(
 
 // E:\gamedcs\sacrifice_window.cpp:1053
 // The Dreamcast line table and xref graph prove this helper boundary at each
-// artifact-drop site. Complete folds the false change-experience arm into
-// sacrifice, but retains the helper's redraw as a distinct inline tail.
+// artifact-drop site; Complete folds the false change-experience arm into
+// sacrifice.
 DC_ADDRESS(0x126254, 0x90)
 MAC_ADDRESS(0x159c74, 0xa4)
 void type_sacrifice_window::putDownArtifact(
@@ -1061,9 +1045,8 @@ void type_sacrifice_window::artifactClick(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1127
-// Complete expands this helper in setArtifactMode and both halves of
-// backpackClick. Mac retains the call in setArtifactMode at 0:0x1594dc;
-// Dreamcast names update_backpack on source line 895.
+// Inlined in setArtifactMode and both halves of backpackClick; Dreamcast
+// names update_backpack on source line 895.
 DC_ADDRESS(0x126420, 0xba)
 MAC_ADDRESS(0x159eec, 0xb8)
 void type_sacrifice_window::updateBackpack()
@@ -1212,11 +1195,11 @@ int type_sacrifice_window::scrollBackpackRight(message& msg)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1289
-// Complete expands this helper into both artifact-batch callbacks. It fills
-// the first empty offering, adds that record's scaled value, and refreshes
-// the corresponding pair of offering widgets.
-// DC's native decoration proves bool (_N), despite its lowered byte dossier,
-// and TArtifactSlot for source: add_artifact@@AAA_NUtype_artifact@@W4TArtifactSlot.
+// Inlined in both artifact-batch callbacks. It fills the first empty
+// offering, adds that record's scaled value, and refreshes the corresponding
+// pair of offering widgets. DC's native decoration proves bool (_N) and
+// TArtifactSlot for source:
+// add_artifact@@AAA_NUtype_artifact@@W4TArtifactSlot.
 DC_ADDRESS(0x12681c, 0x88)
 MAC_ADDRESS(0x15a3e0, 0xd4)
 bool type_sacrifice_window::addArtifact(
@@ -1236,10 +1219,9 @@ bool type_sacrifice_window::addArtifact(
     return true;
 }
 
-// E:\gamedcs\sacrifice_window.cpp:1310. Mac retains this ordinary helper at
-// 0:0x15a4b4 and calls it from allArtifacts; VC6 expands it at each callback.
-// Retail scans the fixed 64-record
-// backpack for its next occupied slot and stops if the offering pane fills.
+// E:\gamedcs\sacrifice_window.cpp:1310. Inlined at each callback (Mac
+// retains it): scan the fixed 64-record backpack for its next occupied slot
+// and stop if the offering pane fills.
 DC_ADDRESS(0x1268a4, 0xa0)
 MAC_ADDRESS(0x15a4b4, 0x158)
 void type_sacrifice_window::emptyBackpack()
@@ -1288,25 +1270,10 @@ int type_sacrifice_window::emptyBackpack(message& msg)
 // E:\gamedcs\sacrifice_window.cpp:1365
 // The all-artifacts callback first offers each of the sixteen admissible doll
 // slots, then expands empty_backpack to fill whatever offering slots remain.
-// NOT A MEMBER-OFFSET BUG (checked 2026-09-06): the `[eax+0x2e4]` against
-// retail's `[eax+0x350]` that a census flagged here is the SWITCH INDEX
-// TABLE - `mov dl, byte ptr [eax + <fn>+0x350]` / `jmp [4*edx + <fn>+0x33c]`
-// - whose base is the function's own end.  Retail's body is 0x6c bytes
-// longer than ours by exactly the update_backpack expansion below, so the
-// two tables sit 0x6c apart.  No hero/type_sacrifice_window member is
-// involved.
-// /Ob2 model (docs/vc6/inliner.md), z = vector<offering>::size (42), costs
-// A addArtifact, S set, U updateArtifactOffering, E emptyBackpack,
-// B updateBackpack. Retail expands updateBackpack after emptyBackpack's
-// nested addArtifact, but keeps that copy's set/U and updateBackpack's size
-// calls out of line: 0 <= 832 - 2A - S - U - E - B <= 41. backpackClick's
-// putDownArtifact must keep calling updateAllSlots, which pins B >= 145.
-// Was A164 S155 U67 E149 B145 (-12, 86.78%). Now A162 (unbraced loop body;
-// DC emptyBackpack shows loop bodies do not add a compound scope, so its
-// coincident for-loop pair does not decide braces), S147
-// (`m_value *=`), U66 (DC const-reference update_offering) => +1, 100%.
-// The other callers (setArtifactMode, the three clicks, emptyBackpack,
-// sacrifice) keep their exact decisions; set/updateOffering bytes unchanged.
+// allArtifacts inlines updateBackpack after emptyBackpack's nested
+// addArtifact; the unbraced emptyBackpack loop body, `m_value *=` and the
+// const-reference updateOffering keep set, updateArtifactOffering and
+// updateBackpack's size call out of line there (docs/vc6/inliner.md).
 VA(0x00564340, 0x35f)
 DC_ADDRESS(0x1269ac, 0xc4)
 MAC_ADDRESS(0x15a6e0, 0x154)  // callback address-take + dc name/signature/order
@@ -1433,9 +1400,9 @@ int type_sacrifice_window::sacrificeCreatures(message& msg)
 }
 
 // The Dreamcast line map places this one-purpose helper at source line 1499.
-// Complete expands it into clear. The same order is independently repeated
-// by ExitDialog: original equipped slot, any legal equipped slot, backpack,
-// then a final arbitrary equipped-slot fallback.
+// Inlined into clear. ExitDialog repeats the same order: original equipped
+// slot, any legal equipped slot, backpack, then a final arbitrary
+// equipped-slot fallback.
 DC_ADDRESS(0x126cc4, 0x5a)
 MAC_ADDRESS(0x15abb0, 0x94)
 void type_sacrifice_window::returnArtifact(
@@ -1452,9 +1419,8 @@ void type_sacrifice_window::returnArtifact(
     m_currentHero->equipArtifact(artifact, -1);
 }
 
-// The Dreamcast line map places clear at source line 1521. Complete expands
-// it into sacrifice_artifacts; retail's vector walk, held-record cleanup and
-// terminal total reset expose the entire body.
+// The Dreamcast line map places clear at source line 1521; inlined into
+// sacrifice_artifacts.
 DC_ADDRESS(0x126d20, 0x78)
 MAC_ADDRESS(0x15ac44, 0xb0)
 void type_sacrifice_window::clear()
@@ -1525,10 +1491,8 @@ void type_sacrifice_window::setCreatureSacrifice(long slot, long newAmount)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1599
-// Retail expands this helper at both callers. Mac retains the body at
-// 0:0x15aecc; allCreatures and creatureClick call it at 0:0x15b06c and
-// 0:0x15b558. The scan preserves one troop only when every other army slot
-// has already been offered to its limit.
+// Inlined at both callers (Mac retains it). The scan preserves one troop
+// only when every other army slot has already been offered to its limit.
 DC_ADDRESS(0x126ed8, 0x54)
 MAC_ADDRESS(0x15aecc, 0x114)
 long type_sacrifice_window::getMaxAmount(long slot) const
@@ -1734,8 +1698,8 @@ void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
 }
 
 // Original: type_sacrifice_window::WindowHandler; DC source line 1846.
-// Retail vtable 0x641620 slot 9 points to 0x5666f0, shared with the skeleton
-// window's identical override. Preserve both source methods and one RVA claim.
+// The retail slot is the skeleton window's identical override; both source
+// methods stay, with one RVA claim.
 DC_ADDRESS(0x127484, 0x36)
 int type_sacrifice_window::windowHandler(message& msg)
 {
@@ -1748,12 +1712,10 @@ int type_sacrifice_window::windowHandler(message& msg)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1859
-// Vtable 0x641620 slot 14 fixes the identity. Complete returns any held
-// artifact to its original equipped slot where possible, then tries an
-// arbitrary equipped slot, the backpack, and finally the arbitrary equipped
-// path once more before closing the modal dialog.
-// DC line 1866 calls return_artifact. The existing ordinary returnArtifact
-// expands naturally here and preserves 100% while removing three failure joins.
+// Complete returns any held artifact to its original equipped slot where
+// possible, then tries an arbitrary equipped slot, the backpack, and finally
+// the arbitrary equipped path once more before closing the modal dialog.
+// DC line 1866 calls return_artifact (inlined).
 VA(0x00565430, 0x80)
 DC_ADDRESS(0x1274bc, 0x38)
 MAC_ADDRESS(0x15b7c8, 0x70)  // anchor-vtable slot 14
@@ -1790,8 +1752,7 @@ bool type_transformer_slot::handleClick(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1891
-// Complete expands both calls in the transformer icon grid and retains no
-// separately claimable constructor body.
+// Inlined at both calls in the transformer icon grid.
 DC_ADDRESS(0x1274f4, 0xa4)
 MAC_ADDRESS(0x15b838, 0x80)
 type_transformer_slot::type_transformer_slot(
@@ -1804,18 +1765,10 @@ type_transformer_slot::type_transformer_slot(
     m_group = newGroup;
 }
 
-// The transformer dialog's own pair, found by the same vtable-uniqueness
-// scan that carried the tradpost family: 0x565f30 is a 33-byte scalar
-// deleting destructor whose only image-wide reference is slot 0 of vtable
-// 0x641694, and its callee 0x565f60 stores that same vtable. The vtable
-// itself is referenced exactly twice - here and in the 0xa3c constructor at
-// 0x5654f0 - so neither row is an /OPT:ICF fold.
+// The transformer dialog's own deleting-destructor/destructor pair.
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
-// DC proves push_back; its text subscripts forward to getText. At 98.3508%,
-// the final rollover append's growth path retains an extra vector::size.
-// Removing the vector alias or binding its pointer argument locally does
-// not recover that nested expansion; keep the canonical container call.
+// DC proves push_back; its text subscripts forward to getText.
 VA(0x005654f0, 0xA3C)
 DC_ADDRESS(0x1275c0, 0x448)
 MAC_ADDRESS(0x15b900, 0x99c)
@@ -1835,7 +1788,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         g_game->getLocalPlayerGamePos());
     m_widgets.push_back(background);
 
-    // Retail-exact only as an end insert through a reference; DC shows push_back.
+    // DC shows push_back; this is an end insert through a reference.
     std::vector<widget*>& widgets = m_widgets;
     widgets.insert(widgets.end(), new textWidget(
         25, 21, 257, 18,
@@ -1915,8 +1868,8 @@ type_skeleton_window::~type_skeleton_window()
 }
 
 // Original: type_skeleton_window::unselect; source line 2144
-// CreatureClick also hides a border but interleaves update/hover operations;
-// neither its DC call sequence nor its retail body establishes a call here.
+// CreatureClick also hides a border but interleaves update/hover
+// operations; no call here.
 DC_ADDRESS(0x127a8c, 0x3e)
 void type_skeleton_window::unselect()
 {
@@ -1928,11 +1881,8 @@ void type_skeleton_window::unselect()
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2157
-// All Complete callers expand this ordinary source helper. The DC call edges and the
-// repeated retail expansion prove the transformed-army scan and the two
-// terminal button states. Mac retains the body at code0+0x15c3f8 before
-// update(), with calls from creatureClick(), allCreatures(), and sacrifice().
-// Retained Dreamcast and Mac call boundaries support an ordinary helper.
+// All Complete callers inline this ordinary source helper (Mac retains it):
+// the transformed-army scan and the two terminal button states.
 DC_ADDRESS(0x127acc, 0x9c)
 MAC_ADDRESS(0x15c3f8, 0x178)
 void type_skeleton_window::updateButtons()
@@ -2061,8 +2011,7 @@ void type_skeleton_window::creatureClick(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2281
-// Slot 9, sitting two rows past creature_click 0x566490 - the call target the
-// transformer slot above pins - in the Dreamcast roster's order.
+// Slot 9, after creature_click in the Dreamcast roster's order.
 VA(0x005666f0, 0x2e)
 DC_ADDRESS(0x128048, 0x36)
 MAC_ADDRESS(0x15cbe8, 0x5c)  // anchor-callee (CAdvPopup slot 9) + linkorder
@@ -2077,10 +2026,8 @@ int type_skeleton_window::windowHandler(message& msg)
 }
 
 // Original: type_skeleton_window::ExitDialog; source line 2293
-// Retail vtable 0x641694 slot 14 points to 0x5f1180, the identical body claimed
-// by type_university_window::exitDialog. Both classes own this override.
-// Mac retains the skeleton-window override between windowHandler and
-// handleWidgetHover; descriptor data +0x7c28 selects this 44-byte body.
+// The retail slot is the identical body claimed by
+// type_university_window::exitDialog; both classes own this override.
 DC_ADDRESS(0x128080, 0x16)
 MAC_ADDRESS(0x15cc44, 0x2c)
 int type_skeleton_window::exitDialog(message& msg)
@@ -2150,8 +2097,7 @@ void type_skeleton_window::createCreatureIcons(
 
 // E:\gamedcs\sacrifice_window.cpp:2385
 // DC records move_all_armies as file-static and both transformer callbacks
-// as callers. Mac retains its body immediately before those callbacks.
-// Complete expands both ordinary source calls: occupied source slots move into the same
+// as callers; inlined in both. Occupied source slots move into the same
 // destination slot when free, otherwise armyGroup::Add chooses a slot.
 DC_ADDRESS(0x1282b0, 0x5e)
 MAC_ADDRESS(0x15d028, 0x84)

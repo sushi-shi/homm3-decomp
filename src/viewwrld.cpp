@@ -77,14 +77,11 @@ DATA(0x006aac30)
 static bool g_viewHeroes;
 
 // E:\gamedcs\viewwrld.cpp:100
-// The magic-number float-to-int conversion. Retail emits NO body for it:
-// the Dreamcast row is `static`, TViewWorldWindow::init's scale-table loop
-// is its only call site, and VC6 expands a single-call-site static without
-// retaining it (the surrounding carve rows leave no ~98 B slot for one).
-// Dreamcast names the local `const unsigned long magic`; its 0x59c00000 bits
-// are read as a float. Retail materialises those bits on the stack and loads
-// the float before adding the double argument. A named double temporary gives
-// init's inlined copy the retail stack layout and exact VC6 bytes.
+// The magic-number float-to-int conversion: the Dreamcast row is `static`,
+// and TViewWorldWindow::init's scale-table loop is its only call site,
+// where it is inlined. Dreamcast names the local `const unsigned long
+// magic`; its 0x59c00000 bits are read as a float and added to the double
+// argument through a named double temporary.
 DC_ADDRESS(0x192ee8, 0x62)
 static long ftol(double d)
 {
@@ -223,9 +220,8 @@ inline void vwClipScaleToScreenBuffer(int destX, int destY)
 }
 
 // E:\gamedcs\viewwrld.cpp:226
-// This is the caller-facing half of the same source boundary. Retail expands
-// it into VWDrawAdvObj, including the nested clipped helper above; keeping the
-// real helpers visible lets VC6 make that decision without a synthetic gate.
+// This is the caller-facing half of the same source boundary; inlined into
+// VWDrawAdvObj, including the nested clipped helper above.
 DC_ADDRESS(0x196a18, 0x100)
 inline void vwScaleToScreenBuffer(int destX, int destY)
 {
@@ -256,9 +252,7 @@ inline void vwScaleToScreenBuffer(int destX, int destY)
 }
 
 // DC 0x19310a/0x193120 (and the shadow twin) compute the cell offsets as
-// (3 - column - 1) * 32 and (2 - row - 1) * 32. Those spellings fold to the
-// same code but cost the inliner the 8 caller units that let the fifth
-// drawHero expand its getMap, as retail does.
+// (3 - column - 1) * 32 and (2 - row - 1) * 32.
 VA(0x005f7500, 0x3F7)
 DC_ADDRESS(0x19308c, 0x34c)
 MAC_ADDRESS(0x203150, 0x530)
@@ -443,8 +437,6 @@ void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
         currBoat->getHflip());
 }
 
-// The dispatch is a jump table, so the emitted arm order IS the source case
-// order.
 VA(0x005f80e0, 0x1F6)
 DC_ADDRESS(0x193a74, 0x200)
 MAC_ADDRESS(0x2040e0, 0x27c)
@@ -854,13 +846,12 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 
 // E:\gamedcs\viewwrld.cpp:946
 // The scaled river layer. Dreamcast supplies the statement order, the two
-// guards and the single tile blit; Complete's retail body corroborates every
-// element independently - the same four bounds, the GetMapExtra/iVWTerrains
-// disjunction, the RiverSet test through the bitfield unit, the scaled origin
-// pair, the inlined clear of the scratch buffer and the DrawTile through
-// riverTileset. advmgr.cpp's full-size DrawRiver is the unscaled twin.
-// The native flip fields (DC 0x3e18..0x3e1b) feed DrawTile directly;
-// Mac 2055e4/205600 and 2058b0/2058cc extract the same river/road bits.
+// guards and the single tile blit: the four bounds, the
+// GetMapExtra/iVWTerrains disjunction, the RiverSet test through the
+// bitfield unit, the scaled origin pair, the clear of the scratch buffer
+// and the DrawTile through riverTileset. advmgr.cpp's full-size DrawRiver is
+// the unscaled twin. The native flip fields (DC 0x3e18..0x3e1b) feed
+// DrawTile directly.
 VA(0x005f9220, 0x38A)
 DC_ADDRESS(0x194850, 0x17c)
 MAC_ADDRESS(0x205484, 0x2cc)  // exhaustive dc-order-map + VWCompleteDraw call order (2nd layer)
@@ -1141,25 +1132,9 @@ void advManager::vwDrawGround(int srcX, int srcY, int z, int destX, int destY)
 // The shared source shape is Dreamcast's 41-line constructor dossier: popup
 // base, explicit window bounds, vector reserve, ordered widget construction,
 // AddWidget/MemError sweep, and the final MESSAGE_WIDGET broadcast. Complete
-// expands the five icon rows to nineteen, the five text rows to fourteen, and
-// adds the two address-taken surface/underground controls. Retail corroborates
-// every revised row through the 45 operator-new EH states and constructor-call
-// stream. The ViewWorld caller's adjacent stack local proves sizeof(*this)=0x78.
-// Residual (96.4425%) PRICED AS CALLER MASS, polish 16, and the direction is
-// DOWN.  The visible defect is an UNDER-inline: at the first two widget sites
-// retail expands `vector<widget*>::push_back` into its `insert(_Last, 1, x)`
-// call (`push edx / push 1 / push eax`) where this compile CALLS the
-// out-of-line `push_back` COMDAT with one argument, which is the /Ob2
-// `budget / sites-remaining` quotient starving the EARLIEST sites. The
-// textbook fix is to grow caller_cb, and it does not work here: an `if (0)`
-// carrier after `Widgets.reserve(NWIDGETS)` - the measuring instrument, not a
-// fix, and deliberately not shipped - gives
-//   N = 1,2,3,5 -> 96.30 | 10 -> 96.09 | 20 -> 90.59 | 30 -> 90.31 |
-//   40 -> 84.95
-// monotone down with no plateau anywhere, so more mass over-inlines faster
-// than it recovers push_back. The lever this body wants is the numerator from
-// the other side (SHRINK the caller), and the Dreamcast roster names no helper
-// to lift these blocks into, so it is out of reach without invented source.
+// expands the five icon rows to nineteen, the five text rows to fourteen,
+// and adds the two address-taken surface/underground controls;
+// sizeof(*this) is 0x78.
 VA(0x005fa600, 0x1726)
 DC_ADDRESS(0x1952b8, 0x80c)
 MAC_ADDRESS(0x2067dc, 0x2594)  // caller stack extent + vtable 0x643c54
@@ -1273,12 +1248,8 @@ TViewWorldWindow::TViewWorldWindow()
 
     m_widgets.push_back(new bitmapBorder(
         611, 537, 68, 34, -1, "box66x32.pcx", 0x800));
-    // RETAIL BOUNDARY: TViewWorldWindow::TViewWorldWindow ->
-    // vector<widget*>::insert. Dreamcast 0x1952b8 proves the ordered widget
-    // append family; Complete adds this puzzle row and retail retains its
-    // insert call at ctor+0xfd0. The old 88.42% flattening control belonged
-    // to an earlier source state: removing this pin now improves the ctor
-    // from 97.1358% to 97.3652% with no tracked-TU losses (2026-09-09).
+    // Dreamcast 0x1952b8 proves the ordered widget append family; Complete
+    // adds this puzzle row.
     m_widgets.push_back(new button(
         612, 538, 66, 32, 19, "VWPuz.def", 0, 1, 0, 25, 2));
 
@@ -1289,16 +1260,12 @@ TViewWorldWindow::TViewWorldWindow()
         686, 538, 32, 32, -1, "iam003.def",
         viewWorldSurfaceHandler, 0, 1);
     // The level controls are Complete-only; Dreamcast 0x1952b8 proves the
-    // surrounding append family uses push_back. The two widget::hide calls
-    // below are the real header-helper sites that select retail's frontier:
-    // the first append retains vector::insert and the second expands it.
+    // surrounding append family uses push_back, with the two widget::hide
+    // header-helper calls below.
     m_widgets.push_back(m_undergroundButton);
     m_widgets.push_back(m_surfaceButton);
 
-    // DC lines 1370 and 1373 prove these are push_back calls too. Together
-    // with both DC Widget.h::hide helpers below, the natural source reproduces
-    // the complete 215-block retail constructor exactly; no depth pin or
-    // direct vector::insert spelling is needed.
+    // DC lines 1370 and 1373 prove these are push_back calls too.
     m_widgets.push_back(new bitmapBorder(
         725, 537, 68, 34, -1, "box66x32.pcx", 0x800));
     button* ok = new button(
@@ -1354,8 +1321,8 @@ TViewWorldWindow::~TViewWorldWindow()
 // TViewArmyWindow's cast-spell callback tests (viewarmywindow.cpp).
 static const int g_levelButtonClick = 13;
 
-// Complete-only address-taken callback. The constructor passes this entry to
-// the iAm003 surface button; the body clears origin.z and redraws the map.
+// Complete-only address-taken callback for the iAm003 surface button; the
+// body clears origin.z and redraws the map.
 // Both level callbacks answer a left click (codeX 13 without the RIGHT
 // modifier) only: swap which of the two level buttons is pressed, redraw
 // the released one, repaint the world and the radar, and flip the
@@ -1379,8 +1346,8 @@ int viewWorldSurfaceHandler(message& msg)
     return 1;
 }
 
-// Complete-only address-taken callback. The constructor passes this entry to
-// the iAm010 underground button; the body sets origin.z and redraws the map.
+// Complete-only address-taken callback for the iAm010 underground button;
+// the body sets origin.z and redraws the map.
 VA(0x005fbec0, 0xD0)
 MAC_ADDRESS(0x208f3c, 0xe4)
 int viewWorldUndergroundHandler(message& msg)
@@ -1474,18 +1441,11 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 
 // E:\gamedcs\viewwrld.cpp:1496
 // Recentres the view-world map on new_center and repaints the radar.
-// Every division by two here is retail's bare `sar reg,1` - an arithmetic
-// shift, not the cdq/sub pair a signed `/ 2` compiles to - so the source
-// wrote `>> 1`. The scale table is the one call site of the file's `ftol`,
-// and the two clamped extents are compared against MAP_WIDTH/MAP_HEIGHT
-// for EQUALITY: a map that exactly fills the view keeps the origin at
-// (0, 0, new_center.z) with no clamping at all.
-// iSkipLevel's DECLARATION SITE is worth 13.5 points (83.37 -> 96.87):
-// retail issues the `fdiv` after both integer divisions, so the float
-// local is declared BELOW the two extent assignments, not above them.
-// The inlined ftol helper's double temporary occupies retail [ebp-8], with
-// skipLevel at [ebp-0xc] and its magic constant at [ebp-0x10]. The earlier
-// union spelling allocated four extra bytes and held this body at 98.8939%.
+// Every division by two is written `>> 1`. The scale table is the one call
+// site of the file's `ftol`, and the two clamped extents are compared
+// against MAP_WIDTH/MAP_HEIGHT for EQUALITY: a map that exactly fills the
+// view keeps the origin at (0, 0, new_center.z) with no clamping at all.
+// iSkipLevel is declared BELOW the two extent assignments.
 VA(0x005fc240, 0x274)
 DC_ADDRESS(0x195d30, 0x2ca)
 MAC_ADDRESS(0x20929c, 0x514)  // anchor-caller ViewWorld, anchor-callee UpdateRadar
@@ -1541,11 +1501,10 @@ void TViewWorldWindow::init(type_point newCenter, bool updateFlag)
     }
 }
 
-// E:\gamedcs\viewwrld.cpp:1549 This ordinary method's
-// only source operation is the five-argument adventure repaint. Complete
-// expands this method at some call sites; the Mac build retains six calls
-// across the level callbacks, viewWorld, updateViewWorld, updateRadar and
-// the puzzle path in the window handler.
+// E:\gamedcs\viewwrld.cpp:1549. This ordinary method's only source
+// operation is the five-argument adventure repaint; the Mac build retains
+// six calls across the level callbacks, viewWorld, updateViewWorld,
+// updateRadar and the puzzle path in the window handler.
 DC_ADDRESS(0x195ffc, 0x42)
 MAC_ADDRESS(0x2097b0, 0x58)
 void TViewWorldWindow::drawWindow()
@@ -1669,13 +1628,9 @@ void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
 }
 
 // E:\gamedcs\viewwrld.cpp:1710
-// Both dispatch levels are the compiler's own tells. The message-id test
-// is an IF-CHAIN (`cmp`, arms emitted in place); the two codeX tests and
-// the widget-id test are SWITCHES (`sub`/`dec` descent, arms sunk behind
-// the default), and the map-dimension divisor is a switch too - its three
-// arms sit after the 1.0f default in reverse-ascending order, which no
-// if-chain produces. The accept arm and the key arm share their last two
-// statements, which is why retail duplicates only the dialogReturn store.
+// The message-id test is an if-chain; the two codeX tests, the widget-id
+// test and the map-dimension divisor are switches. The accept arm and the
+// key arm share their last two statements.
 // The radar drag is a pump: hold the button, keep the LAST mouse-move
 // seen, and re-centre once per outer pass until the button comes up.
 VA(0x005fcb10, 0x37F)

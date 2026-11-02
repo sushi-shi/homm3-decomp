@@ -139,10 +139,10 @@ struct THeroSpecificAbility {
     // is role-derived from its position between the short label and the long
     // description; the pad it replaces was the same four bytes.
     const char* m_mediumText;     // +0x20
-    // +0x24, the LONG description the note above predicted. Landed
-    // 2026-08-20 by the consumer it names: THeroScreenWindow::
-    // WindowHandler's specialty arm strcpy's exactly this displacement
-    // into gText before the describe dialog. Sliced only in hero.obj's
+    // +0x24, the LONG description the note above predicted, proven by the
+    // consumer it names: THeroScreenWindow:: WindowHandler's specialty arm
+    // strcpy's exactly this displacement into gText before the describe
+    // dialog. Sliced only in hero.obj's
     // view so no other compiland's declarator count moves.
     const char* m_longText;       // +0x24
 };

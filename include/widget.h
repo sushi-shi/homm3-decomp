@@ -167,19 +167,15 @@ public:
     DC_ADDRESS(0x054d20, 0x4)
     virtual void onKillFocus() {}  // slot 11
 
-    // Retail body 0x5fe410 (dc 0x196bd4) - the default ctor really is
-    // emitted; it is not an inlined-away static.
     // DC Widget.h:225-226: static hover reset.
     DC_ADDRESS(0x12859c, 0xc)
     static void clearHoverWidget() { s_lastHoverWidget = 0; }
 
-    // Dreamcast Widget.h:231. Retail callers reduce it to the +0x20
-    // RollOver load, so no out-of-line body survives.
+    // Dreamcast Widget.h:231; inlined in every caller.
     DC_ADDRESS(0x06a3e8, 0x4)
     const char* getHelpText() const { return m_rollOver; }
 
-    // Dreamcast Widget.h:236 header inline. CampaignBriefHandler folds this
-    // exact RightClick-or-RollOver choice into its retail body.
+    // Dreamcast Widget.h:236 header inline; inlined in CampaignBriefHandler.
     DC_ADDRESS(0x05abe4, 0x10)
     const char* getRclickText() const
     {
@@ -187,10 +183,9 @@ public:
     }
 
     // DC-attested name (?sleep@widget@@QAAX_N@Z, E:\gamedcs\Widget.h:244)
-    // on a RETAIL-ONLY body: DC's inline is the WIDGET_ASLEEP status-bit
-    // send_message, retail's is the nest counter below. Header-inline
-    // in both builds - retail's only call site is heroWindow's slot-8
-    // body 0x5ff5f0, where /Ob2 expands it in full.
+    // on a Complete-only body: DC's inline is the WIDGET_ASLEEP status-bit
+    // send_message, Complete's is the nest counter below. Header-inline in
+    // both builds; inlined in heroWindow's slot-8 body.
     DC_ADDRESS(0x002dec, 0x24)
     void sleep(unsigned char on)
     {
@@ -228,7 +223,7 @@ public:
     }
 
     // Original: widget::force_update; Widget.h:271
-    // Bottom-view updates expand this same status message in Complete.
+    // Inlined in the bottom-view updates.
     DC_ADDRESS(0x056e20, 0x1c)
     void forceUpdate() { sendMessage(WIDGET_SET_STATUS, WIDGET_UPDATE); }
 

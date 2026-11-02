@@ -32,9 +32,9 @@ public:
     message(int id, int codeX, int codeY, int qualifier,
             int mouseX, int mouseY, int extra, heroWindow* window);
 
-    // Retail RS_CLICK constructs this 32-byte local at 0x588e3d before
-    // setting codeY and passing it to OnWidgetDeselect. The retained body
-    // zeroes offsets +0 through +0x1c and returns the receiver in EAX.
+    // RS_CLICK constructs this 32-byte local before setting codeY and
+    // passing it to OnWidgetDeselect. The body zeroes offsets +0 through
+    // +0x1c.
     // E:\gamedcs\struct.h:42
     VA(0x00589190, 0x1c)
     DC_ADDRESS(0x002d58, 0x1a)

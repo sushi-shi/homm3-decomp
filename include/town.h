@@ -377,10 +377,9 @@ public:
 };
 SIZE(type_horde_effect, 8);
 
-// Head model. sizeof(town) == 360 is now closed from BOTH ends: the
-// ai_player town-array stride measured 360 last lane, and `available`
-// (the last member the TU touches) sits at 0x160..0x167 - exactly
-// 0x168. Field evidence:
+// Head model. sizeof(town) == 360 from BOTH ends: the ai_player town-array
+// stride is 360, and `available` (the last member the TU touches) sits at
+// 0x160..0x167 - exactly 0x168. Field evidence:
 //   +0x00 id     - can_build and Deallocate sign-extend it and index
 //                  gpGame->towns with it (stride 360, i.e. the town
 //                  array's own element size);
@@ -396,9 +395,8 @@ SIZE(type_horde_effect, 8);
 //   +0x08 boatX, +0x0c/+0x10 the two hero slots, +0xe0 garrison,
 //   +0x150/+0x158/+0x160 the three building masks.
 // For give_event_reward's parameter below; gated with it so no other
-// view of this header gains the type name (the initialize_game_data
-// include-set canary measured exactly this forward declaration at
-// 100.0 -> 96.09 when it sat here ungated, 2026-08-20).
+// view of this header gains the type name (ungated here, this forward
+// declaration changes initialize_game_data, the include-set canary).
 class TTownEvent;
 
 DATA(0x0066cd98)
@@ -454,7 +452,7 @@ public:
     // UNSIGNED, byte-proven by game::calculate_production's special-
     // building arm: retail tests it `mov al,[esi+0x34] / test al,al /
     // jbe` and widens it `and eax,0xff`. A signed `char` gives `jle` and
-    // `movsx`, and the row plateaus 2.2 points lower.
+    // `movsx`.
     unsigned char m_pondAmount;
     // +0x35..+0x37 alignment padding (retail's ??4town skips it).
     int m_pondResource;
@@ -477,7 +475,7 @@ public:
     // Behind the SUMMONING gate and nested so that every OTHER view of
     // this class keeps the exact member COUNT it had: initialize.obj is
     // the tree's documented include-set canary and one extra member
-    // anywhere in town takes initialize_game_data 100.0 -> 96.09.
+    // anywhere in town changes initialize_game_data.
     short m_summoningPopulation;
     // +0x42..+0x43 alignment padding (retail's ??4town skips it).
     // +0x44, five mage-guild rows of six spell ids. GiveSpells walks
@@ -526,22 +524,17 @@ public:
     bool canBuildDock() const;
 
     // DC Town.h:299 / :305 header inlines, declaration-only here
-    // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC
-    // linker in ai_player.obj, ?get_generator_bonus@town@@QBAJJ@Z in
-    // townmgr.obj). Declared 2026-08-27 with IsCastle/IsCapitol below:
-    // four DC-attested members that also hold town's class-declarator
-    // count when the five pad arrays left (the include-set wall:
-    // deleting them alone cost sacrifice_window's
-    // create_artifact_widgets 100.0 -> 99.59, a cross-jump/reload
-    // quirk in a textWidget arm; count restored, the row returns).
-    // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
-    // Retail's +0x158 band is m_fullBuildingMask; getBuildableMask expands this read.
+    // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC linker in
+    // ai_player.obj, ?get_generator_bonus@town@@QBAJJ@Z in townmgr.obj),
+    // declared with IsCastle/IsCapitol below: four DC-attested members.
+    // DC Town.h:299/300 returns full_building_mask (+0x150 in DC);
+    // Complete's is m_fullBuildingMask at +0x158. Inlined in getBuildableMask.
     DC_ADDRESS(0x037f50, 0x12)
     __int64 getBuildingMask() const { return m_fullBuildingMask; }
     long getCastleGrowthBonus(TCreatureType creature) const;
 
     // DC Town.h:305-306 returns generatorBonus[dwelling].
-    // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
+    // set_bonus_display calls this header helper; inlined.
     DC_ADDRESS(0x181404, 0x12)
     long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
     // Original ?get_gold_income@town@@QBAF_N@Z proves bool includeSilo.
@@ -557,10 +550,8 @@ public:
     // DC Town.h:311, selected in advmgr.obj. Line 312
     // calls the canonical three-short type_point constructor with mapX/Y/Z
     // and returns the value through the hidden UDT-result buffer.
-    // Earlier canTakeTown probes scored 86.87 with a separately named
-    // point-return local and 79.06 with this constructor expression, versus
-    // the local clone's 98.75/100 peaks. Those measurements do not refute
-    // the CodeView constructor call or justify a second helper definition.
+    // The CodeView constructor call stands; canTakeTown does not need a
+    // second helper definition.
     DC_ADDRESS(0x01fdac, 0x68)
     type_point getLocation() const
     {
@@ -568,17 +559,10 @@ public:
     }
     void calcNumLevelArchers(int* numArchers, int* archerLevel);
 
-    // Town.h:325-327 records the active-mask guard then the built-mask return.
-    // This early-return form preserves the retained body and recovers the
-    // nested isCastle expansion in Windows getVictoryConditionText.
-    // DC HasBuilding (Town.h:324-328) reads the active mask itself: no
-    // GetBuildingMask row, and DC has no such accessor. A nested
-    // getBuildingMask() call (d3650d6a8, inferred from Mac calculateProduction's
-    // two-word read) adds an inline site to every expansion and moved
-    // hero's description loops off retail's g_game register (100 -> 97.95).
-    // DC also opens a second lexical scope for line 326: the active arm is
-    // braced. That block raises the inline cost to 62, which keeps retail's
-    // out-of-line call in hero::getLuck (budget 61) and restores buildBuilding.
+    // Town.h:325-327 records the active-mask guard then the built-mask
+    // return. DC HasBuilding (Town.h:324-328) reads the active mask itself,
+    // with no GetBuildingMask call, and opens a second lexical scope for
+    // line 326: the active arm is braced.
     VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18
     DC_ADDRESS(0x01fe14, 0x98)
     bool hasBuilding(int buildingId, bool checkIncluded) const
@@ -608,7 +592,7 @@ public:
     }
 
     // E:\gamedcs\Town.h:342. Public ?IsCapitol@town@@QBA_NXZ likewise
-    // proves native bool. Both declarations are byte-flat in all consumers.
+    // proves native bool.
     DC_ADDRESS(0x0bccb4, 0x28)
     bool isCapitol() const
     {
@@ -737,8 +721,7 @@ protected:
     // ?DwellingCosts@town@@1PAY1O@6HA = int(*)[14][7]).
     // The index arithmetic retail emits is the proof of the strides:
     // 9*type + (building-17) for the special row, 14*type +
-    // (building-30) for the dwelling row. LOCATED 2026-09-06: the TU
-    // that fills them is this one, and the three definitions now sit in
+    // (building-30) for the dwelling row. The three definitions sit in
     // src/town.cpp beside InitializeBuildingCostsTables (0x5c14c0), whose
     // three walks end exactly on the next table's address.
     // NeutralBuildingCosts' leading bound is the only soft number: the

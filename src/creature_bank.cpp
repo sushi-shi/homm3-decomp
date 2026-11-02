@@ -47,8 +47,8 @@ type_creature_bank_traits::type_creature_bank_traits()
 }
 
 // E:\gamedcs\creature_bank.cpp:32; original initialize_creature_bank_level.
-// DC proves static linkage and both reference parameters. Retail expands
-// the one source call in initializeCreatureBankTraits; keep the real body.
+// DC proves static linkage and both reference parameters; inlined in
+// initializeCreatureBankTraits.
 DC_ADDRESS(0x070fe0, 0x14a)
 MAC_ADDRESS(0x0893bc, 0x19c)
 static void initializeCreatureBankLevel(type_creature_bank_level& traits,
@@ -90,7 +90,7 @@ unsigned char initializeCreatureBankTraits()
         DATA_COMPGEN(0x006703a8, creatureBankSpreadsheetName, "crbanks.txt"));
     if (!sheet)
         return 0;
-    // DC retains ResourceManager::Dispose; Complete expands the wrapper.
+    // DC retains ResourceManager::Dispose; the wrapper is inlined.
     if (sheet->GetNumberOfRows() < 13) {
         ResourceManager::Dispose(sheet);
         return 0;
@@ -148,11 +148,9 @@ unsigned char initializeCreatureBankTraits()
     return 1;
 }
 
-// E:\gamedcs\creature_bank.cpp:146 Retail expands this file
-// static at all five of initialize_creature_bank's call sites, so no
-// out-of-line row survives. The free-slot cursor starts AT the slot being
-// split and is carried across the whole run - every site's scan begins at
-// its own `slot` argument, which is what fixes the parameter's second role.
+// E:\gamedcs\creature_bank.cpp:146. Inlined at all five of
+// initialize_creature_bank's call sites. The free-slot cursor starts AT the
+// slot being split and is carried across the whole run.
 DC_ADDRESS(0x071218, 0xb8)
 MAC_ADDRESS(0x089704, 0x9c)
 static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
@@ -183,13 +181,7 @@ static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 // three become 2+2 with slot 0.
 
 // Original: initialize_creature_bank; DC records bank as
-// type_creature_bank& (parameter sp+0x34). Windows and Mac 0x897a0 pass
-// its address and access the bank unconditionally; neither contradicts
-// that interface. A generated decorated name is not retail type evidence.
-// The pre-edit retail comparison is 100%; the reference spelling preserves
-// all 880 emitted VC6 bytes including padding. Focused creature_bank/game
-// builds preserve their available Mac comparisons. Before delink refresh,
-// the old pointer target name cannot bind this renamed reference definition.
+// type_creature_bank& (parameter sp+0x34).
 VA(0x0047ad90, 0x36E)
 DC_ADDRESS(0x0712d0, 0x210)
 MAC_ADDRESS(0x0897a0, 0x348)

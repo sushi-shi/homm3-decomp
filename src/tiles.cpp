@@ -34,8 +34,7 @@ const TPoint<int> akAdjOffset[TILE_DIR_COUNT] = {
     TPoint<int>(0, 1),   TPoint<int>(-1, 1),  TPoint<int>(-1, 0),  TPoint<int>(-1, -1)
 };
 
-// Loki h3maped TilePoint.cpp's body, also the map editor's (0x4bf3f4);
-// it reproduces all 125 game bytes.
+// Loki h3maped TilePoint.cpp's body, also the map editor's.
 VA(0x005BC910, 0x7D)
 MAC_ADDRESS(0x25bcd4, 0xf8)
 void computeAdjacentDirs(unsigned int width, unsigned int height,

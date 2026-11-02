@@ -41,10 +41,9 @@ class NewmapCell;
 // verdict DoCombat returns and switches its finish-heroes teardown on:
 // 0 = the left (attacking) side won, 1 = the right (defending) side won,
 // -1 = nobody did (retreat / surrender / mutual destruction). Declared
-// HERE rather than in cmbtmgr.h because three enumerators in that
-// header's closure are exactly the include-set perturbation command's
-// GetCommand row has twice measured; move them beside field_13d48 when
-// the field's cmbtmgr writers reconstruct.
+// HERE rather than in cmbtmgr.h because three enumerators in that header's
+// closure change command's GetCommand (an include-set input); move them
+// beside field_13d48 when the field's cmbtmgr writers reconstruct.
 enum ECombatWinner {
     COMBAT_WINNER_NONE = -1,
     COMBAT_WINNER_LEFT = 0,

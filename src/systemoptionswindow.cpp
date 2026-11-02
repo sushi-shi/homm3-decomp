@@ -280,8 +280,7 @@ TSystemOptionsWindow::~TSystemOptionsWindow()
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:205
-// Retail inlines this switch into WindowHandler; no separate entry exists
-// between the destructor and DoModal.
+// Inlined into WindowHandler.
 DC_ADDRESS(0x160698, 0x68)
 MAC_ADDRESS(0x1ac8cc, 0x98)
 int TSystemOptionsWindow::convertID2HelpID(int id) const
@@ -325,69 +324,19 @@ void TSystemOptionsWindow::doModal()
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:260
-// DC-SOURCE-SHAPE RESTORED 2026-09-01 (92.5000 -> 95.3661).
 // The dc 0x160698 helper owns, in order, the negative-id return, the
-// 201..242 range return, and the six-command switch assigning a local for one
-// final return. Retail independently agrees at fn+0x46..+0xae: negative
-// guard, range first, command switch second, then one joined helpID test. The
-// old 92.5000 spelling moved the negative guard into this caller and put the
-// switch first, contradicting both sources. Restoring the exact mixed-return
-// helper shape reached 93.3701. DC line 288 ends the right-click group with a
-// branch to the common return; retaining that join as `goto consume` restores
-// retail's EBX-held dispatch value and reaches 95.3661.
-
-// Negative controls: all-immediate and fully-assigned range-first helper
-// families are byte-identical at 85.5532; plain, inline and forced-inline
-// declarations are byte-identical; moving the dispatch-value declaration or
-// reusing the base-handler result is byte-identical in that family and
-// score-flat at 95.3661. Moving the consume label physically ahead of the
-// main dispatch is likewise score-flat, so no synthetic layout spelling is
-// retained.
-
-// 91.9193 -> 92.5000, 2026-08-21: two statement-order facts from the
-// unmasked retail stream. UpdateSystemOptions sets bPrefsChanged BEFORE it
-// initializes the otherwise-unused message (91.9193 -> 92.0354), and the
-// command tail saves codeY, writes msg->id, then latches the saved command in
-// dialogReturn (-> 92.5000). The latter now agrees in instruction order; only
-// its EAX/ECX versus retail EDX/EAX allocation remains.
-
-// Residual (95.3661%): all 32 out-of-line calls and all 76 CFG blocks agree in
-// count. The help helper's range/switch blocks now agree instruction for
-// instruction. The first remaining CFG difference is return-tail placement:
-// retail splits the post-NormalDialog consume epilogue before main dispatch,
-// while this compiler keeps it attached to the call despite the common join.
-// In the redraw tail retail also hoists the DrawWindow vtable load and three
-// argument pushes ahead of the message-constructor stores; this compiler
-// leaves them after. The old volatile surrogate was a 92.5000 local maximum;
-// the recovered constructor is the positive source fact. The final findWidget
-// and click-sample deltas are register rotations over the same loads/stores
-// and calls.
-// Goto audit: Replacing consume jumps with direct returns scores
-// 92.3189% versus 94.3957%; retain the shared dispatch epilogue.
-// DC's nested right-click/ordinary-widget groups remove three consume gotos
-// without changing 94.3957%. A separate prefsChanged result and positive
-// accepted-command scope remove two more joins at the same score. The
-// translated command label still admits commands that need no confirmation.
-// Combining this with an outer widget-code if dispatch falls to 85.1339%;
-// both byte and bool preference flags preserve the retained switch form.
-// The outer widget-code default can return one directly: all 1526 compiled
-// bytes and 96 relocation names/addends remain unchanged at 94.3957%.
-// Separate direct confirmation/translation bodies and their combinations
-// still lose code agreement (92.9902%); keep each action shared as below.
-// A single do/while(0) around widget dispatch uses confirmation's continue
-// and unconfirmed commands' break to reach common translation. Confirmation
-// stays before translation; both joins are removed with all 1526 compiled
-// bytes and 96 references/addends unchanged at 94.3957%.
+// 201..242 range return, and the six-command switch assigning a local for
+// one final return. UpdateSystemOptions sets bPrefsChanged BEFORE it
+// initializes the otherwise-unused message, and the command tail saves
+// codeY, writes msg->id, then latches the saved command in dialogReturn.
 // The slider arms send WIDGET_CLEAR/SET_STATUS directly, as DC's rows name
-// send_message here (DC never expands widget::set_visible; all 51 of its
-// uses call dc 0x56df8). Retail pushes both constants before getWidget, as
-// a direct send does: 96.70 -> 100 (2026-09-29).
+// send_message here (DC never inlines widget::set_visible).
 VA(0x005b3140, 0x61E)
 DC_ADDRESS(0x160770, 0x578)
 MAC_ADDRESS(0x1aca30, 0x6a4)  // vtable slot 9 + inlined help switch
 int TSystemOptionsWindow::windowHandler(message& msg)
 {
-    // DC records one procedure-local save; Mac reuses r24 in both slider arms.
+    // DC records one procedure-local save, used in both slider arms.
     int save;
     int result = CAdvPopup::windowHandler(msg);
     if (result)

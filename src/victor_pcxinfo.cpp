@@ -10,10 +10,10 @@
 #include "victor.h"
 
 // Public Victor PCX metadata reader, corroborated by the Dreamcast API
-// stub; the Windows body is retail-only. Open failure leaves output alone;
-// successful open clears it even when the header signature is rejected.
-// Retail deliberately ignores the short-read result and always closes an
-// opened file. Preserve that behavior and the planar four-bit normalization.
+// stub; the Windows body is Complete-only. Open failure leaves output
+// alone; successful open clears it even when the header signature is
+// rejected. The short-read result is deliberately ignored and an opened
+// file is always closed. Planar four-bit images are normalized.
 VA(0x006042a0, 0x127)  // anchor-caller PCX importers + OpenFile/header offsets
 int __stdcall pcxinfo(const char* filename, PcxData* data)
 {
@@ -46,7 +46,7 @@ int __stdcall pcxinfo(const char* filename, PcxData* data)
     return status;
 }
 
-// Retail-only PCX palette reader, called by loadpcx. Version 2/5 palettes
+// Complete-only PCX palette reader, called by loadpcx. Version 2/5 palettes
 // are accepted except planar RGB. A missing extended palette marker falls
 // back to the 16 header entries. OpenFile's strictly-positive test and
 // returned color count on open failure are preserved from retail.

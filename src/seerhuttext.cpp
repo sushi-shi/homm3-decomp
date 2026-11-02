@@ -30,24 +30,15 @@ DATA(0x00683210) const TSeerHutTextColumn* g_questTextB = g_seerHutTextA;
 
 DATA(0x0069faa8) std::vector<std::string> g_seerHutNames;
 
-// Retail 0x56c120. Copy one seerhut.txt column into one TSeerHutTextColumn.
+// Copy one seerhut.txt column into one TSeerHutTextColumn.
 
-// The row map is read straight off the body: row 1 into `name` before the
-// loop, then nine groups of five rows (2..46) into quest[1..9].text[0..4],
-// then row 47 into `completion`. The two induction variables retail keeps
-// live are the row byte offset (0x14 per step, tested `cmp esi, 0xc8`, i.e.
-// the strength-reduced `q < 10`) and the destination pointer (0x50 per step),
-// which is what proves the 0x50 quest stride and the 0x340 record extent.
-
-// The five inner statements are one source statement each: VC6 CALLS
-// basic_string::assign at the first two sites and EXPANDS it at the other
-// three, which is an /Ob2 budget outcome and not a spelling difference.
-
-// The tables above are defined before the loader, as retail's order shows:
-// the two 39/23-byte initializer pairs and the vector initializer pair at
-// 0x56bd90..0x56c0b0 precede 0x56c120. Compiled after them, the loader
-// receives C2's phase flag as 1 (docs/vc6/phase-flag.md); compiled first in
-// the TU it kept the fourth inlined _Eos store as `[eax + ecx]` (99.9621%).
+// Row 1 goes into `name` before the loop, then nine groups of five rows
+// (2..46) into quest[1..9].text[0..4], then row 47 into `completion`; the
+// quest stride is 0x50 and the record 0x340 bytes. The five inner statements
+// are one source statement each.
+//
+// The tables above are defined before the loader, as in the original order
+// (docs/vc6/phase-flag.md).
 VA(0x0056c120, 0x2A3)
 MAC_ADDRESS(0x2543f0, 0x1fc)  // anchor-string(seerhut.txt caller 0x56c3e0) + anchor-callee(basic_string::assign) + retail-only
 void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
@@ -66,10 +57,8 @@ void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
     column->m_completion = sheet->GetRow(47)[col];
 }
 
-// Both separator arms expand basic_string::append in full and the
-// cross-jumper merges their copy tails, which is what two `+=` statements in
-// an if/else produce; the return is the ordinary copy construction of the
-// accumulator, `_Tidy()` plus `assign(result, 0, npos)`.
+// Two `+=` statements in an if/else; the return is the ordinary copy
+// construction of the accumulator.
 VA(0x0056c960, 0x216)
 MAC_ADDRESS(0x163f0c, 0xe8)
 std::string joinTextList(const std::vector<std::string>& items)

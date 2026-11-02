@@ -56,10 +56,9 @@ type_text_slider::type_text_slider(type_text_scroller* scroller,
     m_owner = scroller;
 }
 
-// Slot 16 of the scroller's private slider vtable 0x642cc8 - the only
-// slot it overrides. Thirteen bytes, no frame: it reads the slider's own
-// currentState and the owner at +0x68 and calls the scroller's
-// repaint.
+// The only slot the scroller's private slider overrides: it reads the
+// slider's own currentState and the owner at +0x68 and calls the
+// scroller's repaint.
 VA(0x005B9FA0, 0xD)
 MAC_ADDRESS(0x25b144, 0x2c)
 void type_text_slider::onValueChanged()
@@ -101,17 +100,17 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
         this, this->m_x + m_width - 16, this->m_y, 16, m_height, -1,
         max(1, m_textLines.size() - m_lineImages.size() + 1),
         graphics, m_lineImages.size(), 1);
-    // Mac 0x25b424 and retail 0x5ba297 expand the same resource-disposal
-    // wrapper used by setText below; the resource overload has no null guard.
+    // The resource-disposal wrapper setText also uses; the resource overload
+    // has no null guard.
     ResourceManager::Dispose(textFont);
 }
 
-// The scalar deleting destructor, slot 0 of vtable 0x642d0c.
+// The scalar deleting destructor, vtable slot 0.
 VA_COMPGEN(0x005BA2B0, 0x21, SCALAR_DELETING_DTOR, type_text_scroller)
 
 // Slot 1. Hands every line widget and the slider to the opening window at
-// consecutive priorities above the scroller's own, then folds the slider
-// away when the text fits without scrolling.
+// consecutive priorities above the scroller's own, then hides the slider
+// when the text fits without scrolling.
 VA(0x005BA2E0, 0xC6)
 MAC_ADDRESS(0x25b444, 0xfc)
 int type_text_scroller::open(int newPriority, heroWindow* parent)
@@ -197,9 +196,7 @@ void type_text_scroller::refresh(int firstLine)
 // re-tried at the narrow measure only when the wide one already fits, and
 // the slider is re-ranged or hidden from the resulting line count.
 // The final font release uses ResourceManager's canonical inline disposal
-// wrapper. That source call steers VC6's earlier empty-line push expansion
-// and closes the last block (99.4444% -> exact) while
-// retaining push_back and the same 17 ordered retail calls.
+// wrapper.
 VA(0x005BA6E0, 0x1EF)
 MAC_ADDRESS(0x25b8d8, 0x1dc)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::setText(const char* text)

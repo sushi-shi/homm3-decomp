@@ -27,13 +27,10 @@
 // step over it, and the cleanliness floor wants the domain named.
 const int g_saveVersionBoatFieldsAbsent = 0x1c;
 
-// E:\gamedcs\event_record.cpp:36. NO RETAIL BODY of its own - every
-// construction site expands it - but the expansions prove the whole body:
-// the vptr store followed by `mov dl,byte ptr [gNetLocalGamePos] /
-// mov [this+4],dl`, i.e. the acting seat truncated into the signed byte.
-// type_record_shroud::create (0x49bc30) is the clearest Windows witness.
-// Mac retains this source constructor at 0:0xbef5c and 17 derived
-// construction sites call it, including ten event factory methods.
+// E:\gamedcs\event_record.cpp:36. Inlined at every construction site: the
+// vptr store, then the acting seat truncated into the signed byte at +4.
+// Mac retains this source constructor, called from 17 derived construction
+// sites.
 DC_ADDRESS(0x08c624, 0x34)
 MAC_ADDRESS(0x0bef5c, 0x1c)
 type_event_record::type_event_record()
@@ -43,9 +40,8 @@ type_event_record::type_event_record()
 
 VA_COMPGEN(0x0049a5b0, 0x23, SCALAR_DELETING_DTOR, type_event_record)
 
-// Seven derived Mac load/save prefixes reproduce these complete base bodies:
-// this+4, one byte, and read/write slot 0xc/0x10. Recover the base calls.
-// Loads retain the base failure check; saves discard its result.
+// The derived load/save bodies call these base bodies (this+4, one byte):
+// loads keep the base failure check; saves discard its result.
 VA(0x0049a5e0, 0x1D)
 DC_ADDRESS(0x08c678, 0x1e)
 MAC_ADDRESS(0x0befc0, 0x48)
@@ -62,10 +58,9 @@ bool type_event_record::save(TAbstractFile* outfile)
     return outfile->write(&m_playerId, 1) == 1;
 }
 
-// E:\gamedcs\event_record.cpp:65. Ordinary static helper, expanded
-// into the four replay bodies and playRecordedEvents. The char parameter
-// narrows the saved seat at the latter call; each replay passes m_playerId.
-// Preserve these DC-proven source calls instead of copying the helper body.
+// E:\gamedcs\event_record.cpp:65. Ordinary static helper, inlined into the
+// four replay bodies and playRecordedEvents. The char parameter narrows the
+// saved seat at the latter call; each replay passes m_playerId.
 DC_ADDRESS(0x08c6b8, 0x50)
 MAC_ADDRESS(0x0bf050, 0xa8)
 static void setPlayer(char newPlayer)
@@ -80,7 +75,7 @@ static void setPlayer(char newPlayer)
 }
 
 // E:\gamedcs\event_record.cpp:81
-// Retail base vtable slot4 folds to the empty ret4 body at0x485d80.
+// The retail base slot is the shared empty `ret 4` body.
 DC_ADDRESS(0x08c708, 0x4)
 MAC_ADDRESS(0x0bf0f8, 0x4)
 void type_event_record::replay(bool draw)
@@ -88,7 +83,7 @@ void type_event_record::replay(bool draw)
 }
 
 // E:\gamedcs\event_record.cpp:88
-// Retail base vtable slot5 folds to the empty ret body at0x5bc690.
+// The retail base slot is the shared empty body.
 DC_ADDRESS(0x08c70c, 0x4)
 MAC_ADDRESS(0x0bf0fc, 0x4)
 void type_event_record::undo()
@@ -96,12 +91,9 @@ void type_event_record::undo()
 }
 
 // E:\gamedcs\event_record.cpp:96
-// NO RETAIL BODY: VC6 auto-expands this ordinary constructor at record_move and
-// record_teleport and leaves an unreferenced COMDAT body. Mac retains it at
-// code0+0xbf100, between base undo and move-hero create. Dreamcast gives seven
-// ordered source rows and proves that line 100 obtains source through
-// type_obscuring_object::get_location; retail corroborates the packed x/y/z
-// loads at both expansion sites.
+// Inlined at record_move and record_teleport; Mac retains it. Dreamcast
+// gives seven ordered source rows and proves that line 100 obtains source
+// through type_obscuring_object::get_location.
 DC_ADDRESS(0x08c710, 0xae)
 MAC_ADDRESS(0x0bf100, 0xa8)
 type_record_move_hero::type_record_move_hero(hero* currentHero,
@@ -115,12 +107,9 @@ type_record_move_hero::type_record_move_hero(hero* currentHero,
     m_destination = destination;
 }
 
-// Slot 0 of TEN derived vtables at once: 0x63de8c 0x63dea4 0x63debc 0x63ded4
-// 0x63deec 0x63df04 0x63df1c 0x63df34 0x63df4c and 0x63df64 all name this
-// address. Every one of those classes has a trivial implicit destructor that
-// collapses to the base vptr store at 0x49abe0, so the ten wrappers were
-// byte-identical and /OPT:ICF folded them onto one body; the claim names the
-// first of the ten in link order.
+// Slot 0 of TEN derived vtables at once: every one of those classes has a
+// trivial implicit destructor, so the ten wrappers fold onto one body; the
+// claim names the first of the ten in link order.
 VA_COMPGEN(0x0049a620, 0x21, SCALAR_DELETING_DTOR, type_record_move_hero)
 
 VA(0x0049a650, 0x27)
@@ -197,9 +186,9 @@ void type_record_move_hero::replay(bool draw)
 }
 
 // E:\gamedcs\event_record.cpp:186
-// Slot 5 of type_record_move_hero's retail vtable (0x63de8c), shared with
+// Slot 5 of type_record_move_hero's vtable, shared with
 // type_record_teleport. The hero's `valid` byte is sampled BEFORE
-// restore_cell clears it, which is what the leading `mov bl,[hero+6]` proves.
+// restore_cell clears it.
 VA(0x0049a910, 0x65)
 DC_ADDRESS(0x08c9ec, 0x66)
 MAC_ADDRESS(0x0bf580, 0x9c)  // anchor-vtable
@@ -216,10 +205,9 @@ void type_record_move_hero::undo()
 }
 
 // E:\gamedcs\event_record.cpp:204
-// NO RETAIL BODY: VC6 auto-expands this ordinary constructor into record_teleport;
-// Mac retains it at code0+0xbf61c after move-hero undo.
-// Dreamcast line 204 proves this remains a derived-to-base delegation rather
-// than a flattened duplicate of type_record_move_hero's assignments.
+// Inlined into record_teleport (Mac retains it). Dreamcast line 204 proves
+// this is a derived-to-base delegation rather than a flattened duplicate of
+// type_record_move_hero's assignments.
 DC_ADDRESS(0x08ca54, 0x70)
 MAC_ADDRESS(0x0bf61c, 0x44)
 type_record_teleport::type_record_teleport(hero* currentHero,
@@ -255,10 +243,9 @@ void type_record_teleport::replay(bool draw)
 }
 
 // E:\gamedcs\event_record.cpp:237
-// NO RETAIL BODY: VC6 auto-expands this ordinary constructor into
-// record_claim_mine. Mac retains it at code0+0xbf778 after teleport replay.
-// record_claim_town instead invokes the distinct default constructor at
-// dc:0x8eda0. Dreamcast preserves this definition site and the field order.
+// Inlined into record_claim_mine (Mac retains it); record_claim_town instead
+// invokes the distinct default constructor at dc:0x8eda0. Dreamcast
+// preserves this definition site and the field order.
 DC_ADDRESS(0x08cb2c, 0x5c)
 MAC_ADDRESS(0x0bf778, 0x78)
 type_record_claim_mine::type_record_claim_mine(long id,
@@ -270,7 +257,7 @@ type_record_claim_mine::type_record_claim_mine(long id,
 }
 
 // E:\gamedcs\event_record.cpp:255
-// Retail derived vtable slot1 folds to 0x56e3d0: mov eax,3; ret.
+// The retail slot folds to the shared `mov eax,3; ret` body.
 DC_ADDRESS(0x08cbb0, 0x4)
 MAC_ADDRESS(0x0bf838, 0x8)
 type_event_record_type type_record_claim_mine::getType() const
@@ -346,11 +333,9 @@ type_event_record::~type_event_record()
 
 // E:\gamedcs\event_record.cpp:321
 // Dreamcast resolves the base boundary specifically to the default header
-// constructor at dc:0x8eda0, not the parameterized constructor at dc:0x8cb2c.
-// The derived body then assigns the three claim fields, with old_owner coming
-// from gpGame->towns. Mac retains it at code0+0xbfad0 after claim-mine undo.
-// Retail corroborates that final assignment sequence and elides the
-// intermediate claim_mine vptr store.
+// constructor at dc:0x8eda0, not the parameterized constructor at
+// dc:0x8cb2c. The derived body then assigns the three claim fields, with
+// old_owner coming from gpGame->towns.
 DC_ADDRESS(0x08ccfc, 0x60)
 MAC_ADDRESS(0x0bfad0, 0x84)
 type_record_claim_town::type_record_claim_town(long id,
@@ -363,10 +348,8 @@ type_record_claim_town::type_record_claim_town(long id,
 }
 
 // E:\gamedcs\event_record.cpp:339
-// type_record_claim_town::get_type has no retail body of its own: slot 1 of
-// its vtable (0x63ded4) is 0x16ebc0, outside this compiland's span, where
-// /OPT:ICF folded the `mov eax,4 / ret` onto an identical body elsewhere.
-// Retail derived vtable slot1 folds to 0x56ebc0: mov eax,4; ret.
+// type_record_claim_town::get_type has no retail body of its own: its slot
+// folds to the shared `mov eax,4; ret` body.
 DC_ADDRESS(0x08cd84, 0x54)
 MAC_ADDRESS(0x0bfc04, 0x8)
 type_event_record_type type_record_claim_town::getType() const
@@ -407,13 +390,10 @@ void type_record_claim_town::undo()
 }
 
 // E:\gamedcs\event_record.cpp:376
-// Dreamcast's older record stores only the boat pointer here. Complete adds
-// the replay state at +0xc/+0x10; record_hide_boat's retail `ret 0xc` and the
-// two independent snapshot loads corroborate the revised constructor inputs.
-// DC retains this constructor at 0x8ce74 and Mac recordHideBoat calls 0xbfce0;
-// VC6 expands the ordinary same-TU helper in both Windows boat callers.
-// Mac reloads m_currentBoat before each snapshot. Keeping those member reads
-// also restores the retail vector expansion in recordHideBoat (88.9253 -> 100).
+// Dreamcast's older record stores only the boat pointer here; Complete adds
+// the replay state at +0xc/+0x10. DC retains this constructor at 0x8ce74;
+// inlined in both Windows boat callers. m_currentBoat is reloaded before
+// each snapshot.
 MAC_ADDRESS(0x0bfce0, 0x80)
 type_record_hide_boat::type_record_hide_boat(boat* currentBoat,
                                                     unsigned char occupied,
@@ -456,8 +436,6 @@ bool type_record_hide_boat::load(TAbstractFile* infile, int version)
         && (version <= 0x1e || version >= 0x23)) {
         m_previousOccupied = readValue<char>(infile) != 0;
         m_occupied = readValue<char>(infile) != 0;
-        // Mac stages each short separately, then uses lhbrx; the conversion
-        // remains unresolved in the shared native scalar helper.
         m_previousOccupyingHero = readValue<short>(infile);
         m_occupyingHero = readValue<short>(infile);
     } else {
@@ -480,8 +458,6 @@ bool type_record_hide_boat::save(TAbstractFile* outfile)
         return 0;
     writeValue<unsigned char>(outfile, m_previousOccupied);
     writeValue<unsigned char>(outfile, m_occupied);
-    // Mac uses sthbrx in these scalar expansions; native helper byte order
-    // remains an unresolved comparison difference.
     writeValue<short>(outfile, m_previousOccupyingHero);
     writeValue<short>(outfile, m_occupyingHero);
     return 1;
@@ -512,9 +488,7 @@ void type_record_hide_boat::undo()
 }
 
 // E:\gamedcs\event_record.cpp:449
-// DC line 450 calls type_obscuring_object::get_location. Retail inlines that
-// helper into the packed x/y/z loads, so keep the source boundary even though
-// spelling the three fields directly produces the same candidate bytes.
+// DC line 450 calls type_obscuring_object::get_location.
 DC_ADDRESS(0x08cfa8, 0x9a)
 MAC_ADDRESS(0x0c0148, 0x94)
 inline type_record_show_boat::type_record_show_boat(boat* currentBoat,
@@ -597,10 +571,7 @@ void type_record_show_boat::undo()
     m_currentBoat->m_z = m_previousLocation.m_z;
 }
 
-// DC cpp:533 defaults m_location before the line-534 assignment. Spelling
-// that default as `: m_location()` or spelling the base initializer explicitly
-// is byte-flat at recordEraseObject (88.7023%). The ordinary definition is
-// also byte-flat; nested vector _Ufill still gets budget 55 against cost 56.
+// DC cpp:533 defaults m_location before the line-534 assignment.
 DC_ADDRESS(0x08d220, 0x70)
 MAC_ADDRESS(0x0c0534, 0x74)
 type_record_erase::type_record_erase(type_point location,
@@ -689,7 +660,7 @@ void type_record_erase::undo()
 }
 
 // E:\gamedcs\event_record.cpp:646
-// Retail derived vtable slot1 folds to 0x5721f0: mov eax,8; ret.
+// The retail slot folds to the shared `mov eax,8; ret` body.
 DC_ADDRESS(0x08d528, 0x4)
 type_event_record_type type_record_hide_hero::getType() const
 {
@@ -818,7 +789,7 @@ type_event_record* type_record_show_hero::create()
 }
 
 // E:\gamedcs\event_record.cpp:744
-// Retail derived vtable slot1 folds to 0x572810: mov eax,9; ret.
+// The retail slot folds to the shared `mov eax,9; ret` body.
 DC_ADDRESS(0x08d7e8, 0x4)
 type_event_record_type type_record_show_hero::getType() const
 {
@@ -963,23 +934,19 @@ void type_record_player_death::replay(bool draw)
 }
 
 // E:\gamedcs\event_record.cpp:905
-// The player-death undo slot shares the empty base undo body in retail.
+// The player-death undo slot shares the empty base undo body.
 DC_ADDRESS(0x08dc20, 0x4)
 MAC_ADDRESS(0x0c1630, 0x4)
 void type_record_player_death::undo()
 {
 }
 
-// Mac default construction calls the base, then initializes the change vector.
 MAC_COMPGEN_ADDRESS(0x0c1634, 0x5c, CLASS_CTOR, type_record_shroud)
 
 VA_COMPGEN(0x0049bbd0, 0x21, SCALAR_DELETING_DTOR, type_record_shroud)
 
-// DC0x8f398 has only vector/base cleanup, supplied by the implicit C++
-// destructor; its exact emission is documented in config/source/dc_only.tsv.
-// The implicit destructor the wrapper above calls: the change vector's
-// _Tidy inlined (`operator delete(_First)` then the three-pointer clear)
-// followed by the base's vptr store.
+// DC0x8f398 has only vector/base cleanup, supplied by the implicit
+// destructor: the change vector's _Tidy, then the base's vptr store.
 VA_COMPGEN(0x0049bc00, 0x2C, IMPLICIT_DTOR, type_record_shroud)
 MAC_COMPGEN_ADDRESS(0x0c26d0, 0x7c, IMPLICIT_DTOR, type_record_shroud)
 
@@ -1037,12 +1004,8 @@ bool type_record_shroud::save(TAbstractFile* outfile)
 }
 
 // E:\gamedcs\event_record.cpp:978
-// NO RETAIL BODY: the carve leaves no row between save (0x49bdf0) and
-// replay (0x49be60), and the vtable accounts for both, so Complete
-// expanded this DC-named member into its two callers rather than
-// emitting it.  It is defined here at its DC source position so /Ob2 can
-// make that same decision - a defined-but-unclaimed symbol adds no
-// objdiff row of its own.
+// No retail body: Complete inlines this DC-named member into its two
+// callers.
 DC_ADDRESS(0x08ddec, 0x84)
 MAC_ADDRESS(0x0c18a0, 0x60)
 void type_record_shroud::addChange(int x, int y, int z,
@@ -1127,9 +1090,9 @@ void game::recordEraseObject(NewmapCell* cell, type_point point)
 }
 
 // E:\gamedcs\event_record.cpp:1071
-// Retail takes THREE arguments (`ret 0xc`), not the Dreamcast's one: the
-// replay state goes in the record's +0xc/+0x10 pair while the constructor
-// snapshots the boat's current state into +0xd/+0x14 for undo.
+// Complete takes THREE arguments, not the Dreamcast's one: the replay state
+// goes in the record's +0xc/+0x10 pair while the constructor snapshots the
+// boat's current state into +0xd/+0x14 for undo.
 VA(0x0049c560, 0x1B8)
 DC_ADDRESS(0x08e108, 0x3e)
 MAC_ADDRESS(0x0c1dbc, 0xdc)  // anchor-vtable (constructs 0x63deec)
@@ -1178,13 +1141,9 @@ void game::recordMove(hero* who, int direction, type_point destination)
 }
 
 // E:\gamedcs\event_record.cpp:1115
-// NO RETAIL BODY. The nine recorders between shroud::undo and SetVisibility
-// pair one-for-one onto the DC roster's other nine by the derived vftable
-// each stores, and no row is left for this one: the carve's 0x49cf50 stores
-// type_record_teleport's 0x63dea4, not type_record_player_death's 0x63df64.
-// Whatever the PC revision does on player death, it does not go through an
-// out-of-line recorder here.
-// DC1116 constructs the typed record and calls push_back. No standalone retail address is claimed.
+// No retail body: the PC revision does not record player death through an
+// out-of-line recorder here. DC1116 constructs the typed record and calls
+// push_back.
 DC_ADDRESS(0x08e2bc, 0x3c)
 void game::recordPlayerDeath(char playerId)
 {
@@ -1200,11 +1159,9 @@ void game::recordTeleport(hero* who, type_point destination)
 }
 
 // E:\gamedcs\event_record.cpp:1136
-// The DC RECT, distance and teamMask locals reproduce Complete exactly.
-// Both dc 0x8e48c and retail +0x17f branch around addChange and the map-cell
-// store, so unchanged cells are not rewritten. The header getChangeCount
-// helper and vector push_back remain canonical source calls and expand to
-// the retail sequences without inline steering.
+// The DC RECT, distance and teamMask locals; both DC and retail branch
+// around addChange and the map-cell store, so unchanged cells are not
+// rewritten. getChangeCount and push_back stay canonical source calls.
 VA(0x0049d160, 0x268)
 DC_ADDRESS(0x08e33c, 0x210)
 MAC_ADDRESS(0x0c2314, 0x3bc)  // anchor-global (0x63df7c + GetMapExtraPtr)
@@ -1256,11 +1213,8 @@ void game::setVisibility(const int startX, const int startY, const int z,
 // Cover of Darkness's semantics exactly - while -1 clears all eight. It
 // also has no replay guard on the queue, only the empty-record one.
 // DC line 1199's double distance is range+0.5, not the sqrt result; lines
-// 1206..1209 fill tagRECT rect. Both dc 0x8e624 and retail +0x18e skip the
-// write when unchanged, so line 1224's store belongs inside the inequality.
-// Recovering that store reaches 97.8326%; canonical push_back (line 1232)
-// removes the inline-depth pin and reaches 99.9070%; RECT ownership closes
-// the frame and reaches 100%. Direct and named per-cell deltas reproduce it.
+// 1206..1209 fill tagRECT rect. Unchanged cells are skipped, so line 1224's
+// store belongs inside the inequality; push_back is canonical (line 1232).
 VA(0x0049d3d0, 0x260)
 DC_ADDRESS(0x08e54c, 0x1e4)
 MAC_ADDRESS(0x0c274c, 0x39c)  // anchor-global (0x63df7c + GetMapExtraPtr)
@@ -1295,8 +1249,7 @@ void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
         }
     }
 
-    // The EMPTY arm is the one retail lays out inline (`jne` forward to the
-    // queue), so the test is spelled == 0, not != 0.
+    // The empty arm comes first: the test is spelled == 0, not != 0.
     if (record->getChangeCount() == 0) {
         delete record;
     } else {

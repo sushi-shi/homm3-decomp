@@ -1,7 +1,7 @@
 // pcx.h - retail PCX helper ABI, corroborated by the Dreamcast type stream.
 
-// LIBRARY IDENTIFIED (2026-09-05): the five entry points below are the
-// **Victor Image Processing Library** (Catenary Systems), linked statically.
+// LIBRARY: the five entry points below are the **Victor Image Processing
+// Library** (Catenary Systems), linked statically.
 // `imgdes` with exactly these eleven fields under exactly these names -
 // ibuff / stx / sty / endx / endy / buffwidth / palette / colors / imgtype /
 // bmh / hBitmap - is Victor's own image descriptor, and allocimage /

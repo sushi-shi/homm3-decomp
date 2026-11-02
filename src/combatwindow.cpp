@@ -29,22 +29,16 @@
 DATA(0x00695000) static TCombatWindow* g_combatWindow;
 
 // E:\gamedcs\combatwindow.cpp:42
-// DC records only the TCheatCode local. The extra retail _Tidy(false) call
-// belongs to string::_Grow's shared-buffer/zero-length branch, not a second
-// string lifetime: Mac directly assigns the text pointer and length, and DC
-// line93 records text-resource indexing followed by string assignment.
-// Restoring the shared markGameAsCheated operation after assignment keeps
-// that cleanup call and reproduces the complete retail instruction stream.
-// Direct/copy/converting code construction, assign, and recognition-local
-// variants alone did not recover this boundary; keep the canonical helper.
+// DC records only the TCheatCode local, and DC line93 records text-resource
+// indexing followed by string assignment; the shared markGameAsCheated
+// operation follows the assignment.
 VA(0x00472010, 0x1C0)
 DC_ADDRESS(0x069638, 0x218)
 MAC_ADDRESS(0x07fef4, 0x198)  // anchor-caller SendChat + three cheat arms
 void checkCombatCheatCode(std::string& chatString)
 {
-    // Retail keeps every cheat code as its own .rdata array in source
-    // order (the combat copies of shared codes are separate objects),
-    // not as a pooled .data literal.
+    // Every cheat code is its own array in source order (the combat copies
+    // of shared codes are separate objects).
     DATA(0x0063d490) static const char bluePillCode[] = "ajpoyhrcvyy";
     DATA(0x0063d49c) static const char redPillCode[] = "ajperqcvyy";
     DATA(0x0063d4a8) static const char allSpellsCode[] = "ajpgurervfabfcbba";
@@ -64,8 +58,7 @@ void checkCombatCheatCode(std::string& chatString)
         recognized = 1;
         currentHero->m_mana = 999;
         if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-            // DC line82 constructs the artifact in the GiveArtifact call;
-            // Mac 0x7ffd4..0x7fff4 passes that two-word temporary by address.
+            // DC line82 constructs the artifact in the GiveArtifact call.
             currentHero->giveArtifact(type_artifact(ARTIFACT_SPELLBOOK), 1, 1);
         }
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
@@ -79,12 +72,12 @@ void checkCombatCheatCode(std::string& chatString)
     }
 }
 
-// DC139 calls CGameChatEdit's constructor. Retail vtable 0x63d4bc has
-// 27 slots; slots 25/26 are CGameChatEdit::sendChatCleanup and activate.
-// The base owns activated at +0x70 and its alignment.
+// DC139 calls CGameChatEdit's constructor. The vtable has 27 slots; slots
+// 25/26 are CGameChatEdit::sendChatCleanup and activate. The base owns
+// activated at +0x70 and its alignment.
 
-// Retail expands this ordinary forwarding constructor into TCombatWindow.
-// The canonical CGameChatEdit base owns the +0x70 clear.
+// Inlined into TCombatWindow. The canonical CGameChatEdit base owns the
+// +0x70 clear.
 DC_ADDRESS(0x06a3ec, 0x98)
 CCombatChatEdit::CCombatChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
@@ -224,7 +217,7 @@ void CCombatChatEdit::updateScreen()
 
 VA_COMPGEN(0x00472890, 0x05, IMPLICIT_DTOR, CCombatChatEdit)
 
-// Vtable 0x63d528 slot 0.
+// Vtable slot 0.
 VA_COMPGEN(0x004728a0, 0x21, SCALAR_DELETING_DTOR, TCombatWindow)
 
 VA(0x004728d0, 0x2A)
@@ -264,7 +257,7 @@ TCombatWindow::~TCombatWindow()
     g_combatWindow = 0;
 }
 
-// Retail folds the DC helper at combatwindow.cpp:322-346 into its only caller.
+// The DC helper at combatwindow.cpp:322-346 is inlined into its only caller.
 // The two scroll arrows deliberately share help row 5.
 DC_ADDRESS(0x069c70, 0x6a)
 MAC_ADDRESS(0x080894, 0xe0)
@@ -290,11 +283,7 @@ inline int TCombatWindow::convertID2HelpID(int id)
     }
 }
 
-// DC combatwindow.cpp:356 (0x69cdc) proves const message&. Native Mac
-// 0x80984 and Windows read the message unconditionally at the passed
-// address; the former pointer spelling was a synthetic ABI facade.
-// The reference interface preserves all 304 emitted VC6 bytes from the
-// exact pointer baseline; the old target name needs delink refresh.
+// DC combatwindow.cpp:356 (0x69cdc) proves const message&.
 VA(0x00472a50, 0x124)
 DC_ADDRESS(0x069cdc, 0x7e)
 MAC_ADDRESS(0x080974, 0xb4)
@@ -314,9 +303,9 @@ unsigned char TCombatWindow::processRightSelect(const message& msg)
     return 1;
 }
 
-// Dreamcast keeps this source helper out of line; retail /Ob2 folds both call
-// sites in handle_widget_hover. The control-bar vtable and the chat editor's
-// +0x6d focus byte independently prove the two member types.
+// Dreamcast keeps this source helper out of line; inlined at both call
+// sites in handle_widget_hover. The control-bar vtable and the chat
+// editor's +0x6d focus byte prove the two member types.
 DC_ADDRESS(0x069d5c, 0x4c)
 MAC_ADDRESS(0x080a28, 0x4c)
 inline void TCombatWindow::setRollover(const char* newText)
@@ -526,9 +515,7 @@ void TCombatWindow::drawWindow(bool update, int low, int high)
 }
 
 // E:\gamedcs\combatwindow.cpp:633..649. Original name: OnChatActivate.
-// DC calls this ordinary member from SendChat:189 and OnEscape:201.
-// Complete expands the same conditional show/hide and subwindow redraw.
-// Keep the shared helper and widget::show/hide source calls.
+// DC calls this ordinary member from SendChat:189 and OnEscape:201; inlined.
 DC_ADDRESS(0x06a310, 0xb0)
 MAC_ADDRESS(0x081318, 0x98)
 void TCombatWindow::onChatActivate(unsigned char active)
@@ -547,19 +534,15 @@ void TCombatWindow::onChatActivate(unsigned char active)
     }
 }
 
-// COMDAT pairing: substr on the char instantiation, mnemonic agreement 1.000.
+// COMDAT pairing: substr on the char instantiation.
 VA_COMPGEN(0x00473350, 0x1A0, BASIC_STRING_SUBSTR, char)
 
-// COMDAT pairing: find on the char instantiation, mnemonic agreement 0.923.
+// COMDAT pairing: find on the char instantiation.
 VA_COMPGEN(0x004734f0, 0x87, BASIC_STRING_FIND, char)
 
-// COMDAT pairing: _Freeze on the char instantiation, mnemonic agreement 0.927.
+// COMDAT pairing: _Freeze on the char instantiation.
 VA_COMPGEN(0x00473580, 0x76, BASIC_STRING_FREEZE, char)
 
-// COMDAT pairing: vector<std::string*>::insert. Three addresses resemble the
-// pointer-element insert and the widget one is already claimed at 0x14d120
-// (lane 16, on the caller set); this is the string* instantiation, reached
-// from TCombatWindow::combat_message and from TCustomCampaignWindow's
-// LoadCampaignList - two different units, which a compiland-local look-alike
-// never is.
+// COMDAT pairing: vector<std::string*>::insert, reached from
+// TCombatWindow::combat_message and TCustomCampaignWindow's LoadCampaignList.
 VA_COMPGEN(0x00473600, 0x209, VECTOR_INSERT, string_ptr)

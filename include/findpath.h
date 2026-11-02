@@ -119,10 +119,8 @@ public:
     ~searchArray();
     void close();
 
-    // Retail 0x4b3b90 checks receiver+0x24 for null, then indexes the
-    // 30-byte pathCell array and returns ret 4. FindCombatPath calls at
-    // 0x4b382f/0x4b3881/0x4b393e/0x4b3990 correspond to the four
-    // expansions of DC mark_enemy's get_hex call.
+    // Null-checks the pathCell array, then indexes it. FindCombatPath's four
+    // calls are the four expansions of DC mark_enemy's get_hex call.
     // E:\gamedcs\FindPath.h:194
     VA(0x004b3b90, 0x20)  // caller/get_hex correlation
     DC_ADDRESS(0x027fe8, 0x16)
@@ -159,8 +157,7 @@ public:
     }
 
     // Dreamcast FindPath.h:216/226. Both const header helpers retain public
-    // SH4 copies, while Complete expands build_path's calls into the result
-    // vector's size and indexed pointer load.
+    // SH4 copies; inlined in build_path.
     DC_ADDRESS(0x020108, 0x24)
     long getPathSteps() const
     {
@@ -181,10 +178,8 @@ public:
         return m_result[i];
     }
 
-    // Dreamcast FindPath.h:231/236/257.  These source helpers are all
-    // folded into ai_player.obj's destination chooser on retail x86.  Keep
-    // the boundaries visible in C++ even where the selected lowering is a
-    // vector::size call or direct field/index arithmetic.
+    // Dreamcast FindPath.h:231/236/257. These source helpers are all inlined
+    // into ai_player.obj's destination chooser.
     DC_ADDRESS(0x037e4c, 0x18)
     long getVisitedCount() const { return m_visitedPoints.size(); }
 
@@ -192,23 +187,15 @@ public:
     pathCell* getVisitedCell(long index) { return m_visitedPoints[index]; }
     long getTravelTime(const army* currentArmy, long hex) const;
 
-    // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte
-    // out-of-line copy). The PARAMETER IS A SHORT, and that is what the
-    // retail bodies prove: move_toward (0x41f580) and FindCombatPath
-    // (0x4b3400) both index bIsMoatSlowed through a `movsx` from a
-    // 16-bit value, and FindCombatPath even does the neighbour's
-    // `+/- 1` in 16-bit arithmetic (`mov di, word [..]; sar di, 6;
-    // add; movsx ecx, cx`) - which only a short parameter forces. The
-    // one call whose argument is already a sign-extended 16-bit value
-    // loses the movsx, exactly as it should.
-    // Original is_moat@@QBA_NF proves bool and short, respectively.
-    // Its raw-byte return and the 0/1 setters identify a bool map.
+    // findpath.h:242 in the DC roster (ai.obj carries the only out-of-line
+    // copy). Original is_moat@@QBA_NF proves bool and a SHORT parameter;
+    // FindCombatPath does the neighbour's `+/- 1` in 16-bit arithmetic. Its
+    // raw-byte return and the 0/1 setters identify a bool map.
     DC_ADDRESS(0x028018, 0xa)
     bool isMoat(short hex) const { return m_isMoatSlowed[hex]; }
 
-    // E:\\gamedcs\\findpath.h:247 (). Retail folds this
-    // const tiny helper into move_hero and AI_choose_destination as the
-    // byte read at +0x20.
+    // E:\\gamedcs\\findpath.h:247. Inlined in move_hero and
+    // AI_choose_destination.
     DC_ADDRESS(0x037e7c, 0x8)
     bool limitWasReached() const { return m_limitReached != 0; }
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
@@ -224,7 +211,7 @@ public:
                             long baseSpeed);
 
     // Dreamcast FindPath.h:252. MoveHero brackets its move_hero call with
-    // this setter; Complete expands both calls to the +0x6c store.
+    // this setter; both calls inlined.
     DC_ADDRESS(0x114be4, 0x6)
     void setDangerZones(long* dangerZoneMap)
     {
@@ -301,16 +288,16 @@ private:
     // `[result._First]` and immediately reads `word [that + 8]`,
     // pathCell::last_point.
     std::vector<pathCell*> m_result;
-    // ELEMENT TYPE PROVEN, 2026-08-14, by PushPoint (0x4b1a70) - the one
-    // located body that touches it. Its tail inserts into this vector with
+    // ELEMENT TYPE PROVEN by PushPoint (0x4b1a70) - the one located body that
+    // touches it. Its tail inserts into this vector with
     // the four-byte stride (`sub ecx,eax; sar ecx,2` for the capacity test,
     // `add ebx,4` / `add edx,4` in the copy loops) and the value it hands
     // the insert is `lea edx,[ebp+0x14]`, the frame slot holding the
     // get_cell() result - i.e. a pathCell*. The DC fieldlist prints all
     // three of these as std::vector<pathCell...> and the dump truncates the
-    // argument list at the comma, which is why the admitted placeholder was
-    // `int`; queue is pinned by its 30-byte stride, result and this one by
-    // their 4-byte strides plus what retail stores through them.
+    // argument list at the comma; queue is pinned by its 30-byte stride,
+    // result and this one by their 4-byte strides plus what retail stores
+    // through them.
     std::vector<pathCell*> m_visitedPoints;
     // One byte per combat hex, indexed by a SIGN-EXTENDED hex
     // (`movsx edx, si; cmp byte [edx + eax], 0` in move_toward

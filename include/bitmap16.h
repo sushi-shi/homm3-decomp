@@ -108,9 +108,8 @@ public:
     void Gray(int x, int y, int w, int h);
     void GrabAndBlur(const Bitmap16Bit* src, int sx, int sy);
 
-    // Header accessors (DC Bitmap16.h:111-113, 150/156). They are kept
-    // inline because Complete's ResourceManager expands them into its
-    // bitmap-remap blit rather than calling the emitted DC copies.
+    // Header accessors (DC Bitmap16.h:111-113, 150/156), inlined in
+    // ResourceManager's bitmap-remap blit.
     DC_ADDRESS(0x01f100, 0xc)
     int GetWidth() const { return Width; }
 
@@ -133,8 +132,8 @@ public:
     DC_ADDRESS(0x01f124, 0x22)
     unsigned short* GetMap(int x, int y)
     {
-        // Bitmap16.h:151 (dc 0x1f124): add the byte row stride, then
-        // the pixel offset. Retail's retained body has the same order.
+        // Bitmap16.h:151 (dc 0x1f124): add the byte row stride, then the
+        // pixel offset.
         return reinterpret_cast<unsigned short*>(
             reinterpret_cast<unsigned char*>(map) + y * Pitch
             + x * sizeof(*map));
@@ -162,8 +161,7 @@ public:
 
     // DC Bitmap16.h:168 retains this inline body. This header forwarding
     // overload calls GetMap/GetWidth/GetHeight/GetPitch and then the raw
-    // six-argument Grab. Complete's ShootAnimatedMissile expands it into
-    // the retained raw call at 0x0044e3f0.
+    // six-argument Grab; inlined in ShootAnimatedMissile.
     DC_ADDRESS(0x04cb1c, 0x74)
     void Grab(const Bitmap16Bit* src, int srcX, int srcY)
     {

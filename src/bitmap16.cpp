@@ -24,9 +24,8 @@ static long ftol(double d)
 VA_COMPGEN(0x0044e020, 0x21, SCALAR_DELETING_DTOR, Bitmap16Bit)
 
 // DC allocation uses BMCreateSurface then virtual Lock (slot +0x64),
-// falling back to the same heap allocation below. Mac 0x5be20/0x5bee4
-// and retail 0x44df70/0x44e050 retain only that heap path. Their class
-// has no surface descriptor/owner; these calls are not expanded helpers.
+// falling back to the same heap allocation below. Complete's class has no
+// surface descriptor/owner and keeps only that heap path.
 VA(0x0044df70, 0xA3)
 DC_ADDRESS(0x050b00, 0x104)
 MAC_ADDRESS(0x05be20, 0xc4)
@@ -101,10 +100,8 @@ Bitmap16Bit::~Bitmap16Bit()
 }
 
 // E:\gamedcs\bitmap16.cpp:224/234/243/253. The four pixel-format converters
-// the compiland's own Remap runs the surface through. NONE of them has a
-// retail row: /Ob2 expands all four at Remap's two arms, which is the only
-// place in the image that reaches them, so the shift/mask chains below are
-// read straight out of that body.
+// the compiland's own Remap runs the surface through, all four inlined at
+// Remap's two arms.
 DC_ADDRESS(0x050f34, 0x2c)
 unsigned long color1555to8888(unsigned short color)
 {
@@ -198,12 +195,11 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
     referenced = 1;
 }
 
-// DC bitmap16.cpp:358 supplies the ordinary clear helper called by reference.
-// Complete inlines its scalar resets and owned-buffer release; the DC-only
-// surface-release arm has no corresponding field or operation in retail.
-// DC 0x511d6/0x511e0 unlocks/releases the surface instead of deleting a
-// heap buffer. Mac 0x5c094 and retail reference 0x44e250 retain only the
-// heap/borrowed-buffer branch, including its null-pointer guard.
+// DC bitmap16.cpp:358 supplies the ordinary clear helper called by
+// reference; inlined. The DC-only surface-release arm (unlock/release
+// instead of deleting a heap buffer) has no corresponding field in Complete,
+// which keeps only the heap/borrowed-buffer branch with its null-pointer
+// guard.
 DC_ADDRESS(0x051198, 0x90)
 MAC_ADDRESS(0x05c094, 0x64)
 void Bitmap16Bit::clear()
@@ -266,14 +262,9 @@ int Bitmap16Bit::importPCXFile(const char* filename)
         static_cast<const unsigned char*>(static_cast<const void*>(pointer)) \
         + offset))
 
-// The Mac draw/grab/rectangle family expands the canonical Bitmap16.h
-// dimension and byte-pitch reads (DC header lines 111-113). Examples:
-// draw 0x5c1e8/0x5c224, grab 0x5c274/0x5c278/0x5c31c,
-// fillRect 0x5c348/0x5c35c/0x5c41c, frameRect 0x5c438/0x5c44c/0x5c534,
-// darken 0x5c55c/0x5c570/0x5c6d4, masked darken 0x5c6fc/0x5c710/0x5c7e8.
-// Keep these operations as calls to the existing getters. The expanded
-// one-word reads identify the operation; original source-call spelling is
-// inferred. Map lookup is already represented by getMap in each caller.
+// The draw/grab/rectangle family reads dimension and byte pitch through the
+// canonical Bitmap16.h getters (DC header lines 111-113); the source-call
+// spelling is inferred.
 VA(0x0044e2b0, 0x139)
 DC_ADDRESS(0x051378, 0xf0)
 MAC_ADDRESS(0x05c0f8, 0x158)  // MAC_ABSTRACTION_FROM(tokens1:172e459daefb,41.2791): canonical getPitch calls replace the two direct row-stride loads; Windows remains exact.
@@ -372,16 +363,11 @@ void Bitmap16Bit::Grab(const unsigned short* src, int srcX, int srcY,
 }
 
 // E:\gamedcs\bitmap16.cpp:679. FrameRect's sibling, and the same clipped
-// rectangle walk with the interior filled instead of outlined: VC6 turns
-// the inner store loop into its word-fill idiom (duplicate the colour into
-// a dword, `shr ecx,1 / rep stosd / adc ecx,ecx / rep stosw`).
-// DC bitmap16.cpp:699 (0x51566..0x51568) and retail both advance the row
-// cursor unconditionally. Retain that original source behavior for the exact
-// reconstruction, including its unused out-of-range pointer after a bottom-edge
-// rectangle with x > 0. For an owned 4x4 bitmap, fillRect(1,3,1,1) ends at
-// pixel offset 17, beyond one-past 16. The allocation does not include padding
-// that would make this valid portable C++. The earlier guarded repair scored
-// 82.1964%; tested integral offsets and zero-column origins do not match.
+// rectangle walk with the interior filled instead of outlined. DC
+// bitmap16.cpp:699 advances the row cursor unconditionally, so a
+// bottom-edge rectangle with x > 0 leaves an unused out-of-range row
+// pointer: for an owned 4x4 bitmap, fillRect(1,3,1,1) ends at pixel offset
+// 17, beyond one-past 16.
 VA(0x0044e4c0, 0x7D)
 DC_ADDRESS(0x05150c, 0x70)
 MAC_ADDRESS(0x05c348, 0xec)  // anchor-caller(textWidget::Draw, FadeToBlack) + order-map(DC bitmap16.obj)
@@ -403,13 +389,10 @@ void Bitmap16Bit::FillRect(int x, int y, int w, int h, unsigned short color)
     }
 }
 
-// E:\gamedcs\bitmap16.cpp:705. The Dreamcast dossier ()
-// proves the clipped width/height, one GetMap call, row loop, full top/bottom
-// rows, and two endpoint stores on interior rows. Retail independently fixes
-// Pitch as a byte stride and preserves this 18-block source shape.
-// Row-boundary residual (95.2113%): step only on a visited following row.
-// The last-row guard scores 94.3662%, visited-row offsets 70.2113%; original
-// 100% forms end+x at the bottom edge and fails the native pointer control.
+// E:\gamedcs\bitmap16.cpp:705. The Dreamcast record proves the clipped
+// width/height, one GetMap call, row loop, full top/bottom rows, and two
+// endpoint stores on interior rows; Pitch is a byte stride. The row step
+// also runs after the last row, forming end+x at the bottom edge.
 VA(0x0044e540, 0xA3)
 DC_ADDRESS(0x05157c, 0x98)
 MAC_ADDRESS(0x05c434, 0x11c)
@@ -437,13 +420,10 @@ void Bitmap16Bit::FrameRect(int x, int y, int w, int h,
     }
 }
 
-// E:\gamedcs\bitmap16.cpp:742. Dreamcast () proves the clipped
-// rectangle, one GetMap expression, RGB shift-mask construction, and nested
-// row/pixel loops. Complete inlines GetMap and independently fixes Pitch as
-// a byte stride; the earlier unchecked 0xA4-byte body was exact.
-// Row-boundary residual (82.6377%): an integral byte displacement advances
-// after each row, but the pointer is formed only on a visit. Next-row guards
-// score 77.4203%, last-row guards 64.5072%; the DC pixel/mask work is retained.
+// E:\gamedcs\bitmap16.cpp:742. Dreamcast proves the clipped rectangle, one
+// GetMap expression, RGB shift-mask construction, and nested row/pixel
+// loops; Pitch is a byte stride. The row pointer advances after every row,
+// including the last.
 VA(0x0044E5F0, 0xA4)
 DC_ADDRESS(0x051614, 0x94)
 MAC_ADDRESS(0x05c550, 0x1a8)
@@ -478,11 +458,9 @@ void Bitmap16Bit::Darken(int x, int y, int w, int h)
 // E:\gamedcs\bitmap16.cpp:778. The masked Darken overload: the same halve-
 // and-mask pass as the plain one, applied only where the 8-bit companion
 // bitmap has a non-zero byte. The mask row stride is its WIDTH, not its
-// Pitch - retail adds [mask+0x24] at the foot of every row - while the
-// starting row is still taken through Pitch.
-// Dreamcast line 808 and retail both advance the mask and bitmap row pointers
-// after the inner pixel loop. Keep DC GetMap/GetPitch and their different
-// pitch meanings (dc 0x52570/0x5256c), not a width-to-pitch substitution.
+// Pitch, while the starting row is still taken through Pitch. Dreamcast line
+// 808 advances the mask and bitmap row pointers after the inner pixel loop;
+// DC GetMap/GetPitch keep their different pitch meanings.
 VA(0x0044e6a0, 0xE0)
 DC_ADDRESS(0x0516a8, 0xd4)
 MAC_ADDRESS(0x05c6f8, 0x10c)  // MAC_ABSTRACTION_FROM(tokens1:ad3fb507f76d,31.1644): canonical dimension/pitch getters replace the expanded field reads; Windows remains exact.
@@ -566,19 +544,9 @@ void Bitmap16Bit::Colorize(int x, int y, int width, int height,
 // 16-bit-colour overload above. Each pixel's three channels are prescaled to
 // a full 31-bit range by INT_MAX/mask, their maximum becomes the HSV value,
 // and the hue's sextant selects which of v/p/q/t each channel takes back.
-// The integer and float overloads use the same class-owned RGB masks.
-// The sextant, `hue * 6`, `1.0f - saturation` and the fmod argument's
-// double conversion are all loop-invariant and land in the inner loop's
-// preheader; only the fmod call itself stays per-pixel, because VC6 will not
-// hoist an opaque call.
-// Row-boundary residual (96.5654%): integral relative byte offsets avoid the
-// final end+x pointer. Next/last guards score 94.6013/94.5490%; unchecked
-// row walks are not safe. Native one-row differential tests cover all six
-// hue sectors.
-// EXACT: the helper's by-value parameter owns the double scratch storage.
-// Sixteen source states / eight reproduced objects isolate this from the
-// caller's early-return scope (DC 884/885), plain ushort row/pixel pointers,
-// and the helper's ordinary declaration; those source restorations are flat.
+// The integer and float overloads use the same class-owned RGB masks. The
+// row walk advances past the last row. The helper's by-value parameter owns
+// the double scratch storage.
 VA(0x0044e940, 0x3B8)
 DC_ADDRESS(0x0519c4, 0x47c)
 MAC_ADDRESS(0x05c9b4, 0x328)  // anchor-caller(the 16-bit Colorize tail call) + order-map(DC bitmap16.obj)

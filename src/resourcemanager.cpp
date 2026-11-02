@@ -150,7 +150,6 @@ TResourceLODSlot::TResourceLODSlot(const char* name)
 }
 
 // The archive-array cleanup takes this implicit destructor's address.
-// Retail adds four to this, then tail-calls LODFile::~LODFile.
 VA_COMPGEN(0x00559220, 0x8, IMPLICIT_DTOR, TResourceLODSlot)
 VA_COMPGEN_AT(h3maped, 0x004dad90, 0x8, IMPLICIT_DTOR, TResourceLODSlot)
 VA_COMPGEN_AT(h3ccmped, 0x004442a0, 0x8, IMPLICIT_DTOR, TResourceLODSlot)
@@ -161,9 +160,7 @@ VA(0x005594b0, 0x40)
 DC_ADDRESS(0x122984, 0x72)
 MAC_ADDRESS(0x1521d0, 0x40)
 // The pair's conversion constructs TCacheMapKey from getName(), retaining
-// DC 0x1229a0. Windows 0x5594b9..0x5594df expands the twelve-byte copy,
-// terminator and tree insertion. Mac instead inserts into its 16384-entry
-// hash/pointer array through 0x151ff4; that backend has no Windows tree key.
+// DC 0x1229a0. Mac's backend is a hash/pointer array instead of the tree.
 void ResourceManager::AddToCache(resource* value)
 {
     assert(*value->get_Name() != 0);
@@ -173,7 +170,7 @@ void ResourceManager::AddToCache(resource* value)
 
 // The ostringstream used by both missing-resource reporters makes VC6 retain
 // this Dinkumware vbase-destructor closure. The base object's ??_D public and
-// both retail calls independently identify it; all 20 emitted bytes agree.
+// both retail calls independently identify it.
 #if 0  // @carcass -- compiler/library COMDAT emitted by ostringstream
 
 VA(0x005594f0, 0x14)  // anchor-caller + emitted COFF public, retail-only
@@ -215,8 +212,8 @@ VA_COMPGEN_AT(h3ccmped, 0x004442c0, 0x1d, STATIC_CTOR, g_resourcePath)
 // typeName.c_str() before constructing the stream; an ordinary shared helper
 // recovers that argument boundary and the stream's short lifetime. VC6 expands
 // this body naturally: no source inline keyword or inline-depth controls.
-// Both typed reporters are byte-exact with ordinary string assignments. Pasting
-// this body into those callers gives 78.49/72.05 and the wrong stream expansion.
+// Both typed reporters use ordinary string assignments; pasting this body
+// into those callers gives the wrong stream expansion.
 // The original helper name and exact source location are not available.
 static void reportMissingResource(const char* caller, const char* typeName,
                                   const char* resourceName)
@@ -239,15 +236,12 @@ static void reportMissingResource(const char* caller, const char* typeName,
         0);
 }
 
-// Complete's common missing-resource reporter has no Dreamcast identity. Its
-// thirteen game callers pass registers under the game's /Gr; the editor's
-// /Gr-less build pushes all three arguments (h3maped 0x4dc3d6). The dense
-// 0..96 dispatch maps the admitted resource values to names and renders every gap
-// as `0x` plus a hexadecimal value before building the diagnostic shown by
-// the callers.
-// 100%: ordinary string assignments plus reportMissingResource recover all
-// retail calls and lifetimes without inline-depth pins. The former bootstrap
-// C linkage suppressed EH cleanup; keep the ordinary C++ declaration.
+// Complete's common missing-resource reporter has no Dreamcast identity.
+// The game's callers pass registers (/Gr), the editor's push all three
+// arguments. The dense 0..96 dispatch maps the admitted resource values to
+// names and renders every gap as `0x` plus a hexadecimal value before
+// building the diagnostic shown by the callers. It has ordinary C++ linkage
+// (C linkage suppresses EH cleanup).
 VA(0x00559510, 0x4C1)  // caller ABI + retail type-name jump table/message graph
 void reportMissingTypedResource(const char* caller,
                                 int resourceType,
@@ -306,10 +300,8 @@ void reportMissingTypedResource(const char* caller,
 }
 
 // Complete splits sprite-family diagnostics from the common resource
-// reporter above, with the same calling convention. The retail jump table
-// proves the complete 64..79 type-name mapping. Like the common
-// reporter, this is 100% with ordinary assignments and reportMissingResource;
-// no artificial message scope or inline-depth control is needed.
+// reporter above, with the same calling convention; this is the 64..79
+// type-name mapping.
 VA(0x005599e0, 0x448)  // anchor-caller + retail type-name jump table
 void reportMissingSpriteResource(const char* caller,
                                  int resourceType,
@@ -480,10 +472,9 @@ void ResourceManager::SaturateGraphics()
     }
 }
 
-// Mac 0:0x152210..0x152280 retains this ordinary per-archive opener. Its
-// caller at 0:0x152924 calls it for both sprite and bitmap archive lists.
-// The helper constructs the archive pathname, opens its LODFile, destroys the
-// pathname, and returns whether the open succeeded.
+// Mac retains this ordinary per-archive opener, called for both sprite and
+// bitmap archive lists: build the archive pathname, open its LODFile,
+// destroy the pathname, and return whether the open succeeded.
 MAC_ADDRESS(0x152210, 0x70)
 static bool openArchiveResource(int archiveIndex)
 {
@@ -493,11 +484,9 @@ static bool openArchiveResource(int archiveIndex)
     return opened;
 }
 
-// Mac retains the archive searches at 0:0x1522ec and 0:0x152374.
-// Resource loaders reuse them; the public pointTo* wrappers near
-// the end of this file remain separate calls at 0:0x154660 and 0:0x154680.
-// Both bind the selected context row (Mac 0:0x1523a0 forms base + state*0x18;
-// retail inlined bitmap searches keep a dead lea of that row, not +8).
+// Mac retains the archive searches; resource loaders reuse them, and the
+// public pointTo* wrappers near the end of this file stay separate. Both
+// bind the selected context row.
 MAC_ADDRESS(0x1522ec, 0x88)
 static LODFile* findSpriteResource(const char* name)
 {
@@ -646,7 +635,6 @@ MAC_ADDRESS(0x152bfc, 0x3c)
 void ResourceManager::SetPath(const char* path)
 {
 #if defined(HOMM3_TARGET_MAC)
-    // Mac 0x152bfc assigns the path unchanged; MSL has no _fullpath.
     g_resourcePath = path;
 #else
     char fullpath[_MAX_PATH + 1];
@@ -708,13 +696,9 @@ VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
 VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
            t_lod_file_adapter)
 
-// Mac 0:0x152df8..0x152fc8 calls the retained findBitmapResource helper
-// for name and default.pcx. The same two ordinary source calls auto-inline in
-// Complete. Dreamcast names the anonymous bmpHeader local but cannot fix its
-// scope; retail keeps its stack home live across the loose FILE branch. Its
-// function-scope declaration prevents that branch's cache insertion pair from
-// reusing the header slot and matches all 0x41f retail bytes, 34 CFG blocks,
-// and 32 ordered calls. Moving result before the cache lookup was byte-flat.
+// The findBitmapResource helper serves name and default.pcx (both calls
+// inlined here). Dreamcast names the anonymous bmpHeader local; it is
+// function-scoped.
 VA(0x0055a800, 0x41F)
 DC_ADDRESS(0x121ac8, 0x194)
 MAC_ADDRESS(0x152df8, 0x1d0)  // bitmapBorder::SetImage loader;
@@ -753,9 +737,8 @@ Bitmap816* ResourceManager::GetBitmap816(const char* name)
                              "GetBitmap816"),
                 RESOURCE_TYPE_BITMAP, name);
 
-            // Each loader owns its fallback name as .rdata array storage:
-            // retail keeps two separate "default.pal" copies (0x6410b8,
-            // 0x6410c4) beside the pooled .data error-context literals.
+            // Each loader owns its fallback name as .rdata array storage
+            // (two separate "default.pal" copies).
             DATA(0x0064108c) static const char fallbackName[] = "default.pcx";
             lodFile = findBitmapResource(fallbackName);
 
@@ -865,12 +848,10 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
     }
 }
 
-// This getter family is one retail template: only the load callee and result
-// type differ. The scoped lookup locals let C1 reuse their frame slots for
-// AddToCache's insertion pair, exactly as in GetSpreadsheet below. Restoring
-// that helper's std::pair conversion closes every member of the family.
-// Complete removes ignore_cache: ECX supplies the name and the body always
-// performs the shared cache lookup before loading, then returns with ret.
+// This getter family is one retail template: only the load callee and
+// result type differ, and AddToCache takes the std::pair conversion.
+// Complete removes ignore_cache: the body always performs the shared cache
+// lookup before loading.
 VA(0x0055afd0, 0x8A)
 MAC_ADDRESS(0x153204, 0x54)
 Bitmap16Bit* ResourceManager::GetBitmap16(const char* name)
@@ -885,10 +866,9 @@ Bitmap16Bit* ResourceManager::GetBitmap16(const char* name)
     return loaded;
 }
 
-// Mac 0:0x153258 retains the reader immediately before loadPalette. It owns
-// the two stream reads, palette temporary, saturation and conversion; Complete
-// expands the same work in both its loose-file and archive paths. The helper
-// name is inferred from the neighboring retained loadPalette24Data operation.
+// Mac retains this reader before loadPalette; Complete inlines it in both
+// its loose-file and archive paths. The helper name is inferred from the
+// neighboring loadPalette24Data operation.
 MAC_ADDRESS(0x153258, 0x104)
 TPalette16* ResourceManager::loadPaletteData(const char* name,
                                              TAbstractFile* stream)
@@ -953,7 +933,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
 }
 
 // Like GetBitmap16, Complete always consults the cache and removes the
-// Dreamcast ignore_cache argument; the retained body ends with plain ret.
+// Dreamcast ignore_cache argument.
 VA(0x0055b3e0, 0x8A)
 DC_ADDRESS(0x121d90, 0x138)
 MAC_ADDRESS(0x1533e0, 0x54)  // dc public GetPalette + retail getter family
@@ -969,9 +949,9 @@ TPalette16* ResourceManager::GetPalette(const char* name)
     return loaded;
 }
 
-// The retained Mac helper at 0:0x153434 owns the header/RGBA buffers, reads
-// both from the common stream, constructs a palette and applies saturation.
-// Its caller passes (name, stream); the first argument is unused in this body.
+// The retained Mac helper owns the header/RGBA buffers, reads both from the
+// common stream, constructs a palette and applies saturation; its first
+// argument is unused.
 MAC_ADDRESS(0x153434, 0xa8)
 TPalette24* ResourceManager::loadPalette24Data(const char* name,
                                                TAbstractFile* stream)
@@ -987,16 +967,11 @@ TPalette24* ResourceManager::loadPalette24Data(const char* name,
     return result;
 }
 
-// Mac 0:0x1534dc..0x153560 is this loader's archive-only port. Its caller at
-// 0x10fdf0 passes Players.pal; it calls findBitmapResource for the requested
-// name and default.pal, then calls the retained loadPalette24Data operation at
-// 0x153434 through an 8-byte LOD stream adapter. Complete also opens loose
-// FILE resources and reports missing resources. Two source calls to the
-// ordinary findBitmapResource and loadPalette24Data helpers auto-inline in
-// VC6, matching all 0x2d1 retail bytes and its 22 ordered call sites. The
-// latter helper owns the header/RGBA locals recorded in Dreamcast's older
-// direct-reader function; its recovered lifetime closes the former 8-byte
-// frame-coloring residual.
+// Mac's archive-only port calls findBitmapResource for the requested name
+// and default.pal, then loadPalette24Data through an 8-byte LOD stream
+// adapter; Complete also opens loose FILE resources and reports missing
+// resources. Both helpers are inlined here; loadPalette24Data owns the
+// header/RGBA locals recorded in Dreamcast's older direct-reader function.
 VA(0x0055b470, 0x2D1)
 DC_ADDRESS(0x121ec8, 0xe4)
 MAC_ADDRESS(0x1534dc, 0x84)  // dc/hd public identity + retail palette-file shape
@@ -1038,19 +1013,14 @@ TPalette24* ResourceManager::GetPalette24(const char* name)
     }
 
     // Complete routes Dreamcast's two direct LODFile::read calls through the
-    // exact t_lod_file_adapter::Read receiver. Retail proves the vtable owner
-    // at 0x641128 and its slot-1 target at 0x559110; keeping this adapter is a
-    // revision fact, not permission to flatten the older helper operation.
+    // t_lod_file_adapter::Read receiver.
     t_lod_file_adapter stream(lodFile);
     TAbstractFile* streamInterface = &stream;
     return loadPalette24Data(name, streamInterface);
 }
 
 // Dreamcast's older GetFont body records a TFontSpec local and calls the
-// reference-taking font::SetPalette. Mac loadFontData at 0:0x153560 likewise
-// passes the fetched palette directly at 0x153700, with no copy temporary.
-// Passing *palette matches the declared reference interface, removes VC6's
-// implicit TPalette16 pointer-conversion temporary and closes this body.
+// reference-taking font::SetPalette; *palette is passed directly.
 VA(0x0055b750, 0x17A)
 MAC_ADDRESS(0x153560, 0x260)
 font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
@@ -1060,7 +1030,6 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
     stream->read(&spec, sizeof(spec));
 
     int dataSize = fileSize - sizeof(spec);
-    // Mac retains TAutoArrayPtr array cleanup at 0:0x1536a0/1536e4/1537a4.
     TAutoArrayPtr<unsigned char> data(new unsigned char[dataSize]);
     stream->read(data.get(), dataSize);
 
@@ -1083,14 +1052,9 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
     return result.release();
 }
 
-// Mac 0:0x1538a8..0x153944 is this named loader's archive-only port: the
-// font getter calls it at 0x15396c, and it calls findBitmapResource for
-// name/default.fnt before getItemIndex(name) and Mac loadFontData at 0x153560.
-// The latter reads through the same 8-byte LOD stream adapter and performs
-// endian conversion of the font records. Complete also opens loose FILE
-// resources and uses its separate Windows loadFontData body at 0x55b750. Two
-// ordinary source calls to findBitmapResource auto-inline in VC6 and close
-// this 0x229-byte Windows body exactly, preserving all 18 ordered calls.
+// Mac's archive-only port calls findBitmapResource for name/default.fnt
+// before getItemIndex(name) and loadFontData; Complete also opens loose
+// FILE resources. Both findBitmapResource calls are inlined here.
 VA(0x0055b8d0, 0x229)
 MAC_ADDRESS(0x1538a8, 0x9c)
 font* ResourceManager::loadFont(const char* name)
@@ -1155,9 +1119,8 @@ font* ResourceManager::GetFont(const char* name)
     return loaded;
 }
 
-// Mac 0:0x153998 retains this reader directly before loadText. The size,
-// stream and name arguments feed one allocation, virtual read and constructor.
-// Complete expands the same body in its file and archive branches.
+// Mac retains this reader before loadText; Complete inlines it in its file
+// and archive branches.
 MAC_ADDRESS(0x153998, 0xb4)
 TTextResource* ResourceManager::loadTextData(const char* name,
                                              TAbstractFile* stream,
@@ -1228,8 +1191,7 @@ TTextResource* ResourceManager::GetText(const char* name)
     return loaded;
 }
 
-// Mac 0:0x153b2c is the corresponding retained spreadsheet reader. Its
-// neighboring caller is loadSpreadsheet at 0:0x153be0.
+// Mac retains the corresponding spreadsheet reader.
 MAC_ADDRESS(0x153b2c, 0xb4)
 TSpreadsheetResource* ResourceManager::loadSpreadsheetData(
     const char* name, TAbstractFile* stream, int fileSize)
@@ -1315,10 +1277,8 @@ void ResourceManager::Expunge()
 }
 
 // A cache hit adds a reference before returning the resource.
-// Mac 0x152194 calls a different cache backend at 0x1520e8: it searches
-// 16384 eight-byte hash/resource rows, using the name hash at 0x15216c.
-// Windows retains the typed std::map lookup below; its Mac backend cannot
-// be admitted as the same map storage solely through an address binding.
+// Mac's cache backend is a hash/resource array; Windows has the typed
+// std::map lookup below.
 DC_ADDRESS(0x122928, 0x5c)
 MAC_ADDRESS(0x152194, 0x3c)
 resource* ResourceManager::GetFromCache(const char* name)
@@ -1355,8 +1315,8 @@ TSoundHeaderDescriptor g_soundHeaderDescriptors[3] = {
 VA_COMPGEN_AT(h3maped, 0x004dae40, 0x61, STATIC_CTOR, g_soundHeaderDescriptors)
 VA_COMPGEN_AT(h3ccmped, 0x00444350, 0x61, STATIC_CTOR, g_soundHeaderDescriptors)
 
-// ECX/EDX carry name/auto_ptr and ret 4 removes the size output. The direct
-// Win32 file read replaces Dreamcast's separate data/header outputs.
+// The direct Win32 file read replaces Dreamcast's separate data/header
+// outputs.
 VA(0x0055c130, 0x28F)
 DC_ADDRESS(0x1221fc, 0xe4)
 MAC_ADDRESS(0x153cc0, 0x144)  // dc GetSoundFile + caller/record layout
@@ -1473,12 +1433,9 @@ sample* ResourceManager::GetSample(const char* name)
 }
 
 // Original: addPal16; csprite.cpp:978
-// Complete moved DEF parsing from CSprite::SpriteDataReload into getSprite.
-// Both retail targets expand this body in getSprite; Mac -O3 calls it unless
-// qualified inline, while VC6 is byte-flat. The keyword is a source-model
-// inference: Dreamcast's standalone body does not settle the declaration.
-// Its expansion retains deletion of the old palette and construction from
-// the new value.
+// Complete moved DEF parsing from CSprite::SpriteDataReload into getSprite,
+// which inlines this body (deleting the old palette and constructing from
+// the new value); the inline keyword is a source-model inference.
 // Complete's palette copy interface takes a pointer, where DC takes a ref.
 DC_ADDRESS(0x073b64, 0x48)
 inline void addPal16(CSprite* sprite, const TPalette16* pal)
@@ -1842,13 +1799,9 @@ void resource::dispose()
     }
 }
 
-// CSprite's retail vtable fixes this Complete-only override as slot 1.
-// DC CSprite type 0x17d3 / fields 0x17d4 has no Dispose virtual; its
-// ResourceManager disposal functions supply the older frame-walk semantics.
-// Retail proves that GetNumSeqs consumes resType and
-// that every live frame is released before the base cache-removal path. The
-// complete 25-block / 280-byte body is exact, including the map/tree iterator
-// return boundary retained inside the inlined base disposal.
+// CSprite's retail vtable fixes this Complete-only override as slot 1; DC's
+// CSprite has no Dispose virtual. GetNumSeqs consumes resType, and every
+// live frame is released before the base cache-removal path.
 VA(0x0055d1a0, 0x118)
 MAC_ADDRESS(0x15483c, 0x118)
 void CSprite::dispose()
@@ -1864,9 +1817,8 @@ void CSprite::dispose()
                         CSpriteFrame* image = GetFrame(sequence, frame);
                         if (image)
                             // DC 0x122652 uses the resource facade in the
-                            // older free sprite-disposal function. Complete
-                            // moves this loop into the virtual override;
-                            // Mac 0x154900..0x154910 expands that facade.
+                            // older free sprite-disposal function; Complete
+                            // moves this loop into the virtual override.
                             ResourceManager::Dispose(image);
                     }
                 }
@@ -1876,9 +1828,8 @@ void CSprite::dispose()
     }
 }
 
-// Dreamcast resourcemanager.cpp:2377/2380/2382/2391: one map lookup,
-// end test, resource extraction and AddRef. Complete expands this ordinary
-// helper in the getters; the nested map/tree decisions are compiler-owned.
+// Dreamcast resourcemanager.cpp:2377/2380/2382/2391: one map lookup, end
+// test, resource extraction and AddRef; inlined in the getters.
 VA_COMPGEN(0x0055D2C0, 0xBE, CLASS_CTOR, map)
 
 VA_COMPGEN(0x0055d380, 0x2C, MAP_INSERT, TCacheMapKey)
@@ -1887,8 +1838,6 @@ VA_COMPGEN(0x0055d3b0, 0x56, MAP_FIND, TCacheMapKey)
 
 VA_COMPGEN(0x0055e330, 0x56, TREE_FIND, TCacheMapKey)
 
-// Insert's locked key search calls the node rebalance at 0x55e7e0 and
-// predecessor walk at 0x55ec30. Their stock XTREE bodies own all three.
 VA_COMPGEN(0x0055dbc0, 0x12D, TREE_INSERT, TCacheMapKey)
 
 VA_COMPGEN(0x0055e7e0, 0x301, TREE_NODE_INSERT, TCacheMapKey)
@@ -1901,10 +1850,8 @@ VA_COMPGEN(0x0055d630, 0x1AD, STRINGBUF_OVERFLOW, char)
 
 VA_COMPGEN(0x0055db40, 0x7D, IMPLICIT_DTOR, basic_stringbuf)
 
-// The resource cache's own map teardown helper, and the two remaining
-// stringbuf members. All three byte-verified against the emitted COMDATs
-// (0.977 / 0.992 / 0.978); `_Erase` keys off the tree's NAMED key type,
-// TCacheMapKey, exactly as the iterator-increment claim below does.
+// The resource cache's own map teardown helper (keyed on TCacheMapKey), and
+// the two remaining stringbuf members.
 VA_COMPGEN(0x0055e760, 0x7E, TREE_ERASE, TCacheMapKey)
 
 VA_COMPGEN(0x0055eaf0, 0xDC, STRINGBUF_INIT, char)
@@ -1915,54 +1862,50 @@ VA_COMPGEN(0x0055e740, 0x17, TREE_LOWER_BOUND, TCacheMapKey)
 
 VA_COMPGEN(0x0055ebd0, 0x5A, TREE_LBOUND, TCacheMapKey)
 
-// COMDAT pairing: basic_ostringstream::_G?$basic_ostringstream, mnemonic agreement 1.000.
+// COMDAT pairing: basic_ostringstream::_G?$basic_ostringstream.
 VA_COMPGEN(0x0055dae0, 0x30, SCALAR_DELETING_DTOR, basic_ostringstream)
 
 VA_COMPGEN(0x0055db10, 0x21, SCALAR_DELETING_DTOR, basic_stringbuf)
 
-// COMDAT pairing: basic_stringbuf::0?$basic_stringbuf, mnemonic agreement 0.994.
+// COMDAT pairing: basic_stringbuf::0?$basic_stringbuf.
 VA_COMPGEN(0x0055e440, 0xFF, CLASS_CTOR, basic_stringbuf)
 
-// COMDAT pairing: basic_ostringstream::1?$basic_ostringstream, mnemonic agreement 0.944.
+// COMDAT pairing: basic_ostringstream::1?$basic_ostringstream.
 VA_COMPGEN(0x0055d530, 0xC2, IMPLICIT_DTOR, basic_ostringstream)
 // The Libraries archive keeps basic_ostream<char>'s vbase vtable fixup apart.
 VA_COMPGEN_AT(h3maped, 0x004dd4c0, 0xf, IMPLICIT_DTOR, basic_ostream)
 
 VA_COMPGEN(0x0055dcf0, 0x50F, TREE_ERASE_ITERATOR, TCacheMapKey)
 
-// COMDAT pairing: _Tree<TCacheMapKey, resource*>::erase(first, last), 0.960.
+// COMDAT pairing: _Tree<TCacheMapKey, resource*>::erase(first, last).
 VA_COMPGEN(0x0055e200, 0x121, TREE_ERASE_RANGE, TCacheMapKey)
 
-// COMDAT pairing: str on the char instantiation, mnemonic agreement 0.976.
+// COMDAT pairing: str on the char instantiation.
 VA_COMPGEN(0x0055e570, 0x1C5, STRINGBUF_STR, char)
 
-// COMDAT pairing: seekoff on the char instantiation, mnemonic agreement 0.945.
+// COMDAT pairing: seekoff on the char instantiation.
 VA_COMPGEN(0x0055d8a0, 0x15B, STRINGBUF_SEEKOFF, char)
 
-// COMDAT pairing: seekpos on the char instantiation, mnemonic agreement 0.919.
+// COMDAT pairing: seekpos on the char instantiation.
 VA_COMPGEN(0x0055da00, 0xD8, STRINGBUF_SEEKPOS, char)
 
-// COMDAT pairing: pbackfail on the char instantiation, mnemonic agreement 0.968.
+// COMDAT pairing: pbackfail on the char instantiation.
 VA_COMPGEN(0x0055d7e0, 0x5D, STRINGBUF_PBACKFAIL, char)
 
-// COMDAT pairing: underflow on the char instantiation, mnemonic agreement 0.938.
+// COMDAT pairing: underflow on the char instantiation.
 VA_COMPGEN(0x0055d840, 0x5A, STRINGBUF_UNDERFLOW, char)
 
 VA_COMPGEN(0x0055ecf0, 0x18, PAIR_CTOR, cstr_resource_pair)
 
-// COMDAT pairing: std::operator+(const string&, const char*). The two
-// operator+ overloads are one key, but each object emits exactly one of them
-// and they differ: seerhut's is the (const&, const&) form already claimed at
-// 0x174d10, this one is the (const&, const char*) form, reached from
-// ResourceManager::Open, GetBitmap816, LoadBitmap16 and LoadPalette - each
-// appending a literal extension to a path.
+// COMDAT pairing: std::operator+(const string&, const char*), reached from
+// ResourceManager::Open, GetBitmap816, LoadBitmap16 and LoadPalette
+// (seerhut's is the (const&, const&) form).
 VA_COMPGEN(0x004b7ec0, 0x114, BASIC_STRING_CONCAT, char)
 
 VA_COMPGEN(0x0048d7d0, 0x28, LOCALE_FACET_INCREF, char)
 
 // COMDAT pairing: basic_ostringstream<char>::str and
-// basic_streambuf<char>::setg, agreements 1.000 and 1.000 at exactly equal
-// 33-byte extents.
+// basic_streambuf<char>::setg (33 bytes each).
 VA_COMPGEN(0x0055d600, 0x21, OSTRINGSTREAM_STR, char)
 
 VA_COMPGEN(0x0055e540, 0x21, STREAMBUF_SETG, char)

@@ -12,11 +12,9 @@
 #include "platform.h"
 
 // Dreamcast exposes this original helper boundary and its sole named local,
-// const unsigned long magic. Retail has no out-of-line copy because VC6
-// expands it into HSVToRGB. The editors' /Ob1 Libraries build expands it too,
-// and h3ccmped's palette copy at 0x44af80 is the 720-byte body of bitmap24's
-// at 0x44bc20 (its 8-byte aligned frame is d's qword home), so it is declared
-// inline with bitmap24.cpp's body.
+// const unsigned long magic; inlined in HSVToRGB. Declared inline with
+// bitmap24.cpp's body because the editors' /Ob1 Libraries build expands it
+// too.
 // Original: ftol; palette.cpp:45
 DC_ADDRESS(0x10a244, 0x62)
 static inline long ftol(double d)
@@ -37,7 +35,7 @@ TPalette16::TPalette16()
 VA_COMPGEN(0x00522670, 0x21, SCALAR_DELETING_DTOR, TPalette16)
 
 // The raw 16-bit table overload: 0x80 dwords straight into the payload at
-// +0x1c, the same shape TPalette24's raw-data constructor has at 0x522e80.
+// +0x1c, the same shape TPalette24's raw-data constructor has.
 VA(0x005226a0, 0x2D)
 DC_ADDRESS(0x10a2f0, 0x48)
 MAC_ADDRESS(0x13b77c, 0x68)
@@ -192,13 +190,10 @@ TPalette16::~TPalette16()
 }
 
 // DC palette.cpp:210 places the ordinary Convert24to16 body after the
-// destructor and before Cycle; its earlier constructors call this helper.
-// Preserve that source order while matching the retail inline expansions.
-// DC lines 211/224-226/228-229 retain the p16 destination pointer, indexed
-// RGB reads, and three independent extu.w truncations before the final OR.
-// The 72-state family distinguishes actual channel-value lifetimes from casts:
-// named ushort channels give both callers 100%; inline casts alone leave
-// 94.8548/94.9365. The destination-pointer form preserves the recorded p16.
+// destructor and before Cycle; its earlier constructors call this helper
+// (inlined). DC lines 211/224-226/228-229 retain the p16 destination
+// pointer, indexed RGB reads, and three independent truncations before the
+// final OR, here named ushort channels.
 DC_ADDRESS(0x10a910, 0x88)
 MAC_ADDRESS(0x13bb20, 0xa0)
 void TPalette16::Convert24to16(const unsigned char* p24, int rbits, int rshift,

@@ -145,8 +145,8 @@ enum EGiveRecipientId {
 // referenced exactly twice image-wide - by its own constructor and its own
 // destructor - so none of these rows is an /OPT:ICF fold.
 
-// All five constructors are reconstructed byte-exact (2026-08-27): each is
-// CAdvPopup(x2, y2, 601, 593, 0x12), Widgets.reserve(144) (Give: 151), a
+// Each of the five constructors is CAdvPopup(x2, y2, 601, 593, 0x12),
+// Widgets.reserve(144) (Give: 151), a
 // fixed widget list, the slider member store where one exists, and the
 // AddWidget/MemError sweep. The slider callbacks live in the three
 // after-the-ctor gaps (0x5e1600/0x5e3670/0x5e9c60).
@@ -162,7 +162,6 @@ class slider;
 // All five original native Update publics encode _N for bUpdate. The
 // byte primitive in their dossiers is lowered bool, not an unsigned-char
 // source contract. Keep the recovered bool interface across the family.
-// All three corrected VC6 bodies and their complete caller bodies are byte-flat.
 class TTradeResourceWindow : public CAdvPopup {
     void setWidgetOn(short id);
     void setWidgetOff(short id);

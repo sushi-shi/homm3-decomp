@@ -760,8 +760,8 @@ public:
     // DC class 0x309b has only generated default/copy constructors (0x103).
     CObjectType() {}
 
-    // Dreamcast retains an out-of-line copy, while Complete
-    // expands this header helper at the view-world draw-cell test.
+    // Dreamcast retains an out-of-line copy; Complete inlines this header
+    // helper at the view-world draw-cell test.
     // E:\gamedcs\MapCell.h:565
     DC_ADDRESS(0x01f958, 0x1a)
     MAC_ADDRESS(0x127c38, 0x14)
@@ -879,8 +879,7 @@ public:
     // shipyard readers use this same base address (0x4e53c0 / 0x4e53e0
     // and PlayerDead); the typed arms belong to ExtraInfoUnion above.
     // +0x04 and +0x08: two int allocation units of SIGNED 8-BIT
-    // BITFIELDS, sliced 2026-08-08 out of the old `unsigned char
-    // terrain; char pad_05[7]` pair. findpath's CalcTerrainCost
+    // BITFIELDS. findpath's CalcTerrainCost
     // (0x4b1740) reads BOTH units as `mov eax, dword; shl eax, 0x18;
     // sar eax, 0x18` - a 32-bit load whose low byte is sign-extended,
     // which is what VC6 emits for a signed 8-bit bitfield at bit 0 of
@@ -900,7 +899,7 @@ public:
     // CalcTerrainCost's matching parameter `long` for the same reason
     // its three mastery parameters are `long` (see the note there).
     // The equality compare in check_shipyard_square stays a BYTE
-    // compare through the bitfield (measured, still exact): VC6 folds
+    // compare through the bitfield: VC6 folds
     // `field == small_constant` on a byte-aligned 8-bit field into
     // `cmp byte ptr`, so the slice costs nothing there.
     int m_groundSet : 8;
@@ -922,22 +921,16 @@ public:
     // independently: it only lets a flier take min(ground cost, flight
     // cost) on a tile whose bit 6 is set (`test byte [cell+0xc],
     // 0x40`) and charges the flat flight cost everywhere else.
-    // NOT SLICED OUT, and the reason is the include-set sensitivity
-    // class again, MEASURED 2026-08-08: splitting this one bitfield
-    // into `flags_00_05:6 / Passable:1 / flags_07_11:5` - three named
-    // members within one existing record, with no new type or semantic change -
-    // takes initialize_game_data 96.0880 -> 26.1806, one of the values
-    // that class's own struct sweep produced. So the sensitivity is to
-    // the MEMBER population of this header's types, not only to the
-    // count of type definitions in the TU; the note below was written
-    // when only the latter had been measured. findpath spells the test
-    // `cell->flags_00_11 & 0x40` instead, which compiles to retail's
-    // `test byte ptr [cell+0xc], 0x40` unchanged.
+    // NOT SLICED OUT: splitting this one bitfield into three named members
+    // (`flags_00_05:6 / Passable:1 / flags_07_11:5`) changes initialize.obj's
+    // initialize_game_data - the include-set sensitivity reaches the MEMBER
+    // population of this header's types, not only the count of type
+    // definitions. findpath spells the test `cell->flags_00_11 & 0x40`
+    // instead, which compiles to retail's `test byte ptr [cell+0xc], 0x40`.
     // Retail check_shipyard_square reads this field as a whole word
     // (`mov si, word ptr [cell+0xc]`), and get_special_terrain tests it
     // with `test word ptr [cell+0xc], 0x1000`. Both use the canonical
-    // cellFlags overlay below. Earlier include-set experiments predated
-    // this shared representation and do not justify a local offset view.
+    // cellFlags overlay below.
     union {
         struct {
             unsigned short m_flags0011 : 12;
@@ -1014,11 +1007,9 @@ public:
     short m_objectIndex;  // +0x22
     short m_objectTypeIndex;  // +0x24
 
-    // The retained vector-construction callback belongs to this header body;
-    // mapcell.obj is its retail emission site, after NewfullMap::Init.
+    // The retained vector-construction callback belongs to this header body
+    // (emitted in mapcell.obj after NewfullMap::Init).
     // E:\gamedcs\MapCell.h:685
-    // Mac NewfullMap::init passes this retained constructor through the
-    // array-construction callback at 0x11f28c.
     VA(0x004fd650, 0x3E)
     DC_ADDRESS(0x0f49a4, 0xac)
     MAC_ADDRESS(0x11f354, 0x80)
@@ -1323,14 +1314,9 @@ public:
 
 // Canonical inline definitions in Dreamcast MapCell.h source-line order.
 
-// MapCell.h:769 in the DC roster, i.e. a header inline of
-// this class - and retail keeps no out-of-line row for it either.
-// advManager::ProcessDeSelect's elevation-toggle arm expands it in
-// place: `movzx edx,[gpGame+0x1fc48] / inc edx / cmp edx,1 / jle`, the
-// zero-extended flag plus one, tested against one. Gated to the
-// compilation personalities whose call sites prove the expansion
-// (victorylossconditions' z bound in CheckForDefeatedMonsterWin is
-// the same movzx/inc shape, 2026-08-20).
+// MapCell.h:769 in the DC roster, a header inline of this class with no
+// retail row; advManager::ProcessDeSelect's elevation-toggle arm inlines
+// it. Gated to the compilation personalities whose call sites expand it.
 DC_ADDRESS(0x002e48, 0xa)
 inline int NewfullMap::getNumLevels() { return m_hasTwoLevels + 1; }
 
@@ -1342,12 +1328,9 @@ inline const NewmapCell* NewfullMap::zCell(int x, int y, int z) const
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
 
-// MapCell.h:850. This worker reproduces all 49 retail bytes
-// at 0x408770, including the boat callers' retained zero-coordinate lookup.
-// The former scalar-cell claim incorrectly distinguished 49 x86 bytes from
-// 82 SH4 bytes and alleged a zCell bounds test absent on both platforms.
-// Identical folded bodies cannot prove a unique original retail symbol;
-// this annotation owns the emitted canonical worker, not a renamed wrapper.
+// MapCell.h:850. This worker is the retail body, including the boat callers'
+// retained zero-coordinate lookup; there is no zCell bounds test on either
+// platform.
 VA(0x00408770, 0x31)  // exact body + anchor-callees
 DC_ADDRESS(0x01f974, 0x52)
 inline NewmapCell* NewfullMap::zCell(int x, int y, int z)
@@ -1368,10 +1351,8 @@ inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 // WinCE build's out-of-line copy of a header inline - so it is a header
 // inline for EVERY compiland. DC line 907 calls zCell directly.
 
-// DC MapCell.h:897 calls zCell. The unrecorded line 896 does not prove
-// a release VERIFY. Removing the inferred storage check preserves this
-// helper chain and restores the boat callers' retail expansion decisions;
-// the retained 49-byte arithmetic body is owned by zCell above.
+// DC MapCell.h:897 calls zCell (the unrecorded line 896 does not prove a
+// release VERIFY).
 DC_ADDRESS(0x01f9c8, 0x2c)
 inline NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
@@ -1384,9 +1365,8 @@ inline NewmapCell* NewfullMap::cell(type_point point)
     return zCell(point.m_x, point.m_y, point.m_z);
 }
 
-// public decoration is `?PlayerKnowsCell@ExtraInfoUnion@@QBA_NF@Z`),
-
-// The visited-player mask is eight bits at +5.
+// DC public decoration `?PlayerKnowsCell@ExtraInfoUnion@@QBA_NF@Z`. The
+// visited-player mask is eight bits at +5.
 VA(0x00529690, 0x33)  // hd-crossbuild + anchor-callee x3
 DC_ADDRESS(0x01fa40, 0x40)
 inline bool ExtraInfoUnion::playerKnowsCell(short player) const
@@ -1396,12 +1376,10 @@ inline bool ExtraInfoUnion::playerKnowsCell(short player) const
     return (m_cellVisitedInfo.m_visited & (1 << player)) != 0;
 }
 
-// MapCell.h:923-945. These are source-real accessors, not convenience
-// wrappers: Dreamcast publishes their decorated signatures and bodies,
-// while Complete inlines them into the artifact event/appraisal paths.
-// DoWanderingMonsterResult (0x4a7740) also calls this inherited accessor.
-// A direct monster-info bitfield test folded to test eax,0x80000000;
-// the value-returning helper preserved retail's shr/test of the top bit.
+// MapCell.h:923-945. These are source-real accessors: Dreamcast publishes
+// their decorated signatures and bodies, and Complete inlines them into the
+// artifact event/appraisal paths. The value-returning helper tests the top
+// bit.
 DC_ADDRESS(0x09c778, 0x8)
 inline bool ExtraInfoUnion::isCustomized() const { return m_artifactInfo.m_custom != 0; }
 
@@ -1429,10 +1407,11 @@ inline bool ExtraInfoUnion::isDefendedArtifact() const
     return m_artifactInfo.m_price == const_artifact_defended;
 }
 
-// DC MapCell.h:959/964. DoEventCampfire (0x4a1120)
-// proves the short size truncation and unsigned resource lane. The DC public
+// DC MapCell.h:959/964; DoEventCampfire proves the short size truncation and
+// unsigned resource lane. The DC public
 // ?GetCampfireResource@ExtraInfoUnion@@QBA?AW4EGameResource@@XZ returns the
-// enum; its conversion is what takes doEventCampfire past the /Ob2 save cliff.
+// enum; its conversion is what takes doEventCampfire past the /Ob2 save
+// cliff.
 DC_ADDRESS(0x09c7b4, 0xa)
 inline short ExtraInfoUnion::getCampfireSize() const { return m_campfireInfo.m_size; }
 
@@ -1464,12 +1443,10 @@ inline void ExtraInfoUnion::setLeanTo(short id, short amount, int resource)
 }
 
 // The lean-to trio, all three DC-published (MapCell.h:985/992/997).
-// GetLeanToAmount is decorated `short` and that WIDTH is what makes
-// DoEventLeanTo's emptiness test a sixteen-bit `test si,si` and its
-// dialog argument a `movsx`. GetLeanToResource is decorated
-// EGameResource; the field stays an unsigned bitfield (an enum bitfield
-// sign-extends under VC6) and the accessor converts it to the DC return
-// type. The id has no DC accessor and is read off the arm directly.
+// GetLeanToAmount is decorated `short`; GetLeanToResource is decorated
+// EGameResource, and the field stays an unsigned bitfield (an enum bitfield
+// sign-extends under VC6) with the accessor converting it. The id has no DC
+// accessor and is read off the arm directly.
 DC_ADDRESS(0x09c808, 0xc)
 inline short ExtraInfoUnion::getLeanToAmount() const { return m_leanToInfo.m_amount; }
 
@@ -1498,7 +1475,6 @@ inline void ExtraInfoUnion::fillGarden(enum EGameResource resource)
 }
 
 // Original DC public GardenIsFull@ExtraInfoUnion@@QBA_NXZ proves bool.
-// Mac quickInfo 0x15ad8..0x15adc expands this same full-bit predicate.
 DC_ADDRESS(0x09c840, 0xa)
 inline bool ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.m_full; }
 
@@ -1529,8 +1505,8 @@ inline void ExtraInfoUnion::setMagicSpring(short id, bool full)
     m_magicSpringInfo.m_full = full;
 }
 
-// DC MapCell.h:1046/1051. do_event_pyramid
-// (0x4a4230) proves the signed spell lane and bit-zero guarded flag.
+// DC MapCell.h:1046/1051; do_event_pyramid proves the signed spell lane and
+// bit-zero guarded flag.
 // Native get_pyramid_spell/set_pyramid publics both name the SpellID enum;
 // ESpellId is that domain here, unlike the legacy int alias SpellID.
 DC_ADDRESS(0x09c864, 0xa)
@@ -1589,20 +1565,10 @@ inline void ExtraInfoUnion::setScholar(ScholarAwards award, TPrimarySkill primar
 // SkeletonHasTreasure is `_N`, GetItemId and GetSkeletonArtifact are
 // both `F` (short) and SetSkeleton is `void (short, bool, short)` -
 // MapCell.h:1104, which this file's carcass already carried.
-// GetSkeletonArtifact is spelled `int` because
-// retail stores the sign-extended ten-bit field straight into the
-// artifact record with NO `movsx`, which a short return would have
-// forced.
-
-// SetSkeleton's ID PARAMETER IS INT-WIDE and the Dreamcast's `F` is
-// not: the three folded stores end in `and eax,0xfffeffe0 / xor edx,eax
-// / or edx,0xffc0`, i.e. the id is merged into the masked dword FIRST
-// and the artifact constant last. A `short` parameter makes VC6
-// reassociate the same value as `(id | 0xffc0) | masked` and emit the
-// two ops the other way round. All four width combinations were
-// measured against the retail bytes and exactly one is exact - short
-// getter, int setter parameter (100.0, against 99.53 / 99.49 / 90.96),
-// so the width is byte-determined, not a guess.
+// GetSkeletonArtifact is spelled `int`: the sign-extended ten-bit field goes
+// straight into the artifact record. SetSkeleton's id parameter is int-wide
+// where the Dreamcast's is `F`: short getter, int setter parameter (the
+// merge order of the three folded stores needs it).
 DC_ADDRESS(0x09c8c8, 0xe)
 inline bool ExtraInfoUnion::skeletonHasTreasure() const { return m_skeletonInfo.m_hasTreasure; }
 
@@ -1683,8 +1649,7 @@ inline bool ExtraInfoUnion::wagonHasArtifact() const { return m_wagonInfo.m_hasA
 // the Dreamcast line table over DoEventWagon (dc 0x96784):
 // WagonIsFull and WagonHasArtifact are `_N` - bool, not the unsigned
 // char the tomb's twin returns - GetWagonArtifact is `?AW4TArtifact`,
-// GetWagonResource `?AW4EGameResource`, GetWagonAmount `F` (short,
-// which is what makes the payout argument a `movsx ecx,di`) and
+// GetWagonResource `?AW4EGameResource`, GetWagonAmount `F` (short) and
 // EmptyWagon `void ()`. GetWagonArtifact returns its DC TArtifact.
 DC_ADDRESS(0x09c988, 0xe)
 inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
@@ -1706,11 +1671,9 @@ inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
     m_wagonInfo.m_visitedBits = 0;
 }
 
-// DC MapCell.h:1186..1189 assigns artifact, full, has_artifact, visited_bits.
-// Mac randomizeWagon 0xd67f4..0xd6820 expands the same four field stores.
-// These named stores retain the exact 0x4c2390 body; the packed-mask
-// spelling made VC6 expand every use and omit the standalone helper.
-// Original public ?SetWagon@ExtraInfoUnion@@QAAXW4TArtifact@@@Z fixes the domain.
+// DC MapCell.h:1186..1189 assigns artifact, full, has_artifact, visited_bits
+// as four named stores. Original public
+// ?SetWagon@ExtraInfoUnion@@QAAXW4TArtifact@@@Z fixes the domain.
 // E:\gamedcs\MapCell.h:1185
 VA(0x004c2390, 0x21)
 DC_ADDRESS(0x0bcb3c, 0x58)
@@ -1734,8 +1697,8 @@ inline TArtifact ExtraInfoUnion::getTombArtifact() const
 DC_ADDRESS(0x09c9b0, 0x6)
 inline unsigned char ExtraInfoUnion::tombIsFull() const { return m_tombInfo.m_hasArtifact; }
 
-// DC 1209..1211 writes artifact, fullness, visit bits. Complete widens
-// the artifact to ten bits; RandomizeEvents expands all three stores.
+// DC 1209..1211 writes artifact, fullness, visit bits; Complete widens the
+// artifact to ten bits.
 // E:\gamedcs\MapCell.h:1208
 DC_ADDRESS(0x0bcb94, 0x48)
 inline void ExtraInfoUnion::setTomb(TArtifact artifact)
@@ -1749,13 +1712,8 @@ inline void ExtraInfoUnion::setTomb(TArtifact artifact)
 // Dreamcast publishes all five with their signatures - get_wheel_gold
 // and get_windmill_amount return `short` (?...@@QBAFXZ),
 // get_windmill_resource returns EGameResource, and both setters take
-// the same pair - and the retail bytes fix the bodies:
-//   * the wheel's *500 lives INSIDE get_wheel_gold, which is why
-//     do_event_water_wheel truncates the product with `movsx esi,ax`
-//     even though 31*500 provably fits in a short;
-//   * set_windmill writes BOTH fields, which is why the payout tail
-//     is a single `and eax,0xfffe1ff0 / xor eax,edi` on the dword
-//     instead of two read-modify-writes.
+// the same pair. The wheel's *500 lives inside get_wheel_gold (hence the
+// short truncation of the product), and set_windmill writes both fields.
 DC_ADDRESS(0x01fabc, 0x1a)
 inline short ExtraInfoUnion::getWheelGold() const { return m_waterWheelInfo.m_gold * 500; }
 
@@ -1785,8 +1743,7 @@ inline TSecondarySkill ExtraInfoUnion::getWitchSkill() const
 }
 
 // E:\gamedcs\MapCell.h:1251
-// DC lines 1252/1253 assign the typed skill, then clear visits. Retail folds
-// those field stores into the combined 0xfff0001f mask; retain the source fields.
+// DC lines 1252/1253 assign the typed skill, then clear visits.
 VA(0x004c23c0, 0x1c)
 DC_ADDRESS(0x0bcbdc, 0x3c)
 inline void ExtraInfoUnion::setWitchSkill(TSecondarySkill skill)
@@ -1809,8 +1766,8 @@ inline TArtifact NewmapCell::getArtifactIndex() const
     return TArtifact(m_objectIndex);
 }
 
-// E:\gamedcs\MapCell.h:1269 (). Dreamcast retains an out-of-line
-// copy, while retail /Ob2 expands this header helper at its callers.
+// E:\gamedcs\MapCell.h:1269. Dreamcast retains an out-of-line copy; Complete
+// inlines this header helper at its callers.
 DC_ADDRESS(0x0f4a78, 0x24)
 inline TAdventureObjectType CObject::getType() const
 {

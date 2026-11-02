@@ -51,21 +51,17 @@ DATA(0x0066c498) SCampaignPreview g_campaignPreviews[20] = {
 // active dialog here and its destructor clears it before destroying the base.
 DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
 
-// Complete-only campaign-preview table at retail 0x66c498. Each 0x50-byte
-// row has eight descriptor dwords followed by a 12-dword snapshot of the
-// BinkManager::playingBINK aggregate. The constructor/helper own
-// the initialized rows; this TU view intentionally makes no DATA claim yet.
-// The row type and the caption block live in campaignwindow.h.
+// Complete-only campaign-preview table. Each 0x50-byte row has eight
+// descriptor dwords followed by a 12-dword snapshot of the
+// BinkManager::playingBINK aggregate. The constructor/helper own the
+// initialized rows; this TU view intentionally makes no DATA claim yet. The
+// row type and the caption block live in campaignwindow.h.
 
 // E:\gamedcs\campaignwindow.cpp:78
-// Dreamcast emits it out of line (0x34 B); retail has no slot for
-// it, because /Ob2 expands it at all three call sites. The expansion is
-// register-visible and is what the handler's EBX is: the inlined `this` is
-// loaded once from gpCampaignWindow ahead of the sweep and reused by every
-// GetWidget in it, where a direct global load would be reloaded per call.
-// DC line 81 calls widget::hide; keep the ordinary helper and its source
-// calls. Complete adds a null guard: both retail handler expansions test
-// GetWidget's result before sending WIDGET_CLEAR_STATUS (DC has no guard).
+// Dreamcast emits it out of line; inlined at all three call sites. DC line
+// 81 calls widget::hide. Complete adds a null guard: both handler copies
+// test GetWidget's result before sending WIDGET_CLEAR_STATUS (DC has no
+// guard).
 DC_ADDRESS(0x05b53c, 0x34)
 MAC_ADDRESS(0x069d8c, 0x60)
 void TCampaignWindow::hideText()
@@ -329,9 +325,8 @@ void TCampaignWindow::doModal()
 // row and the campaign-filename table.
 DATA(0x0066cad8) static int g_lastCampaignHoverId = -1;
 
-// Mac 0x6aea0/0x6aea8 retains separate exit assignments for selecting
-// a campaign and cancelling. Keeping the two switch breaks also reproduces
-// the Windows dispatcher (88.2203% to 100%); neither arm falls through.
+// Selecting a campaign and cancelling keep separate exit assignments; the
+// two switch breaks stay, and neither arm falls through.
 // E:\gamedcs\campaignwindow.cpp:291
 VA(0x0045f2f0, 0x26C)
 DC_ADDRESS(0x05bd94, 0x1b0)
@@ -397,11 +392,8 @@ int campaignWindowHandler(message& msg)
 
             if (hoverID >= TCampaignWindow::CAMPAIGN_FIRST_ID
                     && hoverID <= TCampaignWindow::CAMPAIGN_LAST_ID) {
-                // The ROW pointer, not the state block: retail keeps
-                // `&gCampaignPreviews[hover - 108]` live across the sweep and
-                // only reaches the snapshot with a `lea esi,[edi+0x20]` at the
-                // copy. Naming the +0x20 member here instead folds the bias
-                // into the base and swaps the sweep's counter register.
+                // The row pointer, not the state block, stays live across
+                // the sweep.
                 SCampaignPreview* preview =
                     &g_campaignPreviews[hoverID
                         - TCampaignWindow::CAMPAIGN_FIRST_ID];

@@ -30,13 +30,12 @@ DATA(0x006a3d08) static int g_splitArmyMode;
 DATA(0x006a3d30) swapManager* g_swapManager;
 
 // The shared includes.h helper is named by Reset's four Dreamcast xrefs
-// (dc 0x1ef5c), once around each morale/luck call. Retail's inlined clamp
-// selects one of the argument addresses, matching the reference-returning
-// template independently proved by the other TUs.
+// (dc 0x1ef5c), once around each morale/luck call: the reference-returning
+// template.
 
 // E:\gamedcs\swapmgr.cpp:120. Dreamcast proves the class identity and
-// constructor signature; retail independently proves the CNetMsg base plus
-// two complete hero snapshots and the 0x938-byte wire extent.
+// constructor signature; the CNetMsg base carries two complete hero
+// snapshots (0x938-byte wire extent).
 DC_ADDRESS(0x15efd4, 0x90)
 CHeroUpdateMsg::CHeroUpdateMsg(hero* left, hero* right)
     : CNetMsg(RS_HERO_UPDATE, sizeof(CHeroUpdateMsg))
@@ -74,8 +73,8 @@ inline CSwapManagerChatEdit::CSwapManagerChatEdit(
 // E:\gamedcs\swapmgr.cpp:210. Dreamcast proves the source-level sequence:
 // reserve the widget roster, construct one widget per line, append the two
 // late-owned controls, then register every non-null widget in vector order.
-// Complete adds the SoD background and artifact slots plus the network arrow
-// split; retail fixes all constructor arguments below.
+// Complete adds the SoD background and artifact slots plus the network
+// arrow split.
 VA(0x005aaa80, 0x38E9)
 DC_ADDRESS(0x159328, 0x2ff8)
 MAC_ADDRESS(0x19be6c, 0x9d30)
@@ -833,15 +832,11 @@ int swapManager::drawSwapWin()
 
 // E:\gamedcs\swapmgr.cpp:665
 // Dreamcast proves the single message local, constructor/helper boundaries,
-// two-by-eight widget walk and final network-handler lifetime. Retail fixes
-// the Complete widget-id shifts and replaces swap_side() with Update().
-// Retail passes the portrait pointer directly through the four-argument
-// broadcastMessage ABI; assigning it to msg.m_extraText adds an absent store
-// and changes downstream register allocation. The direct pointer-to-int ABI
-// cast restores this whole Windows body from 95.7482% to 100%; all other
-// Windows and scored Mac callers remain unchanged.
-// DC line 703 uses TTextResource::operator[] for the hero-name format;
-// restoring that source call is VC6 byte-flat.
+// two-by-eight widget walk and final network-handler lifetime; Complete
+// shifts the widget ids and replaces swap_side() with Update(). The portrait
+// pointer goes directly through the four-argument broadcastMessage ABI (a
+// pointer-to-int cast). DC line 703 uses TTextResource::operator[] for the
+// hero-name format.
 VA(0x005ae750, 0x3A2)
 DC_ADDRESS(0x15c66c, 0x3d8)
 MAC_ADDRESS(0x1a61d8, 0x478)  // full retail body +  dossier
@@ -869,9 +864,8 @@ int swapManager::open(int newPriority)
     m_parent->broadcastMessage(msg);
 
     for (int hero = 0; hero < 2; hero++) {
-        // DC line 698 is one portrait-update statement. Retail passes the
-        // portrait pointer directly to the four-argument overload; the local
-        // message remains the sole object used by the surrounding updates.
+        // DC line 698 is one portrait-update statement; the portrait pointer
+        // goes directly to the four-argument overload.
         m_parent->broadcastMessage(
             MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
             reinterpret_cast<int>(
@@ -909,13 +903,11 @@ int swapManager::open(int newPriority)
                 msg.m_extra = m_heroes[hero]->getSecondarySkill(
                                   TSecondarySkill(skill))
                     + 3 * skill + 2;
-                // Mac retains this call at 0:0x1a6504.
                 m_parent->broadcastMessage(msg);
             } else {
                 msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = hero * 8 + skillIndex + 200;
                 msg.m_extra = widget::WIDGET_DRAWN;
-                // Mac retains this call at 0:0x1a6534.
                 m_parent->broadcastMessage(msg);
             }
         }
@@ -1167,7 +1159,7 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
 }
 
 // Dreamcast preserves this helper as the nested two-hero, nineteen-slot
-// UpdateSlot walk. Complete /Ob2 expands it into both known retail callers.
+// UpdateSlot walk; inlined into both callers.
 DC_ADDRESS(0x15cdbc, 0x64)
 MAC_ADDRESS(0x1a6c1c, 0x70)
 void swapManager::updateAllSlots()
@@ -1183,9 +1175,8 @@ void swapManager::updateAllSlots()
 }
 
 // E:\gamedcs\swapmgr.cpp:977
-// Dreamcast preserves this source helper boundary; Complete /Ob2 expands its
-// sole call into UpdateBackpack, where the parameterized subscript is what
-// produces retail's stride-eight induction variable.
+// Dreamcast preserves this source helper boundary; inlined at its sole call
+// in UpdateBackpack, with the parameterized subscript.
 DC_ADDRESS(0x15ce20, 0x84)
 MAC_ADDRESS(0x1a6c8c, 0x108)
 void swapManager::updateBackpackItem(int hero, int i)
@@ -1306,14 +1297,9 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, bool shif
 // Dreamcast proves the two source locals and the get/view/remove/equip/
 // Update/SetPointer/Reset helper order. Complete retains that shared shape
 // and adds combination-artifact handling plus the campaign scenario guard.
-// Windows closes from 93.4161% to 100% when the spellbook warning has
-// an explicit else for the remaining right-click actions, followed by the
-// shared right-click return. This selects retail's physical warning tail
-// without flattening any helper. Mac retains both viewArtifact calls at
-// 0x1a735c/0x1a7370; merging those into one source call is a separate control,
-// not the recovered branch model. A broader outer action ladder was flat.
-// DC lines 1118/1124 use TTextResource::operator[] for the two trade
-// warnings; those calls are restored and VC6 byte-flat.
+// The spellbook warning has an explicit else for the remaining right-click
+// actions, followed by the shared right-click return. DC lines 1118/1124 use
+// TTextResource::operator[] for the two trade warnings.
 VA(0x005af590, 0x3F7)
 DC_ADDRESS(0x15d150, 0x190)
 MAC_ADDRESS(0x1a71a4, 0x450)  // Main roster/callees + full retail body
@@ -1483,7 +1469,7 @@ void swapManager::sendHeroUpdate()
 }
 
 // E:\gamedcs\swapmgr.cpp:1660. Dreamcast keeps this one-statement helper;
-// Complete folds it into both exits of Main.
+// inlined into both exits of Main.
 DC_ADDRESS(0x15de34, 0xc)
 MAC_ADDRESS(0x1a8714, 0x18)
 inline int swapManager::exitSwapManager(message& msg)
@@ -1514,41 +1500,14 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 
 // E:\gamedcs\swapmgr.cpp:1222
 // Dreamcast supplies the one exitFlag local, helper boundaries and complete
-// statement order. Retail independently fixes the Complete widget ranges,
-// modifier bits, network-exit expansion and 215-byte selector table.
-// DC attributes request-done construction, GetOtherHero and transmission
-// to one line at each of 1243, 1259 and 1291, with only exitFlag named.
-// Mac initializes three separate 0x14-byte packets before GetOtherHero;
-// Windows retail evaluates GetOtherHero before packet initialization.
-// Explicit if/else modifier assignments reproduce Mac's two true/false
-// branch pairs; a Boolean expression is branchless under CW, while an
-// initial zero plus an if has only one branch per flag. Windows is byte-flat.
-// Full-expression packet temporaries permit both argument evaluation orders
-// and raise Windows 84.0502% to 86.82% without changing other scored rows.
-// The current CodeWarrior compile still retains the packet constructor;
-// its expansion and message/flag register choices remain to be recovered.
-// A temporary inline-constructor control is Windows byte-flat and makes CW
-// schedule packet stores before GetOtherHero, as native does. This confirms
-// that execution order alone does not distinguish one full expression from
-// two statements; the control does not prove the original inline qualifier.
-// Combining the sixteen left/right skill case labels and selecting hero
-// plus skill index in one scope removes the shared-skill jump, but scores
-// 83.1641% (left-first) or 83.4984% (right-first), against 84.0502%. Both
-// preserve the named skill and dialog calls; the dispatch layout remains open.
-// Keeping separate left/right selector assignments and a shared skill-
-// requested result after the switch scores 71.6782% (bool/byte/int).
-// A combined inner selector scores 80.3929%; conditional left/right forms
-// reach 83.6259%/83.4984%, below 84.0502%. Canonical helper order is retained.
-// Fresh native-call review at 86.81%: the apparent main/$L inliner
-// differences are EH funclet labels. The remaining extra call is sprintf:
-// Complete shares the right experience/mana sprintf tail, whereas Mac keeps
-// all four experience/mana sprintf sites. Complete also shares the expired
-// return with the final ExitSwapManager tail; DC explicitly returns at 1245.
-// Mac 0x1a809c/0x1a8338 and retail preserve each level across
-// getExperience. Case-owned level snapshots recover 86.81 -> 98.33,
-// including natural shared exits, with existing interfaces unchanged.
-// Mac 0x1a7fa4 (left count) precedes 0x1a7fd8 (right icon),
-// as retail does; retain that complete guarded case order.
+// statement order. DC attributes request-done construction, GetOtherHero
+// and transmission to one line at each of 1243, 1259 and 1291, with only
+// exitFlag named; GetOtherHero is evaluated before the packet. Explicit
+// if/else modifier assignments; full-expression packet temporaries.
+// Complete shares the right experience/mana sprintf tail and shares the
+// expired return with the final ExitSwapManager tail (DC returns explicitly
+// at 1245). Each level is preserved across getExperience, so the level
+// snapshots are case-owned; the left count precedes the right icon.
 VA(0x005afdf0, 0xABB)
 DC_ADDRESS(0x15d4ac, 0x986)
 MAC_ADDRESS(0x1a7954, 0xdc0)  // full retail dispatcher + DC dossier
@@ -1656,11 +1615,7 @@ int swapManager::main(message& msg)
                     skillIndex = msg.m_codeY - kSwapRolloverRightSkill0;
 
                 // DC lines 1311-1338 expose two side/index assignments and
-                // one shared GetNthSS/string/dialog scope. Retail's B32/B34
-                // assignments converge on the same B35 tail. Negative
-                // controls: duplicating the two scopes falls to 82.58%, a
-                // volatile side local to 82.62%, and a byte local to 83.43%;
-                // the shared int form retains the coherent 84.05% shape.
+                // one shared GetNthSS/string/dialog scope.
                 show_secondary_skill:
                     if (skillIndex < m_heroes[skillHero]->m_skillCount)
                     {
@@ -1847,9 +1802,8 @@ int swapManager::main(message& msg)
                     break;
 
                 // Complete places the paired morale/luck cases before its
-                // three left text cases; retail B57-B70 fixes this revision
-                // order even though the older Dreamcast switch laid the
-                // left text statements first.
+                // three left text cases (the older Dreamcast switch laid the
+                // left text statements first).
                 case kSwapRolloverMoraleLeft:
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
@@ -1919,8 +1873,7 @@ int swapManager::main(message& msg)
                     break;
 
                 // Complete repeats the same paired ordering for the right
-                // hero; retail B71-B88 places these calls before its text
-                // cases while preserving the shared DC helper boundaries.
+                // hero.
                 case kSwapRolloverMoraleRight:
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
@@ -2065,16 +2018,12 @@ int swapManager::main(message& msg)
 // E:\gamedcs\swapmgr.cpp:1793
 // Dreamcast proves the source order below: three primary-stat bands, hero
 // heading, morale/luck, fixed status rows, two army bands, two skill bands,
-// and the four artifact/backpack bands. Complete shifts the backpack ids by
-// two; retail's 215-byte dispatch table fixes every
-// admitted case range independently. GetArmyName, get_artifact/get_backpack,
-// GetNthSS and get_rollover_text retain their recovered source boundaries;
-// Complete /Ob2 expands the first three where the x86 body proves it.
-// Dreamcast attributes the hero-heading format lookup to
-// TTextResource::operator[]; getText() is the readable byte-identical wrapper.
-// Retail primary-stat loads use biased addresses into gStatNames. The
-// 115..118 band subtracts 115 before indexing the canonical four entries.
-// Widget 145 maps to the default arm (dispatch index 19), not this band.
+// and the four artifact/backpack bands; Complete shifts the backpack ids by
+// two. GetArmyName, get_artifact/get_backpack, GetNthSS and
+// get_rollover_text retain their recovered source boundaries. Dreamcast
+// attributes the hero-heading format lookup to TTextResource::operator[].
+// The 115..118 primary-stat band subtracts 115 before indexing the canonical
+// four entries; widget 145 maps to the default arm.
 VA(0x005b08b0, 0x4EF)
 DC_ADDRESS(0x15e308, 0x552)
 MAC_ADDRESS(0x1a872c, 0x5a8)  // retail byte table + DC statement roster
@@ -2175,15 +2124,6 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverLeftSkill2: case kSwapRolloverLeftSkill3:
     case kSwapRolloverLeftSkill4: case kSwapRolloverLeftSkill5:
     case kSwapRolloverLeftSkill6: case kSwapRolloverLeftSkill7:
-        // The last residual here is one SIB byte in each skill arm:
-        // retail encodes `movsx eax, [eax + edx + 0xc9]` (hero as base,
-        // skill as index) where we emit `[edx + eax + 0xc9]`. Caching
-        // `m_heroes[n]` in a local to bias the allocator makes it much
-        // worse (99.98 -> 96.52): the pointer then lives in a callee-saved
-        // register across getNthSS and the whole arm re-schedules. DC
-        // records no stack locals here and calls already agree, so `skill`
-        // is a register temp and the base/index choice is allocator state,
-        // not a spelling we have evidence for.
         if (codeY - kSwapRolloverLeftSkill0 < m_heroes[0]->m_skillCount) {
             int skill = m_heroes[0]->getNthSS(
                 codeY - kSwapRolloverLeftSkill0);
@@ -2271,10 +2211,9 @@ void swapManager::setRolloverText(int codeY)
 }
 
 // E:\gamedcs\swapmgr.cpp:2024
-// Dreamcast proves this as one source statement with no locals. Complete's
-// HandleMonster expands the helper while retaining the GetNumArmies and
-// ViewArmy call order; retail fixes the first-selected hero/second slot pair.
-// Mac retains this helper at code 0:0x1a8cd4 and handleMonster calls it.
+// Dreamcast proves this as one source statement with no locals; inlined in
+// HandleMonster (Mac retains it), keeping the GetNumArmies and ViewArmy call
+// order.
 DC_ADDRESS(0x15e85c, 0x5e)
 MAC_ADDRESS(0x1a8cd4, 0xa0)
 void swapManager::viewMon()
@@ -2386,7 +2325,7 @@ void swapManager::update()
 }
 
 // E:\gamedcs\swapmgr.cpp:2140. The older build retains this refresh
-// boundary; Complete expands its Update body at Main's chat-refresh site.
+// boundary; Complete inlines it at Main's chat-refresh site.
 DC_ADDRESS(0x15eb90, 0x1a)
 MAC_ADDRESS(0x1a91c4, 0x34)
 inline void swapManager::onChatUpdate()
@@ -2397,8 +2336,7 @@ inline void swapManager::onChatUpdate()
 
 // E:\gamedcs\swapmgr.cpp:2147
 // Dreamcast proves two snapshot assignments followed by the popup guard and
-// UpdateBackpack(0/1), Update, DrawSwapWin helper order. Retail independently
-// proves Complete's 0x492-byte hero layout and expands this entire boundary.
+// UpdateBackpack(0/1), Update, DrawSwapWin helper order; inlined.
 DC_ADDRESS(0x15ebac, 0xaa)
 MAC_ADDRESS(0x1a91f8, 0x7a0)
 void swapManager::handleHeroUpdateMsg(CNetMsg* netMsg)
@@ -2417,13 +2355,9 @@ void swapManager::handleHeroUpdateMsg(CNetMsg* netMsg)
 }
 
 // E:\gamedcs\swapmgr.cpp:2165
-// DC attributes each packet construction, GetOtherHero and transmission
-// to one source row and records no named locals. Mac constructs before
-// GetOtherHero, while Windows retail schedules the accessor first.
-// Unnamed full-expression packets preserve both allowed argument orders.
-// Applying this to the trade case and canonical onReceiveFromAlly restores
-// Windows' separate 0x14-byte packet homes (0x28 frame) and the entire body
-// from 88.4550% to 100%; all other scored Windows/Mac rows stay unchanged.
+// DC attributes each packet construction, GetOtherHero and transmission to
+// one source row and records no named locals; the packets are unnamed
+// full-expression temporaries.
 VA(0x005b10d0, 0x2A8)
 DC_ADDRESS(0x15ec58, 0x1a0)
 MAC_ADDRESS(0x1a9998, 0x234)  // switch ids/callees + ret 8
@@ -2540,12 +2474,9 @@ MAC_ADDRESS(0x1a9ca4, 0x110)
 bool swapManager::canModHero(int whichHero)
 {
     // Complete lowers this helper as false guards followed by one true tail in
-    // handle_backpack_click, HandleMonster and SwapMons.  Restoring the older
-    // Dreamcast direct-return expressions is the negative control: backpack,
-    // monster, swap and artifact callers fall 99.90->94.31, 100->91.19,
-    // 90.98->86.12 and 93.42->87.81.  The calls, predicates and statement
-    // order remain the DC-proved ones; only the Complete-era hot-seat return
-    // spelling differs.
+    // handle_backpack_click, HandleMonster and SwapMons; the older Dreamcast
+    // direct-return expressions do not. The calls, predicates and statement
+    // order are the DC-proved ones.
     if (g_mpNetProtocol == MP_HOTSEAT) {
         if (!g_game->onSameTeam(
                 m_heroes[whichHero]->m_owner,
@@ -2572,8 +2503,8 @@ void swapManager::onReceiveFromAlly()
 }
 
 // E:\gamedcs\swapmgr.cpp:2298
-// Dreamcast proves the three-statement helper; Complete expands it in the
-// give-me-stuff dispatcher arm and expands DrawSwapWin one level further.
+// Dreamcast proves the three-statement helper; inlined in the give-me-stuff
+// dispatcher arm.
 DC_ADDRESS(0x15ef60, 0x70)
 MAC_ADDRESS(0x1a9e44, 0x40)
 void swapManager::onGiveMeStuffMsg()

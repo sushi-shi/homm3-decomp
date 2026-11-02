@@ -108,8 +108,8 @@ public:
               TPalette16& pal, bool hflip,
               bool tblit) const;
 
-    // CSpriteFrame.h:87-90.  DC emits standalone copies, while retail's
-    // consumers expand these one-field accessors in place.
+    // CSpriteFrame.h:87-90. DC emits standalone copies; inlined in the
+    // consumers.
     DC_ADDRESS(0x04cb90, 0x4)
     int GetCroppedWidth() const { return CroppedWidth; }
 
@@ -123,7 +123,7 @@ public:
     int GetCroppedY() const { return CroppedY; }
 
     // CSpriteFrame.h:147-148. Dreamcast emits this header wrapper as a
-    // standalone function; retail inlines its fixed zero-alpha forwarding.
+    // standalone function; inlined.
     DC_ADDRESS(0x074068, 0x68)
     void DrawCreature(int sx, int sy, int sw, int sh,
                       unsigned short* dst, int dx, int dy, int dw, int dh,
@@ -146,7 +146,7 @@ public:
     }
 
     // DC CSpriteFrame.h:157..179 records each public forwarding boundary.
-    // Retail CSprite 0x47bdc0..0x47c0d0 expands them and calls the private impls.
+    // Inlined in CSprite's draw members, which call the private impls.
     DC_ADDRESS(0x074138, 0x60)
     void DrawAdvObj(int sx, int sy, int sw, int sh, unsigned short* dst,
                  int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, bool hflip) const
@@ -200,7 +200,7 @@ public:
                          bool alpha) const;
 
     // Original: CSpriteFrame::DrawPointer; CSpriteFrame.h:182
-    // Complete expands this whole-frame transparent draw in CSprite::DrawPointer.
+    // Inlined in CSprite::DrawPointer.
     DC_ADDRESS(0x074314, 0x68)
     void DrawPointer(unsigned short* dst, int dx, int dy, int dw, int dh,
                      int dpitch, TPalette16& pal, bool hflip) const
@@ -220,7 +220,7 @@ public:
 
     // Original: CSpriteFrame::DrawShroudTile; CSpriteFrame.h:192
     // The original public ends in _N2: both flip parameters are bool.
-    // Its palette/frame parameter lifetimes span both retained retail calls.
+    // Its palette/frame parameter lifetimes span both calls.
     DC_ADDRESS(0x0743dc, 0xa8)
     void DrawShroudTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                         int dx, int dy, int dw, int dh, int dpitch,
@@ -245,8 +245,8 @@ public:
     int GetHeight() const { return Height; }
 
     // DC CSpriteFrame.h:198..200: canonical zero-flag wrapper.
-    // DrawSpellEffect calls it at DC line 3792; retail expands the wrapper
-    // and calls DrawAdvObjWithFlagAlpha with flagcolor=0 at 0x47efca.
+    // DrawSpellEffect calls it at DC line 3792; inlined there, calling
+    // DrawAdvObjWithFlagAlpha with flagcolor=0.
     DC_ADDRESS(0x074484, 0x60)
     void DrawHeroAlpha(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch,

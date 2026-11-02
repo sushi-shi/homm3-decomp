@@ -233,10 +233,10 @@ public:
         QUEST_TEXT_TIME_LIMIT = 51
     };
 
-    // Complete's shared row selector survives at 0x52e6b0. The quest-log
-    // caller retains it while the adventure-window predicates expand it.
-    // Header ownership is inferred from that cross-TU use; Complete added
-    // this interface after the Dreamcast quest representation.
+    // Complete's shared row selector: the quest-log caller keeps the call
+    // while the adventure-window predicates inline it. Header ownership is
+    // inferred from that cross-TU use; Complete added this interface after
+    // the Dreamcast quest representation.
     VA(0x0052e6b0, 0x2E)
     const TSeerHutTextColumn* getTextColumn()
     {
@@ -268,8 +268,8 @@ public:
     std::string getProgressDialogText();
     std::string getProposalDialogText();
 
-    // The exact HD structural twin maps this accessor to retail 0x45bad0;
-    // its body copies the base's +0x28 completionText member.
+    // The HD structural twin maps this accessor; its body copies the base's
+    // +0x28 completionText member.
     MAC_ADDRESS(0x169418, 0x24)
     std::string getCompletionText() { return m_completionText; }
     // The exact HD structural twin maps this deadline suffix builder to

@@ -160,8 +160,8 @@ void checkDoMain(int forceMouseCheck, int mouseOnly)
 }
 
 // Original: ShowStatus; philai.cpp:102
-// The Mac body at 0:0x13d680 is also a single return, called by philAI::doAI.
-// Complete expands the empty internal helper at its sole call site.
+// The Mac body is also a single return, called by philAI::doAI; inlined at
+// its sole call site.
 DC_ADDRESS(0x10d510, 0x4)
 MAC_ADDRESS(0x13d680, 0x4)
 static void showStatus()
@@ -207,9 +207,7 @@ void aiVisitBlackMarket(hero* currentHero, TBlackMarket* blackMarket)
 }
 
 // E:\gamedcs\philai.cpp:123
-// Complete expands both known calls; the helper boundary is retained from
-// the Dreamcast source rather than flattening the phase adjustment twice.
-// DC marks IncrementHourGlass static; retail auto-inlines the ordinary helper.
+// Inlined at both known calls; DC marks IncrementHourGlass static.
 DC_ADDRESS(0x10d518, 0x62)
 MAC_ADDRESS(0x13d688, 0x9c)
 static void incrementHourGlass()
@@ -232,8 +230,8 @@ static void incrementHourGlass()
 }
 
 // E:\gamedcs\philai.cpp:150
-// DC retains this ordinary static helper. Complete naturally expands it
-// at MoveHero's sole retail call site; no forced-inline declaration is needed.
+// DC retains this ordinary static helper; inlined at MoveHero's sole call
+// site.
 DC_ADDRESS(0x10d57c, 0x38)
 MAC_ADDRESS(0x13d724, 0x64)
 static void restoreMouse(unsigned char mouseWasVisible)
@@ -247,8 +245,8 @@ static void restoreMouse(unsigned char mouseWasVisible)
 }
 
 // E:\gamedcs\philai.cpp:165
-// DC retains this ordinary static helper. The 170/171 negative-ID return
-// closes before GetTown/AI_enter_town; Complete naturally expands this body.
+// DC retains this ordinary static helper; the 170/171 negative-ID return
+// closes before GetTown/AI_enter_town. Inlined.
 DC_ADDRESS(0x10d5b4, 0x8c)
 MAC_ADDRESS(0x13d788, 0x7c)
 static void checkForTown(hero* currentHero)
@@ -260,10 +258,9 @@ static void checkForTown(hero* currentHero)
     aiEnterTown(currentHero, g_game->getTown(townId));
 }
 
-// E:\gamedcs\philai.cpp:207. Retail /Ob2 folds this source helper into
-// AI_enter_town. Dreamcast proves the helper boundary and its five named
-// locals; retail widens the two cost rows from short to int and proves the
-// seven-resource difference/debit loops directly.
+// E:\gamedcs\philai.cpp:207. Inlined into AI_enter_town. Dreamcast proves
+// the helper boundary and its five named locals; Complete widens the two
+// cost rows from short to int.
 DC_ADDRESS(0x10d684, 0x132)
 MAC_ADDRESS(0x13d8d8, 0x1d0)
 static void upgradeCreatures(hero* currentHero, const town* currentTown)
@@ -341,19 +338,15 @@ static long getArtifactPurchaseValue(
 
 // DC line 355 prices the tray entry; line 358 reloads it and attributes the
 // converting type_artifact constructor and GiveArtifact to the same line.
-// Keep the conversion at the call site: a named artifact local delays the
-// independent extra=-1 store and gives 98.1308%; the temporary matches all
-// 329 retail bytes. Explicit and implicit conversion emit the same object.
-// DC 334 checks capacity at each iteration's entry; 361 repeats the selected
-// artifact test at the tail, then 362 equips on exit. Mac preserves that loop
-// and all five calls. The resource output belongs to function scope in DC.
+// DC 334 checks capacity at each iteration's entry; 361 repeats the
+// selected artifact test at the tail, then 362 equips on exit.
 VA(0x00524400, 0x149)
 DC_ADDRESS(0x10da30, 0xb8)
 MAC_ADDRESS(0x13dce4, 0x108)  // anchor-global
 void buyArtifacts(hero* currentHero, TArtifact* artifactList,
                    long marketCount)
 {
-    // DC records the resource output at function scope; VC6 stays 98.13%.
+    // DC records the resource output at function scope.
     EGameResource resource;
     long bestArtifact;
     do {
@@ -414,9 +407,8 @@ long valueOfBlackMarket(const hero* currentHero,
 }
 
 // Original: buy_special_building; philai.cpp:445
-// Complete expands this ordinary helper into aiEnterTown. Dreamcast records
-// the helper call immediately before buy_artifacts at lines 778/779.
-// Mac retains the player-id aiResourceCost overload in all five cost arms.
+// Inlined into aiEnterTown; Dreamcast records the helper call immediately
+// before buy_artifacts at lines 778/779.
 DC_ADDRESS(0x10dcc4, 0x1e2)
 MAC_ADDRESS(0x13ed50, 0x324)
 static void buySpecialBuilding(const hero* currentHero, town* currentTown)
@@ -545,23 +537,10 @@ static unsigned char shouldGarrisonTown(const hero* currentHero,
 }
 
 // E:\gamedcs\philai.cpp:833
-// Complete expands this helper into MoveHero. The source-real loops and
-// `cost` local are fixed by the Dreamcast line/scope table; the extra dock
-// cost and Dinkumware vector layout are retail facts.
-// DC: the resource return (839/840), absent dock (851/852), and
-// absent boat (882/883) all end before the following work. Keep those scopes
-// and the ordinary static declaration, not the old forced-inline substitute.
-// With all four MoveHero helpers ordinary, seven deleted shipyard fences
-// restore 86.6362% (from 86.3549%) without changing any other tracked TU row.
-// Controls: the 256-state fence/boundary family, 97-state scope/value family,
-// and 33-state four-helper family. Retaining a forced checkForTown peaks at
-// 89.6719%; the old forced shipyard enclosure reaches 93.3304%. Neither is
-// source evidence for a forced declaration. Direct/reference point arguments
-// in the fully ordinary family score 86.2031%; keep the real copied value.
-// DC 887/888 separate the boat-cell call and flag write. Naming that cell
-// makes the expanded Windows mark loop match retail directly: MoveHero has
-// 78/79 exact CFG blocks and all calls aligned, though byte score is 95.88%.
-// Naming the analogous clear-loop cell too instead creates an extra tail exit.
+// Inlined into MoveHero. The loops and `cost` local are fixed by the
+// Dreamcast line/scope table. DC: the resource return (839/840), absent dock
+// (851/852), and absent boat (882/883) all end before the following work;
+// DC 887/888 separate the boat-cell call and flag write.
 DC_ADDRESS(0x10e6e8, 0x1aa)
 MAC_ADDRESS(0x13fd54, 0x2ec)
 static void markShipyards(playerData* player)
@@ -615,13 +594,9 @@ static void markShipyards(playerData* player)
 }
 
 // E:\gamedcs\philai.cpp:896
-// Complete expands this helper into MoveHero immediately after the second
-// set_danger_zones statement.
-// DC: the 920/921 absent-boat continue closes before the 925/926
-// cell update. Its size/getCell/cell calls need no inline-depth overrides.
-// Keeping the returned boat cell in a local separates DC's call and store.
-// Passing the indexed shipyard point directly to getCell preserves DC's
-// operator[] source call and makes MoveHero's retail expansion byte-exact.
+// Inlined into MoveHero immediately after the second set_danger_zones
+// statement. DC: the 920/921 absent-boat continue closes before the 925/926
+// cell update.
 DC_ADDRESS(0x10e894, 0x114)
 MAC_ADDRESS(0x140040, 0x198)
 static void clearShipyards(playerData* player)
@@ -753,18 +728,10 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 }
 
 // Original: DetermineHeroToMove; philai.cpp:1156
-// The file-static selector precedes move_all_heroes in the DC TU. Keep its one canonical
-// body visible there: Complete's second DoAI phase expands it, while the first
-// retains the call. Its retail enrollment remains at the link-order position.
-// DC records current_hero and skill_sum at procedure scope; town ID row 1210
-// precedes GetTown and agrees with retail's char-to-short-to-int conversion.
-// Mac0x1409c4 adds the accessor's int result directly; an extra short
-// temporary inserts a narrowing instruction absent from that native loop.
-// The movable-hero scan indexes m_heroes directly; only the garrison scan
-// goes through getHero. Routing the first lookup through the accessor made
-// VC6 fold its expanded sentinel check away (Windows 88.04%, doAI 82.80%,
-// Mac 23.30%); the direct subscript closes both Windows bodies and lifts
-// Mac to 53.96%. A short skillValue temporary is Windows-flat and costs Mac.
+// The file-static selector precedes move_all_heroes in the DC TU. DC
+// records current_hero and skill_sum at procedure scope; town ID row 1210
+// precedes GetTown. The movable-hero scan indexes m_heroes directly; only
+// the garrison scan goes through getHero.
 DC_ADDRESS(0x10eeb0, 0x220)
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 {
@@ -793,10 +760,9 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
                     && skillSum >= lowestSum)
                     continue;
             }
-            // DC assigns lowest_sum at1190 before selected_hero at1193.
+            // DC assigns lowest_sum at1190 before selected_hero at1193;
             // Complete's retained selector and its DoAI expansion both
-            // store selectedHero first; reversing these two stores is the
-            // sole remaining difference in the otherwise exact candidate.
+            // store selectedHero first.
             selectedHero = currentHero;
             lowestSum = skillSum;
         }
@@ -829,9 +795,8 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 }
 
 // Original: move_all_heroes; philai.cpp:1239
-// Each phase owns its own exploration/last-hero flags. Complete expands the
-// helper twice in doAI, with separate call/expansion decisions for its nested
-// determineHeroToMove calls; keep the selector's canonical definition.
+// Each phase owns its own exploration/last-hero flags. Inlined twice in
+// doAI.
 DC_ADDRESS(0x10f0d0, 0x9c)
 MAC_ADDRESS(0x140b60, 0xcc)
 static void moveAllHeroes(long playerId, long* dangerZones)
@@ -849,9 +814,6 @@ static void moveAllHeroes(long playerId, long* dangerZones)
     g_advManager->demobilizeCurrHero(0, 1);
 }
 
-// Native Mac retains a seven-resource counted loop; this O3 body unrolls it.
-// A != bound is byte-flat; pointer traversal and a short counter do not
-// recover that native loop. Keep the indexed helper and its exact VC6 callers.
 VA(0x00526c70, 0x48)
 DC_ADDRESS(0x10f22c, 0xca)
 MAC_ADDRESS(0x140d40, 0x78)  // paired native overload; claim owns the definition
@@ -906,7 +868,7 @@ static const struct {
 
 // Original: type_spellvalue::get_summoning_value; philai.cpp:1529
 // Both builds cap the damage ratio, then the cast-count curve contribution.
-// Complete expands this ordinary helper in getRawSpellValue's summoning arm.
+// Inlined in getRawSpellValue's summoning arm.
 DC_ADDRESS(0x10f94c, 0x136)
 MAC_ADDRESS(0x1413ac, 0xb0)
 long type_spellvalue::getSummoningValue(long damage, long timesCastable) const
@@ -925,9 +887,7 @@ long type_spellvalue::getSummoningValue(long damage, long timesCastable) const
 
 // E:\\gamedcs\\philai.cpp:1610. Dreamcast preserves this helper boundary,
 // its one type_creature_value local, the seven-slot scan, push_back and the
-// descending sort. Complete's /Ob2 folds the single call into the constructor
-// at 0x526d40; retaining it here in its original lexical position reproduces
-// that expansion without flattening the source.
+// descending sort; inlined into the constructor.
 DC_ADDRESS(0x10fc6c, 0x84)
 MAC_ADDRESS(0x141658, 0xd0)
 void type_spellvalue::fillCreatureValueList()
@@ -949,9 +909,7 @@ void type_spellvalue::fillCreatureValueList()
 // E:\gamedcs\philai.cpp:1699.  The what-if probe AI_set_hero_bonuses runs
 // six times: bump the valuer's power/duration/mana, re-ask the best spell
 // value, restore, and report the delta against the caller's baseline.
-// Defined here as the DC build does; retail keeps no out-of-line row -
-// every site is expanded - and objdiff prices an unclaimed base-only
-// symbol at nothing.
+// Defined here as the DC build does; every site is inlined.
 DC_ADDRESS(0x10fe64, 0x52)
 MAC_ADDRESS(0x141900, 0x90)
 long type_spellvalue::getValueOfIncrease(long baseValue,
@@ -968,9 +926,8 @@ long type_spellvalue::getValueOfIncrease(long baseValue,
 }
 
 // Original: ComputeUpgradeValue; philai.cpp:1833
-// Complete expands this ordinary static helper into valueOfStables with the
-// Cavalier/Champion pair. An existing destination stack scales the award
-// by 1.2 (retail valueOfStables +0xba multiplies by the double at 0x63ac20).
+// Inlined into valueOfStables with the Cavalier/Champion pair; an existing
+// destination stack scales the award by 1.2.
 DC_ADDRESS(0x1102e4, 0xac)
 MAC_ADDRESS(0x141e50, 0xc4)
 static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
@@ -1540,12 +1497,7 @@ inline int valueOfShrine(const hero* currentHero, NewmapCell* cell)
     return valueOfLearning(currentHero, info->getShrineSpell());
 }
 
-// The gold price has to be ONE reused local: the traits cost is read
-// into a register and staged back through that local's own frame slot
-// before the fild, and the same slot then stages the price for the
-// double conversion.  Reading the cost straight out of the traits row
-// fild's from the table with no staging store at all, and giving the
-// cost its own named local splits the slot in two.
+// The gold price is one reused local.
 VA(0x00524550, 0xD2)
 DC_ADDRESS(0x10d7b8, 0x164)
 MAC_ADDRESS(0x13daa8, 0x140)
@@ -1608,8 +1560,7 @@ static double g_aiWaterMapFraction = 1.0;
 // DC philai.cpp:3444 precedes get_skill_value at 3469; Mac retains the same
 // getSchoolValue/getSkillValue order. Keep the ordinary helper body visible
 // to its caller in that source order.
-// This visibility recovery is Windows byte-flat at 86.5040%; VC6 retains
-// all four getSkillValue calls to this canonical helper.
+// VC6 retains all four getSkillValue calls to this canonical helper.
 VA(0x00524d20, 0xa3)
 DC_ADDRESS(0x11350c, 0xa0)
 MAC_ADDRESS(0x13e09c, 0xbc)
@@ -2037,39 +1988,10 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 }
 
 // DC philai.cpp:803 records game::GetHero followed by
-// town::ApplySpecialBuildingEffect inside a nested scope. Keeping that
-// result in a local before the call makes VC6 expand the canonical getHero
-// body here, as retail does: the prior artifact-conversion source rose from
-// 96.44 to 99.15%, with 73/73 CFG blocks and all 44 calls agreeing.
-// DC line 767 puts the spellbook resource check at function scope; removing
-// the standalone block around its player pointer is VC6 byte-flat at 99.15%.
-// Mac section 0+0x13f8dc..0x13fc44 is the counterpart: hasArtifact(2) leads
-// its town-entry calls, two applySpecialBuildingEffect calls end it, and its
-// caller at +0x13d7e8 passes a hero and a 0x15c-stride town record.
-// Direct typed artifact construction and blacksmith-table access reproduce
-// both local Windows retail instruction spans and remove two extra Mac memcpy
-// calls: Mac now has the exact 872-byte size and all 24 calls at 94.0367%.
-// Under VC6 those direct expressions alter later inline decisions. Nesting
-// the Conflux building check restores getHero expansion, giving 73/73 CFG
-// blocks and 97.77%; its remaining extra hasBuilding call should be inlined.
-// Moving the POD university local before that inner check is byte-flat on
-// both compilers, so its smaller natural lifetime remains here. Gated VC6 C2
-// trace: caller C1 cost 623, last hasBuilding cost 68, available budget 51;
-// final getHero cost 41 expands under that same budget. Both expansions need
-// at least 109, a 58-unit increase at that point. Removing three owner aliases
-// from buySpecialBuilding lowers its C1 cost 610->595 (budget 66); removing
-// Dungeon's resourceCost alias lowers it to 590 (budget 71), which expands
-// hasBuilding but then leaves only 3 for getHero. Those partial variants are
-// Mac byte-flat and regress Windows. The combined buySpecialBuilding rejection
-// guard and direct value/cost expressions recover both expansions: 99.930435%,
-// 73 exact CFG blocks and all 44 calls agree. Mac retains cost acquisition,
-// value/experience acquisition, resource valuation and optional purchase in
-// that order; its aiEnterTown comparison is 95.5275%. A typed spellbook-ID
-// local in the DC line 768 gap is byte-flat in both compilers.
-// A separate debit-loop index in upgradeCreatures closes the final two SIB
-// encodings: all 1548 retail bytes now match. DC lines 240/241 and 250 keep
-// affordability and debit as separate loops; their register-only indices have
-// no recorded names. Reusing the affordability index reproduces 99.9565%.
+// town::ApplySpecialBuildingEffect inside a nested scope; DC line 767 puts
+// the spellbook resource check at function scope. The Conflux building
+// check is nested. upgradeCreatures uses a separate debit-loop index: DC
+// lines 240/241 and 250 keep affordability and debit as separate loops.
 VA(0x005253d0, 0x60c)
 DC_ADDRESS(0x10e3f8, 0x280)
 MAC_ADDRESS(0x13f8dc, 0x368)  // MAC_ABSTRACTION_FROM(tokens1:46b741d4bc9b,95.5275): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
@@ -2301,10 +2223,7 @@ void aiFriendlyHeroMeeting(hero* currentHero, hero* secondHero)
 // E:\gamedcs\philai.cpp:1261
 // Keep the two movement phases, nested player guards, and canonical helper
 // chain. DC proves both moveHero helpers are file-static, take exploreMode
-// by reference, and precede the selector. Together with the selector's
-// separate priority rejections and staged values, this restores retail's
-// first selector call and second selector expansion, including retained
-// getTown/getHero calls, without inline controls.
+// by reference, and precede the selector.
 VA(0x00525e80, 0x362)
 DC_ADDRESS(0x10f16c, 0xc0)
 MAC_ADDRESS(0x140c2c, 0x114)  // anchor-callee
@@ -2332,8 +2251,6 @@ void philAI::doAI(int whichPlayer)
 
 // Original: MoveHero; philai.cpp:1056
 // DC records this helper as file-static with explore_mode by reference.
-// Keep the canonical definitions in DC source order; the VA tag here lets
-// both compilers extract this same body.
 VA(0x005261f0, 0x5ba)
 DC_ADDRESS(0x10ec58, 0x258)
 MAC_ADDRESS(0x14057c, 0x374)  // anchor-callee
@@ -2420,12 +2337,8 @@ MAC_ADDRESS(0x1408f0, 0x270)
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
 
 // Complete's computer-owner purchase wrapper; its declaration belongs to
-// philai.h with this definition. Retail buy_building calls it at 0x5bf476,
-// then tests builtThisTurn at 0x5bf47b. DC buy_building instead proceeds
-// from get_build_cost_array (dc 0x1672fc) to the resource checks/debits
-// (source 1451..1459), without the new computer-owner trading path.
-// Retail 0x526d2e selects g_aiPlayers[playerId] with a 152-byte stride,
-// calls trade_resources at 0x526d35, and returns with ret 4.
+// philai.h with this definition. Retail buy_building calls it, then tests
+// builtThisTurn; DC buy_building has no computer-owner trading path.
 VA(0x00526d20, 0x1e)
 MAC_ADDRESS(0x140df0, 0x2c)  // anchor-callee type_AI_player::trade_resources + sole caller town::buy_building 0x5bf3c0
 void tradePlayerResources(int playerId, int* costs, int flag)
@@ -2748,8 +2661,7 @@ void philAI::getTurnAIVars(int whichPlayer)
     type_AI_player::setAttackBonuses(computerBonus, humanBonus);
 }
 
-// Mac retains this member wrapper's call to valueOfLearning at 0:0x1422b0.
-// Retail 0x527aa0 takes the hero in ECX and SpellID at [ebp+8].
+// Mac retains this member wrapper's call to valueOfLearning.
 VA(0x00527aa0, 0x56)
 MAC_ADDRESS(0x1422a4, 0x20)
 int hero::valueOfSpell(SpellID spell) const
@@ -2816,9 +2728,8 @@ TPrimarySkill aiChooseMagicSkill(hero* currentHero)
         ? ePriSkillKnowledge : ePriSkillPower;
 }
 
-// DC MoraleIncreaseValue(const hero*, int), philai.cpp:2692,
-// becomes this hero member. Complete 0x527cf0 takes the hero in ECX and the
-// award at [ebp+8]; both exits use ret 4. Keep the changed owner/ABI explicit.
+// DC MoraleIncreaseValue(const hero*, int), philai.cpp:2692, becomes this
+// hero member.
 // Original: MoraleIncreaseValue; philai.cpp:2692.
 VA(0x00527cf0, 0x89)
 DC_ADDRESS(0x111b7c, 0xc6)
@@ -2834,9 +2745,8 @@ int hero::moraleIncreaseValue(int value)
     return static_cast<int>(valueAdded);
 }
 
-// DC LuckIncreaseValue(const hero*, int), philai.cpp:2728,
-// becomes this hero member. Complete 0x527d80 passes ECX to getLuck, reads
-// the award from [ebp+8], and returns with ret 4 on both exits.
+// DC LuckIncreaseValue(const hero*, int), philai.cpp:2728, becomes this hero
+// member.
 // Original: LuckIncreaseValue; philai.cpp:2728.
 VA(0x00527d80, 0x90)
 DC_ADDRESS(0x111c78, 0xf0)
@@ -2975,10 +2885,9 @@ long valueOfCustomItem(const hero* currentHero, NewmapCell* cell, long itemValue
     return itemValue;
 }
 
-// DC ValueOfSpell is file-static at philai.cpp:1945 and Mac retains the
-// separate body at 0:0x1421e8 before valueOfLearning. Complete expands its
-// only PHILAI call into the learning gate; the hero member above is a distinct
-// Complete entry point with the wisdom check included.
+// DC ValueOfSpell is file-static at philai.cpp:1945; Complete inlines its
+// only PHILAI call into the learning gate. The hero member above is a
+// distinct Complete entry point with the wisdom check included.
 DC_ADDRESS(0x110574, 0x36)
 MAC_ADDRESS(0x1421e8, 0x6c)
 static int valueOfSpell(const hero* currentHero, SpellID spell)
@@ -3044,7 +2953,6 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
         purchaseValue = 0;
     value += purchaseValue;
 
-    // Mac 0x1429c0 expands getCreatureAlignment for the generator's creature.
     if (static_cast<unsigned char>(
             g_game->m_mapHeader.m_victoryCondition.appliesToPlayer(
                 g_netLocalGamePos))
@@ -3141,8 +3049,6 @@ int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
         return 0;
 
     // DC 2602 acquires power, 2605 knowledge, then 2608 calls max.
-    // No local types survive here; long preserves both proven getter returns
-    // (hero.h:1001/1006, dc 0x37dd4/0x37dcc).
     long powerValue = currentHero->getValueOfPower();
     long knowledgeValue = currentHero->getValueOfKnowledge();
     return static_cast<int>(max(powerValue, knowledgeValue)
@@ -3564,11 +3470,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
         }
     }
 
-    // The by-value includes.h wrapper, not the bare selector: retail copies
-    // both arguments into their own homes ([ebp+0x10] restored, [ebp+0xc] set
-    // from the immediate) before the address select and the dereference, which
-    // is what that wrapper's extra layer emits. cppMin alone binds `value` in
-    // place and CSEs the cap into a register (99.8200).
+    // The by-value includes.h wrapper, not the bare selector.
     return min(value, 5000000L);
 }
 
@@ -3605,10 +3507,9 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
     return purchaseValue + swapValue / 2;
 }
 
-// Complete retains this separate building appraisal and value_of_town
-// calls it at 0x52ac9c (allied town) and 0x52ad0c (owned town). DC's
-// value_of_town owns the special-building arms itself at source 3235..3263
-// (HasBuilding calls dc 0x112cb6/0x112cd4/0x112cf0/0x112d6e/0x112d96).
+// Complete keeps this separate building appraisal; value_of_town calls it
+// for allied and owned towns (DC's value_of_town owns the special-building
+// arms itself at source 3235..3263).
 // The new helper also prices the Conflux university and unlearned guild
 // spells, then checks the per-hero town bonus mask before the stat arms.
 // Its role name is provisional; keep the retained body in this module.
@@ -3720,12 +3621,8 @@ int valueOfTreasure(const hero* currentHero)
 // experience, once per hero per tree, less the tree's price - free, 2,000
 // gold or 10 gems when this player has already learned which, or the
 // three-way expected price (capped at two thirds of the level's worth)
-// when he has not. DC marks ValueOfTree static; retail and Mac each
-// retain only the same-TU AI_value_of_event caller.
-// DC philai.cpp:3341 explicitly calls GetItemId; Mac 145b60..145b70
-// expands its unsigned five-bit read and short result. Use the inherited
-// helpers directly, with the shared WiseTreePrices domain for the switch.
-
+// when he has not. DC marks ValueOfTree static; DC philai.cpp:3341
+// explicitly calls GetItemId.
 VA(0x0052b5a0, 0x161)
 DC_ADDRESS(0x1130cc, 0x258)
 MAC_ADDRESS(0x145b40, 0x20c)
@@ -3807,9 +3704,9 @@ long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
     if (!info->magicSpringIsFull())
         return 0;
 
-    // DC records one value-type target local, not a path-to-target copy.
-    // Separate declaration/assignment keeps this exact retained body and
-    // restores its retained call in aiValueOfEvent without an inline pin.
+    // DC records one value-type target local, not a path-to-target copy;
+    // separate declaration/assignment keeps the retained call in
+    // aiValueOfEvent.
     type_point target;
     target = currentHero->getTarget();
     if (target.isValid() && moveCost > 300) {
@@ -4241,7 +4138,5 @@ long aiValueOfEvent(const hero* currentHero, type_point point)
     return aiValueOfEvent(currentHero, point, moveCost);
 }
 
-// COMDAT pairing: std::_Unguarded_insert<type_creature_value, greater>. See
-// ai_player's unpredicated twin: `ret 0x10` against its `ret 0xc` is the
-// empty predicate's four stack bytes, and nothing else separates the two.
+// COMDAT pairing: std::_Unguarded_insert<type_creature_value, greater>.
 VA_COMPGEN(0x0052bd50, 0x42, STD_UNGUARDED_INSERT, type_creature_value_greater)

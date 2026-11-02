@@ -31,7 +31,6 @@ font::font(const char* name, const font::TFontSpec& fontspec, int dsize,
         memcpy(Data, d, dsize);
 }
 
-// Mac 0:0xc8dc8 uses array delete for the new[] glyph buffer.
 VA(0x004b5110, 0x67)
 DC_ADDRESS(0x0a1c94, 0x4e)
 MAC_ADDRESS(0x0c8d94, 0x7c)
@@ -42,9 +41,9 @@ font::~font()
 }
 
 // E:\gamedcs\font.cpp:56..76. Original name: GetColor.
-// The decorated DC member signature uses TColor and bool (_N). Both
-// string renderers call this ordinary member; retail expands the custom
-// color test and palette bias. Keep the shared return and nested highlight.
+// The decorated DC member signature uses TColor and bool (_N). Both string
+// renderers call this ordinary member (inlined); the shared return and
+// nested highlight stay.
 DC_ADDRESS(0x0a1ce4, 0x30)
 MAC_ADDRESS(0x0c8e10, 0x3c)
 int font::GetColor(font::TColor colorScheme, bool highlighted)
@@ -68,9 +67,8 @@ DC_ADDRESS(0x0a1d14, 0x44)
 MAC_ADDRESS(0x0c8e4c, 0x24)  // anchor-global
 void font::SetPalette(const TPalette16& newPalette)
 {
-    // DC82 calls the reference copy assignment; Complete 0x4b5180 calls
-    // the retained pointer assignment at 0x522910, which copies palette
-    // data through that canonical overload. Keep the source's ref formal.
+    // DC82 calls the reference copy assignment; Complete calls the pointer
+    // assignment, which copies palette data through that canonical overload.
     Palette = &newPalette;
 }
 
@@ -115,8 +113,8 @@ unsigned int font::getSize() const
 
 // E:\gamedcs\font.cpp:123..125. Original name: DrawCursor.
 // DC proves the ordinary nine-argument member and the underscore draw;
-// clip arguments are unused. Retail expands it at the string-rendering
-// call sites. The decorated bool (_N) remains the highlight interface.
+// clip arguments are unused. Inlined at the string-rendering call sites.
+// The decorated bool (_N) remains the highlight interface.
 DC_ADDRESS(0x0a1e30, 0x2c)
 MAC_ADDRESS(0x0c8f40, 0x44)
 void font::DrawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
@@ -218,40 +216,12 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap,
 // DrawStringExecute. Locals carry the Dreamcast names (limit,
 // lineStart, iOrigPixelWidth, okWidthIndex); `{` and `}` are the
 // in-string colour markers and are weightless everywhere.
-// Signed/unsigned note, byte-forced throughout: every BEARING TEST
-// indexes spec[] with the character zero-extended, while the bearing
-// VALUE that follows indexes with the plain (signed) char - `and
-// eax,0xff` against `movsx`, in three separate places.
-// Lever found here: NAMING the scanned character costs 10 points. A
-// `char c = str[pos];` local gets a stack home and a reload at every
-// use (VC6 homes char locals far more eagerly than ints); writing
-// `str[pos]` at each use lets the same load stay in `al` exactly as
-// retail does. 86.9% -> 96.3% for that change alone.
-// The claim that this was "register allocation only" was WRONG until
-// 2026-08-08: `--branches` reported a TOPOLOGY retarget, the
-// wrap-backtrack's `pos < lineStart` exit landing one block past
-// retail's. Spelling the backtrack as `for (;;) { if (str[pos] == ' ')
-// break; if (pos < lineStart) break; ... }` - the same two-break shape
-// that closed LongestWrappedLineWidth - routes BOTH exits through the
-// shared `if (pos <= lineStart)` instead of letting VC6 jump-thread
-// the lineStart exit straight to the assignment (96.33 -> 96.81, and
-// the branch sequences now AGREE). `while (str[pos] != ' ' &&
-// pos >= lineStart)` scores the same; `pos <= lineStart` as the break
-// condition is worse (96.59).
-// The plain bottom-justification `total` is retained. Overflow-only recovery
-// locals preserve the canonical wrapping helpers. Separately initialize
-// currY before strlen and pos after it: Windows is exact (2026-09-27).
-// Twelve declaration/lifetime spellings reproduce Windows exact; this order
-// also improves the unresolved Mac comparison (30.20 -> 30.71%, 980/968 bytes).
-// A prior volatile probe raised the banked MAX to 98.7864 by
-// aligning the scratch-register family, but retail keeps `total` in EAX;
-// the qualifier itself forces three non-retail stack-memory instructions.
-// Reusing the later-overwritten iHeight or width local is byte-identical
-// to the plain block local, so it supplies no independent lever. Tried
-// and rejected: volatile `limit`
-// (98.28 but one duplicated loop guard), the first `total` (97.24),
-// register/long/initializer/address-taken spellings (96.81), and removing
-// or bypassing the loop guard (95-96% allocation cascades).
+// Every BEARING TEST indexes spec[] with the character zero-extended, while
+// the bearing VALUE that follows indexes with the plain (signed) char, in
+// three separate places. The wrap backtrack is a two-break `for (;;)`, the
+// shape LongestWrappedLineWidth also uses. The plain bottom-justification
+// `total` is retained, and currY is initialized before strlen, pos after
+// it.
 VA(0x004b5490, 0x308)
 DC_ADDRESS(0x0a2108, 0x316)
 MAC_ADDRESS(0x0c9238, 0x3c8)  // anchor-global
@@ -375,7 +345,6 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
     }
 }
 
-// The ordinary ABC sum order matches both retained retail bodies exactly.
 VA(0x004b57a0, 0x25)
 DC_ADDRESS(0x0a2420, 0x18)
 MAC_ADDRESS(0x0c9600, 0x28)
@@ -455,8 +424,6 @@ int font::LineWidth(const char* text) const
     return width;
 }
 
-// Ordinary len/pos/best declaration order matches both Windows and Mac;
-// the native difference was seven uses of the swapped best/pos registers.
 VA(0x004b5990, 0x76)
 DC_ADDRESS(0x0a25c8, 0x86)
 MAC_ADDRESS(0x0c9888, 0xc4)
@@ -552,14 +519,10 @@ int font::LongestWrappedLineWidth(const char* str, int boxWidth) const
 
 // E:\gamedcs\font.cpp - font.obj's tail, and the only member that
 // produces text rather than measuring it: it word-wraps `str` into
-// `result` at `boxWidth` pixels. Retail proves the receiver outright -
-// the space width is `fs.abc[' ']` read as this+0x1bc/0x1c0/0x1c4 - and
-// NH3API corroborates the name and the parameter shape only.
-// Mac 0xc9d04..0xc9d08 adds line width before subtracting word width;
-// 0xc9d74..0xc9d7c counts pending spaces down. Both source forms restore
-// the Windows retail body while retaining every string/vector helper.
-// Mac's local register order also fixes the entry declarations below: p,
-// wordEnd, wordWidth, lineWidth, spaceCount, spaceWidth. Windows stays exact.
+// `result` at `boxWidth` pixels; the space width is `fs.abc[' ']`. NH3API
+// corroborates the name and the parameter shape only. Line width is added
+// before word width is subtracted, and pending spaces count down. Entry
+// declarations: p, wordEnd, wordWidth, lineWidth, spaceCount, spaceWidth.
 VA(0x004b5b90, 0x3A5)
 MAC_ADDRESS(0x0c9b78, 0x270)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
 void font::fillLinesVector(const char* str, int boxWidth,
@@ -634,6 +597,5 @@ void font::fillLinesVector(const char* str, int boxWidth,
         result.push_back(line);
 }
 
-// The vector<string> range erase `result.clear()` reaches, retained as a
-// font.obj COMDAT because this is the only TU that clears one.
+// The vector<string> range erase `result.clear()` reaches.
 VA_COMPGEN(0x004B6010, 0x175, VECTOR_ERASE, string)

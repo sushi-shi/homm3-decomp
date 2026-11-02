@@ -30,16 +30,13 @@ DATA(0x00643b80) static const POINT g_buttonPositions[4] = {
     {54, 234}, {158, 234}, {261, 234}, {365, 234}
 };
 
-// initializeHelpText fills four gUniversityWindowHelp rows at 0x6a7dd8.
-// Buttons consume rows 0/1; the skill description uses row 2's right-click
-// format (0x6a7dec).
+// initializeHelpText fills four gUniversityWindowHelp rows. Buttons consume
+// rows 0/1; the skill description uses row 2's right-click format.
 
-// E:\gamedcs\university_window.cpp:50. The two-store latch setter, and it
-// belongs in this TU rather than the carcass: retail EXPANDS it at its one
-// call site in skill_click (the call census reads `set_skill base x1 vs
-// retail x0`), which /Ob2 can only do from a visible body.
-// Original public ?set_skill@type_university_skill_button@@QAAXW4TSecondarySkill@@_N@Z
-// independently proves the Boolean click parameter.
+// E:\gamedcs\university_window.cpp:50. The two-store latch setter, inlined
+// at its one call site in skill_click. Original public
+// ?set_skill@type_university_skill_button@@QAAXW4TSecondarySkill@@_N@Z
+// proves the Boolean click parameter.
 DC_ADDRESS(0x18fad8, 0xa)
 void type_university_skill_button::setSkill(TSecondarySkill newSkill,
                                              bool newClick)
@@ -48,10 +45,9 @@ void type_university_skill_button::setSkill(TSecondarySkill newSkill,
     m_click = newClick;
 }
 
-// E:\gamedcs\university_window.cpp:65. Complete emits no surviving
-// out-of-line body, but both allocations in the window constructor preserve
-// this source helper in full: iconWidget base construction, derived vtable,
-// then skill/click stores.
+// E:\gamedcs\university_window.cpp:65. Inlined at both allocations in the
+// window constructor: iconWidget base construction, derived vtable, then
+// skill/click stores.
 DC_ADDRESS(0x18e6ac, 0x7c)
 MAC_ADDRESS(0x1fa678, 0x70)
 type_university_skill_button::type_university_skill_button(
@@ -90,29 +86,12 @@ bool type_university_skill_button::handleClick(
 }
 
 // DC 124/133/236 use TTextResource::operator[] for all four text lookups.
-// E:\gamedcs\university_window.cpp:102. Exact with the original helper
-// calls and recovered pointer lifetimes. DC records widget* new_widget;
-// the typed background/exit/cancel locals below are inferred from retail's
-// derived-to-base argument temporaries, not recovered local names. Direct
-// skill-array access restores the cancel hotkey's vector<int>::insert
-// expansion without changing the canonical setHotkey/push_back boundary.
-// DC 147 and retail both reread university->skills for the skill-button
+// E:\gamedcs\university_window.cpp:102. DC records widget* new_widget; the
+// typed background/exit/cancel locals below are inferred, not recovered
+// local names. DC 147 rereads university->skills for the skill-button
 // constructor. DC 199..201 keeps the second background in new_widget and
 // calls push_back twice; unlike 187/188, 247/248 and 255/256, there is no
-// back() call at this site. Complete adds the townUniversity image arm;
-// its third parameter is proven by both retail callers and the branch.
-//
-// Negative controls: the 54-state access/lifetime family leaves cached
-// record references/pointers at 88.1141..88.1533%, versus 95.1581..95.2402%
-// for direct indexing (four objects, four reproduced). The next 54-state
-// typed-local family reaches 98.9215% (18 objects, ten reproduced). In the
-// final 33-state family, reading the stored skill stays at 99.5480% and
-// using back() for the second background at 99.3736%; restoring both is
-// exact for all eight tested scope/declaration combinations (five objects,
-// five reproduced). All other TU functions stay unchanged in these tests.
-// The apparent +4 coordinate-load differences are the same addresses:
-// g_topBarPositions+4 and retail const_243b64. All 154 calls agree after
-// verifying the six folded vector-helper aliases against their retail bodies.
+// back() call at this site. Complete adds the townUniversity image arm.
 VA(0x005ef500, 0x1252)
 DC_ADDRESS(0x18e790, 0xb68)
 MAC_ADDRESS(0x1fa79c, 0x1e68)  // Univers1.pcx + two call-site modes
@@ -295,9 +274,8 @@ type_university_window::type_university_window(
     }
 }
 
-// Dreamcast preserves this helper as a separate source function. Complete
-// inlines it into DoModal and cancel_click; retaining the boundary is required
-// even though no standalone x86 body survives.
+// Dreamcast preserves this helper as a separate source function; inlined
+// into DoModal and cancel_click.
 DC_ADDRESS(0x18f428, 0xe0)
 MAC_ADDRESS(0x1fc830, 0xe4)
 void type_university_window::setSelectionMode()
@@ -406,19 +384,11 @@ void type_university_window::skillClick(TSecondarySkill skill)
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
-// Earlier skillClick controls at 98.3269%: naming a button pointer was
-// byte-flat and moving the selected-skill store below setSkill fell to
-// 98.2560%. Retaining the named skill string and canonical setSkill/show/
-// hide calls is exact in the current TU; the old register-only diagnosis
-// no longer describes this object.
-
 // E:\gamedcs\university_window.cpp:404
 // DC 405/407/408/411 proves the base-handler result guard followed by
-// ConvertToHover for mouse movement. Retail's university vtable 0x643bd8
-// slot 9 points to 0x5666f0, the identical body owned by
-// type_skeleton_window::windowHandler; inheriting CAdvPopup's 0x41b1c0
-// handler loses this derived hover step. Retain the separate source
-// override without claiming the folded retail address twice.
+// ConvertToHover for mouse movement. It shares
+// type_skeleton_window::windowHandler's body; inheriting CAdvPopup's handler
+// would lose this derived hover step.
 DC_ADDRESS(0x18f7e4, 0x84)
 MAC_ADDRESS(0x1fccf4, 0x5c)
 int type_university_window::windowHandler(message& msg)
@@ -431,10 +401,8 @@ int type_university_window::windowHandler(message& msg)
     return 0;
 }
 
-// Identified by shape: heroWindow slot 4 (one widget* argument, `ret 4`),
-// reading widget::RollOver at +0x20 and dispatching slot 13
-// (textWidget::SetText) through the +0x70 rollover pointer before a
-// whole-window redraw.
+// heroWindow slot 4: reads widget::RollOver and sets it on the rollover
+// text widget before a whole-window redraw.
 VA(0x005f0dc0, 0x38)
 DC_ADDRESS(0x18f868, 0x48)
 MAC_ADDRESS(0x1fcd50, 0x8c)
@@ -493,15 +461,13 @@ int type_university_window::exitClick(message& msg)
     return 0;
 }
 
-// The address-taken callback immediately following handle_widget_hover is the
-// purchase button's handler: right-select (14) formats the selected skill's
-// Basic description and opens the canonical skill dialog; a plain deselect
-// (13) pays 2,000 gold, teaches one level, restores the two widget groups,
-// refreshes all four offer rows and clears the selection.
+// The purchase button's handler: right-select (14) formats the selected
+// skill's Basic description and opens the canonical skill dialog; a plain
+// deselect (13) pays 2,000 gold, teaches one level, restores the two widget
+// groups, refreshes all four offer rows and clears the selection.
 
 // Dreamcast CodeView records the branch-local `result` string and the shared
-// set_selection_mode helper. Restoring that helper gives Complete's exact
-// 28-block/15-branch CFG while keeping the positive source boundary intact.
+// set_selection_mode helper.
 // E:\gamedcs\university_window.cpp:479
 VA(0x005f0f60, 0x21D)
 DC_ADDRESS(0x18f97c, 0x128)
@@ -509,8 +475,7 @@ MAC_ADDRESS(0x1fcf5c, 0x164)  // constructor callback xref + selected-skill tail
 int type_university_window::purchaseClick(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        // DC 482 constructs result before the window/skill reads at 484/486;
-        // retail likewise initializes the string before loading msg.window.
+        // DC 482 constructs result before the window/skill reads at 484/486.
         std::string result;
         type_university_window* window =
             static_cast<type_university_window*>(msg.m_window);

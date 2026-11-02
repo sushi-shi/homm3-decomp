@@ -189,8 +189,8 @@ public:
     // retail body of its own.
     long getAttackTime(const pathCell* cell) const;
 
-    // DC ai_tactical.h:471..482 returns
-    // best_attack_time, best_hex and best_value, at the retail-proven offsets.
+    // DC ai_tactical.h:471..482 returns best_attack_time, best_hex and
+    // best_value.
     DC_ADDRESS(0x027fdc, 0x4)
     long getAttackTime() const { return best_attack_time; }
 

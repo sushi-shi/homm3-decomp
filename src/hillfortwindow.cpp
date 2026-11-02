@@ -231,71 +231,13 @@ inline bool canAfford(const long* cost, const long* playerRes)
 }
 
 // E:\gamedcs\hillfortwindow.cpp:203
-// Residual (82.2872%, 2026-08-21): the CFG is closed at 34 branches / one
-// return on both sides, with every mnemonic and symbolic target agreeing.
-// Restoring the CodeView-named CanAfford helper below removed our redundant
-// post-loop `a == 7` test (79.6984 -> 80.0868); putting the resourceIndex ==
-// -1 arm first, as retail's sole polarity difference required, then reached
-// 82.2872. Both sides now reserve the same 0x40-byte frame.
-
-// The dominant remainder is one cascading strength-reduction choice. Retail
-// homes the 0xd4-based widget ID in [ebp-8] and bases the slot induction on
-// slot[i].count (this+0x90, `add ebx,0x50`). This compile homes the slot index
-// and bases the induction on slot[i].cost[6] (this+0x84), adding ID LEAs and
-// shifting most member displacements by 0xc. The out-of-line ledger is 23 vs
-// retail's 24, solely BroadcastMessage x14 vs x15. Raw disassembly proves
-// this is not an expanded callee: our C2 tail-merges the identical occupied-
-// and empty-arm upgrade-button update, while retail keeps two call sites.
-
 // Dreamcast's loop block names six ID locals, in emission order: res_cost_id,
 // res_icon_id, button_id, gold_icon_id, num_id, gold_cost_id; it names no i.
-// Reintroducing all six beside the current i/reference scores 79.60, and a
-// num_id-driven no-i form scores 79.08. Adding only button_id scores 77.7066
-// and still leaves the merged call. Earlier bounded loop forms: direct
-// slot[i] (78.83), id <= CREATURE_NUM_7_ID (78.66), separate i/id induction
-// (77.12), and id-driven without the reference (68.18). The retained
-// i/id/reference form is therefore the measured x86 winner. The clear order
-// at entry is byte-proven: szGoldCost, szResourceCost, resourceIndex, szCount.
-// 2026-09-06, polish lane 22 (82.2872 -> 83.9500): the affordability verdict
-// is NOT a ternary. Retail stores UPGRADE_STATE_TOO_EXPENSIVE and
-// UPGRADE_STATE_AFFORDABLE as two separate constant stores ON THE LOOP'S
-// TWO EXITS (`jg -> mov [edi+0x4c],2` and loop-completion ->
-// `mov [edi+0x4c],1`), with no post-loop compare at all; the ternary makes
-// VC6 fold the verdict into arithmetic on the counter (`inc edx / mov
-// [edi+0x4c],edx`). Assigning inside the loop and `goto`-ing past the
-// fall-through assignment reproduces retail's threading and takes the branch
-// census clean at 34/34. Measured: plain `if/else` after the loop 83.24 (one
-// branch too many), `continue` instead of the trailing `else` byte-flat at
-// 83.95, `int` flags 83.23, memset before the flags 83.42, mixed int/uchar
-// flags 83.30 and 83.79, swapping the two flag declarations 83.96 (noise).
-// Residual (83.95%): the merged BroadcastMessage the note above describes is
-// still merged - retail's 25th call at fn+0x405 is the occupied arm's
-// SET_ICON_NAME, ours cross-jumps into the empty arm's SET_STATUS at fn+0x4e4
-// (`push eax / jmp`) - and retail additionally SHARES one inline strcpy tail
-// between two emptyRolloverText copies where we duplicate it, so the two
-// cross-jump decisions run in OPPOSITE directions in one body. Also open:
-// retail's slot induction pointer sits at &slot[i]+0x44, ours at +0x40, which
-// is what shifts every `[ebx +/- N]` displacement by four.
-// Residual (84.0329%), 2026-09-06.  Structure is now exact: 62/62 blocks
-// with 47 of them byte-identical (it was 3), 34/34 branches and no missing
-// block; the one remaining one-sided call is the if-arm's own
-// SET_ICON_NAME BroadcastMessage, whose two-instruction tail
-// (`mov ecx,esi / call`) our cross-jumper merges into the else arm's last
-// call site where retail keeps both.  What is left is TWO INDUCTION-ANCHOR BIASES that shift
-// a displacement on every touched instruction and nothing else:
-//   * the widget id lives at [ebp-8] as 0xcd (CREATURE_PORTRAIT_1_ID) where
-//     retail parks 0xd4 (CREATURE_NUM_1_ID), so every codeY is +7 off;
-//   * the slot cursor is `esi+0x8c` (anchored on `s.type`, record +0x40)
-//     where retail uses `esi+0x90` (anchored on `s.count`, record +0x44),
-//     so every `[ebx+N]` is 4 off.
-// Both are C2 anchor choices over the SAME effective addresses.  Measured
-// and rejected against 84.0329: spelling every codeY with its absolute
-// enum name (CREATURE_NUM_1_ID + i, GOLD_COST_1_ID + i, ...) and dropping
-// `id` - 83.9081; keeping `msg.codeY = id - 7;` for the portrait rather than
-// `CREATURE_PORTRAIT_1_ID + i` - 83.9081; moving `msg.codeX` after
-// `msg.extraText` in the SET_ICON_NAME statement - byte-flat; and carrying
-// `totalID` the same way in the totals loop below - 83.4988, so the lever is
-// specific to the loop whose derived id feeds six different widget bands.
+// The clear order at entry is szGoldCost, szResourceCost, resourceIndex,
+// szCount. The resourceIndex == -1 arm comes first, and the CodeView-named
+// CanAfford helper below is a real call boundary. The affordability verdict
+// is two constant stores on the loop's two exits (hence the goto), not a
+// ternary.
 VA(0x004e7eb0, 0x64D)
 DC_ADDRESS(0x0d6bf8, 0x52a)
 MAC_ADDRESS(0x109408, 0x734)  // source/call order + DoModal/handler call sites
@@ -315,15 +257,10 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
 
     unsigned char upgradeAllValid = 0;
     unsigned char allUpgraded = 1;
-    // Mac 0x10948c/0x109504 clear the two seven-resource arrays through
-    // bzero. Use the platform clear operation for both retained calls.
+    // Mac clears the two seven-resource arrays through bzero.
     ZeroMemory(m_totalCost, sizeof m_totalCost);
 
-    // Retail carries `id` itself as the loop's induction variable and
-    // recovers `i` for the test (`inc edi / mov [ebp-8],edi /
-    // add edi,-0xd4 / cmp edi,7 / jl`); computing `id` from `i` inside the
-    // body instead leaves `i` memory-homed and every widget id rebuilt with
-    // its own `lea`, which cost 44 of the 62 blocks.
+    // `id` is the loop variable, with `i` recovered from it.
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         TUpgradeSlot& s = m_slot[i];
         s.m_countText[0] = 0;
@@ -336,8 +273,6 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
         sprintf(s.m_countText, "%d", s.m_count);
         ZeroMemory(s.m_cost, sizeof s.m_cost);
 
-        // Mac expands game::isBaseCreature here (0:0x109528), in the
-        // state check (0x10989c), and in upgradeSlot (0x109c70).
         TCreatureType type = s.m_type;
         if (g_game->isBaseCreature(type)) {
             upgradeAllValid = 1;
@@ -548,8 +483,7 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 
 // E:\gamedcs\hillfortwindow.cpp:500..519. Original: UpgradeAll.
 // DC504/508 owns the two dialogs; 514..515 loops over seven UpgradeSlot
-// calls. Retail expands this ordinary helper in the handler at 0x4e8944.
-// No retained retail row is required for the source boundary to exist.
+// calls. Inlined in the handler.
 DC_ADDRESS(0x0d7258, 0x9c)
 MAC_ADDRESS(0x109d9c, 0x11c)
 void THillFortWindow::upgradeAll()
@@ -742,9 +676,7 @@ int hillFortWindowHandler(message& msg)
 // E:\gamedcs\hillfortwindow.cpp:763..780. Original: UpdateHillFort.
 // DC764 branches on firstUpdate: 766..773 builds the initial palette message;
 // 777..778 recalculates and redraws. These are the constructor's final block
-// and the handler's post-upgrade block in retail. The older note incorrectly
-// described this helper as constructing the window. It has no retail row:
-// 0x4e8fb0 belongs to hiscore, beyond this TU's end at 0x4e8bb9.
+// and the handler's post-upgrade block; it has no retail body.
 DC_ADDRESS(0x0d76ec, 0x78)
 MAC_ADDRESS(0x10a3f4, 0xb4)
 static void updateHillFort(unsigned char firstUpdate)

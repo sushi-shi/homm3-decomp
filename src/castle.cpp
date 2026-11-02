@@ -282,10 +282,9 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
 // E:\gamedcs\castle.cpp:572
 // The Dreamcast body carries show_hall_side arms for its two-column hall
 // page; Complete shows all eighteen slots at once and has none of them.
-// Retail's three jump-table pools (0x462188/0x4621c4/0x462200) fix the
-// switch shapes: both building dispatches span -1..43 with the buildings
-// arm laid out first, and the click-side help lookup is a fifteen-case
-// switch on the resource-bar ids.
+// Both building dispatches span -1..43 with the buildings arm first, and
+// the click-side help lookup is a fifteen-case switch on the resource-bar
+// ids.
 VA(0x00461AB0, 0x767)
 DC_ADDRESS(0x05c884, 0x77c)
 MAC_ADDRESS(0x06d53c, 0x74c)  // THallWindow vtable 0x6437a0 slot 9

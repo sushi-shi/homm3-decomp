@@ -17,29 +17,21 @@
 #include "window.h"
 #include "winmgr.h"
 
-// The combat sub-window family's help-text table. Eleven rows, and every
-// one of them is referenced from exactly one of this compiland's three
-// reconstructed-or-not constructors: the base 0x46b610 takes rows 0..3 and
-// 6..8, TCombatControlSubWindow rows 4 and 5, TCombatPlacementSubWindow
-// rows 9 and 10. The START is the lowest row any of them names; nothing in
-// the image reads the two dwords below it, so the table could in principle
-// begin earlier, and the eleven-row extent is a floor rather than a
-// measured end.
+// The combat sub-window family's help-text table. Eleven rows, each
+// referenced from exactly one of this compiland's three constructors: the
+// base takes rows 0..3 and 6..8, TCombatControlSubWindow rows 4 and 5,
+// TCombatPlacementSubWindow rows 9 and 10. The eleven-row extent is a floor
+// rather than a measured end.
 
 // It is an 800x44 strip at (0, 556) with a ten-slot reserve, a
 // bitmapBorder over the caller's sprite and SEVEN buttons -
 // 'icm001.def'..'icm007.def', all 48x36 on row 5, ids 0x7d1..0x7d4 then
 // 0x7d8..0x7da. The four-id gap is real: 0x7d5/0x7d6/0x7d7 belong to
-// TCombatControlSubWindow's rollover strip and its two log arrows, which
-// is why these are seven literal ids and not one incrementing local.
-// The help rows are 0..3 and 6..8 of the same eleven-row table, leaving
-// 4/5 to the control bar and 9/10 to the placement bar - the table's
-// three consumers partition it exactly, which is the second witness for
-// the table's extent.
+// TCombatControlSubWindow's rollover strip and its two log arrows, which is
+// why these are seven literal ids and not one incrementing local.
 
-// rolloverWidget IS NULLED HERE, IN THE BODY - the 0x63d410 vptr store
-// precedes it, so it is not a mem-init - and that is what makes the
-// member the base's rather than TCombatControlSubWindow's.
+// rolloverWidget is nulled here, in the body (after the vptr store), which
+// makes the member the base's rather than TCombatControlSubWindow's.
 
 // The tail dims 0x7d4 through the PARENT window rather than through this
 // sub-window, and only when both sides are AI.
@@ -56,7 +48,6 @@ type_combat_sub_window::type_combat_sub_window(
     bitmapBorder* background = new bitmapBorder(0, 0, 800, 44, 0x7d0,
         backgroundSpriteName, 0x800);
     int gamePos = g_combatManager->m_playerIds[g_combatManager->m_currentSide];
-    // Mac calls the palette helper in each arm at 0:0x77718 and 0:0x77734.
     if (gamePos >= 0)
         background->setPlayerPaletteColors(gamePos);
     else
@@ -138,37 +129,18 @@ type_combat_sub_window::~type_combat_sub_window()
 // arrows. Same family shape as the placement bar below - an out-of-line
 // base call, a LOCAL vector<widget*> that the tail loop drains into the
 // inherited Widgets, and a bare operator delete for the local's storage -
-// with three differences that the bytes fix.
-//
-// THE TAIL LOOP PUSHES UNCONDITIONALLY AND ONLY GUARDS AddWidget. Retail
-// hands push_back the iterator itself (`push edi`, no copy through a
-// local) and only then tests the element, where the placement bar's loop
-// wraps both calls in one `if`. The shared insertion retains null entries;
-// the placement caller keeps its outer guard and therefore skips them.
-//
-// rolloverWidget IS THE BASE'S MEMBER AT +0x34 and its declared type is a
-// bitmapBackedTextWidget*: retail reloads it out of +0x34 into a stack
-// temporary for push_back, which only the derived-to-widget* conversion
-// can explain. Same test as TBottomViewNewTurn::backdrop.
-//
-// The two arrows' handlers are ADDRESS-TAKEN ONLY. They were absent from the
-// original carve but are now promoted at 0x472df0/0x472e40 in combatwindow.obj
-// under their Dreamcast-attested static TCombatWindow names.
-//
-// Exact after restoring the canonical setDisabledFrame calls. DC191
-// names the setter, and DC199 calls the same retained r10 address. The
-// 24-state setter/max family emits sixteen objects; all ten retained elites
-// reproduce. The up-arrow setter alone closes 96.3990 to 100; restoring only
-// the down-arrow setter is byte-flat. Both proven source calls are retained.
-// The old direct stores had changed scheduling inside the adjacent setHotkey
-// expansions. Moving those stores before/after the hotkeys was a failed
-// hypothesis (90.91/92.72), not proof that the setter boundary was irrelevant.
-// Original vector local new_widgets; its scope and lifetime are unchanged.
+// with three differences:
+//   * the tail loop pushes unconditionally and only guards AddWidget, where
+//     the placement bar's loop wraps both calls in one `if`;
+//   * rolloverWidget is the base's member at +0x34, a
+//     bitmapBackedTextWidget*, pushed through a widget* conversion;
+//   * the two arrows' handlers are address-taken only (combatwindow.obj,
+//     under their Dreamcast-attested static TCombatWindow names).
+// DC191 names setDisabledFrame and DC199 calls it again: both arrows use the
+// canonical setter. Original vector local new_widgets.
 
-// DC136/140 and their retained publics prove these empty virtual methods.
-// Retail base-table slots 1/2 fold to 0x485d80 (ret 4) and 0x5bc7e0
-// (ret 8). Keep the bodies and original long arguments (JJ), despite
-// the generated carcass prototypes having lost both parameters.
+// DC136/140 and their retained publics prove these empty virtual methods;
+// keep the bodies and original long arguments (JJ).
 DC_ADDRESS(0x064f60, 0x4)
 void type_combat_sub_window::setRollover(const char*)
 {
@@ -221,8 +193,6 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
         widget::WIDGET_DIMMED);
 }
 
-// UNBLOCKED by the constructor above: its 0x63d420 store is the only
-// image-wide reference to this class's table.
 VA_COMPGEN(0x0046bea0, 0x21, SCALAR_DELETING_DTOR, TCombatControlSubWindow)
 
 VA(0x0046bed0, 0x78)
@@ -233,7 +203,6 @@ TCombatControlSubWindow::~TCombatControlSubWindow()
 }
 
 // DC227..246 retains an empty derived override with the same JJ ABI.
-// Retail control-table slot 2 shares the base method's ret-8 fold.
 DC_ADDRESS(0x065270, 0x4)
 void TCombatControlSubWindow::setRolloverButtons(long, long)
 {
@@ -267,23 +236,17 @@ void type_combat_sub_window::disableAllButtons()
     g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
 }
 
-// DC271 calls the ordinary base implementation. Retail control-table
-// slot 3 shares its 0x46bf90 body after the call expands and ICF folds it.
-// Retain the override and canonical source call instead of only inheriting
-// the base slot. The base body is visible here, as in the original TU.
+// DC271 calls the ordinary base implementation; the override and its
+// canonical source call stay.
 DC_ADDRESS(0x065298, 0x10)
 void TCombatControlSubWindow::disableAllButtons()
 {
     type_combat_sub_window::disableAllButtons();
 }
 
-// The battlefield-placement bar: two buttons over the family base, and
-// the smallest of the family's constructors. Three things in it are read
-// off the bytes rather than assumed.
-
-// THE BASE IS AN OUT-OF-LINE CALL, not an inlined body - `call 0x46b610`
-// with (parent, "CoPlacbr.pcx") on the stack - so this constructor needs
-// nothing from the base's 1392 bytes and lands without them.
+// The battlefield-placement bar: two buttons over the family base, the
+// smallest of the family's constructors. The base is an out-of-line call
+// with (parent, "CoPlacbr.pcx").
 VA(0x0046c050, 0x18C)
 DC_ADDRESS(0x0652a8, 0x1a4)
 MAC_ADDRESS(0x0785fc, 0x2d8)
@@ -420,14 +383,9 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
     m_shown = false;
 }
 
-// TCombatHeroSubWindow's own destructor is 107 bytes, not 120, and the
-// 13-byte difference is one missing call: its loop deletes each widget
-// but does NOT hand it to parentWindow->RemoveWidget first. That also
-// explains why this body DOES name its own table where the three above
-// do not - it derives straight from TSubWindow, whose destructor is an
-// out-of-line call rather than an inlined body, so the 0x63d440 store
-// survives. The surviving reference is what lets the wrapper be claimed
-// with it, exactly as for the family base.
+// TCombatHeroSubWindow's own destructor deletes each widget but does NOT
+// hand it to parentWindow->RemoveWidget first; it derives straight from
+// TSubWindow.
 VA_COMPGEN(0x0046cb70, 0x21, SCALAR_DELETING_DTOR, TCombatHeroSubWindow)
 
 VA(0x0046cba0, 0x6B)
@@ -487,9 +445,8 @@ void TCombatHeroSubWindow::show()
                                       widget::WIDGET_DRAWN;
         }
         draw(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        // DC 0x65ce4 refreshes the whole combat area. Complete Mac
-        // 0x79a5c..0x79a8c instead posts this subwindow rectangle with
-        // width + 1; the older no-argument combat refresh is absent.
+        // DC refreshes the whole combat area; Complete posts this
+        // subwindow rectangle with width + 1.
         g_windowManager->updateScreen(
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width + 1, m_height);
         m_shown = true;
@@ -513,47 +470,19 @@ void TCombatHeroSubWindow::unShow()
     }
 }
 
-// The compiland's last class repeats the pattern one more time, and the
-// carve continues to agree with the roster row for row:
-
-//   0x46ceb0  0xcd1  TCombatCreatureSubWindow::ctor              562
-//   0x46db90  0x21   TCombatCreatureSubWindow::`scalar del dtor' 655
-//   0x46dbc0  0x6b   TCombatCreatureSubWindow::~                 666
-//   0x46dc30  0x2c2  TCombatCreatureSubWindow::Update            688
-//   0x46df00  0x73   TCombatCreatureSubWindow::Show              773
-//   0x46df80  0x3a   TCombatCreatureSubWindow::UnShow            820
-
-// and 0x46df80 is the entry combatManager::DoCommand already proved to
-// be this class's UnShow, so the run is pinned at both ends. The
-// destructor is TCombatHeroSubWindow's 107 bytes exactly - the same
-// delete-only loop over Widgets - differing only in the table it stores:
-// 0x63d444, four bytes past 0x63d440, so both classes carry a one-slot
-// table holding nothing but the destructor.
+// The compiland's last class: constructor, scalar deleting destructor,
+// destructor, Update, Show and UnShow in DC roster order (562, 655, 666,
+// 688, 773, 820). Its destructor is TCombatHeroSubWindow's delete-only loop
+// over Widgets; both classes carry a one-slot table holding nothing but the
+// destructor.
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:562
 // The DC lexical map proves the two view-level arms and their common
-// spellText append. Retail fixes the Complete-only compact-stat labels,
-// every widget argument, the three-iteration standing-spell loops, and the
-// full derived layout at +0x34..+0x6c.
-// Exact with named text-resource arguments at DC573/578/583/588/593/598.
-// The local names are inferred; DC records the operator[] then sprintf
-// order, but no local names. Capturing each caption before formatting
-// preserves that order and all allocation/member/push_back boundaries.
-// All 130 retail blocks and 105 positional calls agree (STL empty-body,
-// pointer-size and pointer/int _Ufill names are existing ICF aliases).
-//
-// Negative controls: the original direct resource arguments retain one
-// extra vector::size call in the compact spell-icon append (99.1290%).
-// A 64-state argument-capture family emitted seven objects, all reproduced:
-// five or six named arguments recover the exact expansion, fewer do not.
-// The consistent six-caption form is retained. A separate 64-state typed
-// caption-result family and 47-state scope follow-up reach only 99.9957%:
-// they restore that expansion but put allocation temporaries at EBP+1c
-// instead of retail EBP+18. Their 64 and 17 objects are not adopted.
-// Earlier 54-state compact conversion/loop-birth controls also leave the
-// size call unresolved. Folding DC-separated member assignments into
-// push_back loses the exact reserve/full-arm lowering (97.27%); keep the
-// canonical vector interface and both proven loop bodies.
+// spellText append; Complete adds the compact-stat labels and the
+// three-iteration standing-spell loops. DC573/578/583/588/593/598 pass named
+// text-resource arguments, each caption captured before formatting (the
+// local names are inferred). DC-separated member assignments stay apart from
+// push_back.
 VA(0x0046ceb0, 0xCD1)
 DC_ADDRESS(0x065dbc, 0x824)
 MAC_ADDRESS(0x079b2c, 0x10ec)  // roster order + vtable 0x63d444 + CCrPop/SpellInf
@@ -770,8 +699,7 @@ void TCombatCreatureSubWindow::show()
                                       widget::WIDGET_DRAWN;
         }
         draw(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        // DC 0x6695c retains the four-coordinate combat facade;
-        // Mac 0x7b0fc..0x7b128 expands the same parent-relative rectangle.
+        // DC 0x6695c retains the four-coordinate combat facade.
         g_combatManager->updateCombatArea(
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
         m_shown = true;

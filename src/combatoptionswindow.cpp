@@ -22,8 +22,8 @@
 // active dialog here and its destructor clears it before widget teardown.
 DATA(0x00694f90) static TCombatOptionsWindow* g_combatOptionsWindow;
 
-// The shared Help.txt table is owned and filled by text.cpp.
-// Retail reads column 1 (right-click), four bytes after each row base.
+// The shared Help.txt table is owned and filled by text.cpp; column 1
+// (right-click) is read.
 VA(0x0046e3b0, 0x1320)
 DC_ADDRESS(0x066c48, 0xd64)
 MAC_ADDRESS(0x07b3b0, 0x2068)
@@ -163,9 +163,7 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     }
 
     // As in systemoptionswindow.cpp, DC calls send_message directly for the
-    // slider highlight (set_visible is always an out-of-line call there),
-    // and retail pushes the constants before getWidget: 84.58 -> 99.95,
-    // and the handler's matching arms 96.92 -> 100.
+    // slider highlight (set_visible is always an out-of-line call there).
     for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
         getWidget(music)->sendMessage(
             widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
@@ -224,8 +222,7 @@ TCombatOptionsWindow::~TCombatOptionsWindow()
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:194
-// Retail inlines this mapping into CombatOptionsWindowHandler; no separate
-// entry exists between the destructor and DoModal.
+// Inlined into CombatOptionsWindowHandler.
 DC_ADDRESS(0x067a14, 0x2c)
 MAC_ADDRESS(0x07d4cc, 0x40)
 int TCombatOptionsWindow::convertID2HelpID(int id) const
@@ -251,15 +248,9 @@ void TCombatOptionsWindow::doModal()
         writePrefs();
 }
 
-// The four highlight helpers are present out of line on Dreamcast,
-// but every retail use is expanded by /Ob2;
-// no retail entry occurs between DoModal and the handler. They are real
-// source, not open-coded loops: HighlightCombatSpeed's expansion holds its
-// inlined `this` in EDI across the whole three-widget sweep, which is what
-// retail's Default and speed cases do and what a direct
-// `gpCombatOptionsWindow->GetWidget(...)` per iteration cannot produce.
-// Keep ordinary definitions in their recorded source order; retail makes
-// the automatic expansion decision without an authored inline qualifier.
+// The four highlight helpers are present out of line on Dreamcast and
+// inlined at every Complete use; they are real source, not open-coded
+// loops.
 // E:\gamedcs\combatoptionswindow.cpp:230
 DC_ADDRESS(0x067a78, 0x52)
 MAC_ADDRESS(0x07d56c, 0x78)
@@ -304,61 +295,10 @@ void TCombatOptionsWindow::highlightMouseShadow()
 // is zero; preference-member writes belong to the individual handler cases.
 // Its original source position is after the handler.
 // E:\gamedcs\combatoptionswindow.cpp:278
-// NOT A MEMBER-OFFSET BUG (checked 2026-09-06): the `[ecx+0x6ac]` against
-// retail's `[ecx+0x704]` that a census flagged here is the SWITCH INDEX
-// TABLE - `mov dl, byte ptr [ecx + <fn>+0x704]` / `jmp [4*edx + <fn>+0x6c4]`
-// - based off the function's own end, which retail places 0x58 later than
-// ours because retail's body is that much longer.  No TCombatOptionsWindow
-// member is involved.
 
-// Residual (83.4%): the tail-block class, in both directions. Retail parks
-// the translate-command and audio-unavailable arms at the tail and reaches
-// them with `je`, where our CL hoists each to its single goto site; and
-// retail expands every case's own `GetWidget(id)->send_message(...)` plus
-// the `bPrefsChanged = 1` and shares only the DrawWindow tail, where our CL
-// tail-merges the case bodies through a shared push sequence. The same
-// class, mirrored, is CampaignWindowHandler's residual - two independent
-// functions in this window family now show our SP3 CL taking the opposite
-// tail-block placement from retail's, which is the standing
-// compiler-generation suspect (match skill, "merged-return blocks"). The
-// last register row is the right-click arm's `return`: retail spends the
-// hoisted `mov eax,ebx` where ours re-materialises the immediate.
-// The constant 1 is NOT a source variable - it is VC6's own B8 hoist into
-// EBX. An earlier `register int one = MESSAGE_DISPATCH_CONSUME;` stood in
-// for it; with the highlight helpers landed the hoist happens by itself and
-// the plain literals score identically, so the crutch is gone.
-// An accessor-bearing conventional release VERIFY at entry is byte-flat
-// (2026-08-21): `(void)gpCombatOptionsWindow->Widgets.size()` leaves
-// 83.35985 and the same 28-vs-27 partial branch census/two polarities.
-// Validation mass therefore cannot select retail's tail phase here.
-// Four direct source-shape probes now bound the two tail classes as well
-// (2026-08-21). Giving SHOW_GRID/MOVEMENT_SHADOW/MOUSE_SHADOW private
-// `UpdateCombatOptions` returns leaves the two missing GetWidget/send_message
-// pairs merged and falls to 80.0076; open-coding those three helper bodies is
-// byte-flat at 83.35985. Making DIALOG_RETURN_SPLIT_ACCEPT an outlier `case`
-// in the dense switch adds four branches and falls to 77.4735. Finally, the
-// positive audio-enabled spelling (`if (volume || ds) { ... } else goto`) is
-// byte-identical to the retained negative guard. The two polarity flips and
-// the three-way widget-tail merge are therefore not source-addressable here.
-// WHY retail's cross-jumper declined, read off the bytes (2026-09-05): the
-// SHOW_GRID / MOVEMENT_SHADOW / MOUSE_SHADOW arms are NOT identical in
-// retail.  Each reloads gpCombatOptionsWindow after `send_message` into a
-// DIFFERENT register - `mov ecx,[0x694f90]` at 0x46f95f, `mov edx,...` at
-// 0x46f990, `mov eax,...` at 0x46f9c1 - before the shared
-// `mov byte ptr [reg+0x4c], bl`.  Three differing tails cannot be merged, so
-// the merge we perform is downstream of an ALLOCATOR divergence, not of a
-// statement shape: no arm spelling can suppress it while all three arms
-// allocate the same register here.  This is behaviour-catalog D7 and it is
-// the same class as hero::THeroScreenWindow::WindowHandler's six help arms
-// and game::ValidateVictoryLossConditions' shared `je`.
-// Goto audit: Replacing consume jumps with direct returns scores
-// 81.7140% versus 83.3598%; other dispatch joins are unchanged by this probe.
 // DC initializes an exit flag, records preference changes within the
-// selected case, and tests both before the redraw/message tails (lines 627-639).
-// Restoring those scopes and each audio-error dialog removes all nine gotos,
-// raising 83.3598% to 85.9186%. Keeping the shared audio label within this
-// recovered dispatcher falls to 77.2424%; the per-arm error exits are retained.
-// Older flattened-dispatch measurements above do not describe this source.
+// selected case, and tests both before the redraw/message tails (lines
+// 627-639); the per-arm audio-error exits are retained.
 VA(0x0046f7b0, 0x72A)
 DC_ADDRESS(0x067b7c, 0x51c)
 MAC_ADDRESS(0x07d680, 0x6f4)  // DoModal address-take + complete message CFG

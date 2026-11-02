@@ -176,9 +176,9 @@ const TCreatureTypeTraits (&akCreatureTypeTraits)[150] = g_creatureTypeTraitsSto
 void initializeCreatureTypeTraits(int id,
     const std::vector<char*, std::allocator<char*> >& values);
 
-// Provisional name: Mac retains this source helper at 0:0x888d0, immediately
-// before IsBaseCreature. All three following queries call it there; VC6
-// expands its two-row lookup in their Windows bodies.
+// Provisional name: Mac retains this source helper immediately before
+// IsBaseCreature, and all three following queries call it there; inlined
+// on Windows.
 MAC_ADDRESS(0x0888d0, 0x70)
 static int getCreatureDwellingIndex(TCreatureType type)
 {
@@ -314,8 +314,7 @@ public:
     TAutoStrPtr() : m_string(0) {}
 
     // E:\gamedcs\creaturetype.cpp:402
-    // Retail keeps this COMDAT at 0x47b7b0, directly after
-    // initializeCreatureTypeTraits; identical private copies fold to it.
+    // Identical private copies fold to this COMDAT.
     VA(0x0047b7b0, 0xA)
     DC_ADDRESS(0x071ef4, 0x18)
     ~TAutoStrPtr() { delete[] m_string; }

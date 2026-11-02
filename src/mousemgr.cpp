@@ -104,13 +104,10 @@ DATA(0x0067ff50) POINT g_mouseHotSpots[mouseManager::MAX_POINTER_SETS][144] = {
 class TCSLock {
 public:
 
-    // DC records only frame line 291 and closing line 294; the
-    // unrecorded 292..293 hold the non-null invariant and the member store.
-    // Retail proves the invariant's IL cost: checkUpdate's nested hidePointer
-    // expansion keeps this constructor as a call (0x50d890) at budget 21,
-    // which requires cb > 40. The plain store+call body costs 39 (free, so
-    // always expanded; checkUpdate 96.73%); the release-build assert's two
-    // tuples make 41. Its text is not recovered.
+    // DC records only frame line 291 and closing line 294; the unrecorded
+    // 292..293 hold the non-null invariant and the member store. The
+    // release-build assert is what keeps this constructor a call inside
+    // checkUpdate's nested hidePointer expansion; its text is not recovered.
     VA(0x0050d890, 0x19)  // byte-identified out-of-line copy
     DC_ADDRESS(0x0ff7e0, 0x20)
     TCSLock(CRITICAL_SECTION* criticalSection) {
@@ -143,16 +140,16 @@ mouseManager::mouseManager()
 }
 
 // E:\gamedcs\mousemgr.cpp:344
-// The written ordinary destructor precedes Open. Retail expands this body
-// into the scalar deleting destructor at 0x50cbc0.
+// The written ordinary destructor precedes Open; inlined into the scalar
+// deleting destructor.
 DC_ADDRESS(0x0fea50, 0x2e)
 mouseManager::~mouseManager()
 {
     DeleteCriticalSection(&m_sectionMouse);
 }
 
-// Slot 3 of vtable 0x640028: own-vptr store, DeleteCriticalSection at
-// +0x78, then the flags&1 operator-delete tail. No standalone retail claim.
+// Vtable slot 3: own-vptr store, DeleteCriticalSection at +0x78, then the
+// flags&1 operator-delete tail.
 VA_COMPGEN(0x0050cbc0, 0x2C, SCALAR_DELETING_DTOR, mouseManager)
 
 VA(0x0050cbf0, 0x4A)
@@ -204,7 +201,7 @@ void mouseManager::reset()
 }
 
 // Original: mouseManager::Main; mousemgr.cpp:431
-// Vtable slot 2 folds onto inputManager::Main's return-zero body at 0x4ec560.
+// Shares inputManager::Main's return-zero body.
 DC_ADDRESS(0x0feb18, 0x4)
 MAC_ADDRESS(0x216fb8, 0x8)
 int mouseManager::main(message& msg)
@@ -254,19 +251,12 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
 }
 
 // E:\gamedcs\mousemgr.cpp:526
-// RETAIL-RECONSTRUCTED 2026-08-09. The 72-block CFG now agrees exactly,
-// including both early-return families, overlap/non-overlap selection, all
-// four clipping ladders and the final cleanup. SaveAndDraw and
-// RestoreUnderlying are ordinary members whose expansions retain their
-// argument homes and private RECTs in retail's Update stack frame.
+// SaveAndDraw and RestoreUnderlying are ordinary members, inlined with
+// their own argument homes and private RECTs.
 
 // DC mousemgr.cpp:639/700 and 648/708 prove separate branch-local
-// window_origin POINTs and ddsd descriptors. Keep those scopes, substituting
-// the retail-proven Windows v1 descriptor for DC's Surface4 descriptor.
-// The 32-state helper/scope family reproduced 32 distinct objects and ten
-// elites with every sibling exact. Rectangle-copy initialization and ordinary
-// helpers reach 99.8420 with the old shared origin, 99.7141 with the proven
-// origins retained; old forced/interleaved construction was 94.1675.
+// window_origin POINTs and ddsd descriptors; Complete uses the Windows v1
+// descriptor in place of DC's Surface4 one.
 VA(0x0050cd90, 0x770)
 DC_ADDRESS(0x0fec54, 0x5d8)
 MAC_ADDRESS(0x217120, 0x62c)  // anchor-global
@@ -458,11 +448,8 @@ void mouseManager::mouseCoords(int& x, int& y)
     y = cursor.y;
 }
 
-// E:\gamedcs\mousemgr.cpp:798 (). The signature proves const
-// RECT&, and lines 805/809 construct save_rect then copy it into src_rect
-// (the SH4 copy reads save_rect.right). Retail expands this ordinary helper;
-// no forced-inline keyword is needed. Independent rectangle constructions
-// score below the copy in the bounded family (all callers measured).
+// E:\gamedcs\mousemgr.cpp:798. The signature proves const RECT&, and lines
+// 805/809 construct save_rect then copy it into src_rect; inlined.
 DC_ADDRESS(0x0ff268, 0xbe)
 MAC_ADDRESS(0x2177f4, 0x150)
 void mouseManager::saveAndDraw(
@@ -482,8 +469,8 @@ void mouseManager::saveAndDraw(
     }
 }
 
-// E:\gamedcs\mousemgr.cpp:844 (): ordinary helper, const RECT&,
-// one block-local src_rect. Retail expands both call sites in Update.
+// E:\gamedcs\mousemgr.cpp:844: ordinary helper, const RECT&, one
+// block-local src_rect; inlined at both call sites in Update.
 DC_ADDRESS(0x0ff328, 0x80)
 MAC_ADDRESS(0x217944, 0x9c)
 void mouseManager::restoreUnderlying(
@@ -528,9 +515,8 @@ void mouseManager::showPointer(bool force)
 }
 
 // E:\gamedcs\mousemgr.cpp:934
-// DC proves the TCSLock, x/y locals, MouseCoords call and member
-// stores in this order. Retail expands this ordinary helper in Update and
-// ShowPointer, including MouseCoords and both lock boundaries.
+// DC proves the TCSLock, x/y locals, MouseCoords call and member stores in
+// this order; inlined in Update and ShowPointer.
 DC_ADDRESS(0x0ff448, 0x3a)
 MAC_ADDRESS(0x217abc, 0x44)
 void mouseManager::getPointerPosition()
@@ -549,20 +535,14 @@ void mouseManager::checkUpdate()
 {
     TCSLock lock(&m_sectionMouse);
     // DC procedure 0xff484 owns update_time and animate_time as unsigned
-    // long function statics (NB11 owner record 5144). Retail's one shared
-    // guard byte at 0x69ca20 tests bits 1/2 for these two initializers.
+    // long function statics (NB11 owner record 5144).
     DATA_COMPGEN_GUARD(0x0069ca20, mouseTimersGuard, updateTime)
     DATA(0x0069ca18)
     static unsigned long updateTime = GameTime::get() + 33;
     DATA(0x0069ca1c)
     static unsigned long animateTime = GameTime::get() + 100;
     // DC 986..999 tests the off-screen case first (showSystemCursor(1)) and
-    // keeps the on-screen reset in a separate else block. Retail's EH map
-    // agrees: state 1 is the live hidePointer lock from the first expansion
-    // and state 2 is the null entry left by the second, dead expansion.
-    // Residual (99.88%): retail tests the second guard bit through a
-    // register (mov al,2; test al,cl) where this compile uses immediates;
-    // a single two-declarator static declaration was byte-flat.
+    // keeps the on-screen reset in a separate else block.
     if (IsIconic(g_hwndApp))
         return;
     if (GameTime::isPast(updateTime) && !isBusy()) {
@@ -592,12 +572,8 @@ void mouseManager::checkUpdate()
     }
 }
 
-// E:\gamedcs\mousemgr.cpp:298 - TCSLock::~TCSLock () lives
-// at 0x50cd80, the ten-byte row directly after SetPointer: `mov
-// eax,[ecx]; push eax; call [__imp__LeaveCriticalSection@4]; ret`.
-// The retail linker places its COMDAT between SetPointer and Update.
-// The canonical in-class body and VA stay above in CodeView source order;
-// EH unwind funclets still use its retained callable copy.
+// E:\gamedcs\mousemgr.cpp:298 - TCSLock::~TCSLock's canonical in-class body
+// and VA stay above in CodeView source order.
 VA(0x0050d8b0, 0x16B)
 DC_ADDRESS(0x0ff610, 0xf6)
 MAC_ADDRESS(0x217c68, 0x150)
@@ -630,8 +606,8 @@ void mouseManager::loadFrame(int newFrame)
 
 // E:\gamedcs\mousemgr.cpp:1120
 // Public ?ShowSystemCursor@mouseManager@@QAAX_N@Z proves bool; the NB11
-// T_UCHAR formal is its lowered storage record. Preserve the separate helper
-// calls at DC1123/1124 and1128/1129 and retail's byte-tested flag.
+// T_UCHAR formal is its lowered storage record. DC1123/1124 and 1128/1129
+// keep the separate helper calls.
 VA(0x0050da20, 0x37)
 DC_ADDRESS(0x0ff708, 0x64)
 MAC_ADDRESS(0x217db8, 0x58)  // anchor-global

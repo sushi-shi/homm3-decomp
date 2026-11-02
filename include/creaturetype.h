@@ -44,12 +44,10 @@ inline int classifyTownAlignment(int townType)
 }
 
 // E:\gamedcs\CreatureType.h:296. Complete retains the army.obj copy;
-// events.cpp also expands this at monsters_flee/join/sell_out, passing a
-// literal count so each singular/plural selection folds at its call site.
-// DC 299..307 keeps the else arm (row 303 is its own jump); the guard-return
-// spelling costs /Ob2 more and pushed getArmyHelpText's appends out of line.
-// Loki's range assert (DC leaves 297..298 unrecorded) costs combatMessage
-// 100 -> 98.07; not ported (docs/vc6/inliner.md).
+// events.cpp also inlines it at monsters_flee/join/sell_out with a literal
+// count. DC 299..307 keeps the else arm (row 303 is its own jump). Loki's
+// range assert (DC leaves 297..298 unrecorded) is not ported
+// (docs/vc6/inliner.md).
 VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup
 DC_ADDRESS(0x01ef94, 0x5c)
 inline const char* getArmyName(int type, int count)
@@ -73,10 +71,9 @@ inline const char* getArmyName(int type, int count)
         || (type) == CREATURE_WATER_ELEMENTAL)
 
 // Original GetBaseCreature: creaturetype.cpp:202. The two
-// CTownDlg::CreateWin calls are named at DC lines 326/342. Complete Mac
-// expands the same row lookup at 0x16c924/0x16ca40, as does Windows; a
-// shared header body/inline linkage are inferred for Complete's cross-TU
-// expansion, not proven by the older DC declaration.
+// CTownDlg::CreateWin calls are named at DC lines 326/342; inlined across
+// TUs, so a shared header body/inline linkage are inferred for Complete,
+// not proven by the older DC declaration.
 // The older DC body returns zero outside 0..6. Complete's popup expansions
 // have no such fallback; their two loops supply valid dwelling indices.
 // Complete's behavior for an invalid dwelling index remains unproven.

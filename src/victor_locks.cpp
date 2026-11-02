@@ -10,14 +10,11 @@
 
 #include "victor.h"
 
-// The eight lock cleanups, one per VictorLock in address order: 0x604620 +
-// 0x20*n releases g_victorLock<n> (g_victorModuleCleanups[8-n]). Each is 31
-// bytes: test the initialized flag at +0x18, DeleteCriticalSection through
-// the IAT, clear the flag.
-// Both editors keep the same order, the map editor at 0x4fce60 + 0x20*n
-// and the campaign editor at 0x463bc0 + 0x20*n; their cleanup tables
-// (0x597dc4.. and 0x4c5524..) list them from lock 7 down to lock 0, as the
-// game's does.
+// The eight lock cleanups, one per VictorLock in address order; each
+// releases g_victorLock<n> (g_victorModuleCleanups[8-n]): test the
+// initialized flag at +0x18, DeleteCriticalSection, clear the flag. Both
+// editors keep the same order; their cleanup tables list them from lock 7
+// down to lock 0, as the game's does.
 VA(0x00604620, 0x1f)  // g_victorModuleCleanups[8]; external Victor library
 VA_AT(h3maped, 0x004fce60, 0x1f)
 VA_AT(h3ccmped, 0x00463bc0, 0x1f)

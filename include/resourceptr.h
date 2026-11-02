@@ -22,8 +22,7 @@ public:
     TResourcePtr(const TResourcePtr& rhs) : m_owns(rhs.m_owns), m_ptr(rhs.release()) {}
 
     // CodeView ResourcePtr.h:44: ownership byte +0, pointer +4.
-    // Retail 0x41bd90 keeps those tests and dispatches virtual dispose;
-    // objnames' state-0 unwind at 0x627890 calls this retained instance.
+    // objnames' state-0 unwind calls this instance.
     // VA instance: TResourcePtr<TTextResource>::~TResourcePtr
     VA(0x0041bd90, 0x12)  // anchor-eh 0x627890 for 0x41b500
     DC_ADDRESS(0x05b294, 0x24)

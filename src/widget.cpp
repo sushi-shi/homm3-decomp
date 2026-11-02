@@ -90,8 +90,7 @@ int widget::open(int newPriority, heroWindow* parent)
 }
 
 // Original: widget::Close; widget.cpp:235
-// heroWindow::RemoveWidget calls the shared empty retail representative
-// at 0x5bc690. ICF removes a separate address, not this source definition.
+// heroWindow::RemoveWidget calls it; it shares the empty no-argument body.
 DC_ADDRESS(0x196ccc, 0x4)
 MAC_ADDRESS(0x20a680, 0x4)
 void widget::close()
@@ -250,8 +249,8 @@ void widget::processHover()
     m_parentWindow->handleWidgetHover(this);
 }
 
-// Dreamcast calls sendMessage in both enable branches; Mac retains both
-// calls at 0:0x20ac34/0x20ac44. Windows expands the canonical helper body.
+// Dreamcast calls sendMessage in both enable branches; the helper is
+// inlined here.
 VA(0x005fe940, 0x83)
 DC_ADDRESS(0x1970c0, 0x44)
 MAC_ADDRESS(0x20ac18, 0x40)
@@ -269,9 +268,9 @@ void widget::enable(unsigned char on)
 DATA(0x006aac68)
 widget* widget::s_lastHoverWidget;
 
-// Complete-only sleep/wake hook: widget's vtable slot 12 and all inherited
-// copies point to the empty ret 4 body folded at 0x485d80. Keep the body
-// out of the header: button::onSleepChange retains its qualified base call.
+// Complete-only sleep/wake hook: widget's vtable slot 12, shared with the
+// empty one-argument body. The body stays out of the header:
+// button::onSleepChange keeps its qualified base call.
 MAC_ADDRESS(0x20ac58, 0x4)
 void widget::onSleepChange(int on)
 {

@@ -115,9 +115,8 @@ textEntryWidget::~textEntryWidget()
         delete m_saveBack;
 }
 
-// DC SetFocus publics independently encode bool for this base and both
-// CMPEdit/CHighScoreEdit overrides. Keep m_hasFocus's separate byte storage;
-// retail copies the argument byte directly and preserves virtual slot 14.
+// DC SetFocus publics encode bool for this base and both
+// CMPEdit/CHighScoreEdit overrides; m_hasFocus keeps its separate byte.
 VA(0x005bab50, 0x49)
 DC_ADDRESS(0x162b50, 0x6c)
 MAC_ADDRESS(0x1afa24, 0x7c)
@@ -357,7 +356,6 @@ int textEntryWidget::main(message& msg)
                     if (!m_hasFocus) {
                         // DC textntry.cpp:448 proves the unused local
                         // `message setFocus` and its default construction.
-                        // Complete can elide its side-effect-free stores.
                         message setFocus;
                         if (m_parentWindow)
                             m_parentWindow->setFocus(m_id);

@@ -218,8 +218,8 @@ TQuickHeroWindow::~TQuickHeroWindow()
 VA_COMPGEN(0x0052f440, 0x47, BASIC_IOS_INIT, char)
 
 // Original: TQuickHeroWindow::QuickWindowWait; quickherowindow.cpp:221
-// Identical quick-window wrappers fold onto the retail 0x530d30 body.
-// Mac retains this ordinary wrapper at 0:0x14b4d0; hero and townmgr call it.
+// Identical quick-window wrappers share one body. Mac retains this
+// ordinary wrapper; hero and townmgr call it.
 DC_ADDRESS(0x117818, 0x30)
 MAC_ADDRESS(0x14b4d0, 0x2c)
 void TQuickHeroWindow::quickWindowWait()

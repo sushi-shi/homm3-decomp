@@ -4087,7 +4087,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x001a2658	0x40	data	?g_rmgDirections@?A0x8197b2fbbced3331@@3PAUTRmgPoint@@A	rmg	external	referenced by ?buildOutline@TRmgObjectPropertiesRef@@QAEXXZ at +0xa2
 0x001a2698	0x20	data	?g_rmgShipyardWaterOffsets@?A0x8197b2fbbced3331@@3PAUTRmgPoint@@A	rmg	external	referenced by ?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z at +0x96
 0x001a26c0	0x20	data	_?riverDeltaOffsets@?CB@??createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z@4PAUTRmgPoint@@A	rmg	internal	referenced by ?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z at +0x3fd (retail +0x3f7, by operand order)
-0x001a26e4	0x3a0	data	?g_rmgMapObjectLimits@@3PAHA	rmg	external	referenced by ??0type_random_map_generator@@QAE@HHHHHHHHHPAVtype_progress_bar@@H@Z at +0x203
+0x001a26e4	0x3a4	data	?g_rmgMapObjectLimits@@3PAHA	rmg	external	referenced by ??0type_random_map_generator@@QAE@HHHHHHHHHPAVtype_progress_bar@@H@Z at +0x203
 0x001a2a8c	0x3a0	data	?g_rmgZoneObjectLimits@@3PAHA	rmg	external	referenced by ??0type_random_map_generator@@QAE@HHHHHHHHHPAVtype_progress_bar@@H@Z at +0x1f7
 0x001a2e34	0x1	data	_?$S38@?CB@??createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z@4EA	rmg	internal	referenced by ?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z at +0x3ea (retail +0x3e4, by operand order)
 0x001a2ee8	0x50	data	?g_rmgRiverPatternTable@@3UTRmgLinePatternTable@@A	rmg_river	external	referenced by ?getPatternTable@TRiverOp@@UAEPAUTRmgLinePatternTable@@H@Z at +0x1

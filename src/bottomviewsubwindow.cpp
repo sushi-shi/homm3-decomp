@@ -21,8 +21,7 @@
 
 // Dreamcast bottomviewsubwindow.cpp:123/662 names GameTime::ElapsedSince;
 // :676-681 names widget::set_visible; the NewTurn, Kingdom, and EnemyTurn
-// constructors name TTextResource::operator[]. Retail expands these header
-// helpers into the timer subtraction, status messages, and text-table loads.
+// constructors name TTextResource::operator[].
 
 // THE LOCAL NAMES BELOW ARE DREAMCAST CODEVIEW, NOT INVENTION. The DC
 // build's S_REGREL32 records for this compiland identify examples and
@@ -30,36 +29,14 @@
 // T_INT4, length 16 - so `int[4]`, which also confirms the array's
 // width) and `text` (std::string); TBottomViewTown's `town_size_name`
 // (std::string); TBottomViewResourceMessage's parameter `res` and its
-// `char str[20]`. The DC list is INCOMPLETE - TBottomViewHero's record
-// now records the std::string `quantity_text` in the army loop. Other
-// optimized locals can still be absent; only recorded entries provide
-// positive evidence of their declarations.
+// `char str[20]`; TBottomViewHero's record also names the std::string
+// `quantity_text` in the army loop. Other optimized locals can be absent.
 
-// THE INCLUDE SET IS NOT THE WALL IN THIS TU - measured, not assumed.
-// The four constructors below formerly plateaued on inline-depth divergence, and
-// the standing hypothesis was that C1XX front-end state (the symbol
-// handle numbering of docs/vc6/handle-order.md, delivered through the
-// IL) carried it, so that matching retail's include closure would move
-// all four together. It does not. Forty-five controlled probes were run
-// against all four rows at once:
-
-//   * six declaration kinds at file scope - `extern int`, forward tag,
-//     `struct { int a; }`, `extern <UDT>*`, a member-function
-//     declarator, a first-virtual declarator - at counts 1..12, then
-//     32, 64, 128 and 256, at two localities (before every #include,
-//     and after all of them);
-//   * eight mutations of the include list itself - reversing the quoted
-//     block, reversing the whole block, hoisting game.h, moving the <>
-//     headers last, and adding hero.h / town.h / castle.h.
-
-// Every one is byte-flat: TBottomViewHero 96.52, Town 94.31, Kingdom
-// 94.06, ResourceMessage 91.30 at that point, and the whole-tree fuzzy figure
-// unchanged to four decimals. The probes are NOT null - `homm3 vc6
-// il-diff` confirms each reaches the front end (nine `extern int` move
-// the gl high-water 0xf63c -> 0xf645 and perturb the ex stream across
-// 392 function spans; adding hero.h moves 118700 ex bytes) and produce
-// identical object code anyway. The C1 handle-order lever does not
-// reach this TU. See TBottomViewKingdom for what the wall actually is.
+// THE INCLUDE SET IS NOT THE WALL IN THIS TU: file-scope declaration probes
+// (extern int, tags, structs, declarators; counts up to 256, before or after
+// the includes) and include-list mutations all reach the front end
+// (`homm3 vc6 il-diff`) but leave the constructors' object code unchanged.
+// See TBottomViewKingdom for what the wall actually is.
 VA_COMPGEN(0x00450d20, 0x21, SCALAR_DELETING_DTOR, type_bottom_view_window)
 
 VA(0x00450d50, 0x78)
@@ -77,55 +54,24 @@ type_bottom_view_window::~type_bottom_view_window()
     }
 }
 
-// The seven derived destructors. Each has an EMPTY body in the source -
-// no derived class owns storage that needs releasing - so all seven are
-// the same 120 bytes: the base destructor inlined whole, its 0x63bb04
-// vptr store, its widget-removal loop and its ??1TSubWindow call. The
-// derived class's OWN vptr store is dead (the inlined base overwrites it
-// immediately) and VC6 eliminates it, which is why not one of these
-// bodies mentions its own vftable and why the only image-wide reference
-// to each derived table is inside that class's constructor.
+// The seven derived destructors have EMPTY bodies - no derived class owns
+// storage that needs releasing - so all seven are the base destructor
+// inlined (its widget-removal loop and its ??1TSubWindow call).
 
-// The identity of every pair is settled by three independent facts that
-// agree, and the sizes leave no freedom:
-
-//   ??_G     ~dtor    vftable     ctor (identified by its advManager
-//   -------  -------  ----------  caller) that precedes the pair
-//   0x4510f0 0x451120 0x63bb0c    0x450dd0  UpdBottomViewNewTurn
-//   0x451770 0x4517a0 0x63bb1c    0x451220  UpdBottomViewResMsg
-//   0x451a00 0x451a30 0x63bb24    0x451820  UpdBottomViewMessage
-//   0x452140 0x452170 0x63bb2c    0x451ab0  UpdBottomViewHero
-//   0x452ad0 0x452b00 0x63bb34    0x4521f0  UpdBottomViewTown
-//   0x4531a0 0x4531d0 0x63bb3c    0x452b80  UpdBottomViewKingdom
-//   0x453640 0x453670 0x63bb44    0x453250  UpdBottomViewEnemyTurn
-
-// First, the eight two-slot tables 0x63bb04..0x63bb44 are consecutive and
-// each one's slot 0 is exactly one of these 33-byte wrappers, so the
-// tables enumerate the family in emission order. Second, each derived
-// table has EXACTLY ONE image-wide reference and it sits inside the
-// constructor listed above, whose own caller is the matching
-// advManager::UpdBottomViewXxx - the class name is read off the caller,
-// not guessed. Third, retail's layout is plain source order with the
-// pair falling immediately after its class's constructor, and that order
-// reproduces the Dreamcast line order (77, 146, 197, 222, 352, 515, 599)
-// exactly.
+// Each pair follows its class's constructor in source order (the Dreamcast
+// line order 77, 146, 197, 222, 352, 515, 599); each derived table's only
+// reference is in its constructor, whose caller is the matching
+// advManager::UpdBottomViewXxx.
 
 // Slot 1 corroborates the two classes DC gives an animate override to:
 // 0x63bb0c and 0x63bb44 point at their own bodies (0x4511a0, 0x4536f0)
 // while the other five share the base's 0x5bc690.
 
-// This also corrects a misattribution left in the carcass above:
-// 0x4521f0 is TBottomViewTown's constructor, not
-// type_bottom_view_window's.
+// 0x4521f0 is TBottomViewTown's constructor, not type_bottom_view_window's.
 
-// The base constructor. No retail body exists for it: every one of the
-// seven derived constructors inlines it, nothing else calls it, and
-// retail's /Gy + /OPT:REF link then drops the unreferenced copy - the
-// same mechanism that puts textWidget::SetText's COMDAT far outside
-// textwdgt.obj's band. It is defined here purely to be inlined, and
-// carries no claim. Its shape is read straight off every derived
-// constructor's first eighteen instructions: TSubWindow's default
-// constructor, then this class's vptr, then the one body statement.
+// The base constructor, inlined in all seven derived constructors and
+// otherwise unreferenced: TSubWindow's default constructor, then this
+// class's vptr, then the one body statement.
 DC_ADDRESS(0x0550b8, 0x5c)
 MAC_ADDRESS(0x05f188, 0x68)
 type_bottom_view_window::type_bottom_view_window(heroWindow* parentWindow)
@@ -153,17 +99,9 @@ type_bottom_view_window::type_bottom_view_window(heroWindow* parentWindow)
 //     is 'medfont.fnt' in font::WHITE at 10,10,148,146, frameDelay is 100
 //     and lastStepTime is stamped at the very end.
 
-// TWO SPELLINGS ARE LOAD-BEARING.
-
-// The two calendar arms tear their format_string temporary down
-// DIFFERENTLY - THEN calls ?_Tidy@ out of line, ELSE has it inlined - and
-// so does `text` itself at the end. That asymmetry is the /Ob2 budget
-// spending itself down across the body, not a source difference; both arms
-// are the same `text = format_string(...)` statement.
-
-// Original: type_bottom_view_window::animate; bottomviewsubwindow.cpp:64
-// The empty base hook is ICF-folded to retail's shared ret at 0x5bc690;
-// the base and five presentation-only subclass vtables retain that slot.
+// Original: type_bottom_view_window::animate; bottomviewsubwindow.cpp:64.
+// The empty base hook is shared (folded) with five presentation-only
+// subclasses.
 DC_ADDRESS(0x055188, 0x4)
 void type_bottom_view_window::animate()
 {
@@ -184,8 +122,6 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
 
     std::string text;
     // DC names: local static char*[4] (type 0x581a, 16 bytes).
-    // Mac 0x5f3fc reads names[week - 1]; VC6 folds -4 into the
-    // indexed address. 0x660b9c terminates the preceding ".bik" literal.
     DATA(0x00660ba0)
     static char* names[4] = {
         "NewWeek1.def", "NewWeek2.def", "NewWeek3.def", "NewWeek4.def"
@@ -269,8 +205,7 @@ void TBottomViewNewTurn::animate()
 //     in two separate loads. str() is therefore called TWICE, and both
 //     expansions carry their own freeze(true);
 //   * the sprite is released through ResourceManager::Dispose; its
-//     inline wrapper owns the virtual CSprite::Dispose call. Restoring
-//     that call lifts the Complete constructor from 98.09% to exact.
+//     inline wrapper owns the virtual CSprite::Dispose call.
 // DC also records `char str[20]` inside the resource guard; it has no
 // corresponding live storage in this optimized Complete body.
 VA(0x00451220, 0x393)
@@ -348,8 +283,6 @@ VA(0x00451750, 0x14)
 void ostrstream::`vbase destructor'();
 #endif
 
-// UNBLOCKED by the constructor above - its 0x63bb1c store is the one
-// image-wide reference to this class's table.
 VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, TBottomViewResourceMessage)
 
 VA(0x004517a0, 0x78)
@@ -549,8 +482,6 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     }
 }
 
-// UNBLOCKED by the constructor above - its 0x63bb2c store is the one
-// image-wide reference to this class's table.
 VA_COMPGEN(0x00452140, 0x21, SCALAR_DELETING_DTOR, TBottomViewHero)
 
 VA(0x00452170, 0x78)
@@ -815,8 +746,6 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
     }
 }
 
-// UNBLOCKED by the constructor above - its 0x63bb34 store is the one
-// image-wide reference to this class's table.
 VA_COMPGEN(0x00452ad0, 0x21, SCALAR_DELETING_DTOR, TBottomViewTown)
 
 VA(0x00452b00, 0x78)
@@ -830,39 +759,10 @@ TBottomViewTown::~TBottomViewTown()
 // The kingdom-overview banner: a hall-level census of the acting player's
 // towns above a two-row flag strip splitting the other players into
 // allies and enemies.
-// THE MISSING INLINE CANDIDATE WAS town::HasBuilding, AND IT IS LANDED
-// (94.0575 -> 98.5213, 2026-08-15). The hall census below calls it three
-// times where this body tested `active & bitNumber[HALL_*_ID]` by hand;
-// dc lines 531/533/535 are `mov #13/#12/#11,r5 / mov #1,r6 /
-// jsr @r11` on `?HasBuilding@town@@QBA_NH_N@Z`, and retail's own
-// out-of-line copy at 0x4305a0 proves the arm: `check_included != 0`
-// reads [ecx+0x158] = active. The expansion is byte-identical to the
-// ladder that was here, so the bytes never arbitrated - only the /Ob2
-// candidate-site count did, and three real sites land exactly on the +1
-// number the probe had measured (98.5213 vs the probe's 98.52).
+// The hall census calls town::HasBuilding three times (dc lines
+// 531/533/535), the check_included arm reading `active`.
 
-// What the probe had established, kept because it is what made the
-// landing legible: the wall was the INLINE-CANDIDATE SITE COUNT of this
-// body. Retail called vector<widget*>::size() out of line (0x423110)
-// inside reserve() where our CL expanded its 19 bytes; capacity() was
-// inlined on BOTH sides, so retail's nested budget ran out between two
-// 19-byte functions. The RE'd /Ob2 rule (docs/vc6/inliner.md section 2)
-// hands a nested expansion `budget / sites-remaining`, so that decision
-// is controlled by the NUMBER of inline-candidate call sites, not by
-// size: one more free (cb <= 0x28) site was worth 94.06 -> 98.52, the
-// callee did not matter (size/capacity/empty all gave 98.52), the site
-// was inert everywhere BEFORE Widgets.reserve(8) and worth the full
-// 4.46 everywhere at or after it, and three free probe sites overshot
-// (95.88). A bare `Widgets.size();` was deliberately never landed
-// because a probe is a score, not a reconstruction - the DC line table
-// then named the statement that carries the sites honestly.
-
-// DC line 524 calls _memset on the int[4] town_count local; Mac
-// 0x6151c..0x61540 clears the same 16 bytes through bzero. Preserve that
-// bulk-clear operation. VC6 expands memset into the retail zero
-// rematerialization and store order, closing 98.5176% to 100%. Two source
-// states emitted two objects and both reproduced. The earlier manual
-// initialization forms missed this library boundary.
+// DC line 524 calls _memset on the int[4] town_count local.
 VA(0x00452b80, 0x620)
 DC_ADDRESS(0x0563b8, 0x4c8)
 MAC_ADDRESS(0x061434, 0x8a4)  // anchor-vtable 0x63bb3c + advManager::UpdBottomViewKingdom
@@ -932,8 +832,6 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     }
 }
 
-// UNBLOCKED by the constructor above - its 0x63bb3c store is the one
-// image-wide reference to this class's table.
 VA_COMPGEN(0x004531a0, 0x21, SCALAR_DELETING_DTOR, TBottomViewKingdom)
 
 VA(0x004531d0, 0x78)
@@ -1004,8 +902,6 @@ TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
     m_lastStepTime = GameTime::get();
 }
 
-// UNBLOCKED by the constructor above - its 0x63bb44 store is the one
-// image-wide reference to this class's table.
 VA_COMPGEN(0x00453640, 0x21, SCALAR_DELETING_DTOR, TBottomViewEnemyTurn)
 
 VA_COMPGEN(0x00453970, 0xAE, CLASS_CTOR, basic_ostream)
@@ -1020,12 +916,7 @@ TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:646
-// `player` IS A LOCAL, and it is worth 8.2 points. Retail pins
-// &players[player_id].numHeroes in a register across the GetMobility
-// call and walks heroes[] through a separate stack pointer; spelled
-// `gpGame->players[player_id]` twice instead, our CL re-derives both
-// addresses from gpGame every iteration. Same lever as the mouseX/mouseY
-// and glTimers hoists - the value has to be a statement before the call.
+// `player` is a local, not a repeated `gpGame->players[player_id]`.
 DC_ADDRESS(0x056bbc, 0x58)
 MAC_ADDRESS(0x0622d4, 0x98)
 long TBottomViewEnemyTurn::sumMobility(long playerId)
@@ -1103,51 +994,49 @@ void TBottomViewEnemyTurn::animate()
     m_crest->forceUpdate();
 }
 
-// COMDAT pairing: basic_streambuf::1?$basic_streambuf, mnemonic agreement 1.000.
+// COMDAT pairing: basic_streambuf::1?$basic_streambuf.
 VA_COMPGEN(0x00454000, 0x50, IMPLICIT_DTOR, basic_streambuf)
 
-// COMDAT pairing: numpunct::1?$numpunct, mnemonic agreement 0.970.
+// COMDAT pairing: numpunct::1?$numpunct.
 VA_COMPGEN(0x00455bf0, 0x2F, IMPLICIT_DTOR, numpunct)
 
-// COMDAT pairing: basic_streambuf::0?$basic_streambuf, mnemonic agreement 0.937.
+// COMDAT pairing: basic_streambuf::0?$basic_streambuf.
 VA_COMPGEN(0x00453f50, 0xA9, CLASS_CTOR, basic_streambuf)
 
-// COMDAT pairing: num_put::0?$num_put, mnemonic agreement 0.931.
+// COMDAT pairing: num_put::0?$num_put.
 VA_COMPGEN(0x004546e0, 0x5C, CLASS_CTOR, num_put)
 
 // COMDAT pairing: sentry::1sentry, mnemonic agreement 0.911.
 VA_COMPGEN(0x00454320, 0x63, IMPLICIT_DTOR, sentry)
 
-// COMDAT pairing: fpos::0?$fpos, mnemonic agreement 0.909.
+// COMDAT pairing: fpos::0?$fpos.
 VA_COMPGEN(0x00454390, 0x3C, CLASS_CTOR, fpos)
 
-// COMDAT pairing: _Iput on the char instantiation, mnemonic agreement 1.000.
+// COMDAT pairing: _Iput on the char instantiation.
 VA_COMPGEN(0x004552d0, 0x3FE, NUM_PUT_IPUT, char)
 
-// COMDAT pairing: _Fput on the char instantiation, mnemonic agreement 1.000.
+// COMDAT pairing: _Fput on the char instantiation.
 VA_COMPGEN(0x00454f20, 0x3A1, NUM_PUT_FPUT, char)
 
-// COMDAT pairing: xsgetn on the char instantiation, mnemonic agreement 0.946.
+// COMDAT pairing: xsgetn on the char instantiation.
 VA_COMPGEN(0x004540b0, 0x98, STREAMBUF_XSGETN, char)
 
-// COMDAT pairing: _Rep on the char instantiation, mnemonic agreement 0.935.
+// COMDAT pairing: _Rep on the char instantiation.
 VA_COMPGEN(0x004556d0, 0x82, NUM_PUT_REP, char)
 
-// COMDAT pairing: opfx on the char instantiation, mnemonic agreement 0.926.
+// COMDAT pairing: opfx on the char instantiation.
 VA_COMPGEN(0x004543d0, 0x74, OSTREAM_OPFX, char)
 
-// COMDAT pairing: sputc on the char instantiation, mnemonic agreement 0.932.
+// COMDAT pairing: sputc on the char instantiation.
 VA_COMPGEN(0x00454a30, 0x4B, STREAMBUF_SPUTC, char)
 
-// COMDAT pairing: _Decref on the char instantiation, mnemonic agreement 0.918.
+// COMDAT pairing: _Decref on the char instantiation.
 VA_COMPGEN(0x00453d30, 0x3B, LOCALE_FACET_DECREF, char)
 
-// COMDAT pairing: num_put::do_put(bool), agreement 1.000. Six do_put
-// overloads share one key and zip as an overload group; this arm and the
-// const void* arm below have unique sizes and anchor both ends of the zip.
+// COMDAT pairing: num_put::do_put(bool); six do_put overloads share one key.
 VA_COMPGEN(0x00454770, 0x292, NUM_PUT_DO_PUT, char)
 
-// COMDAT pairing: num_put::do_put(long) - second in both COFF and RVA order.
+// COMDAT pairing: num_put::do_put(long).
 VA_COMPGEN(0x00454a80, 0x9F, NUM_PUT_DO_PUT, char)
 
 // COMDAT pairing: num_put::do_put(unsigned long).
@@ -1159,26 +1048,16 @@ VA_COMPGEN(0x00454bc0, 0xCA, NUM_PUT_DO_PUT, char)
 // COMDAT pairing: num_put::do_put(long double).
 VA_COMPGEN(0x00454c90, 0xCE, NUM_PUT_DO_PUT, char)
 
-// COMDAT pairing: num_put::do_put(const void*), agreement 0.977.
+// COMDAT pairing: num_put::do_put(const void*).
 VA_COMPGEN(0x00454d60, 0x1B2, NUM_PUT_DO_PUT, char)
 
-// COMDAT pairing: bad_cast::_Doraise, agreement 1.000.
+// COMDAT pairing: bad_cast::_Doraise.
 VA_COMPGEN(0x00453c80, 0x1D, EXCEPTION_DORAISE, bad_cast)
 
-// The three destructor pairs this compiland's <iostream> surface leaves in
-// the 0x453c70..0x455bc0 run, each one identified by the VTABLE its body
-// stores rather than by similarity - every scalar deleting destructor in the
-// image is the same fourteen-instruction shape.
-//   0x453c70 stores 0x6457a8 and tail-jumps ??1exception. 0x6457a8 is
-//     bad_cast's table: this unit's two bad_cast constructors (0x453cd0 and
-//     0x454a10, both claimed above) are the only other writers of it.
-//   0x453f40 stores 0x6456e0 and tail-jumps ??1ios_base, i.e. it is
-//     basic_ios<char>'s. 0x6456e0 is the table basic_ostream's constructor
-//     (0x453970) writes at `this+4`, which is where its basic_ios base sits.
-//   0x4542f0 calls ??1basic_streambuf (0x454000) outright.
-//   0x455bc0 calls ??1numpunct<char> (0x455bf0) outright.
-// Each ??_G is the wrapper over the ??1 immediately named, in the
-// flags&1 / operator delete form.
+// The three destructor pairs this compiland's <iostream> surface leaves,
+// each identified by the vtable its body stores: bad_cast's (tail-jumping
+// ??1exception), basic_ios<char>'s (tail-jumping ??1ios_base), and the
+// wrappers over ??1basic_streambuf and ??1numpunct<char>.
 VA_COMPGEN(0x00453c70, 0xB, IMPLICIT_DTOR, bad_cast)
 
 VA_COMPGEN(0x00453ca0, 0x21, SCALAR_DELETING_DTOR, bad_cast)
@@ -1191,18 +1070,14 @@ VA_COMPGEN(0x004542f0, 0x21, SCALAR_DELETING_DTOR, basic_streambuf)
 
 VA_COMPGEN(0x00455bc0, 0x21, SCALAR_DELETING_DTOR, numpunct)
 
-// COMDAT pairing: bad_cast::bad_cast(const&), agreement 0.857 against a 32 B
-// object; resourcemanager's two 19 B candidates score 0.762.
+// COMDAT pairing: bad_cast::bad_cast(const&).
 VA_COMPGEN(0x00453cd0, 0x1C, CLASS_CTOR, bad_cast)
 
-// COMDAT pairing: ios_base::getloc, agreement 0.906 against a 64 B object;
-// quicktownwindow's 28 B candidate scores 0.750.
+// COMDAT pairing: ios_base::getloc.
 VA_COMPGEN(0x00453d90, 0x3B, IOS_BASE_GETLOC, char)
 
 // COMDAT pairing: bad_cast::bad_cast(const char*), the second half of the
-// ctor overload group. COFF order is (const&, const char*) and RVA order is
-// 0x53cd0, 0x54a10; the similarity agrees with that zip in both directions
-// (0.857 each way, 0.786 crossed).
+// ctor overload group.
 VA_COMPGEN(0x00454a10, 0x1C, CLASS_CTOR, bad_cast)
 
 VA_COMPGEN(0x00455930, 0x4, NUMPUNCT_DO_DECIMAL_POINT, char)
@@ -1221,14 +1096,8 @@ VA_COMPGEN(0x00455780, 0x1E, NUMPUNCT_TRUENAME, char)
 
 VA_COMPGEN(0x00455800, 0x1E, NUMPUNCT_GROUPING, char)
 
-// COMDAT pairing: _Tidyfac's two instantiations. The object emits exactly
-// four such COMDATs and the image has exactly four candidate bodies; the
-// static `_Ptr` each pair shares is the discriminator. 0x55c20 stores into
-// bss_294d9c and 0x55d20 reads and clears it; 0x55ca0/0x55dc0 do the same
-// with bss_294da0. Which static belongs to which facet is settled by the
-// constructors: 0x53a30 calls the claimed num_put<char> ctor at 0x546e0 and
-// then 0x55c20, while 0x11ab90 installs numpunct<char>'s vtbl_245728 and
-// then stores into bss_294da0.
+// COMDAT pairing: _Tidyfac's two instantiations (num_put<char> and
+// numpunct<char>), each pair sharing one static `_Ptr`.
 VA_COMPGEN(0x00455c20, 0x7B, TIDYFAC_NUM_PUT_SAVE, char)
 
 VA_COMPGEN(0x00455ca0, 0x7B, TIDYFAC_NUMPUNCT_SAVE, char)
@@ -1237,32 +1106,26 @@ VA_COMPGEN(0x00455d20, 0x92, TIDYFAC_NUM_PUT_TIDY, char)
 
 VA_COMPGEN(0x00455dc0, 0x92, TIDYFAC_NUMPUNCT_TIDY, char)
 
-// COMDAT pairing: basic_streambuf<char>::uflow. Not reached by any rel32 call
-// at all - it is installed as slot 5 of FOUR vtables, one of them the named
-// ??_7TGzInflateBuf@@6B@, which is exactly what a defaulted virtual of the
-// stream base looks like.
+// COMDAT pairing: basic_streambuf<char>::uflow, a defaulted virtual of the
+// stream base (installed in four vtables, among them TGzInflateBuf's).
 VA_COMPGEN(0x00454080, 0x2B, STREAMBUF_UFLOW, char)
 
-// COMDAT pairing: ostreambuf_iterator<char>::operator=(char), reached from
-// two CRT sites and three of this unit's own - cross-image reach.
+// COMDAT pairing: ostreambuf_iterator<char>::operator=(char).
 VA_COMPGEN(0x004557a0, 0x5C, OSTREAMBUF_ITERATOR_ASSIGN, char)
 
 VA_COMPGEN(0x00453a20, 0xF, IMPLICIT_DTOR, basic_ostream)
 
-// COMDAT pairing: basic_ostream<char>::operator<<(int), agreement 0.960 at
-// an exactly equal 568-byte extent - the MEMBER overload, distinct from the
-// free operator<<(const char*) already claimed elsewhere.
+// COMDAT pairing: basic_ostream<char>::operator<<(int) - the MEMBER
+// overload.
 VA_COMPGEN(0x00453a30, 0x238, OSTREAM_INSERT_INT, char)
 
-// COMDAT pairing: locale::id::operator size_t, agreement 0.905, and
-// locale::~locale, agreement 1.000. Both are 1:1 in this object.
+// COMDAT pairing: locale::id::operator size_t and locale::~locale.
 VA_COMPGEN(0x00453cf0, 0x32, LOCALE_ID_CAST, char)
 
 VA_COMPGEN(0x00453d70, 0x18, IMPLICIT_DTOR, locale)
 
 // COMDAT pairing: basic_streambuf<char>::seekoff and ::seekpos - the BASE
-// class defaults, both 40 bytes, distinct from basic_stringbuf's overrides
-// already claimed in resourcemanager. Agreements 1.000 and 1.000.
+// class defaults.
 VA_COMPGEN(0x00454200, 0x28, STREAMBUF_SEEKOFF, char)
 
 VA_COMPGEN(0x00454230, 0x28, STREAMBUF_SEEKPOS, char)
@@ -1279,6 +1142,5 @@ VA_COMPGEN(0x00454260, 0x5, STREAMBUF_SETBUF, char)
 
 VA_COMPGEN(0x00454270, 0x3, STREAMBUF_IMBUE, char)
 
-// COMDAT pairing: basic_ostream<char>'s scalar deleting destructor,
-// agreement 0.944 - its 15-byte ??1 twin is already claimed at 0x453a20.
+// COMDAT pairing: basic_ostream<char>'s scalar deleting destructor.
 VA_COMPGEN(0x00454280, 0x32, SCALAR_DELETING_DTOR, basic_ostream)

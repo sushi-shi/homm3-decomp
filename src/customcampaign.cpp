@@ -1,8 +1,6 @@
 // 11 functions in the Dreamcast roster; 20 compiler-generated $-thunks
-// omitted. Retail's currently proven 0x8b200..0x8b2d7 unit span contains the
-// two exact methods below. The flanking cursor/customcampaign and
-// customcampaign/dialogbox gaps remain ambiguous, so the older-revision
-// carcass is not force-claimed merely from roster order.
+// omitted. The older-revision carcass is not claimed from roster order
+// alone.
 #include "text.h"
 #include "va.h"
 #include "homm3_minmax.h"
@@ -234,7 +232,7 @@ public:
 };
 
 // The campaign stream adapter owns these two virtuals and its local
-// constructor above. Retail 0x63dacc supplies the read/write slots.
+// constructor above.
 VA(0x00483f10, 0x17)
 MAC_ADDRESS(0x091bfc, 0x30)
 int TStreamBufFile::read(void* data, int size)
@@ -251,7 +249,7 @@ int TStreamBufFile::write(const void* data, int size)
 
 // Original: hero_power; game.cpp:3275
 // The primary-total plus 28 secondary-skill sum moved with campaign hero
-// sorting into this TU. Retail 0x483f50 retains the same hero-pointer helper.
+// sorting into this TU.
 VA(0x00483f50, 0x26)
 DC_ADDRESS(0x0a8ba0, 0xcc)
 MAC_ADDRESS(0x091c5c, 0xdc)
@@ -259,14 +257,10 @@ int heroPower(hero* candidate)
 {
     int primary = candidate->getPrimarySkillTotal();
     int skills = 0;
-    // DC game.cpp:3281 reads the array in place, while every other DC
-    // caller retains hero::get_secondary_skill as a call. The accessor form
-    // differed only in the expanded additions' operand order (getCampaign-
-    // BonusHero 98.37%, both sort helpers 99.9%); the direct read is exact.
+    // DC game.cpp:3281 reads the array in place.
     for (int skill = 0; skill < g_crossoverSecondarySkills; ++skill)
         skills += candidate->m_skillLevel[skill];
-    // DC line 3284 adds sec_skill to pri_skill; Mac 0x91d28 likewise
-    // returns primary (r9) plus the accumulated secondary total (r10).
+    // DC line 3284 adds sec_skill to pri_skill.
     return primary + skills;
 }
 
@@ -311,8 +305,8 @@ void TCampaignSpellBonus::read(TAbstractFile* file)
     }
 }
 
-// Mac keeps one predicate per concrete bonus; Windows folds the false bodies
-// to 0x484d50. The abstract base's retail vtable slot is __purecall.
+// The concrete false predicates share one folded body; the abstract base's
+// slot is __purecall.
 MAC_ADDRESS(0x09201c, 0x8)
 bool TCampaignSpellBonus::usesBitmapIcon() const
 {
@@ -335,18 +329,9 @@ void TCampaignSpellBonus::apply(int whichPlayer) const
         target->addSpell(m_spell);
 }
 
-// The shared hero picker. `best` and the player record are both live
-// before the selector is tested, which is what puts them in the
-// prologue; numHeroes is re-read from the record on every pass. Mac calls
-// heroPower for candidate and then best at 0:0x91ecc/0:0x91ed8;
-// Complete expands both copies of this ordinary helper.
-// Reversing the equivalent comparison to heroPower(candidate) >
-// heroPower(best) preserves those source calls but moves VC6 from 98.3704%
-// to 96.19%; keep the natural best-first expression and both helper sites.
-// The pre-helper 100% body summed `skills + total` per hero; with heroPower
-// expanded, `best && heroPower(best) >= heroPower(candidate)` plus continue,
-// and heroPower returning skills + primary or accumulating either side, are
-// all byte-flat. Retail adds the candidate's sum into its skills register.
+// The shared hero picker. numHeroes is re-read from the record on every
+// pass, and heroPower is inlined at both sites of the natural best-first
+// expression.
 VA(0x004840d0, 0x155)
 MAC_ADDRESS(0x091e3c, 0x158)
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
@@ -358,8 +343,6 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
         for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
             int heroId = player->m_heroes[heroIndex];
             hero* candidate = g_game->getHero(heroId);
-            // A single expression lets VC6 evaluate best first and Mac
-            // evaluate candidate first, as their retail call sequences do.
             if (!best || heroPower(best) < heroPower(candidate))
                 best = candidate;
         }
@@ -401,7 +384,7 @@ void TCampaignSpellScrollBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0) {
-        // Complete reads this spell from an unsigned byte at 0x484050; the canonical scroll constructor takes DC SpellID.
+        // Complete stores this spell as an unsigned byte; the canonical scroll constructor takes DC SpellID.
         type_artifact scroll(static_cast<SpellID>(m_spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         target->giveArtifact(scroll, 0, 0);
     }
@@ -598,7 +581,7 @@ void TCampaignArtifactBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0) {
-        // Complete reads this bonus as a signed word at 0x4848a0; the canonical artifact constructor takes DC TArtifact.
+        // Complete stores this bonus as a signed word; the canonical artifact constructor takes DC TArtifact.
         type_artifact granted(static_cast<TArtifact>(m_artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         target->giveArtifact(granted, 0, 0);
     }
@@ -864,9 +847,8 @@ void TCampaignResourceBonus::read(TAbstractFile* file)
 
 // --- the scenario's starting-options chooser (see customcampaign.h) ---
 
-// The root's destructor, out of line. Nothing calls it - the `??_G` below
-// and both sibling destructors expand the single vptr store - but a plain
-// non-COMDAT body is emitted and kept regardless.
+// The root's destructor, out of line; nothing calls it (the `??_G` below
+// and both sibling destructors expand the vptr store).
 VA(0x00484f40, 0x7)
 MAC_ADDRESS(0x093120, 0x48)
 TCampaignStartOption::~TCampaignStartOption()
@@ -1002,9 +984,8 @@ void TCampaignStartBonusOption::read(TAbstractFile* file)
     }
 }
 
-// The scalar deleting destructor the SEVEN derived bonus classes share:
-// each one's teardown is the base's, so /OPT:ICF folds all seven onto this
-// address, which every derived vftable's slot 0 points at.
+// The scalar deleting destructor the seven derived bonus classes share;
+// every derived vftable's slot 0 points here.
 VA_COMPGEN(0x00485340, 0x21, SCALAR_DELETING_DTOR, TCampaignSpellBonus)
 
 VA(0x00485370, 0x7)
@@ -1082,8 +1063,7 @@ inline int TCampaignStartCrossoverOption::getCrossoverSlot(
     return campaign.m_mapScores[m_choices[which].m_scenario].m_index;
 }
 
-// Mac code+0x93878 precedes the crossover option's virtual methods and
-// is called by getIconResourceName at +0x938e0. Windows expands this pool lookup.
+// Mac keeps this pool lookup as a function; Windows inlines it.
 MAC_ADDRESS(0x093878, 0x4c)
 hero* TCampaignStartCrossoverOption::getFirstCrossoverHero(
     SCampaign* campaign, int which) const
@@ -1195,9 +1175,9 @@ bool TCampaignStartCrossoverOption::canUseCrossoverPool(
     return false;
 }
 
-// Slot 1 for BOTH crossover options - `mov al,1; ret 4`, and /OPT:ICF folds
-// the two identical bodies onto this one address, so only this copy carries
-// the claim (the starting-hero twin below is defined and left unclaimed).
+// Slot 1 for both crossover options; the two identical bodies fold, so only
+// this copy carries the claim (the starting-hero twin below is defined and
+// left unclaimed).
 VA(0x00485a30, 0x5)
 MAC_ADDRESS(0x0938c4, 0x8)
 bool TCampaignStartCrossoverOption::usesBitmapIcon(int which) const
@@ -1246,15 +1226,8 @@ int TCampaignStartHeroOption::getPlayer(int which) const
     return m_choices[which].m_player;
 }
 
-// 2026-09-06, polish lane 38: the read loop is `while (count--)`, not
-// `for (i = 0; i != count; ++i)` - retail's `mov X,count / dec count /
-// test X,X / je` tests the PRE-decrement value, and the index is never used
-// in the body, which is the source-side tell for the whole family. That took
-// the two sibling readers below to EXACT and this one 92.6089 -> 93.9951.
-// Spelling the reset as the canonical vector::clear operation then restores
-// retail's EBX file and ESI receiver bindings and matches all 26 blocks
-// exactly. The erase(begin, end) spelling had the same behavior, branches and
-// call multiset but assigned the callee-saved roles differently (93.9951%).
+// The read loop is `while (count--)`; the index is never used in the body.
+// The reset is the canonical vector::clear.
 VA(0x00485b60, 0x1FB)
 MAC_ADDRESS(0x093da4, 0xe0)  // anchor-vtable (0x63db0c+0x24), retail-only
 void TCampaignStartHeroOption::read(TAbstractFile* file)
@@ -1436,24 +1409,9 @@ void SCampaign::doPreLoadCustomization()
 
 // Complete-only campaign carry-over expansion. Dreamcast's campaign path has
 // no counterpart, but its debug types still corroborate hero, army and
-// artifact source boundaries. Retail independently proves the ScenarioStruct
-// receiver (+0x44..+0xa4), HeroPlaceholderData argument, and source hero. Its
-// code also proves the pointer-end artifact fill, custom-name flag order,
-// guarded west-adjacent TOWN test, and the final hero-id value lifetime.
-// Native binds the campaign base before the hero stores, and its final
-// append retains the four-byte non-POD hero-ID vector operation. Preserve
-// that enum-valued append and its call-scoped temporary. Mac 0x94740
-// constructs an artifact from ARTIFACT_NONE inside each fill iteration;
-// a preconstructed artifact extends the wrong temporary lifetime. Mac
-// 0x94e98 fetches the custom name before storing its flag at 0x94ea4.
-// These lifetimes and ordering reproduce every other Windows instruction.
-// The final append converts the HeroId member to the int element type of
-// m_assignedCarryover: Windows stores m_id into the dead placeholder home
-// [ebp+8] and Mac 0x95114 into 0xdc(r1), beside getCell's by-value argument
-// copy. With HeroId on both sides each compiler passes &m_id directly
-// (91.76%); static_cast/functional casts are byte-flat, a named HeroId local
-// 99.92% and a by-value id accessor 92.77%.
-// CodeWarrior emits default-argument constructor glue for savedArtifacts[].
+// artifact source boundaries. The campaign base is bound before the hero
+// stores, and the final append converts the HeroId member to
+// m_assignedCarryover's int element type.
 MAC_COMPGEN_ADDRESS(0x09513c, 0x10, CLASS_CTOR, type_artifact)
 VA(0x00486590, 0xA84)
 MAC_ADDRESS(0x094648, 0xaf4)  // two calls from ScenarioStruct's 0x487290 map setup
@@ -1659,9 +1617,9 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     g_game->m_campaign.m_assignedCarryover.push_back(currentHero->m_id);
 }
 
-// Mac retains this artifact offer at code 0:0x951b0. Its only caller passes
-// one collected artifact and the selected player; VC6 expands the hero walk.
-// Original helper spelling and linkage are unproved.
+// Mac retains this artifact offer; its only caller passes one collected
+// artifact and the selected player. Inlined in Windows; the original helper
+// spelling and linkage are unproved.
 MAC_ADDRESS(0x0951b0, 0xa4)
 static void offerArtifactToPlayerHeroes(const type_artifact& artifact,
                                        int player)
@@ -1681,9 +1639,6 @@ static void offerArtifactToPlayerHeroes(const type_artifact& artifact,
 // the rest is the shared tail: the hero lands on the object's trigger cell,
 // steps one west off a town entrance, and is registered with its player,
 // the availability table, the hero pool map and the fog.
-// Mac stores the packed point's x/y/z fields in order. Expanding the point
-// constructor into three field assignments drops Windows from 93.5215% to
-// 88.94%; preserve the canonical constructor call.
 VA(0x00487020, 0x263)
 MAC_ADDRESS(0x095254, 0x300)  // anchor-caller(0x487290's two placeholder loops), retail-only
 void TCampaignBrief::ScenarioStruct::placeStartingHero(
@@ -1777,18 +1732,10 @@ hero* SCampaign::findCrossoverHero(int heroId)
 // player's first hero if it still has none, falls back to the placeholder
 // path in PlaceStartingHero above.
 
-// 2026-09-06: reverse searches use `for (i = size(); i--;)`, as retail's
-// tests consume the old count (67.93 -> 74.5681). FindCrossoverHero restores
-// the lookup boundary (+0x332..+0x3ad), and cell(lossHero) restores the
-// existing packed-point wrapper: +0x528 calls cell(int,int,int). Flattening
-// that wrapper to the three fields scores 87.2742; the canonical call
-// reaches 98.0287 with all 71 blocks and 40 branches aligned. No DC body
-// survives for this Complete-only caller; the cell wrapper is DC-proven.
-// Mac 0x958a0..0x95904 keeps the packed loss point separate from the two
-// trigger outputs. Declaring those outputs with the function's container
-// locals preserves their lifetime across the pass and restores Windows's
-// separate slots and 0x4c frame. All instructions and CFG blocks now match;
-// the inner-loop declarations had reused point storage (99.8262%).
+// Reverse searches use `for (i = size(); i--;)`. FindCrossoverHero keeps the
+// lookup boundary, and cell(lossHero) the existing DC-proven packed-point
+// wrapper; the packed loss point is declared with the function's container
+// locals.
 VA(0x00487290, 0x664)
 MAC_ADDRESS(0x095554, 0x450)  // anchor-caller(game::NewMap +0x7ce), retail-only
 void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
@@ -1874,8 +1821,6 @@ void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
 
 // Complete-only helper shared by the scenario handoff and campaign pool
 // pruning. One receiver and one artifact temporary span both artifact loops.
-// Mac 0x95a78 keeps the destination vector in r3 and the hero in r4;
-// both retained callers (0x95c60 and 0x98af4) preserve this argument order.
 MAC_ADDRESS(0x095a78, 0xd8)
 static void collectCrossoverArtifacts(std::vector<type_artifact>& artifacts,
                                       const hero& sourceHero)
@@ -1902,17 +1847,10 @@ static void collectCrossoverArtifacts(std::vector<type_artifact>& artifacts,
 // to the option player's heroes in turn until one accepts it. The chosen
 // start option's own Apply runs last, on every path.
 
-// Retail snapshots the selected hero pool before allocating the artifact
-// vector, and snapshots the recipient player across giveArtifact calls.
-// The canonical collector shared with pruneCrossoverHeroes owns one artifact
-// temporary across both inner loops. Its expansion restores retail's 0x64
-// frame, shared stack home, and the first push_back's retained single-element
-// insert wrapper. The two outer loops also reuse one index, restoring the
-// retail -0x14 home. Mac code+0x95bc4..0x95bd4 initializes the local artifact's
-// ID word before its payload word, supporting the TArtifact constructor here;
-// this also makes the Windows body exact. Retail's
-// ICF label names vector<type_dialog_resource>::insert at the wrapper address;
-// the source-correct vector<type_artifact> specialization resolves there too.
+// The selected hero pool is snapshotted before allocating the artifact
+// vector, and the recipient player across giveArtifact calls. The two outer
+// loops reuse one index. The local artifact is built with the TArtifact
+// constructor.
 VA(0x00487900, 0x2CD)
 MAC_ADDRESS(0x095b50, 0x1d0)  // anchor-caller(game::NewMap +0x5cb), retail-only
 void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
@@ -1975,14 +1913,10 @@ void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(bool* wanted)
         wanted[m_heroPlaceholders[placeholderIndex]] = true;
 }
 
-// Mac places this scenario-owned query immediately after markCrossoverHeroes
-// (0x95e74), before the map-header and pool helpers (0x95fb0/0x96060).
-// Member ownership and constness follow this read-only scenario query;
-// neither is proved by a surviving Complete Dreamcast declaration.
-// Native keeps the empty-scenario return and initializes the accumulated
-// result before that guard. Its two getCount calls own distinct values:
-// the first selects the empty-option arm; the second starts the loop.
-// The former counter hoist followed Mac register choices, not a source scope.
+// Mac places this scenario-owned query after markCrossoverHeroes; member
+// ownership and constness follow this read-only query. The accumulated
+// result is initialized before the empty-scenario guard, and the two
+// getCount calls own distinct values.
 MAC_ADDRESS(0x095ea8, 0x108)
 int TCampaignBrief::ScenarioStruct::getMaxCrossoverHeroes() const
 {
@@ -1997,12 +1931,8 @@ int TCampaignBrief::ScenarioStruct::getMaxCrossoverHeroes() const
     return best;
 }
 
-// Mac 0x96060 follows the other scenario queries and precedes read at
-// 0x960b0. This ordinary member keeps the scenario receiver owned across
-// the size guard and virtual pool query; the original name is unknown.
-// Native 0x96090..0x960a0 returns the virtual result directly, or false
-// from the absent-map arm. A logical && adds a second boolean test and
-// a saved accumulator in the same full-TU CodeWarrior compilation.
+// The original name is unknown; it returns the virtual pool query directly,
+// or false from the absent-map arm.
 MAC_ADDRESS(0x096060, 0x50)
 bool TCampaignBrief::ScenarioStruct::usesCrossoverPool(int pool) const
 {
@@ -2217,7 +2147,7 @@ void TCampaignBrief::ScenarioStruct::startScenario(
 }
 
 // Complete's constructor and destructor live before their callers in this
-// TU. VC6 expands them in selectCampaign; other TUs retain source calls.
+// TU; inlined in selectCampaign.
 VA(0x004885d0, 0xCB)
 MAC_ADDRESS(0x096934, 0xb0)  // retained body and cross-TU callers
 TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
@@ -2229,11 +2159,8 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     m_fileError = CAMPAIGN_FILE_OK;
 }
 
-// Retail 0x4886a0 sits between the constructor above and freeData in this
-// TU's .text contribution, and every campaignbrief caller (TCampaignBrief's
-// constructor 0x459362 and destructor 0x45b05b) retains the call. With the
-// body defined in campaignbrief.cpp VC6 expands it into ~TCampaignBrief
-// (62.61%); owning it here restores that destructor and selectCampaign.
+// Owned here rather than in campaignbrief.cpp, so campaignbrief's callers
+// keep the call.
 VA(0x004886a0, 0x132)
 DC_ADDRESS(0x05ade8, 0x28)
 MAC_ADDRESS(0x096a68, 0x94)  // retained body and cross-TU callers
@@ -2242,8 +2169,8 @@ TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
     clearScenarios();
 }
 
-// Complete-only; also reached from the custom-campaign list scanner
-// (0x482fd0 family). Name provisional.
+// Complete-only; also reached from the custom-campaign list scanner. Name
+// provisional.
 VA(0x004887e0, 0x30)
 MAC_ADDRESS(0x096b74, 0x6c)
 void TCampaignBrief::CampaignHeaderStruct::freeData()
@@ -2269,11 +2196,9 @@ bool TCampaignBrief::CampaignHeaderStruct::loadScenario(
     return true;
 }
 
-// Native 0x96cd8 follows loadScenario (0x96c64) and precedes getNumMaps
-// (0x96d64). It clears the caller's wanted array, then visits this header's
-// scenarios. Header ownership, constness and the descriptive name are
-// inferred; no Complete Dreamcast declaration survives. VC6 expands this
-// ordinary member into pruneCrossoverHeroes, while Mac retains the call.
+// It clears the caller's wanted array, then visits this header's scenarios.
+// Header ownership, constness and the descriptive name are inferred;
+// inlined in pruneCrossoverHeroes (Mac retains the call).
 MAC_ADDRESS(0x096cd8, 0x8c)
 void TCampaignBrief::CampaignHeaderStruct::markRequiredCampaignHeroes(
     bool* wanted) const
@@ -2285,8 +2210,8 @@ void TCampaignBrief::CampaignHeaderStruct::markRequiredCampaignHeroes(
     }
 }
 
-// Complete-only; the 0x482fd0-family caller sizes the campaign list with
-// it. Name provisional.
+// Complete-only; the custom-campaign list sizes itself with it. Name
+// provisional.
 VA(0x00488850, 0x2F)
 MAC_ADDRESS(0x096d64, 0x8c)
 int TCampaignBrief::CampaignHeaderStruct::getNumMaps() const
@@ -2444,12 +2369,8 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
     return true;
 }
 
-// clearScenarios' delete loop naturally retains ScenarioStruct's
-// compiler-generated deleting wrapper. Retail CampaignHeaderStruct::load,
-// the destructor above and selectCampaign call this shared 0x488eb0 copy,
-// which lies in this TU's contribution: campaignbrief no longer expands the
-// destructor, so it emits no copy. All 33 bytes agree: the ordinary
-// destructor stays at 0x485fe0, then flags&1 gates operator delete.
+// clearScenarios' delete loop retains ScenarioStruct's compiler-generated
+// deleting wrapper; its callers here and in selectCampaign share this copy.
 VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)
 
 VA(0x00488ee0, 0x1D)
@@ -2459,9 +2380,9 @@ void TCampaignBrief::CampaignHeaderStruct::startMusic()
     g_soundManager->startMP3(g_campaignMusicTraits[m_campaignMusic].m_name, 0, 1);
 }
 
-// Mac retains this shared prerequisite check at code 0:0x9758c. Both the
-// start-option predicate and getAvailableScenarios call it; VC6 expands the
-// same loop in their retail bodies. Original method spelling is unproved.
+// Mac retains this shared prerequisite check; both the start-option
+// predicate and getAvailableScenarios inline it. Original method spelling is
+// unproved.
 MAC_ADDRESS(0x09758c, 0x90)
 bool TCampaignBrief::ScenarioStruct::prerequisitesMet() const
 {
@@ -2491,8 +2412,8 @@ void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
     }
 }
 
-// Mac code+0x976c4 follows getAvailableScenarios and retains the selection
-// as a call from the campaign-header playback helper. Complete expands it.
+// Mac retains this selection as a call from the campaign-header playback
+// helper; Complete inlines it.
 MAC_ADDRESS(0x0976c4, 0x3c)
 void TCampaignBrief::ScenarioStruct::playText(bool epilogue)
 {
@@ -2505,14 +2426,9 @@ VA(0x00488fb0, 0x528)
 MAC_ADDRESS(0x097700, 0x6bc)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::play()
 {
-    // The direct speech->dispose() below is Windows byte-exact. Replacing it
-    // with ResourceManager::dispose(speech) keeps behavior but drops this
-    // body to 99.57%; this site retains the direct source call.
-    // The subtitle completion flag can also end playback after input.
-    // Retaining the event switch and testing finished removes three jumps
-    // at unchanged 83.8848%; an if-chain for the same events gives 80.7396%.
-    // Retail assigns each playback endpoint only on the path that consumes it;
-    // dropping three eager zero stores raises MAX 85.4677 -> 86.1889.
+    // speech->dispose() is called directly. The subtitle completion flag can
+    // also end playback after input; each playback endpoint is assigned only
+    // on the path that consumes it.
     if (m_video < 0)
         return;
 
@@ -2628,7 +2544,6 @@ void TCampaignBrief::MapTextStruct::play()
                                 g_windowManager->m_screenBitmap->GetHeight(),
                                 g_windowManager->m_screenBitmap->GetPitch(), false);
                 } else {
-                    // Mac retains separate draws at 0:0x97b20 and 0:0x97b84.
                     if (scrollY < textHeight - g_campaignSubtitleHeight) {
                         strip->Draw(0, scrollY, g_campaignSubtitleWidth,
                                     g_campaignSubtitleHeight,
@@ -2659,8 +2574,8 @@ void TCampaignBrief::MapTextStruct::play()
                 }
             }
 
-            // Mac retains musicPlaying at 0x97c40; Complete uses the Miles
-            // stream-status import at retail 0x4893a1 for this playback path.
+            // Complete uses the Miles stream-status import here (Mac retains
+            // musicPlaying).
             if (!speechStarted && (mp3Started || m_audio == -1)
                 && speech) {
                 g_soundManager->memorySample(speech);
@@ -2725,8 +2640,7 @@ void TCampaignBrief::MapTextStruct::play()
     videoClose();
 }
 
-// Mac code+0x97dbc follows MapTextStruct::play and calls playText. The two
-// campaign wrappers are its only direct Mac callers, with three call sites.
+// Mac retains this helper, which calls playText.
 MAC_ADDRESS(0x097dbc, 0x64)
 void TCampaignBrief::CampaignHeaderStruct::playScenarioText(int which, bool epilogue)
 {
@@ -2742,8 +2656,7 @@ void TCampaignBrief::CampaignHeaderStruct::startScenario(
     m_scenarios[which]->startScenario(m_stream, option);
 }
 
-// Mac retains the per-scenario score reader at code 0:0x97e70. SCampaign's
-// load loop calls it once per row; VC6 expands the same five ordered reads.
+// Inlined in SCampaign's load loop (five ordered reads); Mac retains it.
 MAC_ADDRESS(0x097e70, 0x104)
 void CampaignScenarioInfo::read(TAbstractFile* infile)
 {
@@ -2756,8 +2669,7 @@ void CampaignScenarioInfo::read(TAbstractFile* infile)
         static_cast<signed char>(readValue<unsigned char>(infile));
 }
 
-// Mac retains this per-scenario score writer at code 0:0x97f74. SCampaign's
-// save loop calls it once per row; VC6 expands its five ordered writes.
+// Inlined in SCampaign's save loop (five ordered writes); Mac retains it.
 MAC_ADDRESS(0x097f74, 0xf0)
 void CampaignScenarioInfo::write(TAbstractFile* outfile) const
 {
@@ -2769,9 +2681,8 @@ void CampaignScenarioInfo::write(TAbstractFile* outfile) const
 }
 
 // Complete retains this constructor in all three cross-TU callers:
-// TCampaignWindow, SavedGameHeader and game. Mac places it after
-// CampaignScenarioInfo::write and before the generated member teardown/
-// selectCampaign cluster. The older DC class used a header constructor.
+// TCampaignWindow, SavedGameHeader and game. The older DC class used a
+// header constructor.
 VA(0x00489500, 0x88)
 DC_ADDRESS(0x0bcd90, 0x70)
 MAC_ADDRESS(0x098064, 0xe8)
@@ -3278,11 +3189,9 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
     readAssignedHeroes(infile, assignedCount);
 }
 
-// The fixed pre-v28 record uses the old 0x462 hero layout. Retained 0x48ae30
-// calls the obscuring-object base ctor and armyGroup ctor, zeros bitset<48>,
-// then constructs 18 equipped and 64 backpack artifacts. That is exactly
-// declaration-order base/member construction; there is no custom body.
-// SCampaign::Load passes its address to the 16-element constructor iterator.
+// The fixed pre-v28 record uses the old 0x462 hero layout; declaration-order
+// base/member construction, no custom body. SCampaign::Load passes its
+// address to the 16-element constructor iterator.
 VA_COMPGEN(0x0048AE30, 0x5D, CLASS_CTOR, LegacyCampaignHero)
 MAC_COMPGEN_ADDRESS(0x09959c, 0x70, CLASS_CTOR, LegacyCampaignHero)
 
@@ -3293,27 +3202,6 @@ MAC_COMPGEN_ADDRESS(0x09959c, 0x70, CLASS_CTOR, LegacyCampaignHero)
 // Hero counts are bytes; artifact counts/fields and assigned values use
 // two bytes. The outer hero/artifact vectors share a 16-byte element stride.
 
-// Retail keeps each score record and each inner pool vector in EDI across
-// writes; repeated indexing of the outer vectors loses those lifetimes.
-// Each serialized scalar has a separate lifetime, allowing byte/int/short
-// buffers to reuse the dead outfile parameter home. The first byte still
-// uses [ebp-1] while outfile is live there. Both artifact fields share one
-// short buffer; retail's word loads prove narrowing before the writes.
-
-// Historical measurements before the broader scalar-writer reuse below.
-// 2026-09-07: score reference alone 88.0368%, pool references alone 85.4136%,
-// both 99.6062% (from 78.8074% MAX). Per-write scalar scopes with short word
-// buffers reach 99.9518%; sharing the artifact word reaches 99.9632%; one
-// outer counter across all three runs reaches 99.9858%. The canonical
-// by-value writeValue<short> boundary for the two artifact fields restores
-// retail's shared [ebp-0x10] parameter home and 0x10-byte frame. All 880 bytes,
-// 38 CFG blocks, 16 branches, and 24 calls now agree.
-// Controls: narrowing into int gives 97.1048% (movsx); also sharing the inner
-// counters, scoping the hero loop or entire hero phase, hoisting the word
-// to pool/function scope, and unsigned-short buffers are byte-flat at
-// 99.9858%. Extra braces around the three runs were also byte-flat. The
-// earlier shared-counter probe without the recovered references was
-// 78.7965%; that result did not exclude the source reconstruction above.
 VA(0x0048ae90, 0x370)
 MAC_ADDRESS(0x09960c, 0x3b4)  // link-order successor of LegacyCampaignHero's ctor; SCampaign::Load's mirror
 void SCampaign::save(TAbstractFile* outfile)
@@ -3374,9 +3262,7 @@ void SCampaign::save(TAbstractFile* outfile)
     }
 }
 
-// SCampaign::Load's retained Dinkumware helper cluster.  The element and
-// nested-element types are independently fixed by the +0x5c/+0x3c/+0x4c
-// member layouts and by the caller's 0x14/0x492/0x10/8-byte strides.
+// SCampaign::Load's retained Dinkumware helper cluster.
 VA_COMPGEN(0x004013D0, 0x28, VECTOR_CONSTRUCTOR_ITERATOR, LegacyCampaignHero)
 
 VA_COMPGEN(0x00404140, 0x03, VECTOR_DESTROY, type_artifact)
@@ -3391,13 +3277,8 @@ VA_COMPGEN(0x0048C270, 0x285, VECTOR_INSERT, hero_vector)
 
 VA_COMPGEN(0x0048C7A0, 0x285, VECTOR_INSERT, type_artifact_vector)
 
-// ...and the SINGLE-element arm of the same two overload groups, 387 bytes
-// each against the count arms' 645. Which element type each belongs to is
-// read off its own named callees: 0x48c0e0 calls _Construct<vector<hero>> at
-// 0x45fce0 and _Destroy<vector<vector<hero>>> at 0x48c5b0, 0x48c610 calls the
-// type_artifact twins at 0x45fdc0 and 0x48caa0. Each group is now two claims
-// against the object's two COMDATs, zipping by RVA against COFF order with
-// the 387-byte arm first on both sides.
+// The single-element arms of the same two overload groups (vector<hero> and
+// vector<type_artifact>).
 VA_COMPGEN(0x0048c0e0, 0x183, VECTOR_INSERT, hero_vector)
 
 VA_COMPGEN(0x0048c610, 0x183, VECTOR_INSERT, type_artifact_vector)
@@ -3473,17 +3354,15 @@ void SCampaign::applyBriefingChoice(int option)
 
 VA_COMPGEN(0x0048C500, 0xA3, VECTOR_ERASE, hero_vector)
 
-// COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>, agreement 0.972.
-// The map hero placeholders' own sort, instantiated by
-// ScenarioStruct::PlaceCrossoverHeroes. Both bodies are byte-identical to
-// this compile's instruction stream.
+// COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>. The map hero
+// placeholders' own sort, instantiated by ScenarioStruct::PlaceCrossoverHeroes.
 VA_COMPGEN(0x0048eec0, 0x3ED, STD_SORT_0, HeroPlaceholderData_HeroPlaceholderStronger)
 
 VA_COMPGEN(0x0048f630, 0x1AE, STD_SORT, HeroPlaceholderData_HeroPlaceholderStronger)
 
 VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
 
-// COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>, agreement 0.985.
+// COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>.
 VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
 
 VA_COMPGEN(0x0048fa40, 0x1D7, STD_MEDIAN, hero_crossoverherostronger)
@@ -3492,15 +3371,7 @@ VA_COMPGEN(0x0048f940, 0xF4, STD_UNGUARDED_INSERT, hero_crossoverherostronger)
 
 VA_COMPGEN(0x0048fc20, 0x195, STD_UNGUARDED_PARTITION, hero_crossoverherostronger)
 
-// COMDAT pairing: bitset<145>::_Xran and bitset<8>::_Xran. Five byte-identical
-// `_Xran` bodies survive in the image, so the discriminator is the BOUND
-// COMPARE in each caller: 0x8d9a0's four callers all guard with `cmp <reg>,
-// 0x91` (145) - among them game's claimed bitset<145>::set (0x4cfa60) and
-// ::test (0x4cfad0) - and 0x8da70's eight with `cmp <reg>, 0x8`, among them
-// game's claimed bitset<8>::set (0x4d4cc0) and ::test (0x4cfef0).
-// 0x48edf0, which lane 16 claimed here as bitset145 on similarity alone,
-// compares against 0x81 (129) at all three of its callers and is claimed in
-// game.cpp. Recovered campaign readers now emit 129-bit members here too.
+// COMDAT pairing: bitset<145>::_Xran and bitset<8>::_Xran.
 VA_COMPGEN(0x0048d9a0, 0xCB, BITSET_XRAN, Bitset145)
 
 VA_COMPGEN(0x0048da70, 0xCB, BITSET_XRAN, Bitset8)
@@ -3509,30 +3380,22 @@ VA_COMPGEN(0x0048d440, 0x3E, VECTOR_UCOPY, hero)
 
 VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, type_artifact_vector)
 
-// COMDAT pairing: hero::copy_backward, mnemonic agreement 0.918.
+// COMDAT pairing: hero::copy_backward.
 VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, hero)
 
-// The adjacent hero fill walks the same 0x492-byte records forward and
-// invokes hero::operator= once per element.  Its sole non-loop relocation
-// and all 42 bytes identify the specialization independently of link order.
+// The adjacent hero fill: hero::operator= once per element.
 VA_COMPGEN(0x0048e850, 0x2A, STD_FILL, hero)
 
-// COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
+// COMDAT pairing: hero::_Ufill.
 VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)
 
 // CatchableType's copyFunction selects this overload, not the string ctor.
 VA_COMPGEN(0x00404700, 0x157, IMPLICIT_COPY_CTOR, out_of_range)
 
-// COMDAT pairing: vector<vector<hero>>::_Destroy - reached from game and from
-// two sites in this unit's own segment.
+// COMDAT pairing: vector<vector<hero>>::_Destroy.
 VA_COMPGEN(0x0048c5b0, 0x53, VECTOR_DESTROY, hero_vector)
 
-// COMDAT pairing: vector<hero>::operator=. The caller set is the whole
-// argument and it is unambiguous - SCampaign::PruneCrossoverHeroes, the
-// already-claimed vector<vector<hero>>::insert and ::erase (which assign
-// elements of exactly this type), and game's SCampaign::operator=. Mnemonic
-// agreement is 1.000 against a 704 B object and `ret 4` matches the one
-// reference argument.
+// COMDAT pairing: vector<hero>::operator=.
 VA_COMPGEN(0x0045ff30, 0x2C0, VECTOR_COPY_ASSIGN, hero)
 
 VA_COMPGEN(0x00460850, 0x4B1, IMPLICIT_COPY_CTOR, hero)
@@ -3557,44 +3420,32 @@ VA_COMPGEN(0x0048bcc0, 0x32, FILEBUF_SETBUF, char)
 
 VA_COMPGEN(0x0048bd00, 0x1B, FILEBUF_SYNC, char)
 
-// Slot 0 of the same vtable, which is what makes this one of the three
-// indistinguishable 33-byte ??_G bodies in the span that CAN be named.
+// Slot 0 of the same vtable.
 VA_COMPGEN(0x0048bd20, 0x21, SCALAR_DELETING_DTOR, basic_filebuf)
 
-// COMDAT pairing: basic_streambuf<char>::_Init(), agreement 1.000 - the
-// nullary base initializer, distinct from basic_stringbuf's three-argument
-// _Init already claimed in resourcemanager.
+// COMDAT pairing: basic_streambuf<char>::_Init(), the nullary base
+// initializer.
 VA_COMPGEN(0x0048bea0, 0x58, STREAMBUF_INIT, char)
 
-// COMDAT pairing: vector<hero>::capacity and vector<hero>::_Destroy,
-// agreements 0.933 and 1.000. Both are reached from the campaign's
-// carry-over hero vector.
+// COMDAT pairing: vector<hero>::capacity and vector<hero>::_Destroy, both
+// reached from the campaign's carry-over hero vector.
 VA_COMPGEN(0x0048ce20, 0x23, VECTOR_CAPACITY, hero)
 
 VA_COMPGEN(0x0048d410, 0x26, VECTOR_DESTROY, hero)
 
 VA_COMPGEN(0x0048ce50, 0x210, VECTOR_INSERT, hero)
 
-// COMDAT pairing: basic_filebuf<char>::_Init(FILE*, _Initfl), agreement
-// 0.973 - the census had already named it `exe_filebuf_open` off the same
-// vtable's construction path.
+// COMDAT pairing: basic_filebuf<char>::_Init(FILE*, _Initfl).
 VA_COMPGEN(0x0048d4b0, 0xE2, FILEBUF_INIT, char)
 
 VA_COMPGEN(0x0048dc10, 0x35, VECTOR_UCOPY, type_artifact)
 
-// COMDAT pairing: locale::locale(const locale&), agreement 1.000.
-// COMDAT pairing: locale's DEFAULT constructor, the other half of the ctor
-// overload group whose second member is claimed below. Its body is
-// locale::_Init() into `_Ptr` followed by the two nested _Lockit scopes that
-// guard the shared _Locimp's saturating reference count - the copy
-// constructor has neither call. COFF order in this object is (default,
-// const&) and RVA order is 0x488e60, 0x48d800, so the group zips the same
-// way in both directions.
+// COMDAT pairing: locale::locale(const locale&) and locale's default
+// constructor.
 VA_COMPGEN(0x00488e60, 0x4B, CLASS_CTOR, locale)
 
-// ScenarioStruct's deleting wrapper at 0x488eb0 expands in this TU.
-// The same native wrapper remains in campaignbrief, where its enrollment
-// lives; its ordinary destructor at 0x485fe0 remains owned by this file.
+// ScenarioStruct's deleting wrapper is inlined here; its ordinary destructor
+// is owned by this file.
 VA_COMPGEN(0x0048d800, 0x19, CLASS_CTOR, locale)
 
 VA_COMPGEN(0x0048d860, 0x38, VECTOR_UCOPY, hero_vector)
@@ -3615,11 +3466,9 @@ VA_COMPGEN(0x0048eb60, 0x67, CLASS_CTOR, codecvt)
 
 VA_COMPGEN(0x0048ec10, 0x18, CODECVT_DO_LENGTH, char)
 
-// The two starting-options records' own vector helpers, all four proved by
-// the call sites in their Read bodies. The crossover choice is a two-byte
-// element and the hero choice an eight-byte one, which is why the hero
-// option's _Ucopy folds onto vector<type_artifact>'s (same width) and only
-// its _Ufill survives as its own address.
+// The two starting-options records' own vector helpers; the hero choice's
+// _Ucopy folds onto vector<type_artifact>'s (same element width), so only
+// its _Ufill has its own address.
 VA_COMPGEN(0x0048dba0, 0x31, VECTOR_UCOPY, TCampaignCrossoverChoice)
 
 VA_COMPGEN(0x0048dbe0, 0x28, VECTOR_UFILL, TCampaignCrossoverChoice)
@@ -3651,51 +3500,40 @@ VA_COMPGEN(0x0048db70, 0x24, VECTOR_UFILL, unsigned_char)
 
 VA_COMPGEN(0x0048e9d0, 0x09, STD_CONSTRUCT, unsigned_char)
 
-// --- the <fstream> facet block, claimed 2026-09-06 -------------------------
+// --- the <fstream> facet block ---------------------------------------------
 
-// The destructor and the conversion setup, both named by their mnemonic
-// agreement against the object's own free COMDATs (0.885 and 0.887, and no
-// second candidate above 0.45 in either case):
+// The destructor and the conversion setup, matched against the object's own
+// free COMDATs:
 VA_COMPGEN(0x0048bd50, 0x14F, IMPLICIT_DTOR, basic_filebuf)
 
 VA_COMPGEN(0x0048d5a0, 0x22E, FILEBUF_INITCVT, char)
 
 VA_COMPGEN(0x0048d820, 0x3B, STREAMBUF_GETLOC, char)
 
-// std::copy over hero*, the forward twin of the copy_backward already
-// claimed at 0x48e880: `while (first != last) *dest++ = *first++` with
-// hero::operator= called and both pointers stepping by 0x492. The const and
-// non-const source overloads compile to the same bytes and /OPT:ICF folded
-// them, so one claim names the row and the other spelling is its alias.
-// out_of_range's string constructor, not the CatchableType copy constructor
-// at 0x404700. Its retail callers are giveCrossoverArtifacts here, mapcell's
-// readTownData and four RMG sites; it sits in this unit's COMDAT band.
+// std::copy over hero*, the forward twin of copy_backward; the const and
+// non-const source overloads fold, so one claim names the row.
+// out_of_range's string constructor, not the CatchableType copy constructor.
 VA_COMPGEN(0x00487bd0, 0x160, CLASS_NONCOPY_CTOR, out_of_range)
 
 VA_COMPGEN(0x0048dc80, 0x3B, STD_COPY, hero)
 
-// std::copy over vector<hero> values: retail's only callers of the 710-byte
-// body at 0x48e220 are SCampaign::selectCampaign (0x489655) and
-// SCampaign::operator= (0x4bddc1). The carcass label formerly in
-// singleselectionwindow joined this row to copy<const HeroId*>, whose
-// 48-byte body belongs with the folded int copies instead.
+// std::copy over vector<hero> values (SCampaign::selectCampaign and
+// SCampaign::operator=).
 VA_COMPGEN(0x0048e220, 0x2C6, STD_COPY, hero_vector)
 
 VA_COMPGEN(0x0048ece0, 0x37, BITSET_TEST, Bitset129)
 
 VA_COMPGEN(0x0048ed20, 0x25, BITSET_TIDY, Bitset129)
 
-// bitset<129>::reference::operator= - called by ScenarioStruct::read here
-// and by game::loadMap; game emits no out-of-line copy.
+// bitset<129>::reference::operator=, called by ScenarioStruct::read and
+// game::loadMap.
 VA_COMPGEN(0x0048ead0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset129)
 
 VA_COMPGEN(0x0054c6f0, 0x39, VECTOR_ERASE, type_artifact)
 
-// The facet's installation and teardown. _Addfac copies the locale, adds
-// the codecvt to its facet vector and hands the locale back; _Tidyfac's
-// static pair is the exit hook - _Save parks the facet in 0x696940 under a
-// `_Lockit` and registers _Tidy with atexit (`push 0x48ed50 / call
-// _atexit` at 0x48ecae is the link between the two rows).
+// The facet's installation and teardown: _Addfac copies the locale, adds
+// the codecvt and hands the locale back; _Tidyfac's _Save parks the facet
+// under a `_Lockit` and registers _Tidy with atexit.
 VA_COMPGEN(0x0048e8c0, 0x102, LOCALE_ADDFAC_CODECVT, char)
 
 VA_COMPGEN(0x0048ec60, 0x7B, TIDYFAC_CODECVT_SAVE, char)

@@ -142,8 +142,8 @@ enum EBoltColor {
 // attests the domain or the spelling, and the other nine codes stay
 // unnamed until one of the 0x4643b0 branches is decoded.
 
-// FIVE MORE CODES DECODED 2026-08-20 from the other side, by
-// ai_tactical's creature-spell pricers get_ogre_mage_value (0x43c330)
+// FIVE MORE CODES are decoded from the other side, by ai_tactical's
+// creature-spell pricers get_ogre_mage_value (0x43c330)
 // and get_caliph_value (0x43c4a0). Both open with the same
 // jump-table switch over this word, and each arm's only effect is to
 // raise the mastery the spell is priced at from ADVANCED to EXPERT:
@@ -279,10 +279,6 @@ extern const TCombatHeroSprite g_combatHeroSprites[9][2];
 // 20 per side - plus one spare making the 0x6ee8 side stride); the
 // army array base 0x54cc and the 0x548 record stride are byte-proven
 // by hexcell::get_army/get_dead_army, which index side*21 + slot.
-// (Rebased 2026-08-06: the earlier TCombatSide/TStack view sat 0x34
-// past the real army boundary and its field offsets were 0x50 short -
-// objdiff's immediate masking hid the error as the old 99.9 residual
-// on ResetHitByCreature.)
 // The pending-order CODES combatManager::field_3c carries. All three
 // rungs below are byte-witnessed, and the two writers corroborate each
 // other:
@@ -347,10 +343,10 @@ public:
 
     // Dreamcast drawing.cpp:666. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
-    // Complete Windows and Mac fold the fixed-viewport facade in army.cpp;
-    // that cross-TU expansion supports header visibility of this delegation.
-    // Older DC owns the scrolling facade in drawing.cpp; its original
-    // ?ScrollTo@combatManager@@QAA_NHH_N00@Z proves bool for result/flags.
+    // Complete inlines the fixed-viewport facade in army.cpp, so the
+    // delegation is header-visible. Older DC owns the scrolling facade in
+    // drawing.cpp; its original ?ScrollTo@combatManager@@QAA_NHH_N00@Z proves
+    // bool for result/flags.
     DC_ADDRESS(0x0841d4, 0x52)
     bool scrollTo(int x, int y, bool draw, bool doscrollX, bool doscrollY)
     {
@@ -460,9 +456,8 @@ public:
         // The moat row of a town's eighteen wall records: LoadIcons
         // (0x463370) suppresses exactly this row's five icons for
         // Stronghold under the pre-expansion ruleset, and the static
-        // table's row 2 is the SgCsMoat.pcx group. An include-set
-        // trigger: this enumerator moved command.obj's GetCommand when
-        // visible to that TU (measured; max/hist hold the peak).
+        // table's row 2 is the SgCsMoat.pcx group. An include-set trigger:
+        // this enumerator changes command.obj's GetCommand when visible there.
         WALL_TRAITS_ROW_MOAT = 2
     };
     // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
@@ -495,8 +490,7 @@ public:
         TSpellEffectID m_dispelEffect;        // +0x14
 
         // Dreamcast CodeView names this one-argument const member and fixes
-        // its bool result; the retail DrawFrame expansion proves the two
-        // participating bytes at +0x9/+0xa.
+        // its bool result; inlined in DrawFrame (bytes +0x9/+0xa).
         DC_ADDRESS(0x0a1144, 0x16)
         bool isVisible(int side) const
         {
@@ -719,8 +713,7 @@ public:
     std::set<SpellID> m_eagleEyeData[2];  // +0x545c; set roots at +0x5460
     // Per-stack "this stack has already been affected" marks, indexed
     // [combatSide][army slot]. THREE independent readings agree on the
-    // shape, which is why it is sliced in place from the old pad_547c[0x28]
-    // with no byte moves and no change in declarator count:
+    // shape:
     //   * ClearEffects (0x5a66b0) wipes it as ten dwords - a `rep stosd`
     //     with ecx=10 over [this+0x547c] - which bounds the extent.
     //   * SetMassSpellInfluence (0x5a66d0) writes a 1 per stack that took
@@ -775,18 +768,9 @@ public:
     // it as `[&playerIds[side] + 0xddf8]`, which is what proves the stride
     // and the pair. The magnitude reads like a millisecond budget but no
     // reader is decoded, so the name stays an address ordinal.
-    // GATED, AND THAT IS A MEASUREMENT - the fourth firing of the
-    // include-set class from this header, and the first one that says
-    // WHICH edit shape fires it. Bisected 2026-08-20 against command.obj's
-    // GetCommand (92.5714 is that canary's ceiling), one edit at a time:
-    //   * slicing one pad declarator into three (this row), or adding any
-    //     further member declarator to the class          -> 92.5357;
-    //   * RETYPING a pad in place at the SAME declarator count,
-    //     `char pad_54a6[2]` -> `unsigned char IsLocalHuman[2]`,
-    //                                                     -> 92.5714,
-    //     unmoved. Three such renames landed un-gated and cost nothing.
-    // So the trigger is the DECLARATOR COUNT C1XX numbers member handles
-    // from - not the member's name, its type, or the bytes it covers.
+    // GATED: C1XX numbers member handles from the declarator count, so
+    // slicing a pad declarator into several, or adding a member declarator,
+    // changes command.obj's GetCommand; retyping a pad in place does not.
     // The per-side pair InitNonVisualVars' closing walk raises when a
     // side owns at least one stack with army::field_4d8 set. Byte-wide
     // and indexed by side.
@@ -800,8 +784,8 @@ public:
     int m_turnSinceLastEnchanter[2];  // +0x132a0
     // Two dwords InitNonVisualVars sets to -1.
 
-    // RETYPED AS A PER-SIDE PAIR 2026-08-20 by combatManager::
-    // SummonElemental (0x5a7080), which stamps the summoned creature's
+    // A PER-SIDE PAIR, by combatManager:: SummonElemental (0x5a7080), which
+    // stamps the summoned creature's
     // type through `[this + 4*currentSide + 0x132a8]` - so the two
     // dwords are one row indexed by SIDE, exactly like the six other
     // per-side pairs this class already carries, and not two unrelated
@@ -1230,12 +1214,9 @@ public:
                    int x, int y, SLimitData* limits,
                    bool isFlipped, unsigned char colorRow);
 
-    // DC header inline (cmbtmgr.h:1460, 18 B). Its S_PUB32
-    // identity is ?ValidHex@combatManager@@SA_NH@Z: static bool. No retail
-    // body; place_shooter (0x422060) carries two copies of it, one on
-    // the loop index (which VC6 strength-reduces onto the same 30-byte
-    // induction variable the cellData walk uses, so it reads as a
-    // `test/jl` plus `cmp 0x15ea/jge` pair) and one on the adjacent hex.
+    // DC header inline (cmbtmgr.h:1460). Its S_PUB32 identity is
+    // ?ValidHex@combatManager@@SA_NH@Z: static bool. Inlined twice in
+    // place_shooter, on the loop index and on the adjacent hex.
     DC_ADDRESS(0x027ec8, 0x12)
     static bool validHex(int hex)
     {
@@ -1290,18 +1271,6 @@ public:
     // Native ?SetCombatGrid@combatManager@@QAAXHHH_N@Z: draw flag is bool.
     void setCombatGrid(int combatShowEntireGrid, int combatShowMouseHex, int combatGridLevel,
                        bool drawItNow);  // 0x479fc0
-    // 0x46a520 (68 B), army::simple_move's second call: it zeroes a
-    // 187-byte per-hex row at this + 0x14031 with a `rep stosd` of 46
-    // dwords plus a word plus a byte - the cell count exactly - and
-    // then raises the hex, or the two hexes, the passed stack stands
-    // on. It sits in cmbtmgr.obj's own bracket (immediately after
-    // IsQuickCombat 0x46a4a0) but the DC roster has no row for it
-    // there, so both the NAME and the parameter's constness are
-    // PROVISIONAL and its claim waits for the lane that reconstructs
-    // the body. The row it clears is deliberately NOT modelled here:
-    // this declaration alone already costs GetCommand 92.5714 ->
-    // 92.5357 unconditionally (include-set class, bisected), so it is
-    // scoped to army.cpp and the field waits for the same lane.
     // Complete adds the arrow-tower early return in army::rangeAttack
     // (0x440160), directly calling KeepAttack (0x465ad0). DC lacks that
     // arm but records KeepAttack private. This narrow friendship is a
@@ -1405,16 +1374,13 @@ public:
     long chooseMeleeAction(const army* currentArmy, bool teleport,
                              bool simulated, long side);  // 0x421f80
     unsigned char failedSiege();  // 0x41e440
-    // 0x422b20 (632 B), NOT YET CLAIMED and NOT in any TU's carve span
-    // here - `homm3 sema rva` files it under seg_0002. The DC roster
-    // puts combatManager::find_AI_targets in ai.obj (ai.cpp:2608, dc
-    // 0x27888) with exactly these five parameters, and the DC xref
-    // graph lists it as a callee of choose_shooter_action, which is
-    // where 0x422b20 is called from on the retail side too - along
-    // with choose_cyclops_action, choose_melee_action and two
-    // ai_tactical bodies, every one of which the DC graph also records
-    // as a find_AI_targets caller. Its own VA claim wants the ai.obj
-    // span recomputed past 0x4224d9 and is left to that lane.
+    // 0x422b20 (632 B). The DC roster puts combatManager::find_AI_targets in
+    // ai.obj (ai.cpp:2608, dc 0x27888) with exactly these five parameters,
+    // and the DC xref graph lists it as a callee of choose_shooter_action,
+    // which is where 0x422b20 is called from on the retail side too - along
+    // with choose_cyclops_action, choose_melee_action and two ai_tactical
+    // bodies, every one of which the DC graph also records as a
+    // find_AI_targets caller.
     // CodeView ai.cpp:2608 (dc 0x27888) declares a const parameters
     // receiver. Its calculations are const too; the old non-const claim
     // came from our reconstructed declaration, not the retail bytes.
@@ -1483,8 +1449,8 @@ public:
     int getCommand(int newIndex);
     void doCommand(int command);
     int rightClick(int newIndex);  // 0x4769c0
-    // 0x59e900, spells.obj. LOCATED 2026-08-13 from DoCommand's
-    // spell-book case, which calls it with `this` only, compares the
+    // 0x59e900, spells.obj, located from DoCommand's spell-book case, which
+    // calls it with `this` only, compares the
     // result against -1 and forwards it straight into InitiateSpell.
     // The DC spells.obj roster puts combatManager::ViewSpells
     // (spells.cpp:97, 680 SH4 B, ONE parameter) immediately before
@@ -1614,8 +1580,7 @@ public:
     // 0x59fde0 (68 B), the Enchanter's shot resolution army::
     // animate_missile hands its volley to instead of a missile flight
     // (three stack arguments: the launch point and the target stack).
-    // ORDINAL PLACEHOLDER name - no roster row reaches it; the body
-    // stays spells.obj's to reconstruct.
+    // ORDINAL PLACEHOLDER name - no roster row reaches it.
     void animateMagicArrow(int x, int y, army* target);
     void spellTargetMessage(SpellID spellId, int targetIndex,
                             bool firstTarget);  // 0x5a8690
@@ -1715,8 +1680,7 @@ public:
     // The enum uses the same int-wide retail argument slot.
     void powEffect(TSpellEffectID spellEffect, int resetLimitCreature);  // 0x468990
 
-    // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
-    // lookup sites; no standalone body survives.
+    // DC cmbtmgr.h:1466; inlined in both sacrifice lookup sites.
     // Original DC ?find_resurrection_target@combatManager@@QAAPAVarmy@@
     // W4SpellID@@JJ_N@Z proves the enum and bool here; Complete's three-argument leaf
     // retains its wider creature-spell domain.
@@ -1729,18 +1693,16 @@ public:
         return findResurrectionTarget(group, hex, creatureSpell);
     }
 
-    // DC header inline (cmbtmgr.h:1473, 32 B); SH4 proves the
-    // typed target -> wallTargets[target].wall -> wallStrength chain.
-    // Retail has no body because /Ob2 folds the same chain into its callers.
+    // DC header inline (cmbtmgr.h:1473); SH4 proves the typed target ->
+    // wallTargets[target].wall -> wallStrength chain. Inlined in its callers.
     DC_ADDRESS(0x027edc, 0x20)
     long getWallStrength(TWallTargetId target) const
     {
         return m_wallLevel[s_wallTargets[target].m_wall];
     }
 
-    // DC header inline (cmbtmgr.h:1478); the DC xref graph
-    // lists it among DoCompAI's callees and retail carries no
-    // out-of-line copy, so it is the /Ob2 inline-away case.
+    // DC header inline (cmbtmgr.h:1478); the DC xref graph lists it among
+    // DoCompAI's callees. Inlined.
     DC_ADDRESS(0x027efc, 0x2c)
     army* getCurrentArmy() { return &m_armies[m_actingSide][m_actingSlot]; }
 
@@ -1753,8 +1715,7 @@ public:
 
     // E:\gamedcs\CmbtMgr.h:1488. Dreamcast proves the single-expression
     // helper and its four ordered bounds. Complete widens the window to the
-    // retail 800x556 combat area; ProcessCombatMsg retains the source call
-    // and VC6 expands it into the four retail comparisons.
+    // 800x556 combat area; ProcessCombatMsg's call is inlined.
     // DC has x/y only, no receiver: this is static. The original public
     // ?InCombatArea@combatManager@@SA_NHH@Z proves the bool result.
     DC_ADDRESS(0x070a2c, 0x2a)
@@ -1796,9 +1757,8 @@ public:
         return index % COMBAT_GRID_ROW_STRIDE;
     }
 
-    // DC header inline (cmbtmgr.h:1525). mark_teleport's
-    // retail expansion retains the ValidHex bounds checks and the two
-    // invisible edge columns, 0 and 16 of each 17-cell row.
+    // DC header inline (cmbtmgr.h:1525); inlined in mark_teleport. The
+    // invisible edge columns are 0 and 16 of each 17-cell row.
     DC_ADDRESS(0x027f64, 0x3c)
     static bool inInvisibleColumn(int index)
     {
@@ -1809,21 +1769,15 @@ public:
     }
 
     // Returns a REFERENCE on its own public
-    // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
-    // renders every reference as a pointer, which is what this
-    // declaration read before the S_PUB32 pass.
+    // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z).
     DC_ADDRESS(0x063a5c, 0x2c)
     hexcell& getCell(int x, int y)
     {
         return m_cells[getHexIndex(x, y)];
     }
 
-    // DC header inline (CmbtMgr.h:1542). Retail re-loads
-    // obstacles_begin here rather than reusing the copy RemoveObstacle's
-    // own guards just tested; routing the call through this inline does
-    // NOT reproduce that (VC6 CSEs the second load away either way) -
-    // it is kept because the DC roster attests the accessor, not as a
-    // matching lever.
+    // DC header inline (CmbtMgr.h:1542); kept because the DC roster attests
+    // the accessor.
     DC_ADDRESS(0x027fa0, 0x34)
     TObstacle& getObstacle(int index) { return m_obstacles[index]; }
 
@@ -1871,7 +1825,7 @@ public:
     // The named command rearm helper. 0x4782d0 (1461 B, command.obj) is
     // Dreamcast's named GetControl method; SetNextArmy calls it immediately
     // after clearing lastMovedArmy, re-arming the command bar for the new
-    // stack. Declared, not claimed: its body is outside this lane.
+    // stack.
 
     void getControl();
     // DC command.cpp:907. Complete has no standalone copy: ProcessCombatMsg
@@ -1909,9 +1863,8 @@ extern combatManager* g_combatManager;
 // Two GameTime stamps Open takes on its way in, both shared with other
 // compilands - 0x698998 with advmgr.obj's own Open/Main/ProcessKeyPress
 // and command.obj's animation frame pacer, 0x6989b8 with Main and
-// CycleCombatScreen. Behind views because a single file-scope extern added
-// to this header is its own measured include-set trigger (the field_132a0
-// bisection).
+// CycleCombatScreen. Behind views: a single file-scope extern added to this
+// header is an include-set trigger.
 // CheckGetAIMove caches the displayed surrender price here. No surviving
 // retail or Dreamcast symbol supplies a public spelling, so the name keeps
 // its address ordinal.
@@ -1927,17 +1880,10 @@ DATA(0x006989ec) extern int g_processingCombatAction;
 // sweep over the whole image finds exactly one reference to the address,
 // that store. Declared extern rather than defined: an unclaimed data
 // extern still pairs (the DoDialog precedent) and a definition would add
-// a word to a .data section that already reads 100%. The name states what
-// its only writer calls the value.
+// a word to .data. The name states what its only writer calls the value.
 
-// GATED, AND THAT IS A MEASUREMENT that CORRECTS THE DOCTRINE. The match
-// skill's include-set note records "`extern int` ... do NOT move it",
-// from the 200-extern probe that cleared the wrong hypothesis. On THIS
-// header that is false: adding this one file-scope `extern int`, with
-// every other edit of the lane held gated, costs command.obj's GetCommand
-// 92.5714 -> 92.5357 by itself, and gating it restores the ceiling. A
-// bulk probe of externs added together evidently does not reproduce what
-// a single extern added to a header this widely included does.
+// GATED: adding this one file-scope `extern int` to a header this widely
+// included changes command.obj's GetCommand by itself.
 extern int g_combatSeed;
 
 // THE FOUR COMBAT DEPLOYMENT TABLES, .rdata, and their BOUNDS ARE PROVEN
@@ -2083,12 +2029,10 @@ extern const long g_castleWallGateTargets[5];   // 0x63abe0
 // than through the four-int overload, and the coordinate scrollTo facade
 // is a fixed-viewport stub like the extent one instead of building and
 // forwarding a rectangle. Each extra expansion level costs the missile
-// animators the budget for their final bitmap Draw's getMap; together
-// they reproduce shootBallisticMissile, shootAnimatedMissile, shootMissile,
-// army::animateMissile and attackWall, powEffect, drawFrame and
-// updateMouseGrid exactly (91-98.5% under the CE chain). Fly reproduces
-// under both. Defining the stub in the class body instead perturbs
-// events.cpp's unrelated doCombat (95.53 -> 95.36%).
+// animators (shootBallisticMissile, shootAnimatedMissile, shootMissile,
+// army::animateMissile and attackWall, powEffect, drawFrame,
+// updateMouseGrid) the budget for their final bitmap Draw's getMap. Defining
+// the stub in the class body instead perturbs events.cpp's doCombat.
 inline void combatManager::updateCombatArea(int x, int y, int width, int height)
 {
     g_windowManager->updateScreen(x, y, width, height);

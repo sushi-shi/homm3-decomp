@@ -297,11 +297,8 @@ inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     getWidget(BACK_ID)->setHelpText(g_mpHelp[3].m_text, 0, 0);
 }
 
-// Mac dialog reads at 0x219b04, 0x219cdc and 0x21ce48 expand
-// textWidget::getText through the widget string and its character buffer.
-// DC keeps this source helper out of line and OnWidgetDeselect calls it.
-// Complete emits no standalone body, but the retail caller contains exactly
-// its active-field/empty-text guard, proving that VC6 inlined the boundary.
+// DC keeps this source helper out of line and OnWidgetDeselect calls it;
+// Complete inlines it (the active-field/empty-text guard).
 DC_ADDRESS(0x1027b4, 0x38)
 inline unsigned char CMPInputDlg::onOK()
 {
@@ -320,11 +317,9 @@ inline void CMPInputDlg::disableOK()
 }
 
 // The CHotSeatDlg helpers DC keeps out of line (GetPlayerCount,
-// UpdateOK, OnKillFocus). Retail emits none: VC6
-// expands them into CHotSeatEdit's two overrides below. DC proves that UpdateOK
-// only updates widget 519; OnKillFocus performs the full-window redraw.
-// Mac retains GetPlayerCount at 0x219cb8 but expands the other two helpers.
-// Ordinary same-TU definitions reproduce the exact Windows callers.
+// UpdateOK, OnKillFocus), inlined into CHotSeatEdit's two overrides below.
+// DC proves that UpdateOK only updates widget 519; OnKillFocus performs the
+// full-window redraw.
 // E:\gamedcs\multiplayerwindow.cpp:729
 DC_ADDRESS(0x102cc8, 0x30)
 void CHotSeatDlg::onKillFocus(int id)
@@ -353,8 +348,7 @@ void CHotSeatDlg::updateOK()
 
 // Original: DeleteTempSaveGame; multiplayerwindow.cpp:872
 // DC builds the same RMT path but elides deletion; Complete calls DeleteFileA.
-// DC spells the comparison strnicmp, as does Windows: retail links the
-// OLDNAMES alias to LIBCMT's _strnicmp at 0x6260c0.
+// DC spells the comparison strnicmp, as does Windows.
 DC_ADDRESS(0x0ffb40, 0x30)
 MAC_ADDRESS(0x219e54, 0x94)
 void deleteTempSaveGame(const char* filename)
@@ -368,7 +362,7 @@ void deleteTempSaveGame(const char* filename)
 
 // Original: CHeroSessions::CHeroSessions; multiplayerwindow.cpp:1000,
 // Construction initializes its CAutoArray base; there are no
-// additional members. Complete expands that initialization at new CHeroSessions.
+// additional members. Inlined at new CHeroSessions.
 DC_ADDRESS(0x102fcc, 0x3c)
 CHeroSessions::CHeroSessions()
 {
@@ -376,8 +370,8 @@ CHeroSessions::CHeroSessions()
 
 void sliderGames(int state, heroWindow* parentWindow);
 
-// Mac 0x219a30..0x219ab0 expands the same focus/navigation/base-key
-// helper as CHotSeatEdit at 0x219d40..0x219dc4, before updating the dialog.
+// The same focus/navigation/base-key helper as CHotSeatEdit, before
+// updating the dialog.
 VA(0x0050de50, 0x8F)
 DC_ADDRESS(0x0ffac0, 0x2c)
 MAC_ADDRESS(0x219a1c, 0xc4)
@@ -414,15 +408,11 @@ int CHotSeatEdit::onKeyPress(message* msg)
 }
 
 // DC's derived member types make each push_back convert through a widget*
-// temporary, as retail does, and DC 938..940 guards the host button's push
-// like the hot-seat one. Together they raise this constructor from 83.92% to
-// 99.95%; proven STL fold identities and the native CRT comparison spelling
-// in deleteTempSaveGame close the remaining relocation differences.
-// Complete's three final registrations load +0xbc, +0xf4, then +0xf8 at
-// constructor +0x64f/+0x669/+0x683: player edit before the two headers.
-// Keep that retail widget order instead of the older DC header-first run.
-// DC multiplayerwindow.cpp:926/927 looks up the session and user headers.
-// Complete's existing getText helper is byte-flat under VC6 here.
+// temporary, and DC 938..940 guards the host button's push like the
+// hot-seat one. Complete registers the player edit before the two headers
+// (the older DC run is header-first).
+// DC multiplayerwindow.cpp:926/927 looks up the session and user headers;
+// Complete keeps its getText helper.
 VA(0x0050e050, 0xCFC)
 DC_ADDRESS(0x0ffb70, 0x898)
 MAC_ADDRESS(0x219ee8, 0xc3c)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims
@@ -494,7 +484,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
                               slider::BLUE, 0, 0);
     m_widgets.push_back(m_gameSlider);
 
-    // Mac bounds the row index at twelve; DC line 956 retains 112 + i * 25.
+    // DC line 956 retains 112 + i * 25.
     for (int i = 0; i < 12; i++)
         m_widgets.push_back(new textWidget(18, 112 + i * 25, 317, 22, 0,
                                       "smalfont.fnt", font::PRIMARY, 110 + i, 1,
@@ -549,8 +539,8 @@ VA_COMPGEN(0x00558350, 0x54, IMPLICIT_DTOR, CHeroSessions)
 VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
 
 // E:\gamedcs\multiplayerwindow.cpp:1005
-// The retail slider constructor passes 0x50ee10. Both builds use the global
-// window, store its index, redraw, then call update; the parent is unused.
+// The slider's callback. Both builds use the global window, store its
+// index, redraw, then call update; the parent is unused.
 VA(0x0050ee10, 0x2a)
 DC_ADDRESS(0x100408, 0x28)
 MAC_ADDRESS(0x21ab24, 0x54)
@@ -664,8 +654,7 @@ void TMultiPlayerWindow::update()
                     shown++;
                 }
 
-                // DC line 1125 computes the row coordinate; VC6 hoists its base
-                // and advances it by 25. Keep that reduction out of the source.
+                // DC line 1125 computes the row coordinate.
                 int rowY = wy + 0x70 + row * 0x19;
                 m_gameState->Draw(0, status, 0, 0,
                                 g_multiPlayerWindow->m_gameState->GetWidth(),
@@ -748,9 +737,8 @@ void TMultiPlayerWindow::checkSessions()
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:1461
-// Complete inlines this body into OnHost. Keeping the source boundary is
-// material: VC6 leaves the nested member InitRemote call out of line, exactly
-// as retail does.
+// Complete inlines this body into OnHost; the nested member InitRemote call
+// stays out of line.
 DC_ADDRESS(0x100ed0, 0xc2)
 bool TMultiPlayerWindow::onModemHost()
 {
@@ -774,9 +762,8 @@ bool TMultiPlayerWindow::onModemHost()
 }
 
 // DC retains these three member helpers and OnWidgetDeselect calls them.
-// Complete emits no standalone bodies; the corresponding retail case arms
-// contain the complete inlined bodies, including Complete's expanded IPX
-// session setup and the later widget-status API.
+// Complete inlines them into the corresponding case arms, including
+// Complete's expanded IPX session setup and the later widget-status API.
 DC_ADDRESS(0x1018ec, 0x7e)
 inline bool TMultiPlayerWindow::onIPX()
 {
@@ -817,12 +804,10 @@ inline bool TMultiPlayerWindow::onModem()
     return 1;
 }
 
-// Mac 0x21b068..0x21b0a0 and 0x21b0d0..0x21b108 retain the
-// cleanup/menu/redraw/update calls separately in the host and join arms.
 // DC 1197..1297 fixes every arm's shape: CANCEL tests m_inSessionList
-// positively, HOST nests its cancel test and host/join-screen test under
-// the failed OnHost with the success flag in the else arm, and every arm
-// leaves through break to the single return. That shape is exact.
+// positively, HOST nests its cancel test and host/join-screen test under the
+// failed OnHost with the success flag in the else arm, and every arm leaves
+// through break to the single return.
 VA(0x0050f4e0, 0x458)
 DC_ADDRESS(0x1009a4, 0x276)
 MAC_ADDRESS(0x21ae68, 0x2e0)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect)
@@ -959,8 +944,8 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 VA(0x0050f940, 0xC5)
 DC_ADDRESS(0x100c1c, 0x28)
 MAC_ADDRESS(0x21b148, 0x44)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
-                      // 197 B vs DC 40: retail inlines the timer-gated session refresh (PollSound +
-                      // GameTime::Get) that DC keeps in RefreshSessions/CheckSessions. dc 0x100c1c
+                      // Inlines the timer-gated session refresh (PollSound +
+                      // GameTime::Get) DC keeps in RefreshSessions/CheckSessions.
 int TMultiPlayerWindow::windowHandler(message& msg)
 {
     pollSound();
@@ -990,10 +975,8 @@ bool TMultiPlayerWindow::joinSession(CDPlaySession* session, const char* passwor
     return 1;
 }
 
-// Mac 0x21b18c calls initRemote (0x21297c), then its Mac transport setup
-// (0x2137ec). Windows retail hosts through DirectPlay in this method. The
-// missing Mac call in the source audit reflects this different implementation;
-// the shared-call reconciliation for this pair remains open.
+// Mac calls initRemote, then its Mac transport setup; Windows hosts through
+// DirectPlay in this method.
 VA(0x0050fab0, 0x106)
 DC_ADDRESS(0x100d0c, 0x10a)
 MAC_ADDRESS(0x21b18c, 0x7c)
@@ -1571,14 +1554,11 @@ unsigned char TMultiPlayerWindow::isNT()
     return 0;
 }
 
-// DC CHotSeatDlg::WindowHandler (786, dc 0x102e24) invokes VRKeyboard
-// for player-name edits. Complete vtable 0x6401d8 slot 9 uses the inherited
-// CHeroWindowEx::windowHandler (0x5ff820); CHotSeatEdit handles native keys.
+// DC CHotSeatDlg::WindowHandler (786) invokes VRKeyboard for player-name
+// edits; Complete inherits CHeroWindowEx::windowHandler and CHotSeatEdit
+// handles native keys.
 
-// Mac expands this constructor inside onHotSeat (0x21c710), retaining the
-// same reserve/push_back and widget calls. Windows' remaining difference is
-// the first vector::size expansion in the last push_back; sharing one loop
-// index across the edit/link/autodraw loops is byte-flat at 97.43%.
+// Mac inlines this constructor inside onHotSeat.
 VA(0x00511e20, 0x5A1)
 DC_ADDRESS(0x1028c4, 0x364)
 CHotSeatDlg::CHotSeatDlg()

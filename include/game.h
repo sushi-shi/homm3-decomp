@@ -353,19 +353,11 @@ SIZE(type_map_hero_identity, 0x14);
 // compares that mask with bitset<8>(0xff) and copies its single backing
 // dword straight into game::heroPoolMap, which is what types the +0x14 word
 // as a bitset rather than a plain int; the 0x18 size and every offset are
-// the same either way. It was modelled BOTH ways in this tree - this record
-// for the four TUs that read the mask, an inherited `int field_14` twin for
-// everyone else - and the two spellings never met.
-// The members are DIRECT rather than inherited, and retail settles it with
-// three rows: the inherited spelling (which needs the three-argument
-// constructor to assign the base members in its body instead of
-// initialising them) costs ??0type_map_hero_info 100.0000 -> 84.0169,
-// campaignbrief's _Tree::_Copy 100.0000 -> 84.1429 and game's _Tree::erase
-// 100.0000 -> 92.1530. Its one point in favour - it retains newgame's
-// type_map_hero_identity copy ctor through the base copy - is bought back
-// by the plain field_34 vector below - an argument that does not
-// stands either way: that "retained copy ctor" was 0x517c30, and
-// 0x517c30 is objecttype's `pair<const string, int>` constructor.
+// the same either way. The members are DIRECT rather than inherited: the
+// inherited spelling makes the three-argument constructor assign the base
+// members in its body instead of initialising them, which changes
+// ??0type_map_hero_info, campaignbrief's _Tree::_Copy and game's
+// _Tree::erase.
 // The map keyed by hero ID has a different first-word role from the player
 // roster above: game::loadMap copies it into HeroExtra::portraitNumber after
 // comparing the complete -1 dword. NH3API HeroIdentity::portrait/name and
@@ -433,7 +425,7 @@ public:
 
         VA(0x0045a950, 0x3F)
         DC_ADDRESS(0x05ac3c, 0x44)
-        MAC_ADDRESS(0x067194, 0x80)  // retained retail body; formerly enrolled by CLASS_CTOR
+        MAC_ADDRESS(0x067194, 0x80)  // retained retail body
         TPlayerSlotAttributes()
         {
             m_canBeHuman = 0;
@@ -530,7 +522,7 @@ public:
 
     VA(0x0045a7a0, 0x1A3)
     DC_ADDRESS(0x05ac80, 0x70)
-    MAC_ADDRESS(0x067648, 0x104)  // retained retail body; formerly enrolled by CLASS_CTOR
+    MAC_ADDRESS(0x067648, 0x104)  // retained retail body
     NewSMapHeader()
     {
         m_version = 0;
@@ -544,16 +536,11 @@ public:
         m_mapDescription = "";
     }
 
-    // Compiler-generated. Dreamcast retains its standalone COMDAT at the
-    // campaignbrief.cpp use site rather than at a Game.h definition, while
-    // retail expands this exact member teardown into ~SavedGameHeader.
-    // Copy assignment is compiler-generated. BackupGameHeaders proves its
-    // member walk directly: base assignment, both strings, then the bitset.
-    // DC game.h:312 copies the older POD base with memcpy; Complete calls
-    // CMapHeaderData's memberwise assignment because its base owns containers.
-    // DC lines 314/315 preserve the two string operator= boundaries. Retail
-    // expands them to different depths at different callers; retain the source
-    // operations without forcing a shared inline-depth setting.
+    // Compiler-generated (Dreamcast's standalone COMDAT sits at the
+    // campaignbrief.cpp use site). Copy assignment is compiler-generated too:
+    // base assignment, both strings, then the bitset; Complete's base owns
+    // containers, so it is memberwise where DC game.h:312 used memcpy. DC
+    // lines 314/315 preserve the two string operator= boundaries.
     DC_ADDRESS(0x14741c, 0x50)
     void assignData(CMapHeaderData* data, char* name, char* description)
     {
@@ -569,9 +556,8 @@ class TownExtra {
 public:
 
     // Original: TownExtra::TownExtra; Game.h:377
-    // DC clears its 13-byte name array at +0x55. Complete's readTownData
-    // (0x5019f0) constructs the replacement std::string and both spell
-    // bitsets as members of this 0x88-byte record.
+    // DC clears its 13-byte name array at +0x55; Complete's record holds a
+    // std::string and both spell bitsets.
     DC_ADDRESS(0x0f4af0, 0x48)
     TownExtra() {}
     int m_objRef;
@@ -635,7 +621,7 @@ public:
     void initialize(long newOwner);
 
     // Dreamcast's generator-event xref records three calls to get_owner;
-    // retail expands the signed owner-byte load and has no out-of-line row.
+    // inlined in retail.
     DC_ADDRESS(0x01feac, 0xe)
     inline long getOwner() const { return m_playerOwner; }
     // Raw DC publics for load/save return bool (QAA_N); Complete ports the file argument.
@@ -711,7 +697,7 @@ public:
 
     VA(0x0045ac20, 0xD2)
     DC_ADDRESS(0x05ad18, 0xb8)
-    MAC_ADDRESS(0x067430, 0x168)  // retained retail body; formerly enrolled by CLASS_CTOR
+    MAC_ADDRESS(0x067430, 0x168)  // retained retail body
     SGameSetupOptions()
     {
         for (int i = 0; i < NUM_PLAYERS; ++i) {
@@ -975,8 +961,7 @@ public:
     // Retained ordinary body: game.cpp, Windows 0x004bada0.
     bool isHuman() const;
     int save(TAbstractFile* outfile);
-    // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
-    // townManager::SwapHeroes 0x5d5150 calls it on
+    // 0x4b9fc0 (src/game.cpp). townManager::SwapHeroes 0x5d5150 calls it on
     // gpGame->players[townToView->owner] with the town it is showing,
     // and branches on the byte result - the arity and the return type
     // both. Nested under this gate, not added to the class outright: a
@@ -1066,8 +1051,8 @@ public:
     char m_paddingBeforeCampaign[2];
     SCampaign m_campaign;  // +0x1f458
     unsigned char m_newCampaignStarted;
-    // +0x1f4d5. RETYPED IN PLACE 2026-08-20 (no declarator added, so the
-    // include-set population is unchanged): game::SaveGame (0x4beea0)
+    // +0x1f4d5. Retyped in place (no declarator added, so the include-set
+    // population is unchanged): game::SaveGame (0x4beea0)
     // strcpy's its `filename` argument here through gpGame whenever the
     // composed name is neither of the two general-text rows it screens
     // against, i.e. this is the remembered save name. The 0x15f extent
@@ -1075,7 +1060,7 @@ public:
     // width of SaveGame's own two stack buffers and of misc.h's
     // gcRegAppPath, so the whole pad reading as one name buffer is the
     // economical hypothesis rather than a stretch. CORROBORATED FROM THE
-    // OTHER SIDE: game::Load's already-matched header copy-out strcpy's
+    // OTHER SIDE: game::Load's header copy-out strcpy's
     // SavedGameHeader::fileName into this exact offset, so the writer
     // and the reader agree on what the field is.
     char m_saveFileName[0x15f];
@@ -1560,9 +1545,7 @@ public:
 
 // Dreamcast Game.h:839-850, IsHumanTeam: reject a negative
 // team, scan its eight player slots, and call gpGame->IsHuman on a member.
-// Windows 0x42b9e0 and Mac 0:0x2d3e4 retain this same guarded scan.
-// Town and philai emit the retail call to IsHuman; game.obj expands that
-// callee. The reviewed town comparison uses the same canonical header body.
+// Town and philai call this retained body; game.obj inlines it.
 // This is distinct from is_human_ally at dc 0x37fd8, which takes a player
 // number and calls IsHumanTeam(GetTeam(player_number)).
 VA(0x0042b9e0, 0x45)
@@ -1580,11 +1563,9 @@ bool isHumanTeam(int teamNum) const
     return false;
 }
 
-    // Dreamcast Game.h:856 proves ClaimTown's source-visible
-    // IsComputerTeam boundary. Complete keeps the same boundary but its
-    // retail lowering calls the retained IsHumanTeam COMDAT above; retaining
-    // the wrapper is what preserves the materialized logical negation.
-    // The DC public ?IsComputerTeam@game@@QBA_NH@Z likewise proves bool.
+    // Dreamcast Game.h:856 proves ClaimTown's source-visible IsComputerTeam
+    // boundary, a wrapper over IsHumanTeam. The DC public
+    // ?IsComputerTeam@game@@QBA_NH@Z proves bool.
     DC_ADDRESS(0x0bce7c, 0x38)
     inline bool isComputerTeam(int teamNum) const
     {
@@ -1602,10 +1583,8 @@ int getTeam(int playerNum) const
     return m_mapHeader.m_teamInfo[playerNum];
 }
 
-    // Game.h:877. DispatchEvent's obelisk arm preserves this named helper;
-    // retail /Ob2 folds both it and GetTeam into the arm. MoveHero's
-    // Dreamcast line stream names the same nested pair, and Complete folds
-    // both while retaining GetTeam's selected events.obj COMDAT.
+    // Game.h:877. DispatchEvent's obelisk arm and MoveHero name this helper
+    // and its nested GetTeam; both are inlined there.
     DC_ADDRESS(0x08f270, 0x58)
     unsigned char getTeamMask(int playerNum) const
     {
@@ -1620,10 +1599,8 @@ int getTeam(int playerNum) const
         return mask;
     }
 
-    // Game.h:897. Dreamcast emits this header helper after the town-gate
-    // callback and records one nested GetTeam call. Complete expands the
-    // same source boundary into TTownGateWindow's constructor: retail's
-    // range guard, signed teamInfo load and eight-entry count are exact.
+    // Game.h:897. Dreamcast records one nested GetTeam call; inlined into
+    // TTownGateWindow's constructor.
     DC_ADDRESS(0x169c0c, 0x54)
     MAC_ADDRESS(0x1b840c, 0x138)
     unsigned char getNumAllies(int playerNum) const
@@ -1640,12 +1617,9 @@ int getTeam(int playerNum) const
     }
 
     // Game.h:917, GetInfoFlag's setter twin. It marks the whole of
-    // playerNum's TEAM, which is why every events.obj handler that
-    // visits a global-info object ends in an eight-iteration teamInfo
-    // scan rather than a single OR. The Dreamcast statement/call row names
-    // GetTeam for the source-level team lookup; retail VC6 then decides per
-    // expansion whether that tiny nested helper remains a call or folds to
-    // the signed teamInfo load.
+    // playerNum's TEAM, which is why every events.obj handler that visits a
+    // global-info object ends in an eight-iteration teamInfo scan rather than
+    // a single OR. The Dreamcast statement/call row names GetTeam.
 
     // As with GetInfoFlag above, VC6 accepts the elaborated enum before
     // advmgr.h supplies its definition, retaining the attested parameter
@@ -1663,8 +1637,8 @@ int getTeam(int playerNum) const
     }
 
     // Original DC public GetInfoFlag@game@@QBA_NW4GlobalInfoFlags@@H@Z
-    // proves bool. Retail's shrine consumer proves the signed [0,8) player
-    // guard and the byte bitset at +0x4e344.
+    // proves bool; a signed [0,8) player guard and the byte bitset at
+    // +0x4e344.
     DC_ADDRESS(0x01fefc, 0x44)
     bool getInfoFlag(enum GlobalInfoFlags flag, const int playerNum) const
     {
@@ -1715,28 +1689,13 @@ public:
         return m_heroes[which];
     }
 
-    // DC `game::GetCurrHero` (E:\gamedcs\Game.h:991) and
-    // `game::GetCurrTown` (dc 0x1ff40, Game.h:1023) - the acting player's
-    // pair, and NOT GetHero/GetTown applied to the id. Two retail facts
-    // separate them from the general accessors, and both are visible in
-    // TBottomViewTown/TBottomViewHero, whose Dreamcast bodies call these
-    // by name where ours spelled the general accessor:
-    //   * the id is compared at CHAR width and only widened INSIDE the
-    //     taken arm (`mov al,[player+0x3f] / cmp al,-1 / je / movsx eax,al`),
-    //     which the separate getter uses must preserve, unlike
-    //     passing the id to GetHero/GetTown before the sentinel test;
-    //   * the null arm comes LAST (`je` to it, body falls through) and
-    //     reuses whatever zero register is already live, i.e. the source
-    //     tests `!= -1` and returns the pointer first.
-    // GetHero/GetTown keep the opposite spelling because TBottomViewKingdom
-    // and playerData::HasCapitol prove theirs; these are separate members,
-    // so the two spellings do not contend.
-    // A THIRD body agrees on the arm order: advManager::DoEvent (0x4aaaa0)
-    // expands GetCurrHero with the non-null arm falling through and the
-    // null arm placed after, whereas GetHero's `if (id == -1) return 0;`
-    // lays the arms out the other way round. DC sizes them apart too - 68 B
-    // against GetHero's 36. DC retains GetCurrHeroId inside this helper,
-    // and GetCurrTownId inside GetCurrTown; keep both accessor paths.
+    // DC `game::GetCurrHero` (E:\gamedcs\Game.h:991) and `game::GetCurrTown`
+    // (dc 0x1ff40, Game.h:1023) - the acting player's pair, and NOT
+    // GetHero/GetTown applied to the id. The id is compared at char width and
+    // widened only inside the taken arm, and the source tests `!= -1` and
+    // returns the pointer first; GetHero/GetTown keep the opposite spelling.
+    // DC retains GetCurrHeroId inside this helper, and GetCurrTownId inside
+    // GetCurrTown.
     DC_ADDRESS(0x002ed4, 0x44)
     hero* getCurrHero()
     {
@@ -1745,9 +1704,7 @@ public:
         return 0;
     }
 
-    // DC-attested inline Game.h member. Retail CheckCastSpell
-    // expands it to the acting player's widened currHero load; no standalone
-    // retail row exists in the adventure-map header-method bracket.
+    // DC-attested inline Game.h member, inlined in CheckCastSpell.
     DC_ADDRESS(0x002f18, 0xc)
     int getCurrHeroId()
     {
@@ -1782,13 +1739,9 @@ public:
     int getCurrTownId() { return g_currentPlayer->m_currTownId; }
     bool townAlreadyBuiltOn(int townId) const;
 
-    // DC `game::GetTownName` (?GetTownName@game@@QBAPBDH@Z), and another
-    // inline-only member: retail has no out-of-line row and
-    // townManager::SetupTown 0x5c68a4 expands it in place - the towns
-    // vector's _First out of +0x21614, the 360-byte stride, +0xc4 for
-    // cName and its own `_Ptr == 0 ? "" : _Ptr`. DC retains the const
-    // GetTown overload, which indexes without the non-const overload's
-    // -1 sentinel check. Preserve that source call.
+    // DC `game::GetTownName` (?GetTownName@game@@QBAPBDH@Z), inline-only. DC
+    // retains the const GetTown overload, which indexes without the
+    // non-const overload's -1 sentinel check.
     DC_ADDRESS(0x169c7c, 0x1c)
     const char* getTownName(int townId) const
     {
@@ -1799,15 +1752,12 @@ public:
     DC_ADDRESS(0x09ca84, 0x1c)
     mine* getMine(int which) { return &m_mines[which]; }
 
-    // Game.h:1056. GetGarrison is expanded into both DispatchEvent and
-    // philai's value_of_garrison; its nested vector access remains visible
-    // so the recovered source hierarchy is not flattened again.
+    // Game.h:1056; inlined in DispatchEvent and philai's value_of_garrison.
     DC_ADDRESS(0x01ffac, 0x30)
     garrison* getGarrison(int which) { return &m_garrisons[which]; }
 
-    // DC `game::GetBoat`, declared inline in Game.h. Retail has no
-    // out-of-line row; map-cell consumers expand the 40-byte vector indexing
-    // directly at their call sites.
+    // DC `game::GetBoat`, declared inline in Game.h; inlined at the map-cell
+    // call sites.
     DC_ADDRESS(0x01ffdc, 0x30)
     boat* getBoat(int which)
     {
@@ -1821,8 +1771,8 @@ public:
     // once the "heroes can still move" confirm is past.
     void nextPlayer();
 
-    // DC Game.h:1197. The Dreamcast keeps this header helper as a row;
-    // retail expands the map's byte flag plus one at both cheat loops.
+    // DC Game.h:1197; inlined at both cheat loops (the map's byte flag plus
+    // one).
     DC_ADDRESS(0x002f4c, 0x1c)
     int getNumMapLevels() { return m_worldMap.getNumLevels(); }
     void showScenInfo();
@@ -1987,9 +1937,6 @@ void computeUALoc(int whichPlayer);                   // 0x4baed0
 
 // Complete reads versioned nested records through the abstract stream;
 // Dreamcast uses gzread directly and records the checked ID-read count.
-// The six unchecked scalar reads use returned values rather than artificial
-// caller scopes. VC6 then matches all 62 retail blocks and 26 named calls,
-// including the shared failure cleanup; flattening those reads loses it.
 // E:\gamedcs\Game.h:1344
 VA(0x004bc750, 0x3D5)
 DC_ADDRESS(0x0bcfe4, 0x78)
@@ -2077,10 +2024,8 @@ inline bool game::isHumanAlly(int playerNum) const
 }
 
 // Complete's retained body and ClaimTown expansion prove the creature-domain
-// semantics. The nested zero check leaves the body byte-exact while making its
-// VC6 source cost 75, so the 72-budget nested call remains out of line without
-// a pragma. The creature-domain name is inferred; DC get_alignment is the
-// separate player accessor below.
+// semantics; the name is inferred (DC get_alignment is the separate player
+// accessor below).
 VA(0x004c6690, 0x43)
 inline int game::getAlignment(int creature) const
 {
@@ -2093,8 +2038,7 @@ inline int game::getAlignment(int creature) const
 
 // Original: game::get_alignment; game.h:1375. The public
 // ?get_alignment@game@@QBA?AW4TTownType@@H@Z proves the const member,
-// player-id parameter and town-type result. Complete's ViewPuzzle and
-// GetNewHeroId expand the same guarded setup lookup.
+// player-id parameter and town-type result.
 DC_ADDRESS(0x02000c, 0x58)
 inline TTownType game::getPlayerAlignment(int playerId) const
 {
@@ -2102,10 +2046,8 @@ inline TTownType game::getPlayerAlignment(int playerId) const
         ? m_setup.m_alignment[playerId] : eTownNeutral;
 }
 
-// Game.h:1380. DispatchEvent expands this cell accessor; the
-// out-of-line copy is ai_player.obj's, 0x42ed80.
-// E:\gamedcs\game.h:1380. Retail retains this header-inline copy in
-// ai_player.obj; all consumers use the same canonical body.
+// Game.h:1380; the out-of-line copy is ai_player.obj's, and DispatchEvent
+// inlines it.
 VA(0x0042ed80, 0x4D)  // anchor-global
 DC_ADDRESS(0x038000, 0x3c)
 inline NewmapCell* game::getCell(type_point point)
@@ -2113,8 +2055,7 @@ inline NewmapCell* game::getCell(type_point point)
     return m_worldMap.cell(point.m_x, point.m_y, point.m_z);
 }
 
-// Game.h:1390 in the DC roster. Retail expands this short calendar
-// accessor at every game.obj call site and retains no standalone row.
+// Game.h:1390 in the DC roster; inlined at every game.obj call site.
 // DC and Mac completeCurrentMap preserve day + (week - 1) * 7 +
 // (month - 1) * 28 before the signed-short return.
 DC_ADDRESS(0x0bd05c, 0x44)
@@ -2144,9 +2085,8 @@ inline const std::vector<type_point>& game::getWhirlpools() const
     return whirlpools;
 }
 
-// Dreamcast Game.h:1410 names this ordinary inline query and retains a
-// selected out-of-line copy in ai_player.obj. THallWindow expands the
-// same source operation to the retail town-vector lookup.
+// Dreamcast Game.h:1410 names this ordinary inline query; ai_player.obj
+// retains a copy and THallWindow inlines it.
 DC_ADDRESS(0x03803c, 0x28)
 inline bool game::townAlreadyBuiltOn(int townId) const
 {
@@ -2197,9 +2137,6 @@ private:
 };
 SIZE(TCheatCode, 200);
 
-// Mac 0x9dc..0xa10 selects one of two operand addresses for the minimum
-// of strlen and the buffer bound. Use the shared reference selector rather
-// than spelling its expansion here; the Windows encoder remains exact.
 // E:\gamedcs\Game.h:1439
 VA(0x00402a30, 0xA1)
 DC_ADDRESS(0x002fa0, 0x88)

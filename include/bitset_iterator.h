@@ -32,8 +32,7 @@ public:
         return result;
     }
 
-    // Windows retains this dereference body; the Mac caller expands the
-    // adapter before constructing its two-word bit reference.
+    // Windows retains this dereference body; the Mac caller inlines it.
     // VA instance: bitset_iterator<144>::operator*
     VA(0x0048eb40, 0x14)
     // VA instance: bitset_iterator<145>::operator*

@@ -82,9 +82,8 @@ void TSubWindow::draw(unsigned char update, int lowID, int highID)
         highID = m_highId;
     m_parentWindow->drawWindow(0, lowID, highID);
     if (update) {
-        // DC 0x158f1e selects a full combat refresh for its combat-mode
-        // branch. Complete Mac 0x19ba74..0x19bb18 has only this ordinary
-        // parent-relative rectangle path, with no combat-state test.
+        // DC selects a full combat refresh for its combat-mode branch;
+        // Complete has only this ordinary parent-relative rectangle path.
         g_windowManager->updateScreen(
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
     }
@@ -111,7 +110,7 @@ void TSubWindow::restoreBackground()
         int drawX = m_x + m_parentWindow->m_x;
         int drawY = m_y + m_parentWindow->m_y;
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        // Mac 0x19bbe4..bc44 expands the Bitmap16Bit-destination Draw overload.
+        // The Bitmap16Bit-destination Draw overload.
         m_background->Draw(0, 0, m_background->GetWidth(), m_background->GetHeight(),
             screen, drawX, drawY, false);
         g_windowManager->updateScreen(drawX, drawY, m_width + 1, m_height);

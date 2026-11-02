@@ -136,8 +136,8 @@ soundManager::soundManager()
     InitializeCriticalSection(&m_sectionMp3NameChange);
 }
 
-// Mac open retains this boundary at 0x2185c4. Its native channel/group
-// setup differs from the Windows Miles handle allocation below.
+// Mac open retains this boundary; its native channel/group setup differs
+// from the Windows Miles handle allocation below.
 MAC_ADDRESS(0x2186d8, 0x11c)
 void soundManager::initializeSamples()
 {
@@ -154,33 +154,14 @@ void soundManager::initializeSamples()
 }
 
 // E:\gamedcs\soundmgr.cpp:322
-// Vtable slot 0 and the unique Device:/Miles setup body independently pin
-// this retail expansion of soundManager::Open. The DC body is much smaller
-// because it uses ds_engine; Complete performs the PC waveOut preference
-// fallback, Smacker/Bink binding and twelve-handle allocation here.
+// The DC body is much smaller because it uses ds_engine; Complete performs
+// the PC waveOut preference fallback, Smacker/Bink binding and twelve-handle
+// allocation here.
 
-// Retail retry at +0x1ba returns to the common sample-rate test instead of
-// exiting directly. Continuing through the existing rate guard restores
-// that edge and raises Open from 84.5280% to 94.32%. All middleware calls
-// and initializeSamples remain canonical; the Mac channel setup is a
-// platform rewrite. The remaining Windows difference is 30 vs 31 blocks,
-// chiefly the shared preference/exit tails; helper calls are preserved.
-// A conditional while-loop with a preinitialized null result scores 92.07%;
-// the guarded infinite loop retains the stronger 94.32% comparison.
-// Separate initial/bottom guards in a do/while score 91.79%; a failure-first
-// nested preference arm scores 77.34%. Neither restores the shared tail.
-// A direct-call condition plus while(1) scores 82.85%; the SDK S32 result
-// local is byte-flat. The guarded do loop with a shared driverReady join
-// restores all 31 blocks and reaches 95.21%. A common retry label is flat;
-// branch-local preference tails score 87.94%. The same driver join inside
-// an infinite loop returns to 94.32%; its common rate guard is shared.
-// A separate success phase followed by `if (openResult && getPreference)`
-// is byte-flat at 95.21%; VC6 folds it back to the same retry layout.
-// Retail's failure arm branches into quality downgrade only when the
-// preference is set; its zero result falls into the common wave fallback.
-// The explicit guarded fallback recovers that complete phase at 99.44%.
-// A single rate-guarded while with the uninitialized driver-result join
-// closes Open at 100%: all 31 blocks, 17 calls and 47 references agree.
+// The retry returns to the common sample-rate test instead of exiting
+// directly: one rate-guarded while loop with the uninitialized driver-result
+// join. The failure arm downgrades quality only when the preference is set;
+// its zero result falls into the common wave fallback.
 VA(0x005997d0, 0x2BF)
 DC_ADDRESS(0x14b240, 0x30)
 MAC_ADDRESS(0x218578, 0x160)  // vtable slot + Device: string
@@ -318,8 +299,8 @@ void soundManager::close()
     }
 }
 
-// Complete's desktop activation pair: AppWndProc's WM_ACTIVATEAPP
-// calls PauseSamples on
+// Complete's desktop activation pair: AppWndProc's WM_ACTIVATEAPP calls
+// PauseSamples on deactivation and ResumeSamples on reactivation.
 VA(0x00599b90, 0xAB)
 void soundManager::resumeSamples()
 {
@@ -356,7 +337,7 @@ void soundManager::pauseSamples()
 }
 
 // Original: soundManager::Main; soundmgr.cpp:464
-// The slot at retail vftable 0x63fe54 likewise uses the shared zero return.
+// Shares the zero-return body.
 DC_ADDRESS(0x14b2a4, 0x4)
 MAC_ADDRESS(0x2188e8, 0x8)
 int soundManager::main(message& msg)
@@ -454,10 +435,8 @@ void soundManager::modifySample(ds_memsample* inSample, short functionId, long v
 // every other operation retains the initialized zero result.
 VA(0x0059a030, 0x87)
 MAC_ADDRESS(0x218b48, 0xac)
-// Combining the three early guards is not a callback fix: the retained
-// helper drops from 100% to 70.33%, while waitEndSampleThread stays 92%.
-// Moving its zero-result initialization across the early guards also loses
-// the retained exact body without improving the callback.
+// The three early guards stay separate, with the zero-result
+// initialization after them.
 int soundManager::getSampleInfo(ds_memsample* inSample, short operation)
 {
     if (g_noSound)
@@ -494,7 +473,6 @@ void soundManager::adjustSoundVolumes()
         return;
     for (int i = 1; i < m_sampleNum; i++) {
         ds_memsample* handle = m_sampleHandles[i];
-        // GetSampleInfo playing query and sinks the `push 0; push 1` arm below
         if (g_config.m_soundVolume) {
             if (getSampleInfo(handle, SAMPLE_INFO_PLAYING))
                 modifySample(handle, SAMPLE_MODIFY_100, g_ailDriverState[i]);
@@ -590,8 +568,8 @@ void clearMemSample(SAMPLE2 sample2)
         return;
     if (g_shutDownDone)
         return;
-    // This is soundManager::StopSample on the global, inlined by /Ob2 -
-    // guard trio, section, AIL_end_sample, section, store for store.
+    // soundManager::StopSample on the global, written out: guard trio,
+    // section, AIL_end_sample, section.
     g_soundManager->stopSample(sample2.m_playSample);
     sample2.m_resSample->dispose();
 }
@@ -693,16 +671,11 @@ void __cdecl waitEndSampleThread(void* arglist)
 }
 
 // Windows Miles service operation. The WinCE counterpart service_sounds is
-// a four-byte no-op attributed to SoundMgr.h:140 (dc 0xe6ef4); its records do
-// not establish the nonempty Windows definition's inline spelling or owner.
-// Retail expands the complete operation only in memorySample and launchSample,
-// both in this TU; external consumers call the retained 0x59a7d0 body. All 13
-// retail AIL_serve references are in this TU, including ten different sound
-// operations. A source-local ordinary body recovers that visibility boundary
-// and retained emission. Its Windows ownership is a platform inference; the
-// CE header attribution remains recorded separately in dc_only.tsv.
-// Mac retains a platform wrapper at 0:0x219268, called by launchSample and
-// townManager::main; its body forwards to the Mac audio service at 0:0x2181a0.
+// a four-byte no-op attributed to SoundMgr.h:140 (dc 0xe6ef4); its records
+// do not establish this nonempty definition's inline spelling or owner.
+// Inlined in memorySample and launchSample; external consumers call the
+// out-of-line body. Its Windows ownership is a platform inference; the CE
+// header attribution remains recorded in dc_only.tsv.
 VA(0x0059a7d0, 0x51)
 MAC_ADDRESS(0x219268, 0x20)
 void soundManager::serviceSounds()
@@ -815,11 +788,9 @@ void __cdecl processStopAndPlayMP3(void* arglist)
     _endthread();
 }
 
-// Mac resumeStream calls convertVolume at 0x219330 while starting its stream;
-// startMP3 calls it at 0x219504/0x21962c/0x219674 for immediate fades.
-// Windows queues playback here. Its playback thread converts the volume at
-// 0x59a865 in processStopAndPlayMP3; startMP3/resumeStream contain no retail
-// call or equivalent volume calculation.
+// Mac resumeStream and startMP3 call convertVolume; Windows queues playback
+// here and its playback thread converts the volume in
+// processStopAndPlayMP3.
 VA(0x0059ac00, 0xA9)
 DC_ADDRESS(0x14b8e8, 0x3c)
 MAC_ADDRESS(0x219288, 0xf0)

@@ -18,25 +18,6 @@
 #include "soundmgr.h"
 #include "terrain.h"
 
-// THE HEAD OF ai.obj, 0x41e190..0x41eac0 (2026-09-05). The three rows
-// between the compiland's ten terrain.h bitset initializers
-// (0x41ddc0..0x41e18f, the excluded cinit class, with their atexit
-// thunk at 0x41dda0) and the already-claimed get_total_combat_value
-// (0x41eac0) are ai.cpp's own first three bodies, in DC roster order:
-// ChooseBallistaTarget (dc 0x23450, 766 B), failed_siege (dc 0x23750,
-// 332 B) and AICheckRetreat (dc 0x2389c, 1680 B) against retail's 680,
-// 297 and 1350 - ratios 0.89/0.89/0.80 against get_total_combat_value's
-// own 0.82. Three further proofs land on the same map: 0x41e570 calls
-// 0x41e440 as a thiscall with no argument, which is exactly the
-// failed_siege edge the DC xref census records inside AICheckRetreat;
-// cmbtmgr.h already carried 0x41e570 = AICheckRetreat from command.cpp's
-// call site alone; and the NH3API IDB, whose HD pressing runs a constant
-// +0x180 ahead of retail through this whole region (init_bitset_41E190 =
-// our 0x41e010, get_total_combat_value 0x41ec40 = our 0x41eac0), names
-// 0x41e310/0x41e5c0/0x41e6f0 with these three mangled symbols in order.
-// That also retires the `Unnamed41e190` ordinal: the IDB prototype
-// carries the DC parameter names verbatim.
-
 // E:\gamedcs\ai.cpp:43
 // The arrow tower's / ballista's target picker. `attack_skill` is a DEAD
 // parameter in retail - nothing reads [ebp+0xc] - and the DC prototype
@@ -47,22 +28,9 @@
 // forced to 0. Both passes keep the running best - the retry does not
 // reset best_value or result - and both re-read numArmies[target_group]
 // through the back edge.
-// Windows is exact with one value local shared by the two scans: each
-// loop-local declaration gave the same instructions but cycled the five
-// stack homes. Dreamcast records no value local, which is a coverage limit.
-// The Mac comparison remains 97.9873%, with only second-scan register homes
-// different; the shared value local leaves that comparison byte-flat.
-// Mac Complete's 0+0x1f2b4 body calls the same defender-factor helper at
-// 0+0x4fd04 (Air Shield, Petrify, hero defense factor) but divides by its
-// returned factor in both scans. Windows retail uses FMUL and DC ai.cpp:61/89
-// calls __muld. Keep that port difference at the expression itself. The
-// shared retry condition, default-five arm, and result/best assignment order
-// preserve the Windows byte match. Placing damage after estimate raises Mac to
-// 97.5636% (921/944 bytes, all 14 calls in order). Reusing one scan index,
-// consistent with DC's r11 across both loops, raises Mac to 97.9873%
-// (925/944); the first scan is exact and the second only differs in its army
-// pointer register. Naming a divided `damage` local
-// lowered Mac to 95.3390% and was removed.
+// One value local and one scan index are shared by the two scans.
+// Platform difference: Mac divides by the defender factor in both scans,
+// where Windows multiplies (DC ai.cpp:61/89 calls __muld).
 VA(0x0041e190, 0x2A8)
 DC_ADDRESS(0x023450, 0x2fe)
 MAC_ADDRESS(0x01f2b4, 0x3b0)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets // MAC_ABSTRACTION_FROM(tokens1:faad412b5038,97.9873): isIncapacitated now reads durations through getSpellTime; native Mac 0x1f38c expands spell slots 62/70/74.
@@ -400,8 +368,7 @@ long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowes
 }
 
 // DC ai.cpp:365 identifies this as a TU-local helper before the shooter
-// chooser; Mac retains the same order at 0x20180 and 0x20318. Ordinary
-// source placement keeps both Windows bodies and all 49 AI scores unchanged.
+// chooser.
 // THE TWO-HEX SKIP is a four-term conjunction and its polarity is the
 // whole shape: an area effect is only DOUBLE-counted against a wide
 // stack when the centre hex is neither of the stack's two hexes, so
@@ -429,8 +396,6 @@ static long getAreaAttackValue(const army& currentArmy, long hex, long ourGroup,
 }
 
 // The AI choice/effect helpers use their recorded reference interfaces.
-// Restoring these signatures preserves all 63 Windows function bodies and
-// 514 code relocations; native Mac callers pass the same object addresses.
 VA(0x0041eb80, 0x220)
 DC_ADDRESS(0x0240e4, 0x1b8)
 MAC_ADDRESS(0x020318, 0x2ac)
@@ -598,15 +563,9 @@ struct func_moves_before {
 };
 
 // E:\gamedcs\ai.cpp:610
-// STATIC with a single call site, so /Ob2 inlines it unconditionally
-// and retail emits no out-of-line body (the DC's row has no
-// retail slot). Written as its own function because that is what makes
-// the five arms converge on ONE `mov [army+0x190], eax` at 0x41f2f7 -
-// an inlined callee's single return point - instead of five stores.
-// The `> 1` on the two disabled counters is byte-proven: retail
-// materialises the constant 1 in EAX (`mov eax, 1`), compares both
-// counters against it with `jg`, and then REUSES that same AL as the
-// mask for the `test al, cl` bit test below.
+// STATIC with a single call site, inlined (DC's row has no retail slot); a
+// separate function so the five arms converge on one return. The `> 1` on
+// the two disabled counters is the retail test.
 DC_ADDRESS(0x024604, 0x90)
 MAC_ADDRESS(0x020ab4, 0xe0)
 static long getMoveOrder(const army* currentArmy)
@@ -666,9 +625,8 @@ void combatManager::findMoveOrder(std::vector<army*>* result)
 
 // E:\gamedcs\ai.cpp:696, original get_attack_value.
 // DC proves this ordinary file-static helper, its data reference,
-// named double combat_value, and separate integer-return branches. Retail's
-// expansion belongs to getAttackChange below; this helper has no retained
-// standalone retail row. The neighboring 0x41f380 is IsIncapacitated.
+// named double combat_value, and separate integer-return branches; inlined
+// in getAttackChange below.
 DC_ADDRESS(0x0248b4, 0x180)
 MAC_ADDRESS(0x020e48, 0x14c)
 static long getAttackValue(const army* currentArmy, const army* enemy,
@@ -721,10 +679,7 @@ long combatManager::getAttackChange(const army* currentArmy, const army* enemy, 
     return committed + bestOther;
 }
 
-// DC calls get_spell_time but reads the side without a call. The
-// owner loads EAX at the placement boundary only through the stored
-// group; the inline getOwningSide accessor left EDX (99.96%).
-// Mac is byte-flat between the two forms (40.95%).
+// DC calls get_spell_time but reads the side without a call.
 VA(0x0041f580, 0x304)
 DC_ADDRESS(0x024b64, 0x2f8)
 MAC_ADDRESS(0x0210f0, 0x3cc)
@@ -970,28 +925,15 @@ void findAttackHexes(const army* ourArmy, long targetHex, long start,
                        std::vector<long>* result);
 
 // E:\gamedcs\ai.cpp:1121
-// NO RETAIL SLOT, and REQUIRED anyway: a `static` with a single call
-// site is the /Ob2 case that leaves no out-of-line copy, so its absence
-// from the image is what proves the internal linkage rather than what
-// argues against the function existing.
-
-// It is also the whole reason mark_multiheaded_enemy below reproduces:
-// retail keeps its three seven-parameter find_attack_hexes calls
-// OUT-OF-LINE, which a caller with a ~1000-plus budget would never do.
-// Routing them through this wrapper makes them DEPTH-2 expansions, and
-// the RE'd rule hands a depth-2 site only `remaining budget / sites
-// still ahead` (docs/vc6/inliner.md §2) - which starves every one of
-// them exactly as retail's bytes show. Spelling the three calls inline
-// in the caller instead inlines all three and costs 52 points.
+// No retail slot: a static with a single call site, inlined.
 
 // The body is READ OFF mark_multiheaded_enemy's retail expansion: the
 // side count comes from OUR stack's two-hex bit, the extra sweep from
 // the ENEMY's, and the enemy's facing picks both the tail hex and which
 // half of the direction ring is searched.
 
-// DC ai.cpp:1124 calls vector::clear at this helper's entry. Mac Complete's
-// retained body at 0+0x21bc0 likewise zeros the result size before its first
-// getSpeed/findAttackHexes calls. The result is a reference in DC CodeView.
+// DC ai.cpp:1124 calls vector::clear at this helper's entry; the result is
+// a reference in DC CodeView.
 DC_ADDRESS(0x0253a8, 0xa4)
 MAC_ADDRESS(0x021bc0, 0x100)
 static void findAttackHexes(const army* ourArmy, const army* enemy, const searchArray* currentSearchArray, std::vector<long>& result)
@@ -1012,33 +954,16 @@ static void findAttackHexes(const army* ourArmy, const army* enemy, const search
 }
 
 // E:\gamedcs\ai.cpp:1152
-// `ret 0x18` = six stack arguments over `this`, the DC count exactly,
-// and the body calls army::get_multi_head_directions - the one callee
-// in the whole TU that names this function.
-
-// EH-bearing (P2.2) and NOT blocked by it: the fs:[0] frame is the local
-// std::vector<long>'s unwind scaffolding, one state, entered at the
-// vector's construction and never left.
+// Six stack arguments, the DC count; the body calls
+// army::get_multi_head_directions.
 
 // TWO parallel 187-byte marks: `priced` spans the whole call and decides
 // whether a hex is charged the full breath value or just one more point,
 // and `counted` is re-zeroed per defending stack so one stack cannot pay
 // for the same hex twice.
 
-// The vector clear belongs to the four-argument helper above, as both DC
-// ai.cpp:1124 and the retained Mac helper prove. An earlier caller-local
-// `clear()` was only a temporary inlining model.
-
-// Moving clear() into the DC/Mac-proven wrapper makes Complete VC6 retain
-// vector<long>::erase at +0x148 and matches all 758 body bytes and 38 CFG
-// blocks. The retail symbol is vector<int>::erase; both 32-bit template
-// instantiations have the same emitted call bytes. DC locals place the vector
-// below the two 187-byte marks; declaring priced, counted, then hexes gives
-// the paired Mac body the same stack-object order and keeps Windows exact.
-// Mac 0+0x21cc0 now has equal size, all ten calls at exact offsets, and
-// 601/636 matching bytes. Remaining differences are a uniform four-byte
-// stack-object displacement, one getHex null-path branch, two array-address
-// register choices, and the vector destructor's nondeleting flag.
+// DC locals place the vector below the two 187-byte marks: priced, counted,
+// then hexes.
 // E:\gamedcs\ai.cpp:1152
 VA(0x0041fd60, 0x2F6)
 DC_ADDRESS(0x02544c, 0x254)
@@ -1419,10 +1344,7 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters& data)
     return shooterValue[data.getGroup()] > shooterValue[data.getEnemyGroup()];
 }
 
-// CodeView's type_spellvalue destructor is compiler-generated (LF_ONEMETHOD
-// compgenx, attributes 0x103; dc 0x28050). Retail's 0x627a40 unwind funclet
-// uses this retained Dinkumware vector teardown; the implicit member also
-// supplies each caller's expansion without a fabricated source body.
+// CodeView's type_spellvalue destructor is compiler-generated (dc 0x28050).
 VA_COMPGEN(0x00420cf0, 0x26, IMPLICIT_DTOR, type_spellvalue)
 
 // E:\gamedcs\ai.cpp:1635
@@ -1433,21 +1355,12 @@ VA_COMPGEN(0x00420cf0, 0x26, IMPLICIT_DTOR, type_spellvalue)
 // three times in ten, and once *best_value is positive a friend is only
 // considered when it is worth at least as much as the caster itself.
 
-// `value` IS UNINITIALISED on the fall-through arm: retail's third path
-// through the creatureType test reads the dead `estimate` parameter slot
-// straight back out (0x420dee reloads [ebp+0x10] with nothing having
-// written it). Only choose_spell_action reaches this body, and it only
-// sends the two ids the test names, so the arm is unreachable - but it
-// is transcribed as written.
+// `value` IS UNINITIALISED on the fall-through arm (it reads the dead
+// `estimate` parameter slot back). Only choose_spell_action reaches this
+// body, and it only sends the two ids the test names, so the arm is
+// unreachable - but it is transcribed as written.
 
-// EH-bearing (P2.2) and NOT blocked by it: the fs:[0] frame is the local
-// type_AI_spellcaster's unwind scaffolding, one state.
-// Windows is byte-exact with one `i` initialized before the caster; a
-// separate count local moves the loop decrement. Mac -O3 is 98.5981%:
-// 428 bytes and all ten calls agree, with only six references to this
-// stack caster at SP+0x40 instead of retail SP+0x44. The full canonical
-// 0x410 Mac class layout and -O4 leave those offsets unchanged. No DC
-// local or retail operation supports adding a source word just for padding.
+// One `i` is initialized before the caster.
 
 // E:\gamedcs\ai.cpp:1635
 VA(0x00420d20, 0x1D5)
@@ -1455,9 +1368,8 @@ DC_ADDRESS(0x02600c, 0x132)
 MAC_ADDRESS(0x022cb8, 0x1ac)  // anchor-callee
 unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long& bestValue, type_AI_combat_parameters& estimate)
 {
-    // Dreamcast calls getGroup again in the loop; Complete's Mac body keeps
-    // this side in a register across the loop, and Windows retains the same
-    // loop CFG only when the side is cached before construction.
+    // Dreamcast calls getGroup again in the loop; Complete caches the side
+    // before construction.
     long side = estimate.getGroup();
     long i = m_numArmies[side];
     long bestHex = -1;
@@ -1504,14 +1416,10 @@ unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long& 
 // RETAIL-ONLY SoD chooser. choose_spell_action's jump table routes only
 // CREATURE_FAERIE_DRAGON here. It scans the visible 15 columns of every
 // combat row and asks the creature-specific spell valuer for the best hex;
-// positive ties do not replace an earlier choice. The local spellcaster
-// owns the one-state /GX frame visible in retail.
+// positive ties do not replace an earlier choice.
 
-// Mac 0x22f00..0x22f14 retains the same spell/power valuation call and
-// stores bestValue before bestHex on acceptance. Naming its SpellID input
-// before that call reproduces Windows' argument preparation and register
-// lifetimes: 94.6353% -> 100%, all thirteen CFG blocks and four calls.
-// A separate power local alone reaches 95.16%; naming both reaches 94.93%.
+// bestValue is stored before bestHex on acceptance, and the SpellID input is
+// named before the valuation call.
 VA(0x00420f00, 0xFB)
 MAC_ADDRESS(0x022e64, 0x130)
 bool combatManager::chooseFaerieDragonSpellTarget(
@@ -1542,8 +1450,7 @@ bool combatManager::chooseFaerieDragonSpellTarget(
 }
 
 // E:\gamedcs\ai.cpp:1694
-// Nothing else in the TU calls army::get_resurrection_size, and this
-// body does. `ret 0xc` is the DC parameter count exactly.
+// The only caller of army::get_resurrection_size in this TU.
 
 // The Archangel and the Pit Lord share one chooser and differ in three
 // places: the Pit Lord looks for ANIMATE-DEAD targets (and only DEAD
@@ -1553,13 +1460,9 @@ bool combatManager::chooseFaerieDragonSpellTarget(
 // Either way the value doubles while our side is already ahead on live
 // value and the odds have not turned.
 
-// EH-bearing (P2.2) and NOT blocked by it: the fs:[0] frame is the local
-// army's unwind scaffolding, one state.
-
-// DC's can_cast_resurrect/get_group helpers restore retail's caller-saved
-// register schedule, and Complete calls findDemonicResurrectionTarget for
-// both Pit Lord probes. Separate per-arm assignments preserve DC's branch
-// shape; VC6 merges their x87 results and emits retail's single __ftol.
+// DC's can_cast_resurrect/get_group helpers stay, and Complete calls
+// findDemonicResurrectionTarget for both Pit Lord probes; separate per-arm
+// assignments follow DC's branch shape.
 // E:\gamedcs\ai.cpp:1694
 VA(0x00421000, 0x275)
 DC_ADDRESS(0x026140, 0x324)
@@ -1666,8 +1569,8 @@ unsigned char combatManager::chooseSpellAction(const army* currentArmy, long* be
     return 0;
 }
 
-// RECONSTRUCTED 2026-08-08. Only the DEFENDER (side 1) of a walled
-// combat can stay in: every breached wall segment whose hex is walkable
+// Only the DEFENDER (side 1) of a walled combat can stay in: every breached
+// wall segment whose hex is walkable
 // is a way in, and one of those loses the argument outright. If the
 // walls still hold, the AI needs a shooting advantage AND every one of
 // its own live stacks - bar the arrow tower - has to be inside the
@@ -1763,46 +1666,19 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // mover's reachability is seeded, then the enemy walk, then a tail
 // with SEVEN exits.
 
-// The decoded map that preceded this body (banked 2026-08-14, now
-// spent) named seven pieces of missing surface. All seven landed:
-// mark_moat and the two Harpy ids are now declared, maximum selection
-// uses the canonical header helper, and the other four were
-// already in the tree under names the map did not know - gpGame->
-// f_1f698, army::boundFlag (+0x2b8), gCastleWallColumns (0x63bd00) and
-// cmbtmgr.h's InCastle / combatManager::IsInMoat.
-
 // Things worth knowing about the transcription:
-//   * the two `field_3c = 6` exits store in DIFFERENT orders - the
-//     teleport one writes 3c/40/44, the commit one 40/3c/44. Both are
-//     transcribed as retail has them.
+//   * the two `field_3c = 6` exits store in DIFFERENT orders - the teleport
+//     one writes 3c/40/44, the commit one 40/3c/44.
 //   * DC 2119..2138 puts the defensive action in its own positive scope
-//     after the fortification arm. That ordinary if also reproduces the
-//     current retail comparison; a labelled commit is unnecessary.
+//     after the fortification arm.
 //   * the moat-row walk is the fortification arm's last resort: index
-//     gCastleWallColumns by the mover's row (gridIndex / 17), then scan
-//     DOWN from that hex for the first one that is both reachable and
-//     out of the moat, pricing BOTH cells of a two-hex stack.
-// DC ai.cpp:1899/1900 names value locals our_group and enemy_group and
-// calls get_group/get_enemy_group. Retail copies both before markFirewalls;
-// references to the estimate fields would instead reload through opaque calls.
-// The conditional incapacity assignment (1925/1926) also preserves the
-// budget's separate lifetime. Together these restore retail's 0x350 frame.
-// Keep chooser.getAttackTime() at its query and acceptance sites (1976,
-// 2027/2028, 2052) and the by-value max at 2059. A prematurely cached attack
-// time is unnecessary; VC6 can hoist the repeated accessor itself.
-// Windows 0x421680: naming the final movement condition after its early guard
-// keeps the final moveToward as a third distinct call (97.0793 -> 98.5943%):
-// 29 named calls and ten returns now agree. Mac shape retains all 30 direct
-// calls in order. Naming the earlier call's condition drops Windows to 97.87%,
-// and moving the final declaration before the guard drops it to 97.38%; both
-// forms were rejected. Register/stack layout still differs after the tail.
-// An explicit byte flag (initial zero, then guarded one) at the final call
-// raises current Windows 97.3927 -> 97.6398 and Mac 47.4633 -> 47.4967.
-// VC6 still merges the blocking-action call with that tail; all three
-// authored moveToward calls remain, and retail retains three copies.
-// Moving enemyAttacks below the scalar declarations is byte-flat on Mac.
-// A branch-model unsigned-char ourGroup proposal contradicts the Dreamcast
-// CodeView long local, so retain the proven type pending new source evidence.
+//     gCastleWallColumns by the mover's row (gridIndex / 17), then scan DOWN
+//     from that hex for the first one that is both reachable and out of the
+//     moat, pricing BOTH cells of a two-hex stack.
+// DC ai.cpp:1899/1900 names value locals our_group and enemy_group and calls
+// get_group/get_enemy_group; the incapacity assignment is conditional
+// (1925/1926). chooser.getAttackTime() stays at its query and acceptance
+// sites (1976, 2027/2028, 2052), with the by-value max at 2059.
 // E:\gamedcs\ai.cpp:1896
 VA(0x00421680, 0x8F9)
 DC_ADDRESS(0x0266d4, 0x80c)
@@ -2017,9 +1893,7 @@ bool combatManager::chooseMeleeTarget(const army* currentArmy, bool teleport, lo
     }
     if (bestHex == currentArmy->m_gridIndex)
         return 0;
-    // Retail merges an integer 0/1 argument before this retained call.
-    // Byte and bool carriers change the expansion decision elsewhere in
-    // this body; the ordinary int closes Windows without removing helpers.
+    // An ordinary int 0/1 argument.
     int shouldMoveToward = !estimate.m_simulated && bestTime > 1;
     moveToward(currentArmy, bestHex, enemyAttacks,
                shouldMoveToward);
@@ -2103,28 +1977,20 @@ void combatManager::placeShooter(const army* currentArmy)
 }
 
 // E:\gamedcs\ai.cpp:2272
-// The TU's entry point: `ret 4` for the DC count, 208 B against 200,
-// its only caller is OUTSIDE this span (0x477ee0), and its callees are
-// the choose_shooter_action and choose_melee_action slots - the two
-// arms a per-stack AI turn dispatches to.
+// The TU's entry point; its callees are the choose_shooter_action and
+// choose_melee_action slots - the two arms a per-stack AI turn dispatches
+// to.
 
-// whichGroup IS DEAD. The body has no frame at all (two pushes, no
-// ebp) and never reads [esp+0xc]; the side it dispatches on comes from
-// currentSide, and the stack from get_current_army(). Transcribed
-// faithfully - retail's own unused parameter.
+// whichGroup IS DEAD: the side comes from currentSide and the stack from
+// get_current_army(). Transcribed faithfully.
 
 // The 2-vs-3 arm is dead too: `action` can only be 1, 2 or 3 and only
 // `== 1` is tested. Retail still computes the flier bit, which is why
 // it is written out - a stack that is neither a shooter nor a ballista
 // dispatches to choose_melee_action either way.
 
-// DC lines 2289-2292 put army::Is in a nested branch, then attribute the
-// assignments of 2 and 3 to separate scoped arms. The ternary spelling
-// emitted the same behavior but omitted retail's `and eax,0xff` after
-// `not al`. Restoring the separate arms makes VC6 exact: 9/9 CFG blocks,
-// all five calls, and all 71 instructions. The canonical army::is returns
-// bool as its DC mangled signature says. Mac 0:0x245e4 remains exact at
-// 272 bytes with the same five ordered calls.
+// DC lines 2289-2292 put army::Is in a nested branch, then assign 2 and 3 in
+// separate scoped arms.
 VA(0x004221f0, 0xD0)
 DC_ADDRESS(0x027138, 0xc8)
 MAC_ADDRESS(0x0245e4, 0x110)  // anchor-callee
@@ -2162,7 +2028,6 @@ void combatManager::doCompAI(int whichGroup)
 // reading (the target hexcell's armySide/armySlot compare against
 // them) - which is the same fact seen from the other end, since what
 // ValidAttack checks is that the hex still holds the chosen target.
-// The rename belongs to a lane that owns army.h's other consumers.
 
 // Three outcomes, keyed off the path length: no path at all is order
 // 12, a one-cell path (already adjacent) is order 6 aimed from where
@@ -2209,9 +2074,7 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
 }
 
 // DC ai.cpp:2378 calls includes.h's value-returning min wrapper before
-// GetFireShieldStrength at 2382. Keep the capped damage as its own statement:
-// retail reproduces the comparison and temporary slots without a second
-// selector or a reference escaping a by-value helper's parameters.
+// GetFireShieldStrength at 2382; the capped damage is its own statement.
 VA(0x00422440, 0x99)
 DC_ADDRESS(0x027318, 0xc0)
 MAC_ADDRESS(0x0248e4, 0x120)
@@ -2230,11 +2093,9 @@ long combatManager::computeFireShieldDamage(long damage, const army* attacker, c
                              targetHero, attacker, 0);
 }
 
-// E:\gamedcs\ai.cpp:2397. Canonical static single-exchange scorer;
-// retail expands all three melee call sites. DC line 2409 tests ranged
-// first, then breath_attack, before computing fire-shield retaliation.
-// Keeping that meaningful ranged guard is byte-flat for these melee calls,
-// which all pass zero, but preserves the helper's recovered semantics.
+// E:\gamedcs\ai.cpp:2397. Canonical static single-exchange scorer, inlined
+// at all three melee call sites. DC line 2409 tests ranged first, then
+// breath_attack, before computing fire-shield retaliation.
 DC_ADDRESS(0x0273d8, 0x92)
 MAC_ADDRESS(0x024a04, 0xc4)
 static void simulateSimpleAttack(army* currentArmy, army* target,
@@ -2397,14 +2258,10 @@ void combatManager::simulateCombat(long ourGroup, unsigned char checkingSurrende
     m_nextActionGridIndex2 = saved48;
 }
 
-// E:\gamedcs\ai.cpp:2608..2693: separate outer/inner pointer
-// inductions, a split shooter guard, and source calls to getSpellTime and
-// clearAIValues. Complete's x86 and Mac bodies clear four AI target fields
-// through the retail-era helper without clearing expectedDamage, unlike the
-// older DC helper. Windows is byte-exact after restoring these boundaries.
-// Mac 0:0x25100 has the same 724-byte size and all 11 ordinary calls; its
-// remaining null-path branch order comes from the canonical getHex expansion.
-// A named pathCell pointer at that call site was byte-flat and was removed.
+// E:\gamedcs\ai.cpp:2608..2693: separate outer/inner pointer inductions, a
+// split shooter guard, and source calls to getSpellTime and clearAIValues.
+// Complete clears four AI target fields without clearing expectedDamage,
+// unlike the older DC helper.
 VA(0x00422b20, 0x278)
 DC_ADDRESS(0x027888, 0x28e)
 MAC_ADDRESS(0x025100, 0x2d4)  // anchor-caller(choose_shooter_action/choose_melee_action) + anchor-callee(SeedCombatPosition)
@@ -2421,8 +2278,6 @@ void combatManager::findAITargets(long ourGroup, const army* currentArmy,
     long j;
     army* ours = m_armies[ourGroup];
     army* theirs;
-    // Preserve canShoot's logical result through getSimpleAttackEffect's
-    // original bool interface without an integer-to-bool conversion.
     bool shooter;
     for (i = 0; i < m_numArmies[ourGroup]; i++, ours++) {
         ours->clearAIValues();
@@ -2514,22 +2369,21 @@ unsigned char combatManager::doSpellAI()
     return 0;
 }
 
-// COMDAT pairing: vector<army*>::size - ai.obj's own copy, 19 B against
-// the 19-byte emitted COMDAT and the only candidate of that size here.
+// COMDAT pairing: vector<army*>::size - ai.obj's own copy.
 VA_COMPGEN(0x00423110, 0x13, VECTOR_SIZE, army)
 
 VA_COMPGEN(0x00423130, 0x209, VECTOR_INSERT, army)
 
-// COMDAT pairing: std::_Sort<army*, func_moves_before>, agreement 0.973.
+// COMDAT pairing: std::_Sort<army*, func_moves_before>.
 VA_COMPGEN(0x00423630, 0x186, STD_SORT, army_ptr_func_moves_before)
 
-// COMDAT pairing: std::_Sort_0<army*, func_moves_before>, agreement 0.998.
+// COMDAT pairing: std::_Sort_0<army*, func_moves_before>.
 VA_COMPGEN(0x00423340, 0x27F, STD_SORT_0, army_ptr_func_moves_before)
 
-// COMDAT pairing: std::_Unguarded_partition<army*, func_moves_before>, 0.927.
+// COMDAT pairing: std::_Unguarded_partition<army*, func_moves_before>.
 VA_COMPGEN(0x00423820, 0x87, STD_UNGUARDED_PARTITION, army_ptr_func_moves_before)
 
-// COMDAT pairing: std::_Unguarded_insert<army*, func_moves_before>, 0.976.
+// COMDAT pairing: std::_Unguarded_insert<army*, func_moves_before>.
 VA_COMPGEN(0x004237c0, 0x5E, STD_UNGUARDED_INSERT, army_ptr_func_moves_before)
 
 // E:\gamedcs\ai.cpp:597

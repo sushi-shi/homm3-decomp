@@ -54,8 +54,7 @@ long aiGetShipCost(const hero* ourHero, type_point point);
 class type_AI_player {
 public:
 
-    // DC ai_player.h:263. Complete inlines the helper into
-    // AI_initialize; retail leaves exactly the team-word store.
+    // DC ai_player.h:263; inlined into AI_initialize (the team-word store).
     DC_ADDRESS(0x037dec, 0x4)
     void init(short newTeam) { m_team = newTeam; }
     static float getAttackBonus(short player);  // 0x428710

@@ -68,16 +68,14 @@ CHotspotWidget::CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId)
 
 VA_COMPGEN(0x00575260, 0x21, SCALAR_DELETING_DTOR, CHotspotWidget)  // vtbl 0x6419a4 slot0, dc 0x12f2b8
 
-// E:\gamedcs\singleselectionpopups.cpp:124 - slot 2 of vtable 0x6419a4, the
-// same hotspot mouse handler border::Main runs one file over: a field_2C
-// asleep guard, a not-active bail to widget::Main, and a jump-table switch on
-// msg->id with the disabled DOWN/UP arms falling through to their right-button
-// twins. mouseX/mouseY are int (heroWindow::x/y are int, +8.9 over short).
+// E:\gamedcs\singleselectionpopups.cpp:124 - the same hotspot mouse handler
+// border::Main runs one file over: a field_2C asleep guard, a not-active
+// bail to widget::Main, and a switch on msg->id with the disabled DOWN/UP
+// arms falling through to their right-button twins. mouseX/mouseY are int
+// (heroWindow::x/y are int).
 
 // The right-button-up arm tests the selected state positively, performs
-// deselection inside that arm, then returns zero if unselected. This natural
-// branch form lets VC6 share the earlier zero-return epilogue: all 21 retail
-// blocks and four returns match. No goto or extra source operation is needed.
+// deselection inside that arm, then returns zero if unselected.
 VA(0x00575290, 0x179)
 DC_ADDRESS(0x12dea8, 0x100)
 MAC_ADDRESS(0x16bab8, 0x1a4)  // anchor-vtable CHotspotWidget vtbl 0x6419a4 slot2 (Main override), ret 4
@@ -176,10 +174,9 @@ void CSpriteWidget::draw() const
         m_y + m_parentWindow->m_y, 0, 1);
 }
 
-// E:\gamedcs\singleselectionpopups.cpp:47 - inlined into every CreateWin that
-// builds a sprite icon (no standalone retail body). Stores the
-// sprite/frame past the widget base and normalises frame against sequence 0's
-// count; GetNumFrames(0)'s else arm folds to the literal-0 divisor.
+// E:\gamedcs\singleselectionpopups.cpp:47 - inlined into every CreateWin
+// that builds a sprite icon. Stores the sprite/frame past the widget base
+// and normalises frame against sequence 0's count.
 DC_ADDRESS(0x12f018, 0x94)
 CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* sprite, int frameArg)
 {
@@ -193,7 +190,7 @@ CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* sprite, int frameArg)
 }
 
 // Original: CSpriteWidget::zBufferDraw; singleselectionpopups.cpp:67
-// Vtable0x641a00 slot3 shares the empty ret8 body at0x404140.
+// Shares the empty two-argument body.
 DC_ADDRESS(0x12f0c4, 0x4)
 void CSpriteWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
@@ -239,9 +236,9 @@ void CBitmapWidget::draw() const
         m_y + m_parentWindow->m_y, 1);
 }
 
-// E:\gamedcs\singleselectionpopups.cpp:82 - inlined into the bitmap CreateWin
-// callers (no standalone retail body). Stores the image past the
-// widget base with the bitmap's own extent.
+// E:\gamedcs\singleselectionpopups.cpp:82 - inlined into the bitmap
+// CreateWin callers. Stores the image past the widget base with the
+// bitmap's own extent.
 DC_ADDRESS(0x12f168, 0x78)
 CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* image)
 {
@@ -254,7 +251,7 @@ CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* image)
 
 // E:\gamedcs\singleselectionpopups.cpp:121
 // Original: CBitmapWidget::Main; singleselectionpopups.cpp:93
-// Vtable0x641a34 slot2 folds to CSpriteWidget::main0x575a10.
+// Shares CSpriteWidget::main's body.
 DC_ADDRESS(0x12f1e0, 0x18)
 int CBitmapWidget::main(message& msg)
 {
@@ -496,13 +493,10 @@ void CTeamAlignmentDlg::getTeams()
 
 // Complete adds this random-map generation window. The Dreamcast popup
 // procedure inventory ends with the team-alignment dialog, and its full
-// CodeView class field lists contain no RMG/progress class. The five exact
+// CodeView class field lists contain no RMG/progress class. The five
 // Windows-only method identities are reviewed in config/source/win_only.tsv.
-// The whole family is vtable-proven: 0x641b14 slot 0 is the scalar deleting
-// destructor 0x577090, slot 1 the SetTotal override 0x577300 and slot 2 the
-// Advance override 0x577320, and 0x576f00 is the only body that stores that
-// vtable.  The base's own constructor 0x530e20 sits in the
-// quicktownwindow..recruit span and is left unclaimed.
+// The base's own constructor sits in the quicktownwindow..recruit span and
+// is left unclaimed.
 VA(0x00576F00, 0x190)
 MAC_ADDRESS(0x16d654, 0x21c)
 TRandomMapProgress::TRandomMapProgress(int totalSteps)
@@ -526,11 +520,10 @@ TRandomMapProgress::TRandomMapProgress(int totalSteps)
         m_window->addWidget(m_widgets[i], -1);
     g_windowManager->addWindow(m_window, -1, 1);
     updateProgressBar();
-    // Mac 0x16d840..0x16d854 expands the shared full-screen facade.
     g_windowManager->updateScreen();
 }
 
-// Slot 0 of vtable 0x641b14.
+// Slot 0 of the progress vtable.
 VA_COMPGEN(0x00577090, 0x21, SCALAR_DELETING_DTOR, TRandomMapProgress)
 
 VA(0x005770C0, 0xBE)
@@ -540,8 +533,6 @@ TRandomMapProgress::~TRandomMapProgress()
     g_windowManager->removeWindow(m_window);
     delete m_window;
     if (m_barSprite)
-        // Mac 0x16d8cc..0x16d8e0 expands the sprite-disposal facade;
-        // the surrounding null guard belongs to this caller.
         ResourceManager::Dispose(m_barSprite);
     for (unsigned int i = 0; i < m_widgets.size(); i++)
         delete m_widgets[i];
@@ -581,7 +572,7 @@ void TRandomMapProgress::updateProgressBar()
     g_windowManager->updateScreen(m_window->m_x + 16, m_window->m_y + 0x50, 0x120, 16);
 }
 
-// Slot 1 of vtable 0x641b14 - the base's SetTotal override.
+// The base's SetTotal override.
 VA(0x00577300, 0x12)
 MAC_ADDRESS(0x16db84, 0x24)
 void TRandomMapProgress::setTotal(int totalSteps)
@@ -590,10 +581,5 @@ void TRandomMapProgress::setTotal(int totalSteps)
     updateProgressBar();
 }
 
-// COMDAT pairing: vector<widget*>::_Ucopy, agreement 0.978. Same caller-set
-// argument as the insert above: 0x174ce0 is reached from TAdventureMapWindow's
-// constructor and SetSleepImage, and from TTownGateWindow::AddTown's expanded
-// insert - cross-unit reach that only a shared COMDAT has. dialogbox 0x8dba0
-// (49 B, identical similarity) is reached only from unresolved labels inside
-// its own two segments.
+// COMDAT pairing: vector<widget*>::_Ucopy, reached from several units.
 VA_COMPGEN(0x00574ce0, 0x2F, VECTOR_UCOPY, widget)

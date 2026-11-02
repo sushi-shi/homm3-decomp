@@ -71,15 +71,13 @@ iconWidget::~iconWidget()
 }
 
 // E:\gamedcs\iconwdgt.cpp:119
-// Retail fixes the message protocol and six widget-command arms. DC 151
-// calls SetIconSequence; its 447..448 stores are seqId then Frame. DC 159
-// calls the ordinary SetPalette helper; restore that canonical call rather
-// than its copied load/dispose body. Both helpers expand naturally here.
+// DC 151 calls SetIconSequence; its 447..448 stores are seqId then Frame.
+// DC 159 calls the ordinary SetPalette helper. Both helpers are inlined
+// here.
 
 // DC 190..217 and 229..245 retain nested mouse-hit and selected scopes.
 // Mac retains three widget::main calls: inactive, unhandled disabled widget
-// message, and the shared active tail. Restoring the middle source call also
-// makes the Windows retail comparison exact.
+// message, and the shared active tail.
 VA(0x004ea810, 0x2F4)
 DC_ADDRESS(0x0d94a4, 0x212)
 MAC_ADDRESS(0x10c514, 0x33c)  // vtable 0x63ec48 slot 2
@@ -124,7 +122,6 @@ int iconWidget::main(message& msg)
                 return 1;
             }
         }
-        // Mac retains this disabled-message base call at 0:0x10c688.
         if (isDisabled)
             return widget::main(msg);
         break;
@@ -164,8 +161,6 @@ int iconWidget::main(message& msg)
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = WIDGET_DESELECT;
             msg.m_codeY = m_id;
-            // Mac 0x10c7c8..0x10c7e0 retains this argument expression
-            // after the MESSAGE_WIDGET assignment above.
             if (handleClick(false, msg.m_id == MESSAGE_RIGHT_BUTTON_UP))
                 return 1;
             if (msg.m_id == MESSAGE_RIGHT_BUTTON_UP)
@@ -184,22 +179,18 @@ int iconWidget::main(message& msg)
 }
 
 // Original: iconWidget::zBufferDraw; iconwdgt.cpp:275
-// CodeView's formal type proves two arguments despite the old nil-argument
-// carcass. Retail folds this empty hook onto the shared ret-8 at 0x5bc7e0.
+// CodeView's formal type proves two arguments; the empty hook shares the
+// two-argument return body.
 DC_ADDRESS(0x0d96e4, 0x4)
 void iconWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
 }
 
 // E:\gamedcs\iconwdgt.cpp:257
-// Located in retail 2026-08-08 on four independent corroborations:
-// the row is inside iconwdgt.obj's own carve span, it holds the DC
-// roster's handle_click slot in order (immediately before GetRealWidth
-// and GetRealHeight, exactly as at 0x4eab20 / 0x4eab30), the iconWidget
-// vtable at 0x63ec48 stores it in slot 13, and the body's `ret 8`
-// matches the DC's three parameters (this + two). Both arguments are
-// dead - retail returns a bare zero.
-// The public UAA_N_N0 signature preserves native Boolean click values.
+// The DC roster's handle_click slot, immediately before GetRealWidth and
+// GetRealHeight; vtable slot 13. Both arguments are dead - it returns a
+// bare zero. The public UAA_N_N0 signature preserves native Boolean click
+// values.
 VA(0x004eab10, 0x5)
 DC_ADDRESS(0x0d96b8, 0x4)
 MAC_ADDRESS(0x10c850, 0x8)  // anchor-vtable (slot 13 of 0x63ec48)
@@ -370,9 +361,8 @@ void iconWidget::setIconFrame(int newFrame)
 }
 
 // E:\gamedcs\iconwdgt.cpp:444
-// Dreamcast line 447 stores new_sequence to seqId and line 448 clears Frame;
-// Main's retail-inlined WIDGET_SET_ICON_SEQUENCE arm corroborates the order:
-// its six-instruction block is exact only with this source shape.
+// Dreamcast line 447 stores new_sequence to seqId and line 448 clears Frame,
+// as Main's inlined WIDGET_SET_ICON_SEQUENCE arm does.
 DC_ADDRESS(0x0d9ca4, 0x8)
 MAC_ADDRESS(0x10cfb0, 0x10)
 void iconWidget::setIconSequence(int newSequence)

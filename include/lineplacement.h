@@ -178,7 +178,7 @@ public:
     virtual int getLineType(const TTilePoint& point);
 };
 
-// Inline, like the terrain map's: h3maped's map document expands it, and
+// Inline, like the terrain map's: h3maped's map document inlines it, and
 // the game's river and road maps keep their implicit destructors (rmg.cpp).
 MAC_ADDRESS(0x22eeec, 0x48)
 inline TRiverOp::TAbstractMap::~TAbstractMap() {}

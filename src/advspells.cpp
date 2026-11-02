@@ -67,12 +67,11 @@ void advManager::checkCastSpell()
 
 // E:\gamedcs\advspells.cpp:93
 // The dispatcher, and the ONE place every adventure spell is charged from.
-// Ten ascending cases through a jump table; four of the arms are Dreamcast
-// handlers retail has no body for, expanded here because each has exactly
-// this one call site - which is what makes 1028 bytes out of the DC's 344.
-// Each arm re-derives its own `who` because each inlined handler opens with
-// its own game::GetCurrHero, and the two ViewWorld arms hand their own case
-// value to both ViewWorld and GetManaCost.
+// Ten ascending cases; four of the arms are Dreamcast handlers inlined here
+// because each has exactly this one call site. Each arm re-derives its own
+// `who` because each inlined handler opens with its own
+// game::GetCurrHero, and the two ViewWorld arms hand their own case value
+// to both ViewWorld and GetManaCost.
 VA(0x0041c490, 0x404)
 DC_ADDRESS(0x021a2c, 0x158)
 MAC_ADDRESS(0x01d1a8, 0x1bc)  // linkorder + anchor-callee hero::Fly / get_spell_level
@@ -135,27 +134,11 @@ void advManager::castSpell(SpellID whichSpell)
 // advanced mastery and above, builds a new one.
 
 // The old-position visibility test is what the two SLimitData clips are
-// for: retail keeps the boat's previous cell out of the fizzle when it is off
-// the current view, which is why the first fizzle block carries no sample
-// and the second one does.
+// for: the boat's previous cell stays out of the fizzle when it is off the
+// current view.
 
-// Residual (91.1002%): two classes, both recorded rather than ground.
-//  * The three refusal blocks. Retail gives each dialog its OWN epilogue
-//    and sends every silent (not-a-local-human) exit to the function's
-//    final one; our CL cross-jumps them onto one shared block placed after
-//    the first dialog, which shifts the whole later block layout. This is
-//    the merged-return class. Writing `return;` INSIDE the `if` as well as
-//    after it is byte-flat, so it is not source-reachable from here.
-//  * `[ebp+8]` reloads inside the radar-window test: retail keeps the
-//    extracted origin in ECX across `movsx edx,dx` and stores it back,
-//    where we spill and re-read - one extra instruction in each of two
-//    blocks. Register pressure, not a spelling.
-// A foundWater flag removes the search goto and improves the current
-// 91.1018% to 91.5769%; putting the refusal inside an infinite loop's
-// exhaustion arm reaches 91.3281%. The older direction==COUNT post-loop
-// test scored 91.4864% with an extra comparison. The flag records the
-// actual successful cell test while preserving search order and refusal
-// side effects; no new helper is inferred from that flag.
+// The foundWater flag records the actual successful cell test while
+// preserving search order and refusal side effects.
 VA(0x0041c8a0, 0x54D)
 DC_ADDRESS(0x021b84, 0x4d0)
 MAC_ADDRESS(0x01d364, 0x650)  // anchor-callee hero::find_summonable_boat + game::CreateBoat
@@ -283,9 +266,8 @@ void advManager::skuttleBoat(TSkillMastery level)
 
     if (sRandom(1, 100)
         <= akSpellTraits[SPELL_SCUTTLE_BOAT].m_mastery_bonus[level]) {
-        // The CONST get_map_center overload is the one retail calls here
-        // (?get_map_center@advManager@@QBE...); /OPT:ICF folded the pair onto
-        // one row, so the receiver cast costs no bytes and buys the name.
+        // The CONST get_map_center overload
+        // (?get_map_center@advManager@@QBE...).
         boat& theBoat = *g_game->getBoat(
             getCell(get_mouse_map_point())
                 ->m_extraInfo);
@@ -321,20 +303,13 @@ void advManager::skuttleBoat(TSkillMastery level)
 }
 
 // E:\gamedcs\advspells.cpp:397
-// The order-map over advspells.obj's seven retail bodies is settled by
-// three constructor calls, not by size: 0x41cdf0 builds a
-// TSkuttleBoatWindow, THIS body builds a TDimensionDoorWindow and 0x41d360
-// builds a TTownGateWindow, which fixes SkuttleBoat / DimensionDoor /
-// TownGate against the Dreamcast's own advspells.cpp line order. The four
-// small DC handlers between TownGate and TeleportTo (Identify 220 B,
-// WaterWalk 122 B, Disguise 90 B, Flight 236 B) have no retail slot at all
-// and no gap to hide in: their 668 bytes are what makes CastSpell 1028
-// against the DC's 344, and 0x41c490 calls hero::Fly - Flight's own body -
-// with no out-of-line Flight anywhere in the image.
+// The handler order SkuttleBoat / DimensionDoor / TownGate follows the
+// Dreamcast's own advspells.cpp line order. The four small DC handlers
+// between TownGate and TeleportTo (Identify, WaterWalk, Disguise, Flight)
+// are inlined into CastSpell; hero::Fly is Flight's own body.
 // DC398 names GetCurrHero, DC414 the one-argument get_spell_level,
 // DC425..427 the scoped doorWin, and DC462 one-argument GetManaCost.
-// The traits reference and mastery parameter retain their recorded types;
-// TSpellTraits is the older source name for TSpellTraits.
+// The traits reference and mastery parameter retain their recorded types.
 VA(0x0041d090, 0x2C6)
 DC_ADDRESS(0x02225c, 0x2b4)
 MAC_ADDRESS(0x01dcc4, 0x404)  // anchor-vtable TDimensionDoorWindow ctor/dtor + anchor-callee TeleportTo
@@ -406,37 +381,19 @@ void advManager::dimensionDoor(TSkillMastery level)
 // sent to the NEAREST one, chosen by squared map distance with no z term.
 
 // The two loops that pick a town both spell the team test as
-// game::OnSameTeam - retail expands its `||` guard, the two teamInfo byte
-// loads off gpGame+0x1f879 and the `sete` verbatim - and both reach the
-// record through game::GetTown, whose -1 arm survives as the
-// `inc/neg/sbb/and` mask even though the index can never be -1 here.
-
-// The AddTown call is the row src/towngatewindow.cpp currently claims as
-// VA_COMPGEN(0x005c2400, VECTOR_INSERT, widget): retail reaches it
-// THISCALL on the window with ONE stack argument and its body works on
-// `this + 0x60`, i.e. TTownGateWindow::Towns with push_back expanded into
-// it. That is AddTown, not a free vector COMDAT - see the lane report.
+// game::OnSameTeam, and both reach the record through game::GetTown.
+//
+// The AddTown call is TTownGateWindow::addTown, a member call with one
+// argument that pushes onto TTownGateWindow::Towns.
 
 // DC records const movement_cost[4], const traits by reference, GetCurrHero,
-// and one-argument GetManaCost. The joint helper family restores them without
-// moving the 99.0386% result. DistanceSquared now retains its proven const-
-// reference interface (struct.h:120, dc 0x22fe4); both callers pass the local
-// town location directly. The final 24-state helper/caller family emits
-// six objects and reproduces all six. X-before-Y locals in the canonical
-// DistanceSquared helper close all seven scored advspells functions.
-// Its DC121/124/122 line entries are nonmonotonic and record no named
-// locals; the earlier assumption that Y-first was proven was incorrect.
-// Y-first leaves four stack displacements at 99.9914; direct arithmetic
-// inside the same helper gives 95.7232. Both source calls remain intact.
-// Negative controls isolate the max facade: using its template selector
-// directly returns TownGate to 91.81, while changing only text[] to the
-// older accessor leaves the bytes unchanged. Retain both proven boundaries.
-// DC549 initializes nearest distance before DC552 heroLocation; DC564
-// stores closest_distance_2 before DC565 stores closest_town.
-// DC 561 tests DistanceSquared and DC 564 stores it again with no local
-// between them; retail expands both calls (see struct.h). Mac's single
-// evaluation is its own lowering; a named distance local had lowered
-// Windows to 90.50%.
+// and one-argument GetManaCost. DistanceSquared keeps its const-reference
+// interface (struct.h:120) with X-before-Y locals; both callers pass the
+// local town location directly. The max facade and text[] keep their
+// proven boundaries. DC549 initializes nearest distance before DC552
+// heroLocation; DC564 stores closest_distance_2 before DC565 stores
+// closest_town. DC 561 tests DistanceSquared and DC 564 calls it again with
+// no local between them.
 // Original local names: TGWindow, closest_town, closest_distance_2,
 // hero_loc, town_loc; normalized below without changing their scopes.
 VA(0x0041d360, 0x5C8)
@@ -589,9 +546,9 @@ void advManager::disguise(TSkillMastery level)
 
 // E:\gamedcs\advspells.cpp:674
 // Fly. hero::IsFlying gates it exactly as CanWalkOnWater gates Water Walk,
-// but the boat case is not silent here - it gets its own refusal line, and
-// retail re-reads the boat bit for that second test rather than reusing the
-// one IsFlying already made. hero::Fly charges the mana itself.
+// but the boat case is not silent here - it gets its own refusal line, with
+// the boat bit re-read for that second test. hero::Fly charges the mana
+// itself.
 DC_ADDRESS(0x022a9c, 0xec)
 MAC_ADDRESS(0x01eac0, 0x160)
 void advManager::flight(TSkillMastery level)

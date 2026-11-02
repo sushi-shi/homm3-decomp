@@ -61,21 +61,18 @@ void AddToCache(resource* value);
 // Dreamcast resourcemanager.cpp:2377; expanded by Complete's cache getters.
 resource* GetFromCache(const char* name);
 
-// Existing disposal wrappers expand across TUs in the selection destructor:
-// Windows 0x583bb8..0x583c35 and Mac 0x17b5b0..0x17b6bc retain only the
-// member virtual calls. Their bodies must be visible at those source calls.
+// Existing disposal wrappers are inlined across TUs (the selection
+// destructor keeps only the member virtual calls), so their bodies are
+// visible here.
 DC_ADDRESS(0x122530, 0x90)
 inline void Dispose(resource* value) { value->dispose(); }
 
 // Original: ResourceManager::Dispose(sample*), DC resourcemanager.cpp:2196.
 // DC releases a ds_engine cache entry; Complete's sample owns its sound
-// data and inherits reference-counted resource disposal (Windows 0x55d0f0).
-// Complete castSpell (spells.cpp) expands the null guard and virtual call
-// on Windows and Mac 0x190d5c..0x190d70 / 0x190ff0..0x191004. Mac's
-// readFromBitmapResource 0x154728+0x20 is followed directly by expunge
-// 0x154748+0x7c and resource::dispose 0x1547c4: no wrapper body survives.
-// Header visibility and inline linkage are inferred for Complete, not a
-// DC-proven explicit qualifier (all three DC overload flags are zero).
+// data and inherits reference-counted resource disposal. Inlined in
+// castSpell (spells.cpp), the null guard and virtual call. Header
+// visibility and inline linkage are inferred for Complete, not a DC-proven
+// explicit qualifier (all three DC overload flags are zero).
 DC_ADDRESS(0x1225c0, 0x1c)
 inline void Dispose(sample* value)
 {
@@ -87,8 +84,8 @@ DC_ADDRESS(0x1225dc, 0xf6)
 inline void Dispose(CSprite* value) { value->dispose(); }
 
 // Older DC resourcemanager.cpp:2280 had the cache sweep.
-// Complete has no cache-sweep work in the Windows and Mac selection teardown.
-// Keep the original call and expose the empty helper across translation units.
+// Complete has no cache-sweep work in the selection teardown; the original
+// call stays, with the empty helper visible across translation units.
 DC_ADDRESS(0x1226d4, 0x1d6)
 inline void del_Spr_from_Cache() {}
 
@@ -108,9 +105,9 @@ resource* GetFromCache(const char* name);
 // retail 0x559510. No explicit calling convention: the game's thirteen
 // getter call sites pass registers (/Gr), the editor's push the arguments
 // (h3maped 0x4dc3d6). Its body is reconstructed; no PC symbol source
-// survives, so the source name remains explicitly provisional. Use ordinary C++ linkage:
-// the bootstrap extern "C" suppressed VC6's exception cleanup in both
-// reporters; removing it restores the retail fs:[0] registration and unwind
+// survives, so the source name remains explicitly provisional. It has
+// ordinary C++ linkage: extern "C" would suppress VC6's exception cleanup
+// in both reporters, where retail has the fs:[0] registration and unwind
 // states.
 void reportMissingTypedResource(const char* caller,
                                 int resourceType,

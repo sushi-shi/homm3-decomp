@@ -85,12 +85,10 @@
 // Runs that sit inside one of our units' retail ranges (advmgr, game,
 // town, kb, mapcell, ...) mark TU boundaries this tree does not draw yet.
 
-// MEASURED EFFECT (`homm3 build --fast`, delink pairings refreshed): the
-// first function of an including TU is no longer the first one C2
-// compiles, so it receives the phase flag as 1 (docs/vc6/phase-flag.md):
-// showCreatureSpellError 99.4556 -> 100. Every other function of the
-// widened units is unchanged. overview.cpp, whose retail range opens with
-// the run as well, includes it too (setupDynamicStuff 93.47 -> 93.50).
+// EFFECT: the first function of an including TU is no longer the first one
+// C2 compiles, so it receives the phase flag as 1 (docs/vc6/phase-flag.md),
+// which showCreatureSpellError needs. overview.cpp, whose retail range opens
+// with the run as well, includes it too.
 
 #ifndef HOMM3_TERRAIN_H
 #define HOMM3_TERRAIN_H

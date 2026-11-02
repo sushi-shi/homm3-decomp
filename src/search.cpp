@@ -13,23 +13,17 @@
 #include "quest.h"
 #include "terrain.h"
 
-// DC struct.h proves the const-reference comparison operators. Their canonical
-// definitions now live in struct.h; use them directly instead of TU-local
-// duplicate free helpers. The direct != body preserves retail's three tests;
-// negating operator== instead scored 64.78% in the earlier buildPath probe.
+// DC struct.h proves the const-reference comparison operators; their
+// canonical definitions live in struct.h.
 
 // E:\gamedcs\search.cpp:32
-// Native 0x1616a4 and 0x1616bc clear the point-mismatch and unvisited paths
-// independently, agreeing with DC's separate 71/79 source groups. Flying is
-// Boolean state passed to the Boolean getCell parameter; a byte local adds a
-// non-retail normalization.
-// DC lines 32/36 construct both points with type_point(short,short,short)
-// from the hero's coordinates, not through getLocation/getTarget, and lines
-// 42/96 call vector::clear directly (search.cpp rows, not FindPath.h's
-// ClearPath). Those spellings set retail's /Ob2 frontier: the entry and
-// unvisited clears expand erase while the other arms call it. The direct
-// points raise 79.52 to 98.76%; initializing flying before the previous-cost
-// local makes it exact. Routing the clears through clearPath() gives 85.35%.
+// The point-mismatch and unvisited paths clear independently, agreeing with
+// DC's separate 71/79 source groups. Flying is Boolean state passed to the
+// Boolean getCell parameter. DC lines 32/36 construct both points with
+// type_point(short,short,short) from the hero's coordinates, not through
+// getLocation/getTarget, and lines 42/96 call vector::clear directly
+// (search.cpp rows, not FindPath.h's ClearPath). flying is initialized
+// before the previous-cost local.
 VA(0x0056a0d0, 0x282)
 DC_ADDRESS(0x12b2e0, 0x110)
 MAC_ADDRESS(0x161498, 0x41c)  // anchor-global
@@ -136,11 +130,8 @@ bool check_adjacent_monster(const hero* current_hero,
 // standing on an exit is a target, a friendly one is skipped, and the
 // exit must be a live trigger of the entry's own type that is not the
 // entry itself. Whirlpools cost 16 per exit and a flat 500 of barrier
-// value; liths 100 per exit. DC records list and entry_point as references;
-// the three native callers pass their existing vector/cell addresses.
-// Native Mac 0x161a1c goes directly to the for-loop test; there is no
-// separate count guard outside it. Restore DC's post-count monster lifetime
-// and let the loop own its bounds test: the retained Windows body is exact.
+// value; liths 100 per exit. DC records list and entry_point as references.
+// There is no separate count guard outside the for-loop test.
 VA(0x0056a400, 0x32F)
 DC_ADDRESS(0x12b4a8, 0x34c)
 MAC_ADDRESS(0x161998, 0x3e4)  // exhaustive search.obj order-map
@@ -206,8 +197,7 @@ void searchArray::enterLith(const hero* currentHero,
     }
 }
 
-// DC search.cpp:244 proves the pathCell reference; retail uses the
-// same cell address and the body requires its referent.
+// DC search.cpp:244 proves the pathCell reference.
 VA(0x0056a730, 0x111)
 DC_ADDRESS(0x12b7f4, 0x10c)
 MAC_ADDRESS(0x161d7c, 0x1b8)
@@ -218,7 +208,7 @@ void searchArray::enterGate(const pathCell& cell, const NewmapCell* mapCell,
     const int noGateExit = 0xff;
     if (exitPoint.m_x != noGateExit) {
         pathCell exitCell = cell;
-        // DC search.cpp:251 names game::get_cell; Mac and VC6 expand it.
+        // DC search.cpp:251 names game::get_cell; inlined.
         NewmapCell* exitMapCell = g_game->getCell(exitPoint);
         exitCell.m_point.m_x = exitPoint.m_x;
         exitCell.m_point.m_y = exitPoint.m_y;
@@ -230,7 +220,7 @@ void searchArray::enterGate(const pathCell& cell, const NewmapCell* mapCell,
 }
 
 // Original: searchArray::board_boat; search.cpp:264
-// Complete expands this ordinary helper in enter_trigger's boat arm.
+// Inlined in enter_trigger's boat arm.
 DC_ADDRESS(0x12b900, 0x88)
 MAC_ADDRESS(0x161f34, 0xf8)
 void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
@@ -250,12 +240,9 @@ void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 // counts how many gates the treasury can still afford (capped at two:
 // one here, one at the far end) and charges each unbuilt gate's cost
 // into the barrier; the normal search only routes through built gates.
-// A town with a visiting hero cannot receive. Retail's min temporaries put
-// gates first, and its destination loop loads each town ID once.
-// DC records const pathCell&; restoring the reference keeps Windows bytes
-// unchanged. DC lines 352-354 copy the destination town's x/y/z into the
-// new cell's point field by field rather than through town::getLocation;
-// that removes the location return slot and makes the body exact.
+// A town with a visiting hero cannot receive. DC records const pathCell&.
+// DC lines 352-354 copy the destination town's x/y/z into the new cell's
+// point field by field rather than through town::getLocation.
 VA(0x0056a850, 0x27E)
 DC_ADDRESS(0x12b988, 0x240)
 MAC_ADDRESS(0x16202c, 0x35c)  // exhaustive search.obj order-map MAC_ABSTRACTION_FROM(tokens1:599c6f83f8ff,39.8402): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
@@ -469,9 +456,7 @@ bool searchArray::enter_trigger(const hero* current_hero,
 
 // E:\gamedcs\search.cpp:494
 // Dreamcast retains this file-static helper as a separate procedure and
-// SeedPosition calls it. Complete's VC6 expands the same source boundary at
-// the only retail call site; keep the helper ordinary and available before
-// the caller so the compiler makes that decision naturally.
+// SeedPosition calls it; inlined at the only call site.
 DC_ADDRESS(0x12bedc, 0x104)
 MAC_ADDRESS(0x1629ec, 0x22c)
 static unsigned char checkSummonBoat(const hero* currentHero)
@@ -497,10 +482,8 @@ static unsigned char checkSummonBoat(const hero* currentHero)
     return 1;
 }
 
-// DC search.cpp:535 proves the pathCell reference; retail uses the
-// same cell address and the body requires its referent.
-// getManaCost/getPlayer/getSpellLevel have recovered const contracts;
-// preserve those calls directly through currentHero without a mutable facade.
+// DC search.cpp:535 proves the pathCell reference. getManaCost/getPlayer/
+// getSpellLevel have recovered const contracts.
 VA(0x0056b050, 0x3E7)
 DC_ADDRESS(0x12bfe0, 0x38c)
 MAC_ADDRESS(0x162c18, 0x45c)
@@ -564,10 +547,9 @@ void searchArray::checkTownPortal(const hero* currentHero,
     }
 }
 
-// Mac 0:0x163074..0x1631a0 retains this helper between checkTownPortal and
-// seedPosition. seedPosition calls it at 0:0x16383c; VC6 expands the same
-// trigger-cell copy and enter_trigger call in the start-town-negative arm.
-// The older Dreamcast build does not give this Complete helper a name.
+// Mac retains this helper between checkTownPortal and seedPosition, which
+// calls it; inlined in the start-town-negative arm. The older Dreamcast
+// build does not give this Complete helper a name.
 MAC_ADDRESS(0x163074, 0x12c)
 void searchArray::enterStartTrigger(const hero* currentHero,
                                     const pathCell* startCell,

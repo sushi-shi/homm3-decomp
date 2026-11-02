@@ -15,14 +15,12 @@
 // Initial contents recovered from the pinned Complete image.
 
 // Use the timer during video playback so the game RNG sequence stays unchanged.
-// Mac retains GameTime::get at 0:0x130cc0. Its Windows implementation
-// returns timeGetTime(), the operation expanded by retail at this caller.
+// GameTime::get is timeGetTime() on Windows, inlined here.
 VA(0x0050b1d0, 0x54)
 DC_ADDRESS(0x0fd81c, 0x4c)
 MAC_ADDRESS(0x130c68, 0x8c)
 int safeRandom(int min, int max)
 {
-    // Mac retains this call at 0:0x130c9c.
     if (!g_remoteOn)
         return random(min, max);
     if (max == min)
@@ -65,21 +63,13 @@ void generateUniqueSystemID()
 }
 
 // E:\gamedcs\misc.cpp:170
-// DC misc.cpp:172..206 and Mac 0x130e74..0x130f6c preserve the flag order,
-// including the second animateSpellBook mask. The final four are window
-// menu/fullscreen, first-time, then first-install (DC 201/202/204/206;
-// Mac 0x130f40/0x130f4c/0x130f58/0x130f64). Restoring that tail order
-// raises Windows 92.7784% to 100%, with all 24 retail blocks matching.
-// Expanding every compound mask into x = x & 1 is byte-flat in both compilers.
-// A shared settings reference is also Windows-flat; its Mac comparison
-// remains unavailable, so the ordinary direct global access is retained.
-// Restoring DC configStruct's windowConfig subrecord and plain-char
-// bFirstInstall preserves the field layout and is Windows-byte-flat;
-// those type facts are independent of the recovered statement order.
-// Mac config storage also differs: First Time is inside it at +0x54,
-// followed by windowConfig at +0x58;
-// army-info/name/combat-speed are +0x74/+0x94/+0x98 (Win +0x70/+0x90/+0x94).
-// The shared class is kept pending a reviewed platform-layout model.
+// DC misc.cpp:172..206 preserve the flag order, including the second
+// animateSpellBook mask. The final four are window menu/fullscreen,
+// first-time, then first-install (DC 201/202/204/206). The settings are
+// direct global accesses. DC configStruct's windowConfig subrecord and
+// plain-char bFirstInstall fix the field layout. Mac config storage differs
+// (First Time inside it at +0x54, then windowConfig at +0x58); the shared
+// class is kept pending a reviewed platform-layout model.
 VA(0x0050b260, 0x26C)
 DC_ADDRESS(0x0fd958, 0x134)
 MAC_ADDRESS(0x130e60, 0x21c)  // body + sole retail caller
@@ -91,7 +81,7 @@ void checkConfigFile()
     g_config.m_quickCombat &= 1;
     g_config.m_videoSubtitles &= 1;
     g_config.m_townOutlines &= 1;
-    // DC and Mac both retain this second mask. VC6 folds adjacent repeats.
+    // DC and Mac both retain this second mask.
     g_config.m_animateSpellBook &= 1;
     g_config.m_showCombatGrid &= 1;
     g_config.m_showCombatMouseHex &= 1;
@@ -137,17 +127,9 @@ void checkConfigFile()
 }
 
 // E:\gamedcs\misc.cpp:352
-// NOT promotable, checked 2026-08-13 against the same evidence that promoted
-// its sibling: there is no retail body to promote. Source order would emit it
-// between SetGameDefaults (0x50b4d0, ends 0x50b6f2) and
-// SetDefaultCombatOptions (0x50b700), and that gap is fourteen bytes of
-// padding; no other carve row in misc.obj's band fits these default-option stores
-// either (the unclaimed rows are 95/95 B before the band starts and
-// 221/32/489 B at its end). An EXTERN function is emitted out of line
-// unconditionally under /Ob2, so the absence of a body is itself the
-// evidence: retail's SetDefaultSystemOptions has internal linkage and its one
-// call site inlined it away. Mac retains this helper at code 0:0x131144;
-// setGameDefaults calls it there. Its first store initializes animateSpellBook;
+// No retail body: SetDefaultSystemOptions has internal linkage and its one
+// call site inlined it. Mac retains this helper; setGameDefaults calls it
+// there. Its first store initializes animateSpellBook;
 // setDefaultCombatOptions repeats that initialization.
 DC_ADDRESS(0x0fdb78, 0x20)
 MAC_ADDRESS(0x131144, 0x3c)
@@ -735,11 +717,10 @@ void writePrefs()
     writePrefsToRegistry();
 }
 
-// DC IsCDDrive (misc.cpp:603, 0xfe060) accepts every drive; its
-// caller SetupCDDrive returns a fixed 7 as well. The pinned Complete entry
-// at 0x50c1c0 is patched to that result. The overwritten prologue's tail and
-// unreachable drive-enumeration/MCI code remain through 0x50c599; they are
-// not part of this six-byte source match. See config/source/dc_only.tsv.
+// DC IsCDDrive (misc.cpp:603) accepts every drive; its caller SetupCDDrive
+// returns a fixed 7 as well. The pinned Complete entry is patched to that
+// result, with the overwritten drive-enumeration/MCI code left behind it.
+// See config/source/dc_only.tsv.
 VA(0x0050c1c0, 0x6)
 DC_ADDRESS(0x0fe064, 0x4)
 MAC_ADDRESS(0x13137c, 0x114)
@@ -780,14 +761,8 @@ void sRand(int seed)
 }
 
 // CodeView proves both degenerate-range returns, then rand at line 805 and
-// the inclusive remainder at 806. Restore this ordinary source body instead
-// of three caller-local adapters to Random. Retail callers reach 0x50b230,
-// whose guards/rand/remainder also implement Random; the identical-body
-// comparison is checked separately from ownership. No second RVA is claimed.
-// VC6 verification: `sema compare 0x50b230 --unit misc --symbol
-// ?sRandom@@YIHHH@Z --no-build --why-bytes` agrees in every view, including
-// the rand relocation. The two source bodies can therefore share retail's
-// retained code without replacing SRandom's implementation with an adapter.
+// the inclusive remainder at 806. This ordinary source body shares
+// Random's retained code; no second RVA is claimed.
 // E:\gamedcs\misc.cpp:796
 DC_ADDRESS(0x0fe0d0, 0x3c)
 MAC_ADDRESS(0x1314b4, 0x6c)
@@ -807,8 +782,7 @@ MAC_ADDRESS(0x131520, 0x70)
 std::string formatString(const char* format, ...)
 {
     // Dreamcast CodeView types format_string's function static `buffer` as
-    // char[512]. Retail's only three references to it are the vsprintf
-    // destination, the strlen source and the copy source.
+    // char[512].
     DATA(0x006996cc)
     static char buffer[512];
     va_list arguments;
@@ -818,9 +792,7 @@ std::string formatString(const char* format, ...)
     return std::string(buffer);
 }
 
-// Both native constructors pass high-low+1 directly to vector<bool>;
-// reloading m_numbersLeft is an extra CodeWarrior load. The ordinary
-// declaration selects each standard library's own byte/packed storage.
+// Both native constructors pass high-low+1 directly to vector<bool>.
 VA(0x0050c6e0, 0x55)
 DC_ADDRESS(0x0fe150, 0x3e)
 MAC_ADDRESS(0x131590, 0x60)

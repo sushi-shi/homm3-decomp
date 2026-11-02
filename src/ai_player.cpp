@@ -324,8 +324,7 @@ unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown)
 }
 
 // Original: type_town_threat_checker::is_marked; ai_player.cpp:179
-// Retail vtable0x63b670 slot1 points to the folded xor-al/ret4 body
-// 0x5543f0; DC independently returns false at source180.
+// DC returns false at source180 (retail shares a folded false body).
 DC_ADDRESS(0x02dfa0, 0x4)
 unsigned char type_town_threat_checker::isMarked(const town* ourTown) const
 {
@@ -353,14 +352,14 @@ public:
 };
 
 // Original: type_garrison_purchaser::clear_marks; ai_player.cpp:202
-// Retail vtable0x63b67c slot0 is the shared empty return0x5bc690.
+// The retail slot is the shared empty return.
 DC_ADDRESS(0x02dfec, 0x4)
 void type_garrison_purchaser::clearMarks() const
 {
 }
 
 // Original: type_garrison_purchaser::is_marked; ai_player.cpp:209
-// Retail vtable0x63b67c slot1 shares the false/ret4 body0x5543f0.
+// The retail slot shares the folded false body.
 DC_ADDRESS(0x02dff0, 0x4)
 unsigned char type_garrison_purchaser::isMarked(const town* ourTown) const
 {
@@ -385,11 +384,8 @@ MAC_COMPGEN_ADDRESS(0x02b304, 0x68, IMPLICIT_DTOR, type_AI_creature_purchaser)
 
 // Original: type_AI_player::get_resource_value; ai_player.cpp:230
 // DC235/236 sums seven resources with conversion back to long each turn;
-// GetTotalValue calls it at DC1359. Retail0x42a150 expands this loop.
-// The indexed double reads are direct: DC 236 has no call to the
-// ai_player.h:278 getter (which DC's income artifact does call), and its
-// expansion adds a double return temporary that retail's inlined copy in
-// getTotalValue lacks (0x38 versus 0x30 frame, 96.21%).
+// GetTotalValue calls it at DC1359 and inlines it. The indexed double reads
+// are direct: DC 236 has no call to the ai_player.h:278 getter.
 DC_ADDRESS(0x02e094, 0xc8)
 MAC_ADDRESS(0x02b36c, 0x78)
 // Original DC ?get_resource_value@type_AI_player@@QBAJQAH@Z puts the
@@ -644,27 +640,12 @@ void type_AI_player::endTurn()
 // The request dialog alone observes CTurnDuration and times out at 15000 ms.
 
 // Dreamcast names player as playerData& and calls the by-value min/max
-// wrappers in the surplus calculation (lines 519, 522/526, 541). Retail
-// independently copies both inputs to each selector into temporary homes.
-// Those recovered boundaries move the current 79.71% implementation to
-// 84.82%. The recipient-demand selector also copies both inputs in retail
-// (0x4292d6 / 0x4292db), unlike DC's direct-reference std::min; the ordinary
-// min wrapper reproduces those copies and reaches 85.05%.
+// wrappers in the surplus calculation (lines 519, 522/526, 541); the
+// recipient-demand selector uses the ordinary min wrapper too.
 
-// Both dialog-resource records are initialized BEFORE IsLocalHuman, then
-// shared by the local display and remote-message arms. DC lines 591-600 and
-// 622-631 prove the scope; retail stores the first pair at 0x4293c9/0x4293d1
-// before the call and reloads it for CGiftMsg. Recovering these lifetimes
-// reaches 87.31% and fixes the entry register roles previously described as
-// an unreachable compiler-state wall.
-
-// Both retail bodies load the sender quantity before the recipient quantity
-// in the initial difference. Keep the ordinary resource expression instead
-// of preloading a recipient local; VC6 improves 86.52 -> 88.02.
-// Use the indexed AI record directly in the recipient arm. Retaining a
-// reconstructed pointer/reference extends its lifetime across the transfer
-// loop; direct accesses reproduce all 100 retail CFG blocks at 100%. The
-// calculateDemand, min and player helper calls remain unchanged.
+// Both dialog-resource records are initialized before IsLocalHuman, then
+// shared by the local display and remote-message arms (DC lines 591-600 and
+// 622-631).
 VA(0x00429110, 0x6AC)
 DC_ADDRESS(0x02ea20, 0x5a6)
 MAC_ADDRESS(0x02bf4c, 0x6e0)  // linkorder
@@ -860,15 +841,10 @@ void type_AI_player::resetMagusHutValue()
 }
 
 // DC ai_player.cpp:784..788 separates the population load (785), record
-// amount store (786), short multiplication with its exts.w (787) and record
-// value store (788). Short amount and value locals give each statement one
-// role and keep that narrowing before the long m_value field; collapsing it
-// into a cast changes retail's town/population register homes.
-// Mac 0x2cab4..0x2cad8 independently retains the amount store, multiplication,
-// extsh and value store. This ordinary spelling matches all 640 Windows bytes.
-// DC function-scope total_cost is long[7], distinct from int cost[7], and
-// creature_info is copied into the vector. Mac's final resource index
-// sign-extends each iteration. Keep the native locals and short indices.
+// amount store (786), short multiplication (787) and record value store
+// (788), hence the short amount and value locals. DC function-scope
+// total_cost is long[7], distinct from int cost[7], and creature_info is
+// copied into the vector.
 VA(0x00429ad0, 0x280)
 DC_ADDRESS(0x02f280, 0x22e)
 MAC_ADDRESS(0x02c9d8, 0x2ac)  // anchor-callee
@@ -918,9 +894,7 @@ void type_AI_player::calculateReserve()
 }
 
 // DC ai_player.cpp:895..919 proves this ordinary adjacent helper and its
-// long parameter. Complete naturally expands both calls in fillProhibitedArray;
-// the forceinline removal and short-loop family preserve both expansions and
-// the exact caller. Do not add an inline keyword to steer that decision.
+// long parameter; inlined at both calls in fillProhibitedArray.
 DC_ADDRESS(0x02f5fc, 0x98)
 MAC_ADDRESS(0x02cf4c, 0xf0)
 static long sumPlayerDwellings(long playerId)
@@ -992,8 +966,6 @@ void fillProhibitedArray(playerData* player, bool* prohibited)
         }
 
         if (g_game->m_setup.m_difficulty == 0) {
-            // Mac 0x2d36c retains the same isHumanAlly expansion as
-            // 0x2d248 above: getTeam followed by isHumanTeam.
             if (!g_game->isHumanAlly(g_netLocalGamePos)) {
                 if (akCreatureTypeTraits[creature].level
                         == TOWN_DWELLING_COUNT - 1)
@@ -1970,8 +1942,7 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
 }
 
 // Original: move_creatures; ai_player.cpp:2022
-// AddCreatures calls this static ordinary helper at DC2086. Retail
-// 0x42c130 expands its add-or-replace search before dismissing the old slot.
+// AddCreatures calls this static ordinary helper at DC2086 and inlines it.
 DC_ADDRESS(0x031514, 0xa8)
 MAC_ADDRESS(0x02f874, 0x100)
 static void moveCreatures(armyGroup* army, TCreatureType type, short amount)
@@ -2009,10 +1980,9 @@ type_AI_creature_swapper::type_AI_creature_swapper()
     m_armyValueIncrease = 0;
 }
 
-// Mac 0:0x2f990..0x2fa08 retains this Complete-era helper immediately before
-// getAlignments. Its Mac callers are at 0:0x2fa64, 0:0x30220 and 0:0x3032c;
-// VC6 expands its body at those sites. The older DC build has
-// no corresponding named helper, so the original spelling is unknown.
+// Mac retains this Complete-era helper before getAlignments; VC6 inlines it
+// at its three call sites. The older DC build has no corresponding named
+// helper, so the original spelling is unknown.
 MAC_ADDRESS(0x02f990, 0x78)
 int type_AI_creature_swapper::normalizeAlignment(int alignment) const
 {
@@ -2168,13 +2138,8 @@ void type_AI_creature_swapper::doSwap(hero* currentHero,
 // E:\gamedcs\ai_player.cpp:2209. The two 56-byte locals, six helper
 // boundaries, and positive-value loop come from the Dreamcast dossier.
 // Complete adds the Angelic-Alliance byte used by the three philai callers;
-// retail proves its store at +8 and folds calculate_improvement plus the
-// consolidation helper into this selected body.
-// Declaring the ordinary accumulator before the two army copies keeps it in
-// retail's [ebp-4] slot. Windows is exact (15 blocks, eight branches, seven
-// calls and relocations); Mac is also exact (412 bytes, six named calls).
-// Declaring it after both copies promoted it into EDI on Windows and scored
-// 92.5052%; a volatile qualifier scored 80.38% and was rejected.
+// calculate_improvement and the consolidation helper are inlined here. The
+// accumulator is declared before the two army copies.
 VA(0x0042c4a0, 0x108)
 DC_ADDRESS(0x031864, 0xc0)
 MAC_ADDRESS(0x02fe60, 0x19c)  // DC method/locals + Complete parameter
@@ -2643,16 +2608,11 @@ void type_AI_creature_purchaser::doPurchase(
 
 // Original DC public ?get_purchase_value@type_AI_creature_purchaser@@QAAJPBVarmyGroup@@F0QBJ@Z
 // proves const long* const funds (QBJ); the mutable purchase path uses QAJ.
-// Complete adds the final Angelic-Alliance byte to the DC signature. Retail
-// copies both armies and all seven resources, so the valuation can run the
-// real purchaser loop without mutating any caller-owned state. The adjacent
-// local is constructed even when the optional source pointer is null.
-// Mac retail stores m_adjacentArmy in each null/non-null branch. Spelling the
-// two assignments in those branches also restores VC6's register allocation
-// inside the inlined consolidation walk. The Windows body is 100% exact:
-// all 13 blocks, 7 branches, 4 calls, and 4 relocations agree.
-// Mac remains 85.15% with all five named calls in order and equal linked size;
-// its residual is copy scheduling at +0x8/+0x24/+0x110..+0x148.
+// Complete adds the final Angelic-Alliance byte to the DC signature. Both
+// armies and all seven resources are copied, so the valuation can run the
+// real purchaser loop without mutating caller-owned state; the adjacent
+// local is constructed even when the optional source pointer is null, and
+// m_adjacentArmy is assigned in each branch.
 VA(0x0042d780, 0xEF)
 DC_ADDRESS(0x0322f8, 0xc2)
 MAC_ADDRESS(0x030d4c, 0x194)  // DC method/locals + retail Complete tail;
@@ -2760,7 +2720,7 @@ long splitArmy(armyGroup* currentArmy, short index, short limit,
 // This static ordinary helper owns only splitting and its early returns.
 // DC2820 binds current_army;2823 counts free slots;2880/2939 return when
 // the split loops exhaust those slots. Consolidation and final arrangement
-// belong to AI_arrange_army_for_combat below, whose retail body expands us.
+// belong to AI_arrange_army_for_combat below, which inlines it.
 // DC2832..2834 initializes max value, shooter count, then shooter value.
 DC_ADDRESS(0x032670, 0x1ec)
 MAC_ADDRESS(0x031248, 0x258)
@@ -2856,7 +2816,6 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
 
 // Original: AI_arrange_army_for_combat; ai_player.cpp:2952
 // DC2953..2955 calls consolidate, split_armies and arrange in this order.
-// Retail0x42db20 contains the first two expansions and final arrange calls;
 // events::DoCombat calls this wrapper, not its static splitting helper.
 VA(0x0042db20, 0x249)
 DC_ADDRESS(0x03285c, 0x36)
@@ -2901,8 +2860,8 @@ long splitArmy(armyGroup* currentArmy, short index, short limit,
 // E:\gamedcs\ai_player.cpp:2975
 // CodeView makes mark_danger_zones a static three-argument helper and names
 // GetMobility, GetLocation, SeedPosition and the visited-cell accessors.
-// Retail expands this helper inside AI_mark_danger_zones at 0x42de50;
-// the outer player/hero census belongs to that two-argument wrapper.
+// Inlined in AI_mark_danger_zones; the outer player/hero census belongs to
+// that two-argument wrapper.
 DC_ADDRESS(0x032894, 0x164)
 MAC_ADDRESS(0x031500, 0x1f4)
 static void markDangerZones(const hero* ourHero, hero* enemyHero,
@@ -3622,30 +3581,11 @@ long markDestinations(hero* currentHero, long maxDistance,
     return heroDanger;
 }
 
-// Dreamcast proves HeroDestination&. Complete passes the same
-// address and has no nullable path; the previous pointer exception cited an
-// authored symbol label, not a symbol present in the stripped retail image.
-// Reference and pointer share the machine ABI. Retain the reference model
-// through its frame-allocation dip (0x10 versus retail0x18) and recover the
-// caller/callee lifetimes together; all seven named calls remain intact.
-// Dreamcast line 3539 calls type_point::operator!= after FindAdjacentMonster;
-// Complete expands the same three-field inequality. Restoring that source
-// call clears the audit finding and is byte-flat at 85.34764% in VC6.
-// Windows rounds the integer input to float, performs the scale, then calls
-// _ftol without storing a float result. Mac0x32dd4..0x32e20 likewise converts
-// each branch directly back into the integer accumulator before adding20.
-// Removing the extra float result assignment restores that arithmetic and
-// raises Windows 84.96 -> 86.32. DC's monster and point locals both belong
-// to function scope; restoring monster's lifetime reaches 86.50 with all
-// seven canonical calls intact. Reusing currentPathCell after the refund
-// restores the retail barrier/danger source and raises Windows 86.50% to
-// 96.97%; a separate lastCell pointer had preserved the wrong cell.
-// DC3510 groups the three refund guards; its monster local is declared at
-// 3531, after danger accumulation. Reusing point as both search arguments
-// restores the native common argument copy (Mac0x32c84..0x32c98).
-// Windows0x42fac7 is cmp esi,5000000 (81fe404b4c00), not1968:
-// that scalar had been mislabeled as the function at0x4c4b40 by delinking.
-// These corrections reach Windows100%, with all seven helper calls intact.
+// Dreamcast proves HeroDestination&. Dreamcast line 3539 calls
+// type_point::operator!= after FindAdjacentMonster. DC's monster and point
+// locals both belong to function scope; currentPathCell is reused after the
+// refund. DC3510 groups the three refund guards; its monster local is
+// declared at 3531, after danger accumulation.
 // E:\gamedcs\ai_player.cpp:3498
 // Prices one candidate destination: a pickupable trigger already visited by
 // this player refunds the final step (move_cost re-based to last_point's
@@ -3665,12 +3605,8 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
     int type = cell->m_type;
     if (cell->m_isTrigger && akAdvObjectTypeTraits[type].m_blocksLanding
         && (getMapExtra(point) & g_curPlayerBit)) {
-        // Mac0x32b48/0x32b4c snapshots the last point before the
-        // movement refund at0x32b50..0x32b5c. Keep the same source order.
         point = currentPathCell->m_lastPoint;
         destination.m_moveCost -= currentPathCell->m_cost;
-        // Windows keeps the returned cell in EBX for the following
-        // barrier/danger reads; Mac 0x32bcc likewise replaces r25.
         // The refund changes the active path cell, not just its cost.
         currentPathCell = currentSearchArray->getCell(point, 0);
         destination.m_moveCost += currentPathCell->m_cost;
@@ -3737,7 +3673,7 @@ static unsigned char attemptTeleport(hero* currentHero,
 // Original: ConsiderHidingMouse; ai_player.cpp:3813
 // DC3815 calls IsVis/GetMoveShowIt;3819..3822 saves, enables, hides and
 // restores the drawing flag. AttemptStep calls this ordinary static helper
-// at DC3838; retail0x42fc50 expands it before reading the path-cell point.
+// at DC3838 and inlines it.
 DC_ADDRESS(0x034164, 0x90)
 MAC_ADDRESS(0x033a78, 0x80)
 static void considerHidingMouse(hero* currentHero, int direction)
@@ -4022,7 +3958,8 @@ static unsigned char attemptTeleport(hero* current_hero,
         }
     } while (pathIndex < destination_index);
 
-    g_advManager->teleportTo(current_hero, path[destination_index].m_point, 0,
+    start_point = path[destination_index].m_point;
+    g_advManager->teleportTo(current_hero, start_point, 0,
                              0, 1, 0);
     current_hero->useSpell(mana_cost);
     ++current_hero->m_dWalkSpellsCast;
@@ -4683,8 +4620,8 @@ long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigne
     return owner->getValueOfKnowledge() * m_bonus;
 }
 
-// Mac 0:0x36f38 retains this evaluator as a base-class call from both
-// necromancy artifacts. VC6 expands it in their retail getValue bodies.
+// Mac retains this evaluator as a base-class call from both necromancy
+// artifacts; inlined in their getValue bodies.
 MAC_ADDRESS(0x036f38, 0xfc)
 long type_base_necromancy_artifact::getValue(
     const hero* owner, unsigned char equipped, unsigned char) const
@@ -4704,8 +4641,6 @@ long type_base_necromancy_artifact::getValue(
 }
 
 // E:\gamedcs\ai_player.cpp:5152
-// Mac keeps the base evaluator call after the mastery guard. Restoring the
-// same source call lets VC6 expand it and matches all 12 retail CFG blocks.
 // DC's older body contains the calculation directly; its std::min call
 // corroborates the shared evaluator's minimum operation.
 VA(0x00432640, 0x97)
@@ -4959,16 +4894,10 @@ long type_creature_growth_artifact::getValue(const hero* owner,
     return value;
 }
 
-// Complete extends initialize_artifact_effects from DC's effect kinds
-// 0..17 (dc 0x35f3c/0x35f3e) to 0..23 (retail 0x43415b). Its new
-// jump-table entries 18..23 at 0x434578..0x43458c construct these six
-// concrete effects at 0x43443e/0x434463/0x434485/0x4344a2/0x4344cd/
-// 0x4344e3. Their vptr stores link each constructor to the getValue below:
-// 0x63b74c/0x63b754/0x63b75c/0x63b764/0x63b778/0x63b770 respectively.
-// Each table has the shared deleting destructor 0x433080 at slot 0 and
-// the matching three-argument, ret 0xc getValue at slot 1. The exact
-// Complete-only constructor and virtual definitions are reviewed in
-// config/source/win_only.tsv; class names remain provisional semantic names.
+// Complete extends initialize_artifact_effects from DC's effect kinds 0..17
+// to 0..23; the six new kinds construct these concrete effects, each with
+// the shared deleting destructor at slot 0 and its getValue at slot 1.
+// Class names are provisional semantic names.
 VA(0x00432f90, 0xe4)
 MAC_ADDRESS(0x038014, 0xd4)  // vtable-slot 0x63b750 + get_raw_spell_value, retail-only
 long type_spell_artifact::getValue(const hero* owner, unsigned char equipped,
@@ -5047,14 +4976,11 @@ long type_angelic_alliance_artifact::getValue(
         }
     }
 
-    // Mac 0x3846c retains the might-artifact base evaluator at 0x36df0.
     return type_might_artifact::getValue(owner, equipped, exact)
         + total * 5 / 100;
 }
 
 // Mac calls the shared base evaluator twice, once for each mastery path.
-// The canonical calls give VC6 the retail quotient register schedule in both
-// expansions; all 29 CFG blocks and 12 branches now agree.
 VA(0x004333a0, 0x174)
 MAC_ADDRESS(0x0384e0, 0x104)  // vtable slot 0x63b768, Mac 0:0x384e0
 long type_undead_king_cloak_artifact::getValue(const hero* owner,
@@ -5131,20 +5057,12 @@ long type_statue_of_legion_artifact::getValue(
 }
 
 // E:\gamedcs\ai_player.cpp:5557
-// Retail's /Gr call sites put owner/equipped in ECX/DL and the two-dword
-// artifact plus exact on the stack. The contiguous 1..6 jump table separates
-// the scroll and three war-machine appraisals from the ordinary effect-vector
-// path; Dreamcast independently names the function, its four parameters and
-// const_artifact_effects. The current ordinary-C++ reconstruction has retail's
-// 26/26 branch stream and all eight returns. Mac 0x38a68 retains the
-// selected effects row across its loop, and 0x38b30 retains the component
-// bitset across nested virtual calls. Ordinary references recover those
-// same Windows lifetimes, including the first-aid temporary homes: 100%.
-// Either reference alone is insufficient; the complete source model closes.
-// DC line 5578 calls hero::get_secondary_skill(20). Mac's ballista arm
-// expands it to the skill byte at hero+0xdd; retain the canonical typed call.
-// DC line 5620 calls the by-value max(int,int), and both first-aid arms in
-// retail make separate argument-home copies before choosing an address.
+// The contiguous 1..6 jump table separates the scroll and three war-machine
+// appraisals from the ordinary effect-vector path; Dreamcast independently
+// names the function, its four parameters and const_artifact_effects. The
+// effects row and the component bitset are ordinary references. DC line
+// 5578 calls hero::get_secondary_skill(20), and DC line 5620 calls the
+// by-value max(int,int).
 VA(0x004336c0, 0x320)
 DC_ADDRESS(0x037194, 0x2d0)
 MAC_ADDRESS(0x03879c, 0x428)  // anchor-callee unique (hero::GetFirstAidFactor)
@@ -5222,8 +5140,6 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
          || victoryType == VICTORY_CONDITION_TRANSPORT_ARTIFACT)
         && g_game->m_mapHeader.m_victoryCondition.m_artifactNum
                == artifact.m_artifactId) {
-        // Windows0x4338f4 stores5000000. Mac0x38a9c/0x38aa0
-        // uses the same victory bonus, added to its existing value.
         value = 5000000;
     }
 
@@ -5324,7 +5240,7 @@ void aiEquipArtifacts(hero* ourHero)
 }
 
 // DC 0x377f0, 0x37898 and 0x37acc call the TArtifact(-1) constructor for
-// these artifact locals; that member-store order also matches retail VC6.
+// these artifact locals.
 VA(0x00433bb0, 0xad)
 DC_ADDRESS(0x0377f0, 0xa8)
 MAC_ADDRESS(0x038ffc, 0x100)
@@ -5393,9 +5309,8 @@ long getFullValue(const hero* ourHero)
         SPELL_VALUE_CLASS_MASK ^ SPELL_VALUE_SPECIAL);
     value += caster.getBestSpellValue(SPELL_VALUE_SPECIAL);
 
-    // DC 0x37758 constructs this artifact with -1 before the slot loop.
-    // Mac 0x38f78..0x38f8c overwrites the same two-word temporary each turn;
-    // its initial value is dead, but the source lifetime still spans the loop.
+    // DC 0x37758 constructs this artifact with -1 before the slot loop; its
+    // initial value is dead, but the source lifetime spans the loop.
     type_artifact artifact(ARTIFACT_NONE);
     for (int slot = 0; slot < kNumArtifactSlots + 1; ++slot) {
         artifact = ourHero->getArtifact(TArtifactSlot(slot));
@@ -5901,7 +5816,7 @@ void aiShutDown()
     }
 }
 
-// COMDAT pairing: vector<type_creature_source>::size, agreement 1.000.
+// COMDAT pairing: vector<type_creature_source>::size.
 VA_COMPGEN(0x00434600, 0x20, VECTOR_SIZE, type_creature_source)
 
 VA_COMPGEN(0x00434620, 0x23, VECTOR_SIZE, pathCell)
@@ -5912,61 +5827,43 @@ VA_COMPGEN(0x00434680, 0x4D, VECTOR_ERASE, type_creature_source)
 
 VA_COMPGEN(0x00434ba0, 0x43, VECTOR_UCOPY, type_creature_source)
 
-// The retained uninitialized fill copies the three dwords of each
-// type_creature_source record.  The emitted loop agrees with all 58 bytes.
+// The retained uninitialized fill of type_creature_source records.
 VA_COMPGEN(0x0054d580, 0x3A, VECTOR_UFILL, type_creature_source)
 
-// COMDAT pairing: vector<pathCell>::_Ucopy, agreement 0.952; the
-// type_creature_source arm scores 0.531 at operand level.
+// COMDAT pairing: vector<pathCell>::_Ucopy.
 VA_COMPGEN(0x00434bf0, 0x3D, VECTOR_UCOPY, pathCell)
 
-// COMDAT pairing: std::_Sort<type_creature_value, greater>, agreement 0.979.
-// The default-predicate arm scores 0.932 here and 0.976 at 0x34e80, so the
-// two instantiations separate cleanly.
+// COMDAT pairing: std::_Sort<type_creature_value, greater>.
 VA_COMPGEN(0x00434ce0, 0x199, STD_SORT, type_creature_value_greater)
 
-// COMDAT pairing: std::_Sort<type_creature_value>, agreement 0.976.
+// COMDAT pairing: std::_Sort<type_creature_value>.
 VA_COMPGEN(0x00434e80, 0x191, STD_SORT, type_creature_value)
 
-// COMDAT pairing: std::_Sort<long>, agreement 0.995.
+// COMDAT pairing: std::_Sort<long>.
 VA_COMPGEN(0x00435070, 0xCF, STD_SORT, long)
 
-// COMDAT pairing: std::_Insertion_sort_1<type_creature_value, greater>,
-// agreement 0.955 against 0.920 for the default-predicate arm.
+// COMDAT pairing: std::_Insertion_sort_1<type_creature_value, greater>.
 VA_COMPGEN(0x00435160, 0xD5, INSERTION_SORT_1, type_creature_value_greater)
 
-// COMDAT pairing: std::_Insertion_sort_1<type_creature_value>, agreement
-// 0.955 against 0.920 for the greater arm.
+// COMDAT pairing: std::_Insertion_sort_1<type_creature_value>.
 VA_COMPGEN(0x00435310, 0xD5, INSERTION_SORT_1, type_creature_value)
 
-// COMDAT pairing: std::_Insertion_sort_1<long>, agreement 0.926.
+// COMDAT pairing: std::_Insertion_sort_1<long>.
 VA_COMPGEN(0x004353f0, 0x67, INSERTION_SORT_1, long)
 
-// COMDAT pairing: std::_Unguarded_partition<type_creature_value, greater>,
-// agreement 0.929.
+// COMDAT pairing: std::_Unguarded_partition<type_creature_value, greater>.
 VA_COMPGEN(0x00435290, 0x78, STD_UNGUARDED_PARTITION, type_creature_value_greater)
 
-// COMDAT pairing: std::_Median<type_creature_value, greater>, agreement
-// 0.971. Its element arrives BY VALUE, so the key is decoded from the
-// return type rather than from a pointer parameter.
+// COMDAT pairing: std::_Median<type_creature_value, greater>.
 VA_COMPGEN(0x00435240, 0x4E, STD_MEDIAN, type_creature_value_greater)
 
-// COMDAT pairing: bitset<144>::_Xran. All five surviving `_Xran` bodies in
-// the image are byte-identical (same "invalid bitset<N> position" literal at
-// 0x65f450), so neither similarity nor size can separate them - the BOUND
-// COMPARE in each caller can. Every caller of 0x346d0 guards the call with
-// `cmp <reg>, 0x90`, and one of them is the already-claimed
-// bitset<144>::set at 0x4cf9a0.
+// COMDAT pairing: bitset<144>::_Xran.
 VA_COMPGEN(0x004346d0, 0xCB, BITSET_XRAN, Bitset144)
 
-// COMDAT pairing: bitset<9>::_Xran, by the same bound-compare lever: all four
-// callers of 0x34ad0 guard with `cmp <reg>, 0x9`, among them armygrp's
-// claimed bitset<9>::set (0x44c680) and bitset<9>::reference::operator=
-// (0x44c610).
+// COMDAT pairing: bitset<9>::_Xran.
 VA_COMPGEN(0x00434ad0, 0xCB, BITSET_XRAN, Bitset9)
 
 VA_COMPGEN(0x00435020, 0x42, STD_UNGUARDED_INSERT, type_creature_value)
 
-// COMDAT pairing: std::_Unguarded_insert<long>. Both parameters are register
-// arguments under /Gr, so this one ends on a bare `ret`.
+// COMDAT pairing: std::_Unguarded_insert<long>.
 VA_COMPGEN(0x00435140, 0x1C, STD_UNGUARDED_INSERT, long)

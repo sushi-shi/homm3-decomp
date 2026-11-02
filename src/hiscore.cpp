@@ -238,8 +238,7 @@ int highScoreWindowHandler(message& msg);
 // the default branch's hiscore.h location.
 
 // Original: CHighScoreEdit::OnNextEdit; hiscore.cpp:225
-// Retail CHighScoreEdit vtable 0x63ebf4 shares slots 19/20 with CMPEdit
-// (0x510850/0x510870), whose two edit links have the same offsets.
+// Shares CMPEdit's two edit-link bodies, which have the same offsets.
 DC_ADDRESS(0x0d8e08, 0x28)
 MAC_ADDRESS(0x10c110, 0x40)
 void CHighScoreEdit::onNextEdit()
@@ -258,7 +257,7 @@ void CHighScoreEdit::onPrevEdit()
 }
 
 // Original: CHighScoreEdit::SetFocus; hiscore.cpp:252
-// Slot 14 shares CMPEdit's forwarding body at 0x510890.
+// Shares CMPEdit's forwarding body.
 DC_ADDRESS(0x0d8e58, 0x18)
 MAC_ADDRESS(0x10afb0, 0x20)
 void CHighScoreEdit::setFocus(bool state)
@@ -266,10 +265,9 @@ void CHighScoreEdit::setFocus(bool state)
     textEntryWidget::setFocus(state);
 }
 
-// DC names the three CHeroWindowEx-tail pointers at +0x4c/+0x50/+0x54.
-// Retail's proven CHeroWindowEx is four bytes wider, putting them at
-// +0x50/+0x54/+0x58; GetRolloverWidget 0x4e97f0 directly confirms the
-// last shifted offset.
+// DC names the three CHeroWindowEx-tail pointers at +0x4c/+0x50/+0x54;
+// Complete's CHeroWindowEx is four bytes wider, putting them at
+// +0x50/+0x54/+0x58.
 DC_ADDRESS(0x0d8ebc, 0x290)
 inline CHSInputDlg::CHSInputDlg(int maxChars)
     : CHeroWindowEx(284, 194, 232, 212, 0x12)
@@ -310,9 +308,9 @@ inline CHSInputDlg::CHSInputDlg(int maxChars)
 }
 
 // DC360/362 rejects an active empty field, then DC366 returns success.
-// OnWidgetDeselect names this ordinary helper at DC338; retail expands it.
-// Its retained DC public is QAA_NXZ (bool); SH4 debug types expose the
-// underlying byte as unsigned char. Preserve the public return type.
+// OnWidgetDeselect names this ordinary helper at DC338; inlined. Its DC
+// public is QAA_NXZ (bool); SH4 debug types expose the underlying byte as
+// unsigned char.
 DC_ADDRESS(0x0d91cc, 0x38)
 bool CHSInputDlg::onOK()
 {
@@ -378,14 +376,14 @@ int highScoreManager::open(int newPriority)
 }
 
 // Original: highScoreManager::Close; hiscore.cpp:711
-// Retail manager vtable 0x63eb8c shares the empty close at 0x5bc690.
+// Shares the empty close body.
 DC_ADDRESS(0x0d7b88, 0x44)
 void highScoreManager::close()
 {
 }
 
 // Original: highScoreManager::Main; hiscore.cpp:721
-// Its next vtable slot shares the zero-return body at 0x4ec560.
+// Shares the zero-return body.
 DC_ADDRESS(0x0d7bcc, 0x4)
 int highScoreManager::main(message& msg)
 {
@@ -402,15 +400,12 @@ void highScoreManager::viewHiScore()
     highScoreWindow.doModal();
 }
 
-// The retail build inlines this sole constructor use into
-// AddScoreToHighScore.  Every widget argument below is byte-visible in that
-// expansion; the three-entry reserve followed by four pushes also explains
-// the one reallocating final insertion.
+// Inlined into AddScoreToHighScore, its sole use.
 
 // Dreamcast hiscore.cpp:738 names WriteHighScores and preserves its
-// 351-byte cBuf local even in the VMU port. Retail's two caller expansions
-// prove the PC file path, flags, error handler and full score-table write.
-// Mac retains this helper at 0:0x10a8bc using its file adapter.
+// 351-byte cBuf local even in the VMU port; Complete writes the PC file
+// path with its flags, error handler and full score table. Inlined in both
+// callers.
 DC_ADDRESS(0x0d7bf4, 0x46)
 MAC_ADDRESS(0x10a8bc, 0xc4)
 void writeHighScores()
@@ -512,10 +507,9 @@ int CHighScoreEdit::onKeyPress(message* msg)
     return textEntryWidget::onKeyPress(msg);
 }
 
-// DC CHSInputDlg::WindowHandler (hiscore.cpp:371, dc 0xd920c) creates
-// VRKeyboard, copies its result to the edit, then synthesizes dialog close.
-// Complete uses native text entry: vtable 0x63ebbc slot 9 is the inherited
-// CHeroWindowEx::windowHandler (0x5ff820). There is no console override.
+// DC CHSInputDlg::WindowHandler (hiscore.cpp:371) creates VRKeyboard,
+// copies its result to the edit, then synthesizes dialog close. Complete
+// uses native text entry through the inherited CHeroWindowEx::windowHandler.
 VA(0x004e9740, 0x4E)
 DC_ADDRESS(0x0d914c, 0x44)
 MAC_ADDRESS(0x10af38, 0x78)
@@ -564,8 +558,8 @@ int highScoreManager::getMonType(int score, int scoreType)
     return monsterType;
 }
 
-// Mac code 0x10b024 retains this source-local wrapper between getMonType
-// and THighScoreWindow's constructor. The constructor and the score-reset
+// Mac retains this source-local wrapper between getMonType and
+// THighScoreWindow's constructor. The constructor and the score-reset
 // handler call it for both icon families. It loads the score, resolves the
 // monster type, and returns the selected object's image name.
 MAC_ADDRESS(0x10b024, 0x60)
@@ -577,11 +571,8 @@ static const char* highScoreCreatureImageName(int index, int scoreType)
         MONSTER, monsterType)->m_imageName.c_str();
 }
 
-// Four controls precede two 11-icon score families. Mac code 0x10b084 calls
-// the retained source-local image-name helper at 0x10b024 for each family.
-// VC6 inlines that ordinary helper into both loops; naming its score and
-// monster-type locals restores the retail second-loop register order. The
-// Windows constructor then reaches MAX 100% with 46 matching CFG blocks.
+// Four controls precede two 11-icon score families, each calling the
+// source-local image-name helper (inlined).
 // E:\gamedcs\hiscore.cpp:858
 VA(0x004e9880, 0x506)
 DC_ADDRESS(0x0d7e3c, 0x5c4)
@@ -657,7 +648,7 @@ THighScoreWindow::THighScoreWindow()
 }
 
 // DC941/943 owns this update/dialog pair. ViewHiScore calls the ordinary
-// helper at DC734; its retail body contains the corresponding expansion.
+// helper at DC734; inlined.
 DC_ADDRESS(0x0d8400, 0x22)
 MAC_ADDRESS(0x10b708, 0x44)
 void THighScoreWindow::doModal()
@@ -666,9 +657,7 @@ void THighScoreWindow::doModal()
     g_windowManager->doDialog(this, highScoreWindowHandler, 0);
 }
 
-// DC 0xd92c8 proves destructor -> conditional operator-delete.  Retail's
-// 33-byte wrapper matches all 3 CFG blocks exactly; compiler-generated /Z7
-// output carries no classic source-line records.
+// DC 0xd92c8 proves destructor -> conditional operator-delete.
 VA_COMPGEN(0x004e9d90, 0x21, SCALAR_DELETING_DTOR, THighScoreWindow)
 
 VA(0x004e9dc0, 0x81)
@@ -684,11 +673,11 @@ THighScoreWindow::~THighScoreWindow()
     }
 }
 
-// The two numeric columns are asymmetric, which is what fixes the family
-// selector's polarity: a STANDARD sheet shows days (field_58) at x=0x213 in a
-// 0x34-wide box and the score (field_54) again at 0x259, while a campaign
-// sheet shows the score alone at 0x213 in a 0x7a-wide box. Text indices are
-// raw here, as highScoreManager::AddScoreToHighScore's own GetText(261) is.
+// The two numeric columns are asymmetric: a STANDARD sheet shows days
+// (field_58) at x=0x213 in a 0x34-wide box and the score (field_54) again
+// at 0x259, while a campaign sheet shows the score alone at 0x213 in a
+// 0x7a-wide box. Text indices are raw here, as
+// highScoreManager::AddScoreToHighScore's own GetText(261) is.
 VA(0x004e9e50, 0x372)
 DC_ADDRESS(0x0d849c, 0x3ac)
 MAC_ADDRESS(0x10b820, 0x474)
@@ -857,7 +846,6 @@ int highScoreWindowHandler(message& msg)
 
             writeHighScores();
 
-            // Mac retains both image-name calls; retail VC6 expands them.
             for (int reset = 0; reset < 11; ++reset) {
                 g_highScoreWindow->m_creatures[1][reset]->setSprite(
                     highScoreCreatureImageName(reset, 1));
@@ -909,5 +897,5 @@ int highScoreWindowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-// COMDAT pairing: vector<widget*>::reserve, agreement 0.993.
+// COMDAT pairing: vector<widget*>::reserve.
 VA_COMPGEN(0x004ea630, 0x9F, VECTOR_RESERVE, widget)

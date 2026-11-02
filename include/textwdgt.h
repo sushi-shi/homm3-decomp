@@ -43,10 +43,9 @@ public:
     MAC_ADDRESS(0x005bcc, 0x4c)  // textWidget vtable slot 13 + DC header COMDAT
     virtual void setText(const char* newText) { m_text = newText; }
 
-    // E:\gamedcs\TextWdgt.h:67; DC emits this header helper out of line,
-    // while Complete folds the c_str() access into its callers.
-    // Class-inline as in TextWdgt.h:67. Removing the unsupported forceinline
-    // qualifier is byte-neutral across the affected widget/name-edit callers.
+    // E:\gamedcs\TextWdgt.h:67, class-inline; DC emits this header helper
+    // out of line, while Complete inlines the c_str() access into its
+    // callers.
     DC_ADDRESS(0x0d8d14, 0x18)
     const char* getText() { return m_text.c_str(); }
 

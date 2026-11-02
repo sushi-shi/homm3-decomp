@@ -218,28 +218,23 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
 VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 
 // The background's recorded palette-call arms and the morale/luck helpers'
-// owning member stores are positive source facts.
-// Retail keeps createLuckWidget's nested tLimit out of line, which needs this
-// caller's front-end cost (homm3 vc6 cb) in 1085..1142. The influence fill is
-// DC 229..232's counted loop with a braced body (coincident scopes at 231):
-// 1075 -> 1085. DC records no widget-vector alias, and retail addresses
-// m_widgets through `this`.
+// owning member stores are positive source facts. DC 229..232's counted
+// influence loop has a braced body (coincident scopes at 231). DC records no
+// widget-vector alias.
 // The garrison/hero-screen popup: one slot of an armyGroup, shown with
 // the owning hero's bonuses folded in and the upgrade/dismiss actions
 // live. Three things separate it from the one-army constructor:
 
-//  * the traits row is COPIED BY VALUE onto the frame (`mov ecx,0x1d /
-//    rep movsd`) so hero::applyCreatureStatBonuses can fold the hero's own
-//    attack/defense and artifacts into the copy without touching the
-//    table. Every "modified" column then reads the copy while its
-//    "base" column reads the table row through the cached pointer.
-//  * ShowingUpgradeButton and ShowingDismissButton are NOT in the
-//    mem-init list - retail writes each 1 only inside the branch that
-//    creates its button, and leaves them alone otherwise. Only
-//    ShowingOkButton is initialised, which is why the vptr store
-//    follows +0x96 directly.
-//  * `Upgrade` is written from the BODY, after the vptr, because the
-//    !show_ok early clean-up rewrites its incoming value first.
+//  * the traits row is COPIED BY VALUE onto the frame so
+//    hero::applyCreatureStatBonuses can fold the hero's own attack/defense
+//    and artifacts into the copy without touching the table. Every
+//    "modified" column then reads the copy while its "base" column reads
+//    the table row through the cached pointer.
+//  * ShowingUpgradeButton and ShowingDismissButton are NOT in the mem-init
+//    list - each is set to 1 only inside the branch that creates its
+//    button. Only ShowingOkButton is initialised.
+//  * `Upgrade` is written from the BODY, because the !show_ok early
+//    clean-up rewrites its incoming value first.
 
 // E:\gamedcs\viewarmywindow.cpp:140
 VA(0x005f3b50, 0x6B2)
@@ -344,8 +339,6 @@ MAC_ADDRESS(0x200290, 0x2a4)
 TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
                                  unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
-      // Retail initialises the creature type in the member list, before the
-      // widget run; assigning it in the body costs 94.4475 against 97.1745.
       m_armyType(TCreatureType(armyType)),
       m_showingUpgradeButton(0),
       m_showingDismissButton(0),
@@ -356,8 +349,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     m_widgets.reserve(NWIDGETS);
 
     // No hero owns a bare creature type, so the plate takes the local
-    // player's colours unconditionally - the null argument is what folds
-    // create_background_widget's ternary down to that one call.
+    // player's colours unconditionally.
     createBackgroundWidget(0);
     createNameWidget(traits->m_plural_name);
 
@@ -484,13 +476,11 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // spells whose effect has no turn count (Bind, Berserk, Disrupting Ray)
 // the strip gets a fixed descriptor instead of Duration.
 //
-// DC lines 412/511-583 prove the shared exit flag. The help-text stores
-// use assign, the rollover spell is a const reference to its m_influence
-// slot, and the dialog/rollover texts call GetText directly: that shape is
-// exact on Windows (as it was until 462e36412). The Dreamcast build writes
-// operator= stores (??4 at 0x19189e..0x191a1a), TTextResource::operator[]
-// at 510/517/555-561 and a copied spell value (551); each of those
-// spellings leaves the luck += append retained (92.54..99.97%).
+// DC lines 412/511-583 prove the shared exit flag. On Windows the help-text
+// stores use assign, the rollover spell is a const reference to its
+// m_influence slot, and the dialog/rollover texts call GetText directly
+// (the Dreamcast build uses operator=, TTextResource::operator[] and a
+// copied spell value).
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)
 DC_ADDRESS(0x191804, 0x604)
@@ -663,11 +653,8 @@ int TViewArmyWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-// Complete-only Faerie Dragon cast-button callback. The battle constructor
-// takes 0x5f5030 as its handler address. Its two returns end at 0x5f505a;
-// the five NOPs before the next function at 0x5f5060 are padding, so the
-// missing retail inventory row owns 43 bytes. The authored fastcall
-// message-reference body reproduces all 43 bytes without relocations.
+// Complete-only Faerie Dragon cast-button callback, the battle
+// constructor's handler.
 VA(0x005f5030, 0x2B)
 MAC_ADDRESS(0x201078, 0x40)  // Complete-only callback: address taken by battle constructor
 int viewArmyCastSpellHandler(message& msg)
@@ -682,12 +669,9 @@ int viewArmyCastSpellHandler(message& msg)
     return 0;
 }
 
-// DC records five separate helpers here at rows 617/635, 809/823 and 917.
-// Mac retains calls to them and places their bodies among the other widget
-// builders in this order. VC6 expands all five in the constructors with these
-// ordinary definitions: removing explicit inline leaves every claimed
-// viewarmywindow score unchanged. VC6 also emits standalone bodies in its
-// object; their absence from retail does not establish an inline declaration.
+// DC records five separate helpers here at rows 617/635, 809/823 and 917;
+// Mac retains calls to them in this order. All five are inlined in the
+// constructors.
 DC_ADDRESS(0x191e08, 0xc2)
 MAC_ADDRESS(0x2010b8, 0x118)
 void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
@@ -720,8 +704,7 @@ void TViewArmyWindow::createNameWidget(const char* name)
 // The creature portrait: the town-alignment backdrop, the creature's own
 // animated sprite kept in SpriteWidget, and the stack size printed under
 // them in the popup's one Verd10B row. The count line is suppressed for an
-// empty slot, which is what the three-widget/two-widget split of the retail
-// tail encodes.
+// empty slot.
 // Original public create_portrait_widget encodes W4TTownType; the DC
 // formal independently names TTownType town_type. Keep caller integer
 // domains separate and convert at this recovered helper boundary.
@@ -795,21 +778,13 @@ void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
 // bounds agree and a "low - high" range otherwise. The one creature whose
 // damage is not the table's is the BALLISTA: its bounds are scaled by the
 // wielding hero's Attack skill, which is why the builder takes a hero at
-// all. Both `+ 1` factors expand hero::GetPrimarySkill(0) - the 0..99
-// clamp is byte-visible twice over a single `mov cl,[hero+0x476]`, and
-// its `skill >= 2 ? 1 : 0` floor folds to `xor edi,edi` for skill 0,
-// which is what fixes the index as Attack.
+// all. Both `+ 1` factors use hero::GetPrimarySkill(0), Attack.
 //
 // DC 707 types traits as const TCreatureTypeTraits&, and row 708 calls
-// TTextResource::operator[]. Restoring both interfaces and all three callers
-// preserves the 706 retail instruction bytes after the legitimate function
-// name/exception-handler owner relabeling. The shots helper has the same
-// reference/accessor evidence at rows 735/738 and preserves its 669 bytes.
+// TTextResource::operator[]; the shots helper has the same reference/accessor
+// evidence at rows 735/738.
 //
 // E:\gamedcs\viewarmywindow.cpp:707
-// Label lookups retain operator[] -> getText -> vector[]: DC names the
-// public operator; Mac 0x20196c and the following four label builders
-// retain the vector indexer after expanding the outer accessors.
 VA(0x005f5860, 0x2C2)
 DC_ADDRESS(0x19226c, 0x154)
 MAC_ADDRESS(0x201928, 0x270)  // widget IDs + text-record field + "%d - %d"
@@ -840,10 +815,9 @@ void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
         font::PRIMARY, DAMAGE_ID, 6, 0, 8));
 }
 
-// The ammunition row exists only for a shooter, which is what the whole
-// body sitting under one `test byte [traits+0x10], 4` says: a melee stack
-// gets neither the label nor the count. Inside, the base/modified pair is
-// the same presentation the primary skills use, on one shared y.
+// The ammunition row exists only for a shooter: a melee stack gets neither
+// the label nor the count. Inside, the base/modified pair is the same
+// presentation the primary skills use, on one shared y.
 // E:\gamedcs\viewarmywindow.cpp:735
 VA(0x005f5b30, 0x29D)
 DC_ADDRESS(0x1923c0, 0xf0)
@@ -929,10 +903,9 @@ void TViewArmyWindow::createSpeedWidget(int normalSpeed,
         font::PRIMARY, SPEED_ID, 6, 0, 8));
 }
 
-// DC 0x1927ea stores the member before allocation; 0x1927f6 reloads it for
-// limit. Retail's battle constructor likewise reloads +0x68 after allocation.
-// The helper owns this store; caching the getter result in each caller loses
-// that reload. The group constructor uses the same canonical helper.
+// DC stores the member before allocation and reloads it for limit; the
+// helper owns this store. The group constructor uses the same canonical
+// helper.
 DC_ADDRESS(0x1927d4, 0xb8)
 MAC_ADDRESS(0x2023cc, 0x130)
 void TViewArmyWindow::createMoraleWidget(int newMorale)
@@ -944,8 +917,7 @@ void TViewArmyWindow::createMoraleWidget(int newMorale)
         limit(-3, m_morale, 3) + 3, 0, 0, 0, 0x10));
 }
 
-// DC 0x1928a2/0x1928ae and retail's battle +0x7c access prove the same
-// store-then-reload ownership as createMoraleWidget.
+// DC shows the same store-then-reload ownership as createMoraleWidget.
 DC_ADDRESS(0x19288c, 0x74)
 MAC_ADDRESS(0x2024fc, 0x130)
 void TViewArmyWindow::createLuckWidget(int newLuck)
@@ -959,7 +931,6 @@ void TViewArmyWindow::createLuckWidget(int newLuck)
 
 // DC lines 849--862 prove an xp-controlled three-slot loop, natural deque
 // subscripting and separate advances of the widget id, queue index and x.
-// Retail confirms the same two adjacent three-int member rows.
 // E:\gamedcs\viewarmywindow.cpp:837
 VA(0x005f65b0, 0x2B5)
 DC_ADDRESS(0x192900, 0x128)
@@ -968,8 +939,7 @@ void TViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
 {
     int x = 127;
     int widgetId = AFFECTING_SPELLS_0_ID;
-    // DC 0x19292e calls includes.h's by-value max; Mac 0x20265c..0x20267c
-    // keeps both argument copies before the reference selector.
+    // DC 0x19292e calls includes.h's by-value max.
     unsigned int spell = max(
         0, static_cast<int>(thisArmy->m_spellInfluenceQueue.size()) - NSPELLS);
 
@@ -1057,15 +1027,11 @@ void TViewArmyWindow::createRolloverWidget()
 }
 
 // COMDAT pairing: basic_string<char>::assign(const basic_string&, size_t,
-// size_t). Mnemonic agreement is 1.000, and the identification was already
-// proven from the other side: our own bitset<N>::_Xran emits a call to this
-// exact decorated name at the position where retail calls 0x4860 (visible as
-// a reloc-name-only row in that function's asm diff).
+// size_t).
 VA_COMPGEN(0x00404860, 0x210, BASIC_STRING_ASSIGN_STR, char)
 
 VA_COMPGEN(0x00404bc0, 0x06, BASIC_STRING_MAX_SIZE, char)
 
 // COMDAT pairing: basic_string<char>::_Split - the reference-count split that
-// assign/_Freeze reach; a nullary private thiscall in the same Dinkumware
-// block as _Tidy (0x40f0), _Grow (0x4a90) and the assign above.
+// assign/_Freeze reach.
 VA_COMPGEN(0x00404ce0, 0xD8, BASIC_STRING_SPLIT, char)

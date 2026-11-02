@@ -427,9 +427,8 @@ VA_COMPGEN(0x00406480, 0x59F, IMPLICIT_COPY_ASSIGN, hero)
 
 // E:\gamedcs\advmgr.cpp:651
 // Original: CAdvMgrNetMsgHandler::HandleGiftRequestMsg; advmgr.cpp:651
-// CGiftRequestMsg/greedyGuy/resource and the RS_GIFT_REQUEST direct call at
-// 0x406387 prove this identity. The old link-order mapping skipped this DC
-// row and shifted both gifts onto the following handler names.
+// CGiftRequestMsg/greedyGuy/resource and the RS_GIFT_REQUEST call prove this
+// identity.
 VA(0x00406a20, 0x1C7)
 DC_ADDRESS(0x005fc8, 0x204)
 MAC_ADDRESS(0x00649c, 0x1ac)  // anchor-callee + message payload
@@ -464,8 +463,7 @@ void CAdvMgrNetMsgHandler::handleGiftRequestMsg(CNetMsg* netMsg)
 // E:\gamedcs\advmgr.cpp:677
 // Original: CAdvMgrNetMsgHandler::HandleGiftMsg; advmgr.cpp:677
 // DC700/705 call GetLocalPlayer/UpdateResourceDisplay after crediting the
-// gift. Retail slot +0x10 at 0x63a694 points here; CTownNetMsgHandler
-// overrides the same slot at 0x643760 and calls this base body at 0x5c66ba.
+// gift. CTownNetMsgHandler overrides this slot and calls the base body.
 VA(0x00406bf0, 0x1FA)
 DC_ADDRESS(0x0061cc, 0x25c)
 MAC_ADDRESS(0x0066ac, 0x1e4)  // anchor-vtable + town forward
@@ -505,10 +503,8 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
 // E:\gamedcs\advmgr.cpp:713
 // Original: CAdvMgrNetMsgHandler::HandleTradeRequestMsg; advmgr.cpp:713
 // DC716/717 assign the two heroes and DC719 calls HeroSwap on their table
-// entries: neither DC 719, Mac +0x6fd4 nor retail applies GetHero's -1
-// guard, which restores handleNetMsg to 100% (from 96.62%). Complete
-// expands this ordinary helper in handleNetMsg's RS_TRADE_REQUEST arm
-// (0x4062b4..0x406343); it has no retained standalone retail body.
+// entries, without GetHero's -1 guard. Inlined in handleNetMsg's
+// RS_TRADE_REQUEST arm.
 DC_ADDRESS(0x006428, 0x2cc)
 MAC_ADDRESS(0x006890, 0x794)
 void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
@@ -522,28 +518,13 @@ void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
 
 // E:\gamedcs\advmgr.cpp:734
 // The adventure manager's big zero fill, in retail's own statement
-// grouping: the ground tileset and hero sample rows share one counted
-// loop (the bytes walk both off a single induction pointer at +0x360
-// with a -0x300 displacement, as in Close), the river and road rows are
-// counted loops starting at index 1 (slot 0 is the never-loaded "none"
-// entry; each loop unrolls to direct this-relative stores and zeroes its
-// own scratch register - the xor eax/xor ecx pair, which a memset pair
-// cannot produce because memset lea's its destination into ECX), the
-// boat and froth rows share a second counted loop, and the flag,
-// boat-flag and looped-sample fills are counted loops too: VC6
-// recognizes a constant-count zero fill and emits rep stosd for it, but
-// sets EDI up before ECX where a memset sets ECX up first. cursorIcons
-// is the one real memset here - its lea is hoisted ahead of the boat
-// loop. radarIcons is nulled twice - both stores are retail's.
-// radarOrigin is a BODY assignment from a type_point(0,0,0) temporary
-// (the masked ebp-0x14 temp copied as one dword), not an init-list item:
-// as an init-list item VC6 emits it in declaration order between the
-// vector and the string (83.04), as the first body statement it lands
-// after the string exactly as retail schedules it (90.30). Listing
-// members out of declaration order in the init list is byte-inert -
-// VC6 initializes in declaration order regardless (measured). The
-// implicit vector and string defaults carry the two EH states;
-// advCommand and the moving-object pair share one or-edx,-1.
+// grouping: the ground tileset and hero sample rows share one counted loop,
+// the river and road rows are counted loops starting at index 1 (slot 0 is
+// the never-loaded "none" entry), the boat and froth rows share a second
+// counted loop, and the flag, boat-flag and looped-sample fills are counted
+// loops too; cursorIcons is the one memset. radarIcons is nulled twice -
+// both stores are retail's. radarOrigin is a body assignment from a
+// type_point(0,0,0) temporary, not an init-list item.
 VA(0x00406df0, 0x1DF)
 DC_ADDRESS(0x0066f4, 0x430)
 MAC_ADDRESS(0x007024, 0x3a8)  // anchor-global
@@ -833,38 +814,23 @@ int advManager::open(int newPriority)
     return 0;
 }
 
-// The admitted retail vtable inventory bounds advManager at exactly three
-// slots (0x63a678..0x63a683): Open, Close and Main, matching Dreamcast.
-// The following five-slot table at 0x63a684 belongs instead to the now-
-// modelled CAdvMgrNetMsgHandler. Its slot 0 is this deleting destructor;
-// VC6's emitted ??_G public and all 33 retail bytes agree. The five-byte
-// implicit destructor it calls is folded with another owner in retail, but
-// VC6 still emits the class's named ??1 public; the direct-symbol compgen
-// claim binds that existing body without inventing a source destructor.
+// advManager's vtable has exactly three slots (Open, Close and Main,
+// matching Dreamcast); the following five-slot table belongs to
+// CAdvMgrNetMsgHandler, whose slot 0 is this deleting destructor.
 VA_COMPGEN(0x004077b0, 0x21, SCALAR_DELETING_DTOR,
            CAdvMgrNetMsgHandler)
 
 VA_COMPGEN(0x0057d160, 0x05, IMPLICIT_DTOR, CAdvMgrNetMsgHandler)
 
 // E:\gamedcs\advmgr.cpp:1092
-// The sprite teardown, gated on the town-nesting depth. Retail's own
-// grouping is preserved statement for statement: the two river and road
-// tilesets start at index 1 (slot 0 is the "no river"/"no road" entry that
-// is never loaded), the ground tileset and the hero sample run share ONE
-// counted loop - the bytes walk both off a single induction pointer at
-// +0x360 with a -0x300 displacement - and the four gem icons are four
-// statements rather than a loop, which is why their null stores sink past
-// the following Dispose calls into one batch.
+// The sprite teardown, gated on the town-nesting depth. The river and road
+// tilesets start at index 1 (slot 0 is never loaded), the ground tileset
+// and the hero sample run share one counted loop, and the four gem icons
+// are four statements rather than a loop.
 
-// DC records two signed int indices, i and j. Reusing them across the
-// cleanup loops preserves the native operations. Three index-scope/type
-// controls produced two objects without a MAX gain.
-// DC lines 1109..1192 use ResourceManager::Dispose for the sprite and
-// resource pointers. Keep the canonical inline wrapper at those source
-// calls; the two sample loops retain their retail virtual-call spelling.
-// The wrappers restore the retained destroy-range call and retail's loop
-// register allocation (86.37% -> 97.31%). Retail then proves an explicit
-// null guard on route-array deletion; together these recover exact VC6 bytes.
+// DC records two signed int indices, i and j, reused across the cleanup
+// loops. DC lines 1109..1192 use ResourceManager::Dispose for the sprite and
+// resource pointers; the two sample loops use the virtual call.
 VA(0x004077e0, 0x2D1)
 DC_ADDRESS(0x0074ec, 0x450)
 MAC_ADDRESS(0x007d0c, 0x3f4)  // anchor-vtable
@@ -891,7 +857,6 @@ void advManager::close()
         }
         for (i = 0; i < m_cachedGraphics.size(); i++)
             ResourceManager::Dispose(m_cachedGraphics[i]);
-        // The canonical dispose calls restore retail's destroy-range call.
         m_cachedGraphics.clear();
         ResourceManager::Dispose(monAttackSprites);
         monAttackSprites = 0;
@@ -968,8 +933,8 @@ int advManager::inMapArea(int x, int y)
 }
 
 // DC advmgr.cpp:1229..1237: GetCursorSampleSet.
-// Both retail callers expand this ordinary helper. The walkSpeed parameter
-// is already unused in the DC body; its sample loop covers indices 0..10.
+// Inlined at both retail callers. The walkSpeed parameter is already unused
+// in the DC body; its sample loop covers indices 0..10.
 DC_ADDRESS(0x0079b0, 0x52)
 MAC_ADDRESS(0x008180, 0x78)
 void advManager::getCursorSampleSet(int walkSpeed)
@@ -983,10 +948,8 @@ void advManager::getCursorSampleSet(int walkSpeed)
 }
 
 // E:\gamedcs\advmgr.cpp:1245. This is the mouse-relative point, not
-// get_map_center: DC adds the mouse offsets, while header dc 0x1f000
-// adds fixed viewport offsets. Retail reads +0xec/+0xf0 and keeps this
-// ordinary body for the cross-TU spell/window callers; DoAdvCommand expands
-// its four source calls. A header-inline spelling emitted no retained body.
+// get_map_center: DC adds the mouse offsets, while the header version adds
+// fixed viewport offsets. Inlined at DoAdvCommand's four call sites.
 VA(0x00407b10, 0x6F)
 DC_ADDRESS(0x007a04, 0x88)
 MAC_ADDRESS(0x0081f8, 0x60)  // field loads + four cross-TU call sites
@@ -1247,9 +1210,8 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
     return eventCell;
 }
 
-// DC advmgr.cpp:1568/1575/1625/1629 names ElapsedSince,
-// get_map_center, IsPast and UpdateScreen in this order. Mac retains
-// UpdateScreen at 0:0x90e0; Complete expands the other helper bodies.
+// DC advmgr.cpp:1568/1575/1625/1629 names ElapsedSince, get_map_center,
+// IsPast and UpdateScreen in this order.
 VA(0x004087b0, 0x487)
 DC_ADDRESS(0x008644, 0x52a)
 MAC_ADDRESS(0x008c9c, 0x4a8)
@@ -1363,7 +1325,6 @@ int advManager::main(message& msg)
         if (GameTime::isPast(lastFrame)) {
             m_cursorFrameCount = 0;
             completeDraw(0);
-            // Mac 0x90e0 retains updateScreen(1, 0); VC6 expands this call.
             updateScreen(1, 0);
         }
     }
@@ -1390,22 +1351,15 @@ bool saveGame(bool campaignWinMode);
 
 
 // E:\gamedcs\advmgr.cpp:1688
-// Original publics prove const message& and bool& exitFlag; the Complete
-// caller passes the same four references. The native direction initializer
-// precedes the chat-focus guard (DC1690/1692; Mac 0x9178/0x9188).
-// The jump table preserves the source arm order, including the clockwise
-// keypad directions. DC1711..1764 places those arms before the other commands,
-// then DC1890..1928 places movement after the switch, guarded by moveDir.
-// DC1718..1722 and Mac 0x93e4..0x9520 join scrolling and direction assignment
-// before the keypad break. Other command arms also break to the final guard.
-// Together these native joins restore VC6's delayed register saves and exact
-// return sequences; separate early returns change them.
+// Original publics prove const message& and bool& exitFlag. The direction
+// initializer precedes the chat-focus guard (DC1690/1692). The arms follow
+// source order, including the clockwise keypad directions: DC1711..1764
+// places those arms before the other commands, then DC1890..1928 places
+// movement after the switch, guarded by moveDir; scrolling and direction
+// assignment join before the keypad break (DC1718..1722), and other command
+// arms also break to the final guard.
 // DC1898 constructs walkTrigger inside ValidMove's successful arm before
-// HideRoute, with no additional lifetime block. Keep GetCurrHero, HideRoute,
-// Reseed and CheckDimHero as canonical calls.
-// SPACE is Complete-only. Mac 0x9344..0x9380 and 0x93a0..0x93dc independently
-// reconstruct the hero location for GetCell and DoEvent. Keep both accessor
-// calls rather than reusing a point across the intervening opaque operations.
+// HideRoute. SPACE is Complete-only.
 VA(0x00408c40, 0xB9D)
 DC_ADDRESS(0x008b70, 0x7c0)
 MAC_ADDRESS(0x009144, 0x8ec)  // anchor-callee
@@ -1658,19 +1612,15 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
 // four functions down does: once at the top for the waitingPlayer byte
 // this passes on to SetHeroContext/SetTownContext, and once more inside
 // the town arm's guard, uncached.
-// DC line 1981 retains HideRoute(1, 0, 1) in the town arm. The canonical
-// source call keeps this Windows function exact.
+// DC line 1981 retains HideRoute(1, 0, 1) in the town arm.
 
-// DC advmgr.cpp:1939 proves the three reference parameters below; main
-// supplies their stack locals and retail passes the same address ABI.
+// DC advmgr.cpp:1939 proves the three reference parameters below.
 VA(0x004097e0, 0x290)
 DC_ADDRESS(0x009330, 0x2e4)
 MAC_ADDRESS(0x009a30, 0x23c)
 int advManager::processSelect(const message& msg, type_point& triggerPoint, NewmapCell*& peventCell)
 {
     playerData* localPlayer = g_game->getLocalPlayer();
-    // This predicate feeds native bool context flags. A byte local adds
-    // test/setne normalization at both calls that retail does not contain.
     bool waitingPlayer = !g_currentPlayer->isLocalHuman();
 
     switch (msg.m_codeY) {
@@ -1741,12 +1691,9 @@ int advManager::processSelect(const message& msg, type_point& triggerPoint, Newm
 }
 
 // DC lines 2187/2234 retain hideRoute(1, 0, 1)/(1, 0, 0), and lines
-// 2288..2294 retain overrideBottomView. DC also names CheckDimNextHeroBut
-// and get_map_center; Mac calls CheckDimNextHeroBut at 0:0x9e08. Complete
-// expands their bodies here. The reviewed Mac address has instruction-shape
-// evidence, but no admitted exact byte verdict.
-// DC advmgr.cpp:2152 proves all four reference parameters; the retail
-// caller likewise passes the message, exit byte, point and cell-pointer homes.
+// 2288..2294 retain overrideBottomView; DC also names CheckDimNextHeroBut
+// and get_map_center. DC advmgr.cpp:2152 proves all four reference
+// parameters.
 VA(0x00409a70, 0x641)
 DC_ADDRESS(0x009a94, 0x6d4)
 MAC_ADDRESS(0x009c6c, 0x5d4)
@@ -1823,7 +1770,6 @@ int advManager::processDeSelect(const message& msg, bool& exitFlag, type_point& 
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
                 g_game->nextPlayer();
         } else {
-            // Mac retains this second call at 0:0x9f68.
             g_game->nextPlayer();
         }
         break;
@@ -1890,10 +1836,8 @@ int advManager::processDeSelect(const message& msg, bool& exitFlag, type_point& 
     return 1;
 }
 
-// DC lines 2373/2420 call UpdateScreen after each map repaint. Mac source
-// shape retains both updateScreen calls. DC lines 2410-2413 name the
-// includes.h by-value max/min wrappers; restoring those four calls gives
-// exact VC6 retail bytes, CFG, and all 21 ordered calls.
+// DC lines 2373/2420 call UpdateScreen after each map repaint; lines
+// 2410-2413 name the includes.h by-value max/min wrappers.
 VA(0x0040a0c0, 0x50D)
 DC_ADDRESS(0x00a168, 0x722)
 MAC_ADDRESS(0x00a240, 0x59c)
@@ -1994,18 +1938,12 @@ void advManager::processRadarSelect(const message* msg)
 }
 
 // E:\gamedcs\advmgr.cpp:2434
-// DC proves const message&, type_point&, NewmapCell*&, the const pathCell* const
-// local, and int object-dispatch locals. Complete passes the same referents.
-// Line 2460 passes a named point snapshot to GetCell; later movement operations
-// reread m_lastMapHover after opaque calls. Preserve both phases.
-// DC 2450..2456 and Mac 0xa8ec..0xa900 retain separate visibility assignments.
-// DC 2519..2529 and Mac 0xaa64..0xaaa8 initialize curr/mobile, then guard and
-// reread the current hero id before GetHero, testing curr outside that guard.
-// DC 2534..2557 scopes the current-hero command and path handling as if/else.
-// Keeping that else places Complete's shared command return correctly; an
-// early return in the first arm duplicates its VIEW_HERO dispatch under VC6.
-// The later HERO/TOWN/SHIPYARD dispatch is an if-chain: retail preserves that
-// source order, while a switch sorts the comparisons and moves the hero arm.
+// DC proves const message&, type_point&, NewmapCell*&, the const pathCell*
+// const local, and int object-dispatch locals. Line 2460 passes a named
+// point snapshot to GetCell; later movement operations reread
+// m_lastMapHover after opaque calls. DC 2534..2557 scopes the current-hero
+// command and path handling as if/else; the later HERO/TOWN/SHIPYARD
+// dispatch is an if-chain in source order.
 VA(0x0040a5d0, 0x606)
 DC_ADDRESS(0x00a88c, 0x6ae)
 MAC_ADDRESS(0x00a7dc, 0x648)  // anchor-callee
@@ -2114,10 +2052,6 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
         }
         if (myPos != g_game->getHero(clickedIndex)->m_owner)
             return;
-        // Retail homes this bool at [ebp+0xc] and pushes SetHeroContext's
-        // trailing 1 AFTER the IsLocalHuman call. Historical uchar/int
-        // local controls lost to the direct expression; the native local
-        // restored as bool now preserves that push order without normalization.
         bool waitingPlayer = !g_currentPlayer->isLocalHuman();
         setHeroContext(clickedIndex, 0, waitingPlayer, 1);
         return;
@@ -2132,7 +2066,6 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
         if (clickedIndex == -1)
             return;
         town* clickedTown = g_game->getTown(clickedIndex);
-        // Retail forwards this predicate directly to the bool context flag.
         bool waitingPlayer = !g_currentPlayer->isLocalHuman();
         if (g_game->onSameTeam(g_curWatchPlayer, clickedTown->m_owner)
             || m_debugViewAll)
@@ -2145,13 +2078,9 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
 }
 
 // Original: advManager::ProcessMapSelect2; advmgr.cpp:2624
-// The separate fallback selection interface is retained without a retail VA
-// claim. DC line 2558 calls it after the current-hero DoAdvCommand assignment
-// (0xad7e), rather than at the general hero/town/shipyard fallback. That call
-// is an older-build difference: Mac 0xac50..0xac58 stores the command result
-// then branches to its epilogue; Complete shares the command/return block at
-// target .text+0x4e0b..0x4e21. Neither repeats this helper's point validation,
-// visibility query or cell lookup, so that specific source call is not restored.
+// The separate fallback selection interface is retained without a retail
+// VA claim; DC line 2558 calls it after the current-hero DoAdvCommand
+// assignment, an older-build call Complete does not make.
 DC_ADDRESS(0x00af3c, 0x2ca)
 void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
                                    NewmapCell*& eventCell)
@@ -2322,18 +2251,14 @@ type_cell_adjuster::type_cell_adjuster()
     m_mobileHero = 0;
 }
 
-// RETAIL-RECONSTRUCTED 2026-08-09. The body consolidates repeated creature
+// Retail-reconstructed. The body consolidates repeated creature
 // slots before choosing either a detailed seven-slot list or one approximate
 // size/name pair. The detailed form stops at the first empty consolidated
 // slot. Its caller set is the creature-bank help group and QuickInfo; no
 // Dreamcast standalone copy survives, so the name is role-derived.
 
-// THE PREFIX ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-09-06, reloc
-// census). Retail's call at fn+0x8a is basic_string::assign(const char*,
-// size_type) where ours was append(const char*, size_type); the inlined
-// strlen ahead of it and both pushes are identical, so only the relocation
-// target differed. `result` is empty there, so the two are behaviourally the
-// same; with the assign spelling this row's call sequence AGREES 23/23.
+// The prefix assigns rather than appends (result is empty there, so the two
+// are the same).
 VA(0x0040abe0, 0x37D)
 MAC_ADDRESS(0x00b018, 0x290)
 std::string getArmyHelpText(const armyGroup* source,
@@ -2387,8 +2312,7 @@ type_cell_adjuster::~type_cell_adjuster()
     restoreCell();
 }
 
-// DC advmgr.cpp:3075/3077/3100 names GetCurrHeroId, GetCurrHero and
-// GetBoat; Complete expands their header bodies at these uses.
+// DC advmgr.cpp:3075/3077/3100 names GetCurrHeroId, GetCurrHero and GetBoat.
 VA(0x0040afb0, 0x12F)
 DC_ADDRESS(0x00bf1c, 0x11c)
 MAC_ADDRESS(0x00bf7c, 0x158)
@@ -2423,8 +2347,8 @@ NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y
 }
 
 // DC advmgr.cpp:3111..3127 proves the ordinary helper and its three
-// conditional restores. Retail expands it in the destructor, getTriggerCell,
-// and setRolloverText; keep its body at the original source position.
+// conditional restores; inlined in the destructor, getTriggerCell and
+// setRolloverText.
 DC_ADDRESS(0x00c038, 0x5c)
 MAC_ADDRESS(0x00c0d4, 0x80)
 void type_cell_adjuster::restoreCell()
@@ -3362,39 +3286,19 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     drawRolloverText(g_text);
 }
 
-// The help-text group. Retail files these five statics AFTER
-// SetRolloverText, not before it as the DC source does (the same
-// define-the-helper-after-its-caller shape border.cpp records); all
-// five are called from BOTH SetRolloverText (0xb150) and QuickInfo
-// (0x137c0), which is why /Ob2 left them out of line. Only five of the
-// DC's eleven survive as separate bodies - set_town_help,
-// set_hero_help, set_pyramid_help and the four 3-param wagon/tomb/
-// water_wheel/windmill builders have no retail row at all.
+// The help-text group: five statics filed after SetRolloverText (the DC
+// source puts them before it), all called from both SetRolloverText and
+// QuickInfo. Only five of the DC's eleven survive as separate bodies;
+// set_town_help, set_hero_help, set_pyramid_help and the four
+// wagon/tomb/water_wheel/windmill builders are inlined.
 
-// Arity pins the group. Free functions are /Gr fastcall, so ret N
-// counts (params - 2): the run is 6, 5, 6, 5, 5 at 0xd3f0, 0xd670,
-// 0xd8d0, 0xdb00, 0xdcc0 against a DC sequence of 6 (creature bank),
-// 6 (shrine), 5 (tree), 5 (witch hut). The order-preserving, arity-
-// respecting embedding of the DC four into the retail five is UNIQUE,
-// and it leaves 0xd670 - a 5-param row that, like the creature-bank
-// builder, calls the army describer 0xabe0 and armyGroup::HasCreatures
-// - as a retail-only sibling with no DC counterpart. Its two callers and
-// `ret 0xc` admit the ordinal five-parameter declaration used above and the
-// reconstructed body below. 0xabe0 is named only by its independently
-// reconstructed army-description role.
+// The fifth body is a Complete-only five-parameter sibling of the
+// creature-bank builder (it also calls the army describer and
+// armyGroup::HasCreatures); its name is ordinal.
 
-// 0xd3f0 is the one with independent body evidence: 6 params AND the
-// two creature-bank-only callees (0xabe0, armyGroup::HasCreatures).
 // E:\gamedcs\advmgr.cpp:2762
-// RETAIL-RECONSTRUCTED 2026-08-09 (87.2833%). The std::string bank name,
-// short-width visited-player gate and branch-local bank lookups restore the
-// retail control flow. Sibling full/compact scopes now share retail's -0x14
-// result-string home and 0x14-byte frame; the residual is register allocation
-// and the associated cleanup-tail scheduling.
-// DC 2767/2773 and Mac 0xb348/0xb390 access the unvisited/visited labels.
-// Keep the existing Complete getText helper; the spelling is VC6 byte-flat.
-// DC 2771/2778 and Mac 0xb370/0xb3b0/0xb3f4 call the retained
-// ExtraInfoUnion::getCreatureBank helper. VC6 expands all three calls here.
+// DC 2767/2773 access the unvisited/visited labels and DC 2771/2778 call
+// ExtraInfoUnion::getCreatureBank.
 VA(0x0040d3f0, 0x27C)
 DC_ADDRESS(0x00b3bc, 0x3cc)
 MAC_ADDRESS(0x00b2a8, 0x19c)  // anchor-callee
@@ -3422,9 +3326,7 @@ void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_
     }
 }
 
-// Retail callers fix this five-parameter /Gr ABI and the mine-help role.
-// Mac expands onSameTeam(owner, playerId), including its two validity checks;
-// keeping that canonical call also reproduces the Windows comparison loads.
+// Retail callers fix this five-parameter ABI and the mine-help role.
 VA(0x0040d670, 0x253)
 MAC_ADDRESS(0x00b444, 0x184)
 void getMineHelpText(char* buffer, NewmapCell* cell, long playerId,
@@ -3460,7 +3362,6 @@ void getMineHelpText(char* buffer, NewmapCell* cell, long playerId,
     }
 }
 
-// Mac b6b0..b6c0 expands the signed shrine-spell getter.
 VA(0x0040d8d0, 0x229)
 DC_ADDRESS(0x00b788, 0x1a8)
 MAC_ADDRESS(0x00b5c8, 0x1c0)
@@ -3491,7 +3392,6 @@ void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell, Global
     }
 }
 
-// Mac b86c..b874 expands the signed three-bit tree-price getter.
 VA(0x0040db00, 0x1BD)
 DC_ADDRESS(0x00b930, 0x17c)
 MAC_ADDRESS(0x00b788, 0x1c0)
@@ -3528,7 +3428,6 @@ void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const ch
     }
 }
 
-// Mac bdac..bdb8 expands the signed seven-bit witch-skill getter.
 VA(0x0040dcc0, 0x1E4)
 DC_ADDRESS(0x00bd84, 0x128)
 MAC_ADDRESS(0x00bd70, 0x1a4)
@@ -3562,13 +3461,8 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
 }
 
 // E:\gamedcs\advmgr.cpp:4385
-// DC records mouseManager::GetFrame in the scroll-zone fallback. Calling its
-// shared inline getter changes VC6's inliner decision at the earlier GetCell:
-// retail's retained NewfullMap::zCell call now appears in the candidate too.
-// Retail's final branch destinations prove an outside-range frame must reset
-// the pointer; correcting the earlier inverted predicate makes Windows exact
-// (15/15 calls, 27/27 branches). Mac shape has 16/16 direct calls but no
-// exact byte verdict. A shared rx/ry scope was tested and rejected earlier.
+// DC records mouseManager::GetFrame in the scroll-zone fallback. An
+// outside-range frame resets the pointer.
 VA(0x0040deb0, 0x3CF)
 DC_ADDRESS(0x00ed7c, 0x4c0)
 MAC_ADDRESS(0x00e09c, 0x368)  // anchor-callee
@@ -3593,15 +3487,8 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
                     == m_radarOrigin.m_z)) {
             NewmapCell* currCell = getCell(get_mouse_map_point());
 
-            // rx/ry, NOT mouseX/mouseY - retail passes the /32 CELL
-            // coordinates here, exactly as ProcessHover does. At
-            // fn+0x246 it pushes ebx and edi, and edi is built at
-            // fn+0x28 as `mov eax,edi / cdq / and edx,0x1f / add
-            // eax,edx / sar edi,5` from [ebp+8] - the same value it
-            // then stores into lastHoverX at [esi+0xec]. Passing the
-            // raw pixel coordinates kept both parameters live to this
-            // point and cost VC6 the two dead parameter homes retail
-            // spills into (`mov [ebp+8],eax` right at this call).
+            // rx/ry, NOT mouseX/mouseY: the /32 cell coordinates, exactly as
+            // ProcessHover does.
             setRolloverText(currCell, rx, ry);
             switch (currCell->m_type) {
             case TOWN: {
@@ -3627,8 +3514,6 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
             }
             }
         } else {
-            // Mac resets the pointer and returns at 0:0xe22c when the
-            // visibility or selected-hero check fails.
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             return 1;
         }
@@ -3663,9 +3548,6 @@ type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
     return getNormalCursor(currCell);
 }
 
-// The native shipwreck condition below is retained. Removing the previously
-// inferred VERIFY is byte-score-flat across this TU; the two-line DC gap
-// alone does not establish a release assertion.
 VA(0x0040e280, 0xD3)
 DC_ADDRESS(0x00f2c0, 0xe8)
 MAC_ADDRESS(0x00e4d8, 0x110)
@@ -3686,8 +3568,7 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
     if (currCell->m_isTrigger) {
         if (currCell->m_groundSet != eTerrainWater)
             return ADV_EVENT_POINTER;
-        // Both DC line 4548 and Mac 0xe5b0 recheck the trigger here;
-        // VC6 removes the redundant test after the enclosing condition.
+        // Both DC line 4548 and Mac recheck the trigger here.
         if (currCell->m_type == SHIPWRECK && currCell->m_isTrigger)
             return ADV_EVENT_POINTER;
     }
@@ -3946,24 +3827,16 @@ void advManager::reseed(int targetX, int targetY)
 }
 
 // E:\gamedcs\advmgr.cpp:4840
-// RETAIL-RECONSTRUCTED 2026-08-09. Retail proves the complete dig command:
-// movement/backpack gates, map-cell eligibility, Grail award, sound/dialog
-// split, every player's puzzle refresh and the post-action route/button cleanup.
+// The complete dig command: movement/backpack gates, map-cell eligibility,
+// Grail award, sound/dialog split, every player's puzzle refresh and the
+// post-action route/button cleanup.
 
 // DC line 4878 constructs the point argument and calls GetCell on the same
-// row. Restoring that natural temporary and helper raised 93.7323% to 98.5243%.
-// The CheckDimNextHeroBut tail already uses its canonical source call. DC
-// line 4965 also calls Reseed(0, 0); restoring it is Windows byte-flat.
-// DC 4853/4863/4893/4899/4920/4934/4947 accesses these seven messages.
-// Keep the existing Complete getText calls; they are Windows byte-flat.
-// Retail reads c_str() straight off getDescription's returned object
-// (`mov eax,[eax+4]`), so the description is an unnamed temporary: DC 4936
-// constructs type_artifact(2) and describes it on one row (98.51 -> 99.17).
+// row; DC line 4965 calls Reseed(0, 0). DC 4936 constructs type_artifact(2)
+// and describes it on one row, so the description is an unnamed temporary.
 // DC 4924/4926 default-construct the award record inside its arm and then
-// assign the Grail id, which is why retail stores the -1 payload before the
-// id. Retail's isHuman branch also jumps straight to giveArtifact, so the
-// ambient-music switch (DC 4937, same scope as the dialogs) belongs to the
-// human-only arm (99.17 -> 100).
+// assign the Grail id. The ambient-music switch (DC 4937) belongs to the
+// human-only arm.
 VA(0x0040ec90, 0x5AD)
 DC_ADDRESS(0x00fd84, 0x772)
 MAC_ADDRESS(0x00f088, 0x668)  // anchor-callee
@@ -4107,9 +3980,6 @@ void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
                                   ADVENTURE_SCREEN_WIDTH,
                                   ADVENTURE_SCREEN_HEIGHT);
 
-    // Mac 0xf72c/0xf758 contains the signed predicate and elapsed delta
-    // expanded by GameTime::elapsed. Reuse the cached timestamp for both;
-    // this preserves the exact standalone retail body and all caller bytes.
     unsigned long curTime = GameTime::get();
     if (GameTime::elapsed(
             curTime, g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
@@ -4139,7 +4009,6 @@ void advManager::drawAdventureMapGems()
                       g_windowManager->m_screenBitmap, 556, 508, 0, 1);
 }
 
-// Mac fc50..fc60 expands getCurrHeroId before the cursor draw guard.
 VA(0x0040f3f0, 0x47D)
 DC_ADDRESS(0x010788, 0x514)
 MAC_ADDRESS(0x00f948, 0x5e0)
@@ -4389,8 +4258,7 @@ bool hasFlag(int objType)
     }
 }
 
-// DC advmgr.cpp:5641 calls game::GetHero; Complete expands its null guard
-// and hero-array lookup before querying the obscured object.
+// DC advmgr.cpp:5641 calls game::GetHero.
 VA(0x0040fd20, 0x10E)
 DC_ADDRESS(0x01129c, 0x188)
 MAC_ADDRESS(0x01043c, 0x130)
@@ -4431,10 +4299,8 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
 }
 
 // The tile offsets keep the 3x2 hero footprint's (size - cell - 1) form, as
-// the object draws spell (width - cellX - 1): the extra front-end cost lets
-// retail's final nested Bitmap16Bit::getMap expand (96.1357% -> 100%), and
-// the same spelling makes both scaled view-world twins exact.
-// DC Game.h:973/974/979 proves getHero's early null-return scope.
+// the object draw spells (width - cellX - 1). DC Game.h:973/974/979 proves
+// getHero's early null-return scope.
 VA(0x0040fe30, 0x484)
 DC_ADDRESS(0x011424, 0x534)
 MAC_ADDRESS(0x01056c, 0x560)
@@ -4566,10 +4432,7 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
     }
 }
 
-// DC advmgr.cpp:5881/5894 and 5918/5931 call boat::GetHflip. Keep
-// that native-bool helper in both routines. Direct facing comparisons had
-// hidden a map-cell inline-budget mismatch caused by an inferred VERIFY;
-// the canonical unchecked cell -> zCell chain makes both callers exact.
+// DC advmgr.cpp:5881/5894 and 5918/5931 call boat::GetHflip.
 VA(0x00410760, 0x24F)
 DC_ADDRESS(0x011ea4, 0x248)
 MAC_ADDRESS(0x011048, 0x2a8)
@@ -4895,16 +4758,10 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 }
 
 // E:\gamedcs\advmgr.cpp:6239
-// DC 6299 and Mac 0x1215c..0x121ac decode TObjectCell signed nibble
-// members; the three native draw sites use those members again. Preserve
-// them through getBitPos and sprite draws instead of packed-byte locals.
-// Native member reads recover 85.2050 -> 99.1390% in the 64-state family.
-// DC locals retain ThisCell/ObjCell/ObjType/SprPtr, not cached receiver
-// aliases or a bit-index local. Mac and retail reload the map receiver at
-// the draw sites; direct receivers and the nested getBitPos call reach 100%
-// in the reproduced 12-state receiver/argument family.
-// DC 6255..6264 also preserves the clipping deltas, and 6412/6413 names
-// the partLow/partHigh bounds of the final hero/boat part loop.
+// DC 6299 decodes TObjectCell's signed nibble members, used again at the
+// three draw sites. DC locals retain ThisCell/ObjCell/ObjType/SprPtr. DC
+// 6255..6264 preserves the clipping deltas, and 6412/6413 names the
+// partLow/partHigh bounds of the final hero/boat part loop.
 VA(0x00411590, 0x5E4)
 DC_ADDRESS(0x012fcc, 0x8c4)
 MAC_ADDRESS(0x011fa0, 0x680)  // anchor-callee
@@ -5252,10 +5109,8 @@ void advManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
                            0, 0);
 }
 
-// Dreamcast advmgr.cpp:6708 calls GetCell for the temporary map point.
-// Retail keeps its inlined validity call after discarding the cell result.
-// DC's `unsigned char bCloudFlip` is a lowered bool: retail passes the flag
-// to DrawShroudTile's bool parameter without a test/setne conversion.
+// Dreamcast advmgr.cpp:6708 calls GetCell for the temporary map point and
+// discards the cell. DC's `unsigned char bCloudFlip` is a lowered bool.
 VA(0x00412220, 0x248)
 DC_ADDRESS(0x013fc8, 0x316)
 MAC_ADDRESS(0x012cf8, 0x2d0)
@@ -5331,16 +5186,10 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 }
 
 // E:\gamedcs\advmgr.cpp:6805
-// DC lines 6862/6871 retain hasFlag and GetCell; Mac retains hasFlag and
-// both GetCell calls. Replacing the repeated type switch is byte-flat
-// in Windows, while restoring GetCell at the trigger raises 90.1618% to
-// 95.2382%. Retail and candidate now agree on 41 CFG blocks, 22 branches,
-// and all nine direct calls. Mac's direct-call count also agrees at 7/7.
-// Earlier default-then-assign point controls beat direct constructors at
-// both call sites. DC 6884/6896 and Mac 0x131f0..0x13214 / 0x132e4..0x13308
-// read the signed TObjectCell nibble members at the two draw sites, rather
-// than named byte-shift temporaries. Together with DC 6821/6822 and
-// 6829/6830 clipping updates, the native expressions recover 100% Windows.
+// DC lines 6862/6871 retain hasFlag and GetCell. Points are
+// default-constructed and then assigned at both call sites. DC 6884/6896
+// read the signed TObjectCell nibble members at the two draw sites; DC
+// 6821/6822 and 6829/6830 give the clipping updates.
 VA(0x00412470, 0x482)
 DC_ADDRESS(0x0142e0, 0x4e4)
 MAC_ADDRESS(0x012fc8, 0x40c)  // linkorder
@@ -5399,8 +5248,7 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
             if (!objType->m_suppressDraw)
                 continue;
 
-            // DC line 6862 and the Mac PEF call to 0+0x103cc retain
-            // the canonical hasFlag boundary; VC6 expands it here.
+            // DC line 6862 retains the canonical hasFlag boundary.
             if (hasFlag(objType->m_objectType)) {
                 NewmapCell* triggerCell;
                 int triggerY;
@@ -5411,8 +5259,7 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                 obj->findTrigger(triggerX, triggerY);
                 type_point triggerPoint;
                 triggerPoint = type_point(triggerX, triggerY, z);
-                // DC line 6871 retains the ordinary GetCell helper. Retail
-                // expands its point check and map access at this call site.
+                // DC line 6871 retains the ordinary GetCell helper.
                 triggerCell = getCell(triggerPoint);
                 owner = getFlaggedObjectOwner(triggerCell);
                 int frame = (m_animCtr
@@ -5528,19 +5375,14 @@ NewmapCell* advManager::getCell(int x, int y, int z)
 }
 
 // Read by both mobilization draw gates and by UpdateRadar's radar-icon
-// frame select before repainting the adventure screen; role (an "adventure
-// repaint suppressed" latch) is what the bytes prove. No located writer yet
-// - nearest consumer holds the declaration, and UpdateRadar below is now
-// the earliest of them, so the claim sits here rather than beside
-// DemobilizeCurrHero.
+// frame select before repainting the adventure screen: an "adventure
+// repaint suppressed" latch, written by advManager::ViewWorld.
 VA(0x00412bd0, 0x6C)
 DC_ADDRESS(0x014b90, 0x5a)
 MAC_ADDRESS(0x013770, 0xbc)
 NewmapCell* advManager::getCell(type_point point)
 {
     // DC advmgr.cpp:7028/7029 preserve both NewfullMap overloads.
-    // Retail 0x412be6 folds the zero-coordinate call to cellData, and
-    // 0x412bf0..0x412c35 expands the point overload's row arithmetic.
     if (!point.isValid())
         return m_fullMap->cell(0, 0, 0);
     return m_fullMap->cell(point);
@@ -7019,8 +6861,8 @@ void advManager::overrideBottomView(advManager::EBottomViewType view, int time)
     }
 }
 
-// Dreamcast advmgr.cpp:8875/8919/8921 calls GameTime::IsPast and
-// Game.h GetCurrHeroId/GetCurrTownId. Retail expands all three.
+// Dreamcast advmgr.cpp:8875/8919/8921 calls GameTime::IsPast and Game.h
+// GetCurrHeroId/GetCurrTownId.
 VA(0x00415de0, 0x140)
 DC_ADDRESS(0x018d38, 0x210)
 MAC_ADDRESS(0x0166b0, 0x1b4)
@@ -7070,8 +6912,8 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
         m_advWindow->drawBottomView(update != 0);
 }
 
-// Dreamcast bottom-view update family calls advManager::ClearBottomView;
-// retail expands its window clear and default-state assignment.
+// The bottom-view update family calls advManager::ClearBottomView, inlined
+// here.
 VA(0x00415f20, 0x87)
 DC_ADDRESS(0x018f48, 0x7c)
 MAC_ADDRESS(0x016864, 0x88)
@@ -7107,10 +6949,7 @@ unsigned char advManager::updBottomViewNewTurn(unsigned char forceUpdate)
 }
 
 // E:\gamedcs\advmgr.cpp:8968
-// DC source row 8972 calls OverrideBottomView(this, 6, -1), and Mac
-// bvResMsg retains that call at +0x169d8. Restoring it also makes the
-// Windows string cleanup and whole body byte-exact; the former 93.33%
-// residue was caller codegen collateral.
+// DC source row 8972 calls OverrideBottomView(this, 6, -1).
 VA(0x00416060, 0xF7)
 DC_ADDRESS(0x019098, 0x62)
 MAC_ADDRESS(0x016990, 0x8c)  // anchor-global
@@ -7119,8 +6958,6 @@ void advManager::bvResMsg(const char* msg, int resType, int resQty)
     m_bottomViewResourceType = resType;
     m_bottomViewResourceQuantity = resQty;
     m_bottomViewMessage = msg;
-    // Mac bvResMsg +0x48 calls overrideBottomView(6, -1). Its ordinary
-    // body supplies the 5000-tick default and VC6 expands it here.
     overrideBottomView(BOTTOM_VIEW_6, -1);
     g_advManager->updBottomView(1, 1, 1);
     m_advWindow->updateResourceDisplay(1, 1);
@@ -7143,19 +6980,11 @@ unsigned char advManager::updBottomViewResMsg(unsigned char forceUpdate)
 }
 
 // E:\gamedcs\advmgr.cpp:8994
-// Residual (92.68%): the complete string assignment and update tail match;
-// only the empty shared-string arm differs. Retail decrements the reference
-// count and calls basic_string::_Tidy(0), while this VC6 invocation clears the
-// three representation words inline. operator=, assign(const char*), and
-// assign(const char*, length) are byte-identical; iterator-range assign is
-// worse and was rejected.
 VA(0x00416210, 0xD7)
 DC_ADDRESS(0x019194, 0x3c)
 MAC_ADDRESS(0x016ab0, 0x74)  // anchor-global
 void advManager::bvMessage(const char* msg)
 {
-    // MEASURED NEGATIVE, do not retry: same pin as BVResMsg above, same
-    // reason - it costs 92.68 -> 21.28 here.
     m_bottomViewMessage = msg;
     overrideBottomView(BOTTOM_VIEW_7, -1);
     g_advManager->updBottomView(1, 1, 1);
@@ -7220,10 +7049,9 @@ unsigned char advManager::updBottomViewTown(unsigned char forceUpdate)
 }
 
 // E:\gamedcs\advmgr.cpp:9063
-// DC carries this free helper out of line (0x9C bytes); retail's
-// /Ob2 inlines the static into every quick-view caller and drops the body.
-// Native get_identify_level records TSkillMastery result, const playerData&,
-// long i and hero* const this_hero; keep those domains through the getter.
+// DC carries this free helper out of line; inlined into every quick-view
+// caller. Native get_identify_level records TSkillMastery result, const
+// playerData&, long i and hero* const this_hero.
 DC_ADDRESS(0x019420, 0x9c)
 MAC_ADDRESS(0x016d58, 0xcc)
 static TSkillMastery getIdentifyLevel(type_point point)
@@ -7241,7 +7069,7 @@ static TSkillMastery getIdentifyLevel(type_point point)
 }
 
 // Dreamcast advmgr.cpp:9088 calls Hero.h get_location before
-// get_identify_level; retail expands the point construction.
+// get_identify_level.
 // Original DC public HeroQuickView@advManager@@QAAXHHH_N@Z proves
 // displayDropShadow is bool.
 VA(0x00416590, 0x210)
@@ -7279,17 +7107,12 @@ void advManager::heroQuickView(int heroId, int x, int y,
 const char* getBuildingName(int townType, int buildingId);
 
 // E:\gamedcs\advmgr.cpp:9115
-// Exact without the two building-append pins. DC 9120/9121 name GetTown
-// and get_location; 9171 names HasBuilding(building, false), followed by
-// is_legal_building. The appends at 9174/9176 are ordinary operator+=.
-// DC locals include enemy_player (reference), this_hero, shared long i,
-// msg, iPlayer, infowin and view_level (normalized below). Keep retail's
-// const town access for its four const getArmy calls, unlike the older DC
-// and Mac. Mac townQuickView calls the mutable twin at 0x1b6fdc four times;
-// the same authored cv spelling cannot select both retained overloads.
-// Restoring these together gives 99.5015%; DC 9192/9193 and retail place
-// first = 1 before calculateProduction, closing the remaining instruction
-// schedule difference at 100%. No alternate string spelling is required.
+// DC 9120/9121 name GetTown and get_location; 9171 names
+// HasBuilding(building, false), followed by is_legal_building. DC locals
+// include enemy_player (reference), this_hero, shared long i, msg, iPlayer,
+// infowin and view_level. The town is const, selecting the const getArmy
+// overload (DC and Mac use the mutable twin). DC 9192/9193 place first = 1
+// before calculateProduction.
 // Original DC public TownQuickView@advManager@@QAAXHHH_N@Z likewise
 // proves displayDropShadow is bool.
 VA(0x004167a0, 0x7DB)
@@ -7302,18 +7125,6 @@ void advManager::townQuickView(int townId, int x, int y,
         return;
 
     int player = g_game->getLocalPlayerGamePos();
-    // CONST, and the bytes require it: retail's four get_army() calls below
-    // are ?get_army@town@@QBEABVarmyGroup@@XZ, the const overload, which is
-    // a DIFFERENT function at a different address from the non-const one a
-    // plain `town*` binds (town.h models both; DC 0x168bf8 / 0x168bd0).
-    // `predict-inline` reports the pair as get_army base x0 vs retail x4 -
-    // a mangled-name divergence its OVER-inline bucket cannot tell apart
-    // from an inlining decision. TQuickTownWindow's ctor already takes
-    // `const town*`, so this costs no extra declarator. MEASURED BYTE-FLAT
-    // (85.3187 either way): objdiff does not gate on the reloc's symbol
-    // name, so this is a fidelity fix - it makes the object reference the
-    // function retail references - and it retires a false OVER-inline row
-    // that would otherwise send the next lane after an inliner knob.
     const town* const thisTown = g_game->getTown(townId);
     TSkillMastery identifyLevel = getIdentifyLevel(thisTown->getLocation());
 
@@ -7407,11 +7218,10 @@ void advManager::townQuickView(int townId, int x, int y,
 }
 
 // E:\gamedcs\advmgr.cpp:9243
-// DC garrison_quick_view calls game::GetGarrison. Its inline accessor
-// reproduces the same Windows bytes as direct array indexing here.
+// DC garrison_quick_view calls game::GetGarrison (its inline accessor).
 // DC lines 9253/9257 assign Expert to identifyLevel for friendly/debug
 // viewers, then test it separately; lines 9263/9267/9271 assign each view
-// level in its own branch. This also matches retail VC6 byte for byte.
+// level in its own branch.
 VA(0x00416f80, 0x1CD)
 DC_ADDRESS(0x019cdc, 0x1a4)
 MAC_ADDRESS(0x017644, 0x16c)  // anchor-callee
@@ -7554,8 +7364,7 @@ void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBo
 
 // Original DC public names prove bool context flags: DeactivateCurrTown/Hero
 // use QAAX_N@Z, DemobilizeCurrHero uses QAAX_N0@Z, and MobilizeCurrHero/
-// SetTownContext use QAAXH_N0@Z. Primitive 0x20 alone also renders as uchar;
-// the original decorated names preserve the boolean distinction.
+// SetTownContext use QAAXH_N0@Z.
 VA(0x00417570, 0x2A)
 DC_ADDRESS(0x01a3b0, 0x3e)
 MAC_ADDRESS(0x017cc4, 0x54)
@@ -7606,17 +7415,8 @@ void advManager::mobilizeCurrHero(int inMove, bool waitingPlayer, bool drawChang
 }
 
 // Dreamcast lines 9455/9461/9470 name curr and cell and preserve the
-// getCurrHero, getLocation and updateScreen helper boundaries. Restoring those
-// calls removes the duplicated timer body and reproduces all 431 retail bytes.
-// DC 9435..9450 are four separate guard returns (each its own scope and
-// branch), not one conjunction. Both spellings emit this body exactly, but
-// only the guard-return form keeps the body out of line where retail calls
-// it. `vc6 predict-inline 0x41ab00 --trace` shows why: with the guards C1XX
-// no longer saves the body (callee flags 0x2a, no 0x40), whereas the
-// conjunction shipped a cost-169 body that /Ob2 expanded into doAdventureOptions,
-// doSystemOptions, screenScroll, processDeSelect, processRadarSelect and
-// deactivateCurrHero (all back to 100%).
-// Mac 17e90..17e98 expands getCurrHeroId after the current-player guard.
+// getCurrHero, getLocation and updateScreen helper boundaries.
+// DC 9435..9450 are four separate guard returns, not one conjunction.
 VA(0x00417680, 0x1AF)
 DC_ADDRESS(0x01a520, 0x13c)
 MAC_ADDRESS(0x017e58, 0x14c)
@@ -7653,20 +7453,12 @@ void advManager::demobilizeCurrHero(bool waitingPlayer,
 // Makes a town the adventure view's subject: drop any mobile hero, clear
 // the current-hero slot, centre the radar on the town and repoint the
 // locator strip, the spell/sleep buttons and the ambient music at it.
-// Retail resolves the acting player TWICE and caches neither: the first
-// selection assigns m_currHeroId directly in each if/else branch, and the
-// second is an if-assignment over a gpCurrentPlayer default. This spelling
-// also reproduces retail's GetTown register sequence. It also
-// reaches RedrawAdvScreen through the gpAdvManager global, not `this`.
+// The acting player is resolved twice and cached neither time, and
+// RedrawAdvScreen is reached through the gpAdvManager global, not `this`.
 
 // DC lines 9477/9513/9528/9530 retain DeactivateCurrHero,
 // HideRoute(0, 0, 1), get_map_center and town::get_location.
-// Mac also calls DeactivateCurrHero at 0:0x17fd0. Windows expands it
-// to DemobilizeCurrHero plus the acting-player id clear. With that
-// first assignment, Windows is
-// exact with all 26 CFG blocks and 16 direct calls agreeing. Mac's reviewed
-// address has 14 direct calls against this source's 15 in the structural
-// view, with no admitted exact byte verdict here.
+// Windows inlines DeactivateCurrHero.
 VA(0x00417830, 0x2EB)
 DC_ADDRESS(0x01a65c, 0x21a)
 MAC_ADDRESS(0x017fa4, 0x27c)  // anchor-global
@@ -7725,40 +7517,11 @@ void advManager::setTownContext(int townId, bool waitingPlayer, bool update)
 // reseeds his route. ProcessSelect, ProcessDeSelect and ProcessMapSelect are
 // its three callers in this file and they fix the parameter roles.
 
-// Two shapes are worth naming:
-//   * retail INLINES MapExtraPosAndAdjacentsSet (0x41a750, reconstructed
-//     further down this file) for the visibility probe around the hero -
-//     the whole `GetMapExtra` + 3x3 neighbour double loop is expanded in
-//     place, and its out-of-line body still exists because the callee has
-//     extern linkage.
-//   * DC 9571 nests get_location and GetCell. Their returned point and
-//     by-value parameter provide the short lifetimes visible in retail;
-//     reusing a stack slot does not prove separate caller blocks. The
-//     earlier hand-scoped point model reached 99.27%, but that measurement
-//     does not supersede the canonical helper boundaries.
+// MapExtraPosAndAdjacentsSet is inlined for the visibility probe around the
+// hero. DC 9571 nests get_location and GetCell.
 
-// Residual (99.27%): two instructions in the route-target write, and the
-// cause is a CSE our CL makes and retail does not. Both sides load
-// pathTargetX as a DWORD for the `>= 0` guard. Retail then loads the
-// point's old word into AX first, clobbering that register, so the x
-// insert has to re-read pathTargetX from memory
-// (`mov ax,[ebp-0x20] / ... / mov cx,ax / xor cx,[edi+0x35]`); our CL
-// schedules `mov cx,ax` first and keeps the guard's value, then loads the
-// old word (`mov cx,ax / mov ax,[ebp-0x20] / xor cx,ax`). Commutative and
-// identical in effect - it is the SCHEDULE, not the operand order, that
-// differs. Eleven spellings measured and rejected: named int locals for the
-// three coordinates (96.14), the same as shorts (99.27), y/x/z order
-// (96.89), z/y/x order (96.73), an explicit short cast (99.27), sharing one
-// point between the route target and the view centre (99.27), a `!= -1`
-// guard (99.02), a `!(x < 0)` guard (99.27), and hoisting the point's
-// declaration above the guard (99.27), default construction followed by
-// separate x/y/z assignments (99.27), and eliding the named routeTarget
-// temporary at the SeedTo call (99.27). Dreamcast nevertheless proves the
-// named hero::get_target boundary before SeedTo; restoring that inline
-// helper is byte-flat and is source-shape truth rather than a score lever.
-// DC lines 9648/9671 also retain Reseed(0, 0) and get_map_center;
-// restoring them was byte-flat before the selected-player argument recovery
-// below, which reaches Windows 100% in the combined native interface model.
+// Dreamcast proves the named hero::get_target boundary before SeedTo; DC
+// lines 9648/9671 also retain Reseed(0, 0) and get_map_center.
 // Original DC SetHeroContext@@QAAXHH_N0@Z proves two integer parameters
 // followed by two bool flags; keep the same boolean domain through its helpers.
 VA(0x00417b20, 0x63E)
@@ -7769,10 +7532,7 @@ void advManager::setHeroContext(int heroId, int inMove, bool waitingPlayer, bool
     if (heroId == -1)
         return;
 
-    // DC advmgr.cpp:9548/9551 and Mac 0+0x18264/0x18288 retain these
-    // helpers in this order. hideRoute's third flag performs the same
-    // button-status update as the former expanded block, with no screen
-    // redraw or target removal.
+    // DC advmgr.cpp:9548/9551 retain these helpers in this order.
     deactivateCurrTown(waitingPlayer);
     if (!waitingPlayer && drawChanges)
         hideRoute(0, 0, 1);
@@ -7786,8 +7546,8 @@ void advManager::setHeroContext(int heroId, int inMove, bool waitingPlayer, bool
 
     player->m_currHeroId = heroId;
 
-    // DC 9570 and Mac 0x182c0 reload the selected player's current hero id
-    // after storing it, then pass that member to the canonical GetHero.
+    // DC 9570 reloads the selected player's current hero id after storing
+    // it, then passes that member to GetHero.
     hero* curr = g_game->getHero(player->m_currHeroId);
     NewmapCell* cell = getCell(curr->getLocation());
 
@@ -8035,30 +7795,14 @@ void advManager::checkLoadSample(e_looping_sound_id idNum)
 }
 
 // E:\gamedcs\advmgr.cpp:9945
-// 89.50 -> 93.76 (2026-08-21): the DC line table proves two source shapes
-// that combine non-linearly on x86. The MINE arm declares `type` and
-// `abandoned` from two separate `mines[extraInfo]` expressions; that makes
-// the mine load/test sequence instruction-exact. The non-trigger tail is a
-// switch on object type with a nested switch on special terrain, not an if
-// chain; that prevents VC6 from lowering both decisions to branchless
-// arithmetic and gives retail's test/cmp control flow. The mine locals alone
-// are slightly negative (89.44), and the nested switches alone reach 92.88;
-// together they reach 93.76. Replacing the two two-value nested switches
-// (GARRISON and CREATURE_GENERATOR_4) with their DC-looking if chains was
-// also measured and rejected on the pre-tail shape (88.37).
+// The DC line table proves two source shapes: the MINE arm declares `type`
+// and `abandoned` from two separate `mines[extraInfo]` expressions, and the
+// non-trigger tail is a switch on object type with a nested switch on
+// special terrain. GARRISON and CREATURE_GENERATOR_4 are two-value
+// if-chains.
 
-// 93.7570 -> 94.5074 (2026-08-21): THAT REJECTION EXPIRED WITH THE TAIL
-// REWRITE. Re-measured on the current shape, the two two-value if-chains now
-// PAY. The bytes name them directly: retail dispatches GARRISON with
-// `mov cx, word ptr [ecx+0x22] / test cx,cx / jne / cmp cx,1`, a word-width
-// if-chain with INLINE arms, where a `switch` forces `movsx eax,word / sub /
-// je / dec` because a jump table needs the index sign-extended. Equality
-// against a short compares at 16 bits; a switch cannot.
-
-// Mac switch targets retain source case order and separate equal-valued
-// returns. In particular, creature 6 has its own return-42 arm at 0x191fc
-// before the default at 0x19204. Restoring those arms and their order
-// reproduces the Windows code and compact dispatch tables exactly.
+// The switch keeps source case order and separate equal-valued returns
+// (creature 6 has its own return-42 arm).
 VA(0x00418620, 0x5E4)
 DC_ADDRESS(0x01b5a8, 0x866)
 MAC_ADDRESS(0x018d38, 0x55c)  // anchor-global
@@ -8327,7 +8071,6 @@ void advManager::insertSound(int x, int y, int z, int soundPriority,
     m_touchedSounds ^= 1 << m_soundArray[best].m_soundId;
 }
 
-// Mac 194c4..194d0 expands game::getCurrHeroId before the route guard.
 VA(0x00418dd0, 0x4DF)
 DC_ADDRESS(0x01c05c, 0x426)
 MAC_ADDRESS(0x019480, 0x3c8)
@@ -8404,7 +8147,6 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
     }
 }
 
-// Mac 198cc..198d8 expands the same current-hero ID accessor.
 VA(0x00419300, 0x14C)
 DC_ADDRESS(0x01c484, 0xfc)
 MAC_ADDRESS(0x019848, 0x110)
@@ -8442,11 +8184,9 @@ void advManager::hideRoute(int updateScreen, int removeTarget,
 }
 
 // Original: advManager::CheckDimHero; advmgr.cpp:10558
-// Complete expands this guard in DoAdvCommand, ProcessKeyPress and
-// ProcessSearch, adding hero-locator and next-hero-button refreshes after
-// the shared ShowRoute call. Preserve those nested source calls. All three
-// expansions reload gpAdvManager for the next-hero-button refresh, as for
-// the locator refresh, so both reach it through the global.
+// Inlined in DoAdvCommand, ProcessKeyPress and ProcessSearch, adding
+// hero-locator and next-hero-button refreshes after the shared ShowRoute
+// call; both refreshes go through the gpAdvManager global.
 DC_ADDRESS(0x01c580, 0x6c)
 MAC_ADDRESS(0x019958, 0xc8)
 void advManager::checkDimHero()
@@ -8471,9 +8211,7 @@ void advManager::checkDimNextHeroBut()
         m_advWindow->widgetSetStatus(11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
 }
 
-// Dreamcast advmgr.cpp:10586 calls game::GetCurrHero; retail expands
-// its null guard and hero array lookup before seedPosition.
-// Mac 19ad0..19adc expands getCurrHeroId before GetCurrHero.
+// Dreamcast advmgr.cpp:10586 calls game::GetCurrHero.
 VA(0x004194a0, 0xC7)
 DC_ADDRESS(0x01c64c, 0x104)
 MAC_ADDRESS(0x019a98, 0x148)  // MAC_ABSTRACTION_FROM(tokens1:3f7c4740d528,52.3256): canonical game::getCurrHeroId replaces the direct current-player read; same loads, but the inline boundary grows the CW frame by 16 bytes.
@@ -8524,12 +8262,9 @@ void advManager::forceNewHover()
 // three-int row.
 DATA(0x0063a66c) static const int g_scrollSpeedInc[3] = { 1, 2, 3 };
 
-// ScreenScroll stamps this tick and CheckScreenScroll reads it. The Mac
-// build uses direct TOC scalar storage at 1+0x3d20.
+// ScreenScroll stamps this tick and CheckScreenScroll reads it.
 
 // E:\gamedcs\advmgr.cpp:10624
-// VC6 matches retail exactly when scrollInc is declared before the two map
-// origin locals. The Mac source shape retains all six ordered direct calls.
 VA(0x004195c0, 0x258)
 DC_ADDRESS(0x01c7e4, 0x324)
 MAC_ADDRESS(0x019c48, 0x208)  // anchor-callee
@@ -8591,8 +8326,7 @@ void advManager::screenScroll(int dir, int changeMouse)
         demobilizeCurrHero(0, 0);
         m_radarOrigin.m_x = x;
         m_radarOrigin.m_y = y;
-        // Dreamcast and Mac retain these three helper calls. Complete VC6
-        // expands them here, preserving the retail nine-call sequence.
+        // Dreamcast and Mac retain these three helper calls.
         updateRadar(1, 1, 0, 0, 0);
         completeDraw(0);
         updateScreen(0, 0);
@@ -8600,9 +8334,8 @@ void advManager::screenScroll(int dir, int changeMouse)
 }
 
 // The DC also emits MouseInScrollZone (dc 0x1ccf8); its canonical member
-// definition follows this routine. Retail expands the hover callers' tests.
-// Dreamcast advmgr.cpp:10747 calls mouseManager::GetFrame twice;
-// retail expands the byte-backed frame accessor at both comparisons.
+// definition follows this routine. Dreamcast advmgr.cpp:10747 calls
+// mouseManager::GetFrame twice.
 VA(0x00419820, 0x169)
 DC_ADDRESS(0x01cb08, 0x1f0)
 MAC_ADDRESS(0x019e50, 0x1a0)
@@ -8614,8 +8347,6 @@ void advManager::checkScreenScroll()
     int y;
     g_mouseManager->mouseCoords(x, y);
 
-    // Mac initializes the no-scroll sentinel before testing the coordinates;
-    // both outside-window and central-window paths reach the same clock call.
     if (x >= 0 && x < WINDOW_SCREEN_WIDTH && y >= 0
         && y < WINDOW_SCREEN_HEIGHT) {
         if (x < 16) {
@@ -8659,8 +8390,7 @@ void advManager::checkScreenScroll()
 }
 
 // DC advmgr.cpp:10756 records MouseInScrollZone as an ordinary public member.
-// Complete expands this body in ProcessHover; lack of a retained body does
-// not change its source ownership.
+// Inlined in ProcessHover.
 DC_ADDRESS(0x01ccf8, 0x6e)
 MAC_ADDRESS(0x019ff0, 0x84)
 int advManager::mouseInScrollZone()
@@ -8678,9 +8408,7 @@ int advManager::mouseInScrollZone()
 }
 
 // Dreamcast advmgr.cpp:10782/10785/10830/10836 calls GetCurrTownId,
-// GetCurrTown, get_map_center and Reseed. Mac additionally calls
-// CheckDimNextHeroBut at 0:0x1a324. Retail expands these helpers in
-// the initial-origin path.
+// GetCurrTown, get_map_center and Reseed.
 VA(0x00419990, 0x2E3)
 DC_ADDRESS(0x01cd68, 0x352)
 MAC_ADDRESS(0x01a074, 0x2d4)
@@ -8700,14 +8428,13 @@ void advManager::setInitialMapOrigin()
                                  ? g_currentPlayer
                                  : g_game->getLocalPlayer();
         if (player->m_numHeroes > 0) {
-            // Mac 0x1a174 indexes the hero pool directly; neither target
-            // executes getHero's -1 guard in this branch.
+            // The hero pool is indexed directly, without getHero's -1 guard.
             hero* startHero = &g_game->m_heroes[player->m_heroes[0]];
             m_radarOrigin.m_x = startHero->m_x - 9;
             m_radarOrigin.m_y = startHero->m_y - 8;
             m_radarOrigin.m_z = startHero->m_z;
         } else if (player->m_numTowns > 0) {
-            // Mac 0x1a1d8 likewise indexes the town pool without a guard.
+            // The town pool is indexed without a guard too.
             town* startTown = &g_game->m_towns[player->m_townIds[0]];
             m_radarOrigin.m_x = startTown->m_mapX - 9;
             m_radarOrigin.m_y = startTown->m_mapY - 8;
@@ -8766,8 +8493,8 @@ void popupPlayerTurnInfo()
                     ShowWindow(g_hwndApp, SW_RESTORE);
                 SetForegroundWindow(g_hwndApp);
                 Sleep(500);
-                // Windows replays the notification after a timed-out dialog.
-                // Mac 0x1a348 has only the initial loadPlaySample call.
+                // Windows replays the notification after a timed-out dialog
+                // (Mac has only the initial loadPlaySample call).
                 sample2 = loadPlaySample("SysMsg.wav");
             }
         } while (dialogReturn == DIALOG_RETURN_TIMEOUT
@@ -8777,8 +8504,7 @@ void popupPlayerTurnInfo()
     }
 }
 
-// DC advmgr.cpp:10965 calls ForceNewHover; Mac retains the call at
-// 0:0x1a728. Complete expands its mouse-coordinate and hover update body.
+// DC advmgr.cpp:10965 calls ForceNewHover; inlined here.
 VA(0x00419e00, 0x300)
 DC_ADDRESS(0x01d30c, 0x3e0)
 MAC_ADDRESS(0x01a4b8, 0x39c)
@@ -9006,9 +8732,7 @@ bool advManager::findAdjacentMonster(type_point point, type_point& result, type_
     NewmapCell* mapCell;
 
     // dc 0x1dc24 rows 11130-11133: max, max, min, min - the includes.h
-    // wrappers again. The bound leads in every call: retail compares
-    // `0 < m_x - 1` and branches `jg`, where `max(point.m_x - 1, 0)`
-    // compares the other way round and emits `jl`.
+    // wrappers again, with the bound leading in every call.
     rect.left = max(0, point.m_x - 1);
     rect.top = max(0, point.m_y - 1);
     rect.right = min(g_mapWidth, point.m_x + 2);
@@ -9096,14 +8820,11 @@ int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
 // artifact cell over a CompleteDraw of the puzzle origin, colorized
 // to 0.625 hue and fizzled forward over 220ms unless every piece is
 // already down (0x30 = all 48 revealed), and one type_point local is
-// reused for the puzzle origin and the closing view re-centre (the
-// tail's x/y/z writes are RMW bitfield inserts into the same slot).
+// reused for the puzzle origin and the closing view re-centre.
 
-// PuzzleDraw keeps the Bitmap16Bit-taking DrawTile wrapper recorded by
-// DC at 0x1e398. Mac's retained PuzzleDraw (0x1b6b8) expands that same
-// wrapper; VC6 expands both helpers here and reproduces retail exactly.
-// DC advmgr.cpp:11281 calls get_map_center at the closing recenter step;
-// Complete expands its fixed viewport offset.
+// PuzzleDraw keeps the Bitmap16Bit-taking DrawTile wrapper recorded by DC
+// at 0x1e398; both helpers are inlined here. DC advmgr.cpp:11281 calls
+// get_map_center at the closing recenter step.
 VA(0x0041a7f0, 0x307)
 DC_ADDRESS(0x01e068, 0x2f8)
 MAC_ADDRESS(0x01b408, 0x2b0)  // anchor-callee
@@ -9145,7 +8866,7 @@ void advManager::viewPuzzle()
 }
 
 // Original: advManager::PuzzleDraw; advmgr.cpp:11287
-// Complete ViewPuzzle expands this operation with desktop viewport offsets.
+// Inlined in ViewPuzzle, with desktop viewport offsets.
 DC_ADDRESS(0x01e360, 0xe8)
 MAC_ADDRESS(0x01b6b8, 0xe0)
 void advManager::puzzleDraw(int startX, int startY, int z, int ultX, int ultY)
@@ -9269,11 +8990,9 @@ int advManager::moreTreesNear(type_point point)
     int dead = 0;
     type_point pt;
 
-    // dc 0x1e86c rows 11452-11455 name the callees outright: `max`
-    // [dc 0x1ef28] and `min` [dc 0x2da4], the includes.h by-value int
-    // wrappers - not the const-ref cppMin/cppMax selectors. The wrapper
-    // copies its arguments and dereferences the selector's returned
-    // address, which is the extra move retail carries here.
+    // dc 0x1e86c rows 11452-11455 name the callees outright: `max` and
+    // `min`, the includes.h by-value int wrappers, not the const-ref
+    // cppMin/cppMax selectors.
     rect.top = max(point.m_y - radius, 0);
     rect.bottom = min(point.m_y + radius + 1, g_mapHeight);
     rect.left = max(point.m_x - radius, 0);
@@ -9358,8 +9077,7 @@ VA_COMPGEN(0x0041b0e0, 0x21, SCALAR_DELETING_DTOR, CAdvPopup)
 VA_COMPGEN(0x0041b110, 0x5, IMPLICIT_DTOR, CHeroWindowEx)
 
 // CodeView marks this procedure compiler-generated (compgenx): only the
-// CHeroWindowEx base teardown runs there. The exact Windows-only source
-// exception is reviewed in config/source/win_only.tsv.
+// CHeroWindowEx base teardown runs there.
 VA(0x0041b120, 0x67)
 DC_ADDRESS(0x0034c8, 0x18)
 MAC_ADDRESS(0x01be60, 0x9c)
@@ -9373,9 +9091,8 @@ CAdvPopup::~CAdvPopup()
 }
 
 // E:\gamedcs\advmgr.cpp:11528
-// Retail keeps the same seven-statement, branchless shape: publish the saved
-// result, rewrite the message from this object's three command fields, and
-// forward it to the executive.
+// Publish the saved result, rewrite the message from this object's three
+// command fields, and forward it to the executive.
 VA(0x0041b190, 0x2D)
 DC_ADDRESS(0x01ec80, 0x32)
 MAC_ADDRESS(0x01befc, 0x30)  // CAdvPopup vtable 0x63a6a8 slot 14
@@ -9389,9 +9106,9 @@ int CAdvPopup::exitDialog(message& msg)
 }
 
 // E:\gamedcs\advmgr.cpp:11539
-// Dreamcast proves the local inventory and statement order. Retail preserves
-// that control flow but gates the network pump on Complete's bVideoPaused:
-// base handler, expired-turn exit, CheckHandleNet, abort-message exit.
+// Dreamcast proves the local inventory and statement order; Complete gates
+// the network pump on bVideoPaused: base handler, expired-turn exit,
+// CheckHandleNet, abort-message exit.
 VA(0x0041b1c0, 0x87)
 DC_ADDRESS(0x01ecb4, 0xf4)
 MAC_ADDRESS(0x01bf2c, 0x108)  // CAdvPopup vtable 0x63a6a8 slot 9
@@ -9417,21 +9134,16 @@ int CAdvPopup::windowHandler(message& msg)
 
 VA_COMPGEN(0x0041b410, 0xCB, BITSET_XRAN, bitset48)
 
-// COMDAT pairing: append on the char instantiation, mnemonic agreement 0.960.
+// COMDAT pairing: append on the char instantiation.
 VA_COMPGEN(0x0041b250, 0xE6, BASIC_STRING_APPEND_STR, char)
 
-// COMDAT pairing: append on the char instantiation, mnemonic agreement 0.955.
+// COMDAT pairing: append on the char instantiation.
 VA_COMPGEN(0x0041b340, 0xC2, BASIC_STRING_APPEND_PTR, char)
 
-// <string>'s pointer/count assignment is shared with SendChat (0x4022e0).
-// Retail's hero assignment (0x406480) and getArmyHelpText (0x40abe0) call
-// it too. It expands in adventuremapwindow but remains naturally emitted
-// here: all 161 bytes agree outside four matching named call relocations.
-// basic_string<char>::_Tidy is game-emitted, not LIBCPMT's: the 60-byte
-// LIBCPMT COMDAT matches nowhere in retail, while this compiland's 80-byte
-// COMDAT (72 game objects emit the same bytes) equals 0x4040f0. Game objects
-// precede the libraries on the link line, so their copy is the one every
-// LIBCPMT caller reaches.
+// <string>'s pointer/count assignment is shared with SendChat, the hero
+// assignment and getArmyHelpText. basic_string<char>::_Tidy is game-emitted,
+// not LIBCPMT's: game objects precede the libraries on the link line, so
+// their copy is the one every LIBCPMT caller reaches.
 VA_COMPGEN(0x004040F0, 0x4B, BASIC_STRING_TIDY, char)
 
 VA_COMPGEN(0x00404150, 0xA1, BASIC_STRING_ASSIGN_PTR_SIZE, char)

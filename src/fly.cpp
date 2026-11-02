@@ -17,42 +17,29 @@
 #include "terrain.h"
 #include "winmgr.h"
 
-// GameTime, glTimers and gCombatAreaLimits all reach this TU through
-// their owners' headers: retail's fly.cpp saw GameTime for free (the DC
-// roster files GameTime::NextFrameTime at struct.h:438, and CmbtMgr.h
-// already drags struct.h in), and this tree simply parks the class in
-// kbwin.h instead.
+// GameTime, glTimers and gCombatAreaLimits all reach this TU through their
+// owners' headers (the DC roster files GameTime::NextFrameTime at
+// struct.h:438, and CmbtMgr.h already drags struct.h in); this tree parks
+// the class in kbwin.h.
 
 // E:\gamedcs\fly.cpp:35
 // Both private find_flyer_attack_cell overloads are called only by
-// ValidFlight in the Dreamcast graph. Retail's 761-byte ValidFlight contains
-// their work inline and has no separate carved predecessors after the ten
-// terrain.h bitset initializers.
-
+// ValidFlight in the Dreamcast graph, and are inlined there: four copies of
+// the same six-step adjacency scan.
 // E:\gamedcs\fly.cpp:58
 // E:\gamedcs\fly.cpp:76
-// RECONSTRUCTED 2026-08-13. The 761 retail bytes are FOUR copies of the
-// same six-step adjacency scan, which is exactly the two private DC
-// find_flyer_attack_cell member overloads expanded by /Ob2. Their source
-// bodies stay ordinary member definitions even though retail retained no
-// out-of-line copy. Removing the explicit inline keywords preserves all five
-// exact targets; expansion alone does not recover original lexical spelling.
 
 // WHAT THE FOUR COPIES VARY. The pair (start, target) walks
 // (this hex, enemy hex), (this second hex, enemy hex),
 // (this hex, enemy second hex), (this second hex, enemy second hex), each
-// guarded by the wide-stack bit of the stack it belongs to - which is why
-// the third and fourth copies sit inside one `enemy->creatureId & 1`
-// block and the second and fourth inside their own `creatureId & 1`
-// tests. Retail computes the adjacency ROW ADDRESS once per target and
-// reuses it across the two copies that share a target (`[ebp-8]`), so the
-// two hexes are locals, not re-read members.
+// guarded by the wide-stack bit of the stack it belongs to. The two hexes
+// are locals, not re-read members.
 
 // side/slot (+0x10/+0x14) are read here as the CHOSEN ATTACK TARGET's
-// (side, slot), not as this stack's own identity: retail indexes
-// gpCombatManager->armies with them and then scans the cells adjacent to
-// the resulting stack, and the -1 pair is the "no target selected" case
-// that falls through to the literal reachability test.
+// (side, slot), not as this stack's own identity: they index
+// gpCombatManager->armies, the cells adjacent to the resulting stack are
+// scanned, and the -1 pair is the "no target selected" case that falls
+// through to the literal reachability test.
 
 // E:\gamedcs\fly.cpp:35
 DC_ADDRESS(0x0a1360, 0x88)
@@ -130,22 +117,17 @@ int army::flyTo(int destIndex, bool restoreFacing)
     return 0;
 }
 
-// RECONSTRUCTED 2026-08-13. The animation is a two-level loop: `steps`
-// straight-line hops of iFlightPixelSpan pixels each, and inside every
-// hop one pass over the walk sequence's frames. The pixel geometry is
-// the combat grid's own - cells[hex].field_00/field_02 are the hex's
-// screen x/y, and the flight distance is the plain euclidean one, which
-// is what puts a CRT `sqrt` call (not `fsqrt`; /Op keeps the double in
-// memory and the call form) at the head of the body.
+// The animation is a two-level loop: `steps` straight-line hops of
+// iFlightPixelSpan pixels each, and inside every hop one pass over the walk
+// sequence's frames. The pixel geometry is the combat grid's own -
+// cells[hex].field_00/field_02 are the hex's screen x/y, and the flight
+// distance is the plain euclidean one through `sqrt`.
 
 // THE PACING PAIR is GameTime::DelayTil followed by the struct.h inline
-// GameTime::NextFrameTime in kbwin.h; its elapsed-time clamp is present
-// in retail, so a direct timer increment would change the operation.
+// GameTime::NextFrameTime in kbwin.h, with its elapsed-time clamp.
 
 // The typed m_saveScreenPostGrid bitmap restores the previous draw bounds.
-// Keep the by-value frame extent and the canonical renderer calls: Complete's
-// fixed-viewport header helpers eliminate ScrollTo and expand UpdateCombatArea.
-// No extra block is needed around the outer loop; its removal is byte-flat.
+// Keep the by-value frame extent and the canonical renderer calls.
 VA(0x004b4a40, 0x44E)
 DC_ADDRESS(0x0a1590, 0x40e)
 MAC_ADDRESS(0x0c82a0, 0x5dc)

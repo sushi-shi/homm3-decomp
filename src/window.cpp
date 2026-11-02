@@ -79,8 +79,7 @@ heroWindow::~heroWindow()
 VA(0x005feae0, 0x17A)
 DC_ADDRESS(0x19721c, 0xc4)
 MAC_ADDRESS(0x20af50, 0x208)
-// The native public records update as bool; forwarding it to drawWindow
-// must not introduce an unsigned-char-to-bool normalization absent in retail.
+// The native public records update as bool, forwarded as is to drawWindow.
 int heroWindow::open(int newPriority, bool update)
 {
     if (m_status & WINDOW_STATE_OPEN)
@@ -129,8 +128,8 @@ void heroWindow::close(unsigned char update)
 }
 
 // Original: heroWindow::handle_message; window.cpp:194
-// Retail base vtable0x643cc4 slot3 shares the return-zero body0x4ec560.
-// Mac retains this body at 0x20b1d0; CSingleSelPopup::handleMessage calls it.
+// Shares the return-zero body. Mac retains this body;
+// CSingleSelPopup::handleMessage calls it.
 DC_ADDRESS(0x19731c, 0x4)
 MAC_ADDRESS(0x20b1d0, 0x8)
 int heroWindow::handleMessage(message& msg)
@@ -139,7 +138,7 @@ int heroWindow::handleMessage(message& msg)
 }
 
 // Original: heroWindow::handle_widget_hover; window.cpp:202
-// Base vtable slot4 shares the empty ret4 body0x485d80.
+// Shares the empty one-argument body.
 DC_ADDRESS(0x197320, 0x4)
 void heroWindow::handleWidgetHover(widget* current)
 {
@@ -230,15 +229,11 @@ void heroWindow::removeAndDeleteWidget(int id)
 }
 
 // E:\gamedcs\window.cpp:381
-// DC's message& parameter and GetWidget(m_focusId) call at 391 are canonical.
-// The two-state helper control preserves all retained function bytes; retail
-// expands GetWidget's tailWidget/prevWidget walk here. DC413's combat-over
-// handling is absent from Complete's 94-byte body: retail goes directly from
-// the focused widget's result to the ordinary widget traversal.
-// The /Ob2 witness: this body recurs inlined inside the 4-int
-// overload and both WidgetSet/ClearStatus while the out-of-line copy
-// still serves the external callers - auto-inlining with
-// unconditional emission (see the profile note in units.toml).
+// DC's message& parameter and GetWidget(m_focusId) call at 391 are
+// canonical; GetWidget's tailWidget/prevWidget walk is inlined. DC413's
+// combat-over handling is absent from Complete: the focused widget's result
+// goes directly to the ordinary widget traversal. Also inlined in the 4-int
+// overload and both WidgetSet/ClearStatus.
 VA(0x005fede0, 0x5E)
 DC_ADDRESS(0x197480, 0xb0)
 MAC_ADDRESS(0x20b3e8, 0xc4)  // linkorder bracket; widget Main-slot calls byte-proven
@@ -367,8 +362,8 @@ void heroWindow::restoreBackground(unsigned char update)
 
 // Original: heroWindow::MoveWindow; window.cpp:707
 // This relative-motion API uses the same saved-background operations as
-// Complete's retained CenterWindow0x5ff240, with desktop800x600 clipping.
-// No retained standalone MoveWindow address is claimed.
+// Complete's CenterWindow, with desktop 800x600 clipping. No standalone
+// MoveWindow address is claimed.
 DC_ADDRESS(0x197874, 0x106)
 void heroWindow::moveWindow(int deltaX, int deltaY)
 {
@@ -528,17 +523,9 @@ void heroWindow::setFocus(int id)
 }
 
 // E:\gamedcs\window.cpp:934
-// Retail's handler sits at 0x5ff500 between setFocus and deleteWidgets;
-// doModal passes its address to the window manager. The function census
-// row was admitted from that reference and the complete emitted body.
-// The twelve bytes decode as:
-//   mov eax,ecx / push eax / mov ecx,[eax+0x1c] / mov edx,[ecx] /
-//   call [edx+0xc] / ret
-// i.e. fastcall in ecx - the /Gr form of the STATIC member DC's
-// fieldlist marks it as - message::window at +0x1c, and heroWindow
-// vtable slot 3, which independently corroborates handle_message's
-// slot in the roster in window.h. Defined here so that DoModal's
-// address-take resolves; that claim is what scores the pair.
+// doModal passes its address to the window manager. The STATIC member DC's
+// fieldlist marks it as: it dispatches message::window's vtable slot 3
+// (handle_message).
 VA(0x005ff500, 0xC)
 DC_ADDRESS(0x197c74, 0x18)
 MAC_ADDRESS(0x20bc1c, 0x34)
@@ -654,11 +641,9 @@ unsigned char CHeroWindowEx::processRightSelect(int id)
     return 1;
 }
 
-// E:\gamedcs\window.cpp:1036 - vtable 0x243ce8 slot 9. The three arms
-// dispatch through slots 11/10/12 in that order (the [vptr+0x2c],
-// [vptr+0x28] and [vptr+0x30] call sites are what pin the roster
-// order), and the no-match arm returns 0 WITHOUT re-testing the exit
-// flag - retail jumps straight to the shared `xor eax,eax` tail.
+// E:\gamedcs\window.cpp:1036 - vtable slot 9. The three arms dispatch
+// through slots 11/10/12 in that order, and the no-match arm returns 0
+// without re-testing the exit flag.
 VA(0x005ff820, 0xA5)
 DC_ADDRESS(0x197eb4, 0x92)
 MAC_ADDRESS(0x20c094, 0x104)  // anchor-vtable (slot 9 of 0x243ce8)
@@ -689,10 +674,9 @@ int CHeroWindowEx::windowHandler(message& msg)
     return 0;
 }
 
-// E:\gamedcs\window.cpp:1122/1123 Ordinary source-owned
-// body, not a header inline. Retail vtable slot 12 and CScenarioInfoDlg's
-// qualified call resolve to 0x559140 (xor eax,eax; ret 8), ICF-folded with
-// t_stdio_file_adapter::write; that existing claim remains the sole owner.
+// E:\gamedcs\window.cpp:1122/1123. Ordinary source-owned body, not a
+// header inline; it shares t_stdio_file_adapter::write's body, which owns
+// the claim.
 DC_ADDRESS(0x197f48, 0x4)
 MAC_ADDRESS(0x20c198, 0x8)
 int CHeroWindowEx::onWidgetDeselect(int id, bool& exitFlag)

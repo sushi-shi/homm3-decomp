@@ -19,8 +19,8 @@ void LODFile::clear()
 }
 
 // E:\gamedcs\lodfile.cpp:72
-// DC's getDataPtr is an ordinary helper called at pointAt line 431.
-// The PC expansion seeks the archive stream before returning its handle.
+// DC's getDataPtr is an ordinary helper called at pointAt line 431. The PC
+// version seeks the archive stream before returning its handle.
 DC_ADDRESS(0x0e9100, 0x54)
 MAC_ADDRESS(0x11b5f4, 0x8c)
 void* LODFile::getDataPtr(const char* itemName)
@@ -60,8 +60,7 @@ bool LODFile::exist(const char* itemName)
     return false;
 }
 
-// Mac retains both recursive calls at 0x11b770 and 0x11b7d8. The Windows
-// retail body at 0x4fa660 carries equivalent loops at the same two branches.
+// Mac retains both recursive calls.
 VA(0x004fa660, 0x113)
 DC_ADDRESS(0x0e91c0, 0xf2)
 MAC_ADDRESS(0x11b6f0, 0x148)
@@ -121,8 +120,8 @@ char* LODFile::getErrorString(int lodError)
     }
 }
 
-// E:\gamedcs\lodfile.cpp:226.  DC's seven source rows prove these five
-// stores; retail repeats them exactly in open's vector-resize temporary.
+// E:\gamedcs\lodfile.cpp:226. DC's seven source rows prove these five
+// stores; inlined in open's vector-resize temporary.
 DC_ADDRESS(0x0e92f8, 0x38)
 MAC_ADDRESS(0x11b838, 0x1c)
 LODEntry::LODEntry()
@@ -134,9 +133,7 @@ LODEntry::LODEntry()
     csize = 0;
 }
 
-// E:\gamedcs\lodfile.cpp:266.  No retail row of its own: /Ob2 folds it
-// into the one call site below, where the "LOD" strcpy expands to VC6's
-// repne scasb + rep movs pair.
+// E:\gamedcs\lodfile.cpp:266. Inlined into the one call site below.
 DC_ADDRESS(0x0e93bc, 0x60)
 MAC_ADDRESS(0x11b9b0, 0x50)
 LODHeader::LODHeader()
@@ -193,14 +190,13 @@ int LODFile::open(const char* filename, int flags)
     return 0;
 }
 
-// DC set_filemap (lodfile.cpp:341, 0xe955c) owns hFile/hFileMap/
-// pFileMem at +0x188/+0x18c/+0x190 and opens a wide WinCE mapping.
-// GetFileSize (line53, 0xe90c0) uses the same backend: it saves DCftell,
-// clears tempoff at +0x194, reads DCftell again and restores tempoff.
-// Complete's LODFile is 0x18c bytes, with its Dinkumware vector occupying
-// +0x17c..+0x18b and no mapping/tempoff tail. Its open/read bodies at
-// 0x4fa8a0/0x4fab20 use fopen/fseek/fread and a decompression buffer.
-// The two backend operations are reviewed in config/source/dc_only.tsv.
+// DC set_filemap (lodfile.cpp:341) owns hFile/hFileMap/pFileMem at
+// +0x188/+0x18c/+0x190 and opens a wide WinCE mapping. GetFileSize (line53)
+// uses the same backend: it saves DCftell, clears tempoff at +0x194, reads
+// DCftell again and restores tempoff. Complete's LODFile is 0x18c bytes,
+// with its vector at +0x17c..+0x18b and no mapping/tempoff tail; its open
+// and read use fopen/fseek/fread and a decompression buffer. The two
+// backend operations are reviewed in config/source/dc_only.tsv.
 
 // Original: compare; lodfile.cpp:393
 DC_ADDRESS(0x0e9654, 0x12)
@@ -221,9 +217,6 @@ VA(0x004faa70, 0xAB)
 DC_ADDRESS(0x0e9690, 0x4e)
 MAC_ADDRESS(0x11bb74, 0x80)
 // Original public0x593733 ?pointAt@LODFile@@QAA_NPBD@Z proves bool,
-// despite byte lowering. Fresh VC6 emits QAE_NPBD rather than QAEEPBD;
-// all17 lodfile and235 resourcemanager code sections remain byte-identical.
-// The owner comparison requires refreshed target labels for the bool name.
 bool LODFile::pointAt(const char* itemName)
 {
     if (!getDataPtr(itemName)) {

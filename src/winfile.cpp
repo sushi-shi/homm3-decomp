@@ -61,8 +61,8 @@ bool File::Close()
     return true;
 }
 
-// E:\gamedcs\winfile.cpp:70 - no retail body; inlined into Delete and
-// Open below (the one-pass inliner needs the body before its callers).
+// E:\gamedcs\winfile.cpp:70 - inlined into Delete and Open below, so the
+// body precedes its callers.
 DC_ADDRESS(0x1984ec, 0x4)
 inline bool File::Exists(const char* filename)
 {

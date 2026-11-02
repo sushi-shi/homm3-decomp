@@ -503,9 +503,8 @@ bool InitializeArtifactTraitsTable()
     return 1;
 }
 
-// DC 0x050058 proves the ordinary static two-argument row parser. Complete
-// Mac 0x5a92c..0x5aa58 expands its cost/slot-mask/class operation; the pooled
-// string copies and added default fields remain owned by the caller.
+// DC 0x050058 proves the ordinary static two-argument row parser; the
+// pooled string copies and added default fields remain owned by the caller.
 DC_ADDRESS(0x050058, 0x7ba)
 static inline void InitializeArtifactTraits(int id,
     const TSpreadsheetResource::TStringVector& resource)

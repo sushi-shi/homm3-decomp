@@ -272,7 +272,7 @@ public:
     FileTime m_fileTime;  // +0x6f8
     SavedGameHeader m_saved;  // +0x700
 
-    VA(0x00578E00, 0x25F)  // retained retail body; formerly enrolled by CLASS_CTOR
+    VA(0x00578E00, 0x25F)  // retained retail body
     DC_ADDRESS(0x1474b8, 0xbc)
     GameSelectionHeadersStruct()
     {
@@ -362,10 +362,9 @@ public:
         m_heroIndex = -1;
     }
 
-    // DC SingleSelectionWindow.h:138. Complete keeps the same source
-    // helper but expands both calls in SetupAdvancedOptions.  Retail x86
-    // directly proves that Complete changed the three independent stores
-    // from DC's hero/player/town statement order to town/player/hero.
+    // DC SingleSelectionWindow.h:138; inlined at both calls in
+    // SetupAdvancedOptions. Complete changes the three independent stores
+    // from DC's hero/player/town order to town/player/hero.
     DC_ADDRESS(0x147610, 0x1a)
     void resetAdvancedOptions()
     {

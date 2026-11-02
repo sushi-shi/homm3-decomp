@@ -65,7 +65,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine
 // Original: AppInit; kbwin.cpp:166
 // Complete uses ANSI window APIs and initializes the desktop Imm mouse;
 // DC uses wide WinCE APIs and its own DirectInput/sound initialization.
-// The ordinary helper expands into WinMain at 0x4f7a30 in Complete.
+// Inlined into WinMain.
 DC_ADDRESS(0x0e7d20, 0x118)
 static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
 {
@@ -117,8 +117,7 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
 {
     switch (message) {
         case WM_CREATE:
-            // Mac core/make callback 0:0x20f7ac retains GameTime::get
-            // before srand; Windows 0x4f7c39 expands its timeGetTime read.
+            // GameTime::get before srand (timeGetTime on Windows).
             srand(GameTime::get());
             GdiSetBatchLimit(1);
             return 0;
@@ -225,8 +224,8 @@ void appExit()
     cleanUpMenus();
 }
 
-// Mac retains the shared event pump at code 0+0x20f90c. Its event polling
-// uses Mac OS services; this Windows body pumps native window messages.
+// Mac retains the shared event pump with Mac OS polling; this Windows body
+// pumps native window messages.
 VA(0x004f7fb0, 0xAA)
 DC_ADDRESS(0x0e7fd0, 0x42)
 MAC_ADDRESS(0x20f90c, 0x350)
@@ -293,8 +292,8 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
 }
 
 // Original: UpdateDfltMenu; kbwin.cpp:680
-// The released menu-update hook has an empty body. The adjacent 0x4f8140
-// procedure is the four-argument About callback, not this one-argument hook.
+// The released menu-update hook has an empty body; the adjacent procedure
+// is the four-argument About callback, not this one-argument hook.
 DC_ADDRESS(0x0e8018, 0x4)
 void updateDfltMenu(HMENU menu)
 {
@@ -422,8 +421,7 @@ void GameTime::delay(int interval)
 }
 
 // Original: InitVideo; kbwin.cpp:851
-// Empty hook; heroWindowManager::open retains the call to retail's
-// shared ICF ret at 0x5bc690.
+// Empty hook; heroWindowManager::open still calls it.
 DC_ADDRESS(0x0e80b4, 0x30)
 MAC_ADDRESS(0x20fcdc, 0x4)
 void initVideo()

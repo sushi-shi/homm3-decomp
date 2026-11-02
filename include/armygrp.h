@@ -179,15 +179,15 @@ enum TCreatureType {
     // Retail army::get_mirror_effect floors this creature's backlash chance
     // at Magic Mirror's base value. NH3API supplies the Complete-era spelling.
     CREATURE_FAERIE_DRAGON = 0x86,
-    // The other two war machines, added 2026-08-08 for recruit.obj's
+    // The other two war machines, used by recruit.obj's
     // siege_artifact_to_creature (0x550360), whose jump table returns
     // 0x91..0x94 for the four siege artifacts in order. The numbering
     // is corroborated by its own neighbours - 0x93/0x94 below were
     // already byte-proven - and by the creature->artifact switch
     // inlined into recruitUnit::Update, which maps 0x91->3 and
     // 0x92->4. NH3API spellings, Complete numbering.
-    // 0x8f, added 2026-08-08 for hero.obj's hero::getIdentifyLevel (0x4e5de0)
-    // and the same block inlined into hero::IsInIdentifyRange
+    // 0x8f, used by hero.obj's hero::getIdentifyLevel (0x4e5de0) and the same
+    // block inlined into hero::IsInIdentifyRange
     // (0x4e5e10): both `push 0x8f` into armyGroup::get_creature_total
     // and, when the count is nonzero, force a mastery field that is
     // otherwise below 3 up to 3. The id is INTERPOLATED between two ids
@@ -247,13 +247,10 @@ enum TCreatureType {
     // NOT repeated here - get_spell_work_chance's immunity switch already
     // carries all three below, at the same values this body proves.
 
-    // GATED, and it has to be - measured both ways 2026-08-20, exactly
-    // like netmsg.h's RS_ERASE_OBJECT. Ungated, these six enumerators take
-    // initialize ?initialize_game_data@@YIXXZ 100.00 -> 96.09 and events
-    // ?monsters_sell_out@advManager@@... 100.00 -> 99.95. 96.09 is the
-    // include-set canary's own signature value, and neither TU mentions a
-    // creature id: this is the documented type/symbol-table population
-    // class, not a modelling error. game.obj opens them for itself.
+    // GATED, like netmsg.h's RS_ERASE_OBJECT: ungated, these six enumerators
+    // change initialize_game_data and advManager::monsters_sell_out, neither
+    // of which mentions a creature id (the type/symbol-table population
+    // class). game.obj opens them for itself.
     CREATURE_PIXIE = 0x76,
     CREATURE_SPRITE = 0x77,
     CREATURE_PSYCHIC_ELEMENTAL = 0x78,
@@ -478,7 +475,7 @@ enum ESpellId {
     SPELL_CURE = 0x25,
     SPELL_RESURRECTION = 0x26,
     SPELL_ANIMATE_DEAD = 0x27,
-    // The gap between ANIMATE_DEAD and BLESS, byte-proven 2026-08-20 by
+    // The gap between ANIMATE_DEAD and BLESS, byte-proven by
     // combatManager::find_spell_target (0x5a3950): its three-way jump
     // chain is `sub edx, 0x26 / dec / dec`, so the third arm is 0x28, and
     // that arm is the one gated on `first_target` before it reaches
@@ -492,12 +489,9 @@ enum ESpellId {
     SPELL_SACRIFICE = 0x28,
     SPELL_BLESS = 0x29,
     SPELL_CURSE = 0x2a,
-    // The 41..52 enchantment ladder, byte-proven end to end 2026-08-08
-    // by the ai_tactical pricers' `K*136 + 0x34` mastery_bonus
-    // displacement. Every rung below is measured, and the two rungs
-    // already here (PRECISION 44, MIRTH 49) plus SORROW 50 and
-    // MISFORTUNE 52 are carried by functions that compile EXACT, so
-    // the ladder is anchored at both ends and no rung can shift:
+    // The 41..52 enchantment ladder, byte-proven end to end by the
+    // ai_tactical pricers' `K*136 + 0x34` mastery_bonus displacement;
+    // PRECISION 44, MIRTH 49, SORROW 50 and MISFORTUNE 52 anchor both ends:
     //   get_blood_lust_value    0x438100  +0x170c = 43*136 + 0x34
     //   get_weakness_value      0x438ed0  +0x181c = 45*136 + 0x34
     //   get_tough_skin_value    0x438d90  +0x18a4 = 46*136 + 0x34
@@ -551,11 +545,9 @@ enum ESpellId {
     // SPELL_TELEPORT 0x3f and one below SPELL_CLONE 0x41, both already
     // proven, so no other value fits.
 
-    // UNGATED DELIBERATELY. armygrp.h reaches initialize.cpp's include
-    // closure and a new enumerator is an input to the include-set class
-    // recorded on TSpellTraits below; the trade was authorised, is
-    // recorded above initialize_game_data's baseline row, and the
-    // ratchet keeps the peak in `hist` for a later lane to re-measure.
+    // UNGATED DELIBERATELY, although armygrp.h reaches initialize.cpp's
+    // include closure and a new enumerator is an input to the include-set
+    // class recorded on TSpellTraits below.
     SPELL_REMOVE_OBSTACLE = 0x40,
     // get_elemental_type's 0x5a9360 jump table independently proves this
     // contiguous summon family and its mapping to the four base elementals.
@@ -607,8 +599,7 @@ enum ESpellId {
     // reads akSpellTraits[0x4c].m_sample/m_effect for the death-cloud
     // animation over the target hex. NH3API's SPELL_DEATH_CLOUD at the
     // same value; the neighbours 0x4a/0x4b above and 0x4e below bracket
-    // it. Canaries measured on admission (the ESpellId class is
-    // non-monotonic - see the TSpellTraits school note).
+    // it.
     SPELL_DEATH_CLOUD = 0x4c,
     // 78, byte-proven by combatManager::ShowSpellMessage (0x5a8950).
     // Its creature-spell dispatch is a jump table over 0x2a..0x4e and
@@ -660,14 +651,14 @@ struct TSpellTraits {
     // 12/+0xc, m_name 16/+0x10, m_abbreviated_name 20/+0x14,
     // m_level 24/+0x18 all already agree here), so 4 is 4.
 
-    // +0x08 IS THE DC's m_effect, sliced 2026-08-20: the SPRITE-EFFECT
-    // id this spell plays over its target. combatManager::AreaEffect
+    // +0x08 IS THE DC's m_effect: the SPRITE-EFFECT id this spell plays over
+    // its target. combatManager::AreaEffect
     // (0x5a4970) is the witness - it loads
     // `[akSpellTraits + spell*136 + 8]` and hands it straight to
     // drawing.obj's hex-taking SpellEffect overload (0x496a10) as the
     // effect argument, exactly as do_fire_shield hands +0x04 to
-    // LoadPlaySample.  UNGATED 2026-08-20 by the view audit; both names
-    // are byte-proven, so both are declared for everyone.
+    // LoadPlaySample. Both names are byte-proven, so both are declared for
+    // everyone.
     const char* m_sample;     // +0x04
     // DC TSpellTraits record 0x1f65: member type 0x1f15, TSpellEffectID.
     TSpellEffectID m_effect;  // +0x08, int-wide enum
@@ -740,11 +731,11 @@ enum EMagicTerrain {
     MAGIC_TERRAIN_MAGIC_CLOUDS = 0x9
 };
 
-// PROVEN layout (2026-08-04): Dreamcast CodeView class size 56 with
+// PROVEN layout: Dreamcast CodeView class size 56 with
 // armies @0 and numTroops @28, corroborated by retail codegen - the
 // 7-slot loops and the CREATURE_NONE sentinel in
 // GetNumArmies (0x44acc0) / IsMember (0x44ab80).
-// PROVEN layout (2026-08-04): stride 116 from the retail index math
+// PROVEN layout: stride 116 from the retail index math
 // (idx*29 dwords in HasAllUndead/get_AI_value), attributes @0x10 and
 // AI_value @0x40 from the same bodies; field names are the NH3API
 // roster, which lands exactly on those offsets with cost[7].
@@ -822,15 +813,11 @@ extern const char* g_creatureBackgroundNames[10];
 // proven by GetArmySizeName's nine reloc targets. The NAME is a
 // bootstrap invention (no Dreamcast/NH3API name survives for these).
 
-// GetMorale's two town-building tests were bootstrapped here as
-// separate `unsigned int[2]` mask objects (gTavernMask /
-// gBrotherhoodOfTheSwordMask) while another lane owned town.h. They
-// were never separate objects: the town lane byte-proved
-// `bitNumber[i] == 1i64 << i` for every i < 48 in the pinned image, so
-// 0x66cdc0 and 0x66ce48 are simply bitNumber[5] and bitNumber[22].
-// GetMorale now spells them `built & bitNumber[TAVERN_ID]` and
-// `active & bitNumber[EXTRA_1_ID]` off town.h's own table - the Tavern
-// and, for a Castle, the Brotherhood of the Sword. Merged 2026-08-07.
+// GetMorale's two town-building tests are bitNumber[5] and bitNumber[22]
+// (0x66cdc0 and 0x66ce48; `bitNumber[i] == 1i64 << i` for every i < 48 in
+// the pinned image), spelled `built & bitNumber[TAVERN_ID]` and
+// `active & bitNumber[EXTRA_1_ID]` off town.h's own table - the Tavern and,
+// for a Castle, the Brotherhood of the Sword.
 
 // The game singleton and gpGame now live in their owner's header
 // (game.h); f_1f698 is the one field GetAlignments reads (nonzero ->

@@ -606,10 +606,9 @@ VA_COMPGEN(0x00462890, 0x15, DEFAULT_CTOR_CLOSURE, set)
 VA_COMPGEN(0x004628b0, 0x6E, IMPLICIT_DTOR, set)
 
 // The manager constructor takes these callbacks for three 0x24-byte
-// TArcher rows. The two canonical resource handles generate both bodies:
-// 0x462920 clears +4/+8; 0x462930 releases +8 then +4, including cleanup
-// of the second member if the first release throws. CodeView's older
-// TArcher uses raw Sprite/Missile pointers and has no written constructor.
+// TArcher rows; the two canonical resource handles generate both bodies.
+// CodeView's older TArcher uses raw Sprite/Missile pointers and has no
+// written constructor.
 VA_COMPGEN(0x00462920, 0x0B, CLASS_CTOR, TArcher)
 MAC_COMPGEN_ADDRESS(0x06e02c, 0x10, CLASS_CTOR, TArcher)
 
@@ -650,13 +649,6 @@ unsigned char combatManager::loadWallTraitsTable()
 // top but restored only inside the last !IsQuickCombat() block, and
 // gpMouseManager->field_38 is raised unconditionally and lowered only
 // there too. A quick combat therefore leaves both changed.
-
-// EH states run 0..4, one per `new`, with -1 between them - the frame
-// exists only to run operator delete if a constructor throws, since
-// there is no STL and no string anywhere in the body.
-// DC 0x5d636..0x5d664 draws GameText[727] and flushes it before loading.
-// Complete Mac 0x6e220..0x6e2d4 starts with pointer/configuration state,
-// stopAllSamples and the battle sample/fade path, without this busy-text draw.
 VA(0x00462a20, 0x83F)
 DC_ADDRESS(0x05d60c, 0x662)
 MAC_ADDRESS(0x06e220, 0x5c4)
@@ -901,45 +893,25 @@ void combatManager::freeIcons()
 }
 
 // E:\gamedcs\cmbtmgr.cpp:1004
-// Deployment. Both halves of every war-machine block are byte-forced:
-// which side may have the machine at all, and the hex it lands on.
+// Deployment: which side may have each war machine, and the hex it lands
+// on.
 //   * the catapult is gated on `fortification > 0 && side == 0` and goes
-//     into armies[0] with no side term in its address, which is why it is
-//     spelled armies[0] here and not armies[side] - retail's own source
-//     evidently said so too;
+//     into armies[0];
 //   * the ballista is refused to a DEFENDER of a fortified town
-//     (`!fortification || side != 1`), which is the siege rule;
-//   * the three artifact machines' hexes are `side ? A : B` ternaries -
-//     retail materialises them with the neg/sbb/and/add idiom that pairs
-//     two constants differing by one mask, not with arithmetic on side;
-//   * the arrow towers are gated on `side == 1` and address armies[1] the
-//     same way the catapult addresses armies[0]. A Citadel installs the
-//     keep alone, a Castle adds the two towers with (n+1)/2 shots each -
-//     which is exactly what InitializeArchers was already documented to
-//     prove from the other end.
-// The deployment tables' bounds come from adjacency, not from guessing a
-// stride: see their declaration in the header.
+//     (`!fortification || side != 1`), the siege rule;
+//   * the three artifact machines' hexes are `side ? A : B` ternaries;
+//   * the arrow towers are gated on `side == 1` and address armies[1]. A
+//     Citadel installs the keep alone, a Castle adds the two towers with
+//     (n+1)/2 shots each.
 
-// TWO SPELLINGS HERE ARE BYTE-FORCED AND LOOK REDUNDANT IN SOURCE; both
-// were measured, and both are retail's:
-//   * `group` is a local for GetNumArmies and for Init's two arguments,
-//     but the loop's empty-slot test re-reads `armyGroups[side]` from the
-//     member. Using the local for the test too costs 99.35 -> 95.90 -
-//     retail really does load the pointer once into a frame slot AND
-//     re-read the member at the top of each iteration.
-//   * the hex lookup is hoisted out of the tight/loose arms into a
-//     separate `ordinal`, because retail forms the `7*side` index ONCE
-//     after the two arms rejoin; writing the two-level index inside each
-//     arm duplicates it and costs 95.90 -> 94.18.
+// `group` is a local for GetNumArmies and Init's two arguments, yet the
+// loop's empty-slot test re-reads `armyGroups[side]` from the member; the
+// hex lookup is hoisted into a separate `ordinal` after the tight/loose
+// arms rejoin.
 
-// DREAMCAST LOCALS RESTORED 2026-08-30, byte-flat at 99.35275%. Raw NB11
-// places procedure-scope `side` before the outer loop, then records const
-// unsigned-char `grouped` and const-int `layout` in the side scope. The
-// occupied-slot scope records `hex` followed by an `army& thisArmy`; its
-// Init and LoadResources calls are source-visible in the SH4 line/xref
-// stream. The prior names (`tight_formation`, `last`) and repeated direct
-// array receiver were a score-neutral flattening. Fatal rules now preserve
-// these five names, types, declaration scopes/order and receiver boundary.
+// NB11 places procedure-scope `side` before the outer loop, then records
+// const unsigned-char `grouped` and const-int `layout` in the side scope;
+// the occupied-slot scope records `hex` followed by an `army& thisArmy`.
 VA(0x00463600, 0x3D8)
 DC_ADDRESS(0x05e09c, 0x33a)
 MAC_ADDRESS(0x06ec6c, 0x420)  // anchor-callee
@@ -958,8 +930,6 @@ void combatManager::loadArmies(unsigned char isSurrounded)
         const unsigned char grouped =
             combatHero && (combatHero->m_formation & 1) && IsHuman[side];
         const int layout = group->getNumArmies() - 1;
-        // Mac0x6ed50 initializes the placement counter after the layout call.
-        // This order also restores Windows' known-zero comparison.
         int placed = 0;
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             if (m_armyGroups[side]->m_armies[i] == CREATURE_NONE)
@@ -1041,10 +1011,8 @@ void combatManager::loadArmies(unsigned char isSurrounded)
 
 // Original: combatManager::FreeArmies; cmbtmgr.cpp:1151
 // DC1152 stops samples, then DC1154..1157 frees each army's raw resource
-// pointers. Complete retains only the audio operation here (0x4639e0);
-// its army members are reference-counted handles whose destructor cleanup
-// is byte-proven at 0x43d400. DoVictory retains this call and Close expands
-// it. The earlier provisional name stopCombatSounds split this identity.
+// pointers; Complete keeps only the audio operation, since its army members
+// are reference-counted handles. DoVictory retains this call and Close expands
 VA(0x004639e0, 0x0E)
 DC_ADDRESS(0x05e3d8, 0x8c)
 MAC_ADDRESS(0x06f08c, 0x2c)
@@ -1054,8 +1022,8 @@ void combatManager::freeArmies()
 }
 
 // Original: combatManager::CheckNativeTerrain; cmbtmgr.cpp:1498
-// SetupCombat expands this ordinary member after LoadArmies. Each side's
-// summary flag is set by the first native-terrain army in that group.
+// Inlined in SetupCombat after LoadArmies. Each side's summary flag is set
+// by the first native-terrain army in that group.
 DC_ADDRESS(0x05e948, 0x64)
 MAC_ADDRESS(0x06f86c, 0x6c)
 void combatManager::checkNativeTerrain()
@@ -1278,8 +1246,7 @@ void combatManager::setupAdjacencyArray()
 
         for (int direction = 0; direction < COMBAT_DIRECTION_COUNT;
                 direction++) {
-            // DC cmbtmgr.cpp:1541 names InInvisibleColumn here; Mac expands
-            // its bounds and edge-column tests in the call-free loop.
+            // DC cmbtmgr.cpp:1541 names InInvisibleColumn here.
             if (inInvisibleColumn(hex)) {
                 m_adjacentCells[hex][direction] = -1;
                 if (column == 0) {
@@ -1501,8 +1468,6 @@ const char* combatManager::getBackgroundName()
     return background;
 }
 
-// Bound-first SLimitData comparisons reproduce retail's four expanded
-// rectangle checks; all 39 CFG blocks and the six return sites now agree.
 VA(0x004647a0, 0x17A)
 DC_ADDRESS(0x05f058, 0x176)
 MAC_ADDRESS(0x0700d8, 0x2fc)
@@ -1700,23 +1665,14 @@ unsigned char combatManager::actsBefore(
     return incumbent->index < candidate->index;
 }
 
-// DC cmbtmgr.cpp:2349 calls CheckCastleAttack after this selection loop.
-// Neither retail target retains that call: Mac has only the five ordered
-// game calls below, and Windows ends after returning the selection result.
-// The two DC GetSpeed calls belong to actsBefore, not this body.
-// Original public ?NextArmy@combatManager@@QAA_N_N@Z proves a bool
-// result and checking-for-bad-morale flag. Retail and Mac return only
-// true/false; all callers supply that same boolean domain.
-// The morale check passes the chosen army's side field, as placeArmyInGrid
-// reads it (DC 4071 has no GetOwningSide call): with the accessor there the
-// final SetNextArmy argument loads took other scratch registers (99.9020%).
-// The field in SetNextArmy too is Windows-flat and lowers Mac 27.10 -> 26.98%.
+// DC cmbtmgr.cpp:2349 calls CheckCastleAttack after this selection loop;
+// Complete does not. Original public ?NextArmy@combatManager@@QAA_N_N@Z
+// proves a bool result and checking-for-bad-morale flag. The morale check
+// passes the chosen army's side field directly (DC 4071 has no
+// GetOwningSide call).
 VA(0x00465080, 0x2A2)
 DC_ADDRESS(0x05f518, 0x41c)
 MAC_ADDRESS(0x070b74, 0x328)
-// Mac 0x70b9c..0x70bb8 still indexes both acting side and slot after
-// testing side == 0: the canonical getCurrentArmy expansion, rather
-// than a source-level constant-side army lookup.
 bool combatManager::nextArmy(bool checkingForBadMorale)
 {
     if (m_actingSlot >= 0 && m_actingSide == 0
@@ -1760,7 +1716,6 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
             if (best) {
                 if (!m_inSecondPhase)
                     best->newTurn();
-                // Mac 0x70d50..0x70d90 expands this inline predicate.
                 if (best->isIncapacitated())
                     continue;
                 if (checkingForBadMorale && !m_creaturePlacement
@@ -1806,33 +1761,17 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
 // counter (the enchanter). Every id is argued on the enumerator in
 // army.h rather than here.
 
-// Two shapes the bytes force:
-//   * the controlling side is computed TWICE through Dreamcast's
-//     Army.h `army::get_controlling_side` boundary, once into the member
-//     and once again inside the wraith arm. VC6 expands both calls, as
-//     retail requires;
-//   * the wraith arm's exits are `break`s, not `return`s: all of them
-//     land on the shared two-statement tail (lastMovedArmy = 0 and the
-//     command-bar rearm), which is also where bCreaturePlacement and
-//     the compare chain's default edge go.
+// The controlling side is computed twice through Dreamcast's Army.h
+// `army::get_controlling_side` boundary, once into the member and once
+// inside the wraith arm; the wraith arm's exits are `break`s landing on the
+// shared two-statement tail.
 
-// DREAMCAST SHAPE RESTORED. Raw NB11
-// records `result` as the sole non-optimized local inside the mana-drain
-// sample scope. Its xrefs prove two Army.h get_controlling_side calls,
-// two Army.h GetName calls and the named GetControl tail. The old source
-// used a file-local controlling-side expansion, a direct creature-trait
-// helper, `message`, and an address-ordinal command helper solely to retain
-// the existing bytes. Enabling the original CreatureType.h inline view and
-// restoring all five named source boundaries produces the identical x86.
-// Three frozen missing-call rows retire; fatal rules now reject putting any
-// of those flattened spellings back.
+// Raw NB11 records `result` as the sole local inside the mana-drain sample
+// scope; its xrefs prove two Army.h get_controlling_side calls, two Army.h
+// GetName calls and the named GetControl tail.
 
 // DC lines 2399 and 2403 each put format_string, basic_string::operator=
-// and the returned temporary's destructor on one statement row. Restoring
-// the same direct assignment in both arms makes the complete message region
-// byte-exact and removes the diagnostic inline-depth fence. Recovering the
-// two player references in isQuickCombat then restores retail's expansion
-// here as well: all 0x4f6 bytes, 74 blocks, 44 branches and 27 calls match.
+// and the returned temporary's destructor on one statement row.
 VA(0x00465330, 0x4F6)
 DC_ADDRESS(0x05f934, 0x1de)
 MAC_ADDRESS(0x070e9c, 0x508)  // anchor-global
@@ -2051,8 +1990,7 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2603
-// One arrow-tower shot, and the survey it replaces got the PROTOTYPE
-// right and two of its four callee readings wrong.
+// One arrow-tower shot.
 
 // The parameter is NOT combatManager::TArcherID. It is scaled by 169 and
 // added to +0x54cc, i.e. `&armies[0][0] + p * sizeof(army)`, with no
@@ -2066,25 +2004,13 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 // archer index uninitialised for any other hex - and its 0xfe -> 0 /
 // 0xfb -> 1 / 0xff -> 2 mapping is what proves field_1402c is an array.
 
-// DC records const numFrames; a conditional initializer preserves that lifetime.
-// The missile-frame output lives in its animation branch, reproducing
-// retail's -0x28 home. Naming the staged double before the retained reduction
-// call, then directly converting the product, is Windows exact. Assigning
-// that product back to the double introduces a redundant /Op rounding spill.
+// DC records const numFrames. The staged double is named before the
+// retained reduction call.
 
-// Mac 0x719e8..0x719f8 orders the lower/keep/upper arms; its facing
-// decision merges an integer before the field store at0x71a70. VC6
-// canonicalizes the source choices. Mac divides tower damage by the
-// retained reduction at0x71c20; Windows multiplies, so that port-specific
-// arithmetic is recorded separately from shared helper recovery.
-//
-// Two shapes the bytes forced and that are worth not re-litigating:
-// the damage accumulator is a DOWN-counted loop over a copy of
-// numTroops (retail spills the count and steps it with dec/jne, which
-// an up-counted `for (i = 0; i < n; i++)` does not produce), and
-// `damage * ComputeDefenderDamageReduction(1)` is in THAT operand
-// order - retail materialises and spills the int-to-double conversion
-// BEFORE the call, which is the left-operand-first shape.
+// Platform difference: Mac divides tower damage by the reduction, Windows
+// multiplies. The damage accumulator is a down-counted loop over a copy of
+// numTroops, and `damage * ComputeDefenderDamageReduction(1)` keeps that
+// operand order.
 VA(0x00465ad0, 0x443)
 DC_ADDRESS(0x05feac, 0x370)
 MAC_ADDRESS(0x071988, 0x408)  // anchor-callee
@@ -2152,13 +2078,10 @@ void combatManager::keepAttack(int towerPos)
                      archer->m_missile);
     }
 
-    // The accumulator is a DOWN-counted loop over a copy of numTroops:
-    // retail spills the count and steps it with `dec / jne`, which an
-    // up-counted `for (i = 0; i < n; i++)` does not produce.
     int damage = 0;
     for (int shot = tower->m_numTroops; shot > 0; shot--)
         damage += sRandom(2, 4);
-    // The shared reduction helper is dual exact. This caller differs:
+    // Platform difference in this caller:
     // Mac 0x71c20 divides by that multiplier, Windows multiplies it.
     double scaledDamage = damage;
 #ifdef HOMM3_TARGET_MAC
@@ -2222,8 +2145,7 @@ float combatManager::computeDamageModifier(int attack, int defense)
     return 1.0f;
 }
 
-// Dreamcast cmbtmgr.cpp:2738..2752. Complete expands this ordinary helper
-// into CalculateGainedExperience. The helper owns the stack loop, both
+// Dreamcast cmbtmgr.cpp:2738..2752; inlined into CalculateGainedExperience.
 // army::Is calls (line 2745), and the defeated-hero bonus (2749/2750).
 DC_ADDRESS(0x060220, 0xf8)
 MAC_ADDRESS(0x071e50, 0xd8)
@@ -2253,11 +2175,6 @@ void combatManager::resetHitByCreature()
 }
 
 // DC cmbtmgr.cpp:2797 records two GridX calls on the combined rejection row.
-// Keep both calls: caching the column over-inlines the early-return cleanup
-// (94.7277%); the combined guard restores all retail instructions. Refreshing
-// generated source identities proves the vector<bool> destructor's ICF fold
-// onto retail's vector<widget*> destructor, closing the remaining relocation
-// at +0x193 and producing 100% without a manually admitted alias.
 VA(0x00466010, 0x243)
 DC_ADDRESS(0x060354, 0x1e2)
 MAC_ADDRESS(0x071fb0, 0x294)
@@ -2328,23 +2245,12 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 // moat, the two-boat naval blockade, and the random scatter of ordinary
 // obstacles. Called only from Open.
 
-// Shapes the bytes force, all of them cheap to get wrong:
-//   * the naval branch has its OWN epilogue, so it is a real `return`
-//     and not a jump into the shared tail every other exit uses;
-//   * both obstacle-budget arms tail-merge into ONE Random call site,
-//     which is what says a single local is assigned in an if/else
-//     rather than two calls written out;
-//   * the landmine placement passes size()-1 directly. Dreamcast records
-//     no slot local, and retail pushes the final argument before the decrement;
-//   * the large-obstacle guard is the De Morgan form
-//     `(fort < 2 || type != STRONGHOLD) && Random(1, 100) <= 40` -
-//     retail falls THROUGH to Random on `jl` and skips on `je`, and the
-//     positive `!(a && b)` spelling emits those two swapped;
-//   * the placement loop is `while (placed < budget)` with `placed`
-//     pre-set to 0, which VC6 folds to a `test/jle` on budget alone.
-//     Mac 0x72a34 keeps a single Pick call in the inner retry loop.
-//     The guarded retry preserves that call in CodeWarrior while VC6 rotates
-//     it into the retail initial/retry sites; a do/while misses the rotation.
+// The naval branch has its own `return`; both obstacle-budget arms assign a
+// single local that feeds one Random call; the landmine placement passes
+// size()-1 directly (Dreamcast records no slot local); the large-obstacle
+// guard is the De Morgan form
+// `(fort < 2 || type != STRONGHOLD) && Random(1, 100) <= 40`; the placement
+// loop is `while (placed < budget)` with `placed` pre-set to 0.
 VA(0x00466290, 0x607)
 DC_ADDRESS(0x060538, 0x3e2)
 MAC_ADDRESS(0x0722b8, 0x818)  // anchor-callee
@@ -2490,7 +2396,6 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)
 {
     TPickANumber picker(0, 0x21);
-    // Mac 0x72b0c keeps the pick at the loop head.
     for (;;) {
         int obstacleId = picker.pick();
         if (obstacleId < 0)
@@ -2569,7 +2474,6 @@ void combatManager::removeObstacle(int index)
         return;
     TObstacle* obstacle = &getObstacle(index);
     const TObstacleInfo* shape = obstacle->m_shape;
-    // Mac 0x72d9c/0x72de8 expands gridY and rowIsOdd at both checks.
     unsigned char oddRow = rowIsOdd(gridY(obstacle->m_hex));
     for (int i = 0; i < shape->m_extraHexCount; i++) {
         int cellIndex = shape->m_extraHexOffsets[i] + obstacle->m_hex;
@@ -2639,26 +2543,18 @@ void combatManager::initializeArchers()
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3299
-// RECONSTRUCTED 2026-08-20. Two walks over the same +0x13438 latch: the
-// first raises each marked stack's drawing-effect byte (or, for an arrow
+// Two walks over the same +0x13438 latch: the first raises each marked stack's
+// drawing-effect byte (or, for an arrow
 // tower, the one of three keep/tower latches its grid index selects),
 // the second clears the stack's hexcell occupancy. Only the drawing half
-// is quick-combat gated - the occupancy clear runs either way, which is
-// what makes the two IsQuickCombat expansions straddle it.
+// is quick-combat gated - the occupancy clear runs either way.
 
-// Dreamcast explicitly calls MarkCreatureEffect at cmbtmgr.cpp:3312
-// (dc 0x60d3a). The inline helper's Complete view contains the retail-only
-// arrow-tower switch and expands to the same x86 previously written out
-// here: restoring the helper boundary was byte-neutral at 97.37131% and
-// the whole marked-stack region remains instruction-exact.
+// Dreamcast explicitly calls MarkCreatureEffect at cmbtmgr.cpp:3312;
+// Complete's inline helper adds the arrow-tower switch.
 
 // The 20-per-side byte arrays against armies[2][21] are retail's own
 // asymmetry, not a mis-slice: one loop steps the byte arrays by 20 and
 // the army index by 21, and ResetLimitCreature memsets exactly 2x20.
-
-// Mac 0x73178..0x7319c captures both origins before computing the extents.
-// The same order with the canonical width/height calls restores Windows
-// exact bytes; the earlier raw-member scheduling controls are superseded.
 VA(0x00466e00, 0x323)
 DC_ADDRESS(0x060ce0, 0x1fe)
 MAC_ADDRESS(0x0730bc, 0x26c)  // anchor-global
@@ -2752,8 +2648,7 @@ void combatManager::lowerDoor()
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3400 The drawbridge animation alone,
-// as in Dreamcast and Mac (0x734ac, whose only caller is testRaiseDoor).
-// Retail has no standalone body: VC6 expands it into its sole caller below.
+// as in Dreamcast and Mac; inlined into its sole caller below.
 DC_ADDRESS(0x061034, 0xac)
 MAC_ADDRESS(0x0734ac, 0xd0)
 void combatManager::raiseDoor()
@@ -2772,10 +2667,8 @@ void combatManager::raiseDoor()
     waitEndSample(sample, -1);
 }
 
-// E:\gamedcs\cmbtmgr.cpp:3426 The occupancy guards, then the
-// animation: Mac 0x7357c has exactly retail's guard sequence before its one
-// call to raiseDoor, and walkTo, flyTo, teleportTo and processNextAction all
-// branch to it. Retail's 0x4672e0 is this function with raiseDoor expanded.
+// E:\gamedcs\cmbtmgr.cpp:3426 The occupancy guards, then the animation;
+// walkTo, flyTo, teleportTo and processNextAction all call it.
 VA(0x004672e0, 0x177)
 DC_ADDRESS(0x0610e0, 0x7e)
 MAC_ADDRESS(0x07357c, 0x94)
@@ -2935,56 +2828,32 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
     return 1;
 }
 
-// THE THREE MISSILE ANIMATORS, SURVEYED 2026-08-20 (not reconstructed).
-// They are one body written three times, so the survey is recorded once,
-// here, at the first of them.
-
-// VERIFIED DIRECTLY: none of the three touches a single pad byte of this
-// class. Every `this`-relative displacement in all three bodies is one of
-// +0x54a4, +0x54a5, +0x54a8, +0x54ac - which is just the inlined
-// IsQuickCombat guard - plus gpGame+0x1f69d inside it. So the header work
-// for this family is declarations and .rdata externs ONLY, with no layout
-// archaeology, which makes them far cheaper than InitNonVisualVars
-// despite being bigger.
-
-// All three missile animators retain the shared bitmap, sprite and rectangle
-// helpers. Their dirty extents start from heroWindowManager::NullLimits and
-// are clipped to combatManager::CombatAreaLimits before UpdateCombatArea.
-// The ballistic path computes a parabola, restores its saved bitmap inside
-// the loop, and uses a 100ms speed factor. The other two use 33ms; only the
-// animated variant owns its sprite and cycles its frames.
-// DC 0x61926, 0x61d5c and 0x6223a pass inclusive right/bottom endpoints
-// to ScrollTo's width/height parameters. Preserve those original caller
-// expressions; Complete's fixed viewport eliminates the scrolling work.
+// THE THREE MISSILE ANIMATORS. All three retain the shared bitmap, sprite
+// and rectangle helpers; their dirty extents start from
+// heroWindowManager::NullLimits and are clipped to
+// combatManager::CombatAreaLimits before UpdateCombatArea. The ballistic
+// path computes a parabola, restores its saved bitmap inside the loop, and
+// uses a 100ms speed factor; the other two use 33ms, and only the animated
+// variant owns its sprite and cycles its frames. DC 0x61926, 0x61d5c and
+// 0x6223a pass inclusive right/bottom endpoints to ScrollTo's width/height
+// parameters.
 
 // E:\gamedcs\cmbtmgr.cpp:3640
-// RECONSTRUCTED 2026-08-20, the parabolic member of the trio. DC local
-// names again (ARROW_TRAVEL_DIST, MISSILE_PERIOD, nframes, flatness,
+// The parabolic member of the trio. DC local names again (ARROW_TRAVEL_DIST,
+// MISSILE_PERIOD, nframes, flatness,
 // saved, deltaX, deltaY, next_frame_time, update_area). DC has NO
 // `flipped` row for this one and retail pushes a literal 0 for hflip,
 // which agrees: a ballistic missile is never mirrored, and it needs no
 // angle search or DrawFrame at all - the trajectory is arithmetic.
 
-// DC positively records ARROW_TRAVEL_DIST: preserve that named distance
-// before deriving the flight-frame count. The other two missile routines
-// have different recorded locals; missing debug rows alone do not prove
-// that an expression was unnamed in the original source.
+// DC records ARROW_TRAVEL_DIST, named before deriving the flight-frame
+// count.
 
 // DC 3697 multiplies deltaX by step; 3698 computes nframes - step.
-// Mac 0x73df8 also subtracts step, while its horizontal product is
-// strength-reduced. Keep the ordinary indexed loop and trajectory,
-// rather than spelling compiler-created induction variables in source.
 
-// DC cmbtmgr.cpp:3721 retains UpdateCombatArea(SLimitData). Mac
-// 0x73fdc..0x74000 expands its inclusive width/height and UpdateScreen
-// call after clipping the same four-word rectangle.
-// DC 3703/3707/3725 name the bitmap Grab/Draw and const sprite Draw
-// forwarding overloads. The four-word NullLimits copy permits either copy
-// initialization or default construction followed by assignment; the
-// latter lets VC6 expand GetNumFrames. With the Windows fixed-viewport
-// update and scroll definitions (cmbtmgr.h) the nested IsValidSeq and the
-// final Draw's GetMap expand as in retail, and the body reproduces exactly
-// (91.3063% under the CE forwarding chain, with a 0x8c frame).
+// DC cmbtmgr.cpp:3721 retains UpdateCombatArea(SLimitData); DC
+// 3703/3707/3725 name the bitmap Grab/Draw and const sprite Draw forwarding
+// overloads.
 VA(0x00467a00, 0x3AF)
 DC_ADDRESS(0x0614f0, 0x4b8)
 MAC_ADDRESS(0x073c44, 0x488)  // anchor-global
@@ -3022,7 +2891,6 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     for (int step = 0; step < nframes; step++) {
         unsigned long nextFrameTime = GameTime::get() + missilePeriod;
         if (step != 0) {
-            // Mac 0x73e24 copies a four-word rectangle temporary here.
             updateArea = SLimitData(
                 x, y, x + width - 1, y + height - 1);
             x = startX + deltaX * step / nframes;
@@ -3047,19 +2915,9 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     }
 }
 
-// DC cmbtmgr.cpp:3846 adds the current x/y to width/height and subtracts
-// one before constructing the old bounds. Mac 0x744a4..0x744b4 forms
-// the current inclusive endpoints for Include. Keep those expressions
-// and the ordinary indexed loop; right/bottom induction counters were
-// compiler substitutions. The canonical bitmap, sprite, rectangle and
-// resource calls stay intact; with the Windows fixed-viewport update and
-// scroll definitions (cmbtmgr.h) this reproduces retail. The CE forwarding
-// chain stopped at 94.71% from Include's lowering at +0x333 onward.
-// DC 3794/3796 and Mac 0x7428c..0x742ac separate the count guard
+// DC cmbtmgr.cpp:3846 adds the current x/y to width/height and subtracts one
+// before constructing the old bounds. DC 3794/3796 separate the count guard
 // from the inner angle break; unordered angles continue that loop.
-// The inner-break restoration is VC6 byte-identical. Eight rectangle
-// constructor/conditional-assignment combinations do not improve the
-// helper-preserving model; retain the ordinary member initializer/if form.
 VA(0x00467db0, 0x46A)
 DC_ADDRESS(0x0619a8, 0x4b8)
 MAC_ADDRESS(0x0740cc, 0x588)  // MAC_ABSTRACTION_FROM(tokens1:4dc9747a4bbe,49.0113): Windows recovery of the SLimitData/s_combatAreaLimits identities and the DC sprite-angle loop; CW reallocates the body (masked 160 -> 109 of 354).
@@ -3073,8 +2931,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 
     const int deltaX = destX - startX;
     int deltaY = destY - startY;
-    // DC records flipped as a lowered byte; retail forwards it directly to
-    // CSprite's public _N parameter. An unsigned char adds test/setne.
+    // DC records flipped as a lowered byte; it is CSprite's bool parameter.
     bool flipped = deltaX < 0;
     const int distance = static_cast<int>(sqrt(static_cast<double>(
         deltaY * deltaY + deltaX * deltaX)));
@@ -3134,7 +2991,6 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         if (step != 0) {
             saved.Draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap, x, y, false);
-            // Mac 0x743e0 constructs and copies the four-word bounds.
             updateArea = SLimitData(
                 x, y, x + width - 1, y + height - 1);
             x += addX;
@@ -3162,41 +3018,20 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3902
-// RECONSTRUCTED 2026-08-20. Local names are DC's own
-// (NB11 local records): deltaX/deltaY, addX/addY,
+// Local names are DC's own (NB11 local records): deltaX/deltaY, addX/addY,
 // nframes, flipped, saved, frame, next_frame_time, ARROW_DELAY, and
-// update_area for the four running limits - which is why update_area is
-// spelled as ONE four-int aggregate rather than four scalars: the
-// aggregate is worth half a point here (91.22 -> 91.74) because it
-// colours the four limits into one slot run the way retail does.
+// update_area for the four running limits, one four-int aggregate.
 
-// Two shapes were forced by retail rather than chosen. `angle` is
-// assigned from a NAMED DOUBLE, not from a cast expression: retail
-// rounds the atan product to double and reloads it before narrowing to
-// the float (`fstp qword / fld qword / fstp dword`), and neither
-// `angle = expr` nor `angle = (float)expr` emits that middle pair -
-// only a real double lvalue does (90.68 -> 91.18). And the multiplier
-// is 0x63b8f0, whose stored double is 57.2957763671875 - the FLOAT
-// rounding of 180/PI, not the 57.29577951308232 that
-// GetMissileStartingPosition multiplies by further down this same TU.
-// Two constants, two spellings, both retail's.
+// `angle` is assigned from a named double, not a cast expression. The
+// multiplier is 0x63b8f0, the FLOAT rounding of 180/PI (57.2957763671875),
+// not the 57.29577951308232 GetMissileStartingPosition multiplies by
+// further down this TU.
 
-// DC cmbtmgr.cpp:3990/4004/4008/4030 retains the bitmap Draw/Grab and
-// const CSprite bitmap Draw overloads (Bitmap16.h:162/168, CSprite.h:324).
-// Keep their nested map/dimension accessors. In the isolated lane, restoring
-// those calls moved Windows 99.24 -> 97.47% and Mac 42.2507 -> 43.7332%.
-// DC 3953/3957 separates the frame-count loop from the inner angle break;
-// Mac 0x74864..0x748a4 likewise exits when the average angle is below angle.
-// Retain that comparison rather than the combined >= guard, including its
-// unordered-input behavior. The natural for loop and count-only while with
-// inner break produce identical VC6 bytes: lane Windows 96.57%, Mac 65.8784%.
-// The final bitmap Draw expands. Under the CE forwarding update/scroll
-// chain its nested Bitmap16Bit::getMap stayed out of line (96.70%); the
-// Windows fixed-viewport definitions in cmbtmgr.h reproduce retail.
-// Moving ARROW_DELAY before drawFrame regressed to 92.65% and contradicts
-// DC 3974 (NullLimits construction), 3978 (DrawFrame), 3980 (delay math),
-// and Mac 0x74960..0x74994. Preserve the native draw-before-delay order.
-
+// DC cmbtmgr.cpp:3990/4004/4008/4030 retains the bitmap Draw/Grab and const
+// CSprite bitmap Draw overloads. DC 3953/3957 separates the frame-count loop
+// from the inner angle break (exit when the average angle is below angle,
+// including unordered input). ARROW_DELAY follows drawFrame (DC
+// 3974/3978/3980).
 VA(0x00468220, 0x48F)
 DC_ADDRESS(0x061e60, 0x45c)
 MAC_ADDRESS(0x074654, 0x5c4)  // anchor-global; MAC_ABSTRACTION_FROM(tokens1:b764eb463ab5,65.8784): Windows recovery of the SLimitData/s_combatAreaLimits identities and DC 4016's scrollTo extent; CW reallocates the body (masked 214 -> 149 of 369).
@@ -3208,8 +3043,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
 
     const int deltaX = destX - startX;
     int deltaY = destY - startY;
-    // DC records flipped as a lowered byte; retail forwards it directly to
-    // CSprite's public _N parameter. An unsigned char adds test/setne.
+    // DC records flipped as a lowered byte; it is CSprite's bool parameter.
     bool flipped = deltaX < 0;
     int distance = static_cast<int>(sqrt(static_cast<double>(
                        deltaY * deltaY + deltaX * deltaX)));
@@ -3237,9 +3071,8 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             frame = 0;
     } else {
         float angle;
-        // The double result is stored, reloaded and only then narrowed
-        // to the float: that round-trip is /Op's, and an explicit
-        // (float) cast on the expression suppresses it.
+        // The double result is stored and reloaded before narrowing to the
+        // float.
         double degrees;
         if (flipped)
             degrees = atan(static_cast<double>(deltaY) / deltaX)
@@ -3271,15 +3104,12 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         if (step != 0) {
             saved.Draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap, x, y, false);
-            // Mac 0x749fc/0x74abc derives each rectangle from its current origin.
-            // Retaining those expressions also matches the Windows loop schedule.
             updateArea = SLimitData(x, y, x + width - 1, y + height - 1);
             x += addX;
             y += addY;
         }
         saved.Grab(g_windowManager->m_screenBitmap, x, y);
-        // DC cmbtmgr.cpp:4008 calls the const bitmap-forwarding overload
-        // from CSprite.h:324, retained at dc 0x1f268.
+        // DC cmbtmgr.cpp:4008 calls the const bitmap-forwarding overload.
         missile->Draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, flipped, 1);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
@@ -3323,15 +3153,7 @@ void combatManager::removeArmyFromGrid(const army& a)
     }
 }
 
-// Native Mac 0x74d4c/0x74dac selects integer 1/0 before narrowing;
-// Boolean assignments use branchless neg/cntlzw instead. VC6 is byte-flat.
-// DC 4071 reads the side field without a GetOwningSide call, and retail
-// loads only its low byte at both stores; Mac 0x74d6c loads and sign-extends
-// the second side before computing the front index, so that copy is a
-// narrowed local (Windows 99.77 -> 100%, Mac 85.64 -> 93.09%). RoE-era
-// Loki 0x80b6258 instead loads it after offsetToFront's retained is() call;
-// the direct store there scores Windows 100% but Mac 81.91%.
-// The reversed offset/index sum is byte-flat on both compilers.
+// DC 4071 reads the side field without a GetOwningSide call.
 VA(0x004687c0, 0x99)
 DC_ADDRESS(0x0623cc, 0xac)
 MAC_ADDRESS(0x074d10, 0xbc)
@@ -3350,10 +3172,9 @@ void combatManager::placeArmyInGrid(const army& a, int hex)
     }
 }
 
-// DC's older tail draws and updates the combat area after DoModal.
-// Complete's Mac 0x74e7c..0x74eb0 and exact Windows body instead test
-// the dialog result, cast the Faerie Dragon spell and adjust nextAction;
-// neither retains that redraw tail.
+// DC's older tail draws and updates the combat area after DoModal; Complete
+// instead tests the dialog result, casts the Faerie Dragon spell and adjusts
+// nextAction.
 VA(0x00468860, 0x124)
 DC_ADDRESS(0x062478, 0xe8)
 MAC_ADDRESS(0x074dcc, 0x120)
@@ -3390,21 +3211,13 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 
 // E:\gamedcs\cmbtmgr.cpp:4158. TSpellEffectID is a source-proven enum;
 // the walks select, advance and finish animations for armies[2][21].
-// DC4234/4236 and Mac 0x750d4..0x750f4 put the nested effect-loading guard
-// after effect selection. DC4277 keeps the first two max calls together.
-// DC4292/4293 retain the marking condition and MarkCreatureEffect helper;
-// Complete adds the arrow-tower case inside that canonical helper.
-// DC4321/4337 and Mac 0x754b0..0x7553c enclose advancement in the positive
-// next-frame/readiness guards. The references subtract frameCount before
-// one in winceStartOffset; moving this local among its use scopes is flat.
-// DC4389 retains UpdateCombatArea; keep its nested rectangle accessors.
-// DC4410/4411 and Mac 0x757b4..0x758ac finish with a while loop
-// whose progress flag is set in each advancing branch (DC4425/4433).
-// With the Windows const-reference extent overload these source scopes
-// reproduce retail exactly; the by-value copy stopped at 98.5390%.
-// Early-continue and shared progress-write variants lose CFG alignment.
-// Counter declaration positions and wince-offset use-scope variants
-// produce identical bytes.
+// DC4234/4236 put the nested effect-loading guard after effect selection;
+// DC4277 keeps the first two max calls together; DC4292/4293 retain the
+// marking condition and MarkCreatureEffect helper (Complete adds the
+// arrow-tower case inside it); DC4321/4337 enclose advancement in the
+// positive next-frame/readiness guards; DC4389 retains UpdateCombatArea;
+// DC4410/4411 finish with a while loop whose progress flag is set in each
+// advancing branch (DC4425/4433).
 VA(0x00468990, 0xA08)
 DC_ADDRESS(0x062560, 0x856)
 MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global
@@ -3704,7 +3517,6 @@ bool combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
     return 0;
 }
 
-// Mac 0x75cf0..0x75d5c expands gridX/gridY for both endpoints.
 VA(0x00469670, 0xD2)
 DC_ADDRESS(0x062e4c, 0xb4)
 MAC_ADDRESS(0x075cd8, 0x138)
@@ -3714,7 +3526,6 @@ long combatManager::getDistance(long start, long stop)
     int sy = gridY(start);
     int tx = gridX(stop);
     int ty = gridY(stop);
-    // Complete Mac calls labs for both displacements (0x75d8c..0x75e00).
     long a = (sy + 1) / 2 - (ty + 1) / 2 - sx + tx;
     long b = ty / 2 - sy / 2 - sx + tx;
     if ((a < 0) == (b < 0))
@@ -3747,8 +3558,7 @@ void combatManager::updateArmyLuckAndMorale()
     }
 }
 
-// DC cmbtmgr.cpp:4584 names const SMonFrameInfo& sMonFrameInfo; retail
-// loads the same 0x67ff24 reference cell owned by monframeinfo.cpp.
+// DC cmbtmgr.cpp:4584 names const SMonFrameInfo& sMonFrameInfo.
 VA(0x00469880, 0x190)
 DC_ADDRESS(0x062fe4, 0x282)
 MAC_ADDRESS(0x075f18, 0x214)
@@ -3810,8 +3620,7 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
 
 // E:\gamedcs\cmbtmgr.cpp:4669
 // DC's const-this record and lines 4675/4680/4686 prove the side check and
-// both canonical HasArmy calls. Complete expands this ordinary helper in
-// HexIsBlocked; its two cell/body tests are the same retail operands.
+// both canonical HasArmy calls; inlined in HexIsBlocked.
 DC_ADDRESS(0x063268, 0x5a)
 MAC_ADDRESS(0x07612c, 0x60)
 unsigned char combatManager::doorCanBeLowered() const
@@ -3991,14 +3800,10 @@ void combatManager::learnSpellFromEagleEye(int side)
 }
 
 // E:\gamedcs\cmbtmgr.cpp:4886
-// DC owns both artifact loops and their local artifact copies.
-// Lines 4900/4922 call hero::get_artifact/get_backpack; lines 4914/4936
-// call vector::push_back. VC6's push_back delegates through insert(end(),
-// value) to insert(end(), 1, value): retail retains the equipped append
-// at 0x46a11a -> 0x54d330 and expands the backpack append. GiveArtifact
-// calls at 0x46a0f8/0x46a190 return the success byte before removal.
-// The looted_artifacts parameter is a reference: DC's public mangling has
-// AAV (not PAV), despite an older roster rendering it as a pointer.
+// DC owns both artifact loops and their local artifact copies. Lines
+// 4900/4922 call hero::get_artifact/get_backpack; lines 4914/4936 call
+// vector::push_back. The looted_artifacts parameter is a reference: DC's
+// public mangling has AAV (not PAV).
 VA(0x0046a070, 0x2D3)
 DC_ADDRESS(0x063704, 0x188)
 MAC_ADDRESS(0x0768f0, 0x1a4)
@@ -4081,11 +3886,7 @@ void combatManager::markTowerForEffect(const army* tower)
 }
 
 // DC4970/4973 return the tutorial/local policy before the two player
-// references at4976; Complete Mac0x76c10..0x76c28 keeps the same order.
-// Both player addresses precede their preference reads. The early-return
-// and reference-declaration variants preserve all Windows scores. Replacing
-// the explicit true/false returns with one && result lowers this body from
-// 100% to94.0278% without improving its missile callers.
+// references at 4976, with explicit true/false returns.
 VA(0x0046a4a0, 0x71)
 DC_ADDRESS(0x063900, 0xc4)
 MAC_ADDRESS(0x076bc8, 0xac)
@@ -4159,11 +3960,10 @@ VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, TObstacle)
 
 VA_COMPGEN(0x0046A680, 0xBE, CLASS_CTOR, set)
 
-// erase(iterator, iterator) - the range form, `ret 0xc` for the hidden
-// return plus two by-value iterators.
+// erase(iterator, iterator) - the range form.
 VA_COMPGEN(0x0046a740, 0x121, TREE_ERASE_RANGE, int_set)
 
-// erase(iterator) - the single-iterator form, `ret 8`.
+// erase(iterator) - the single-iterator form.
 VA_COMPGEN(0x0046a870, 0x50F, TREE_ERASE_ITERATOR, int_set)
 
 VA_COMPGEN(0x0046ad80, 0x7E, TREE_ERASE, int_set)

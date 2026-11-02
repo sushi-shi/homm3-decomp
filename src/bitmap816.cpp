@@ -16,8 +16,8 @@ VA_COMPGEN(0x0044f7d0, 0x21, SCALAR_DELETING_DTOR, Bitmap816)
 
 // Original: Bitmap816::Bitmap816; bitmap816.cpp:36
 // DC allocates a padded, locked DirectDraw surface when available. Complete
-// removes that per-bitmap surface tail: retained constructor 0x44f800 owns
-// the byte buffer directly, and destructor 0x44f9d0 releases it with delete[].
+// removes that per-bitmap surface tail: the constructor owns the byte
+// buffer directly, and the destructor releases it with delete[].
 DC_ADDRESS(0x053854, 0x10c)
 Bitmap816::Bitmap816(int w, int h)
     : resource(0, RESOURCE_TYPE_NONE),
@@ -69,10 +69,9 @@ Bitmap816::Bitmap816(const char* name, const char* path,
     importPCXFile(filename, rbits, rshift, gbits, gshift, bbits, bshift);
 }
 
-// DC 0x53be4/0x53bee unlocks/releases the optional surface; Complete's
-// heap buffer needs only delete[]. DC 0x53c0e/0x53c20 deletes palette
-// pointers, whereas Mac 0x5dbf4/0x5dc00 and retail 0x44fa12/0x44fa1e
-// destroy embedded m_p24/m_p16 automatically after this body.
+// DC unlocks/releases the optional surface; Complete's heap buffer needs
+// only delete[]. DC deletes palette pointers, whereas Complete destroys the
+// embedded m_p24/m_p16 automatically after this body.
 VA(0x0044f9d0, 0x70)
 DC_ADDRESS(0x053ba4, 0xb8)
 MAC_ADDRESS(0x05dbb4, 0x88)
@@ -82,21 +81,11 @@ Bitmap816::~Bitmap816()
         delete[] map;
 }
 
-// The initial EH state (retail 1, ours was 2) was a CLEANUP-COUNT fact, not
-// a spelling. Retail's unwind map for this body has exactly two entries and
-// the funclets say which: 0x628600 is `mov ecx,[ebp-0x10]; jmp ~resource`
-// and 0x628608 is `add ecx,0x34; jmp ~TPalette16`. There is no
-// `add ecx,0x250; jmp ~TPalette24` funclet - although the Bitmap816
-// CONSTRUCTOR group at 0x6285a0 has all three (8/0xb/0xe bytes). VC6 emits
-// a cleanup chain only for a region that can THROW, so retail's two entries
-// say (a) this body's delete cannot throw - the TU sees <new>'s
-// `operator delete(void*) _THROW0()` rather than the implicit, throwing
-// declaration - and (b) the ~TPalette24 call CAN, which is why that
-// destructor carries no exception specification. Measured: empty body -> 1
-// entry; <new> alone -> 1; <new> plus a throwing ~TPalette24 -> 2, retail.
-// The map editor's and campaign editor's copies (h3maped 0x4e36e0,
-// h3ccmped 0x449610) keep a third state around the delete: their Libraries
-// compile had no <new>, so the delete itself can throw.
+// The destructor's unwind map has two cleanup states, not three: this TU
+// sees <new>'s non-throwing `operator delete(void*) _THROW0()`, and
+// ~TPalette24 carries no exception specification. The editors' Libraries
+// compile had no <new>, so their copies keep a third state around the
+// delete.
 
 // Original: Bitmap816::import; bitmap816.cpp:163
 DC_ADDRESS(0x053c5c, 0x104)
@@ -181,8 +170,7 @@ int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,
 }
 
 // Bitmap816.h's const getMap helper (DC 0x19c5f0) owns the source-pixel
-// address calculation in both draw loops; Mac expands that field/pitch/index
-// operation in the two call-free bodies below.
+// address calculation in both draw loops.
 VA(0x0044fba0, 0xCB)
 DC_ADDRESS(0x053fe4, 0xc4)
 MAC_ADDRESS(0x05dc3c, 0xf8)
@@ -305,8 +293,8 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
     zBufferDraw(sx, sy, sw, sh, zBuffer, dx, dy, 800, 600, 1600, id);
 }
 
-// Retail vtable 0x63ba14 slot 2. Complete adds this resource virtual;
-// DC Bitmap816 type 0x105e / fields 0x244e has no GetSize member.
+// Vtable slot 2. Complete adds this resource virtual; DC Bitmap816 type
+// 0x105e / fields 0x244e has no GetSize member.
 VA(0x0044fe30, 0x09)
 MAC_ADDRESS(0x05dfd4, 0xc)
 unsigned int Bitmap816::getSize() const

@@ -84,8 +84,8 @@ enum WitchHutSkillEncoding {
 // quest-guard pool. The name is corroborated by the admitted retail structure
 // evidence; the Dreamcast adventure-object enum predates this object.
 
-// The four ids added 2026-08-20 are the rest of that same post-Dreamcast
-// block, and every one of them is byte-proven by readObject's (0x502e00)
+// The four ids below are the rest of that same post-Dreamcast block, and every
+// one of them is byte-proven by readObject's (0x502e00)
 // jump table - its five highest arms are exactly 214..218, in that order:
 //   214  reads an owner byte and a hero id, widens the 0xff sentinel to -1,
 //        and only then reads a power-rating byte, appending the record to
@@ -94,8 +94,7 @@ enum WitchHutSkillEncoding {
 //        RANDOM_HERO, BOAT and HOLY_GRAIL, the classes something else
 //        places.  (mapcell.h's events-only view spells 212 with this name;
 //        212 is BORDER_GATE above and that view's spelling is contradicted
-//        by these bytes.  Left standing there - no byte in this lane
-//        reaches it.)
+//        by these bytes.)
 //   216  reads owner, a castle id, and - only when that id is zero - a
 //        faction mask, then a min and a max level.
 //   217  the same record with both levels forced to the object type's own
@@ -278,10 +277,10 @@ enum EMapDimension {
 // compares the float's BIT PATTERN with integer `cmp` immediates
 // (0x41800000 / 0x413d70a4 / 0x40f5c28f) - VC6 folding an exact float
 // equality against a normal constant - and our CL folds a literal the same
-// way. MACROS, not `const float`: the const-object spelling was MEASURED
-// and it does NOT fold, VC6 emitting a memory load per compare and taking
-// UpdateRadar 90.18 -> 85.42. A float domain cannot be an enum, so this is
-// the only naming that clears the unnamed-domain-compare floor at zero
+// way. MACROS, not `const float`: the const-object spelling does NOT fold,
+// VC6 emitting a memory load per compare. A float domain cannot be an enum,
+// so this is the only naming that clears the unnamed-domain-compare floor at
+// zero
 // cost.
 #define VIEW_WORLD_TILE_SCALE_FULL 16.0f
 #define VIEW_WORLD_TILE_SCALE_MID 11.84f
@@ -666,8 +665,8 @@ public:
     // Dreamcast places three alignment bytes after animate_in_background.
     // Complete keeps the byte at +0x6c before the pointer array at +0x70.
     char m_paddingAfterAnimateInBackground[3];
-    // +0x70 and +0x84, sliced 2026-08-14 from UpdateHeroLocator
-    // (0x403560) and HighlightLocators (0x4038c0): the first row takes
+    // +0x70 and +0x84, sliced from UpdateHeroLocator (0x403560) and
+    // HighlightLocators (0x4038c0): the first row takes
     // bitmapBorder::SetImage with the portrait name out of akHeroTraits
     // and is indexed `[this + i*4 + 0x70]`, the second takes SetImage
     // with hpsyyy.pcx plus a send_message/Draw pair and is indexed
@@ -781,8 +780,7 @@ public:
     // Gated to advmgr.obj's own view for the standing include-set reason,
     // exactly as EAdvCommand is: ProcessMapSelect is the only reader, and
     // an ungated nested enum is a type DEFINITION in the closure of every
-    // TU that includes this header. MEASURED score-neutral in both
-    // positions today - the gate is prophylaxis, not a repair.
+    // TU that includes this header.
     enum EHeroViewTile {
         HERO_VIEW_TILE_X = 9,
         HERO_VIEW_TILE_Y = 8
@@ -1045,9 +1043,8 @@ public:
     // passes a local it never reads back.
     void checkAdjacentMon(int* foughtBattle);
     void setInitialMapOrigin();
-    // 0x4ad470, DECLARED not defined - 5425 EH-framed bytes this lane is
-    // not reconstructing. `ret 0x28` against the Dreamcast's TEN
-    // parameters is the arity screen, the 5425/2540 size ratio sits in
+    // 0x4ad470. `ret 0x28` against the Dreamcast's TEN parameters is the arity
+    // screen, the 5425/2540 size ratio sits in
     // the SH4->x86 band, and the DC xref graph makes DoCombat exactly the
     // two-call callee TownEvent has left once every other edge is
     // matched. Both retail call sites fill the left/right pairs in the
@@ -1126,8 +1123,7 @@ private:
                             unsigned char humanPlayer);
     void doEventCoverOfDarkness(NewmapCell* cell, type_point point,
                                 bool humanPlayer);
-    // 0x4abdc0, DECLARED not defined - 1744 bytes this lane is not
-    // reconstructing. LOCATED by do_event_dragon_city, which is its only
+    // 0x4abdc0, located by do_event_dragon_city, which is its only
     // reconstructed caller: retail pushes FIVE arguments in exactly the
     // Dreamcast's parameter order (hero, cell, text, point, human_player)
     // with the advManager in ECX, 1744 B against the DC's 1330 is 1.31 in
@@ -1358,7 +1354,7 @@ private:
 public:
 
     // E:\gamedcs\AdvMgr.h:1245. DC's fixed viewport center is (6,5);
-    // Complete's wider view uses (9,8), as the retail recentering paths prove.
+    // Complete's wider view uses (9,8).
     DC_ADDRESS(0x01f000, 0x84)
     type_point getMapCenter() const
     {

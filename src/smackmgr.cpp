@@ -246,10 +246,8 @@ DATA(0x0069e5a8) int g_soundCount;
 DATA(0x0069e5a4) int g_soundCountCd;
 DATA(0x0069e5ac) int g_soundCountCampaign;
 
-// Retail has separate Smacker and Bink service tails at 0x5971e5/0x5971da.
-// Preserve the codec branches and canonical serviceSounds calls: merging
-// all four guards removes one tail here and in videoPause/videoResume.
-// The WinCE counterpart is a four-byte stub and proves no Windows body.
+// Separate Smacker and Bink service tails, with canonical serviceSounds
+// calls. The WinCE counterpart is a four-byte stub.
 VA(0x005971b0, 0x3B)
 DC_ADDRESS(0x14ac30, 0x4)
 MAC_ADDRESS(0x25e3f8, 0x6c)
@@ -319,7 +317,7 @@ void videoOpen(int id, int x, int y, int w, int h, int loop, bool autoDraw,
         BinkManager::openBink(id, x, y, w, h, loop, autoDraw);
 }
 
-// Retail's 225-byte body follows this canonical helper chain:
+// The canonical helper chain:
 VA(0x005975f0, 0xE1)
 DC_ADDRESS(0x14ac40, 0x4)
 MAC_ADDRESS(0x25e660, 0x50)
@@ -351,10 +349,9 @@ void videoNextFrame()
     g_insideNextFrame = 0;
 }
 
-// Mac retains this call from videoDrawCurrentFrame at 0:0x25e788 and updates
-// the screen from this body at 0:0x25f9dc. Windows retail 0x598e80 only
-// calls SmackDoFrame; videoDrawRects owns the screen updates on this port.
-// Keep the helper visible before the caller so VC6 can expand it.
+// Mac retains this call from videoDrawCurrentFrame and updates the screen
+// from this body; on Windows it only calls SmackDoFrame and videoDrawRects
+// owns the screen updates.
 VA(0x00598e80, 0x25)
 MAC_ADDRESS(0x25f948, 0xc8)
 void SmackManager::drawSmackerFrame()
@@ -401,9 +398,6 @@ void videoPause()
 VA(0x00597850, 0xAB)
 DC_ADDRESS(0x14ac50, 0x4)
 MAC_ADDRESS(0x25e884, 0xc4)
-// The implicit zero tests are byte-identical to `== 0`/`!= 0` here but cost
-// 4 fewer /Ob2 IL units; openSmackerVideo's third videoClose expansion only admits
-// this body at that cost. Splitting the guard into two returns costs more.
 void videoResume()
 {
     if (!g_videoPauseCount || --g_videoPauseCount)
@@ -602,10 +596,10 @@ void videoShutDown()
 }
 
 // The base archive's path on the drive the misc.obj install scan selected.
-// That scan (in the unclaimed 0x50c1cb body) walks GetLogicalDrives, writes
-// each candidate letter to gArchiveDriveLetter, and open()s what this
-// function returns; smackmgr's own two loaders then open their third archive
-// from it, the sound loader after swapping the extension for .snd.
+// That scan walks GetLogicalDrives, writes each candidate letter to
+// gArchiveDriveLetter, and open()s what this function returns; smackmgr's
+// own two loaders then open their third archive from it, the sound loader
+// after swapping the extension for .snd.
 VA(0x00597d00, 0x50E)
 std::string getDriveArchivePath()
 {
@@ -913,14 +907,7 @@ void SmackManager::setPixelFormat(unsigned long redMask,
 VA(0x00598af0, 0x385)
 MAC_ADDRESS(0x25f6e4, 0x264)
 // VideoOpen's DC-proven Boolean flags pass unchanged into this Windows
-// opener. Retail reads autoDraw as a byte and widens advance's low byte.
-// Retail refuses videoResume at the first two videoClose expansions and
-// accepts it at the third, then calls closeSmacker and videoSoundOnOff.
-// That split needs both the SmackManagerStruct member accesses here (caller
-// IL) and videoResume's implicit pause-count tests (callee IL, 112 against a
-// nested budget of 114). With them the two plain descriptor subscripts give
-// retail's id*20 index; the former const-reference row (76.24%) put a
-// pointer on the frame instead.
+// opener.
 void openSmackerVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
                bool advance)
 {
@@ -996,9 +983,8 @@ void openSmackerVideo(int id, int x, int y, int w, int h, int loop, bool autoDra
 // expand the draw/close helpers; those bytes prove their Windows guard
 // and store order. The CE CloseSmacker body itself is only rts/nop.
 namespace SmackManager {
-
-// Mac 0:0x25fa10 retains this helper immediately before nextSmackerFrame.
-// videoRestart calls it at 0:0x25e954; Windows expands the same guarded pair.
+// Mac retains this helper immediately before nextSmackerFrame and
+// videoRestart calls it; inlined on Windows.
 MAC_ADDRESS(0x25fa10, 0x44)
 void restartSmacker()
 {
@@ -1157,24 +1143,15 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
 
 }  // namespace SmackManager
 
-// COMDAT pairing: basic_string<char>::append(size_t, char) - the fill form,
-// which the mangled suffix `@ID@Z` separates from the already-modelled
-// pointer form `@PBDI@Z`. Agreement 0.994 here against 0.834 for the
-// pointer-form objects, so the suffix and the score agree.
+// COMDAT pairing: basic_string<char>::append(size_t, char), the fill form.
 VA_COMPGEN(0x004b5f40, 0xCF, BASIC_STRING_APPEND_COUNT, char)
 
-// COMDAT pairing: basic_string<char>::assign(size_t, char) - `ret 8` for its
-// two stack arguments, against the `@ABV12@II@Z` form's three and the
-// `@PBDI@Z` form's two pointers. smackmgr.obj emits exactly these two assign
-// overloads and the other is claimed at 0x4860.
+// COMDAT pairing: basic_string<char>::assign(size_t, char).
 VA_COMPGEN(0x0051a780, 0xBC, BASIC_STRING_ASSIGN_COUNT, char)
 
-// COMDAT pairing: basic_string<char>::operator[](size_t), `ret 4`.
+// COMDAT pairing: basic_string<char>::operator[](size_t).
 VA_COMPGEN(0x0051a840, 0x98, BASIC_STRING_SUBSCRIPT, char)
 
-// COMDAT pairing: basic_string<char>::basic_string(const basic_string&).
-// smackmgr.obj emits exactly ONE string constructor, so the ctor group has a
-// single member and binds directly - no zip to get wrong. `ret 4` matches the
-// one reference argument, and the callers span customcampaign, game (twice),
-// this unit and three further segments.
+// COMDAT pairing: basic_string<char>::basic_string(const basic_string&),
+// this object's one string constructor.
 VA_COMPGEN(0x00460700, 0x125, CLASS_CTOR, basic_string)

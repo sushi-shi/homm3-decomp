@@ -4258,11 +4258,11 @@ rva	size	kind	name	unit	linkage	evidence
 0x000c9a08	0x10	data	_dungeonGenerator4	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator4 at +0x2
 0x000c9a18	0x1ec	data	?aConfluxBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aConfluxBuildingTraits at +0xa
 0x000c9c08	0x10	data	_dungeonGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator3 at +0x2
-0x000c9c18	0x10	data	_fortressGenerator5	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$fortressGenerator5 at +0x2
+0x000c9c18	0xc	data	_fortressGenerator5	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$fortressGenerator5 at +0x2
 0x000c9c28	0x10	data	_dungeonGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator1 at +0x2
 0x000c9c38	0x1f0	data	?aFortressBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aFortressBuildingTraits at +0x8
 0x000c9e28	0x10	data	_dungeonGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator2 at +0x2
-0x000c9e38	0xc	data	_necropolisGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator6 at +0x2
+0x000c9e38	0x10	data	_necropolisGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator6 at +0x2
 0x000c9e48	0x10	data	_fortressGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$fortressGenerator6 at +0x2
 0x000c9e58	0x10	data	_necropolisGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator7 at +0x2
 0x000c9e68	0x10	data	_castleGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator2 at +0x2
@@ -4293,7 +4293,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000ca1d8	0x10	data	_towerGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$towerGenerator2 at +0x2
 0x000ca1e8	0xc	data	_strongholdGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$strongholdGenerator3 at +0x2
 0x000ca1f4	0x1c	data	?_s_akUpgradeName@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@0PAPBDA	TownTypeTraits	external	referenced by 0x00032b40 at +0x1de
-0x000ca210	0x10	data	_castleGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator7 at +0x2
+0x000ca210	0xc	data	_castleGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator7 at +0x2
 0x000ca220	0x10	data	_rampartGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$rampartGenerator6 at +0x2
 0x000ca230	0x10	data	_necropolisGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator3 at +0x2
 0x000ca240	0x10	data	_towerGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$towerGenerator1 at +0x2

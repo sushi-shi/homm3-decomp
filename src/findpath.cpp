@@ -58,8 +58,7 @@ searchArray::searchArray()
     m_limitReached = 0;
 }
 
-// Dreamcast findpath.cpp:66 calls Close; Mac retains its callable body.
-// Retail VC6 expands the ordinary helper in this destructor.
+// Dreamcast findpath.cpp:66 calls Close; inlined.
 VA(0x004b13e0, 0x78)
 DC_ADDRESS(0x09ee08, 0x2c)
 MAC_ADDRESS(0x0c465c, 0xa8)
@@ -69,7 +68,7 @@ searchArray::~searchArray()
 }
 
 // Dreamcast findpath.cpp:72/77 calls Close then game::GetNumMapLevels;
-// Mac retains Close, while retail VC6 expands both source calls.
+// both inlined.
 VA(0x004b1460, 0x9F)
 DC_ADDRESS(0x09ee34, 0xb4)
 MAC_ADDRESS(0x0c4704, 0x128)
@@ -98,8 +97,7 @@ void searchArray::close()
     m_isMoatSlowed = 0;
 }
 
-// Dreamcast findpath.cpp:116 calls FindPath.h get_cell. Retail expands
-// its null guard and plane/row offset before clearing the path cells.
+// Dreamcast findpath.cpp:116 calls FindPath.h get_cell; inlined.
 VA(0x004b1530, 0x20F)
 DC_ADDRESS(0x09ef20, 0x112)
 MAC_ADDRESS(0x0c48e0, 0x198)
@@ -167,9 +165,8 @@ DATA(0x0063e5e0) const long g_roadCostRow[4] = { 0, 10, 11, 12 };
 DATA(0x0063e5f0) const float g_diagonalCost = 1.4142135f;
 DATA(0x006778ac) long g_masteryTerrainCost[kNumMasteries] = { 140, 140, 120, 100 };
 
-// simply forwards its own trailing parameter. Retail GetTerrainCost calls
-// GetCreatureTotal with creature 0x8e at 0x4b1a1b/0x4b1a22 and passes
-// its positive-result byte to CalcTerrainCost: hasNomad names that proven
+// simply forwards its own trailing parameter. GetTerrainCost passes
+// GetCreatureTotal(0x8e)'s positive-result byte: hasNomad names that
 // creature predicate, which removes the Sand penalty.
 VA(0x004b1740, 0x13E)
 DC_ADDRESS(0x09f034, 0x11e)
@@ -192,10 +189,8 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
     else
         cost = g_terrainCost[terrain][pathfinding];
     // A third off every sea step. 0xe1 is one of the ten object ids
-    // get_special_terrain (0x4fce20) can answer with and the only one
-    // this body reacts to on water; mapcell.h carries the whole
-    // ten-value answer set now, with the provenance of the eight SoD
-    // spellings spelled out there.
+    // get_special_terrain can answer with and the only one this body
+    // reacts to on water; mapcell.h carries the whole answer set.
     if (terrain == eTerrainWater
             && special == FAVORABLE_WINDS)
         cost = cost * 2 / 3;
@@ -231,9 +226,8 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
                            cell->m_groundSet, hasNomad);
 }
 
-// Dreamcast findpath.cpp:237/239 calls game::get_cell twice, then
-// Hero.h get_secondary_skill at 259. Retail and Mac expand those
-// header accessors while retaining the terrain-cost callees.
+// Dreamcast findpath.cpp:237/239 calls game::get_cell twice, then Hero.h
+// get_secondary_skill at 259; these header accessors are inlined.
 VA(0x004b18c0, 0x1A2)
 DC_ADDRESS(0x09f184, 0x120)
 MAC_ADDRESS(0x0c4cc8, 0x204)
@@ -262,23 +256,17 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
 
 // E:\gamedcs\findpath.cpp:271..447 (). Dreamcast proves
 // const pathCell& old_cell, pathCell& point, the local upper/lower binary
-// search, and the eight point stores at lines 429..436. Retail's ret 0x20
-// agrees with the eight stack arguments. Original local spellings include
-// adjusted_cost, pCell, move_cost, barrier_value, delta_x and delta_y.
-// The queue orders barrier plus danger after this turn's movement, with
-// adjusted cost breaking ties. Only after queue/visited insertion is the
-// point copied to its grid cell. DC line 396 calls pop_back for the
-// 500-entry cap; keep that source operation instead of a library expansion.
+// search, and the eight point stores at lines 429..436. Original local
+// spellings include adjusted_cost, pCell, move_cost, barrier_value, delta_x
+// and delta_y. The queue orders barrier plus danger after this turn's
+// movement, with adjusted cost breaking ties. Only after queue/visited
+// insertion is the point copied to its grid cell. DC line 396 calls
+// pop_back for the 500-entry cap.
 
-// Removed the old terrainForbidsMagic, findQueueSlot and fillPathCell
-// compiler-budget probes and the tail-insert inline_depth(0) pin. Their
-// prior 87.5488% peak is superseded; none had source-boundary evidence.
 // The real game::get_cell accessor remains a canonical game.h inline.
 
-// Retail reuses one comparison-key stack home in the visited-cell check and
-// queue search. One local for that shared role, together with pop_back,
-// reproduces the retained body. Separate cell/entry locals leave six stack
-// homes permuted (99.9640%); the original local name is not recorded.
+// One comparison-key local is shared by the visited-cell check and queue
+// search; the original local name is not recorded.
 VA(0x004b1a70, 0x88D)
 DC_ADDRESS(0x09f2a4, 0x472)
 MAC_ADDRESS(0x0c4ecc, 0x65c)  // anchor-bracket
@@ -325,7 +313,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
             danger = min(oldCell.m_dangerValue, danger);
             // The "unreachable" sentinel the danger map carries; every
             // producer that vetoes a square outright writes a value at or
-            // below it. Spelled as the literal retail compares against.
+            // below it.
             if (danger <= -500000000)
                 return;
         }
@@ -839,8 +827,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
 
 // Original: searchArray::valid_move_adjacent; findpath.cpp:877
 // The two ordinary predicates test reachable, non-moat hexes next to either
-// half of an enemy. Preserve the source definitions without inventing a
-// standalone retail address or replacing Complete's different teleport scan.
+// half of an enemy; no standalone retail body.
 DC_ADDRESS(0x0a02c8, 0xc6)
 unsigned char searchArray::validMoveAdjacent(const army* currentArmy, int hex)
 {
@@ -874,14 +861,14 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy,
     return 0;
 }
 
-// Retail hands FindCombatPath 1000 for BOTH limit and base_speed in
-// the placement phase, materialising the constant once; outside it,
-// base_speed falls back to the stack's own speed when the caller
-// passed a negative and the limit collapses to zero for a bound stack.
+// FindCombatPath gets 1000 for BOTH limit and base_speed in the placement
+// phase; outside it, base_speed falls back to the stack's own speed when
+// the caller passed a negative and the limit collapses to zero for a bound
+// stack.
 
 // Dreamcast findpath.cpp:943/952/960/963 calls army::get_spell_time,
 // FindPath.h get_hex, army::OffsetToFront and
-// combatManager::InInvisibleColumn. Retail expands these accessors.
+// combatManager::InInvisibleColumn; inlined.
 VA(0x004b2da0, 0x24B)
 DC_ADDRESS(0x0a03fc, 0x232)
 MAC_ADDRESS(0x0c64ac, 0x2c0)  // anchor-global
@@ -940,8 +927,7 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
     }
 }
 
-// Dreamcast findpath.cpp:1013/1060 calls get_hex in both passes;
-// retail expands both header helper calls.
+// Dreamcast findpath.cpp:1013/1060 calls get_hex in both passes; inlined.
 VA(0x004b2ff0, 0x298)
 DC_ADDRESS(0x0a0630, 0x1d2)
 MAC_ADDRESS(0x0c676c, 0x29c)
@@ -1014,8 +1000,8 @@ DATA(0x0063bcf4) const unsigned char g_innerMoatHexes[11] = {
 };
 
 // Dreamcast findpath.cpp:1098/1117 calls get_controlling_side,
-// get_owning_side and TObstacle::IsVisible. Retail expands their
-// shared header bodies in the drawbridge and quicksand checks.
+// get_owning_side and TObstacle::IsVisible; inlined in the drawbridge and
+// quicksand checks.
 VA(0x004b3290, 0x16F)
 DC_ADDRESS(0x0a0804, 0x16a)
 MAC_ADDRESS(0x0c6a08, 0x1d0)
@@ -1054,10 +1040,9 @@ void searchArray::setMoat(const army* currentArmy)
         m_isMoatSlowed[currentArmy->getSecondGridIndex()] = 0;
 }
 
-// E:\gamedcs\findpath.cpp:1136 DC 1143/1165 test the result
-// vector's own size, and retail's expansion compares it unsigned (seta).
-// DC1143 tests an ordinary army's result vector before the side==-1
-// destination check at1147; retain that branch order.
+// E:\gamedcs\findpath.cpp:1136. DC 1143/1165 test the result vector's own
+// size; DC1143 tests an ordinary army's result vector before the side==-1
+// destination check at 1147.
 DC_ADDRESS(0x0a0970, 0xd4)
 MAC_ADDRESS(0x0c6bd8, 0x170)
 bool searchArray::buildCombatPath(const army* currentArmy,
@@ -1096,11 +1081,8 @@ void searchArray::markEnemy(long hex, long cost)
 
 // E:\gamedcs\findpath.cpp:1187
 // Both of FindCombatPath's expansions are here; the DC body's own range
-// check is not, because retail's first call site has it hoisted into the
-// direction loop and its second spells it at the site. It answers "the
-// hex this enemy stands on IS the destination", which is why retail's
-// caller consumes the result with `sete`/`test`/`jne` rather than with a
-// plain compare.
+// check is not. It answers "the hex this enemy stands on IS the
+// destination".
 DC_ADDRESS(0x0a0a8c, 0x8c)
 MAC_ADDRESS(0x0c6da0, 0xd8)
 bool searchArray::checkEnemyArmies(long hex, long cost,
@@ -1125,26 +1107,16 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 // town computer stacks compare HP with moat damage and may press blocked cells.
 // Preserve the repeated town/type and getTotalHitPoints reads.
 //
-// DC1325..1333 and Mac c73c0..c74d8 share a successful enemy condition,
-// update the reached pathCell inside it, then break the direction loop.
-// There is no post-loop direction test. The canonical markEnemy calls use
-// the combined early-return guard recorded on DC1176..1177; completing
-// both scopes restores retail's four nested mark expansions.
-// DC1304..1307 initializes the blocked state before testing the moat.
-// DC1304/1313/1355 read pc's cost and current point directly. Retaining
-// those component reads preserves the sign extension through isMoat and
-// the front-offset expansion rather than narrowing a cached long again.
+// DC1325..1333 share a successful enemy condition, update the reached
+// pathCell inside it, then break the direction loop; there is no post-loop
+// direction test. The canonical markEnemy calls use the combined
+// early-return guard recorded on DC1176..1177. DC1304..1307 initializes the
+// blocked state before testing the moat, and DC1304/1313/1355 read pc's
+// cost and current point directly.
 //
 // DC best_dist/end_hex/move_cost are int; move_cost is the one-step
-// increment, not pc.m_cost. The function-scope pathCell lifetime and direct
-// m_queue ownership reproduce retail's copy/cost/distance blocks.
-// Mac c7290..c72c8 expands offsetToFront twice, computing the current front
-// before the adjacent front. Keep both canonical calls.
-//
-// Retail retains getHex within the four markEnemy expansions and expands
-// it in the reached-cell update and final path walk. It calls vector insert
-// through the canonical push_back calls. The three differing template names
-// are reviewed folded pointer-copy and pointer-vector-insertion aliases.
+// increment, not pc.m_cost. Mac computes the current front before the
+// adjacent front.
 VA(0x004b3400, 0x787)
 DC_ADDRESS(0x0a0b18, 0x43a)
 MAC_ADDRESS(0x0c6e78, 0x720)  // anchor-global
@@ -1196,8 +1168,8 @@ bool searchArray::findCombatPath(const army* currentArmy,
     int bestDistance = 800;
     int bestHex = -1;
     // Dreamcast CodeView names function-scope `pathCell pc` and emits its
-    // empty constructor before both vector clears. Restoring that lifetime
-    // is byte-flat at 87.9780 but preserves the positive source evidence.
+    // empty constructor before both vector clears; that function-scope
+    // lifetime is kept.
     pathCell pc;
     m_result.clear();
     m_queue.clear();

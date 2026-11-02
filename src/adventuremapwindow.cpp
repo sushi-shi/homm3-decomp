@@ -525,9 +525,8 @@ DC_ADDRESS(0x0003b0, 0x4ec)
 MAC_ADDRESS(0x0002ac, 0x69c)  // anchor-global
 void checkAdvCheatCode(std::string& chatString)
 {
-    // Retail keeps every cheat code as its own .rdata array in source
-    // order (the combat copies of shared codes are separate objects),
-    // not as a pooled .data literal.
+    // Every cheat code is its own array in source order (the combat copies
+    // of shared codes are separate objects).
     DATA(0x0063a480) static const char trinityCode[] = "ajpgevavgl";
     DATA(0x0063a48c) static const char agentsCode[] = "ajpntragf";
     DATA(0x0063a498) static const char lotsOfGunsCode[] = "ajpybgfbsthaf";
@@ -656,15 +655,14 @@ void checkAdvCheatCode(std::string& chatString)
     }
 
     if (cheatUsed) {
-        // DC line211 calls TTextResource::operator[] here. Keep its canonical
-        // getText path together with the shared cheat marker: that boundary
-        // restores the retail string-assignment expansion in both handlers.
+        // DC line211 calls TTextResource::operator[] here; the getText path
+        // goes together with the shared cheat marker.
         chatString = (*g_generalText)[GENERAL_TEXT_CHEATER];
         markGameAsCheated();
     }
 }
 
-// slot 0 of ??_7TAdventureMapWindow@@6B@ (0x63a5e4) points at it.
+// Slot 0 of ??_7TAdventureMapWindow@@6B@.
 VA_COMPGEN(0x00402ae0, 0x21, SCALAR_DELETING_DTOR, TAdventureMapWindow)
 
 VA(0x00402b10, 0x77)
@@ -798,8 +796,8 @@ int TAdventureMapWindow::convertID2HelpID(int id) const
 DATA(0x0065f228)
 static int g_lastAdventureHover = -1;
 
-// The two input handlers are identity/arity claims while their decoded
-// bodies remain on the dependency frontier documented in the carcass above.
+// The two input handlers' decoded bodies remain on the dependency frontier
+// documented in the carcass above.
 VA(0x00402e70, 0x195)
 DC_ADDRESS(0x000d88, 0x14e)
 MAC_ADDRESS(0x00251c, 0x204)
@@ -946,7 +944,7 @@ town_rollover: {
                     break;
 
                 const town* mapTown = g_game->getTown(townID);
-                // 0x63a608 is basic_string::_Nullstr's byte: c_str().
+                // basic_string::_Nullstr's byte: c_str().
                 const char* townName = mapTown->m_name.c_str();
                 sprintf(g_text, DATA_COMPGEN(
                     0x0065f3d4, adventureTownRolloverFormat, "%s, %s"),
@@ -966,8 +964,8 @@ generic_help:
                 rolloverText = g_adventureWindowHelp[helpID].m_text;
         }
 
-        // Mac 0x298c..0x29a0 forwards the text pointer as the integer payload;
-        // broadcastMessage owns the actual message object.
+        // The text pointer goes as the integer payload; broadcastMessage owns
+        // the actual message object.
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
             ROLLOVER_TEXT_ID, reinterpret_cast<int>(rolloverText));
         drawWindow(0, ROLLOVER_TEXT_ID, ROLLOVER_TEXT_ID);
@@ -1112,8 +1110,7 @@ void TAdventureMapWindow::updateTownLocators(int top, bool drawWin,
         g_windowManager->updateScreen();
 }
 
-// Pass the visibility predicate directly to setVisible. An inferred int
-// local widens retail's byte test even though the predicate is Boolean.
+// The visibility predicate goes directly to setVisible.
 VA(0x00403560, 0x23E)
 DC_ADDRESS(0x0010ec, 0x4)
 MAC_ADDRESS(0x002f50, 0x3a4)
@@ -1333,8 +1330,8 @@ DC_ADDRESS(0x001188, 0x4)
 MAC_ADDRESS(0x0039d8, 0xcc)
 bool TAdventureMapWindow::setElevationToggleImage(int level)
 {
-    // Mac 0x39ec..0x3a04 initializes a function-local cache; 0x3a2c passes
-    // the icon pointer directly to the four-int broadcast overload.
+    // A function-local cache; the icon pointer goes directly to the
+    // four-int broadcast overload.
     DATA(0x0065f234) static int previousLevel = -1;
     if (level != previousLevel) {
         previousLevel = level;
@@ -1352,11 +1349,9 @@ bool TAdventureMapWindow::setElevationToggleImage(int level)
 
 // The older TAdvMenu::SetSleepImage at dc 0x2a74 calls clear_hotkeys and
 // set_hotkey on consecutive button.h source lines. Preserve both wrappers.
-// Mac 0x3abc..0x3ad4 lazily initializes the function-local image cache to -1;
-// VC6 constant-initializes the same retail data cell without a runtime guard.
-// Mac 0x3aec..0x3b04 passes the icon pointer directly to the four-int broadcast
-// overload, whose body owns message construction. A redundant caller message
-// consumed VC6 inline budget and prevented the third vector::size expansion.
+// The function-local image cache starts at -1 (Mac initializes it lazily).
+// The icon pointer goes directly to the four-int broadcast overload, whose
+// body owns message construction.
 VA(0x00403cc0, 0x215)
 DC_ADDRESS(0x00118c, 0x4)
 MAC_ADDRESS(0x003aa4, 0xf4)  // anchor-global
@@ -1393,11 +1388,9 @@ void TAdventureMapWindow::clearBottomView()
 // E:\gamedcs\adventuremapwindow.cpp:1253
 // DC public ?UpdateResourceDisplay@TAdventureMapWindow@@QAAX_N0@Z
 // proves native bools despite the lowered T_UCHAR formal records. Both this
-// forwarding interface and TResourceDisplay::update must preserve that ABI:
-// a byte-to-bool boundary inserts two setne conversions absent at 0x403f00.
-// Retail has the !draw reset and unconditional two-argument Update only.
-// DC1257's update guard and DC1261's UpdateScreen call are port-specific;
-// the 30-byte retail body has neither extra branch nor screen update.
+// forwarding interface and TResourceDisplay::update keep that ABI. Complete
+// has the !draw reset and unconditional two-argument Update only; DC1257's
+// update guard and DC1261's UpdateScreen call are port-specific.
 VA(0x00403f00, 0x1E)
 DC_ADDRESS(0x0011bc, 0x38)
 MAC_ADDRESS(0x003bec, 0x30)  // anchor-global
@@ -1421,9 +1414,9 @@ void TAdventureMapWindow::drawChatText(bool update)
 
 // Original: TAdvMenu::SetAdvWinButtonPalette; adventuremapwindow.cpp:1273
 // Complete owns these menu buttons directly in TAdventureMapWindow; its
-// updateButtons body at 0x403f60 expands GetWidget and the button palette call.
-// Mac 0:0x3c94 receives id in r3 and player in r4, then loads the window
-// through g_advManager; no instance pointer is passed.
+// updateButtons body inlines GetWidget and the button palette call. Mac
+// receives id and player and loads the window through g_advManager; no
+// instance pointer is passed.
 DC_ADDRESS(0x001238, 0x22)
 MAC_ADDRESS(0x003c94, 0x4c)
 void TAdventureMapWindow::setAdvWinButtonPalette(int id, int player)
@@ -1490,11 +1483,10 @@ void TAdventureMapWindow::onSleepChange(unsigned char on)
     }
 }
 
-// UNCLAIMED IN SPAN, RESOLVED 2026-09-06 (claim lane 31): 0x404690 is NOT a
-// basic_string destructor - it stores logic_error's vtable 0x6455bc and
-// tail-calls ~exception, so it is `??1logic_error`, and it is claimed in
+// 0x404690 is NOT a basic_string destructor - it stores logic_error's vtable
+// 0x6455bc and tail-calls ~exception, so it is `??1logic_error`, claimed in
 // objecttype.cpp with the rest of that COMDAT group (0x404640 / 0x404660 /
-// 0x4046e0). events' 0x4ad0e0 is still open.
+// 0x4046e0).
 
 // COMDAT pairing: basic_string<char>::_Eos, 20 B against this compiland's
 // single 20-byte COMDAT.
@@ -1508,7 +1500,7 @@ void std::basic_string<char>::_Eos(unsigned n)
 
 #endif  // @carcass
 
-// COMDAT pairing: _Grow on the char instantiation, mnemonic agreement 0.971.
+// COMDAT pairing: _Grow on the char instantiation.
 VA_COMPGEN(0x00404a90, 0x122, BASIC_STRING_GROW, char)
 
 VA_COMPGEN(0x00404BD0, 0x108, BASIC_STRING_COPY, char)

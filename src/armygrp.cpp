@@ -46,7 +46,7 @@ DATA(0x00693878)
 static TSplitWindow* g_splitWindow;
 
 // Original DC HasCreatures public QBA_NXZ proves bool; CodeView displays
-// the lowered unsigned-byte primitive. Retail returns the predicate in AL.
+// the lowered unsigned-byte primitive.
 VA(0x004496a0, 0x16)
 DC_ADDRESS(0x04dae4, 0x22)
 MAC_ADDRESS(0x056454, 0x94)
@@ -59,9 +59,8 @@ bool armyGroup::hasCreatures() const
     return 0;
 }
 
-// Dreamcast armygrp.cpp:62 and Mac code0+0x564e8 place this standalone
-// helper between hasCreatures and splitSliderCallback. The Mac callback,
-// splitArmy and windowHandler retain calls; VC6 expands the same-TU calls.
+// Dreamcast armygrp.cpp:62 and Mac place this standalone helper between
+// hasCreatures and splitSliderCallback; inlined at the same-TU calls.
 DC_ADDRESS(0x04db08, 0x80)
 MAC_ADDRESS(0x0564e8, 0xf4)
 void TSplitWindow::updateSplitArmy(unsigned char update)
@@ -248,8 +247,8 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
     delete g_splitWindow;
 }
 
-// E:\gamedcs\armygrp.cpp:208. Retail /Ob2 expands the sole call below and
-// /OPT:REF removes the out-of-line copy. Mac retains it at code0+0x5751c.
+// E:\gamedcs\armygrp.cpp:208. Inlined at the sole call below; Mac retains
+// it.
 DC_ADDRESS(0x04e388, 0xa0)
 MAC_ADDRESS(0x05751c, 0x118)
 void TSplitWindow::setRolloverText(int codeY)
@@ -354,9 +353,8 @@ VA(0x0044a460, 0x55)
 MAC_ADDRESS(0x0578b4, 0x108)
 const std::bitset<TOWN_TYPE_COUNT>& getAngelicAllianceAlignments()
 {
-    // Retail: construction guard 0x69385c, the bitset at 0x693884 and the
-    // built flag at 0x693890 (byte loads and stores in this body, getMorale
-    // and getMoraleDescription, where it is inlined).
+    // A function-local static, also inlined in getMorale and
+    // getMoraleDescription.
     DATA_COMPGEN_GUARD(0x0069385c, groupedAlignmentsGuard, groupedAlignments)
     DATA(0x00693884)
     static std::bitset<TOWN_TYPE_COUNT> groupedAlignments;
@@ -374,22 +372,18 @@ const std::bitset<TOWN_TYPE_COUNT>& getAngelicAllianceAlignments()
 }
 
 // E:\gamedcs\armygrp.cpp:341
-// Retail's two compressed switch tables are at +0x418/+0x45c (spells)
-// and +0x494/+0x4b8 (creatures). Their shared branch destinations matter:
-// Resurrection only tests undead; Bless adds the damage-high test used by
-// Fortune/Misfortune/Slayer; Precision shares Forgetfulness's shooter test.
-// Stone tests the Troglodyte pair; Poison tests living and the Gargoyle pair.
-// The old transcription grouped these entries by apparent similarity and
-// also treated Diamond Golems as universally immune. The retail table puts
-// them on the normal path, Green/Red/Azure Dragons on level <= 3, Gold on
-// level <= 4, and Black/Magic Elemental on the unconditional zero path.
+// The two switches share branch destinations: Resurrection only tests
+// undead; Bless adds the damage-high test used by Fortune/Misfortune/Slayer;
+// Precision shares Forgetfulness's shooter test. Stone tests the Troglodyte
+// pair; Poison tests living and the Gargoyle pair. Diamond Golems take the
+// normal path, Green/Red/Azure Dragons level <= 3, Gold level <= 4, and
+// Black/Magic Elemental the unconditional zero path.
 
-// DC lines 505..507 and retail +0x2bd..+0x2d5 make mind immunity a creature
-// trait OR a hero's Badge of Courage. DC 564..565 and retail +0x325 apply
-// GetMagicResistanceFactor after the entire creature switch, including its
-// default arm; it is not confined to Dwarves. The arrow-tower rejection at
-// retail +0xa7 is independent of the siege-weapon trait. These are behavior
-// corrections, verified separately from the byte similarity score.
+// DC lines 505..507 make mind immunity a creature trait OR a hero's Badge
+// of Courage. DC 564..565 apply GetMagicResistanceFactor after the entire
+// creature switch, including its default arm; it is not confined to
+// Dwarves. The arrow-tower rejection is independent of the siege-weapon
+// trait.
 VA(0x0044a4d0, 0x52E)
 DC_ADDRESS(0x04e644, 0x3f2)
 MAC_ADDRESS(0x0579bc, 0x574)  // linkorder
@@ -637,9 +631,7 @@ unsigned char armyGroup::hasAllUndead() const
 }
 
 // E:\gamedcs\armygrp.cpp:668
-// LINKER-ELIMINATED in retail: /Ob2 expands this member at its morale
-// consumers and /OPT:REF drops the remaining copy, so the 0x4ab20..0x4ab80
-// image gap contains Dismiss rather than this body.
+// Inlined at its morale consumers; no retail body.
 DC_ADDRESS(0x04eb88, 0x36)
 MAC_ADDRESS(0x058194, 0x48)
 unsigned char armyGroup::hasSomeUndead() const
@@ -674,14 +666,8 @@ unsigned char armyGroup::isMember(TCreatureType monType) const
     return 0;
 }
 
-// Naming the creature once preserves getCreatureAlignment and recovers Windows
-// 67.8644 -> 100. Mac reuses that same creature load through the census.
-// Its ten byte stores reload a reference-bound integer zero: counted
-// std::fill_n reproduces this leaf body (99.7368%) while remaining Windows
-// exact. The older DC body calls memset instead. Pointer-range std::fill
-// keeps an eight-byte unrolled runtime loop; int versus sizeof count is flat.
-// The sole Mac residual is the fallback array's SP-0x10 versus SP-0x14 home;
-// do not pad the array or remove getCreatureAlignment to chase that displacement.
+// The creature is named once, through getCreatureAlignment. Its ten byte
+// stores use counted std::fill_n (the older DC body calls memset).
 VA(0x0044abb0, 0x97)
 DC_ADDRESS(0x04ebf0, 0xa6)
 MAC_ADDRESS(0x05828c, 0x17c)
@@ -745,10 +731,8 @@ long armyGroup::getAIValue() const
 
 // Original: armyGroup::GetNumArmies; armygrp.cpp:804.
 // The older DC body belongs to armygrp.cpp; Mac places its body after
-// getAIValue and before add, with 42 retained game-call sites. Body order
-// alone does not exclude a retained header copy. The ordinary source body
-// restores eight Windows callers to exact; Complete's hero bottom-view
-// count still expands, so its original TU/placement remains unresolved.
+// getAIValue and before add. Complete's hero bottom-view count inlines it,
+// so the original TU/placement is unresolved.
 VA(0x0044acc0, 0x14)
 DC_ADDRESS(0x04ed28, 0x24)
 MAC_ADDRESS(0x058528, 0x7c)
@@ -928,10 +912,10 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
     return applyLimits ? limit(-3, morale, 3) : morale;
 }
 
-// FULLY TRANSCRIBED 2026-08-06. Complete has SIX params (ret 0x18),
-// extending the older DC five-argument API: (index, ownerHero, ownerTown, MODE
-// 0, arg5, 0) - SEVEN pushes; Complete also adds the grouping argument
-// to DC's six-argument GetMorale. mode==3 -> (elementals/f_1f698 gate) townType
+// Complete has SIX params, extending the older DC five-argument API:
+// (index, ownerHero, ownerTown, MODE 0, arg5, 0); Complete also adds the
+// grouping argument to DC's six-argument GetMorale. mode==3 ->
+// (elementals/f_1f698 gate) townType
 VA(0x0044b100, 0x1C9)
 DC_ADDRESS(0x04f160, 0xac)
 MAC_ADDRESS(0x058b60, 0x270)
@@ -1183,18 +1167,14 @@ void armyGroup::mergeArmies(armyGroup& source)
     }
 }
 
-// E:\gamedcs\armygrp.cpp:1347 Complete adds the full-width
-// magic-terrain mode and alignment-grouping byte; ret 24h proves the hidden
-// result and eight explicit parameters. DC lines 1347..1451 retain result,
-// alignments[9], angel_type, the GetArmyName calls and nested modifier scopes.
-// Complete's neutral alignment requires the ten-byte array below.
-// Mac materializes the shared four-valued town classification at 0x59868
-// and 0x5993c. Restoring its two calls removes the old switch-exit scaffolding
-// and raises Windows 97.27% to 99.21%; the source helper remains canonical.
-// DC lines 1375..1378 retain explicit penalty assignments in if/else arms;
-// this shape also recovers the final string append and return code in VC6.
-// Windows and Mac use text indices 38/39 for holy good/evil and 41/40 for
-// evil-fog good/evil (Mac loads at 0x598b4, 0x598e0, 0x59988, 0x599b4).
+// E:\gamedcs\armygrp.cpp:1347. Complete adds the full-width magic-terrain
+// mode and alignment-grouping byte (a hidden result and eight explicit
+// parameters). DC lines 1347..1451 retain result, alignments[9],
+// angel_type, the GetArmyName calls and nested modifier scopes. Complete's
+// neutral alignment requires the ten-byte array below. The source keeps
+// the two canonical town-classification helper calls. DC lines 1375..1378
+// retain explicit penalty assignments in if/else arms. Text indices 38/39
+// are holy good/evil and 41/40 evil-fog good/evil.
 VA(0x0044b960, 0x859)
 DC_ADDRESS(0x04f708, 0x3aa)
 MAC_ADDRESS(0x059734, 0x714)  // retail-body signature
@@ -1207,13 +1187,7 @@ std::string armyGroup::getMoraleDescription(
     if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
         return g_moraleInfo[27];
 
-    // NOT a named `const TCreatureTypeTraits&`: retail's CSE keeps the
-    // 116-byte OFFSET (it stores the `shl eax,2` result, not an address)
-    // and re-adds the table base at each use through base+index
-    // addressing (`test [eax+edx+0x10], mask`). Naming the row as a
-    // reference makes VC6 materialise the ADDRESS instead - one extra
-    // `add` per use, a stack slot of its own, and the table base loaded
-    // BEFORE the index chain rather than after it.
+    // Indexed, not a named `const TCreatureTypeTraits&`.
     if (akCreatureTypeTraits[creature].attributes & g_ctaNoMorale)
         return g_moraleInfo[28];
 
@@ -1337,13 +1311,9 @@ std::string armyGroup::getMoraleDescription(
 // E:\gamedcs\armygrp.cpp:1464. Complete adds the creature argument and
 // full-width magic-terrain mode. DC line 1482 assigns the hero description;
 // line 1499 calls HasBuilding(EXTRA_0_ID, true). Preserve those source calls.
-// Mac 0x59fa0..0x59fe4 materializes the four-valued town classification.
-// Restoring its helper call matches every Windows byte, including the retained
-// Halfling string destructor and expanded final-adjustment cleanup.
-// The town-type snapshot stays within its nonnull guard. Naming the formatted
-// string extends its lifetime and loses the native temporary cleanup boundary.
-// Luck remains int: Windows and Mac 0x5a18c use its full-width argument;
-// an allocator scratch byte in that home does not prove a narrow parameter.
+// The town-classification helper call stays. The town-type snapshot stays
+// within its nonnull guard, and the formatted string is a temporary. Luck
+// remains int.
 VA(0x0044c1c0, 0x3C5)
 DC_ADDRESS(0x04fab4, 0x1e2)
 MAC_ADDRESS(0x059e48, 0x3a8)  // retail-body signature
@@ -1372,7 +1342,6 @@ std::string armyGroup::getLuckDescription(
 
     // Complete adds the clover-field luck bonus before applying enemy-group
     // modifiers. Dreamcast has only the cursed-ground terrain parameter.
-    // Mac 0x59f68 expands the town lookup before the shared classification.
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
         if (classifyTownAlignment(g_game->getAlignment(creature))
             == moralAlignmentNeutral) {
@@ -1434,10 +1403,8 @@ TTerrainType armyGroup::getNativeTerrain() const
     return native;
 }
 
-// COMDAT pairing: bitset<9>::reference::operator=, agreement 0.922; the
-// neighbouring 0x4c680 row scores 0.600 against the same COMDAT.
+// COMDAT pairing: bitset<9>::reference::operator=.
 VA_COMPGEN(0x0044c610, 0x67, BITSET_REFERENCE_ASSIGN, bitset9)
 
-// COMDAT pairing: the same bitset<9> instantiation's _Tidy, 23 B against
-// this compiland's single 23-byte COMDAT.
+// COMDAT pairing: the same bitset<9> instantiation's _Tidy.
 VA_COMPGEN(0x0044c6e0, 0x17, BITSET_TIDY, bitset9)

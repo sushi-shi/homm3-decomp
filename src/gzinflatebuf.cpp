@@ -19,8 +19,7 @@
 // disassembly alone could not: the 0x63e704 / 0x645640 / 0x63aba8 vftables
 // are Dinkumware's three-slot {deleting dtor, what, _Doraise} shape, the
 // 354-byte body at 0x41ba90 is `std::runtime_error::runtime_error(const
-// string&)`'s COMDAT, and the 249-byte body at 0x49a0c0 - carried as
-// "substantial, unidentified" in dxplay.cpp's next-lane note - is
+// string&)`'s COMDAT, and the 249-byte body at 0x49a0c0 is
 // `TRuntimeError::TRuntimeError(const char*)`, not a dxplay method.
 
 // The header-check failures throw a plain `bool` (throw record 0x64e1b8
@@ -207,10 +206,8 @@ int TGzDeflateBuf::overflow(int c)
     return traits_type::not_eof(c);
 }
 
-// Refill from the source streambuf and return the next byte. Loki's
-// `Bytef c = *next_in++; int result = c;` capture is retail's: it stores the
-// advanced cursor before widening, and its inline cost is what leaves the
-// constructor's last FHCRC read as the one TDataError expansion.
+// Refill from the source streambuf and return the next byte, as Loki's
+// `Bytef c = *next_in++; int result = c;` capture.
 VA(0x004d5fd0, 0x74)
 MAC_ADDRESS(0x220a18, 0xb0)
 int TGzInflateBuf::_getC()
@@ -224,7 +221,6 @@ int TGzInflateBuf::_getC()
             m_sourceEof = true;
         _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
         _m_zstream.avail_in = count;
-        // Mac 0x220a80 reloads the unsigned stream member for this guard.
         if (_m_zstream.avail_in == 0)
             return -1;
     }
@@ -362,27 +358,22 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
     ownedBuffer.release();
 }
 
-// 0x4d65e0: the message-less form. `std::runtime_error`'s inline string
-// constructor expands into it, which is the whole 175-byte body.
-// Mac expands this constructor: its retained 0x221994 body is the
-// runtime_error(string) base constructor: r4 is a prebuilt string, copied
-// at 0x2219c0. Callers destroy the temporary then install the derived vptr
-// (e.g. 0x221660 -> 0x22166c -> 0x22167c).
+// The message-less form; std::runtime_error's inline string constructor is
+// inlined into it.
 VA(0x004d65e0, 0xAF)
 TGzInflateBuf::TDataError::TDataError()
     : std::runtime_error(std::string())
 {
 }
 
-// __CxxThrowException's catchable-type record for the tag; the copy is what
-// the throw makes into the exception object.
+// The throw's catchable-type record names this copy constructor.
 VA_COMPGEN(0x004d6690, 0x157, IMPLICIT_COPY_CTOR, TDataError)
 
 VA_COMPGEN(0x004d67f0, 0x21, SCALAR_DELETING_DTOR, TGzInflateBuf)
 
-// 0x4d6820: hand the source stream back whatever this object read ahead -
-// the raw bytes still in next_in, or, when the member was never a gzip
-// member, the undrained tail of the output window.
+// Hand the source stream back whatever this object read ahead - the raw
+// bytes still in next_in, or, when the member was never a gzip member, the
+// undrained tail of the output window.
 VA(0x004d6820, 0xF6)
 MAC_ADDRESS(0x221394, 0x12c)
 TGzInflateBuf::~TGzInflateBuf()
@@ -404,36 +395,16 @@ TGzInflateBuf::~TGzInflateBuf()
     delete[] _m_pInBuf;
 }
 
-// 0x4d6920: drain the source into the output half, either
-// through inflate or, for a non-gzip member, by straight copy.
-// Constructor visibility probes are Windows-flat. A temporary explicit
-// inline _mustGetC suppresses its required Windows body and is rejected.
-// CW auto/deferred/depth controls change the native retained-call pattern;
-// no source qualifier or compiler override is inferred from those controls.
-// Mac 0x221574..0x221588 dispatches inflate status with a range tree:
-// compare -3, skip larger values, compare -4, then select the exceptions.
-// A switch reproduces that tree at candidate +0xc0..+0xd4; sequential
-// equality guards do not. Windows 81.4346% -> 81.90%, with every trailer
-// _mustGetC call preserved. Exception homes and expansion decisions remain.
+// Drain the source into the output half, either through inflate or, for a
+// non-gzip member, by straight copy. Inflate status is dispatched through a
+// switch.
 
-// The FIRST guard reads `avail_in <= 0`, not `== 0`: retail inverts it to
-// `ja` (unsigned above) where `== 0` can only ever emit `jne`, and the two
-// are the same test on zlib's `uInt`. 80.8063 -> 81.1188. The second guard
-// really is `== 0` - retail emits `jne` there.
-
-// Retail's raw-copy minimum uses a strict unsigned comparison: spelling
-// avail_in < avail_out ? avail_in : avail_out restores jb and raises this
-// caller from 81.1204% to 81.4346%. std::_cpp_min on copied local counts
-// adds operand homes and scores 79.1832%; keep the direct value expression.
+// The first guard reads `avail_in <= 0` on zlib's unsigned uInt (the same
+// test as `== 0`); the second really is `== 0`.
 
 // The gzip trailer is two _mustGetLong reads, as Loki h3maped retains
-// TGzInflateBuf::_mustGetLong (0x81d4070: four _mustGetC calls summed with
-// shifts 0/8/16/24). Inlined twice, it gives retail's expanded/called
-// _mustGetC pattern (expanded at trailer reads 1,2,5,6, called at 3,4,7,8)
-// and its separate exception slots. Loki's refill also stores next_in
-// before avail_in (0x81d3ba1..0x81d3bb0); with the helper, that order is
-// retail's ecx load of the input buffer. 81.80% -> 100%. Mac expands all
-// eight checked reads without a visible group boundary.
+// TGzInflateBuf::_mustGetLong (four _mustGetC calls summed with shifts
+// 0/8/16/24). Loki's refill also stores next_in before avail_in.
 VA(0x004d6920, 0x251)
 MAC_ADDRESS(0x2214c0, 0x4d4)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
 int TGzInflateBuf::underflow()
@@ -465,11 +436,8 @@ int TGzInflateBuf::underflow()
                     default:
                         break;
                     }
-                    // This is the live z_stream output window's beginning.
-                    // Retail +0x9b..+0xb3 loads next_out/avail_out and forms
-                    // their sum minus 512, rather than loading _m_pOutBuf.
-                    // Preserve that stream-state dependency, not a guessed
-                    // cancellation through the separately cached pointer.
+                    // This is the live z_stream output window's beginning:
+                    // next_out + avail_out - 512, not _m_pOutBuf.
                     m_crc = crc32(m_crc,
                                 _m_zstream.next_out + _m_zstream.avail_out - GZ_WINDOW_SIZE,
                                 GZ_WINDOW_SIZE - _m_zstream.avail_out);
@@ -503,19 +471,15 @@ int TGzInflateBuf::underflow()
              + GZ_WINDOW_SIZE - _m_zstream.avail_out);
     _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
     _m_zstream.avail_out = GZ_WINDOW_SIZE;
-    // Mac 0x221970..0x221974 loads the get pointer then widens its byte
-    // unsigned, the same canonical traits conversion used by _getC.
     if (egptr() > eback())
         return traits_type::to_int_type(*gptr());
     return -1;
 }
 
-// 0x4d6b80 calls TRuntimeError(const char*) at 0x49a0c0, then installs
-// the derived vptr. Both its canonical body and VA are in exceptions.h;
-// this object retains the out-of-line copy and calls it, while the
-// objnames throw expands the shared derived initialization.
+// Calls TRuntimeError(const char*), then installs the derived vptr. Both
+// its canonical body and VA are in exceptions.h.
 
-// 0x4d6ba0: get_byte with the malformed-member throw attached.
+// get_byte with the malformed-member throw attached.
 VA(0x004d6ba0, 0x81)
 int TGzInflateBuf::_mustGetC()
 {

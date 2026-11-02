@@ -196,8 +196,7 @@ public:
         }
     }
 
-    // DC dxplay.h:90 retains the third early success arm. It preserves the
-    // exact standalone body and avoids a byte temporary in Update's expansion.
+    // DC dxplay.h:90 retains the third early success arm.
     VA(0x005112c0, 0x1C)  // exact selected COMDAT
     DC_ADDRESS(0x101d58, 0x2a)
     unsigned char isJoinDisabled()
@@ -259,8 +258,8 @@ public:
     unsigned char* m_data;
     unsigned long m_dataSize;
 
-    // separate line rows prove body assignments rather than an initializer list;
-    // Complete folds the helper into its callers while preserving both stores.
+    // separate line rows prove body assignments rather than an initializer
+    // list; inlined in its callers.
     DC_ADDRESS(0x08bda8, 0xa)
     CDPlayMsg()
     {
@@ -268,9 +267,9 @@ public:
         m_dataSize = 0;
     }
 
-    // Mac 0x46ef8 is a deleting destructor called from CDPlayHeroes, but it
-    // reads its data pointer at +0x0c; this Windows wrapper stores it at +0.
-    // The Mac class identity is unresolved, so it is not an exact source pair.
+    // Mac's CDPlayHeroes deleting destructor reads its data pointer at +0x0c
+    // where this Windows wrapper stores it at +0, so its class identity is
+    // unresolved.
     VA(0x00497790, 0x21)  // annotation-only anchor for the active header-inline COMDAT
     DC_ADDRESS(0x08bdb4, 0x18)
     ~CDPlayMsg()
@@ -278,8 +277,7 @@ public:
         destroy();
     }
 
-    // early size guard, conditional delete, allocation, and size store; retail's
-    // inlined cmp/jb fixes this equivalent operand order.
+    // early size guard, conditional delete, allocation, and size store.
     DC_ADDRESS(0x08bdcc, 0x40)
     unsigned char allocSize(unsigned long dSize)
     {
@@ -304,8 +302,8 @@ public:
     }
 
     // Original: CDPlayMsg::GetId; dxplay.h:177
-    // ReceiveSystemMsg0x497910 expands the null-data sentinel and the
-    // payload's first dword load. The bytes are a DirectPlay message.
+    // Inlined in ReceiveSystemMsg: the null-data sentinel and the payload's
+    // first dword. The bytes are a DirectPlay message.
     DC_ADDRESS(0x08be38, 0x10)
     unsigned long getId()
     {
@@ -507,9 +505,8 @@ protected:
         return 1;
     }
 
-    // Complete base/lobby vtables0x63dc28/0x63dd20 slots44..54 share
-    // the return-true body0x496cd0 (mov al,1; ret8). DC's distinct
-    // in-class virtual defaults remain distinct source methods.
+    // These Complete base/lobby vtable slots share one return-true body;
+    // DC's distinct in-class virtual defaults remain distinct source methods.
     // Original: CDPlay::SysMsgAddPlayerToGroup; dxplay.h:441
     DC_ADDRESS(0x08bf1c, 0x4)
     virtual unsigned char sysMsgAddPlayerToGroup(

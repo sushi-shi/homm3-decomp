@@ -289,11 +289,10 @@ struct type_AI_puzzle_tile {
 };
 SIZE(type_AI_puzzle_tile, 0x10);
 
-// Retail expands these stores in AI_attempt_puzzle_guess's array loop.
-// E:\gamedcs\puzzlewindow.cpp:279 Both DC line281
-// and Mac0x147ad0 clear visibility immediately after object type.
-// Mac retains this ordinary TU constructor in matchPuzzle's first-tile
-// local; keep its body before the adjacent cell-taking constructor.
+// Inlined in AI_attempt_puzzle_guess's array loop.
+// E:\gamedcs\puzzlewindow.cpp:279. DC line281 clears visibility
+// immediately after object type. Mac retains this ordinary TU constructor
+// in matchPuzzle's first-tile local.
 DC_ADDRESS(0x1154c4, 0x74)
 MAC_ADDRESS(0x147ab8, 0x70)
 type_AI_puzzle_tile::type_AI_puzzle_tile()
@@ -338,15 +337,11 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
     }
 }
 
-// E:\gamedcs\puzzlewindow.cpp:319. Retail keeps NO out-of-line row: the one
-// caller is check_match below, and /Ob2 expands the whole chain there. The
-// comparison is byte-proven by that expansion, which XORs the packed words
-// and masks each group - `test ecx,0x3ff` for object_type, `test cl,0xff` for
-// the two four-bit offsets together, `test cl,0x1f` for terrain, `test
-// ecx,0x1fe0` for river and road together, and `test dl,1` for diggable.
-// has_grail and visible are deliberately NOT compared.
-// Native DC ??8type_AI_puzzle_tile@@QBA_NABU0@@Z proves const bool return;
-// restoring that interface preserves Windows matchPuzzle 95.1081%.
+// E:\gamedcs\puzzlewindow.cpp:319. Inlined in its one caller, check_match
+// below. The comparison masks each packed group: object_type, the two
+// four-bit offsets together, terrain, river and road together, and
+// diggable. has_grail and visible are deliberately NOT compared.
+// Native DC ??8type_AI_puzzle_tile@@QBA_NABU0@@Z proves const bool return.
 DC_ADDRESS(0x1156bc, 0xc0)
 MAC_ADDRESS(0x147d08, 0x178)
 bool type_AI_puzzle_tile::operator==(
@@ -362,14 +357,12 @@ bool type_AI_puzzle_tile::operator==(
 }
 
 // E:\gamedcs\puzzlewindow.cpp:334
-// DC puzzlewindow.cpp:390/391/393 and retail advance sample/row cursors
-// unconditionally. This exact reconstruction retains that original defect:
-// a 33x33 bitmap at dest(16,16) has valid samples but forms a final source
-// row at byte offset 2112 beyond its 1089-byte allocation. A clipped bottom
-// puzzle row can similarly form visible+324 beyond visible[17*19]. These
-// final cursors are not dereferenced, but their formation is not valid portable
-// C++. The earlier guarded repair scored 60.63%; bounded offset alternatives
-// remain non-exact. No extra allocation or padding guarantee is claimed.
+// DC puzzlewindow.cpp:390/391/393 advance sample/row cursors
+// unconditionally, an original defect: a 33x33 bitmap at dest(16,16) forms
+// a final source row at byte offset 2112 beyond its 1089-byte allocation,
+// and a clipped bottom puzzle row can form visible+324 beyond
+// visible[17*19]. These final cursors are not dereferenced, but their
+// formation is not valid portable C++.
 VA(0x0052c8b0, 0xFC)
 DC_ADDRESS(0x11577c, 0xbc)
 MAC_ADDRESS(0x147e80, 0xf0)  // bracketed between tile ctor and AI attempt
@@ -415,7 +408,7 @@ void Bitmap816::mark_puzzle(unsigned char* visible, long destX, long destY)
 
 // E:\gamedcs\puzzlewindow.cpp:403.
 // Complete reads setup alignment directly and disposes through the bitmap
-// vtable; those retail operations override the older DC callees.
+// vtable, overriding the older DC callees.
 DC_ADDRESS(0x115838, 0x10a)
 MAC_ADDRESS(0x147f70, 0x148)
 static unsigned char markAIPuzzle(long player, unsigned char* visible)
@@ -444,7 +437,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
 
 // E:\gamedcs\puzzlewindow.cpp:445.
 // DC proves the array reference and point local.
-// Complete's tile dimensions are 19x17, independently fixed by retail strides.
+// Complete's tile dimensions are 19x17.
 DC_ADDRESS(0x115944, 0x12c)
 MAC_ADDRESS(0x1480b8, 0x190)
 static void createAIPuzzleMap(long player, unsigned char* visible,
@@ -468,10 +461,8 @@ static void createAIPuzzleMap(long player, unsigned char* visible,
 }
 
 // E:\gamedcs\puzzlewindow.cpp:614
-// Mac 0x148b4c..0x148b8c initializes the result at this first-use boundary;
-// direct construction keeps its canonical point constructor and avoids a copy.
-// Retail loads current before storing best; DC 668/669 spans support the
-// point assignment before that scalar update (Windows 99.22 -> 100).
+// The result is constructed at this first-use boundary; DC 668/669 spans
+// put the point assignment before the scalar best update.
 VA(0x0052c9b0, 0x55B)
 DC_ADDRESS(0x115f64, 0x3e4)
 MAC_ADDRESS(0x1489fc, 0x428)  // anchor-caller
@@ -531,15 +522,12 @@ type_point aiAttemptPuzzleGuess(long player)
     return type_point(-1, -1, -1);
 }
 
-// E:\gamedcs\puzzlewindow.cpp:472. Retail expands this file static into
-// match_puzzle below - its only call site - so no out-of-line retail row
-// exists; the Dreamcast build kept one. `origin` arrives BY
-// VALUE and is rebased in place (the dword copy at match_puzzle+0x26c then
-// two bitfield writes), and both index parameters are reused as the scan's
-// own counters: `first_y` keeps the caller's value as its lower bound while
-// `first_x` restarts at zero. A single mismatched tile answers zero
-// immediately, which is why retail's failure edge jumps straight past the
-// caller's score test.
+// E:\gamedcs\puzzlewindow.cpp:472. Inlined into match_puzzle below - its
+// only call site; the Dreamcast build kept a body. `origin` arrives BY
+// VALUE and is rebased in place, and both index parameters are reused as
+// the scan's own counters: `first_y` keeps the caller's value as its lower
+// bound while `first_x` restarts at zero. A single mismatched tile answers
+// zero immediately.
 DC_ADDRESS(0x115a70, 0x176)
 MAC_ADDRESS(0x148248, 0x240)
 static long checkMatch(long player, long firstX, long firstY,
@@ -671,6 +659,5 @@ static type_point matchPuzzle(long player, type_AI_puzzle_tile (&puzzleMap)[19][
     return result;
 }
 
-// COMDAT pairing: bitset<48>::test, agreement 1.000 at an exactly equal
-// 52-byte extent.
+// COMDAT pairing: bitset<48>::test.
 VA_COMPGEN(0x005067e0, 0x34, BITSET_TEST, Bitset48)

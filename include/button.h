@@ -72,16 +72,12 @@ public:
     int deselect(message& msg);
 
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
-    // wrapper is inlined at its retail call sites. The old 0x404200 mapping
-    // was disproven by that body's `ret 0xc`: it is the three-argument
-    // vector<int>::insert implementation, not this one-argument member.
+    // wrapper is inlined at its call sites.
     DC_ADDRESS(0x057da4, 0x18)
     void setText(const char* newText) { m_text = newText; }
 
-    // Dreamcast button.h:99 (6 B SH4: one store). A free
-    // /Ob2 candidate site wherever a caller uses it - see
-    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
-    // sequence is reproduced only with this setter in its six loops.
+    // Dreamcast button.h:99 (one store); used in the six loops of
+    // TSingleSelectionWindow::CreateFilterWidgets.
     DC_ADDRESS(0x0669f4, 0x6)
     void setDisabledFrame(long frame) { m_disabledFrame = frame; }
     // The later private highlight frame has no Dreamcast field; its outside
@@ -125,7 +121,7 @@ public:
 
     // Original: textButton::SetText; button.h:136
     // DC assigns the inherited Text string directly, distinct from
-    // button::SetText; TurnChatOn/Off expand it at retail 0x58ca80/0x58cbf0.
+    // button::SetText; inlined in TurnChatOn/Off.
     DC_ADDRESS(0x14762c, 0x24)
     void setText(const char* newText) { m_text = newText; }
 

@@ -11,10 +11,7 @@
 #include "window.h"
 #include "winmgr.h"
 
-// Ordinary source-local body. Retail expands it in the three derived
-// constructors (0x450130, 0x4502d0, 0x450690), leaving a widget default-
-// constructor call and a single derived vtable store. No explicit inline
-// declaration is needed to expose this body to those same-TU callers.
+// Ordinary source-local body, inlined in the three derived constructors.
 // E:\gamedcs\border.cpp:34
 DC_ADDRESS(0x05433c, 0x3c)
 MAC_ADDRESS(0x05e244, 0x38)
@@ -38,8 +35,8 @@ border::~border()
 }
 
 // Original: border::initialize; border.cpp:67
-// Complete removes widget's focusable storage (see widget.h). The retained
-// derived constructors expand this forwarding call to widget::initialize.
+// Complete removes widget's focusable storage (see widget.h). The derived
+// constructors inline this forwarding call to widget::initialize.
 DC_ADDRESS(0x054408, 0x36)
 MAC_ADDRESS(0x05e32c, 0x20)
 void border::initialize(int x, int y, int w, int h, int id, int style,
@@ -109,7 +106,6 @@ int border::main(message& msg)
             default:
                 break;
             }
-            // Mac 0x5e560: disabled button cases and default share this call.
             return widget::main(msg);
         }
     }
@@ -118,9 +114,8 @@ int border::main(message& msg)
 }
 
 // E:\gamedcs\border.cpp:153/154. The DC body returns zero; its public
-// UAA_N_N0 signature proves native bool for the return and both parameters.
-// Retail border vslot 13 folds onto iconWidget's 0x4eab10 representative.
-// Keep border's canonical source body without a duplicate retail claim.
+// UAA_N_N0 signature proves native bool for the return and both
+// parameters. Shares iconWidget's body.
 DC_ADDRESS(0x054590, 0x4)
 bool border::handleClick(bool downClick, bool rightClick)
 {
@@ -128,12 +123,12 @@ bool border::handleClick(bool downClick, bool rightClick)
 }
 
 // Original: border::zBufferDraw; border.cpp:158
-// Retail vtable 0x63ba24 slot 3 shares the empty ret-8 representative 0x5bc7e0.
+// Shares textWidget's empty two-argument body.
 DC_ADDRESS(0x054594, 0x4)
 void border::zBufferDraw(unsigned short* zBuffer, int id) const {}
 
 // Original: border::Draw; border.cpp:161
-// Its slot 4 shares the empty no-argument body at 0x5bc690.
+// Shares the empty no-argument body.
 DC_ADDRESS(0x054598, 0x4)
 void border::draw() const {}
 
@@ -158,20 +153,12 @@ void coloredBorder::draw() const
         m_y + m_parentWindow->m_y, m_width, m_height, m_color);
 }
 
-// E:\gamedcs\border.cpp:201 - located in retail 2026-08-14, the
-// constructor the earlier sdd note asked for. `ret 0x1c` is seven stack
-// dwords; six of them go to widget::initialize in x,y,w,h,id,style order
-// and the ODD one out - [ebp+0x1c], the sixth argument - is the dword
-// stored to [this+0x30], which is what fixes the DC parameter order
-// (..., int color_, int style) and colour's int width. [this+0x34] is
-// zeroed as a BYTE, fixing colorize's type.
+// E:\gamedcs\border.cpp:201. Six of the seven arguments go to
+// widget::initialize in x,y,w,h,id,style order; the sixth argument is the
+// colour stored at +0x30, which fixes the DC parameter order (..., int
+// color_, int style). The colorize flag at +0x34 is a byte.
 //
-// The base is entered through ??0widget@@QAE@XZ with a SINGLE derived
-// vtable store: border's default ctor is expanded in place and its
-// ??_7border@@6B@ store dead-store-eliminated. widget::initialize runs
-// in the ctor BODY (not a base initializer), which is why VC6 wraps the
-// whole thing in an fs:[0] frame - the base subobject has to be
-// unwindable across that call.
+// widget::initialize runs in the constructor BODY, not a base initializer.
 VA(0x00450130, 0x6D)
 DC_ADDRESS(0x054650, 0x80)
 MAC_ADDRESS(0x05e58c, 0x88)  // anchor-bracket + arity (`ret 0x1c`)
@@ -185,13 +172,12 @@ coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
 
 VA_COMPGEN(0x004501a0, 0x21, SCALAR_DELETING_DTOR, coloredBorderFrame)
 
-// inlined ~border, so only ??_7border@@6B@ survives before the
-// CodeView dc 0x54dd8: CV_fldattr_t.compgenx marks this destructor
-// as implicit. Its retained retail body performs only base/member teardown.
+// CodeView dc 0x54dd8: CV_fldattr_t.compgenx marks this destructor as
+// implicit.
 VA_COMPGEN(0x004501d0, 0xB, IMPLICIT_DTOR, coloredBorderFrame)
 
 // Original: coloredBorderFrame::zBufferDraw; border.cpp:210
-// Retail slot 3 at 0x63ba68 shares 0x5bc7e0 with border and textWidget.
+// Shares the empty two-argument body with border and textWidget.
 DC_ADDRESS(0x0546d0, 0x4)
 void coloredBorderFrame::zBufferDraw(unsigned short* zBuffer, int id) const {}
 
@@ -216,7 +202,6 @@ int coloredBorderFrame::main(message& msg)
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        // Mac retains this base call separately at 0:0x5e6fc.
         if (msg.m_id == MESSAGE_WIDGET)
             return border::main(msg);
         return 0;
@@ -284,7 +269,7 @@ void bitmapBorder::draw() const
 }
 
 // Original: bitmapBorder::SetPalette; border.cpp:323
-// Retail Main's SET_PALETTE arm expands the same load/copy/dispose sequence.
+// Inlined in Main's SET_PALETTE arm.
 DC_ADDRESS(0x054988, 0x38)
 MAC_ADDRESS(0x05e9dc, 0x6c)
 void bitmapBorder::setPalette(const char* paletteName)
@@ -348,7 +333,6 @@ int bitmapBorder::main(message& msg)
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        // Mac retains this base call separately at 0:0x5eb44.
         if (msg.m_id == MESSAGE_WIDGET)
             return border::main(msg);
         return 0;
@@ -393,7 +377,7 @@ bitmapBorder16::~bitmapBorder16()
 }
 
 // Original: bitmapBorder16::zBufferDraw; border.cpp:415
-// The 0x63bacc vtable's slot 3 folds to the shared empty ret-8 body.
+// Shares the empty two-argument body.
 DC_ADDRESS(0x054ba4, 0x4)
 void bitmapBorder16::zBufferDraw(unsigned short* zBuffer, int id) const {}
 
@@ -421,8 +405,8 @@ void bitmapBorder16::draw2() const
 }
 
 // Original: bitmapBorder16::GetRealWidth; border.cpp:431
-// Complete vslot 6 at 0x63bae4 shares bitmapBorder::getRealWidth, 0x4504a0:
-// both bitmap types put Width at +0x24 after their resource base.
+// Shares bitmapBorder::getRealWidth: both bitmap types put Width at +0x24
+// after their resource base.
 DC_ADDRESS(0x054c2c, 0x20)
 MAC_ADDRESS(0x05ee04, 0x1c)
 int bitmapBorder16::getRealWidth() const
@@ -431,7 +415,7 @@ int bitmapBorder16::getRealWidth() const
 }
 
 // Original: bitmapBorder16::GetRealHeight; border.cpp:436
-// Vslot 5 at 0x63bae0 similarly shares bitmapBorder::getRealHeight, 0x4504b0.
+// Shares bitmapBorder::getRealHeight.
 DC_ADDRESS(0x054c4c, 0x20)
 MAC_ADDRESS(0x05ee20, 0x1c)
 int bitmapBorder16::getRealHeight() const
@@ -439,25 +423,8 @@ int bitmapBorder16::getRealHeight() const
     return m_image ? m_image->GetHeight() : 0;
 }
 
-// E:\gamedcs\border.cpp:449 - located in retail, slot 2 of vtable
-// 0x63bacc (the only reference to this row in the whole image, stored by
-// the constructor 0x450690 and re-stored by the destructor 0x450750).
-// bitmapBorder::Main one class up, arm for arm: the same hoisted id test
-// ahead of the codeX chain, the same `sub ecx,0xa` two-case subtract, and
-// the same duplicated `return 0` epilogues.
-
-// Only two commands survive on the 16-bit variant. SET_PALETTE is an
-// EMPTY accepting arm - retail's `je` lands straight on `mov eax,1` -
-// which is what a hi-colour image with no palette to retint leaves. The
-// SET_IMAGE arm is the whole of bitmapBorder16::SetImage,
-// expanded: retail has NO row for that method anywhere in border.obj's
-// span because Main is its only caller, so /OPT:REF dropped the orphaned
-// COMDAT after /Ob2 expanded it here. Writing it as the CALL is what gives
-// retail's single `return 1` tail - the method's own `return` becomes a
-// forward jump onto it, where a longhand `return 1` duplicates the
-// epilogue and inverts the strcmp branch.
 // E:\gamedcs\border.cpp:441 - bitmapBorder::SetImage one class up with the
-// hi-colour loader. No VA: retail keeps no row for it (see the note below).
+// hi-colour loader. No VA: inlined into Main.
 DC_ADDRESS(0x054c6c, 0x2c)
 MAC_ADDRESS(0x05ee3c, 0x74)
 void bitmapBorder16::setImage(const char* bitmapName)
@@ -470,6 +437,11 @@ void bitmapBorder16::setImage(const char* bitmapName)
     m_image = ResourceManager::GetBitmap16(bitmapName);
 }
 
+// E:\gamedcs\border.cpp:449 - bitmapBorder::Main one class up, arm for arm.
+// Only two commands survive on the 16-bit variant. SET_PALETTE is an EMPTY
+// accepting arm, which is what a hi-colour image with no palette to retint
+// leaves. The SET_IMAGE arm calls bitmapBorder16::SetImage, inlined here
+// (Main is its only caller).
 VA(0x00450860, 0xC6)
 DC_ADDRESS(0x054c98, 0x84)
 MAC_ADDRESS(0x05eeb0, 0xb0)
@@ -478,7 +450,6 @@ int bitmapBorder16::main(message& msg)
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        // Mac retains this base call separately at 0:0x5eee8.
         if (msg.m_id == MESSAGE_WIDGET)
             return border::main(msg);
         return 0;
@@ -494,6 +465,6 @@ int bitmapBorder16::main(message& msg)
     return border::main(msg);
 }
 
-// COMDAT pairing: bitset<10>::_Xran, agreement 0.901 at an exactly equal
-// 203-byte extent, and the only bitset width this object instantiates.
+// COMDAT pairing: bitset<10>::_Xran, the only bitset width this object
+// instantiates.
 VA_COMPGEN(0x00404410, 0xCB, BITSET_XRAN, Bitset10)

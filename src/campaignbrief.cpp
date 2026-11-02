@@ -121,7 +121,7 @@ void TCampaignBrief::select(int which)
     }
 }
 
-// Retail-only: codeX at +4, qualifier at +0xc, owning window at +0x1c.
+// Complete-only.
 VA(0x00457f70, 0x49)
 MAC_ADDRESS(0x064274, 0x94)
 static int decreaseCampaignDifficulty(message& msg)
@@ -137,7 +137,7 @@ static int decreaseCampaignDifficulty(message& msg)
     return 0;
 }
 
-// Retail-only: codeX at +4, qualifier at +0xc, owning window at +0x1c.
+// Complete-only.
 VA(0x00457fc0, 0x49)
 MAC_ADDRESS(0x064308, 0x94)
 static int increaseCampaignDifficulty(message& msg)
@@ -156,15 +156,13 @@ static int increaseCampaignDifficulty(message& msg)
 VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
 MAC_COMPGEN_ADDRESS(0x064044, 0x228, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
 
-// The placeholder enum vector keeps this retained four-byte capacity body
-// byte-identical; the old int enrollment predated the element-type evidence.
 VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, HeroId)
 
 // Both native Mac body order and DC lines 392/437/452 put these helpers
-// after Select. VC6 still expands both; all Windows TU scores are unchanged.
+// after Select; both inlined.
 // E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
 // description as a second widget message; Complete hands it to the
-// scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
+// scroller (type_text_scroller::SetText) instead.
 DC_ADDRESS(0x058938, 0x6a)
 MAC_ADDRESS(0x06439c, 0xb0)
 void TCampaignBrief::resetMapAndDescription(int which)
@@ -178,9 +176,8 @@ void TCampaignBrief::resetMapAndDescription(int which)
     m_scroller->setText(m_scenarios[which].m_mapDescription.c_str());
 }
 
-// E:\gamedcs\campaignbrief.cpp:452. Select expands this ordinary TU
-// helper and ResetMapAndDescription. Retail retains vector::size at the loop
-// tests (0x423110); expansion does not establish an inline source specifier.
+// E:\gamedcs\campaignbrief.cpp:452. Inlined in Select, as is
+// ResetMapAndDescription.
 DC_ADDRESS(0x0589a4, 0x84)
 MAC_ADDRESS(0x06444c, 0x88)
 void TCampaignBrief::clearSelected()
@@ -193,8 +190,9 @@ void TCampaignBrief::clearSelected()
 
 // Original: TCampaignBrief::SetupCurrentTerritory; campaignbrief.cpp:462
 // Complete moves currentTerritory into the window and availability/setup into
-// CampaignScenarioPreview. The constructor still expands this ordinary helper
-// between the campaign description and selected-map controls (DC line 913).
+// CampaignScenarioPreview. The constructor still inlines this ordinary
+// helper between the campaign description and selected-map controls (DC
+// line 913).
 DC_ADDRESS(0x058a28, 0x74)
 MAC_ADDRESS(0x0644d4, 0xb0)
 void TCampaignBrief::setupCurrentTerritory()
@@ -398,15 +396,11 @@ void TCampaignBrief::addBonusIcons()
 // bitmap or the sprite form of the bonus with its help text, and the
 // frames past the count are hidden.
 
-// Dreamcast's named `bmapNames` and `help_id` locals serve its fixed three-slot
-// GetWidget path. Complete directly owns the widened widget arrays instead.
-// Retail snapshots the selected scenario index before the vector lookup, uses
-// branch-local border receivers for the status update, and snapshots the live
-// campaign pointer at the following virtual call. Those lifetimes reproduce
-// all 34 CFG blocks, 16 branches, 24 calls, and every instruction row.
-// The scenario count query retains the owned-pointer accessor as a nested
-// call. Two separate calls in the loop condition suppress VC6 rotation
-// (88.022%); the canonical query restores all 663 retail bytes.
+// Dreamcast's named `bmapNames` and `help_id` locals serve its fixed
+// three-slot GetWidget path; Complete directly owns the widened widget
+// arrays instead. The selected scenario index is snapshotted before the
+// vector lookup, the border receivers are branch-local, and the live
+// campaign pointer is snapshotted at the following virtual call.
 VA(0x00458d40, 0x297)
 DC_ADDRESS(0x058c00, 0x1ac)
 MAC_ADDRESS(0x0650a4, 0x2f0)  // Select callee, dc-order-map after AddBonusIcons
@@ -816,8 +810,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
 }
 
 // Complete retains these three by-value accessors adjacent to the campaign
-// constructor.  Each body is the ordinary Dinkumware string copy from the
-// layout-proven member and provides a named relocation target for the caller.
+// constructor; each is a plain string copy of the member.
 VA(0x0045a3e0, 0x134)
 MAC_ADDRESS(0x06774c, 0x24)
 std::string SCampaign::getCampaignFileName() const
@@ -840,17 +833,13 @@ std::string TCampaignBrief::CampaignHeaderStruct::getCampaignDescription() const
 }
 
 // Canonical body and VA: include/game.h.
-// Canonical body and VA: include/game.h.
 VA_COMPGEN(0x0045a990, 0x119, CLASS_CTOR, CMapHeaderData)
 
 VA_COMPGEN(0x0045aab0, 0xCC, IMPLICIT_DTOR, CMapHeaderData)
 MAC_COMPGEN_ADDRESS(0x0672e4, 0xa0, IMPLICIT_DTOR, CMapHeaderData)
 
-// The owner token has to be the class the DEMANGLER produces from the
-// emitted symbol - `??1TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ` keys as
-// `tplayerslotattributes_tplayerslotattributes@dtor`, with no enclosing-class
-// prefix. Default construction, destruction, copy construction and copy
-// assignment each have their own admitted claim.
+// Default construction, destruction, copy construction and copy assignment
+// each have their own claim.
 VA_COMPGEN(0x0045ab80, 0x9B, IMPLICIT_DTOR, TPlayerSlotAttributes)
 
 // Canonical body and VA: include/game.h.
@@ -867,21 +856,17 @@ MAC_COMPGEN_ADDRESS(0x0670cc, 0x60, IMPLICIT_DTOR, map)
 
 // Canonical body and VA: include/victorylossconditions.h.
 
-// COMDAT pairing: vector<type_map_hero_identity>'s copy assignment, 661 B
-// against campaignbrief.obj's single 661-byte COMDAT.
+// COMDAT pairing: vector<type_map_hero_identity>'s copy assignment.
 VA_COMPGEN(0x0045bcd0, 0x295, VECTOR_COPY_ASSIGN, type_map_hero_identity)
 
 // The same map's two-argument constructor - `map(const key_compare&, const
-// allocator_type&)`, the form the copy path builds through. Byte-verified
-// against the emitted COMDAT at 0.984 mnemonic agreement over 190 bytes.
+// allocator_type&)`, the form the copy path builds through.
 VA_COMPGEN(0x0045bf70, 0xBE, CLASS_CTOR, map)
 
 VA_COMPGEN(0x0045c740, 0x165, TREE_COPY, type_map_hero_info)
 
 // The scenario vector's own teardown, and the sole caller of the preview
-// destructor claimed above: it walks its elements with the 0x4d4 stride,
-// frees the block and zeroes the three pointers - Dinkumware's `_Tidy`
-// shape verbatim.
+// destructor claimed above.
 VA_COMPGEN(0x0045c030, 0x3B, VECTOR_DTOR, CampaignScenarioPreview)
 
 // push_back on the layout-proven 0x4d4-byte preview retains Dinkumware's
@@ -897,13 +882,11 @@ VA_COMPGEN(0x0045d270, 0xFF, TREE_COPY_NODE, type_map_hero_info)
 VA_COMPGEN(0x0045D370, 0xA3, TREE_CONST_ITERATOR_INC, type_map_hero_info)
 
 // type_map_hero_identity's implicit copy-assign, the element operation the
-// map's node copy drives. Byte-verified against the emitted COMDAT at 0.973
-// mnemonic agreement over 343 bytes.
+// map's node copy drives.
 VA_COMPGEN(0x0045d8e0, 0x157, IMPLICIT_COPY_ASSIGN, type_map_hero_identity)
 
-// The vector copy-assignment above and both TPlayerSlotAttributes assignment
-// loops invoke this wrapper on 0x14-byte hero-identity elements. Its retained
-// destructor call tears down the string at +4 before optional scalar delete.
+// The vector copy-assignment above and both TPlayerSlotAttributes
+// assignment loops invoke this wrapper on hero-identity elements.
 VA_COMPGEN(0x0045DA40, 0x21, SCALAR_DELETING_DTOR,
            type_map_hero_identity)
 
@@ -933,9 +916,7 @@ TCampaignBrief::~TCampaignBrief()
 }
 
 // Dreamcast proves this ordinary private helper and its four source-level
-// id groups. Complete expands it into CampaignBriefHandler, so no standalone
-// x86 row remains; retaining the call here lets VC6 make that natural /Ob2
-// decision from the real body and source order.
+// id groups; inlined in CampaignBriefHandler.
 DC_ADDRESS(0x05a2b4, 0x54)
 MAC_ADDRESS(0x067938, 0x68)
 int TCampaignBrief::convertID2HelpID(int id) const
@@ -1243,17 +1224,15 @@ std::string getCampaignName()
     return header->getCampaignName();
 }
 
-// COMDAT pairing: the unit's own std::_Construct<type_map_hero_identity> COMDAT,
-// mnemonic agreement 1.000 over all 142 instructions.
+// COMDAT pairing: std::_Construct<type_map_hero_identity>.
 VA_COMPGEN(0x0045d420, 0x170, STD_CONSTRUCT, type_map_hero_identity)
 
 VA_COMPGEN(0x0045d700, 0x1D6, STD_CONSTRUCT, CampaignScenarioPreview)
 
-// COMDAT pairing: _Tree<int, type_map_hero_info>::erase(first, last), 0.961.
+// COMDAT pairing: _Tree<int, type_map_hero_info>::erase(first, last).
 VA_COMPGEN(0x0045c070, 0x12B, TREE_ERASE_RANGE, type_map_hero_info)
 
-// COMDAT pairing: std::_Construct<pair<const int, type_map_hero_info>>, 0.993
-// against a 368 B object; newgame's two candidates are 347 and 343 B.
+// COMDAT pairing: std::_Construct<pair<const int, type_map_hero_info>>.
 VA_COMPGEN(0x0045d590, 0x16E, STD_CONSTRUCT, type_map_hero_info_pair)
 
 // COMDAT pairing: basic_string<char>::_Refcnt, 15 B against this
@@ -1285,17 +1264,12 @@ void std::char_traits<char>::assign(char& to, const char& from)
 
 #endif  // @carcass
 
-// COMDAT pairing: map<int, type_map_hero_info>'s COPY constructor, the second
-// half of the two-member ctor group whose first half is already claimed at
-// 0x45bf70 (190 B, the less+allocator form). 0x45dcb0 calls _Tree::_Copy and
-// _Construct<pair<const int, type_map_hero_info>>, which only the copy form
-// does, and RVA order matches COFF order in both arms.
+// COMDAT pairing: map<int, type_map_hero_info>'s COPY constructor (it calls
+// _Tree::_Copy and _Construct).
 VA_COMPGEN(0x0045dcb0, 0x1E5, CLASS_CTOR, map)
 
-// COMDAT pairing: _Tree<int, type_map_hero_info>::_Buynode - reached from the
-// copy ctor above and from seg_0019, and campaignbrief.obj emits exactly one.
+// COMDAT pairing: _Tree<int, type_map_hero_info>::_Buynode.
 VA_COMPGEN(0x0045dea0, 0x1D, TREE_BUYNODE, type_map_hero_info)
 
-// COMDAT pairing: vector<type_map_hero_identity>::_Ucopy (thiscall, three
-// pointer arguments, `ret 0xc`).
+// COMDAT pairing: vector<type_map_hero_identity>::_Ucopy.
 VA_COMPGEN(0x0045d230, 0x38, VECTOR_UCOPY, type_map_hero_identity)
