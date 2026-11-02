@@ -3824,9 +3824,10 @@ DATA(0x00660500) static long g_constThresholds[6] = {
 // local. The single mana-source Boolean expression also recovers the Mac
 // flag lifetime. Keep the recorded DC local spellings; the naming-only
 // control is byte-flat.
-// Reusing the existing start_point for the destination copy reproduces
-// all 1217 retail bytes. The older extra-local probe also did so but added
-// an unsupported destination local; that distinct probe remains rejected.
+// Keep the direct path argument: DC4145 copies it separately from start_point,
+// and Mac 0x345d4 passes it without storing to that local. Reusing start_point
+// reaches Windows100 but lowers Mac79.3785 to78.4819; an assignment argument
+// lowers Mac further to77.4373. Neither proves a new source boundary.
 DC_ADDRESS(0x034630, 0x44a)
 static unsigned char attemptTeleport(hero* current_hero,
                                       std::vector<pathCell>& path,
@@ -3945,8 +3946,7 @@ static unsigned char attemptTeleport(hero* current_hero,
         }
     } while (pathIndex < destination_index);
 
-    start_point = path[destination_index].m_point;
-    g_advManager->teleportTo(current_hero, start_point, 0,
+    g_advManager->teleportTo(current_hero, path[destination_index].m_point, 0,
                              0, 1, 0);
     current_hero->useSpell(mana_cost);
     ++current_hero->m_dWalkSpellsCast;

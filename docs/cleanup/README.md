@@ -55,14 +55,14 @@ four shared declarations. Rejected probes and remaining leads are recorded in
 the five lane documents rather than claimed complete.
 
 The combined targeted VC6 comparison preserves all current-source MAX values.
-The approved PR changes add seven exact game functions; #191 retains the
+The approved PR changes add six exact game functions; #191 retains the
 existing direction-selection function and excludes its unsupported identity
 ledger. #195 moves the existing packed-bit writer to one shared header and
 uses it in player, hero and RMG serialization. The retained return contract
 and checked-bit behavior are documented in [the PR review](pr-review.md).
 
 All 28 open PRs have a recorded disposition. Independent compiler checks cover
-19 acceptable or corrected candidates; rejected source models and older feature
+19 Windows candidates, including the later Mac-rejected #192; rejected source models and older feature
 drafts have explicitly limited review scopes. The remaining PRs stay for the
 user's review. Full landing gates and publication are recorded there separately.
 
@@ -106,3 +106,8 @@ source-owned score changes; incidental CUR movement is not a reason to add
 compiler-steering source. Editor changes use their correct image profile.
 Bank fresh measured scores and integrate the lanes through the repository's
 landing workflow.
+
+Final publication excludes #192: its Windows-exact local reuse lowers the Mac
+comparison and contradicts the stronger direct-argument evidence. The original
+call is retained; the PR remains for review. Its provisional integration
+history is preserved on the SSD branch, not included as a publication parent.

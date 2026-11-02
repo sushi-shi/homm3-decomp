@@ -22,7 +22,7 @@ are recorded separately below; “no static blocker” does not mean byte-verifi
 | [#119](https://github.com/sushi-shi/homm3-decomp/pull/119) | [59c1efbd8993](https://github.com/sushi-shi/homm3-decomp/commit/59c1efbd8993b89c5ab4eebafc02ceb0c53a76b1) | Conflicting feature draft; UI behavior and full historical comparisons remain unverified. |
 | [#146](https://github.com/sushi-shi/homm3-decomp/pull/146) | [c873a3a16af2](https://github.com/sushi-shi/homm3-decomp/commit/c873a3a16af23fad98f2b5746144a9e0918d0226) | Conflicting unfinished integration; HotA generation remains explicitly gated. |
 | [#191](https://github.com/sushi-shi/homm3-decomp/pull/191) | [67e44b625339](https://github.com/sushi-shi/homm3-decomp/commit/67e44b6253393a74e508f3560d4ba3277e9df5d2) | Raw PR blocked. Corrected local integration retains only cmbtmgr/spells; original command body and source-owned identities retained. |
-| [#192](https://github.com/sushi-shi/homm3-decomp/pull/192) | [3b6ad1004a5e](https://github.com/sushi-shi/homm3-decomp/commit/3b6ad1004a5e2a187586cbc2ae965c36b1634641) | Verified isolated target at 100%; locally integrated. Reused native local; source comment reconciled. |
+| [#192](https://github.com/sushi-shi/homm3-decomp/pull/192) | [3b6ad1004a5e](https://github.com/sushi-shi/homm3-decomp/commit/3b6ad1004a5e2a187586cbc2ae965c36b1634641) | Windows 100% candidate rejected by Mac/native preservation; original direct argument retained, PR excluded from publication. |
 | [#193](https://github.com/sushi-shi/homm3-decomp/pull/193) | [15a40826f920](https://github.com/sushi-shi/homm3-decomp/commit/15a40826f920da85a295b8cbd8596672c0bb4c1c) | Verified isolated target at 100%; locally integrated. Canonical signed-byte read preserves existing short-read behavior. |
 | [#194](https://github.com/sushi-shi/homm3-decomp/pull/194) | [875484190b65](https://github.com/sushi-shi/homm3-decomp/commit/875484190b65c38e8081d9cb9bfcd358ece600d7) | Verified isolated target at 100%; locally integrated. Retail proves both free and paid purchases consume stock. |
 | [#195](https://github.com/sushi-shi/homm3-decomp/pull/195) | [aba1fd5f5b92](https://github.com/sushi-shi/homm3-decomp/commit/aba1fd5f5b92d7be2955444b5db51498da352f75) | Raw and shared-writer candidates reach 100%; tested canonical shared writer locally committed, pending landing gates. |
@@ -245,15 +245,17 @@ clues, not unique source declarations. The optional counter/scope/materialized
 condition edits recover no additional established source fact that would
 justify adopting this candidate's loss.
 
-The final **local** #191 integration therefore keeps only `cmbtmgr`/`spells`,
-retains the complete previous `command.cpp` body, and omits the manual runtime
-alias. It does not adopt the measured losing command candidate. #192, #193,
-#194 and #215 are also locally integrated. #195's tested shared writer is
-locally committed with the duplicate removed. The five cleanup lane
-commits are locally integrated separately from these PR decisions. The combined 19-unit targeted Windows comparison passed with seven MAX gains
-and no MAX losses. Full editor/Mac landing gates remain the next step;
-isolated results do not substitute for them. No PR has been merged on GitHub or
-published by this work at this checkpoint, including corrected #191.
+The final #191 integration keeps only `cmbtmgr`/`spells`, retains the complete
+previous `command.cpp` body, and omits the manual runtime alias. The tested
+shared writer replaces #195's duplicate. #193, #194 and #215 are also included.
+The five cleanup lanes are integrated separately from these PR decisions.
+
+The provisional 19-unit Windows comparison had seven MAX gains and no MAX
+losses. Subsequent complete editor and Mac checks rejected one cleanup goto
+rewrite and #192 respectively, as detailed below. Final publication retains
+six game gains and #215's editor gain. #192 ancestry is excluded from
+`cleanup/verified-final-20261102`; the provisional integration branch remains
+available for audit. Publication uses the full serialized landing gates.
 
 ### Reproduction artifacts and context
 
@@ -313,3 +315,26 @@ source gate exposed the moved writer's stale reconciliation path, which was
 updated from `src/rmg.cpp` to `include/packed_bits.h` without adding a new
 exemption or changing its native-evidence basis. The cleanliness gate also
 moved the new guard-count enum into its owning creature-bank header.
+
+## Final #192 disposition
+
+The full Mac preservation check found its sole regression in #192:
+`attemptTeleport` 79.3785% to78.4819%. A natural assignment-expression
+variant lowered it further to77.4373%; the direct-call control reproduced
+79.3785%. DC4145 copies the selected point into the argument independently
+of start_point, and Mac0x345d4 passes the selected point without storing it
+to that local. The existing direct call is retained. Neither an invented
+platform fork nor an abstraction waiver is justified. The isolated Windows
+100% result above remains a measured rejected candidate, not the final source.
+
+The publication branch therefore excludes #192 ancestry and preserves the
+provisional integration branch for audit. It retains the five worker lanes and
+corrected #191/#193/#194/#195/#215 integrations: six new exact game functions
+and #215's additional exact editor counterpart. All other PRs remain open.
+
+The final full Mac checkpoint passes across 1,546 scored pairs with no
+unreviewed regression (713 exact). #194 improves its Mac comparison from
+81.9940% to97.3214%. Another 1,713 emitted pairs remain unavailable because
+of unresolved references, and 87 Windows-VA claims lack a full-TU body; these
+are explicit coverage limits, not successful comparisons. Ownership, inventory
+and cleanliness checks pass after the integration corrections.
