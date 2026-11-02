@@ -33,13 +33,13 @@ Head `3b6ad1004a5e2a187586cbc2ae965c36b1634641`. The direct final path-point arg
 
 Native Mac loads the final path point directly into the argument register, without a final write to the earlier `start_point` home. DC also stages the final argument at distinct stack offsets. Optimized code does not uniquely prove C++ spelling, but these observations support the retained direct expression; the optional copy restores no helper or independently established source fact that warrants its regression. No platform fork or abstraction waiver is justified. The final direct-source restoration reproduces 79.3785% again.
 
-Detailed evidence and artifacts: [pr192-mac-review.md](/tmp/homm3-pr-review-20261102/pr192-mac-review.md), including native disassembly, DC source layout and both experimental/restored compiler logs under `/tmp/homm3-cleanup-flow-20261102/build/cleanup-flow/`. Aggregate TU coverage was not enumerated in this focused rejection report and is not invented here.
+Detailed evidence and artifacts: [pr192-mac-review.md](mac/pr192-mac-review.md), including native disassembly, DC source layout and both experimental/restored compiler logs under `/tmp/homm3-cleanup-flow-20261102/build/cleanup-flow/`. Aggregate TU coverage was not enumerated in this focused rejection report and is not invented here.
 
 ## #202: preserved available siblings, constructor coverage gap
 
 Head `5304445fa9623127eea6e330bf9d2a55067bc135`. The identical candidate from the Windows two-state verification was checked at cleanup commit `d413ed6b6`. All twenty available adventuremapwindow scores remain identical (seventeen exact); all sixteen unavailable pair identities remain unavailable; zero claims lack emitted full-TU bodies. The changed constructor, Windows VA `0x00401510`, remains unavailable because anonymous TOC literal `@1845` has zero reviewed payload matches. This does not independently verify the changed constructor's Mac behavior or score.
 
-Detailed evidence: [naming-mac-review.md](/tmp/homm3-pr-review-20261102/naming-mac-review.md). Baseline and candidate logs/JSON are under `/tmp/homm3-cleanup-names-20261102/build/pr-review-202/`. The retained report also contains an older unrelated smackmgr row, excluded from the counts above. Authored source was restored byte-for-byte and the checkout is clean; generated object/report artifacts retain the last candidate until refreshed.
+Detailed evidence: [naming-mac-review.md](mac/naming-mac-review.md). Baseline and candidate logs/JSON are under `/tmp/homm3-cleanup-names-20261102/build/pr-review-202/`. The retained report also contains an older unrelated smackmgr row, excluded from the counts above. Authored source was restored byte-for-byte and the checkout is clean; generated object/report artifacts retain the last candidate until refreshed.
 
 
 ## #203/#208/#209: further coverage gaps and an edited-target regression
@@ -50,7 +50,7 @@ For #203, `advManager::processHover` (`0x0040e360`) cannot resolve its `type_poi
 
 For #209, `TGiveResourceWindow::update` (`0x005eaf50`) loses 0.0515463918 percentage points on Mac, 35.7731958763 → 35.7216494845. This is the changed function itself, not unchanged-source collateral. Its quantity alias restores no canonical helper or independently proven original source fact. Hold this candidate rather than waive preservation solely for its Windows gain. No new correction variant was tested in this review.
 
-Detailed report: [flow-mac-review.md](/tmp/homm3-pr-review-20261102/flow-mac-review.md). Baseline/candidate reports, logs and byte-for-byte restoration checks are in `/tmp/homm3-cleanup-flow-20261102/build/cleanup-flow/pr-mac/`. All three sources were restored; no banking/adoption/commit occurred.
+Detailed report: [flow-mac-review.md](mac/flow-mac-review.md). Baseline/candidate reports, logs and byte-for-byte restoration checks are in `/tmp/homm3-cleanup-flow-20261102/build/cleanup-flow/pr-mac/`. All three sources were restored; no banking/adoption/commit occurred.
 
 
 ## #205/#206: measured losses require source-aware decisions
@@ -72,7 +72,7 @@ Reviewed heads: #196 `626f09a97e2b8701a02de09df11e41b38cdc9e31`; #201 `fc20da881
 
 Likewise #205's Mac-only `normalizeAlignment` helper is not a scored row. Its prior native body evidence remains useful but is not an independently measured helper preservation result. The full #205 candidate, rather than a split hunk, produced the reported regression; its cause has not been isolated here.
 
-Detailed report: [types-mac-review.md](/tmp/homm3-pr-review-20261102/types-mac-review.md); machine-readable comparisons and baseline/candidate snapshots are in `types-mac/results.json` and `types-mac/*-report.json` under `/tmp/homm3-pr-review-20261102/`. All five sources were restored byte-for-byte, the tracked tree is clean, and the committed Mac ledger hash is unchanged.
+Detailed report: [types-mac-review.md](mac/types-mac-review.md); machine-readable comparisons and baseline/candidate snapshots are in `types-mac/results.json` and `types-mac/*-report.json` under `/tmp/homm3-pr-review-20261102/`. All five sources were restored byte-for-byte, the tracked tree is clean, and the committed Mac ledger hash is unchanged.
 
 ## #197: available callers preserved, changed target still unresolved
 
@@ -80,7 +80,7 @@ Reviewed head `07d26ae16a6b8ca04e17ce803bcfb208307116b8`. Units `questlogwindow`
 
 The edited `doQuestLog` (`0x0052e430`, Mac `0:0x14a280`) is unavailable in both states because `g_questLogWindow` lacks reviewed UDATA binding. Direct emitted-code comparison does **not** show an identical target: its 1048-byte body changes two bytes at `+0x2ff` and `+0x357`, corresponding to a matching temporary store/load moving from stack offset `0xac` to `0xa4`. All 29 symbolic cross-references remain identical. This is the sole changed code hunk across the four units; linked retail scoring cannot determine whether its change improves or worsens the target while that binding remains unresolved. Do not turn the 141 preserved available pairs into a target-preservation claim.
 
-Detailed report: [editor-mac-review.md](/tmp/homm3-pr-review-20261102/editor-mac-review.md). Baseline/candidate logs, reports and emitted hunk snapshots are under `/tmp/homm3-cleanup-editors-20261102/build/pr-review-197/mac/` and `build/pr197-mac-*.log`. Both source/header files were restored byte-for-byte; the worktree is clean and no ledger was banked.
+Detailed report: [editor-mac-review.md](mac/editor-mac-review.md). Baseline/candidate logs, reports and emitted hunk snapshots are under `/tmp/homm3-cleanup-editors-20261102/build/pr-review-197/mac/` and `build/pr197-mac-*.log`. Both source/header files were restored byte-for-byte; the worktree is clean and no ledger was banked.
 
 ## #198/#199/#210: one target improvement, other target gaps
 
@@ -92,7 +92,7 @@ Reviewed heads: #198 `8d6f0e14708568d4f4ddff31b118e67d24aa9a25`; #199 `2b6cbbba8
 
 #210's `TRmgTreasureGroup::reset` (`0x00535040`) cannot resolve its vector-deleter `clear` call at `+0x24`; `initializeZones` (`0x0053bcb0`) cannot resolve a vector indexing call at `+0x334`; `placeZoneTreasures` (`0x00547360`) lacks a reviewed payload for anonymous literal `@1039`. The exact available `assembleTreasureGroup` is a different function and does not substitute for those targets.
 
-Detailed report: [enums-mac-review.md](/tmp/homm3-pr-review-20261102/enums-mac-review.md), with the full named unavailable/no-body roster in `enums-mac-unavailable.tsv` beside it. Baseline/candidate/restored snapshots are in `/tmp/homm3-cleanup-enums-20261102/build/pr-mac-review/`. A final restored-source build reproduces all 175 baseline scored values (61 exact), with the original 242 emitted-unavailable and 21 no-body claims. Sources are restored, checkout clean, and no scores banked.
+Detailed report: [enums-mac-review.md](mac/enums-mac-review.md), with the full named unavailable/no-body roster in `/tmp/homm3-pr-review-20261102/enums-mac-unavailable.tsv`. Baseline/candidate/restored snapshots are in `/tmp/homm3-cleanup-enums-20261102/build/pr-mac-review/`. A final restored-source build reproduces all 175 baseline scored values (61 exact), with the original 242 emitted-unavailable and 21 no-body claims. Sources are restored, checkout clean, and no scores banked.
 
 ## Scope of this supplement
 

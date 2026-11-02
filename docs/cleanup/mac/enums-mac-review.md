@@ -66,7 +66,7 @@ Total baseline: **175 scored, 61 exact, 242 emitted unavailable, 21 claims
 without a full-TU body**. Unavailable rows are coverage gaps, not zero-score
 matches or regression waivers. The complete named baseline and per-candidate
 unavailable/no-body roster, with the tool's reason for every pair, is in
-[`enums-mac-unavailable.tsv`](enums-mac-unavailable.tsv).
+`/tmp/homm3-pr-review-20261102/enums-mac-unavailable.tsv`.
 
 ## Method and restoration
 
