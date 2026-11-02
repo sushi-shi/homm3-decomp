@@ -5469,14 +5469,14 @@ VA_AT(h3maped, 0x004a2ffa, 0xc8)
 void type_random_map_generator::recenterZone(TRmgZone* zone)
 {
     TRmgZoneBounds bounds = zone->m_bounds;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
+    int count = 0;
     TRmgMapPosition position;
     position = zone->getLevelPosition();
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition total;
     total.m_z = position.m_z;
     TRmgMapPosition cell;
     cell.m_z = position.m_z;
-    int count = 0;
     total.m_x = 0;
     total.m_y = 0;
     for (cell.m_y = bounds.m_minimumY; cell.m_y < bounds.m_maximumY; ++cell.m_y) {
