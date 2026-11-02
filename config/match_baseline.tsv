@@ -2075,7 +2075,7 @@ game	?readMapHeroSetups@game@@QAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.00
 game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	95.9038	95.9038	95.9038	0xc3ef0	tokens1:f74d344a5d46
 game	?readString@NewSMapHeader@@SIHPAVTAbstractFile@@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xc6010	tokens1:ff6698c8d216
 game	?readVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3200	tokens1:e3922c9df6c0
-game	?receiveSaveGame@game@@QAEHHHHEE@Z	100.0000	100.0000	100.0000	0xcbd40	tokens1:8c3df2f6e5d1
+game	?receiveSaveGame@game@@QAEHHHHEE@Z	100.0000	100.0000	100.0000	0xcbd40	tokens1:3b24fe15bad1
 game	?recordMonsterIdentifier@game@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xced40	tokens1:be6dee7ca98a
 game	?replaceRecruit@game@@QAEXHJ@Z	100.0000	100.0000	100.0000	0xc86a0	tokens1:534bd63d401f
 game	?reset@HeroExtra@@QAEXH@Z	100.0000	100.0000	100.0000	0xb8450	tokens1:e762d74fb43a
@@ -2135,7 +2135,7 @@ game	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfef0	-
 game	?test@?$bitset@$0BM@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd17d0	-
 game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
-game	?transmitSaveGame@game@@QAEHHH_N0@Z	97.4264	97.4264	97.4264	0xcafd0	tokens1:4a480194c767
+game	?transmitSaveGame@game@@QAEHHH_N0@Z	97.4264	97.4264	97.4264	0xcafd0	tokens1:8bba4425564c
 game	?turnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	tokens1:09ac63bef778
 game	?turnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	tokens1:b9f191ddf209
 game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	tokens1:9bea0f215987
@@ -4795,12 +4795,12 @@ window	?widgetSetStatus@heroWindow@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1feed0
 window	?windowHandler@CHeroWindowEx@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ff820	tokens1:000f838740b8
 winfile	??0File@@QAE@XZ	100.0000	100.0000	100.0000	0x1ffb20	tokens1:e4f2da4b3fb9
 winfile	??1File@@QAE@XZ	100.0000	100.0000	100.0000	0x1ffb40	tokens1:368225ccb095
-winfile	?close@File@@UAEEXZ	100.0000	100.0000	100.0000	0x1ffb70	tokens1:4eb1ba5192ad
-winfile	?deleteFile@File@@SIEPBD@Z	100.0000	100.0000	100.0000	0x1ffb90	tokens1:f7167cc9b8f5
+winfile	?Close@File@@UAE_NXZ	100.0000	100.0000	100.0000	0x1ffb70	tokens1:ddd26bc63b42
+winfile	?Delete@File@@SI_NPBD@Z	100.0000	100.0000	100.0000	0x1ffb90	tokens1:744f27ca59d3
+winfile	?IsOpen@File@@UAE_NXZ	100.0000	100.0000	100.0000	0x1ffb60	tokens1:6bb86c930b8e
+winfile	?Open@File@@UAE_NPBDW4FileMode@@@Z	100.0000	100.0000	100.0000	0x1ffbc0	tokens1:335a7892484a
 winfile	?getLength@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffd90	tokens1:76de7791b03f
 winfile	?getPosition@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffd70	tokens1:d593fd07c042
-winfile	?isOpen@File@@UAEEXZ	100.0000	100.0000	100.0000	0x1ffb60	tokens1:4f5d7bab5bee
-winfile	?open@File@@UAEEPBDW4FileMode@@@Z	100.0000	100.0000	100.0000	0x1ffbc0	tokens1:1b0520d2f72e
 winfile	?read@File@@UAEKPAXK@Z	100.0000	100.0000	100.0000	0x1ffc80	tokens1:953966a5a094
 winfile	?seek@File@@UAEKKK@Z	100.0000	100.0000	100.0000	0x1ffd20	tokens1:429b08f48dee
 winfile	?seekBegin@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffcd0	tokens1:0393ac9da581

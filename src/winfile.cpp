@@ -44,41 +44,41 @@ File::~File()
 
 VA(0x005ffb60, 0xB)
 DC_ADDRESS(0x19849c, 0xa)
-unsigned char File::isOpen()
+bool File::IsOpen()
 {
     return m_file != NULL;
 }
 
 VA(0x005ffb70, 0x20)
 DC_ADDRESS(0x1984a8, 0x26)
-unsigned char File::close()
+bool File::Close()
 {
     if (!m_file)
-        return FALSE;
+        return false;
 
     CloseHandle(m_file);
     m_file = NULL;
-    return TRUE;
+    return true;
 }
 
 // E:\gamedcs\winfile.cpp:70 - no retail body; inlined into Delete and
 // Open below (the one-pass inliner needs the body before its callers).
 DC_ADDRESS(0x1984ec, 0x4)
-inline unsigned char File::exists(const char* filename)
+inline bool File::Exists(const char* filename)
 {
     return access(filename, 0) == 0;
 }
 
-// Original: File::Delete; winfile.cpp:77
-// The semantic suffix avoids the C++ keyword delete after case normalization.
+// Original public ?Delete@File@@SA_NPBD@Z proves both spelling and bool.
+// winfile.cpp:77; the normalized deleteFile spelling was project-authored.
 VA(0x005ffb90, 0x24)
 DC_ADDRESS(0x1984f0, 0x18)
-unsigned char File::deleteFile(const char* filename)
+bool File::Delete(const char* filename)
 {
-    unsigned char deleted;
+    bool deleted;
 
-    if (!exists(filename))
-        return FALSE;
+    if (!Exists(filename))
+        return false;
 
     deleted = DeleteFileA(filename) != 0;
     return deleted;
@@ -86,25 +86,25 @@ unsigned char File::deleteFile(const char* filename)
 
 VA(0x005ffbc0, 0x84)
 DC_ADDRESS(0x198568, 0x4e)
-unsigned char File::open(const char* filename, FileMode mode)
+bool File::Open(const char* filename, FileMode mode)
 {
-    File::close();
+    File::Close();
 
-    if (exists(filename)) {
+    if (Exists(filename)) {
         m_file = CreateFileA(filename, mode, FILE_SHARE_READ, NULL, OPEN_EXISTING,
                               FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS, NULL);
     } else {
         if (mode == modeRead)
-            return FALSE;
+            return false;
         m_file = CreateFileA(filename, mode, FILE_SHARE_READ, NULL, CREATE_NEW,
                               FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS, NULL);
     }
 
     if (m_file == INVALID_HANDLE_VALUE) {
         m_file = NULL;
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
 }
 
 VA(0x005ffc50, 0x30)
