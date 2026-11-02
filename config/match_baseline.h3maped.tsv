@@ -6012,7 +6012,7 @@ rmg	?push_back@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@
 rmg	?readObjectPlacementRules@t_abstract_random_generator@@QAEXXZ	99.8568	99.8568	99.8568	0x9dc9e	-
 rmg	?readRmgTemplateConnections@@YAXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHH@Z	96.9600	96.9600	96.9600	0x9f7c4	-
 rmg	?readRmgTemplateZones@@YAXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	99.9754	99.9754	99.9754	0x9f2f5	-
-rmg	?recenterZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	91.4699	91.4699	91.4699	0xa2ffa	tokens1:82c646897dec
+rmg	?recenterZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0xa2ffa	tokens1:15eca5c05d97
 rmg	?releaseReservation@type_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9c264	-
 rmg	?releaseReservation@type_object@@UAEXXZ	100.0000	100.0000	100.0000	0xed06	-
 rmg	?removeObject@TRmgMapItem@@QAEXPAVtype_object@@@Z	100.0000	100.0000	100.0000	0x99ee8	-

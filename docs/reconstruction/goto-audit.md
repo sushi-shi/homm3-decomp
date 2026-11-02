@@ -6,6 +6,14 @@ H1/H2-style review and current dispositions are in
 has changed the surviving inventory, including reintroducing an RMG gap-scan
 exit. The old totals and probe scores are retained as historical evidence.
 
+The renewed cleanup's final total is **31 gotos**, unchanged from its starting
+tree. Its `_setTriggerMask` direct-return probe stayed game-exact but lowered
+`h3maped` source-owned MAX from 100% to 98.72% in the complete integration
+build, so the original goto was restored before push. Four terrain-scan
+assignments moved outside conditions remain. This disposition supersedes the
+worker's intermediate total of 30; the separate historical checkpoints below
+are unchanged.
+
 The recorded inventory is **31 goto statements in 12 functions across 10 files**.
 That is **285 fewer than the initial 316 (90.2%)**, across 117 functions;
 111 original functions and 45 files no longer contain gotos. Every surviving

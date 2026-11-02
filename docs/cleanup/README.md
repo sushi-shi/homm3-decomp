@@ -46,7 +46,9 @@ checkout. Existing unrelated worktrees are not modified.
 The five worker commits are integrated into the SSD review branch. The enum
 lane removes a duplicate artifact-class domain and names creature-bank extents;
 the editor lane replaces 17 tile-direction literals. Control-flow cleanup
-removes one goto and four assignments from conditions. The Boolean lane
+moves four assignments out of conditions. All tested goto removals remain
+rejected: the last candidate was game-exact but lowered the map-editor
+comparison, so integration restored its shared exit. The Boolean lane
 restores 16 native predicate declarations, preserving original spellings and
 unproven byte storage. Naming cleanup clarifies video state and centralizes
 four shared declarations. Rejected probes and remaining leads are recorded in

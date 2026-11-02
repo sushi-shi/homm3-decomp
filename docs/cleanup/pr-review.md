@@ -45,7 +45,7 @@ are recorded separately below; “no static blocker” does not mean byte-verifi
 | [#212](https://github.com/sushi-shi/homm3-decomp/pull/212) | [5b35a5e11aa0](https://github.com/sushi-shi/homm3-decomp/commit/5b35a5e11aa022609955962753996fbc0bf5ccce) | Revise constructor: discarded assignment ternary justified only by compiler budget. |
 | [#213](https://github.com/sushi-shi/homm3-decomp/pull/213) | [b2d4a6ad8cc6](https://github.com/sushi-shi/homm3-decomp/commit/b2d4a6ad8cc6b7e49175c35209431d484e09f040) | Revise: new unnecessary goto; /Gr already provides the claimed fastcall ABI. |
 | [#214](https://github.com/sushi-shi/homm3-decomp/pull/214) | [aa04d6b3b1ab](https://github.com/sushi-shi/homm3-decomp/commit/aa04d6b3b1ab8da4b04af03ef2b58c6daadbba51) | Blocked: unchecked GAME alias admission and redundant compiler-state guard. |
-| [#215](https://github.com/sushi-shi/homm3-decomp/pull/215) | [b5a507f312d4](https://github.com/sushi-shi/homm3-decomp/commit/b5a507f312d44441c59619fd5caa46abbb8dda6c) | Verified isolated game target at 100%; locally integrated with residual note refreshed. Editor result remains for integration gates. |
+| [#215](https://github.com/sushi-shi/homm3-decomp/pull/215) | [b5a507f312d4](https://github.com/sushi-shi/homm3-decomp/commit/b5a507f312d44441c59619fd5caa46abbb8dda6c) | Verified isolated game target at 100%; locally integrated with residual note refreshed. Full editor comparison also reaches 100% (previously 91.4699%). |
 
 ## Blocking findings
 
@@ -291,3 +291,19 @@ The coordinator context compares `cmbtmgr`, `command`, `spells`, `ai_player`,
 families did not invent variants to fill the width. The nine-state
 coordinator run kept eight elites. Preserve these context qualifications when
 quoting a score outside this document.
+
+## Integration checkpoint
+
+The full game build compiled, compared and linked with no unresolved externals
+and no source-edit MAX losses. The first full map-editor pass found a cleanup
+regression outside the reviewed PRs: `_setTriggerMask` fell from 100% to
+98.72% after replacing its shared exit with a direct return. The game had
+remained exact. Landing was stopped before publication; the original goto
+was restored and its rejected probe recorded beside the function. This is
+why the lane-local checks were not treated as complete cross-image proof.
+
+The restored trigger body was recompiled at 100% in both images; both
+ledgers were refreshed with no remaining source-edit MAX loss. The same
+full editor comparison independently raises #215 recenterZone from
+91.4699% to 100%, while the shared packed-bit writer preserves its RMG
+editor consumers. Publication remains subject to the restarted full gates.
