@@ -3154,21 +3154,10 @@ int game::save(TAbstractFile* outfile)
         return -1;
     }
 
-    // Complete's packed hero-player masks have no DC loop counterpart.
-    // Retail retains bitset<8>::test. Reading through const operator[]
-    // preserves that boundary without a pin (59.5944% for the whole save);
-    // direct test(), including on a const reference, expands it (57.4921%).
-    for (i = 0; i < HERO_COUNT; ++i) {
-        const std::bitset<NUM_PLAYERS>& players = m_heroPoolMap[i];
-        unsigned char poolBits[1];
-        poolBits[0] = 0;
-        unsigned int player;
-        for (player = 0; player < NUM_PLAYERS; ++player) {
-            if (players[player])
-                poolBits[player >> 3] |= 1 << (player & 7);
-        }
-        outfile->write(poolBits, sizeof(poolBits));
-    }
+    // Mac 0xd32f0..0xd3368 expands the shared byte-buffer writer for each
+    // hero's player mask, retaining its const bitset<8>::test call.
+    for (i = 0; i < HERO_COUNT; ++i)
+        writePackedBits(outfile, m_heroPoolMap[i]);
 
     // The twelve guarded scalar writes. Retail carries FOUR temps for
     // them, not one: a char reused across writes 1-2 and 7-9, an unsigned
@@ -6046,19 +6035,22 @@ void game::applyMapHeaderAvailability()
 // adds eleven CFG blocks.  Retail also packs the final availability byte as
 // a one-byte array; spelling that literally reproduces its index arithmetic
 // but changes the later bitset range-throw phase and falls to 80.44%.  The
-// scalar spelling below is the measured whole-function plateau.  Reusing the
-// saved name length, rather than calling length() again, is likewise
+// scalar spelling was the measured whole-function plateau. The shared writer
+// now owns that native array operation; see docs/matching/packed-bit-writers.md.
+// Reusing the saved name length, rather than calling length() again, is likewise
 // codegen-significant: the second inline candidate moves the throw phase and
 // falls to 79.19%.
 // DC game.cpp:6920 records construction of the local string from the saved
-// hero name; Mac 0xdb804+0x40c retains that constructor call. Direct
-// construction raises VC6 from 89.9519% to 90.3579% and gives the Mac
+// hero name; Mac 0xdb804+0x40c retains that constructor call. An earlier direct
+// construction probe raised VC6 from 89.9519% to 90.3579% and gave the Mac
 // candidate the same 1776-byte extent as retail, with one direct-call gap.
 // DC 0xb0754's twenty gzwrite calls stage each field DC shares through a
 // local buffer, so those writes stay direct. Mac swaps the Complete-only
 // alignment and name length as owned values, which keep writeValue; the
 // setup key and portrait reuse enumBuffer like the other enum writes
 // (95.51%; writeValue<char> for those two gives 78.12%).
+// Current shared packed-writer recovery: MAX 95.45 -> 88.34%; keep the native
+// array operation and helper call through the remaining string inline mismatch.
 VA(0x004c4f10, 0x71D)
 DC_ADDRESS(0x0b0188, 0x5cc)
 MAC_ADDRESS(0x0db804, 0x6f0)  // game::Save caller + DC identity + stream-write order
@@ -6200,12 +6192,8 @@ int NewSMapHeader::save(TAbstractFile* outfile)
         writeValue<int>(outfile, LITTLE_ENDIAN_LONG(count));
         outfile->write(it->second.m_name.c_str(), count);
 
-        ucharBuffer = 0;
-        for (i = 0; i < NUM_PLAYERS; ++i) {
-            if (it->second.m_players.test(i))
-                ucharBuffer |= 1 << i;
-        }
-        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+        // Mac 0xdbe4c..0xdbeb4 owns a one-byte array and ignores write status.
+        writePackedBits(outfile, it->second.m_players);
     }
 
     return 0;

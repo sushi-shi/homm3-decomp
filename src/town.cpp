@@ -346,7 +346,7 @@ int town::load(TAbstractFile* infile, int saveVersion)
 // mutable-proxy path to test<70>. See the source abstraction annotation below.
 VA(0x005bd2f0, 0x402)
 DC_ADDRESS(0x165988, 0x3d4)
-MAC_ADDRESS(0x1b2290, 0x5e8)  // carcass promotion; anchor-callee armyGroup::save; caller game::Save's town pool
+MAC_ADDRESS(0x1b2290, 0x5e8) // MAC_ABSTRACTION_FROM(tokens1:cf216604c9e5,64.6164): restore the complete mutable writePackedBitsCount operation expanded at native Mac 0x1b2714..0x1b27a8 while preserving the caller-owned 70-byte buffer, signed spell bound, proxy access and raw write-count guard. Same linked extent and named calls; score 64.5503. See docs/matching/packed-bit-writers.md.
 int town::save(TAbstractFile* outfile)
 {
     char charBuffer;

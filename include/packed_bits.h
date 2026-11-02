@@ -39,20 +39,22 @@ inline std::bitset<N> readPackedBits(TAbstractFile* infile)
     return result;
 }
 
-// The same LSB-first writer expands in playerData::save (Mac 0xcd1f0)
-// and hero::save (Mac 0xf3d84). Cross-TU use owns this shared header body.
-// Scalar output uses the canonical writeValue in abstractfile.h. The retained
-// editor writers at 0x4aed89..0x4af09b own their packed
-// bytes, checked bit tests and stream write, then return whether the complete
-// byte count was written. Loki's writeBitset independently keeps these three
-// operations in one helper. The former separate encoder had no native claim
-// or independent caller and incorrectly split that operation. All six editor
-// instances match retail with the counted zero fill also expanded by Mac.
+// One complete LSB-first writer serves game, hero and RMG TUs. Their native
+// expansions support a shared header; name and original filename are unknown.
+// The retained editor RMG bodies at 0x4aed89..0x4af09b own zeroing, checked bit
+// access and one stream write, returning full-width complete-write success.
+// Mac hero (-O1) and RMG expand the operation and retain bitset::test. A full-TU
+// ordinary/inline probe reproduces that boundary with explicit inline and const
+// subscript. The counted clear also avoids a retained fill_n / zero-TOC load.
+// This is source-model evidence, not a recovered native inline declaration.
+// Loki's void writeBitset has a distinct throwing editor-stream contract.
+// See docs/matching/packed-bit-writers.md for placement and all caller families.
 template <size_t N>
-int writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
+inline int writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
 {
     unsigned char packed[(N + 7) / 8];
-    std::fill_n(packed, sizeof(packed), 0);
+    for (unsigned int byte = 0; byte < sizeof(packed); ++byte)
+        packed[byte] = 0;
     for (unsigned int index = 0; index < N; ++index) {
         if (bits[index])
             packed[index >> 3] |= 1 << (index & 7);

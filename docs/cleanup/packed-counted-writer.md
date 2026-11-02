@@ -3,8 +3,9 @@
 `writePackedBitsCount` in `packed_bits.h` now owns the repeated zero/pack/write
 operation for all four `NewfullMap::saveObjectType` masks and the padded spell
 mask in `town::save`. It is a distinct raw-count API, not a constness-dependent
-overload of the existing const success-returning writer. That writer and the
-reader helpers remain unchanged.
+overload of the existing const success-returning writer. The
+[combined writer audit](../matching/packed-bit-writers.md) covers that separate
+writer's placement and recovery; reader helpers remain unchanged.
 
 DC `mapcell.obj:0xf22cc` names one `outBuf[6]`, signed `int i` and `int count`;
 lines 3684/3696/3708/3720 retain mutable bitset subscript/proxy conversions.
@@ -29,7 +30,8 @@ extent was rejected by VC6 (C2265/C2783), so caller storage and extent are passe
 explicitly. Native Mac expands the entire writer through the mutable proxy to
 `test`; an ordinary template left a new writer call. `inline` reproduces the
 observed expansion. No const conversion, platform fork, inline pin, dummy
-statement, new linking manifest, or score waiver was introduced.
+statement or new linking manifest was introduced. Integration records the
+specific town abstraction exception against its preceding source hash/CUR.
 
 ## Targeted results
 
@@ -52,7 +54,8 @@ bytes out of 1512); linked candidate extent remains 1496 bytes and the same
 named direct-call offsets/targets remain: armyGroup::save, memset, test<70>.
 Both baseline and candidate have the existing memset-versus-native-bzero
 call difference. The remaining one-byte score movement is recorded without
-claiming an exact causal instruction or adding a Mac waiver.
+claiming an exact causal instruction. The owning source's one-time abstraction
+annotation covers this canonical helper recovery, not future regressions.
 `saveObjectType` is unavailable in both states due to the existing unresolved
 `writeScalar<char>` relocation; its shape/call report confirms four retained
 `test<48>` calls, the mutable proxy setup and no new writer call. This is source

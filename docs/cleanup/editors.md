@@ -157,6 +157,7 @@ subscript spelling or header placement alone solves retail inlining.
 
 Banking was attempted after the final targeted build. `status update` correctly
 refused because the shared RawStream edit makes76 other unit receipts stale.
-The worker does not bypass freshness or edit scores manually. The coordinator's
-full integration build must refresh those units and bank the combined scores;
-this source commit therefore leaves the prior ledger untouched.
+The worker did not bypass freshness or edit scores manually. Integration's
+fresh map-editor comparison refreshes those receipts and banks the combined
+scores, retaining HIST. The source-only worker commit leaves the prior ledger
+untouched; the coordinator's follow-up owns that score update.

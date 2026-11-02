@@ -43,7 +43,7 @@ are recorded separately below; “no static blocker” does not mean byte-verifi
 | [#192](https://github.com/sushi-shi/homm3-decomp/pull/192) | [3b6ad1004a5e](https://github.com/sushi-shi/homm3-decomp/commit/3b6ad1004a5e2a187586cbc2ae965c36b1634641) | Windows 100% candidate rejected by Mac/native preservation; original direct argument retained, PR excluded from publication. |
 | [#193](https://github.com/sushi-shi/homm3-decomp/pull/193) | [15a40826f920](https://github.com/sushi-shi/homm3-decomp/commit/15a40826f920da85a295b8cbd8596672c0bb4c1c) | Verified isolated target at 100%; locally integrated. Canonical signed-byte read preserves existing short-read behavior. |
 | [#194](https://github.com/sushi-shi/homm3-decomp/pull/194) | [875484190b65](https://github.com/sushi-shi/homm3-decomp/commit/875484190b65c38e8081d9cb9bfcd358ece600d7) | Verified isolated target at 100%; locally integrated. Retail proves both free and paid purchases consume stock. |
-| [#195](https://github.com/sushi-shi/homm3-decomp/pull/195) | [aba1fd5f5b92](https://github.com/sushi-shi/homm3-decomp/commit/aba1fd5f5b92d7be2955444b5db51498da352f75) | Raw and shared-writer candidates reach 100%; tested canonical shared writer locally committed, pending landing gates. |
+| [#195](https://github.com/sushi-shi/homm3-decomp/pull/195) | [aba1fd5f5b92](https://github.com/sushi-shi/homm3-decomp/commit/aba1fd5f5b92d7be2955444b5db51498da352f75) | Raw and shared-writer candidates reach 100%; canonical shared writer published. Follow-up caller/placement audit is linked below. |
 | [#196](https://github.com/sushi-shi/homm3-decomp/pull/196) | [626f09a97e2b](https://github.com/sushi-shi/homm3-decomp/commit/626f09a97e2b8701a02de09df11e41b38cdc9e31) | Verified isolated target at 100%; native shutdown-load order supports the loop. |
 | [#197](https://github.com/sushi-shi/homm3-decomp/pull/197) | [07d26ae16a6b](https://github.com/sushi-shi/homm3-decomp/commit/07d26ae16a6b8ca04e17ce803bcfb208307116b8) | Verified isolated target at 100%, including three calling units; explicit convention and element references. |
 | [#198](https://github.com/sushi-shi/homm3-decomp/pull/198) | [8d6f0e147085](https://github.com/sushi-shi/homm3-decomp/commit/8d6f0e14708568d4f4ddff31b118e67d24aa9a25) | Verified isolated target at 100%; unused current-layout overlay types remain as cleanup. |
@@ -104,35 +104,25 @@ Line positions below refer to the downloaded PR diffs, before integration.
 
 ## Packed-bit writer (#195)
 
-The PR's new TU-local void writer duplicates `rmg.cpp`'s existing
-`writePackedBits` template. Its six RMG callers serialize hero availability
-and disabled artifact/spell/skill masks. `hero::save` contains the same
-48-bit pack/write operation; `playerData::save` writes 12 bits. Native Mac
-`0xcd1f0..0xcd25c` and `0xf3d84..0xf3e08` independently show zero-filled
-buffers, const bit tests, LSB-first packing and one stream write. The hero
-body's counted zero-fill is evidence against its current memset spelling.
+The initial review found the PR-local void writer duplicated RMG's complete
+pack-and-write template. The published correction put that canonical body in
+`include/packed_bits.h`, retained its integer complete-write success contract,
+and restored calls from player and hero saving. That initial eight-site scope
+was incomplete; it did not establish all consumers or the explicit-inline
+choice. The PR remains merged.
 
-The tested shared candidate puts one ordinary template body in `packed_bits.h`,
-retains the existing RMG integer success-result contract, and calls it from
-player and hero saving. Cross-TU visibility supports header ownership; the
-original helper name and exact original placement remain inferred. No forced
-inline control is added. RMG's existing return comparison remains part of
-its retained helper; player/hero callers continue ignoring the write result.
-Both the raw PR and this shared-writer candidate independently reproduce
-`playerData::save` at 100%, with zero projected MAX losses, including the
-checked hero/RMG consumers. The shared version is locally applied for
-integration, not yet published; it preserves one existing implementation
-rather than adding the PR's duplicate TU-local void writer.
+The [follow-up writer audit](../matching/packed-bit-writers.md) records the full
+source sweep, native placement evidence, further game/editor callers, distinct
+raw-count and padded formats, and compiler costs. Cross-TU expansion supports a
+shared header, but neither the original game helper name nor original filename
+has been recovered. Loki's proven `writeBitset` name belongs to a separate
+`TRawOStream` interface and must not be transferred to the game API.
 
-Other similar code is not automatically interchangeable:
-
-- The editors already own `writeBitset` for their different `TRawOStream`
-  interface, including its stream/error semantics. A matching bit order does
-  not justify changing that stream boundary.
-- `NewfullMap::saveObjectType` writes four masks and checks each returned byte
-  count using `< 6`. The existing RMG helper returns equality-as-success;
-  blindly replacing the checked paths would change their result contract.
-  Keep those paths pending separate native/error-contract evidence.
+The initial integration made `playerData::save` exact without MAX losses.
+That result describes the initial scope only. The follow-up preserves supported
+helper calls through measured caller losses; it must not inherit the earlier
+zero-loss claim. Previously unavailable Mac pairs also require named call-stream
+inspection: a passing global score gate did not prove their helper expansion.
 
 ## Older feature drafts
 
