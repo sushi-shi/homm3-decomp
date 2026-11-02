@@ -3674,7 +3674,7 @@ sacrifice_window	?allCreatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000	
 sacrifice_window	?artifactClick@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0	tokens1:61e93f66af66
 sacrifice_window	?backpackClick@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1636c0	tokens1:695c7c75a428
 sacrifice_window	?convertWithCommas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	tokens1:0bb4a7234f40
-sacrifice_window	?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z	99.5747	100.0000	100.0000	0x160380	tokens1:3fb591ab89ef
+sacrifice_window	?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x160380	tokens1:3fb591ab89ef
 sacrifice_window	?createCreatureIcons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70	tokens1:8908d3cf447c
 sacrifice_window	?createCreatureIcons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760	tokens1:18a815c94942
 sacrifice_window	?createCreatureWidgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0	tokens1:c99876b04e4c
@@ -4172,7 +4172,7 @@ smackmgr	?videoDrawCurrentFrame@@YIXXZ	100.0000	100.0000	100.0000	0x197740	token
 smackmgr	?videoDrawRects@@YIXXZ	90.3379	90.3379	90.3379	0x1979d0	tokens1:f2476431bfd7
 smackmgr	?videoNeedsUpdate@@YI_NXZ	100.0000	100.0000	100.0000	0x197930	tokens1:c75e58379230
 smackmgr	?videoNextFrame@@YIXXZ	100.0000	100.0000	100.0000	0x1976e0	tokens1:d4f9efd57092
-smackmgr	?videoOpen@@YIXHHHHHH_N0@Z	100.0000	100.0000	100.0000	0x197570	tokens1:3f8b3fc6cd47
+smackmgr	?videoOpen@@YIXHHHHHH_N0@Z	100.0000	100.0000	100.0000	0x197570	tokens1:bc65d7aebec8
 smackmgr	?videoPause@@YIXXZ	100.0000	100.0000	100.0000	0x1977a0	tokens1:16a01175da6b
 smackmgr	?videoPlay@@YIHHHHHH@Z	100.0000	100.0000	100.0000	0x1972d0	tokens1:77ca11c52983
 smackmgr	?videoPlaying@@YI_NXZ	100.0000	100.0000	100.0000	0x197990	tokens1:66d48391aafc
