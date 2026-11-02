@@ -2501,8 +2501,6 @@ unsigned char CSaveScreen::isSaved()
     return m_screenSaved;
 }
 
-void openSmackerVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
-
 VA(0x00557410, 0x1E)
 DC_ADDRESS(0x11ec64, 0x22)
 MAC_ADDRESS(0x215048, 0x2c)
