@@ -72,16 +72,16 @@ void TTown::TTimedEvent::read(TRawIStream* pIStream, int version)
     *pIStream >> aReserved;
 }
 
+// Canonical writer recovery: current VC6 retains writeBitset (veto 38/12),
+// where retail expands it. MAX 100 -> 40.16%; const[]/inline probes byte-flat.
 VA(0x004c19e0, 0xa0)
 void TTown::TTimedEvent::write(TRawOStream* pOStream, int version) const
 {
     static_cast<const ::TTimedEvent*>(this)->write(pOStream, version);
-    unsigned char aBuildMask[(s_kNumBuildings + 7) / 8];
-    fill_n(aBuildMask, sizeof(aBuildMask), 0);
-    for (unsigned int building = 0; building < s_kNumBuildings; building++)
-        if (_m_buildMask.test(building))
-            aBuildMask[building / 8] |= 1 << building % 8;
-    *pOStream << aBuildMask << _m_generatorBonuses;
+    // Loki 0x08186cf3 retains getBuildMask; the following clear/pack/write
+    // operation is the writeBitset body retained at 0x0837b380/0x0837b580.
+    writeBitset(*pOStream, getBuildMask());
+    *pOStream << _m_generatorBonuses;
     signed char aReserved[kNumTownEventReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
@@ -376,6 +376,9 @@ bool TTown::isCustomized() const
 
 // Loki writes the cast event count (Loki Town.cpp 975). Residual: retail
 // stores the count after loading the stream, as a named size_type count does.
+// The recovered spell writeBitset calls currently veto 31/12 instead of
+// retail expansion: MAX 98.84 -> 68.59%. Const[]/inline probes were byte-flat;
+// operation identity supports reuse without proving unique original spelling.
 VA(0x004c2ad9, 0x252)
 void TTown::write(TRawOStream* pOStream, int version) const
 {
@@ -407,19 +410,10 @@ void TTown::write(TRawOStream* pOStream, int version) const
     } else {
         *pOStream << static_cast<signed char>(_m_aBuildingState[eBuildingFort].getBBuilt());
     }
-    unsigned char aSpells[(kNumSpells + 7) / 8];
-    if (version >= GAME_VERSION_AB) {
-        fill_n(aSpells, sizeof(aSpells), 0);
-        for (unsigned int spell = 0; spell < kNumSpells; spell++)
-            if (_m_obligatorySpellsMask[spell])
-                aSpells[spell / 8] |= 1 << spell % 8;
-        *pOStream << aSpells;
-    }
-    fill_n(aSpells, sizeof(aSpells), 0);
-    for (unsigned int spell = 0; spell < kNumSpells; spell++)
-        if (_m_disabledSpellsMask[spell])
-            aSpells[spell / 8] |= 1 << spell % 8;
-    *pOStream << aSpells;
+    // Loki 0x0818aee5..0x0818af72 expands the same fixed-size bitset writer.
+    if (version >= GAME_VERSION_AB)
+        writeBitset(*pOStream, _m_obligatorySpellsMask);
+    writeBitset(*pOStream, _m_disabledSpellsMask);
     *pOStream << static_cast<long>(_m_events.size());
     for (std::vector<TTimedEvent>::const_iterator iter = _m_events.begin(); iter != _m_events.end(); ++iter)
         iter->write(pOStream, version);

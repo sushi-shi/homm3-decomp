@@ -785,13 +785,17 @@ always counts `call` + tail `jmp`.
   their own cb charge, but the budget their body spent is charged neither
   to the enclosing budgets nor to the running size (the replay models it;
   see "The replay" below). Measured in h3maped (/O1, so the veto is active):
-  - `writeBitset<28>` passes the budget in `TWitchHut::write` (cb 98 of
-    1000) and is vetoed 35/12; `_isHeroAvailable` is vetoed 55/12 in
-    `canCreate` and 47/12 in `getAvailableHeroesInClass`. Retail keeps
-    out-of-line copies of both helpers for other callers, so neither is
-    `__forceinline`, yet the three callers carry the code in line: the
-    original callers spelled the loop and the test themselves (all three
-    now exact or label-only).
+  - `writeBitset<28>` passes the budget in `TWitchHut::write` (the current
+    reconstruction traces cb 97 of 1000) and is vetoed 38/12. Retail retains
+    the canonical writer at `0x004342e7` and expands its same clear, tested
+    bit-pack and array-write operation in `TWitchHut::write`. The veto
+    diagnoses the current compiler state; it does not prove that the
+    original caller pasted the loop. Preserve the restored helper call
+    while recovering that state; see `docs/cleanup/editors.md`.
+    `_isHeroAvailable` is separately vetoed 55/12 in `canCreate` and 47/12
+    in `getAvailableHeroesInClass`. Retained copies plus expanded callers
+    do not by themselves establish an explicit inline qualifier or recover
+    the original caller spelling.
   - `TRawOStream::operator<<` is vetoed 18/12 eh-spent everywhere; ten such
     sites in `TMonster::write` charge 710 of its 1000 budget, which leaves
     `fill_n` at budget 34 against cb 43 where retail expands it.
