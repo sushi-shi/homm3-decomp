@@ -60,10 +60,14 @@ SIZE(type_creature_bank_level, 0x60);
 // The constructor first initializes the retail 16-byte Dinkumware string
 // consumed by the help-text selector, then the four levels above. This
 // independently closes the 0x190 stride; only the old anonymous tail is
-// retired.
+// retired. The count name is inferred from that fixed array extent.
+enum ECreatureBankLevelCount {
+    CREATURE_BANK_LEVEL_COUNT = 4
+};
+
 struct type_creature_bank_traits {
     std::string m_name;
-    type_creature_bank_level m_levels[4];
+    type_creature_bank_level m_levels[CREATURE_BANK_LEVEL_COUNT];
 
     type_creature_bank_traits();
 };

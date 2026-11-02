@@ -25,6 +25,13 @@ DATA(0x0067029c)
 const type_creature_bank_traits* g_constCreatureBankTraits =
     g_creatureBankTraits;
 
+// The spreadsheet names at most four guard types. guardTypes below adds
+// one CREATURE_NONE terminator; this count is independent of bank levels
+// and of armyGroup's seven stack slots. The count name is inferred.
+enum ECreatureBankGuardTypeCount {
+    CREATURE_BANK_GUARD_TYPE_COUNT = 4
+};
+
 // E:\gamedcs\creature_bank.cpp:25
 // Mac array-construction descriptor at TOC-0x75bc names this member ctor.
 DC_ADDRESS(0x07152c, 0x1c)
@@ -52,7 +59,7 @@ static void initializeCreatureBankLevel(type_creature_bank_level& traits,
     traits.m_guards.m_numTroops[0] = atoi(resource[column]);
     column += 2;
     traits.m_upgradeChance = atoi(resource[column++]);
-    for (int guard = 1; guard < 4; ++guard) {
+    for (int guard = 1; guard < CREATURE_BANK_GUARD_TYPE_COUNT; ++guard) {
         traits.m_guards.m_numTroops[guard] = atoi(resource[column]);
         column += 2;
         if (traits.m_guards.m_numTroops[guard] == 0)
@@ -90,7 +97,7 @@ unsigned char initializeCreatureBankTraits()
     }
 
     DATA(0x006702a0)
-    static TCreatureType guardTypes[CREATURE_BANK_COUNT][5] = {
+    static TCreatureType guardTypes[CREATURE_BANK_COUNT][CREATURE_BANK_GUARD_TYPE_COUNT + 1] = {
         { CREATURE_CYCLOPS, CREATURE_NONE },
         { CREATURE_DWARF, CREATURE_NONE },
         { CREATURE_GRIFFIN, CREATURE_NONE },
@@ -119,10 +126,10 @@ unsigned char initializeCreatureBankTraits()
         traits->m_name = resource[0];
 
         type_creature_bank_level* level = traits->m_levels;
-        int levelsLeft = 4;
+        int levelsLeft = CREATURE_BANK_LEVEL_COUNT;
         do {
             level->m_guards.initialize();
-            for (int slot = 0; slot < 5; ++slot) {
+            for (int slot = 0; slot < CREATURE_BANK_GUARD_TYPE_COUNT + 1; ++slot) {
                 if (guardTypes[bank][slot] == CREATURE_NONE)
                     break;
                 level->m_guards.m_armyTypes[slot] = guardTypes[bank][slot];
@@ -191,7 +198,7 @@ void initializeCreatureBank(type_creature_bank& bank,
 {
     int roll = random(1, 100);
     int which;
-    for (which = 0; which < 3; ++which) {
+    for (which = 0; which < CREATURE_BANK_LEVEL_COUNT - 1; ++which) {
         roll -= g_constCreatureBankTraits[type].m_levels[which].m_chance;
         if (roll <= 0)
             break;
@@ -206,13 +213,13 @@ void initializeCreatureBank(type_creature_bank& bank,
 
     int drawn;
     for (drawn = 0; drawn < level->m_relicArtifacts; ++drawn)
-        bank.m_artifacts.push_back(g_game->getRandomArtifactId(16));
+        bank.m_artifacts.push_back(g_game->getRandomArtifactId(ArtifactClassRelic));
     for (drawn = 0; drawn < level->m_majorArtifacts; ++drawn)
-        bank.m_artifacts.push_back(g_game->getRandomArtifactId(8));
+        bank.m_artifacts.push_back(g_game->getRandomArtifactId(ArtifactClassMajor));
     for (drawn = 0; drawn < level->m_minorArtifacts; ++drawn)
-        bank.m_artifacts.push_back(g_game->getRandomArtifactId(4));
+        bank.m_artifacts.push_back(g_game->getRandomArtifactId(ArtifactClassMinor));
     for (drawn = 0; drawn < level->m_treasureArtifacts; ++drawn)
-        bank.m_artifacts.push_back(g_game->getRandomArtifactId(2));
+        bank.m_artifacts.push_back(g_game->getRandomArtifactId(ArtifactClassTreasure));
 
     long slot = 0;
     switch (bank.m_guards.getNumArmies()) {

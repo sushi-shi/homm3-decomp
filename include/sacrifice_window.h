@@ -62,15 +62,6 @@ enum ESacrificeArtifactSlotFrame {
     SACRIFICE_BACKPACK_ARTIFACT_COUNT = HERO_BACKPACK_CAPACITY
 };
 
-// ARTRAITS.TXT's parser maps T/N/J/R to these bit values, and the retained
-// offering helper maps the same four values to its experience ladder.
-enum ESacrificeArtifactClass {
-    SACRIFICE_ARTIFACT_CLASS_TREASURE = 2,
-    SACRIFICE_ARTIFACT_CLASS_MINOR = 4,
-    SACRIFICE_ARTIFACT_CLASS_MAJOR = 8,
-    SACRIFICE_ARTIFACT_CLASS_RELIC = 16
-};
-
 enum ESacrificeGeneralText {
     SACRIFICE_GENERAL_TEXT_EXPERIENCE = 123,
     SACRIFICE_GENERAL_TEXT_HERO_NAME = 273,
