@@ -41,6 +41,29 @@ build directories on `/dev/nvme0n1p1` (ext4). Integration uses
 The shared Git repository and read-only seed inputs remain in the original
 checkout. Existing unrelated worktrees are not modified.
 
+## Integrated results
+
+The five worker commits are integrated into the SSD review branch. The enum
+lane removes a duplicate artifact-class domain and names creature-bank extents;
+the editor lane replaces 17 tile-direction literals. Control-flow cleanup
+removes one goto and four assignments from conditions. The Boolean lane
+restores 16 native predicate declarations, preserving original spellings and
+unproven byte storage. Naming cleanup clarifies video state and centralizes
+four shared declarations. Rejected probes and remaining leads are recorded in
+the five lane documents rather than claimed complete.
+
+The combined targeted VC6 comparison preserves all current-source MAX values.
+The approved PR changes add seven exact game functions; #191 retains the
+existing direction-selection function and excludes its unsupported identity
+ledger. #195 moves the existing packed-bit writer to one shared header and
+uses it in player, hero and RMG serialization. The retained return contract
+and checked-bit behavior are documented in [the PR review](pr-review.md).
+
+All 28 open PRs have a recorded disposition. Independent compiler checks cover
+19 acceptable or corrected candidates; rejected source models and older feature
+drafts have explicitly limited review scopes. The remaining PRs stay for the
+user's review. Full landing gates and publication are recorded there separately.
+
 ## Existing H3 work
 
 The existing [reconstruction debt](../todos/reconstruction_debt.md),
