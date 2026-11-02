@@ -3,6 +3,10 @@
 Manually maintained source-cleanup checklist. Counts are recorded snapshots,
 not live totals. Unchecked items need review; they are not necessarily defects.
 
+The [source cleanup review](../cleanup/README.md) tracks the H1/H2-style
+enum, control-flow, type, naming and editor cleanup lanes, with evidence,
+measured results and retained or deferred cases for each lane.
+
 ## Remaining work
 
 - [ ] Remove avoidable casts: **3,047 named casts**
