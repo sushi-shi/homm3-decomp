@@ -252,7 +252,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00017a33	0x2f	func	??9?$bitset@$0DA@@std@@QBE_NABV01@@Z	objecttype	external	masked body (47 bytes, 0 relocations) unique at a census start
 0x00017a62	0x2c	func	??Breference@?$bitset@$0CJ@@std@@QBE_NXZ	EditTownEventBuildingsPage	external	masked body (44 bytes, 1 relocations) unique at a census start
 0x00017a8e	0x4a	func	?set@?$bitset@$0CJ@@std@@QAEAAV12@I_N@Z	Town	external	masked body (74 bytes, 1 relocations) unique at a census start
-0x00017ad8	0x5a	func	?_Xran@?$bitset@$0CJ@@std@@ABEXXZ	Town	external	referenced by ?write@TTimedEvent@TTown@@QBEXPAVTRawOStream@@H@Z at +0x2b
+0x00017ad8	0x5a	func	?_Xran@?$bitset@$0CJ@@std@@ABEXXZ	Town	external	referenced by ?set@?$bitset@$0CJ@@std@@QAEAAV12@I_N@Z at +0xe
 0x00017b4e	0x1c	func	??_GCTreeCtrl@@UAEPAXI@Z	EditTownEventBuildingsPage	external	vtable of CTreeCtrl (RTTI) slot 1
 0x000181a6	0x1c	func	??_GCStatic@@UAEPAXI@Z	HeroPrototypePropsGeneralPage	external	vtable of CStatic (RTTI) slot 1
 0x0001869c	0x30	func	??0TGeneratorBonuses@TTown@@QAE@ABV01@@Z	EditTownEventSheet	external	masked body (48 bytes, 0 relocations) unique at a census start
@@ -1008,7 +1008,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00041c36	0x8e	func	??0TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	masked body (142 bytes, 9 relocations) unique at a census start
 0x00041cc4	0xaa	func	??0?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	referenced by 0x00041c36 at +0x59
 0x00041d6e	0x7a	func	??0TGenerator@@QAE@ABV0@@Z	GUIGameObject	external	referenced by 0x00041cc4 at +0x65
-0x00041de8	0x57	func	??0TFlaggableObject@@QAE@ABV0@@Z	GUIGameObject	external	referenced by ??0TGarrison@@QAE@ABV0@@Z at +0x4e
+0x00041de8	0x57	func	??0TFlaggableObject@@QAE@ABV0@@Z	GUIGameObject	external	referenced by ??0TRandomGenerator@@QAE@ABV0@@Z at +0x6c
 0x00042038	0x8e	func	??0TGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	masked body (142 bytes, 9 relocations) unique at a census start
 0x000420c6	0xaa	func	??0?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	masked body (170 bytes, 10 relocations) unique at a census start
 0x00042170	0x80	func	??0TAbandonedMine@@QAE@ABV0@@Z	GUIGameObject	external	masked body (128 bytes, 7 relocations) unique at a census start
@@ -4087,7 +4087,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x001a2658	0x40	data	?g_rmgDirections@?A0x8197b2fbbced3331@@3PAUTRmgPoint@@A	rmg	external	referenced by ?buildOutline@TRmgObjectPropertiesRef@@QAEXXZ at +0xa2
 0x001a2698	0x20	data	?g_rmgShipyardWaterOffsets@?A0x8197b2fbbced3331@@3PAUTRmgPoint@@A	rmg	external	referenced by ?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z at +0x96
 0x001a26c0	0x20	data	_?riverDeltaOffsets@?CB@??createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z@4PAUTRmgPoint@@A	rmg	internal	referenced by ?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z at +0x3fd (retail +0x3f7, by operand order)
-0x001a26e4	0x3a4	data	?g_rmgMapObjectLimits@@3PAHA	rmg	external	referenced by ??0type_random_map_generator@@QAE@HHHHHHHHHPAVtype_progress_bar@@H@Z at +0x203
+0x001a26e4	0x3a0	data	?g_rmgMapObjectLimits@@3PAHA	rmg	external	referenced by ??0type_random_map_generator@@QAE@HHHHHHHHHPAVtype_progress_bar@@H@Z at +0x203
 0x001a2a8c	0x3a0	data	?g_rmgZoneObjectLimits@@3PAHA	rmg	external	referenced by ??0type_random_map_generator@@QAE@HHHHHHHHHPAVtype_progress_bar@@H@Z at +0x1f7
 0x001a2e34	0x1	data	_?$S38@?CB@??createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z@4EA	rmg	internal	referenced by ?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z at +0x3ea (retail +0x3e4, by operand order)
 0x001a2ee8	0x50	data	?g_rmgRiverPatternTable@@3UTRmgLinePatternTable@@A	rmg_river	external	referenced by ?getPatternTable@TRiverOp@@UAEPAUTRmgLinePatternTable@@H@Z at +0x1
