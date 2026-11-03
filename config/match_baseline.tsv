@@ -1559,7 +1559,7 @@ dxplay	?startSession@CDPlay@@UAEEK@Z	100.0000	100.0000	100.0000	0x97250	tokens1:
 dxplay	?sysMsgAddGroupToGroup@CDPlay@@MAEEPAUDPMSG_ADDGROUPTOGROUP@@K@Z	100.0000	100.0000	100.0000	0x96cd0	tokens1:0d503af9e0e6
 dxplay	?sysMsgCreatePlayerOrGroup@CDPlay@@MAEEPAUDPMSG_CREATEPLAYERORGROUP@@K@Z	100.0000	100.0000	100.0000	0x981e0	tokens1:8cf71d54217a
 dxplay	?sysMsgHost@CDPlay@@MAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	0x981d0	tokens1:8001a334c0e2
-dxplay	?testLobbied@CDPlayLobby@@QAE_NXZ	88.4210	88.4210	88.4210	0x98b70	tokens1:c0e5cda08259
+dxplay	?testLobbied@CDPlayLobby@@QAE_NXZ	96.4912	96.4912	96.4912	0x98b70	tokens1:690f1a4eeca7
 dxplay	?updateSessionDesc@CDPlay@@UAEEPAUDPSESSIONDESC2@@@Z	100.0000	100.0000	100.0000	0x96f90	tokens1:43d9e43c5a93
 error	??0TRuntimeError@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x9a0c0	tokens1:58c58fb104ff
 event_record	??1type_event_record@@UAE@XZ	100.0000	100.0000	100.0000	0x9abe0	tokens1:968be45b9276
@@ -2719,7 +2719,7 @@ multiplayerwindow	?onModemJoin@TMultiPlayerWindow@@QAE_NXZ	100.0000	100.0000	100
 multiplayerwindow	?onNextEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110850	tokens1:7fc710e67e59
 multiplayerwindow	?onOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470	tokens1:37b76150e0e7
 multiplayerwindow	?onPrevEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110870	tokens1:7031bcaae5c5
-multiplayerwindow	?onSearch@TMultiPlayerWindow@@QAE_NXZ	89.8072	89.8072	94.1892	0x111660	tokens1:8e010132c642
+multiplayerwindow	?onSearch@TMultiPlayerWindow@@QAE_NXZ	100.0000	100.0000	100.0000	0x111660	tokens1:e14684415483
 multiplayerwindow	?onTCP@TMultiPlayerWindow@@QAE_NXZ	100.0000	100.0000	100.0000	0x1113f0	tokens1:42fcfe73f832
 multiplayerwindow	?onWidgetDeselect@CHotSeatDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x112420	tokens1:72c4f34fd0a0
 multiplayerwindow	?onWidgetDeselect@CMPInputDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x1108f0	tokens1:0fd31c226d1c
