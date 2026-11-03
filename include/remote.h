@@ -98,19 +98,17 @@ public:
     CDPlayHeroes();
     virtual ~CDPlayHeroes();
     void destroyMsgQueue();
-    virtual unsigned char sysMsgHost(DPMSG_GENERIC* message,
-                                     unsigned long toId);
-    virtual unsigned char sysMsgSessionLost(DPMSG_GENERIC* message,
-                                            unsigned long toId);
-    virtual unsigned char sysMsgDestroyPlayerOrGroup(
+    virtual bool SysMsgHost(DPMSG_GENERIC* message, unsigned long toId);
+    virtual bool SysMsgSessionLost(DPMSG_GENERIC* message, unsigned long toId);
+    virtual bool SysMsgDestroyPlayerOrGroup(
         DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
-    virtual unsigned char sysMsgCreatePlayerOrGroup(
+    virtual bool SysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
     bool pollRemote();
     // Reached from the free GetRemoteData wrapper (with a literal 0) and
     // from CNetMsgHandler::CheckHandleNet (with the literal pair (1, 0)).
-    CNetMsg* getRemoteData(unsigned char removeFromQueue,
-                           unsigned char* wasCompressed);
+    // Native public: ?GetRemoteData@CDPlayHeroes@@QAAPAVCNetMsg@@_NPA_N@Z.
+    CNetMsg* GetRemoteData(bool removeFromQueue, bool* wasCompressed);
     bool transmitRemoteData(CNetMsg* msg, int toWho,
                             bool compressMsg, bool guaranteed);
     bool transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
@@ -129,7 +127,7 @@ protected:
     void queueMsg(CNetMsg* netMsg);
     CNetMsg* compressMsg(CNetMsg* netMsg);
     CNetMsg* uncompressMsg(CNetMsg* netMsg);
-    unsigned char handleLowLevelMsg(CNetMsg* netMsg);
+    bool HandleLowLevelMsg(CNetMsg* netMsg);
 
 public:
     friend int transmitRemoteDataDPID(CNetMsg*, unsigned long,
@@ -586,8 +584,8 @@ int transmitRemoteData(CNetMsg* msg, int toWho,
                        bool compressMsg, bool guaranteed);
 int transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
                            bool compressMsg, bool guaranteed);
-CNetMsg* getRemoteData(unsigned char removeFromQueue,
-                       unsigned char* wasCompressed);
+// Native public: ?GetRemoteData@@YAPAVCNetMsg@@_NPA_N@Z.
+CNetMsg* GetRemoteData(bool removeFromQueue, bool* wasCompressed);
 unsigned long calcCrcLong(const unsigned char* buf, unsigned len);
 // DC remote.cpp:1411, dc 0x11ce68; retail ReceiveSaveGame keeps this
 // cleanup boundary out of line on both fatal in-game receive paths.

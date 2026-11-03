@@ -91,9 +91,9 @@ inline bool CHeroSessions::getSessionInfo(unsigned long index, char* sessName,
 
     numPlayers = session->m_playerCount;
     status = open;
-    if (session->isJoinDisabled())
+    if (session->IsJoinDisabled())
         status = closed;
-    else if (session->isPasswordProtected())
+    else if (session->IsPasswordProtected())
         status = password;
     return true;
 }
@@ -427,37 +427,37 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     g_multiPlayerWindow = this;
     m_hostJoinScreen = 0;
 
-    m_widgets.reserve(77);
+    m_widgets.reserve(NWIDGETS);
 
-    m_widgets.push_back(new bitmapBorder(0, 0, 454, 490, 100, "mupopup.pcx", 0x800));
+    m_widgets.push_back(new bitmapBorder(0, 0, 454, 490, BACKGROUND_ID, "mupopup.pcx", 0x800));
 
     m_hotSeat = 0;
     if (!g_noCdRom)
-        m_hotSeat = new button(373, 78, 64, 48, 102, "muBhot.def", 0, 1, 0, 0, 2);
+        m_hotSeat = new button(373, 78, 64, 48, HOT_SEAT_ID, "muBhot.def", 0, 1, 0, 0, 2);
 
-    m_ipx = new button(373, 135, 64, 48, 103, "muBipx.def", 0, 1, 0, 0, 2);
-    m_tcp = new button(373, 192, 64, 48, 104, "muBtcp.def", 0, 1, 0, 0, 2);
-    m_modem = new button(373, 249, 64, 48, 105, "muBmodm.def", 0, 1, 0, 0, 2);
-    m_direct = new button(373, 306, 64, 48, 106, "muBdrct.def", 0, 1, 0, 0, 2);
-    m_online = new button(373, 363, 64, 48, 101, "mubonl.def", 0, 1, 0, 0, 2);
+    m_ipx = new button(373, 135, 64, 48, IPX_ID, "muBipx.def", 0, 1, 0, 0, 2);
+    m_tcp = new button(373, 192, 64, 48, TCP_ID, "muBtcp.def", 0, 1, 0, 0, 2);
+    m_modem = new button(373, 249, 64, 48, MODEM_ID, "muBmodm.def", 0, 1, 0, 0, 2);
+    m_direct = new button(373, 306, 64, 48, DIRECT_ID, "muBdrct.def", 0, 1, 0, 0, 2);
+    m_online = new button(373, 363, 64, 48, ONLINE_ID, "mubonl.def", 0, 1, 0, 0, 2);
 
     m_host = 0;
     if (!g_noCdRom)
-        m_host = new button(373, 78, 64, 48, 107, "muBhost.def", 0, 1, 0, 0, 2);
+        m_host = new button(373, 78, 64, 48, HOST_ID, "muBhost.def", 0, 1, 0, 0, 2);
 
-    m_join = new button(373, 135, 64, 48, 108, "muBjoin.def", 0, 1, 0, 0, 2);
-    m_search = new button(373, 192, 64, 48, 109, "muBsrch.def", 0, 1, 0, 0, 2);
-    m_cancel = new button(373, 424, 64, 48, 124, "muBcanc.def", 0, 1, 0, 1, 2);
+    m_join = new button(373, 135, 64, 48, JOIN_ID, "muBjoin.def", 0, 1, 0, 0, 2);
+    m_search = new button(373, 192, 64, 48, SEARCH_ID, "muBsrch.def", 0, 1, 0, 0, 2);
+    m_cancel = new button(373, 424, 64, 48, BACK_ID, "muBcanc.def", 0, 1, 0, 1, 2);
 
     m_sessNameHeader = new textWidget(216 - m_x, 146 - m_y, 127, 18,
                                     g_generalText->GetText(GENERAL_TEXT_SESSION_NAME), "smalfont.fnt",
-                                    font::PRIMARY, 127, 1, 0, 8);
+                                    font::PRIMARY, SESS_NAME_HEADER_ID, 1, 0, 8);
     m_userNameHeader = new textWidget(346 - m_x, 146 - m_y, 127, 18,
                                     g_generalText->GetText(GENERAL_TEXT_USER_NAME), "smalfont.fnt",
-                                    font::PRIMARY, 128, 1, 0, 8);
+                                    font::PRIMARY, USER_NAME_HEADER_ID, 1, 0, 8);
     m_playerName = new CMultiPlayerWindowEdit(19, 436, 334, 18, 21,
                                             g_config.m_networkDefaultName, "smalfont.fnt",
-                                            font::WHITE, 0, 0, 0, 125, 0x100, 0,
+                                            font::WHITE, 0, 0, 0, PLAYER_NAME_ID, 0x100, 0,
                                             7, 5);
 
     if (m_hotSeat)
@@ -477,20 +477,20 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_widgets.push_back(m_userNameHeader);
 
     m_rolloverWidget = new textWidget(8, 465, 438, 18, 0, "smalfont.fnt",
-                                    font::PRIMARY, 123, 1, 32, 8);
+                                    font::PRIMARY, ROLLOVER_ID, 1, 32, 8);
     m_widgets.push_back(m_rolloverWidget);
 
-    m_gameSlider = new slider(337, 81, 16, 330, 122, 10, sliderGames,
+    m_gameSlider = new slider(337, 81, 16, 330, SLIDER_ID, 10, sliderGames,
                               slider::BLUE, 0, 0);
     m_widgets.push_back(m_gameSlider);
 
     // DC line 956 retains 112 + i * 25.
     for (int i = 0; i < 12; i++)
         m_widgets.push_back(new textWidget(18, 112 + i * 25, 317, 22, 0,
-                                      "smalfont.fnt", font::PRIMARY, 110 + i, 1,
+                                      "smalfont.fnt", font::PRIMARY, GAMENAME_1_ID + i, 1,
                                       0, 8));
 
-    m_splash = new bitmapBorder(16, 77, 338, 335, 129, "mumap.pcx", 0x800);
+    m_splash = new bitmapBorder(16, 77, 338, 335, HERO_SPLASH_ID, "mumap.pcx", 0x800);
     m_widgets.push_back(m_splash);
 
     addWidgetsToMessageStream();
@@ -506,7 +506,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_currentIndex = 0;
     m_currentGame = 0;
 
-    setHelpText(g_multiSelectionHelp + 1, 101, 110, 0);
+    setHelpText(g_multiSelectionHelp + 1, ONLINE_ID, GAMENAME_1_ID, 0);
     m_gameSlider->setHelpText(g_multiSelectionHelp[22].m_text,
                               g_multiSelectionHelp[22].m_rclick, 0);
     m_cancel->setHelpText(g_multiSelectionHelp[24].m_text,
@@ -608,7 +608,7 @@ void TMultiPlayerWindow::goMainMenu()
     m_online->show();
     m_userNameHeader->hide();
     m_sessNameHeader->hide();
-    widget* w = getWidget(126);
+    widget* w = getWidget(IP_ADDRESS);
     if (w)
         w->hide();
     m_sessions->destroy();
@@ -714,10 +714,10 @@ void TMultiPlayerWindow::update()
 // Original: TMultiPlayerWindow::RefreshSessions; multiplayerwindow.cpp:1344,
 // Expanded in onTCP and the timed window handler.
 DC_ADDRESS(0x100c44, 0x5a)
-void TMultiPlayerWindow::refreshSessions()
+void TMultiPlayerWindow::RefreshSessions()
 {
     m_sessions->destroy();
-    g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
+    g_dPlay->EnumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
     m_sessTimer = GameTime::get();
     m_gameSlider->updateResolution(
         m_sessions->getCount() - 12);
@@ -727,11 +727,11 @@ void TMultiPlayerWindow::refreshSessions()
 // Original: TMultiPlayerWindow::CheckSessions; multiplayerwindow.cpp:1449,
 // The second timer read follows the complete refresh operation.
 DC_ADDRESS(0x100e94, 0x3a)
-void TMultiPlayerWindow::checkSessions()
+void TMultiPlayerWindow::CheckSessions()
 {
     if (m_sessTimer
         && GameTime::elapsedSince(m_sessTimer) > m_sessionRefreshTimeout) {
-        refreshSessions();
+        RefreshSessions();
         m_sessTimer = GameTime::get();
     }
 }
@@ -771,8 +771,8 @@ inline bool TMultiPlayerWindow::onIPX()
     if (::initRemote(MP_IPX, m_playerName->getText()) &&
         initConnection(0, 0)) {
         DPCAPS caps;
-        g_dPlay->getCaps(&caps, 1);
-        m_sessionRefreshTimeout = caps.m_timeout + 100;
+        g_dPlay->GetCaps(&caps, 1);
+        m_sessionRefreshTimeout = caps.dwTimeout + 100;
         if (g_mpNetProtocol == MP_TCP)
             m_sessionRefreshTimeout = 1000;
 
@@ -780,7 +780,7 @@ inline bool TMultiPlayerWindow::onIPX()
             m_host->show();
         m_join->show();
         m_join->enable(0);
-        refreshSessions();
+        RefreshSessions();
         return 1;
     }
 
@@ -814,7 +814,7 @@ MAC_ADDRESS(0x21ae68, 0x2e0)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselec
 int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
     switch (id) {
-    case CANCEL_ID:
+    case BACK_ID:
         if (m_inSessionList) {
             remoteCleanup();
             goMainMenu();
@@ -902,7 +902,7 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         break;
 
     case SEARCH_ID:
-        if (onSearch()) {
+        if (OnSearch()) {
             exitFlag = 1;
         }
         break;
@@ -913,19 +913,19 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         }
         break;
 
-    case FIRST_SESSION_ID:
-    case FIRST_SESSION_ID + 1:
-    case FIRST_SESSION_ID + 2:
-    case FIRST_SESSION_ID + 3:
-    case FIRST_SESSION_ID + 4:
-    case FIRST_SESSION_ID + 5:
-    case FIRST_SESSION_ID + 6:
-    case FIRST_SESSION_ID + 7:
-    case FIRST_SESSION_ID + 8:
-    case FIRST_SESSION_ID + 9:
-    case FIRST_SESSION_ID + 10:
-    case LAST_SESSION_ID: {
-        int game = m_currentIndex + id - FIRST_SESSION_ID;
+    case GAMENAME_1_ID:
+    case GAMENAME_2_ID:
+    case GAMENAME_3_ID:
+    case GAMENAME_4_ID:
+    case GAMENAME_5_ID:
+    case GAMENAME_6_ID:
+    case GAMENAME_7_ID:
+    case GAMENAME_8_ID:
+    case GAMENAME_9_ID:
+    case GAMENAME_10_ID:
+    case GAMENAME_11_ID:
+    case GAMENAME_12_ID: {
+        int game = m_currentIndex + id - GAMENAME_1_ID;
         if (game < m_sessions->getCount()) {
             m_currentGame = game;
             update();
@@ -933,7 +933,7 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         break;
     }
 
-    case GAME_SLIDER_ID:
+    case SLIDER_ID:
     case ROLLOVER_ID:
         break;
     }
@@ -949,7 +949,7 @@ MAC_ADDRESS(0x21b148, 0x44)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); r
 int TMultiPlayerWindow::windowHandler(message& msg)
 {
     pollSound();
-    checkSessions();
+    CheckSessions();
 
     return CHeroWindowEx::windowHandler(msg);
 }
@@ -958,7 +958,7 @@ VA(0x0050fa10, 0x9F)
 DC_ADDRESS(0x100ca0, 0x6a)
 bool TMultiPlayerWindow::joinSession(CDPlaySession* session, const char* password)
 {
-    if (!g_dPlay->joinSession(&session->m_guidInstance,
+    if (!g_dPlay->JoinSession(&session->m_guidInstance,
                              const_cast<char*>(password)))
         return 0;
 
@@ -993,7 +993,7 @@ bool TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
     if (g_mpNetProtocol != MP_TCP)
         flags |= 0x2000;
 
-    if (!g_dPlay->hostSession(fullName, flags, 8,
+    if (!g_dPlay->HostSession(fullName, flags, 8,
                              const_cast<char*>(password)))
         return 0;
 
@@ -1007,7 +1007,7 @@ bool TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
     g_thisNetPlayerInfo.m_version = version;
 
     if (g_mpNetProtocol == MP_TCP)
-        g_dPlay->getIPAddress(g_thisNetPlayerInfo.m_dpid, m_localIpAddress);
+        g_dPlay->GetIPAddress(g_thisNetPlayerInfo.m_dpid, m_localIpAddress);
 
     return 1;
 }
@@ -1024,8 +1024,8 @@ bool TMultiPlayerWindow::initRemote(eNetGameType netGameType, const char* extra,
     if (!initConnection(const_cast<char*>(extra), comportInfo))
         return 0;
 
-    g_dPlay->getCaps(&dpCaps, 1);
-    m_sessionRefreshTimeout = dpCaps.m_timeout + 100;
+    g_dPlay->GetCaps(&dpCaps, 1);
+    m_sessionRefreshTimeout = dpCaps.dwTimeout + 100;
     if (g_mpNetProtocol == MP_TCP)
         m_sessionRefreshTimeout = 1000;
     return 1;
@@ -1240,7 +1240,7 @@ bool TMultiPlayerWindow::onModemJoin()
     ShowCursor(1);
     m_sessions->destroy();
     for (int retry = 0; retry < 3; ++retry) {
-        g_dPlay->enumSessions(m_sessions, 0, 0x42);
+        g_dPlay->EnumSessions(m_sessions, 0, 0x42);
         if (g_dPlay->getLastError() == g_dplayErrorUserCancel)
             break;
         if (!retry)
@@ -1282,7 +1282,7 @@ bool TMultiPlayerWindow::onDirectJoin()
     m_sessions->destroy();
     ShowCursor(1);
     for (int retry = 0; retry < 2; ++retry) {
-        unsigned char enumFailed = !g_dPlay->enumSessions(
+        unsigned char enumFailed = !g_dPlay->EnumSessions(
             m_sessions, m_sessionRefreshTimeout, 0x42);
         if (g_dPlay->getLastError() == g_dplayErrorUserCancel)
             break;
@@ -1346,7 +1346,7 @@ bool TMultiPlayerWindow::onJoin()
 
     const char* password = 0;
     CMPInputDlg dlg(20, 20);
-    if (session->isPasswordProtected()) {
+    if (session->IsPasswordProtected()) {
         dlg.m_header1->setText(g_mpHelp[6].m_text);
         dlg.m_header2->setText(g_generalText->GetText(GENERAL_TEXT_PASSWORD));
         dlg.m_field1->enable(0);
@@ -1429,11 +1429,11 @@ bool TMultiPlayerWindow::onTCP()
     m_join->enable(0);
 
     if (getIPAddress(ipAddress)) {
-        if (!getWidget(IP_ADDRESS_ID)) {
+        if (!getWidget(IP_ADDRESS)) {
             char addressText[256];
             textWidget* ipWidget = new textWidget(
                 0, 16, m_width, 50, 0, "bigfont.fnt", font::PRIMARY,
-                IP_ADDRESS_ID, 1, 0, 8);
+                IP_ADDRESS, 1, 0, 8);
             m_widgets.push_back(ipWidget);
             addWidget(ipWidget, -1);
             sprintf(addressText, g_generalText->GetText(GENERAL_TEXT_IP_ADDRESS_FORMAT), ipAddress);
@@ -1442,7 +1442,7 @@ bool TMultiPlayerWindow::onTCP()
     }
 
     m_sessions->destroy();
-    g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
+    g_dPlay->EnumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
     m_sessTimer = GameTime::get();
     m_gameSlider->updateResolution(
         m_sessions->getCount() - 12);
@@ -1462,7 +1462,7 @@ VA(0x00511660, 0x666)  // caller slot + complete TCP search flow
 DC_ADDRESS(0x10196c, 0x294)
 // Native OnSearch public QAA_NXZ (DC file 0x5aceb7); protocol and
 // session helpers likewise return bool, including forwarded Host/Join arms.
-bool TMultiPlayerWindow::onSearch()
+bool TMultiPlayerWindow::OnSearch()
 {
     CMPInputDlg searchDlg(20, 20);
     searchDlg.m_header1->setText(g_generalText->GetText(GENERAL_TEXT_NETWORK_HOST_ADDRESS_PROMPT));
@@ -1484,7 +1484,7 @@ bool TMultiPlayerWindow::onSearch()
 
     CHourGlass hourGlass(1);
     m_sessions->destroy();
-    g_dPlay->enumSessions(m_sessions, 5000, 0x42);
+    g_dPlay->EnumSessions(m_sessions, 5000, 0x42);
 
     if (!m_sessions->getCount()) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_IP_ADDRESS_WAS_NOT_FOUND), 1, -1, -1,
@@ -1498,13 +1498,12 @@ bool TMultiPlayerWindow::onSearch()
     // register allocation and separate failure cleanup paths.
     CDPlaySession* session = m_sessions->get(0);
     if (!joinSession(session, 0)) {
-        // Original DC local name: sErr.
-        char errorText[256];
+        char sErr[256];
         long lastError = g_dPlay->getLastError();
         normalDialog(g_generalText->GetText(GENERAL_TEXT_SESSION_CONNECTION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        g_dPlay->getErrorDesc(lastError, errorText);
-        normalDialog(errorText, 1, -1, -1,
+        g_dPlay->getErrorDesc(lastError, sErr);
+        normalDialog(sErr, 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
         initRemote(MP_TCP, 0, 0);
@@ -1529,7 +1528,7 @@ bool TMultiPlayerWindow::onHotSeat()
 // Original: TMultiPlayerWindow::IsNT; multiplayerwindow.cpp:2061
 // The ordinary platform query uses the PC ANSI OSVERSIONINFO representation.
 DC_ADDRESS(0x101cfc, 0x5c)
-unsigned char TMultiPlayerWindow::isNT()
+unsigned char TMultiPlayerWindow::IsNT()
 {
     OSVERSIONINFOA versionInfo;
     versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);

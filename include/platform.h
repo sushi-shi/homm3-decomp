@@ -29,6 +29,8 @@
 #include <ddraw.h>
 #include <mmsystem.h>
 #include <dsound.h>
+#include <dplay.h>
+#include <dplobby.h>
 #include <Mss.h>
 // Compile the Windows reconstruction against the actual RAD vendor ABI.
 // CodeWarrior otherwise selects the Mac SDK declarations in these headers.

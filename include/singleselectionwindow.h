@@ -424,7 +424,7 @@ public:
                                     unsigned char* msgReceived);  // slot 1
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg);  // slot 3
 
-    unsigned char m_wasCompressed;  // +0x0c
+    bool m_wasCompressed;  // +0x0c; native GetRemoteData bool* output contract.
 };
 SIZE(CSingleSelectionNetMsgHandler, 0x10);
 
