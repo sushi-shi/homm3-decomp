@@ -916,15 +916,17 @@ bool TWitchHut::isCustomized() const
     return _m_abPotentialSkill != _s_kabDefaultPotentialSkill;
 }
 
+// Current VC6 vetoes the recovered writer 38/12 despite cb97/budget1000;
+// retail expands its identical operation. MAX 100 -> 14.16%, with historical
+// peak retained. Const[]/explicit-inline probes were byte-flat, not a fix.
+// An 18-state zero-init/ascending-loop family also left this at 14.1628%.
+// Unlike Town's retained getter ordering, no positive boundary contradiction
+// was found here: the dead version slot can hold an inlined writer's buffer.
 VA(0x0048f8a1, 0x62)
 void TWitchHut::write(TRawOStream* pOStream, int version) const
 {
-    if (version >= 1) {
-        unsigned char aByte[(kNumSecSkills + 7) / 8];
-        std::fill_n(aByte, sizeof(aByte), 0);
-        for (unsigned int i = 0; i < kNumSecSkills; i++)
-            if (_m_abPotentialSkill.test(i))
-                aByte[i / 8] |= 1 << (i % 8);
-        *pOStream << aByte;
-    }
+    // This is the complete writeBitset<28> operation retained at 0x004342e7.
+    // The current VC6 inline veto does not justify pasting its body here.
+    if (version >= 1)
+        writeBitset(*pOStream, _m_abPotentialSkill);
 }

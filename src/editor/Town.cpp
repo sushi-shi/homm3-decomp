@@ -72,16 +72,24 @@ void TTown::TTimedEvent::read(TRawIStream* pIStream, int version)
     *pIStream >> aReserved;
 }
 
+// Loki 0x08186ce4 clears with fill_n before getBuildMask (0x08186cf3).
+// Its getGeneratorBonuses (0x08186d6c) precedes the chained array/bonus writes.
+// This caller-owned operation differs from Loki writeBitset's memset/output
+// body; the earlier complete-writer call inferred too broad a boundary.
+// Restored comparison: 99.927536%, with zero register/flow distance.
 VA(0x004c19e0, 0xa0)
 void TTown::TTimedEvent::write(TRawOStream* pOStream, int version) const
 {
+    // VC6 rejects ::TTimedEvent::write and this->::TTimedEvent::write here
+    // (C2352/C2299): the nested class shadows its nonvirtual global base.
     static_cast<const ::TTimedEvent*>(this)->write(pOStream, version);
     unsigned char aBuildMask[(s_kNumBuildings + 7) / 8];
     fill_n(aBuildMask, sizeof(aBuildMask), 0);
+    const std::bitset<s_kNumBuildings>& buildMask = getBuildMask();
     for (unsigned int building = 0; building < s_kNumBuildings; building++)
-        if (_m_buildMask.test(building))
+        if (buildMask[building])
             aBuildMask[building / 8] |= 1 << building % 8;
-    *pOStream << aBuildMask << _m_generatorBonuses;
+    *pOStream << aBuildMask << getGeneratorBonuses();
     signed char aReserved[kNumTownEventReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
@@ -374,8 +382,13 @@ bool TTown::isCustomized() const
            || _m_alignment != ePlayerNone;
 }
 
-// Loki writes the cast event count (Loki Town.cpp 975). Residual: retail
-// stores the count after loading the stream, as a named size_type count does.
+// Loki writes the cast event count (Loki Town.cpp 975). Keeping the size_type
+// count until output reproduces retail's count-store/stream-load ordering;
+// a named long count does not. Final comparison is 99.978165%, with zero
+// register/flow distance; the remaining difference is displacement/relocation.
+// Loki's spell plane uses fill_n (0x0818aef9), unlike the retained memset-based
+// writeBitset. Complete 0x004c2c16/0x004c2c69 clears the same caller buffer for
+// both planes. Preserve this caller operation rather than infer whole writers.
 VA(0x004c2ad9, 0x252)
 void TTown::write(TRawOStream* pOStream, int version) const
 {
@@ -420,7 +433,8 @@ void TTown::write(TRawOStream* pOStream, int version) const
         if (_m_disabledSpellsMask[spell])
             aSpells[spell / 8] |= 1 << spell % 8;
     *pOStream << aSpells;
-    *pOStream << static_cast<long>(_m_events.size());
+    std::vector<TTimedEvent>::size_type eventCount = _m_events.size();
+    *pOStream << static_cast<long>(eventCount);
     for (std::vector<TTimedEvent>::const_iterator iter = _m_events.begin(); iter != _m_events.end(); ++iter)
         iter->write(pOStream, version);
     if (version >= GAME_VERSION_SOD)

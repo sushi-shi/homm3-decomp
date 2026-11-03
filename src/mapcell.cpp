@@ -3806,6 +3806,13 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     return usedDefaultMask ? READ_OBJECT_TYPE_DEFAULT_MASK : 1;
 }
 
+// DC 0xf22cc names one outBuf[6], signed i/count and ushort_buffer; its
+// gzwrite rows store every checked result in count before the unsigned guard.
+// Keep those locals with the canonical writers. sizeof supplies the unsigned
+// comparison without casts, including the native negative-count conversion.
+// Residual: 94.0864%; VC6 keeps test<48> for shadow/trigger where retail
+// expands test and retains _Xran. Native count staging and the four-argument
+// writer reproduce the prior 656 bytes and named relocations exactly.
 // The final Write returns 1, not 0, on success.
 VA(0x00503c40, 0x2B9)
 DC_ADDRESS(0x0f22cc, 0x4b6)
@@ -3813,60 +3820,57 @@ MAC_ADDRESS(0x1269a0, 0x3a0)
 int NewfullMap::saveObjectType(TAbstractFile* outfile,
                                CObjectType* tempObjectType)
 {
+    int count;
     game::saveString(outfile, tempObjectType->m_imageName);
 
     char value = tempObjectType->m_width;
-    if (static_cast<unsigned>(writeScalar(outfile, value)) < 1)
+    count = writeScalar(outfile, value);
+    if (count < sizeof(value))
         return -1;
     value = tempObjectType->m_height;
-    if (static_cast<unsigned>(writeScalar(outfile, value)) < 1)
+    count = writeScalar(outfile, value);
+    if (count < sizeof(value))
         return -1;
 
     unsigned char packed[6];
-    int i;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_drawCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
-    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
+    count = writePackedBitsCount<sizeof(packed)>(
+            outfile, tempObjectType->m_drawCells, sizeof(packed) * 8,
+            packed);
+    if (count < sizeof(packed))
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_passableCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
-    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
+    count = writePackedBitsCount<sizeof(packed)>(
+            outfile, tempObjectType->m_passableCells, sizeof(packed) * 8,
+            packed);
+    if (count < sizeof(packed))
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_shadowCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
-    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
+    count = writePackedBitsCount<sizeof(packed)>(
+            outfile, tempObjectType->m_shadowCells, sizeof(packed) * 8,
+            packed);
+    if (count < sizeof(packed))
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_triggerCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
-    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
+    count = writePackedBitsCount<sizeof(packed)>(
+            outfile, tempObjectType->m_triggerCells, sizeof(packed) * 8,
+            packed);
+    if (count < sizeof(packed))
         return -1;
 
-    short typeValue = tempObjectType->m_objectType;
-    if (static_cast<unsigned>(writeScalar(outfile, typeValue)) < 2)
+    unsigned short typeValue = tempObjectType->m_objectType;
+    count = writeScalar(outfile, typeValue);
+    if (count < sizeof(typeValue))
         return -1;
 
     int extra = tempObjectType->m_extra;
-    if (static_cast<unsigned>(writeScalar(outfile, extra)) < 4)
+    count = writeScalar(outfile, extra);
+    if (count < sizeof(extra))
         return -1;
 
     value = tempObjectType->m_suppressDraw;
-    return static_cast<unsigned>(writeScalar(outfile, value)) < 1 ? -1 : 1;
+    count = writeScalar(outfile, value);
+    return count < sizeof(value) ? -1 : 1;
 }
 
 // The trailing byte is normalized to bool, not copied. Like Save, this

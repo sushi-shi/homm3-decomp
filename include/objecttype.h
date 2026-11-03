@@ -187,12 +187,19 @@ public:
     TObjectType& setSlotCategory(int category);
     TObjectType& setBUnderlay(bool underlay);
 
-    // Loki h3maped TObjectType::getRecommendedTerrainMask/getSlotCategory/
-    // getTriggerLoc (0x8363ac0, 0x8363ad4, 0x8363b48).
+    // Loki h3maped's const getTerrainMask (0x8363aac) returns this+0x14;
+    // getRecommendedTerrainMask (0x8363ac0) returns this+0x18. The RMG
+    // serializer uses these const views; other mutable field consumers
+    // retain their distinct bitset-proxy paths.
+    const std::bitset<kNumTerrainTypes>& getTerrainMask() const
+    {
+        return _m_terrainMask;
+    }
     const std::bitset<kNumTerrainTypes>& getRecommendedTerrainMask() const
     {
         return _m_recommendedTerrainMask;
     }
+    // Loki getSlotCategory/getTriggerLoc: 0x8363ad4/0x8363b48.
     int getSlotCategory() const { return _m_slotCategory; }
     // Loki h3maped TObjectType::hasTrigger; the stored byte type matches
     // getBUnderlay's.

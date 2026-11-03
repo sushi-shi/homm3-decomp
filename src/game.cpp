@@ -3082,11 +3082,15 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // is an indexed one-byte array, local to the hero loop.
 // The scalar write groups own no locals; removing their artificial scopes and
 // testing saveVector directly preserves the natural lifetime of saved.
-// Residual: VC6 expands both pool-loop saveVector calls that retail retains,
-// and the associated failure cleanup differs. Bracing every error return with
-// count restored falls from 92.8015 to 90.7320; moving the shared index to
-// entry and removing the remaining availability-guard braces are byte-flat.
-// Keep the canonical helper calls.
+// Residual (92.2229%): the byte-identical C2 trace retains all six saveVector
+// calls and expands writePackedBits. The failure cleanup before the vector
+// loops expands SavedGameHeader with 115 budget units left, leaving 48 for
+// the later sites (destructor cost 67); retail has a different cleanup split.
+// The point/long saveVector specializations fold together: their unmatched
+// names in the aggregate call report do not establish an inline mismatch.
+// Earlier error-return bracing with count restored fell 92.8015 -> 90.7320;
+// moving the shared index to entry was flat. Keep the canonical helper calls.
+// See docs/matching/game-save-recovery.md for the native evidence and limits.
 VA(0x004be3f0, 0xAA5)
 DC_ADDRESS(0x0a8cd0, 0xcfe)
 MAC_ADDRESS(0x0d2954, 0x1ba8)  // SavedGameHeader + write/pool callee sequence
@@ -3154,21 +3158,10 @@ int game::save(TAbstractFile* outfile)
         return -1;
     }
 
-    // Complete's packed hero-player masks have no DC loop counterpart.
-    // Retail retains bitset<8>::test. Reading through const operator[]
-    // preserves that boundary without a pin (59.5944% for the whole save);
-    // direct test(), including on a const reference, expands it (57.4921%).
-    for (i = 0; i < HERO_COUNT; ++i) {
-        const std::bitset<NUM_PLAYERS>& players = m_heroPoolMap[i];
-        unsigned char poolBits[1];
-        poolBits[0] = 0;
-        unsigned int player;
-        for (player = 0; player < NUM_PLAYERS; ++player) {
-            if (players[player])
-                poolBits[player >> 3] |= 1 << (player & 7);
-        }
-        outfile->write(poolBits, sizeof(poolBits));
-    }
+    // Mac 0xd32f0..0xd3368 expands the shared byte-buffer writer for each
+    // hero's player mask, retaining its const bitset<8>::test call.
+    for (i = 0; i < HERO_COUNT; ++i)
+        writePackedBits(outfile, m_heroPoolMap[i]);
 
     // The twelve guarded scalar writes. Retail carries FOUR temps for
     // them, not one: a char reused across writes 1-2 and 7-9, an unsigned
@@ -3211,7 +3204,7 @@ int game::save(TAbstractFile* outfile)
     if (count < sizeof(byteValue))
         return -1;
     // f_1f698 is an int member and retail writes only its low byte.
-    byteValue = static_cast<char>(m_gameVersion);
+    byteValue = m_gameVersion;
     count = outfile->write(&byteValue, sizeof(byteValue));
     if (count < sizeof(byteValue))
         return -1;
@@ -6039,26 +6032,21 @@ void game::applyMapHeaderAvailability()
     }
 }
 
-// Residual (87.0015%, 2026-08-26): the first fourteen CFG blocks are exact
-// and the player/condition/map-entry write order is complete.  Retail keeps
-// the fixed-name string's constructor and destructor expanded only through
-// calls to _Tidy, while this TU's /Ob2 budget expands those _Tidy bodies and
-// adds eleven CFG blocks.  Retail also packs the final availability byte as
-// a one-byte array; spelling that literally reproduces its index arithmetic
-// but changes the later bitset range-throw phase and falls to 80.44%.  The
-// scalar spelling below is the measured whole-function plateau.  Reusing the
-// saved name length, rather than calling length() again, is likewise
-// codegen-significant: the second inline candidate moves the throw phase and
-// falls to 79.19%.
-// DC game.cpp:6920 records construction of the local string from the saved
-// hero name; Mac 0xdb804+0x40c retains that constructor call. Direct
-// construction raises VC6 from 89.9519% to 90.3579% and gives the Mac
-// candidate the same 1776-byte extent as retail, with one direct-call gap.
-// DC 0xb0754's twenty gzwrite calls stage each field DC shares through a
-// local buffer, so those writes stay direct. Mac swaps the Complete-only
-// alignment and name length as owned values, which keep writeValue; the
-// setup key and portrait reuse enumBuffer like the other enum writes
-// (95.51%; writeValue<char> for those two gives 78.12%).
+// DC6802/6803..6966/6967 stores each checked write in count before its
+// unsigned sizeof comparison; 6824/6825, 6829/6830 and 6922/6923 do the
+// same for saveString. Restoring these lifetimes recovers the nested string
+// call boundary while preserving the shared packed writer (88.34 -> 99.16%).
+// DC6920 and Mac0xdbc10 retain construction of the local fixed-name string.
+// Complete's owned alignment and length values keep their endian writeValue
+// calls; the other narrow writes retain the recorded staging buffers.
+// Retail reloads the custom name length after writing its length prefix.
+// Keep that operation despite its current 97.8992% score: three natural
+// length-lifetime variants emit identical code; caching the earlier length
+// scores 99.1594% but omits this retail reload. The remaining difference is
+// buffer/register placement and the nested string _Eos/char_traits::assign
+// call at +0x6ca, with 81 exact CFG blocks and one size-only block. No
+// helper is expanded by hand.
+// See docs/matching/game-save-recovery.md for verification and Mac coverage.
 VA(0x004c4f10, 0x71D)
 DC_ADDRESS(0x0b0188, 0x5cc)
 MAC_ADDRESS(0x0db804, 0x6f0)  // game::Save caller + DC identity + stream-write order
@@ -6072,30 +6060,34 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     // DC NewSMapHeader::Save records sbyte_buffer as signed char.
     signed char sbyteBuffer;
 
-    if (outfile->write(&m_version, sizeof(m_version)) < sizeof(m_version))
+    count = outfile->write(&m_version, sizeof(m_version));
+    if (count < sizeof(m_version))
         return -1;
 
     boolBuffer = m_isPlayable;
-    if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-        < sizeof(boolBuffer))
+    count = outfile->write(&boolBuffer, sizeof(boolBuffer));
+    if (count < sizeof(boolBuffer))
         return -1;
 
-    if (outfile->write(&m_size, sizeof(m_size)) < sizeof(m_size))
+    count = outfile->write(&m_size, sizeof(m_size));
+    if (count < sizeof(m_size))
         return -1;
 
     boolBuffer = m_hasTwoLayers;
-    if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-        < sizeof(boolBuffer))
+    count = outfile->write(&boolBuffer, sizeof(boolBuffer));
+    if (count < sizeof(boolBuffer))
         return -1;
 
-    if (game::saveString(outfile, m_mapName) < 0)
+    count = game::saveString(outfile, m_mapName);
+    if (count < 0)
         return -1;
-    if (game::saveString(outfile, m_mapDescription) < 0)
+    count = game::saveString(outfile, m_mapDescription);
+    if (count < 0)
         return -1;
 
     ucharBuffer = m_difficulty;
-    if (outfile->write(&ucharBuffer, sizeof(ucharBuffer))
-        < sizeof(ucharBuffer))
+    count = outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    if (count < sizeof(ucharBuffer))
         return -1;
 
     writeValue<char>(outfile, m_maxHeroLevel);
@@ -6104,86 +6096,88 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     for (i = 0; i < NUM_PLAYERS; ++i, ++player) {
 
         boolBuffer = player->m_canBeHuman;
-        if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        count = outfile->write(&boolBuffer, sizeof(boolBuffer));
+        if (count < sizeof(boolBuffer))
             return -1;
 
         boolBuffer = player->m_canBeComputer;
-        if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        count = outfile->write(&boolBuffer, sizeof(boolBuffer));
+        if (count < sizeof(boolBuffer))
             return -1;
 
         enumBuffer = player->m_aiStrategy;
-        if (outfile->write(&enumBuffer, sizeof(enumBuffer))
-            < sizeof(enumBuffer))
+        count = outfile->write(&enumBuffer, sizeof(enumBuffer));
+        if (count < sizeof(enumBuffer))
             return -1;
 
         writeValue<unsigned short>(outfile,
             LITTLE_ENDIAN_SHORT(player->m_legalAlignments));
 
         boolBuffer = player->m_hasRandomAlignment;
-        if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        count = outfile->write(&boolBuffer, sizeof(boolBuffer));
+        if (count < sizeof(boolBuffer))
             return -1;
 
         boolBuffer = player->m_generateHero;
-        if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        count = outfile->write(&boolBuffer, sizeof(boolBuffer));
+        if (count < sizeof(boolBuffer))
             return -1;
 
         if (player->m_generateHero) {
             sbyteBuffer = player->m_castleLoc.m_x;
-            if (outfile->write(&sbyteBuffer, sizeof(sbyteBuffer))
-                < sizeof(sbyteBuffer))
+            count = outfile->write(&sbyteBuffer, sizeof(sbyteBuffer));
+            if (count < sizeof(sbyteBuffer))
                 return -1;
             sbyteBuffer = player->m_castleLoc.m_y;
-            if (outfile->write(&sbyteBuffer, sizeof(sbyteBuffer))
-                < sizeof(sbyteBuffer))
+            count = outfile->write(&sbyteBuffer, sizeof(sbyteBuffer));
+            if (count < sizeof(sbyteBuffer))
                 return -1;
             sbyteBuffer = player->m_castleLoc.m_z;
-            if (outfile->write(&sbyteBuffer, sizeof(sbyteBuffer))
-                < sizeof(sbyteBuffer))
+            count = outfile->write(&sbyteBuffer, sizeof(sbyteBuffer));
+            if (count < sizeof(sbyteBuffer))
                 return -1;
         }
 
         enumBuffer = player->m_nonRandomHeroId;
-        if (outfile->write(&enumBuffer, sizeof(enumBuffer))
-            < sizeof(enumBuffer))
+        count = outfile->write(&enumBuffer, sizeof(enumBuffer));
+        if (count < sizeof(enumBuffer))
             return -1;
 
         if (player->m_nonRandomHeroId != -1) {
             enumBuffer = player->m_nonRandomHeroCustomPortrait;
-            if (outfile->write(&enumBuffer, sizeof(enumBuffer))
-                < sizeof(enumBuffer))
+            count = outfile->write(&enumBuffer, sizeof(enumBuffer));
+            if (count < sizeof(enumBuffer))
                 return -1;
 
             std::string s(player->m_nonRandomHeroCustomName);
-            if (game::saveString(outfile, s) < 0)
+            count = game::saveString(outfile, s);
+            if (count < 0)
                 return -1;
         }
     }
 
     enumBuffer = m_victoryCondition.m_type;
-    if (outfile->write(&enumBuffer, sizeof(enumBuffer))
-        < sizeof(enumBuffer))
+    count = outfile->write(&enumBuffer, sizeof(enumBuffer));
+    if (count < sizeof(enumBuffer))
         return -1;
     if (m_victoryCondition.m_type != -1)
         saveVictoryCondition(enumBuffer, outfile);
 
     enumBuffer = m_lossCondition.m_type;
-    if (outfile->write(&enumBuffer, sizeof(enumBuffer))
-        < sizeof(enumBuffer))
+    count = outfile->write(&enumBuffer, sizeof(enumBuffer));
+    if (count < sizeof(enumBuffer))
         return -1;
 
     if (m_lossCondition.m_type != -1)
         saveLossCondition(enumBuffer, outfile);
 
     enumBuffer = m_numTeams;
-    if (outfile->write(&enumBuffer, sizeof(enumBuffer))
-        < sizeof(enumBuffer))
+    count = outfile->write(&enumBuffer, sizeof(enumBuffer));
+    if (count < sizeof(enumBuffer))
         return -1;
     if (m_numTeams) {
-        if (outfile->write(m_teamInfo, sizeof(m_teamInfo)) < sizeof(m_teamInfo))
+        count = outfile->write(m_teamInfo, sizeof(m_teamInfo));
+        if (count < sizeof(m_teamInfo))
             return -1;
     }
 
@@ -6198,14 +6192,10 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 
         count = it->second.m_name.length();
         writeValue<int>(outfile, LITTLE_ENDIAN_LONG(count));
-        outfile->write(it->second.m_name.c_str(), count);
+        outfile->write(it->second.m_name.c_str(), it->second.m_name.length());
 
-        ucharBuffer = 0;
-        for (i = 0; i < NUM_PLAYERS; ++i) {
-            if (it->second.m_players.test(i))
-                ucharBuffer |= 1 << i;
-        }
-        outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+        // Mac 0xdbe4c..0xdbeb4 owns a one-byte array and ignores write status.
+        writePackedBits(outfile, it->second.m_players);
     }
 
     return 0;
