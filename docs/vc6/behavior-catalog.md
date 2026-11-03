@@ -1220,6 +1220,15 @@ retains four returns but introduces an EAX-to-ECX copy: `IS_ERROR` adds
 mask/compare instructions (90.8772%), while `HRESULT_SEVERITY` adds
 shift/mask/compare instructions (89.1228%). Neither changes the restore/store
 order or provides a missing owner/helper model.
+A common Win32 `BOOL` result also fails: it scores 82.1930% and retains
+int-to-bool conversion instructions in both final exits; the `bool` control
+stays at 96.4912%.
+
+An exact native analogue, `deque<int>::iterator::operator++` at `0x449230`,
+does emit compare/store/restore/branch. Its `_Next` store is part of the
+precondition, and the taken arm performs real pointer updates. It therefore
+does not present a constant-return diamond to the select pass and cannot
+justify an extra operation or helper in `TestLobbied`.
 
 The recognizer also requires the condition producer to be the immediately
 preceding tuple (`0x2eea9`). Computing a bool success/failure snapshot before
