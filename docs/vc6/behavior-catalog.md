@@ -1312,6 +1312,15 @@ two returns). All controls reproduce. Thus a second use changes early
 propagation as predicted, but these ordinary forms do not remove the later
 materialization or close the restore/store residual.
 
+Computing `SUCCEEDED` only in the success return after the failure guard
+also fails to preserve a useful distinction. With one pre-guard status write,
+local HRESULT, member HRESULT and named-bool returns all reproduce 88.4210%
+and three returns. Per-arm writes with either raw or member status returns
+normalize to the existing four-return 96.4912% body. Using the existing
+inherited `getLastError()` accessor in that success return gives the same
+88.4210%/96.4912% results. These controls cover a predicate computed inside
+the surviving arm, separately from the earlier saved-bool reuse probes.
+
 The two result arms must each contain only one assignment or return, apart
 from metadata. Indirect selected operands (kind 6) reject conversion; constant
 1/0 operands pass. Different operand type words do not themselves reject it:
