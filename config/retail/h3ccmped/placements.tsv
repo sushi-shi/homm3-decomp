@@ -297,7 +297,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00015cf0	0x1e	func	??_G?$basic_ios@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	resourcemanager	external	vtable of ?$basic_ios@DU?$char_traits@D@std@@@std (RTTI) slot 0
 0x00015d10	0x2f	func	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	CampaignDoc	external	masked body (47 bytes, 3 relocations) unique at a census start
 0x00015d40	0x1e	func	??_G?$basic_streambuf@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	resourcemanager	external	vtable of ?$basic_streambuf@DU?$char_traits@D@std@@@std (RTTI) slot 0
-0x00015d60	0x1e	func	??_GTCampaign@@QAEPAXI@Z	CampaignDoc	external	referenced by ??0TScenarioPropsSheet@@QAE@PAVCWnd@@PAVTCampaignDoc@@H@Z at +0x122
+0x00015d60	0x1e	func	??_GTCampaign@@QAEPAXI@Z	CampaignDoc	external	referenced by 0x00013600 at +0x172
 0x00015d80	0x45	func	?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@2@_N@Z	CampaignDoc	external	masked body (69 bytes, 3 relocations) unique at a census start
 0x00015dd0	0x3b	func	??0?$fpos@H@std@@QAE@J@Z	resourcemanager	external	masked body (59 bytes, 5 relocations) unique at a census start
 0x00015e10	0x187	func	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEPAV?$auto_ptr@VTScenarioStartingBonus@@@2@PAV32@ABV32@@Z	CampaignDoc	external	masked body (391 bytes, 13 relocations) unique at a census start
@@ -324,7 +324,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00016e10	0x3b	func	?_write@TRawOStream@@AAEAAV1@ABH@Z	CampaignDoc	external	masked body (59 bytes, 3 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x00016e80	0x8	func	??_ETStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@WFE@AEPAXI@Z	CampaignDoc	external	vtable ??_7TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@6BTGzInflateBuf@@@ stored by 0x00010d70 slot 0
 0x00016e90	0x8	func	??_ETGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@WBA@AEPAXI@Z	CampaignDoc	external	vtable ??_7TGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@6BTCampaignScenarioMap@@@ stored by 0x00010c30 slot 0
-0x00018da0	0x167	func	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	Player	external	referenced by ?InitializeGameResourceTypeTraitsTable@@YAXXZ at +0xa0
+0x00018da0	0x167	func	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	Player	external	referenced by ??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z at +0x207
 0x00019100	0x31d	func	?initializeCampaignMapTraitsTable@@YAEXZ	campaignmap	external	masked body (797 bytes, 28 relocations) unique at a census start
 0x00019420	0x16	func	__h3cg$campaignmap$static_dtor$campaignNames	campaignmap	external	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x24
 0x0001af10	0x1e	func	??_GCMenu@@UAEPAXI@Z	CampaignMapWnd	external	vtable of CMenu (RTTI) slot 1
@@ -420,7 +420,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000255a0	0xce	func	?overflow@TGzDeflateBuf@@MAEHH@Z	gzinflatebuf	external	masked body (206 bytes, 3 relocations) unique at a census start
 0x00025670	0x6d	func	?_getC@TGzInflateBuf@@AAEHXZ	gzinflatebuf	external	masked body (109 bytes, 0 relocations) unique at a census start
 0x000256e0	0x11	func	?_putBackC@TGzInflateBuf@@AAEXD@Z	gzinflatebuf	external	masked body (17 bytes, 0 relocations) unique at a census start
-0x00025700	0x5a7	func	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	gzinflatebuf	external	referenced by 0x00010d70 at +0x81
+0x00025700	0x5a7	func	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	gzinflatebuf	external	masked body (1447 bytes, 111 relocations) unique at a census start
 0x00025cb0	0xba	func	??0TDataError@TGzInflateBuf@@QAE@XZ	gzinflatebuf	external	masked body (186 bytes, 11 relocations) unique at a census start
 0x00025d70	0x4b	func	??1TAllocationFailure@@UAE@XZ	gzinflatebuf	external	referenced by ??_GTAllocationFailure@@UAEPAXI@Z at +0x4; ICF-folded with 8 identical bodies
 0x00025dc0	0x15a	func	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	gzinflatebuf	external	referenced by __CT??_R0?AVTDataError@TGzInflateBuf@@@8??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z28 at +0x18
@@ -926,7 +926,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00098ce0	0x1c	data	__CT??_R0_N@81	gzinflatebuf	external	referenced by __CTA1_N at +0x4
 0x00098d00	0x8	data	__CTA1_N	gzinflatebuf	external	referenced by __TI1_N at +0xc
 0x00098d08	0x10	data	__TI5?AVTAllocationFailure@@	gzinflatebuf	external	referenced by ??0TGzDeflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@HH@Z at +0xa7
-0x00098d18	0x10	data	__TI1_N	gzinflatebuf	external	referenced by ?InitInstance@TCampaignEditorApp@@UAEHXZ at +0x73
+0x00098d18	0x10	data	__TI1_N	gzinflatebuf	external	referenced by ??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z at +0x13a
 0x00098fb8	0x1c	data	__CT??_R0PAX@84	CampaignDoc	external	referenced by __CTA3PAVCException@@ at +0xc
 0x00098fd8	0x1c	data	__CT??_R0PAVCObject@@@84	CampaignDoc	external	referenced by __CTA3PAVCException@@ at +0x8
 0x00098ff8	0x1c	data	__CT??_R0PAVCException@@@84	CampaignDoc	external	referenced by __CTA3PAVCException@@ at +0x4
@@ -948,9 +948,15 @@ rva	size	kind	name	unit	linkage	evidence
 0x0009a200	0x1c	data	__CT??_R0?AVbad_cast@std@@@8??0bad_cast@std@@QAE@ABV01@@Z12	resourcemanager	external	referenced by __CTA2?AVbad_cast@std@@ at +0x4
 0x0009a220	0xc	data	__CTA2?AVbad_cast@std@@	resourcemanager	external	referenced by __TI2?AVbad_cast@std@@ at +0xc
 0x0009a230	0x10	data	__TI2?AVbad_cast@std@@	resourcemanager	external	referenced by ?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z at +0x367
+0x0009a8e8	0x14	data	__CTA4PAVTCampaignDocLoadFailure@@	CampaignDoc	external	referenced by __TI4PAVTCampaignDocLoadFailure@@ at +0xc
+0x0009a900	0x1c	data	__CT??_R0PAVTCampaignDocLoadFailure@@@84	CampaignDoc	external	referenced by __CTA5PAVTCampaignDocInvalidFileVersion@@ at +0x8
+0x0009a920	0x1c	data	__CT??_R0PAVTCampaignDocInvalidFileVersion@@@84	CampaignDoc	external	referenced by __CTA5PAVTCampaignDocInvalidFileVersion@@ at +0x4
+0x0009a940	0x18	data	__CTA5PAVTCampaignDocInvalidFileVersion@@	CampaignDoc	external	referenced by __TI5PAVTCampaignDocInvalidFileVersion@@ at +0xc
+0x0009a958	0x10	data	__TI4PAVTCampaignDocLoadFailure@@	CampaignDoc	external	referenced by 0x00013600 at +0x603
+0x0009a968	0x10	data	__TI5PAVTCampaignDocInvalidFileVersion@@	CampaignDoc	external	referenced by 0x00013600 at +0xfb
 0x0009c5e0	0x1c	data	__CT??_R0?AVTDataError@TGzInflateBuf@@@8??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z28	gzinflatebuf	external	referenced by __CTA3?AVTDataError@TGzInflateBuf@@ at +0x4
 0x0009c600	0x10	data	__CTA3?AVTDataError@TGzInflateBuf@@	gzinflatebuf	external	referenced by __TI3?AVTDataError@TGzInflateBuf@@ at +0xc
-0x0009c610	0x10	data	__TI3?AVTDataError@TGzInflateBuf@@	gzinflatebuf	external	referenced by ?underflow@TGzInflateBuf@@UAEHXZ at +0x189
+0x0009c610	0x10	data	__TI3?AVTDataError@TGzInflateBuf@@	gzinflatebuf	external	referenced by ??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z at +0x220
 0x0009c9b0	0x1c	data	__CT??_R0?AVTError@?$TGDIObjectSelector@VCFont@@@@@8??0TError@?$TGDIObjectSelector@VCFont@@@@QAE@ABV01@@Z32	MainFrame	external	referenced by __CTA6?AVTError@?$TGDIObjectSelector@VCFont@@@@ at +0x4
 0x0009c9d0	0x1c	data	__CTA6?AVTError@?$TGDIObjectSelector@VCFont@@@@	MainFrame	external	referenced by __TI6?AVTError@?$TGDIObjectSelector@VCFont@@@@ at +0xc
 0x0009c9f0	0x10	data	__TI6?AVTError@?$TGDIObjectSelector@VCFont@@@@	MainFrame	external	referenced by ?OnCreate@TMainFrame@@IAEHPAUtagCREATESTRUCTA@@@Z at +0x23b
@@ -4262,12 +4268,12 @@ rva	size	kind	name	unit	linkage	evidence
 0x000c9c28	0x10	data	_dungeonGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator1 at +0x2
 0x000c9c38	0x1f0	data	?aFortressBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aFortressBuildingTraits at +0x8
 0x000c9e28	0x10	data	_dungeonGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator2 at +0x2
-0x000c9e38	0x10	data	_necropolisGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator6 at +0x2
+0x000c9e38	0xc	data	_necropolisGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator6 at +0x2
 0x000c9e48	0x10	data	_fortressGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$fortressGenerator6 at +0x2
 0x000c9e58	0x10	data	_necropolisGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator7 at +0x2
 0x000c9e68	0x10	data	_castleGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator2 at +0x2
 0x000c9e78	0x10	data	_castleGenerator4	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator4 at +0x2
-0x000c9e88	0x10	data	_fortressGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$fortressGenerator1 at +0x2
+0x000c9e88	0xc	data	_fortressGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$fortressGenerator1 at +0x2
 0x000c9e98	0x10	data	_infernoGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$infernoGenerator2 at +0x2
 0x000c9ea8	0x10	data	_castleGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator3 at +0x2
 0x000c9eb8	0x10	data	_confluxGenerator4	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$confluxGenerator4 at +0x2
