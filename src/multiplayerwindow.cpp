@@ -91,9 +91,9 @@ inline bool CHeroSessions::getSessionInfo(unsigned long index, char* sessName,
 
     numPlayers = session->m_playerCount;
     status = open;
-    if (session->isJoinDisabled())
+    if (session->IsJoinDisabled())
         status = closed;
-    else if (session->isPasswordProtected())
+    else if (session->IsPasswordProtected())
         status = password;
     return true;
 }
@@ -717,7 +717,7 @@ DC_ADDRESS(0x100c44, 0x5a)
 void TMultiPlayerWindow::RefreshSessions()
 {
     m_sessions->destroy();
-    g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
+    g_dPlay->EnumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
     m_sessTimer = GameTime::get();
     m_gameSlider->updateResolution(
         m_sessions->getCount() - 12);
@@ -771,7 +771,7 @@ inline bool TMultiPlayerWindow::onIPX()
     if (::initRemote(MP_IPX, m_playerName->getText()) &&
         initConnection(0, 0)) {
         DPCAPS caps;
-        g_dPlay->getCaps(&caps, 1);
+        g_dPlay->GetCaps(&caps, 1);
         m_sessionRefreshTimeout = caps.dwTimeout + 100;
         if (g_mpNetProtocol == MP_TCP)
             m_sessionRefreshTimeout = 1000;
@@ -958,7 +958,7 @@ VA(0x0050fa10, 0x9F)
 DC_ADDRESS(0x100ca0, 0x6a)
 bool TMultiPlayerWindow::joinSession(CDPlaySession* session, const char* password)
 {
-    if (!g_dPlay->joinSession(&session->m_guidInstance,
+    if (!g_dPlay->JoinSession(&session->m_guidInstance,
                              const_cast<char*>(password)))
         return 0;
 
@@ -993,7 +993,7 @@ bool TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
     if (g_mpNetProtocol != MP_TCP)
         flags |= 0x2000;
 
-    if (!g_dPlay->hostSession(fullName, flags, 8,
+    if (!g_dPlay->HostSession(fullName, flags, 8,
                              const_cast<char*>(password)))
         return 0;
 
@@ -1007,7 +1007,7 @@ bool TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
     g_thisNetPlayerInfo.m_version = version;
 
     if (g_mpNetProtocol == MP_TCP)
-        g_dPlay->getIPAddress(g_thisNetPlayerInfo.m_dpid, m_localIpAddress);
+        g_dPlay->GetIPAddress(g_thisNetPlayerInfo.m_dpid, m_localIpAddress);
 
     return 1;
 }
@@ -1024,7 +1024,7 @@ bool TMultiPlayerWindow::initRemote(eNetGameType netGameType, const char* extra,
     if (!initConnection(const_cast<char*>(extra), comportInfo))
         return 0;
 
-    g_dPlay->getCaps(&dpCaps, 1);
+    g_dPlay->GetCaps(&dpCaps, 1);
     m_sessionRefreshTimeout = dpCaps.dwTimeout + 100;
     if (g_mpNetProtocol == MP_TCP)
         m_sessionRefreshTimeout = 1000;
@@ -1240,7 +1240,7 @@ bool TMultiPlayerWindow::onModemJoin()
     ShowCursor(1);
     m_sessions->destroy();
     for (int retry = 0; retry < 3; ++retry) {
-        g_dPlay->enumSessions(m_sessions, 0, 0x42);
+        g_dPlay->EnumSessions(m_sessions, 0, 0x42);
         if (g_dPlay->getLastError() == g_dplayErrorUserCancel)
             break;
         if (!retry)
@@ -1282,7 +1282,7 @@ bool TMultiPlayerWindow::onDirectJoin()
     m_sessions->destroy();
     ShowCursor(1);
     for (int retry = 0; retry < 2; ++retry) {
-        unsigned char enumFailed = !g_dPlay->enumSessions(
+        unsigned char enumFailed = !g_dPlay->EnumSessions(
             m_sessions, m_sessionRefreshTimeout, 0x42);
         if (g_dPlay->getLastError() == g_dplayErrorUserCancel)
             break;
@@ -1346,7 +1346,7 @@ bool TMultiPlayerWindow::onJoin()
 
     const char* password = 0;
     CMPInputDlg dlg(20, 20);
-    if (session->isPasswordProtected()) {
+    if (session->IsPasswordProtected()) {
         dlg.m_header1->setText(g_mpHelp[6].m_text);
         dlg.m_header2->setText(g_generalText->GetText(GENERAL_TEXT_PASSWORD));
         dlg.m_field1->enable(0);
@@ -1442,7 +1442,7 @@ bool TMultiPlayerWindow::onTCP()
     }
 
     m_sessions->destroy();
-    g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
+    g_dPlay->EnumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
     m_sessTimer = GameTime::get();
     m_gameSlider->updateResolution(
         m_sessions->getCount() - 12);
@@ -1488,7 +1488,7 @@ bool TMultiPlayerWindow::OnSearch()
 
     CHourGlass hourGlass(1);
     m_sessions->destroy();
-    g_dPlay->enumSessions(m_sessions, 5000, 0x42);
+    g_dPlay->EnumSessions(m_sessions, 5000, 0x42);
 
     if (!m_sessions->getCount()) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_IP_ADDRESS_WAS_NOT_FOUND), 1, -1, -1,

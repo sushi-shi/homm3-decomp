@@ -1175,6 +1175,32 @@ does not restore retail's four. These are not matching source fixes.
 Severity and success switches retain extra extraction/dispatch instructions.
 Keep the natural signed-status guard while this source distinction is open.
 
+Full-TU, reproduced profile controls reject a size-mode explanation: `/O1`
+and `/O2 /Os` lower this function to 66.2281% and lose 78 exact siblings;
+`/O2 /Og-` lowers it to 25.8421% and loses all 85 exact siblings. A fully
+nested positive-guard model with one bool result avoids select conversion,
+but keeps that result in BL and emits one return, not four. Direct severity-
+bit guards and dispatches also score below the signed-status baseline.
+Restoring the independently proven bool interfaces and result locals across
+the TU preserves its 85 exact functions without changing this residual.
+A reproduced `/G3` control emits identical code and relocation identities
+for the whole TU, retaining the same 88.4210% lobby score.
+
+Query/fetch-loop controls are also distinct from retail: a two-iteration
+counter loop retains one virtual-call site (19.4211%); pointer-phase loops
+emit two sites but only two returns (44.7368%/57.8070%). Exhaustive
+success/failure/severity switches without a fallback do not improve the
+baseline either.
+
+The recognizer's protected-branch flag (+9 bit 8) is not an ordinary-loop
+lever. Separate passive probes reproduce all 4,153 object bytes: `0x187`
+appears in C++ catch transfer, `0x188/189` in finally transfer/continuation,
+`0x18b` in EH scope lowering and `0x18c` with nonreturning calls; `0x18a`
+remains unidentified. The tested ordinary if/switch/while constructs emit
+none of this family. No such exception or nonreturning operation is evidenced
+in TestLobbied. The x86 opcode-name table at `0xa5a88` ends at `_last`
+(`0x144`); reading past it does not recover names for these generic opcodes.
+
 ### D14. Word/byte extraction spellings (four measured forms)
 `textntry.cpp:87-97`: `(code & 0xFF00) >> 8` emits the byte-register extract
 `xor edx,edx; mov dl,ch` with NO re-widening; byte-narrowed spellings land

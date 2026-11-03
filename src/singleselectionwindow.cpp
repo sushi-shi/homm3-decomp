@@ -2982,7 +2982,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
             transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
 
             CAutoArray<CDPlayPlayer> playerArray;
-            g_dPlay->enumPlayers(&playerArray, 0, 0);
+            g_dPlay->EnumPlayers(&playerArray, 0, 0);
             for (int i = 0; i < playerArray.getCount(); ++i) {
                 CDPlayPlayer* curr = playerArray.get(i);
                 std::auto_ptr<int> version(static_cast<int*>(
@@ -3044,7 +3044,7 @@ void TSingleSelectionWindow::setupNewGameMode()
             transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
 
             CAutoArray<CDPlayPlayer> playerArray;
-            g_dPlay->enumPlayers(&playerArray, 0, 0);
+            g_dPlay->EnumPlayers(&playerArray, 0, 0);
             for (int i = 0; i < playerArray.getCount(); ++i) {
                 CDPlayPlayer* curr = playerArray.get(i);
                 std::auto_ptr<int> version(static_cast<int*>(
@@ -6083,7 +6083,7 @@ int TSingleSelectionWindow::windowHandler(message& msg)
         if (m_newPlayerUpdateMan)
             m_newPlayerUpdateMan->tick();
 
-        CNetMsg* networkMsg = getRemoteData(1, 0);
+        CNetMsg* networkMsg = GetRemoteData(1, 0);
         bool cancel = false;
         if (networkMsg) {
             redraw = handleNetMsg(networkMsg, cancel);
@@ -6476,7 +6476,7 @@ MAC_ADDRESS(0x186528, 0x88)
 int CHostWaitDlg::handleMessage(message& msg)
 {
     int ret = CAnimatedDlg::handleMessage(msg);
-    m_msg = getRemoteData(1, 0);
+    m_msg = GetRemoteData(1, 0);
     if (m_msg && m_msg->m_dpidFrom == m_forWho)
         return exitDialog(msg);
     return ret;
@@ -7626,7 +7626,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
     if (g_remoteOn) {
         DPSESSIONDESC2* sessionDesc = g_dPlay->getCurrSession();
         sessionDesc->dwFlags |= 0x21;
-        g_dPlay->updateSessionDesc(sessionDesc);
+        g_dPlay->UpdateSessionDesc(sessionDesc);
         ::operator delete(sessionDesc);
     }
 
@@ -8441,7 +8441,7 @@ DC_ADDRESS(0x1451a0, 0x48)
 MAC_ADDRESS(0x186068, 0x58)
 CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(unsigned char inPopup, unsigned char* msgReceived)
 {
-    CNetMsg* msg = getRemoteData(0, &m_wasCompressed);
+    CNetMsg* msg = GetRemoteData(0, &m_wasCompressed);
     if (!msg)
         return 0;
     return handleNetMsg(msg);
@@ -8456,38 +8456,38 @@ CNetMsg* CSingleSelectionNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     switch (netMsg->m_subType) {
     case RS_REQUEST_HERO_FACE:
         g_singleSelectionWindow->onRequestHeroFaceMsg(netMsg, 1);
-        msg = getRemoteData(1, 0);
+        msg = GetRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_TOWN_UPDATE:
         g_singleSelectionWindow->onTownUpdateMsg(netMsg, 1);
-        msg = getRemoteData(1, 0);
+        msg = GetRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_SETAGR:
         g_singleSelectionWindow->onSetAGRMsg(netMsg, 1);
-        msg = getRemoteData(1, 0);
+        msg = GetRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_REQUEST_HERO_FACE_REPLY:
         g_singleSelectionWindow->onRequestHeroFaceReplyMsg(netMsg, 1);
-        msg = getRemoteData(1, 0);
+        msg = GetRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_CHAT_MSG:
         g_singleSelectionWindow->receiveChat(
             netMsg->m_dpidFrom, static_cast<CChatMsg*>(netMsg)->m_text, 1);
-        msg = getRemoteData(1, 0);
+        msg = GetRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_SETUP_PING:
         g_singleSelectionWindow->onPingMsg(netMsg);
-        msg = getRemoteData(1, 0);
+        msg = GetRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_SETUP_PING_RESPONSE:
         g_singleSelectionWindow->onPingResponseMsg(netMsg, 1);
-        msg = getRemoteData(1, 0);
+        msg = GetRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     default:

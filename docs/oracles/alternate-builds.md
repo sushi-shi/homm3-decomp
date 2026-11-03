@@ -163,6 +163,30 @@ from 16 to 17 exact pairs. `highlightLocators` went from 76 to 91 of 93
 identical shape instructions; the remaining two differences are glue TOC
 reloads.
 
+The network follow-up restores 78 member interfaces across CDPlay (52),
+CDPlayLobby (16), CDPlayHeroes (6), CDPlayMsg (2) and CDPlaySession (2), plus
+the free `GetRemoteData(bool, bool*)` wrapper. Original NB11 public names
+provide `_N` and native method spelling, for example
+`?Send@CDPlay@@UAA_NPAXKKK_N@Z` and
+`?GetRemoteData@@YAPAVCNetMsg@@_NPA_N@Z`. The latter's output-pointer contract
+also types `CSingleSelectionNetMsgHandler::m_wasCompressed` as bool. The
+unqualified byte field records for `m_connected` and `m_inSession` are not
+enough to change them.
+`GetSendQueueSize` and `GetReceiveQueueSize` also recover the two output
+references encoded by `AAK0`; their bodies take addresses only at the SDK
+pointer boundary. Complete's five-argument `RegisterApp` remains distinct
+from Dreamcast's older four-argument version because retail passes and stores
+the additional application-launcher name.
+
+Changing the return declarations alone initially regressed 31 wrappers:
+their authored `unsigned char ok = m_hRes >= 0` temporaries made VC6 use
+extra result-register moves when returning bool. Keeping the relational
+result in a `bool` local restores every preceding exact wrapper. Owning-TU
+symbol refresh and all affected Windows consumers preserve MAX; all 102
+previously available affected Mac comparisons retain scores and availability.
+The network count remains 279/280 exact. This corrects source interfaces;
+it does not resolve `TestLobbied`'s conditional-select residual.
+
 ## Compiler probes: which source differences each compiler preserves
 
 Each probe compiles two spellings of one small function. The compilers are
