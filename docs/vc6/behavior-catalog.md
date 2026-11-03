@@ -1155,8 +1155,16 @@ per case — the negative form folds the three `return 1` tails into
   a register value; `neg/sbb/neg` for `!= 0` of a CALL result (value already
   in EAX); `neg/sbb/inc` for `== 0`)
 
-`CDPlayLobby::TestLobbied` (`0x498b70`, still 88.4210%) provides a measured
-conditional-select residual. A passive trace of pinned SP3 C2 12.00.8447
+`CDPlayLobby::TestLobbied` (`0x498b70`) improves from 88.4210% to 96.4912%
+by recording the final HRESULT in each return path. The failure-first guard
+preserves retail's three branches and four returns; the stores combine into
+one executed write. The only remaining difference is `test; pop edi; store;
+jge` versus retail's `test; store; pop edi; jge`. All 85 exact siblings retain
+MAX. This is a source model supported by effects and control flow, not proof
+of a unique original spelling; Dreamcast compiles this Windows body out.
+
+The former direct-store model provides a measured conditional-select
+control. A passive trace of pinned SP3 C2 12.00.8447
 reproduces all 53,191 object bytes except the COFF timestamp. Three conditional
 branches and four return pseudos survive global optimization. Pass RVA
 `0x27954`, through recognizer `0x2ee61`, replaces the final diamond with
@@ -1173,7 +1181,34 @@ only two returns. Sharing just the initial HRESULT failure or allocation
 failure with the final failure gives three returns; later epilogue handling
 does not restore retail's four. These are not matching source fixes.
 Severity and success switches retain extra extraction/dispatch instructions.
-Keep the natural signed-status guard while this source distinction is open.
+They do not explain the four-return layout recovered by per-path recording.
+
+The per-path model has a member store plus a return in each arm, so it
+survives conditional-select conversion without a select event. An identity-
+checked trace reproduces 53,351 object bytes. Restore insertion `0x335cd`
+places `epop EDI` before the comparison. The first `0x3465c` pass cannot
+combine the stores: its dispatch at `0x34867` skips common-prefix hoister
+`0x36423` while per-function flag `0xac348` is 1. The driver clears that flag
+at `0x68660`, and the second invocation moves the common store immediately
+before `jge`. Both stores already had equivalent operands before the first
+invocation; a changed operand is not what enables the second one. Scheduling
+at `0x3ad9b` then moves the test ahead of `epop`, leaving the residual order.
+
+Passive dependency and ready-list traces reproduce the same 53,351 bytes.
+There is no direct or transitive `epop` → member-store dependency in the
+final block: both depend independently on the final call and precede `jge`.
+The test has priority `0x6000`; `epop EDI` and the store both have `0x4000`.
+Their earlier sequence keys are 10 and 12, respectively, so the equal-
+priority ready list keeps `epop` first. The scheduler chooses the test in
+cycle 6, then `epop` and the store in cycle 7. This is an observed scheduling
+tie, not a demonstrated alias barrier or proof of source-local impossibility.
+
+Const or entry-scope result declarations, explicit `else`, assignment in the
+guard, recording within comma returns, a shared query/fetch HRESULT and a
+common bool result all reproduce 96.4912%. Success-first recording and three
+nested positive-guard forms merge the early false exits and score 55.0%.
+The failure-first model is
+retained without added operations, helper bodies or lifetime barriers.
 
 The recognizer also requires the condition producer to be the immediately
 preceding tuple (`0x2eea9`). Computing a bool success/failure snapshot before

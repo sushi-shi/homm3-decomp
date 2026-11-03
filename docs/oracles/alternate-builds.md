@@ -46,14 +46,16 @@ from [the documented Platinum disc](https://archive.org/details/homm-antologiya-
 `autorun/launch/Setup3` → `Program_Executable_Files/Heroes3.exe`, and has SHA-256
 `2b777dcf02706adf6aaa98ed02f906ebc2f0ef3dd6ab00d434257b6dce60b0f0`.
 
-Compiling current `dxplay` with the pinned HoMM1 SP5 passes, while keeping
+Compiling the direct-store `dxplay` model with the pinned HoMM1 SP5 passes, while keeping
 the SP3 SDK and unit profile, reproduces all 86 SP3 comparison scores.
-`TestLobbied`'s section bytes and relocations are identical under both
+That model's `TestLobbied` section bytes and relocations are identical under both
 compilers: both still emit `setge` and score 88.4210%. The baseline and SP5
 objects were each reproduced independently. This isolates a source/context
 distinction that changing from SP3 to SP5 alone does not repair; it does not
 prove a unique original C++ spelling. See the conditional-select evidence in
 [behavior-catalog.md D13](../vc6/behavior-catalog.md#d13-bool-materialization).
+Subsequent per-path HRESULT recording restores the four returns under SP3
+and reaches 96.4912%; only the final member-store/EDI-restore order differs.
 
 ## Loki Linux (GCC 2.95.2)
 

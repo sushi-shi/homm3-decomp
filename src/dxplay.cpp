@@ -1019,42 +1019,21 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
     return buf;
 }
 
-// Residual (88.4210%): the two-call probe is byte-right; retail's final
-// `m_hRes >= 0` is a jge to separate return-1/return-0 epilogues, while our
-// CL folds either polarity to `setge al`. `why-branch` measures 57/3/4
-// instructions/branches/returns in retail versus 51/2/3 here, classifies the
-// residual as D6 plus D8/D13 branchless folding, and finds no catalog lever.
-// A 24-state batch of early/nested/single-pass exits, byte-result forms,
-// and separate GlobalAlloc/GlobalLock lifetimes also leaves 88.4211% best.
-// A named result initialized to zero and assigned in the success arm is a
-// negative control: it falls to 85.33% without recovering the extra exit.
-// A 24-source return-width/assignment/label batch stays at 88.4211%; a
-// further 17 nested-guard and scoped-return forms also fail to improve it.
-// The unchanged baseline is retained; scope/goto variants score at most
-// 77.5439% and do not reproduce retail's fourth return path.
-// Restoring Complete's public bool return type is byte-flat at 88.4211%,
-// including both remote.cpp callers; it preserves the branch-folding residual.
-// Sixteen connection-validity result controls (two reproduced objects) are
-// also flat at 88.4210%: returning the already validated buffer, with implicit
-// or explicit bool conversion, does not restore the branch. Both final test
-// polarities and void*/DPLCONNECTION* buffer types preserve all 86 exact
-// siblings. The missing separate exits remain unexplained.
-// Eight native-bool literal/polarity controls under the restored signature
-// emit one reproduced object: true/false versus integer return constants
-// leaves the same branchless result and all sibling scores unchanged.
-// DC compiles 1352..1379 out; GHND 0x42 plus GlobalLock is windowsx.h's
-// GlobalAllocPtr. The DirectPlay-sample goto FAILURE spelling with a
-// FAILED(hr) test falls to 54.30% (2026-09-29).
-// Native SDK interfaces, field order and m_hRes spelling are also byte-flat.
-// HRESULT severity/success switches retain separate exits (best 90.8772%)
-// but leave extra shift/setcc/dispatch instructions absent in retail; keep
-// the direct signed-status guard until a supported source model closes it.
-// Identity-checked SP3 C2 trace locates the fold in conditional-select pass
-// 0x27954, before tail merging: cost 2 passes threshold 10. A shared failure
-// label avoids it but leaves two returns (three if only one early failure
-// shares it). See docs/vc6/behavior-catalog.md D13.
-// Clearing buf on failure retains jge but adds pointer tracking and a final
-// test/setne (75.0%); a VC5 control still folds to setge and worsens siblings.
+// Each final path records the fetched HRESULT before returning its bool.
+// This preserves retail's three guards and four returns: VC6 retains the
+// status stores through conditional-select conversion, then combines them.
+// The direct pre-guard store folded the last diamond to setge (88.4210%).
+// No extra operation or status write occurs on an executed path.
+// Residual (96.4912%): ours emits test; pop edi; store; jge, whereas retail
+// emits test; store; pop edi; jge. All other instructions and return paths
+// agree. A passive compiler trace locates the store hoist after epop insertion;
+// see docs/vc6/behavior-catalog.md D13 for the phase evidence.
+// Const/entry result declarations, assignment in the guard, explicit else,
+// comma returns, shared query/fetch result and common bool return are flat.
+// Success-first recording merges the early false exits (55.0%). Earlier
+// direct-store result, pointer, loop and SDK status controls do not close it.
+// DC compiles lines 1352..1379 out. Both Collector's and Buka retain the same
+// retail body (Buka differs only in the GlobalAlloc/GlobalLock IAT operands).
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order
 DC_ADDRESS(0x08b69c, 0x4)
@@ -1067,10 +1046,13 @@ bool CDPlayLobby::TestLobbied()
     void* buf = GlobalLock(GlobalAlloc(0x42, size));
     if (!buf)
         return 0;
-    m_hRes = m_lpLobby->GetConnectionSettings(0, buf, &size);
-    if (m_hRes >= 0)
-        return 1;
-    return 0;
+    HRESULT result = m_lpLobby->GetConnectionSettings(0, buf, &size);
+    if (FAILED(result)) {
+        m_hRes = result;
+        return false;
+    }
+    m_hRes = result;
+    return true;
 }
 
 VA(0x00498be0, 0x31)
