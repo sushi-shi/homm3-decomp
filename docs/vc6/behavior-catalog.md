@@ -1268,6 +1268,15 @@ retains four returns but introduces an EAX-to-ECX copy: `IS_ERROR` adds
 mask/compare instructions (90.8772%), while `HRESULT_SEVERITY` adds
 shift/mask/compare instructions (89.1228%). Neither changes the restore/store
 order or provides a missing owner/helper model.
+The archived [DirectX 6.1 DPChat `ConnectUsingLobby` sample](https://github.com/NickCis/directx-6-1-sdk-samples/blob/fcd9eac7bb7d85a331dabd4521d67891692b2255/dplay/src/dpchat/lobby.cpp)
+contains the same size query, `GlobalAllocPtr(GHND, size)` allocation and
+fetch sequence. Its shared failure label owns real COM releases and
+`GlobalFreePtr`, and the function returns an HRESULT after establishing a
+connection. Those operations are absent from retail TestLobbied; the sample
+therefore supplies neither a missing cleanup lifetime nor proof of HoMM3's
+return structure. Keep the SDK macro interpretation distinct from an original
+source attribution.
+
 A common Win32 `BOOL` result also fails: it scores 82.1930% and retains
 int-to-bool conversion instructions in both final exits; the `bool` control
 stays at 96.4912%.
