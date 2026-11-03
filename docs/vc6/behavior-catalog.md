@@ -1273,6 +1273,17 @@ ECX constant state followed by XOR EAX / TEST ECX / SETNE AL normalization.
 Neither the ordinary copies nor this wider local supplies a matching late
 simplification; no datatype or helper change is adopted from this diagnostic.
 
+Sharing the actual HRESULT write between query failure and fetch failure is
+a distinct, semantically valid source control: successful query recording
+still precedes allocation, allocation failure returns separately, and each
+completed COM phase records its result once. This model reproduces 81.4035%
+and three native returns. Its shared failure block keeps the status store;
+the final success path keeps a separate store. Multiple incoming paths
+prevent both the simple select conversion and the late prefix hoist, whose
+`0x364e4` gate requires a singly referenced target. No earlier transformation
+splits this block into retail's separate failure exits. The measured output
+therefore supplies no new ordering improvement or helper to adopt.
+
 A fresh scored `compile-m dxplay` capture of the adopted per-path source
 reproduces the plain replay under the inert shim, then emits one lobby
 assembly at 96.4912% across both phase values and all 64 declaration offsets.
