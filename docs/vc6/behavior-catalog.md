@@ -1322,6 +1322,15 @@ two more compare/store/restore/branch sites: `getProtectionValue` at
 `loadSoundHeaders` at `0x598687` stores the opened campaign archive handle
 before a branch that reads and allocates headers. Neither is a constant-bool
 return diamond; neither supplies a missing lobby operation.
+A wider scan of all 12,022 admitted retail function ranges, without a score
+filter, finds 19 instances of the narrow compare/test, memory-destination
+MOV, POP(s), conditional-branch sequence. All have scored owners, and
+TestLobbied is the only non-exact owner. Five additional large-function
+sites are EH-state stores: `initMainClasses`, three `num_get::do_get`
+instantiations and the town-screen constructor. Their branches retain real
+construction/destruction work, not a constant-bool result selection. These
+sites do not justify adding a cleanup lifetime to the lobby probe. The scan
+is a bounded instruction-pattern search, not an exhaustive source-shape proof.
 
 The recognizer also requires the condition producer to be the immediately
 preceding tuple (`0x2eea9`). Computing a bool success/failure snapshot before
