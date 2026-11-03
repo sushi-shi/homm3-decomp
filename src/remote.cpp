@@ -142,11 +142,11 @@ CDPlayHeroes::~CDPlayHeroes()
 
 VA(0x00552530, 0x20E)
 DC_ADDRESS(0x11bad8, 0x48)
-unsigned char CDPlayHeroes::sysMsgHost(DPMSG_GENERIC* message,
+bool CDPlayHeroes::SysMsgHost(DPMSG_GENERIC* message,
                                        unsigned long toId)
 {
     unsigned char wasHost = isHost();
-    if (!CDPlay::sysMsgHost(message, toId))
+    if (!CDPlay::SysMsgHost(message, toId))
         return 0;
     if (!wasHost)
         handleHostXFer();
@@ -155,7 +155,7 @@ unsigned char CDPlayHeroes::sysMsgHost(DPMSG_GENERIC* message,
 
 VA(0x00552740, 0x1DE)
 DC_ADDRESS(0x11bb20, 0x20)
-unsigned char CDPlayHeroes::sysMsgSessionLost(DPMSG_GENERIC* message,
+bool CDPlayHeroes::SysMsgSessionLost(DPMSG_GENERIC* message,
                                               unsigned long toId)
 {
     CSessionLostMsg msg;
@@ -167,22 +167,22 @@ unsigned char CDPlayHeroes::sysMsgSessionLost(DPMSG_GENERIC* message,
 // then returns true; other object kinds go through the base dispatcher.
 VA(0x00552920, 0x216)  // anchor-string(playerDroppedLog) + dc-order-map
 DC_ADDRESS(0x11bb40, 0x20)
-unsigned char CDPlayHeroes::sysMsgDestroyPlayerOrGroup(
+bool CDPlayHeroes::SysMsgDestroyPlayerOrGroup(
     DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId)
 {
-    if (message->m_playerType == DPPLAYERTYPE_PLAYER) {
-        handlePlayerDrop(message->m_dpId);
+    if (message->dwPlayerType == DPLAY_PLAYER_TYPE_PLAYER) {
+        handlePlayerDrop(message->dpId);
         return 1;
     }
-    return CDPlay::sysMsgDestroyPlayerOrGroup(message, toId);
+    return CDPlay::SysMsgDestroyPlayerOrGroup(message, toId);
 }
 
 VA(0x00552b40, 0x14)
 DC_ADDRESS(0x11bb60, 0x3a)
-unsigned char CDPlayHeroes::sysMsgCreatePlayerOrGroup(
+bool CDPlayHeroes::SysMsgCreatePlayerOrGroup(
     DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId)
 {
-    return CDPlay::sysMsgCreatePlayerOrGroup(message, toId);
+    return CDPlay::SysMsgCreatePlayerOrGroup(message, toId);
 }
 
 // Mac polls its native receive buffer here and calls the same low-level
@@ -196,7 +196,7 @@ bool CDPlayHeroes::pollRemote()
     unsigned long toId;
 
     while (1) {
-        if (!receive(&fromId, &toId, &m_dpMsg, 1))
+        if (!Receive(&fromId, &toId, &m_dpMsg, 1))
             break;
         if (fromId == g_thisNetPlayerInfo.m_dpid)
             continue;
@@ -204,14 +204,14 @@ bool CDPlayHeroes::pollRemote()
             continue;
         CNetMsg* netMsg =
             static_cast<CNetMsg*>(static_cast<void*>(m_dpMsg.m_data));
-        if (handleLowLevelMsg(netMsg))
+        if (HandleLowLevelMsg(netMsg))
             continue;
         queueMsg(netMsg);
     }
 
-    if (m_res != DPLAY_RECEIVE_ERROR_NO_MESSAGES) {
+    if (m_hRes != DPLAY_RECEIVE_ERROR_NO_MESSAGES) {
         char description[256];
-        getErrorDesc(m_res, description);
+        getErrorDesc(m_hRes, description);
         g_logFile.log(DATA_COMPGEN(0x00682a98, dplayReceiveErrorLog,
                                 "DPlay Receive error [%s]"),
                     description);
@@ -265,7 +265,7 @@ static const long g_playerActiveUpdateInterval = 600000;
 VA(0x00552db0, 0x28F)
 DC_ADDRESS(0x11bc88, 0xd2)
 MAC_ADDRESS(0x2109e4, 0x1a0)
-unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
+bool CDPlayHeroes::HandleLowLevelMsg(CNetMsg* netMsg)
 {
     switch (netMsg->m_subType) {
     case RS_PING:
@@ -329,8 +329,8 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 VA(0x00553040, 0x1D1)
 DC_ADDRESS(0x11bd5c, 0xf4)
 MAC_ADDRESS(0x210b84, 0x14c)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map
-CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
-                                     unsigned char* wasCompressed)
+CNetMsg* CDPlayHeroes::GetRemoteData(bool removeFromQueue,
+                                     bool* wasCompressed)
 {
     if (wasCompressed)
         *wasCompressed = 0;
@@ -473,7 +473,7 @@ bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
     int retries = 0;
 
     while (!sent && retries <= 5) {
-        sent = send(msg, msg->m_size, g_thisNetPlayerInfo.m_dpid,
+        sent = Send(msg, msg->m_size, g_thisNetPlayerInfo.m_dpid,
                     dpidTo, guaranteed);
         if ((!sent
              && getLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER)
@@ -487,7 +487,7 @@ bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
                                     "Sending to invalid player? [%d]"),
                         dpidTo);
             if (getLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER) {
-                destroyPlayer(dpidTo);
+                DestroyPlayer(dpidTo);
                 handlePlayerDrop(dpidTo);
             }
             return true;
@@ -1150,10 +1150,10 @@ unsigned char CChatEdit::ignoreKey(message* msg)
 VA(0x00554400, 0xF)
 DC_ADDRESS(0x11cdfc, 0x18)
 MAC_ADDRESS(0x21294c, 0x30)
-CNetMsg* getRemoteData(unsigned char removeFromQueue,
-                       unsigned char* wasCompressed)
+CNetMsg* GetRemoteData(bool removeFromQueue,
+                       bool* wasCompressed)
 {
-    return g_dPlay->getRemoteData(removeFromQueue, 0);
+    return g_dPlay->GetRemoteData(removeFromQueue, 0);
 }
 
 VA(0x00554410, 0x93)
@@ -1187,8 +1187,8 @@ void remoteCleanup()
     if (g_remoteOn) {
         if (g_dPlay) {
             if (g_thisNetPlayerInfo.m_dpid)
-                g_dPlay->destroyPlayer(g_thisNetPlayerInfo.m_dpid);
-            g_dPlay->closeSession();
+                g_dPlay->DestroyPlayer(g_thisNetPlayerInfo.m_dpid);
+            g_dPlay->CloseSession();
             delete g_dPlay;
             g_dPlay = 0;
         }
@@ -1565,7 +1565,7 @@ int CWaitForReadyPlayersDlg::handleMessage(message& msg)
     }
 
     if (GameTime::elapsedSince(m_startTime) >= 3000) {
-        CNetMsg* netMsg = getRemoteData(1, 0);
+        CNetMsg* netMsg = GetRemoteData(1, 0);
         if (netMsg) {
             CMessageKill killMsg(netMsg);
             switch (netMsg->m_subType) {
@@ -1618,7 +1618,7 @@ unsigned char createDPlayObject()
         return 1;
 
     g_dPlay = new CDPlayHeroes;
-    if (!g_dPlay->init())
+    if (!g_dPlay->Init())
         return 0;
 
     g_dPlay->setGuid(guidHeroes3);
@@ -1688,7 +1688,7 @@ unsigned char initConnection(char* ipAddressOrPhoneNbr,
         return 0;
     }
 
-    if (!g_dPlay->initConnection(connection)) {
+    if (!g_dPlay->InitConnection(connection)) {
         delete connection;
         return 0;
     }
@@ -1736,7 +1736,7 @@ bool testIfLobbyLaunched()
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, registryKey, 0, KEY_READ, &key)
         == ERROR_SUCCESS) {
         RegCloseKey(key);
-        return g_dPlay->testLobbied();
+        return g_dPlay->TestLobbied();
     }
 
     const char* appNameStart = strrchr(registryKey, '\\');
@@ -1746,10 +1746,10 @@ bool testIfLobbyLaunched()
     commandLine[0] = 0;
     strcpy(executableName, g_executableName);
 
-    g_dPlay->registerApp(
+    g_dPlay->RegisterApp(
         appName, fileName, commandLine, guidHeroes3,
         executableName[0] ? executableName : 0);
-    return g_dPlay->testLobbied();
+    return g_dPlay->TestLobbied();
 }
 
 // E:\gamedcs\remote.cpp:1960 - the PC path adds the MPlayer host/client
@@ -1773,7 +1773,7 @@ unsigned char handleMPlayerLaunch()
         if (!initConnection(
                 DATA_COMPGEN(0x00691210, remoteMPlayerEmptyAddress, ""), 0))
             return 0;
-        if (!g_dPlay->hostSession(
+        if (!g_dPlay->HostSession(
                 DATA_COMPGEN(0x00682c24, remoteMPlayerSession,
                              "MPlayer Session"),
                 4, 8, 0))
@@ -1788,9 +1788,9 @@ unsigned char handleMPlayerLaunch()
         bool connected = false;
         CAutoArray<CDPlaySession> sessions;
         for (int attempt = 0; attempt < 3; ++attempt) {
-            if (g_dPlay->enumSessions(&sessions, 0, 2)
+            if (g_dPlay->EnumSessions(&sessions, 0, 2)
                 && sessions.getCount() > 0) {
-                if (!g_dPlay->joinSession(
+                if (!g_dPlay->JoinSession(
                         &sessions.get(0)->m_guidInstance, 0)) {
                     sessions.destroy(1);
                     return 0;
@@ -1848,8 +1848,8 @@ unsigned char lobbyLaunchConnect()
     if (!connection)
         return 0;
 
-    if (connection->m_flags & DPLAY_CONNECTION_CREATE_SESSION) {
-        connection->m_sessionDesc->m_flags |=
+    if (connection->dwFlags & DPLAY_CONNECTION_CREATE_SESSION) {
+        connection->lpSessionDesc->dwFlags |=
             DPLAY_SESSION_MIGRATE_HOST | DPLAY_SESSION_KEEP_ALIVE;
         g_logFile.log(DATA_COMPGEN(0x00682d68, lobbyIsHost,
                                 "We are the host...."));
@@ -1859,12 +1859,12 @@ unsigned char lobbyLaunchConnect()
     }
     g_logFile.log(DATA_COMPGEN(0x00682d2c, lobbyMaxPlayers,
                             "CDPlayLobby::Connect - MaxPlayers: %d"),
-                connection->m_sessionDesc->m_maxPlayers);
+                connection->lpSessionDesc->dwMaxPlayers);
     g_logFile.log(DATA_COMPGEN(0x00682d00, lobbyCurrentPlayers,
                             "CDPlayLobby::Connect - CurrentPlayers: %d"),
-                connection->m_sessionDesc->m_currentPlayers);
+                connection->lpSessionDesc->dwCurrentPlayers);
 
-    if (!g_dPlay->setConnectionSettings(0, connection)) {
+    if (!g_dPlay->SetConnectionSettings(0, connection)) {
         g_logFile.log(DATA_COMPGEN(0x00682cdc, lobbySetSettingsError,
                                 "Error setting connection settings!"));
         delete connection;
@@ -1874,7 +1874,7 @@ unsigned char lobbyLaunchConnect()
     CHourGlass hourGlass(1);
     g_logFile.log(DATA_COMPGEN(0x00682cc4, lobbyAttemptingConnect,
                             "Attempting connect..."));
-    if (!g_dPlay->connect()) {
+    if (!g_dPlay->Connect()) {
         g_logFile.log(DATA_COMPGEN(0x00682ca0, lobbyConnectError,
                                 "Error connecting to lobby session!"));
         char description[256];
@@ -1888,7 +1888,7 @@ unsigned char lobbyLaunchConnect()
     g_logFile.log(DATA_COMPGEN(0x00682c7c, lobbyConnected,
                             "Successful connect!"));
     strncpy(g_config.m_networkDefaultName,
-            connection->m_playerName->m_shortNameA, 21);
+            connection->lpPlayerName->lpszShortNameA, 21);
     delete connection;
     g_config.m_networkDefaultName[21] = 0;
     g_logFile.log(DATA_COMPGEN(0x00682c6c, lobbyUserName,
@@ -1955,7 +1955,7 @@ MAC_ADDRESS(0x213d7c, 0x168)
 void updateCurrentPlayers()
 {
     CAutoArray<CDPlayPlayer> playerArray;
-    g_dPlay->enumPlayers(&playerArray, 0, 0);
+    g_dPlay->EnumPlayers(&playerArray, 0, 0);
 
     for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (g_game->m_players[i].m_dpid
@@ -2220,7 +2220,7 @@ int CLevelPickWaitDlg::handleMessage(message& msg)
     CAnimatedDlg::handleMessage(msg);
     pollSound();
 
-    CNetMsg* netMsg = getRemoteData(1, 0);
+    CNetMsg* netMsg = GetRemoteData(1, 0);
     if (netMsg) {
         CMessageKill msgKill(netMsg);
         switch (netMsg->m_subType) {
@@ -2328,7 +2328,7 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
     CAnimatedDlg::handleMessage(msg);
     pollSound();
 
-    CNetMsg* netMsg = getRemoteData(1, 0);
+    CNetMsg* netMsg = GetRemoteData(1, 0);
     if (netMsg) {
         CMessageKill killMsg(0);
         if (netMsg->m_subType != RS_COMBAT_INIT)
@@ -2599,7 +2599,7 @@ CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup,
         m_abortPopupMsg = 0;
         return handleNetMsg(abortMsg);
     }
-    CNetMsg* netMsg = getRemoteData(1, 0);
+    CNetMsg* netMsg = GetRemoteData(1, 0);
     if (netMsg == 0)
         return 0;
     if (msgReceived)
@@ -2932,8 +2932,8 @@ unsigned char getQueueSize(int toWho, unsigned long& numMsgs,
     unsigned long dpidTo = 0;
     if (toWho != NET_MESSAGE_RECIPIENT_ALL)
         dpidTo = g_game->m_players[toWho].m_dpid;
-    if (!g_dPlay->getSendQueueSize(g_thisNetPlayerInfo.m_dpid, dpidTo,
-                                 &numMsgs, &queueSize))
+    if (!g_dPlay->GetSendQueueSize(g_thisNetPlayerInfo.m_dpid, dpidTo,
+                                 numMsgs, queueSize))
         return 0;
     return 1;
 }

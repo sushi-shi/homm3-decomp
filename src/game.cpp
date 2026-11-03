@@ -8765,7 +8765,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     while (!done) {
         pollSound();
         checkDoMain(0, 1);
-        CNetMsg* confirmMsg = getRemoteData(1, 0);
+        CNetMsg* confirmMsg = GetRemoteData(1, 0);
         CMessageKill kill(confirmMsg);
 
         if (!confirmMsg && GameTime::elapsedSince(dataTimeOutStart)
@@ -8782,7 +8782,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                         != DIALOG_RETURN_ACCEPT) {
                     if (inGame && toWho != NET_MESSAGE_RECIPIENT_ALL) {
                         unsigned long killDPID = m_players[toWho].m_dpid;
-                        g_dPlay->destroyPlayer(m_players[toWho].m_dpid);
+                        g_dPlay->DestroyPlayer(m_players[toWho].m_dpid);
                         handlePlayerDrop(m_players[toWho].m_dpid);
                         m_players[toWho].clearNetInfo();
                         g_playerDrop = 1;
@@ -8796,7 +8796,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                                     && i != g_game->getLocalPlayerGamePos()) {
                                 unsigned long killDPID =
                                     m_players[i].m_dpid;
-                                g_dPlay->destroyPlayer(m_players[i].m_dpid);
+                                g_dPlay->DestroyPlayer(m_players[i].m_dpid);
                                 handlePlayerDrop(m_players[i].m_dpid);
                                 m_players[toWho].clearNetInfo();
                                 CDestroyPlayerMsg destroyMsg(killDPID);
@@ -8993,7 +8993,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                     shutDown(0);
                 } else {
                     unsigned long killDPID = m_players[fromWho].m_dpid;
-                    g_dPlay->destroyPlayer(m_players[fromWho].m_dpid);
+                    g_dPlay->DestroyPlayer(m_players[fromWho].m_dpid);
                     g_dPlay->handlePlayerDrop(m_players[fromWho].m_dpid);
                     CDestroyPlayerMsg msg(killDPID);
                     transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
@@ -9008,7 +9008,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             destroyMsg(netMsg);
             netMsg = 0;
         }
-        netMsg = getRemoteData(1, 0);
+        netMsg = GetRemoteData(1, 0);
 
         if (netMsg) {
             lastDataReceiveTime = GameTime::get();

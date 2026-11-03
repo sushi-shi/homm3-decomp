@@ -103,24 +103,6 @@ SIZE(CHeroSessions, 0x14);
 // cannot reproduce.
 class TMultiPlayerWindow : public CHeroWindowEx {
 public:
-    enum EWidgetId {
-        ONLINE_ID = 101,
-        HOT_SEAT_ID = 102,
-        IPX_ID = 103,
-        TCP_ID = 104,
-        MODEM_ID = 105,
-        DIRECT_ID = 106,
-        HOST_ID = 107,
-        JOIN_ID = 108,
-        SEARCH_ID = 109,
-        FIRST_SESSION_ID = 110,
-        LAST_SESSION_ID = 121,
-        GAME_SLIDER_ID = 122,
-        ROLLOVER_ID = 123,
-        CANCEL_ID = 124,
-        PLAYER_NAME_ID = 125,
-        IP_ADDRESS_ID = 126
-    };
     CSprite* m_gameState;  // +0x50
     unsigned char m_inSessionList;  // +0x54
     unsigned char m_showSplash;  // +0x55
@@ -141,11 +123,13 @@ public:
                              _DPCOMPORTADDRESS* comportInfo);
     bool joinSession(CDPlaySession* session, const char* password);
     bool hostSession(const char* sessName, const char* password);
+    void RefreshSessions();
+    void CheckSessions();
     bool onJoin();
     bool onHost();
     bool onIPX();
     bool onTCP();
-    bool onSearch();
+    bool OnSearch();
     bool onHotSeat();
     bool onModem();
     bool onDirect();
@@ -156,9 +140,6 @@ public:
     void update();
     void goSessionList();
     void goMainMenu();
-    void refreshSessions();
-    void checkSessions();
-    unsigned char isNT();
     virtual int windowHandler(message& msg);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
 
@@ -170,6 +151,7 @@ public:
     {
         return m_rolloverWidget;
     }
+    unsigned char IsNT();
 
 private:
     button* m_hotSeat;  // +0xc8
@@ -185,6 +167,43 @@ private:
     slider* m_gameSlider;  // +0xf0
     textWidget* m_sessNameHeader;  // +0xf4
     textWidget* m_userNameHeader;  // +0xf8
+public:
+    // Native DC enum 0x472a, recorded between userNameHeader and RolloverWidget.
+    enum EOtherWidgetIDs {
+        BACKGROUND_ID = 100,
+        ONLINE_ID = 101,
+        HOT_SEAT_ID = 102,
+        IPX_ID = 103,
+        TCP_ID = 104,
+        MODEM_ID = 105,
+        DIRECT_ID = 106,
+        HOST_ID = 107,
+        JOIN_ID = 108,
+        SEARCH_ID = 109,
+        GAMENAME_1_ID = 110,
+        GAMENAME_2_ID = 111,
+        GAMENAME_3_ID = 112,
+        GAMENAME_4_ID = 113,
+        GAMENAME_5_ID = 114,
+        GAMENAME_6_ID = 115,
+        GAMENAME_7_ID = 116,
+        GAMENAME_8_ID = 117,
+        GAMENAME_9_ID = 118,
+        GAMENAME_10_ID = 119,
+        GAMENAME_11_ID = 120,
+        GAMENAME_12_ID = 121,
+        SLIDER_ID = 122,
+        ROLLOVER_ID = 123,
+        BACK_ID = 124,
+        PLAYER_NAME_ID = 125,
+        IP_ADDRESS = 126,
+        SESS_NAME_HEADER_ID = 127,
+        USER_NAME_HEADER_ID = 128,
+        HERO_SPLASH_ID = 129
+    };
+    enum { NWIDGETS = 77 };
+
+private:
     textWidget* m_rolloverWidget;  // +0xfc
 };
 SIZE(TMultiPlayerWindow, 0x100);
