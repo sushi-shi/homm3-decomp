@@ -1244,6 +1244,10 @@ bool immediately after the call and changing it in just one branch retains
 the branch but only three returns: default true scores 92.3509%, default
 false 82.8772%; both retain extra CL operations. These controlled full-TU
 comparisons reproduce and supply no improvement to adopt.
+Default-result forms with per-arm status recording also keep only three
+returns. Initializing after the final call uses CL (true: 89.9825%, false:
+83.7544%); initializing before it keeps BL across the call (true: 87.1930%,
+false: 82.7895%). Neither removes the extra result operations.
 
 An exact native analogue, `deque<int>::iterator::operator++` at `0x449230`,
 does emit compare/store/restore/branch. Its `_Next` store is part of the
@@ -1281,6 +1285,9 @@ Restoring the independently proven bool interfaces and result locals across
 the TU preserves its 85 exact functions without changing this residual.
 A reproduced `/G3` control emits identical code and relocation identities
 for the whole TU, retaining the same 88.4210% lobby score.
+Repeating CPU-profile controls on the adopted per-arm model gives identical
+objects with `/G4` and `/G5`. `/G6` lowers the lobby to 80.2632% and loses
+74 exact siblings; the scheduling residual does not justify a profile change.
 
 A reproduced VC5 SP3 C1XX/C2 control with the same VC6 headers also retains
 `setge`, lowers the lobby score to 77.7193% and loses 59 exact siblings.
@@ -1294,6 +1301,10 @@ The later Buka build retains that body too, apart from its two IAT operands.
 A reproduced SP5 control keeps all 86 comparison scores and emits the same
 lobby section bytes/relocations as SP3; see the
 [alternate-build comparison](../oracles/alternate-builds.md#buka-vc6-sp5).
+The newer per-arm model was separately reproduced with the verified RTM
+front/back ends and SP5: all 86 scores remain unchanged at the current
+96.4912% lobby baseline. Its emitted lobby section is byte-identical across
+the three compiler versions; RTM also reproduces the full normalized object.
 
 Query/fetch-loop controls are also distinct from retail: a two-iteration
 counter loop retains one virtual-call site (19.4211%); pointer-phase loops
@@ -1308,6 +1319,15 @@ but also keeps the pointer in EDI and emits a final `test`/`setne` (75.0%).
 Selecting `buf` or null with a conditional expression instead emits
 `setl`/masking and pointer normalization (64.2982%). Both controls reproduce;
 neither recovers the separate constant-return epilogues.
+
+A single-pass `do/while(false)` with failure breaks tests a different shared-
+exit model without repeating any operation. With an entry default true,
+direct/per-arm recording scores 44.0175%/39.0175% and retains two returns;
+default false scores 32.9474%/36.4561% and retains one. All keep BL alive
+across calls. The false/per-arm form does recover `test; store; pop edi`,
+but adds result operations and merges exits. This demonstrates another
+restore-region outcome, not evidence for adding an otherwise unnecessary
+one-shot scope around the final fetch.
 
 The recognizer's protected-branch flag (+9 bit 8) is not an ordinary-loop
 lever. Separate passive probes reproduce all 4,153 object bytes: `0x187`
