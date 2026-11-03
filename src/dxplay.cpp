@@ -1053,6 +1053,8 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
 // 0x27954, before tail merging: cost 2 passes threshold 10. A shared failure
 // label avoids it but leaves two returns (three if only one early failure
 // shares it). See docs/vc6/behavior-catalog.md D13.
+// Clearing buf on failure retains jge but adds pointer tracking and a final
+// test/setne (75.0%); a VC5 control still folds to setge and worsens siblings.
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order
 DC_ADDRESS(0x08b69c, 0x4)

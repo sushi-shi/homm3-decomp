@@ -1186,11 +1186,25 @@ the TU preserves its 85 exact functions without changing this residual.
 A reproduced `/G3` control emits identical code and relocation identities
 for the whole TU, retaining the same 88.4210% lobby score.
 
+A reproduced VC5 SP3 C1XX/C2 control with the same VC6 headers also retains
+`setge`, lowers the lobby score to 77.7193% and loses 59 exact siblings.
+VC5 cannot parse the unused inline `TRuntimeError()` string temporary, so
+this isolated comparison uses its declaration alone in both controls; the
+VC6 control still reproduces all 86 live scores. This does not support an
+older-compiler explanation. The Collector's executable (SHA-256
+`0da1c7772567f2ad4bf2314d07e8b617c40893c80601b39607cafdf025eb6247`)
+contains the same 110 lobby bytes at the same RVA as pinned GOG Complete.
+
 Query/fetch-loop controls are also distinct from retail: a two-iteration
 counter loop retains one virtual-call site (19.4211%); pointer-phase loops
 emit two sites but only two returns (44.7368%/57.8070%). Exhaustive
 success/failure/severity switches without a fallback do not improve the
 baseline either.
+Clearing `buf` on failed fetch and then returning `buf != 0` retains `jge`,
+but also keeps the pointer in EDI and emits a final `test`/`setne` (75.0%).
+Selecting `buf` or null with a conditional expression instead emits
+`setl`/masking and pointer normalization (64.2982%). Both controls reproduce;
+neither recovers the separate constant-return epilogues.
 
 The recognizer's protected-branch flag (+9 bit 8) is not an ordinary-loop
 lever. Separate passive probes reproduce all 4,153 object bytes: `0x187`
