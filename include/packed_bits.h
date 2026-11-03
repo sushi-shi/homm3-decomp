@@ -69,20 +69,21 @@ inline int writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
 // Preserve the raw count for each caller's unsigned short-write comparison.
 // The native bound is sizeof(buffer)*8 in mapcell, but signed NUM_SPELLS
 // in town. Keep its type; town writes 70 bytes for its 70-bit mask.
+// WireBytes is explicit template storage extent; it need not be ceil(bits/8).
+// Bits preserves the caller's mutable/const access path; both return raw count.
 // This inferred API is distinct from the const writer's success result.
 // Inline preserves native Mac expansion through the mutable proxy to test;
 // an ordinary template retains a writer call absent from those native loops.
-template <size_t N, class Count>
-inline int writePackedBitsCount(TAbstractFile* outfile, std::bitset<N>& bits,
-                                Count bitCount, unsigned char* packed,
-                                unsigned int byteCount)
+template <size_t WireBytes, class Bits, class Count>
+inline int writePackedBitsCount(TAbstractFile* outfile, Bits& bits,
+                                Count bitCount, unsigned char* packed)
 {
-    memset(packed, 0, byteCount);
+    memset(packed, 0, WireBytes);
     for (int index = 0; index < bitCount; ++index) {
         if (bits[index])
             packed[index / 8] |= 1 << (index % 8);
     }
-    return outfile->write(packed, byteCount);
+    return outfile->write(packed, WireBytes);
 }
 
 #endif

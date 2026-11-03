@@ -436,8 +436,8 @@ int town::save(TAbstractFile* outfile)
 
     // The saved-game format writes all 70 bytes, including 61 zero padding
     // bytes: Mac 0x1b2718/0x1b278c; DC town.cpp:728..738 names outBuf[70].
-    if (writePackedBitsCount(outfile, SpellDisabledMask, hero::NUM_SPELLS,
-            spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
+    if (writePackedBitsCount<sizeof(spellBuf)>(outfile, SpellDisabledMask,
+            hero::NUM_SPELLS, spellBuf) < sizeof(spellBuf))
         return -1;
 
     charBuffer = static_cast<char>(
