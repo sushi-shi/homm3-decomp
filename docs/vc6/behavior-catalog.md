@@ -1193,6 +1193,14 @@ at `0x68660`, and the second invocation moves the common store immediately
 before `jge`. Both stores already had equivalent operands before the first
 invocation; a changed operand is not what enables the second one. Scheduling
 at `0x3ad9b` then moves the test ahead of `epop`, leaving the residual order.
+The earlier generic checkpoint `0x683e6` already gives both stores identical
+destination descriptors, memory identity/value number and HRESULT source;
+a shared-reference spelling has no demonstrated address-equality defect to
+repair. Both `0x3465c` calls are after allocation and EPOP insertion. The
+gate clears only after native/register cleanup `0x34d29`, so it is not a
+pre/post-allocation switch. The late hoister explicitly accepts return arms
+through `0x364e4`/`0x86cea`. No source-controlled setter of the phase flag
+was found in the bounded static audit.
 
 Restore placement itself follows register-use regions, not status writes.
 Inside `0x335cd`, worker `0x33bc5` propagates per-block register-use masks
@@ -1218,6 +1226,9 @@ Const or entry-scope result declarations, explicit `else`, assignment in the
 guard, recording within comma returns, a shared query/fetch HRESULT and a
 common bool result all reproduce 96.4912%. Success-first recording and three
 nested positive-guard forms merge the early false exits and score 55.0%.
+Conditional expressions with the status write in each comma arm also retain
+96.4912%, whether returned directly or through a named bool; success-first
+conditional recording again scores 55.0%.
 The failure-first model is
 retained without added operations, helper bodies or lifetime barriers.
 
@@ -1257,6 +1268,12 @@ does emit compare/store/restore/branch. Its `_Next` store is part of the
 precondition, and the taken arm performs real pointer updates. It therefore
 does not present a constant-return diamond to the select pass and cannot
 justify an extra operation or helper in `TestLobbied`.
+Extending this comparison to exact functions larger than 500 bytes finds
+two more compare/store/restore/branch sites: `getProtectionValue` at
+`0x43990f` stores state for the expanded duration calculation, and
+`loadSoundHeaders` at `0x598687` stores the opened campaign archive handle
+before a branch that reads and allocates headers. Neither is a constant-bool
+return diamond; neither supplies a missing lobby operation.
 
 The recognizer also requires the condition producer to be the immediately
 preceding tuple (`0x2eea9`). Computing a bool success/failure snapshot before
