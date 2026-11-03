@@ -1248,6 +1248,9 @@ Default-result forms with per-arm status recording also keep only three
 returns. Initializing after the final call uses CL (true: 89.9825%, false:
 83.7544%); initializing before it keeps BL across the call (true: 87.1930%,
 false: 82.7895%). Neither removes the extra result operations.
+Giving the failure arm its own immediate `return ok` restores 96.4912%
+for both defaults at entry, before the final call and after it, without
+changing the remaining instruction-order difference.
 
 An exact native analogue, `deque<int>::iterator::operator++` at `0x449230`,
 does emit compare/store/restore/branch. Its `_Next` store is part of the
@@ -1264,6 +1267,29 @@ normalization between checkpoints `0x683c5` and `0x683e6` removes the bool
 temporary and places the HRESULT comparison after the store. The adjacency
 gate then passes. Retail's `test; store; pop; jge` ordering alone therefore
 does not recover that source ordering.
+
+Internal passive captures locate that normalization in global propagation
+`0x11703`, with full 53,351-byte identity preserved. Call `0x12347` to
+`0x1117e` sinks the predicate's defining compare/select/assignment chain
+across the independent member store to its use. Substitution at `0x12396`,
+assignment removal at `0x1239d` and queued simplification then leave the
+original HRESULT comparison. Admission at `0x12141` requires a single-use
+state: a second qualifying use changes definition byte `+0x13` from `0x0a`
+to `0x0b`. Type compatibility, control-region checks and actual intervening
+operand dependencies also constrain movement; a memory write is not an
+unconditional barrier.
+
+Reusing the saved success predicate in the existing guard and success return
+tests that gate without adding an operation. With one common status store,
+both guard polarities score 87.7018% and retain `setge cl; mov al,cl` with
+three returns. Returning it from the failure arm scores 84.9123% and adds
+a second bool test/normalization. Combining predicate reuse with per-arm
+status recording keeps four returns in the failure-first forms, but retains
+`setge cl; test cl,cl`: success-value return scores 91.9123%, failure-value
+return 91.9298%. Success-first recording merges the exits again (45.4386%,
+two returns). All controls reproduce. Thus a second use changes early
+propagation as predicted, but these ordinary forms do not remove the later
+materialization or close the restore/store residual.
 
 The two result arms must each contain only one assignment or return, apart
 from metadata. Indirect selected operands (kind 6) reject conversion; constant
