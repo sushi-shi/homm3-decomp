@@ -440,7 +440,7 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // nine-bit stored form, type, subtype, slot category and underlay, then
 // sixteen reserved bytes. Only the map editor keeps them (h3maped 0x490944,
 // 0x490a11); the game links them unreferenced.
-// The writer's wall (90.58): retail expands the reserved fill_n (four
+// Earlier 90.58 probe: retail expands the reserved fill_n (four
 // stosd). Here the vetoed calls before it charge 959 of the 1000 budget
 // and leave 41 against fill_n's cb 43 (`vc6 predict-inline --root`);
 // a ternary or const getImageName, `bits[i]` in writeBitset and an
@@ -453,8 +453,8 @@ TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objectType)
     stream << objectType.getImageName();
     writeBitset(stream, objectType._m_passableMask);
     writeBitset(stream, objectType._m_triggerMask);
-    writeBitset<kNumTerrainTypes - 1>(stream, objectType._m_terrainMask.to_ulong());
-    writeBitset<kNumTerrainTypes - 1>(stream, objectType._m_recommendedTerrainMask.to_ulong());
+    writeBitset<kNumTerrainTypes - 1>(stream, objectType.getTerrainMask().to_ulong());
+    writeBitset<kNumTerrainTypes - 1>(stream, objectType.getRecommendedTerrainMask().to_ulong());
     stream << static_cast<long>(objectType._m_type)
            << static_cast<long>(objectType._m_extra)
            << static_cast<signed char>(objectType._m_slotCategory)

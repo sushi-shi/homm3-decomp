@@ -65,6 +65,11 @@ initial scope with further callers and placement evidence, and explicitly
 records its source-recovery costs; the initial zero-loss result does not apply
 to those later changes.
 
+The later writer follow-up at `043806c7b` was reverted at the user's request
+(`92c6636e`, verified publication `52c662b39f`). [PR #216](https://github.com/sushi-shi/homm3-decomp/pull/216)
+now targets the restored default branch and holds the revised helper boundaries
+and matching work for review. It must not be merged without explicit approval.
+
 All 28 open PRs have a recorded disposition. Independent compiler checks cover
 19 Windows candidates, including the later Mac-rejected #192; rejected source models and older feature
 drafts have explicitly limited review scopes. The remaining PRs stay for the

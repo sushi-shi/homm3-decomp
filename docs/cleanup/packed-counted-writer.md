@@ -1,7 +1,8 @@
 # Counted packed-plane writer
 
 `writePackedBitsCount<WireBytes>` shares the zero/pack/write operation for
-`NewfullMap::saveObjectType` and `town::save`. Its four arguments are the stream,
+`NewfullMap::saveObjectType`, `town::save`, and the two RMG terrain planes.
+Its four arguments are the stream,
 mask reference, native bit-count expression, and caller-owned buffer. The wire
 extent is a template argument, keeping town's 70-byte format explicit without
 a fifth runtime argument. `Bits&` preserves the actual mutable or const access
@@ -30,11 +31,13 @@ Each mask performs one write. Storage extent and loop bound remain distinct
 because those are concrete native facts, not a new serialization feature.
 
 The helper name and grouping are inferred. Neither a named older DC template
-nor an original header name is asserted. Header visibility serves both TUs.
+nor an original header name is asserted. Header visibility serves these TUs.
 CodeWarrior expands the inline helper through the native proxy/test path;
 an ordinary template leaves a writer call absent from native. VC6 rejects
 deduced array-reference extents and the partially explicit `WireBytes,N,Count`
 form; deducing `Bits` directly accepts the four-argument interface.
+The const RMG uses, native terrain getters and their remaining two-byte-clear
+residual are detailed in [the RMG recovery](../matching/rmg-packed-writer-recovery.md).
 
 ## Verification and remaining mismatch
 

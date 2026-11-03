@@ -124,6 +124,13 @@ helper calls through measured caller losses; it must not inherit the earlier
 zero-loss claim. Previously unavailable Mac pairs also require named call-stream
 inspection: a passing global score gate did not prove their helper expansion.
 
+The later follow-up publication at `043806c7b` was not approved and has been
+reverted (`92c6636e`, published through `52c662b39f`). PR #216 is now a normal
+unmerged proposal against the restored default branch. Its deeper review
+corrects the RMG signed/shared-buffer family and three unsupported editor
+whole-writer groupings. Its current measurements supersede the initial
+follow-up's results; remaining losses are explicit in the linked audit.
+
 ## Older feature drafts
 
 These were triaged separately from the matching batch. Their complete file
