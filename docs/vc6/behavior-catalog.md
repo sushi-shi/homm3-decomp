@@ -1249,6 +1249,19 @@ order or provides a missing owner/helper model.
 A common Win32 `BOOL` result also fails: it scores 82.1930% and retains
 int-to-bool conversion instructions in both final exits; the `bool` control
 stays at 96.4912%.
+Initializing a phase-local `BOOL` after the fetch and updating it in one arm
+also leaves three returns and an ECX result followed by `setne`: a common
+status write before the guard scores 87.8070%/81.7544% for true/false
+defaults, versus 85.4386%/79.2105% when recorded after the guard. Giving the
+failure arm its own immediate return folds both defaults back to the direct
+store/`setge` body (88.4210%). These controls reproduce. The older entry-
+default `BOOL` controls already had a bool function interface; interface
+recovery is not a reason to repeat them.
+
+Returning the validated buffer (`buf != 0`) from the success arm of the
+per-path recording model reproduces the identical full-TU object at
+96.4912%. The existing null guard lets VC6 reduce that result to true;
+it does not alter the restore/store ordering.
 
 Moving a common bool result's assignment before the status store in each
 arm scores 90.9649%: it prevents store combination and retains CL-to-AL
