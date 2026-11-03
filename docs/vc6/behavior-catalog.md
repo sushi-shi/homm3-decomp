@@ -1235,6 +1235,30 @@ priority ready list keeps `epop` first. The scheduler chooses the test in
 cycle 6, then `epop` and the store in cycle 7. This is an observed scheduling
 tie, not a demonstrated alias barrier or proof of source-local impossibility.
 
+A fresh scored `compile-m dxplay` capture of the adopted per-path source
+reproduces the plain replay under the inert shim, then emits one lobby
+assembly at 96.4912% across both phase values and all 64 declaration offsets.
+The result has 134 state labels including the captured control and five
+TU-wide callee-prefix rounds; TestLobbied itself has no inline callees, so
+those prefix rounds add no distinct local boundary. Its source digest is
+checked against the live TU. This rules out the modeled state axes for this
+source, beyond merely observing deterministic repeated compiles. It does
+not cover changed helper bodies, declaration semantics or unknown compiler
+state, and it does not justify arbitrary header insertion.
+
+Two scratch-only ordinary helper extractions test whether an inline boundary
+changes that result: one takes `long& status, HRESULT result` and owns the
+same failure-first per-arm recording/return; the other also owns the final
+`GetConnectionSettings` call. Neither adds an `inline` keyword or a pragma.
+VC6 auto-inlines both and emits the identical lobby section, including all
+four calls and the restore/store reversal, at 96.4912%. All 86 TU scores
+are identical; the baseline and both candidate objects reproduce. These
+are compiler-mechanism controls, not recovered helper definitions. The
+native class method lists provide `getLastError` and the existing connection
+wrappers, but no status recorder; the existing accessor controls also leave
+this residual unchanged. Neither diagnostic helper is adopted. This bounded
+result does not exclude a different, independently supported helper model.
+
 Const or entry-scope result declarations, explicit `else`, assignment in the
 guard, recording within comma returns, a shared query/fetch HRESULT and a
 common bool result all reproduce 96.4912%. Success-first recording and three
@@ -1429,8 +1453,15 @@ A reproduced VC5 SP3 C1XX/C2 control with the same VC6 headers also retains
 `setge`, lowers the lobby score to 77.7193% and loses 59 exact siblings.
 VC5 cannot parse the unused inline `TRuntimeError()` string temporary, so
 this isolated comparison uses its declaration alone in both controls; the
-VC6 control still reproduces all 86 live scores. This does not support an
-older-compiler explanation. The Collector's executable (SHA-256
+VC6 control still reproduces all 86 live scores. Repeating this control on
+the adopted per-arm model gives 83.8597% under VC5, against 96.4912% under
+VC6, with 59 previously exact sibling scores lower. Both compilations
+reproduce. VC5 retains four returns and hoists the common status store, but
+saves EDI before the query and restores it separately on all four exits;
+it does not reproduce retail's save around the fetch and restore before
+its final branch. The isolated header workaround again leaves all 86 VC6
+control scores unchanged. Neither source model supports a VC5 explanation.
+The Collector's executable (SHA-256
 `0da1c7772567f2ad4bf2314d07e8b617c40893c80601b39607cafdf025eb6247`)
 contains the same 110 lobby bytes at the same RVA as pinned GOG Complete.
 The later Buka build retains that body too, apart from its two IAT operands.
