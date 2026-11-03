@@ -1196,6 +1196,23 @@ final join. No evidenced cleanup or common exit operation supplies the
 missing executable suffix; moving the fetch-status write there would also
 change the query/allocation failure paths.
 
+A distinct later pass, `0x39f2d` at driver call `0x68695`, does duplicate
+shared epilogues. Both walks require an unconditional transfer (kind `0x11`,
+zero `tuple+0x20`); the three conditional failure edges in each preserved
+shared-failure model fail this entry gate before cost evaluation. Existing
+identity-gated checkpoints show one native return becoming two in the fully
+shared model, or three in the mixed-sharing models, as their unconditional
+jumps become epilogues. The active copy limit is 20 encoded bytes, not the
+earlier suffix pass's payload count. It is not the failing condition here.
+
+A fully assigned nested bool result, with one common source return and no
+entry default live across calls, supplies a distinct control. With per-arm
+final status recording it reproduces the identical 96.4912% lobby section
+and all four native returns. With a common final status store it reproduces
+the 88.4210% three-return `setge` body. Thus a single source return is compatible
+with the four-exit layout, but these coherent result-lifetime changes do not
+resolve the store/restore order. Both full-TU controls reproduce.
+
 The per-path model has a member store plus a return in each arm, so it
 survives conditional-select conversion without a select event. An identity-
 checked trace reproduces 53,351 object bytes. Restore insertion `0x335cd`
@@ -1234,6 +1251,27 @@ Their earlier sequence keys are 10 and 12, respectively, so the equal-
 priority ready list keeps `epop` first. The scheduler chooses the test in
 cycle 6, then `epop` and the store in cycle 7. This is an observed scheduling
 tie, not a demonstrated alias barrier or proof of source-local impossibility.
+
+Scheduling is followed by copy cleanup (`0x3bdf5`, `0x3c273`) and can therefore
+precede removal of a real intermediate copy or unused save/restore pair.
+The existing per-arm capture retains its tail through checkpoints `0x68718`,
+`0x6872b`, `0x68768` and `0x68788`; final emission lowers EPOP/branch encodings
+without swapping the store and restore. The first cleanup requires tuple
+flag bit 4, produced by allocation-repair helper `0x3311e` and cleared by the
+scheduler for multi-instruction issue groups. This is an identified producer,
+not a complete inventory of that flag's writers. The current tail has flag 1.
+
+A separate passive capture of the existing bool value-before-status model
+reproduces 53,313 object bytes outside the timestamp. All 70 tuples survive
+those late cleanup checkpoints; its ordinary CL-to-AL copies also have flag 1.
+Retargeting the bool definition to AL before the intervening HRESULT store
+would overwrite the EAX value the store still needs. The second cleanup's
+intervening-use checks compare both reads and writes, including overlapping
+register slices. A newly measured Win32 `BOOL` value-before-status control
+scores 83.9474% and reproduces: four returns remain, but each final arm has
+ECX constant state followed by XOR EAX / TEST ECX / SETNE AL normalization.
+Neither the ordinary copies nor this wider local supplies a matching late
+simplification; no datatype or helper change is adopted from this diagnostic.
 
 A fresh scored `compile-m dxplay` capture of the adopted per-path source
 reproduces the plain replay under the inert shim, then emits one lobby
