@@ -1,5 +1,6 @@
 #include "prefs.h"
 #include "va.h"
+#include "singleselectionwindow.h"
 
 #include <algorithm>
 #include "homm3_minmax.h"
@@ -9,8 +10,6 @@
 #include <memory>
 #include <string.h>
 #include <vector>
-
-#include "singleselectionwindow.h"
 
 #include "advmgr.h"
 #include "armygrp.h"
