@@ -27,7 +27,7 @@ Campaign	??0?$ctype@D@std@@QAE@PBF_NI@Z	100.0000	100.0000	100.0000	0xf230	-
 Campaign	??0?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xfa40	-
 Campaign	??0TCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x77d0	tokens1:f4403dd673f5
 Campaign	??0TCampaign@@QAE@H@Z	100.0000	100.0000	100.0000	0x77e0	tokens1:da0347407b03
-Campaign	??0TCampaignScenarioMap@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@2@H_N@Z	99.9062	99.9062	100.0000	0xa1f0	tokens1:44b6870d0b62
+Campaign	??0TCampaignScenarioMap@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@2@H_N@Z	100.0000	100.0000	100.0000	0xa1f0	tokens1:ea1177736903
 Campaign	??0TCreateFailure@TCampaignScenarioMap@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xab80	-
 Campaign	??0TCreateFailure@TCampaignScenarioMap@@QAE@XZ	100.0000	100.0000	100.0000	0xa7c0	-
 Campaign	??0TImportTextFailure@TCampaign@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x6c00	-
@@ -373,7 +373,6 @@ CampaignDoc	?_Ufill@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$allo
 CampaignDoc	?_Ufill@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@IAEXPAV?$auto_ptr@VTScenarioStartingBonus@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x16740	-
 CampaignDoc	?_read@TRawIStream@@AAEAAV1@AAC@Z	100.0000	100.0000	100.0000	0x16dd0	-
 CampaignDoc	?_read@TRawIStream@@AAEAAV1@AAF@Z	100.0000	100.0000	100.0000	0x24db0	-
-CampaignDoc	?_read@TRawIStream@@AAEAAV1@AAH@Z	100.0000	100.0000	100.0000	0xffd0	-
 CampaignDoc	?_write@TRawOStream@@AAEAAV1@ABH@Z	100.0000	100.0000	100.0000	0x16e10	-
 CampaignDoc	?capacity@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$allocator@UTChoice@TScenarioOptionsCrossoverScenario@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x15fd0	-
 CampaignDoc	?copy_backward@std@@YAPAV?$auto_ptr@VTScenarioStartingBonus@@@1@PAV21@00@Z	100.0000	100.0000	100.0000	0x16880	-
@@ -387,7 +386,7 @@ CampaignDoc	?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV?$basic_stream
 CampaignDoc	?insert@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$allocator@UTChoice@TScenarioOptionsCrossoverScenario@@@std@@@std@@QAEPAUTChoice@TScenarioOptionsCrossoverScenario@@PAU34@ABU34@@Z	-	100.0000	100.0000	0x15ff0	-
 CampaignDoc	?insert@?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QAEXPAUTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@IABU34@@Z	100.0000	100.0000	100.0000	0x16230	-
 CampaignDoc	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEPAV?$auto_ptr@VTScenarioStartingBonus@@@2@PAV32@ABV32@@Z	100.0000	100.0000	100.0000	0x15e10	-
-CampaignDoc	?loadCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@std@@PAVCFile@@@Z	93.6407	94.5946	94.5946	0x13600	tokens1:dd2baee351b6
+CampaignDoc	?loadCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@std@@PAVCFile@@@Z	100.0000	100.0000	100.0000	0x13600	tokens1:eeb6fe02c7c6
 CampaignDoc	?loadScenarioMap@TCampaignDoc@@QAE?AV?$auto_ptr@VTCampaignScenarioMap@@@std@@ABVCString@@@Z	100.0000	100.0000	100.0000	0x14390	tokens1:745cd3389969
 CampaignDoc	?make_pair@std@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@1@ABV?$auto_ptr@VTCampaign@@@1@ABH@Z	100.0000	100.0000	100.0000	0x167f0	-
 CampaignDoc	?promptTextFileName@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA_NPBDHKAAVCString@@@Z	100.0000	100.0000	100.0000	0x10890	tokens1:613ff81ae8df
@@ -869,7 +868,7 @@ EditStartingHeroOptionDlg	?_initPlayers@TEditStartingHeroOptionDlg@@AAEXXZ	100.0
 GameMapHeader	??0?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@QAE@ABU?$less@H@1@_NABV?$allocator@UTCustomHero@TGameMapHeader@@@1@@Z	100.0000	100.0000	100.0000	0x24030	-
 GameMapHeader	??0?$pair@Viterator@?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@_N@std@@QAE@ABViterator@?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@1@AB_N@Z	100.0000	100.0000	100.0000	0x241b0	-
 GameMapHeader	??0TCustomHero@TGameMapHeader@@QAE@ABU01@@Z	100.0000	100.0000	100.0000	0x23920	-
-GameMapHeader	??0TGameMapHeader@@QAE@AAVTRawIStream@@H@Z	88.5382	88.5382	88.5382	0x22b70	tokens1:4b73aba6dbbe
+GameMapHeader	??0TGameMapHeader@@QAE@AAVTRawIStream@@H@Z	88.5331	88.5382	88.5382	0x22b70	tokens1:4b73aba6dbbe
 GameMapHeader	??0TPlayerSlot@TGameMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x238c0	-
 GameMapHeader	??1?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x8890	-
 GameMapHeader	??4reference@?$bitset@$07@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0x249c0	-
@@ -889,6 +888,7 @@ GameMapHeader	?_Ucopy@?$vector@HV?$allocator@H@std@@@std@@IAEPAHPBH0PAH@Z	100.00
 GameMapHeader	?_Ufill@?$vector@HV?$allocator@H@std@@@std@@IAEXPAHIABH@Z	100.0000	100.0000	100.0000	0x24580	-
 GameMapHeader	?_Xran@?$bitset@$08@std@@ABEXXZ	100.0000	100.0000	100.0000	0x24bf0	-
 GameMapHeader	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x24cd0	-
+GameMapHeader	?_read@TRawIStream@@AAEAAV1@AAI@Z	100.0000	100.0000	100.0000	0xffd0	-
 GameMapHeader	?_read@TRawIStream@@AAEAAV1@AAY0BE@E@Z	100.0000	100.0000	100.0000	0x24df0	-
 GameMapHeader	?_readLossCondition@TGameMapHeader@@CAXAAUTLossConditionData@@AAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x22ad0	tokens1:390184451f7f
 GameMapHeader	?_readVictoryCondition@TGameMapHeader@@CAXAAUTVictoryConditionData@@AAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x22750	tokens1:183a7059bf39
@@ -1331,7 +1331,7 @@ gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0x11ae0	-
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x25dc0	-
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	100.0000	100.0000	100.0000	0x25cb0	-
 gzinflatebuf	??0TGzDeflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@HH@Z	100.0000	100.0000	100.0000	0x25080	-
-gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	93.4988	93.4988	93.4988	0x25700	-
+gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	100.0000	100.0000	100.0000	0x25700	-
 gzinflatebuf	??0TRuntimeError@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1bb0	-
 gzinflatebuf	??0runtime_error@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1020	-
 gzinflatebuf	??1TAllocationFailure@@UAE@XZ	100.0000	100.0000	100.0000	0x25d70	-
@@ -1466,7 +1466,7 @@ resourcemanager	?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z	100.0000	10
 resourcemanager	?GetFromCache@ResourceManager@@YAPAVresource@@PBD@Z	100.0000	100.0000	100.0000	0x445a0	-
 resourcemanager	?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	100.0000	100.0000	100.0000	0x45d90	-
 resourcemanager	?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z	100.0000	100.0000	100.0000	0x45b30	-
-resourcemanager	?Open@ResourceManager@@YA_N_N0PAH@Z	99.9737	99.9737	99.9737	0x44ea0	-
+resourcemanager	?Open@ResourceManager@@YA_N_N0PAH@Z	100.0000	100.0000	100.0000	0x44ea0	-
 resourcemanager	?SetPath@ResourceManager@@YAXPBD@Z	100.0000	100.0000	100.0000	0x450f0	-
 resourcemanager	?SetPixelFormat@ResourceManager@@YAXKKK@Z	100.0000	100.0000	100.0000	0x451e0	-
 resourcemanager	?_Construct@std@@YAXPAHABH@Z	100.0000	100.0000	100.0000	0x36ed0	-
@@ -1510,7 +1510,7 @@ resourcemanager	?do_truename@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_tra
 resourcemanager	?erase@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0x46fa0	-
 resourcemanager	?erase@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x46a80	-
 resourcemanager	?falsename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x48c60	-
-resourcemanager	?findBitmapResource@@YAPAVLODFile@@PBD@Z	99.8913	99.8913	99.8913	0x44730	-
+resourcemanager	?findBitmapResource@@YAPAVLODFile@@PBD@Z	100.0000	100.0000	100.0000	0x44730	-
 resourcemanager	?getloc@ios_base@std@@QBE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0xf4a0	-
 resourcemanager	?grouping@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x48d00	-
 resourcemanager	?insert@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@_N@2@ABU?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@2@@Z	100.0000	100.0000	100.0000	0x46940	-
@@ -1548,7 +1548,7 @@ resourcemanager	?underflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator
 resourcemanager	?write@t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x441b0	-
 resourcemanager	?xsgetn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPADH@Z	100.0000	100.0000	100.0000	0x159e0	-
 resourcemanager	?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPBDH@Z	100.0000	100.0000	100.0000	0x15a80	-
-resourcemanager	__h3cg$resourcemanager$static_ctor$g_resourceArchiveContexts	99.6000	99.6000	99.6000	0x443d0	-
+resourcemanager	__h3cg$resourcemanager$static_ctor$g_resourceArchiveContexts	100.0000	100.0000	100.0000	0x443d0	-
 resourcemanager	__h3cg$resourcemanager$static_ctor$g_resourceCache	100.0000	100.0000	100.0000	0x444f0	-
 resourcemanager	__h3cg$resourcemanager$static_ctor$g_resourceLodSlots	100.0000	100.0000	100.0000	0x441d0	-
 resourcemanager	__h3cg$resourcemanager$static_ctor$g_resourcePath	100.0000	100.0000	100.0000	0x442c0	-

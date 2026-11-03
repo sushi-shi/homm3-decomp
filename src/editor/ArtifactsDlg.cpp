@@ -173,8 +173,8 @@ void TArtifactsDlg::_disableControls()
 // Keep the requested list position separate from InsertItem's result.
 // The component search is Loki's find_if loop (Loki ObjectPaletteWnd.cpp 84)
 // with temporary end iterators, which preserve its value lifetimes.
-// Residual: retail lays the loop's exit block out right after the test, as
-// an endless loop with a break does; the instructions otherwise agree.
+// Retail's search-end test falls through to the combined-count decrement;
+// the component-count update and iterator increment branch back to the search.
 VA(0x00404e90, 0x271)
 int TArtifactsDlg::_insertItem(int index, TArtifact artifact, TArtifactSlot slot)
 {
@@ -214,12 +214,16 @@ int TArtifactsDlg::_insertItem(int index, TArtifact artifact, TArtifactSlot slot
                 int combination = akArtifactTraits[artifact].m_comboType;
                 if (combination != -1) {
                     const std::bitset<ARTIFACT_COUNT>& components = g_combinationArtifacts[combination].m_components;
-                    for (TConstBitsetIterator<ARTIFACT_COUNT> current(components, 0);
-                         (current = std::find_if(current, TConstBitsetIterator<ARTIFACT_COUNT>(components, ARTIFACT_COUNT),
-                                                 std::bind2nd(std::not_equal_to<bool>(), false)))
-                         != TConstBitsetIterator<ARTIFACT_COUNT>(components, ARTIFACT_COUNT);
-                         ++current)
+                    TConstBitsetIterator<ARTIFACT_COUNT> current(components, 0);
+                    for (;;) {
+                        current = std::find_if(
+                            current, TConstBitsetIterator<ARTIFACT_COUNT>(components, ARTIFACT_COUNT),
+                            std::bind2nd(std::not_equal_to<bool>(), false));
+                        if (!(current != TConstBitsetIterator<ARTIFACT_COUNT>(components, ARTIFACT_COUNT)))
+                            break;
                         ++_m_slotClassCounts[akArtifactTraits[current.position()].m_allowableSlotMask];
+                        ++current;
+                    }
                     --_m_slotClassCounts[akArtifactTraits[artifact].m_allowableSlotMask];
                 }
                 _updateUnusedSlots();

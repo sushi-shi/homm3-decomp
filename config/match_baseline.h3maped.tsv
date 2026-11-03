@@ -116,7 +116,7 @@ ArtifactsDlg	?OnRemoveButton@TArtifactsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x
 ArtifactsDlg	?_Lbound@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@IBEPAU_Node@12@ABW4TArtifact@@@Z	100.0000	100.0000	100.0000	0x649f	-
 ArtifactsDlg	?_disableControls@TArtifactsDlg@@AAEXXZ	100.0000	100.0000	100.0000	0x4e19	tokens1:00cbb6b47aca
 ArtifactsDlg	?_enableControls@TArtifactsDlg@@AAEXXZ	100.0000	100.0000	100.0000	0x4dac	tokens1:e19e25926e87
-ArtifactsDlg	?_insertItem@TArtifactsDlg@@AAEHHW4TArtifact@@W4TArtifactSlot@@@Z	90.5556	90.5556	100.0000	0x4e90	tokens1:79a74679d259
+ArtifactsDlg	?_insertItem@TArtifactsDlg@@AAEHHW4TArtifact@@W4TArtifactSlot@@@Z	100.0000	100.0000	100.0000	0x4e90	tokens1:00f0a01df967
 ArtifactsDlg	?_removeItem@TArtifactsDlg@@AAEXH@Z	99.9070	99.9070	99.9070	0x510b	tokens1:9214d6506116
 ArtifactsDlg	?_updateUnusedSlots@TArtifactsDlg@@AAEXXZ	100.0000	100.0000	100.0000	0x521e	tokens1:762d44f38034
 ArtifactsDlg	?compareItems@?A0x4051c901dc4dfd06@@YGHJJJ@Z	100.0000	100.0000	100.0000	0x4936	tokens1:f17817362097
@@ -5697,12 +5697,12 @@ resourcemanager	?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD@Z	100.0000	100
 resourcemanager	?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	100.0000	100.0000	100.0000	0xdccc0	-
 resourcemanager	?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z	100.0000	100.0000	100.0000	0xdcd20	tokens1:f95b56d253b4
 resourcemanager	?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z	100.0000	100.0000	100.0000	0xdca60	-
-resourcemanager	?Open@ResourceManager@@YA_N_N0PAH@Z	99.9737	99.9737	99.9737	0xdbe40	-
+resourcemanager	?Open@ResourceManager@@YA_N_N0PAH@Z	100.0000	100.0000	100.0000	0xdbe40	-
 resourcemanager	?PointToSpriteResource@ResourceManager@@YAPAVLODFile@@PBD@Z	100.0000	100.0000	100.0000	0xdd310	-
 resourcemanager	?ReadFromBitmapResource@ResourceManager@@YAHPAVLODFile@@PAXH@Z	100.0000	100.0000	100.0000	0xdd320	-
 resourcemanager	?SetPath@ResourceManager@@YAXPBD@Z	100.0000	100.0000	100.0000	0xdc090	-
 resourcemanager	?SetPixelFormat@ResourceManager@@YAXKKK@Z	100.0000	100.0000	100.0000	0xdc180	-
-resourcemanager	?_Construct@std@@YAXPAHABH@Z	-	100.0000	100.0000	0xde4d0	-
+resourcemanager	?_Construct@std@@YAXPAHABH@Z	100.0000	100.0000	100.0000	0xde4d0	-
 resourcemanager	?_Construct@std@@YAXPAU?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0xde4f0	-
 resourcemanager	?_Dec@const_iterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xde410	-
 resourcemanager	?_Eos@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	100.0000	100.0000	100.0000	0xdd6c0	-

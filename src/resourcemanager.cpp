@@ -531,6 +531,11 @@ static LODFile* findBitmapResource(const char* name)
 // catch-all drains any recorded archives and rethrows, while the outer int
 // handler publishes the failing archive class to the caller.
 
+// The map editor's vector<int>::reserve expansion calls this 17-byte
+// Dinkumware placement constructor at Open+0x57. Its null guard and int
+// copy agree with the emitted COMDAT; another linked copy is not its target.
+VA_COMPGEN_AT(h3maped, 0x004de4d0, 0x11, STD_CONSTRUCT, int)
+
 // Dreamcast Open proves the open_sprites/open_bitmaps parameters,
 // `sprite_pathname` then `bitmap_pathname` locals, and each copy/append/c_str/
 // LODFile::open statement group. Retail additionally proves that each open

@@ -214,7 +214,7 @@ int TGzInflateBuf::_getC()
 {
     if (_m_zstream.avail_in == 0) {
         if (m_sourceEof)
-            return -1;
+            return traits_type::eof();
         int count = _m_pSrcBuf->sgetn(
             _m_pInBuf, GZ_WINDOW_SIZE);
         if (count < GZ_WINDOW_SIZE)
@@ -222,7 +222,7 @@ int TGzInflateBuf::_getC()
         _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
         _m_zstream.avail_in = count;
         if (_m_zstream.avail_in == 0)
-            return -1;
+            return traits_type::eof();
     }
     Bytef c = *_m_zstream.next_in++;
     int result = c;
@@ -264,17 +264,17 @@ void TGzInflateBuf::_putBackC(char c)
 // the missing guards as surplus calls. Mac retains one checked read per
 // loop (0x2210dc/0x221154), then tests the decoded byte at 0x221140/0x2211b8;
 // CodeWarrior does not peel these conditions. Both forms keep the canonical
-// _mustGetC helper. The stream-traits byte snapshot below recovers 98.9360%:
-// all 61 CFG blocks and the exception expansion sequence agree. VC6 gives a
-// nested callee (caller budget - callee cb) / remaining sites; Loki's plain
-// `if (flags & 0x04)` tests, unnamed method check and named inflateInit2
-// result shrink this body so that only the second FHCRC read expands
-// TDataError, as in retail.
-// Loki's three asserts (pSrcBuf, _m_pSrcBuf, inflateInit2's Z_OK) take the
-// campaign editor's copy 93.45 -> 99.95 but the game's 100 -> 94.98; not
-// ported (docs/vc6/inliner.md).
-// Loki initializes next_in/avail_in before next_out/avail_out. This order
-// also matches the map editor's constructor exactly; the game stays exact.
+// _mustGetC helper. Loki's plain flag tests, unnamed method check and named
+// inflateInit2 result preserve the header-parser structure.
+// Keep all three Loki assertions and express EOF through the inherited stream
+// traits consistently in _getC, both magic checks, _mustGetC and underflow.
+// This shared model matches all three Windows images exactly. Changing only
+// _mustGetC's comparison recovered the game but lost the campaign match;
+// the callers' EOF checks are part of the same source contract.
+// Loki's second assertion is inside the gzip-success branch (0x81d338a skips
+// the assertion at 0x81d33b7 on raw pass-through). Input setup precedes output
+// setup. Reusing zlibBytes for the two casts instead is not byte-equivalent.
+// See docs/vc6/inliner.md for the bounded failed controls and inline diagnosis.
 VA(0x004d6050, 0x58A)
 MAC_ADDRESS(0x220ae4, 0x82c)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
@@ -286,6 +286,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
       m_sourceEof(false),
       m_inflating(false)
 {
+    assert(pSrcBuf != 0);
     _m_pInBuf = new char[2 * GZ_WINDOW_SIZE];
     if (_m_pInBuf == 0)
         throw TAllocationFailure();
@@ -303,7 +304,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
     _m_zstream.zfree = 0;
     try {
         int magic = _getC();
-        if (magic == -1)
+        if (magic == traits_type::eof())
             throw false;
         try {
             if (magic != g_gzMagic[0])
@@ -311,7 +312,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
             // Mac preserves the first byte in r20 for the catch below;
             // the second byte in r19 is passed to _putBackC at 0x220d0c.
             int nextMagic = _getC();
-            if (nextMagic == -1)
+            if (nextMagic == traits_type::eof())
                 throw false;
             if (nextMagic != g_gzMagic[1]) {
                 _putBackC(nextMagic);
@@ -325,6 +326,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
         m_ok = false;
     }
     if (m_ok) {
+        assert(_m_pSrcBuf != 0);
         if (_mustGetC() != Z_DEFLATED)
             throw TDataError();
         int flags = _mustGetC();
@@ -353,6 +355,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
         int result = inflateInit2(&_m_zstream, -MAX_WBITS);
         if (result == Z_MEM_ERROR)
             throw TAllocationFailure();
+        assert(result == Z_OK);
         m_inflating = true;
     }
     ownedBuffer.release();
@@ -473,7 +476,7 @@ int TGzInflateBuf::underflow()
     _m_zstream.avail_out = GZ_WINDOW_SIZE;
     if (egptr() > eback())
         return traits_type::to_int_type(*gptr());
-    return -1;
+    return traits_type::eof();
 }
 
 // Calls TRuntimeError(const char*), then installs the derived vptr. Both
@@ -484,7 +487,7 @@ VA(0x004d6ba0, 0x81)
 int TGzInflateBuf::_mustGetC()
 {
     int c = _getC();
-    if (c == -1)
+    if (c == traits_type::eof())
         throw TDataError();
     return c;
 }

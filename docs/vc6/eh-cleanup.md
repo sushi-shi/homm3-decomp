@@ -77,6 +77,51 @@ improve them. PR #199's available Mac `game` comparisons also preserve all 77
 banked pairs; this wrapper's exact Mac comparison remains unavailable because
 an anonymous TOC literal is unresolved.
 
+### Follow-up reconstruction of the seven rows
+
+Targeted VC6 comparisons on 2026-11-03 measured the following six rows at 100%:
+
+| Image | Function | Recovered difference |
+| --- | --- | --- |
+| Game | `game::transmitSaveGame` | Dreamcast's `pConfirmMsg` initialization before the transfer-init message and named `iReturn`; both destroy-player messages are full-expression temporaries passed directly to the send call. |
+| Map editor | `TArtifactsDlg::_insertItem` | An explicit find/break/increment loop preserves the retail fall-through exit and back edge, with the existing iterator and predicate helpers. |
+| Map editor | `ResourceManager::Open` | The call at `Open+0x57` targets the 17-byte cdecl `std::_Construct<int>` at `0x004de4d0`; recover that linked copy's claim. |
+| Campaign editor | `ResourceManager::Open` | Placement incorrectly folded two archive finders referencing different members of the same table. Include relocation addends in folding identity to retain the table's proven extent. |
+| Campaign editor | `TCampaignScenarioMap::TCampaignScenarioMap` | Construct the borrowed stream wrapper before `try`: retail initializes its frame slot before entering protected state 4, and its try covers states 4..14. |
+| Campaign editor | `loadCampaign` | Raw first-field read, early difficulty-bool capture, explicit version-mismatch increment/continue and canonical string `empty()` calls recover the retail expansion and lifetime decisions. All 39 unwind predecessors and three protected ranges agree. |
+
+These are measured candidate results from targeted VC6 comparisons.
+The artifact loop's older compact spelling was borrowed from a different Loki
+function (`ObjectPaletteWnd.cpp:84`); it was not native evidence for this body.
+The resource fixes change target identification, not the shared Open algorithm.
+The map-editor refresh also exposed a manifest conflict: a legacy folded data
+alias estimated alignment 4 while its section-backed aliases proved 8. Reuse
+that unambiguous observed alignment for the legacy alias; keep concrete section
+alignments unchanged.
+
+The seventh row, campaign `TGzInflateBuf`, also reaches 100%, with both the
+game and map-editor copies remaining exact. All three trusted Loki assertions
+are retained. The missing source model was consistent `traits_type::eof()`
+use across `_getC`, both constructor magic checks, `_mustGetC` and `underflow`.
+Changing only the checked-reader predicate had recovered game exactness while
+moving the campaign copy to 88.46%; treating producer and callers together
+closes both. The helper is the inherited stream contract, already used by the
+deflating half and compatible with native -1 comparisons. Native bytes do not
+uniquely distinguish a literal from this fully expanded helper.
+
+Loki's second assertion belongs inside the successful gzip branch: the flag
+test at `0x081d338a` skips to owner release at `0x081d3781`, bypassing the
+source-buffer assertion at `0x081d33b7`. Restoring that scope alone is
+byte-neutral in VC6; it remains a trusted source fact. See
+[inliner.md](inliner.md) for the combined model's inline explanation.
+
+Native evidence also restores `TAutoArrayPtr`'s original `_m_bOwns`/`_m_ptr`
+fields and empty exception specifications on its pointer constructor, `get`
+and `release`. These corrections were byte-neutral in the preceding gzip
+comparison. The ownership field's CodeView primitive 0x20 remains ambiguous
+between unsigned char and lowered bool; the bool control was byte-neutral and
+the existing byte declaration is retained.
+
 ## A catch continuation can look like an unmatched function
 
 Before reconstructing a frameless queue entry, check incoming jumps and the

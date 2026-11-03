@@ -2135,7 +2135,7 @@ game	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfef0	-
 game	?test@?$bitset@$0BM@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd17d0	-
 game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
-game	?transmitSaveGame@game@@QAEHHH_N0@Z	97.4264	97.4264	97.4264	0xcafd0	tokens1:2e6e336fbcf4
+game	?transmitSaveGame@game@@QAEHHH_N0@Z	100.0000	100.0000	100.0000	0xcafd0	tokens1:f9f97a8930e9
 game	?turnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	tokens1:09ac63bef778
 game	?turnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	tokens1:b9f191ddf209
 game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	tokens1:9bea0f215987
@@ -2163,14 +2163,14 @@ gzinflatebuf	??0TAllocationFailure@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1b9
 gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0xd6b80	tokens1:56f44ef96667
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xd6690	-
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	100.0000	100.0000	100.0000	0xd65e0	tokens1:0413d8f23acd
-gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd6050	tokens1:8675ee16acf0
+gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd6050	tokens1:5dd98fae1b7b
 gzinflatebuf	??0TRuntimeError@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1b7b0	-
 gzinflatebuf	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x1ba90	-
 gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	100.0000	100.0000	100.0000	0xd6820	tokens1:ef5da3a370b0
 gzinflatebuf	??_GTGzInflateBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd67f0	-
-gzinflatebuf	?_getC@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0xd5fd0	tokens1:fee47687ecfd
-gzinflatebuf	?_mustGetC@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0xd6ba0	tokens1:5be6fa880b72
-gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	100.0000	100.0000	100.0000	0xd6920	tokens1:da49048ee97a
+gzinflatebuf	?_getC@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0xd5fd0	tokens1:e18028a5720d
+gzinflatebuf	?_mustGetC@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0xd6ba0	tokens1:74721ad34319
+gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	100.0000	100.0000	100.0000	0xd6920	tokens1:e73128fd51f0
 gzio	@check_header@4	100.0000	100.0000	100.0000	0x206490	-
 gzio	@destroy@4	100.0000	100.0000	100.0000	0x206640	-
 gzio	@do_flush@8	100.0000	100.0000	100.0000	0x2069c0	-

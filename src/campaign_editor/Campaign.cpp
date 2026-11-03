@@ -1339,8 +1339,8 @@ void TCampaignScenarioMap::TPlayerInfo::setHeroes(const map<int, string>& newHer
 // out-of-line ones (setBPresent, setMainTown, setHeroes) and the inline
 // rest; with direct stores VC6 reverses retail's retained incorrect-version
 // TCreateFailure, custom-hero name copy and heroes-map begin.
-// Residual: retail gives the stream wrapper its own frame slot (EBP-0x1c);
-// VC6 puts it in pStreamBuf's dead argument slot.
+// Construct the borrowed stream wrapper before the protected reads: retail
+// initializes its frame slot before entering try state 4 (states 4..14).
 VA(0x0040a1f0, 0x4f0)
 TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pStreamBuf, int campaignVersion,
                                            bool bAnyVersion)
@@ -1348,8 +1348,8 @@ TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pS
 {
     int maxVersion = campaignVersion == eCampaignVersionShadowOfDeath ? 28
                      : campaignVersion == eCampaignVersionArmageddonsBlade ? 21 : 14;
+    TRawIStream stream(pStreamBuf);
     try {
-        TRawIStream stream(pStreamBuf);
         long version = readValue<long>(stream);
         if (version > maxVersion || !bAnyVersion && version != 28 && version != 21 && version != 14)
             throw TMapFileIsIncorrectVersion(maxVersion, version);

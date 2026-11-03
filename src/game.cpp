@@ -8674,9 +8674,14 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     close(handle);
     int fullGameCRC = calcCrcLong(data, fileSize);
 
+    // DC 10269 initializes pConfirmMsg before msg; 10274 saves iReturn.
+    // The later destroy-player sends (10418/10437) each construct their
+    // message in the transmit call's full expression, after clearNetInfo.
+    CNetMsg* pConfirmMsg = 0;
     CGameTransmitInitMsg msg(fileSize, fullGameCRC, thisPlayerDead,
                              isDiff, makeOrig);
-    if (!transmitRemoteData(&msg, toWho, false, true))
+    int iReturn = transmitRemoteData(&msg, toWho, false, true);
+    if (!iReturn)
         shutDown(0);
 
     int totalBlocks = fileSize / GAME_TRANSMIT_PAYLOAD_SIZE;
@@ -8759,10 +8764,10 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     while (!done) {
         pollSound();
         checkDoMain(0, 1);
-        CNetMsg* confirmMsg = GetRemoteData(1, 0);
-        CMessageKill kill(confirmMsg);
+        pConfirmMsg = GetRemoteData(1, 0);
+        CMessageKill kill(pConfirmMsg);
 
-        if (!confirmMsg && GameTime::elapsedSince(dataTimeOutStart)
+        if (!pConfirmMsg && GameTime::elapsedSince(dataTimeOutStart)
                 > GAME_TRANSMIT_TIMEOUT) {
             ++retryCount;
             g_logFile.log(DATA_COMPGEN(
@@ -8780,9 +8785,8 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                         handlePlayerDrop(m_players[toWho].m_dpid);
                         m_players[toWho].clearNetInfo();
                         g_playerDrop = 1;
-                        CDestroyPlayerMsg destroyMsg(killDPID);
-                        transmitRemoteDataDPID(&destroyMsg, NET_BROADCAST_DPID,
-                                               false, true);
+                        transmitRemoteDataDPID(&CDestroyPlayerMsg(killDPID),
+                                               NET_BROADCAST_DPID, false, true);
                         return 0;
                     } else {
                         for (int i = 0; i < NUM_PLAYERS; ++i) {
@@ -8793,9 +8797,8 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                                 g_dPlay->DestroyPlayer(m_players[i].m_dpid);
                                 handlePlayerDrop(m_players[i].m_dpid);
                                 m_players[toWho].clearNetInfo();
-                                CDestroyPlayerMsg destroyMsg(killDPID);
-                                transmitRemoteDataDPID(&destroyMsg, NET_BROADCAST_DPID,
-                                                       false, true);
+                                transmitRemoteDataDPID(&CDestroyPlayerMsg(killDPID),
+                                                       NET_BROADCAST_DPID, false, true);
                             }
                         }
                         g_playerDrop = 1;
@@ -8815,14 +8818,14 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                     transmitRemoteData(&resendEnd, i, false, true);
                 }
             }
-        } else if (confirmMsg) {
+        } else if (pConfirmMsg) {
 
             ++numMsgs;
             dataTimeOutStart = GameTime::get();
-            switch (confirmMsg->m_subType) {
+            switch (pConfirmMsg->m_subType) {
             case RS_GAME_TRANSMIT_REQ: {
                 CGameTransmitReqMsg* receivedMsg =
-                    static_cast<CGameTransmitReqMsg*>(confirmMsg);
+                    static_cast<CGameTransmitReqMsg*>(pConfirmMsg);
                 gameTransmitMainMsg->m_blockNbr = receivedMsg->m_blockNbr;
                 current = data + receivedMsg->m_blockNbr
                     * GAME_TRANSMIT_PAYLOAD_SIZE;
@@ -8848,13 +8851,13 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                 break;
 
             case RS_PLAYER_DROPPED:
-                if (getGamePosFromDPID(confirmMsg->m_dpidFrom) == toWho) {
-                    handlePlayerDrop(confirmMsg->m_dpidFrom);
+                if (getGamePosFromDPID(pConfirmMsg->m_dpidFrom) == toWho) {
+                    handlePlayerDrop(pConfirmMsg->m_dpidFrom);
                     g_playerDrop = 1;
                     delete[] data;
                     return 0;
                 }
-                handlePlayerDrop(confirmMsg->m_dpidFrom);
+                handlePlayerDrop(pConfirmMsg->m_dpidFrom);
                 // A dropped broadcast peer owes no end confirmation;
                 // share the confirmation tail exactly as the retail switch does.
 
@@ -8862,11 +8865,11 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                 g_logFile.log(DATA_COMPGEN(
                                 0x00677ed4, xferConfirmLog,
                                 "Received game transmit end verification from [%d]"),
-                            confirmMsg->m_dpidFrom);
+                            pConfirmMsg->m_dpidFrom);
                 transferSmack->setPercentage(1.0f);
                 done = 1;
                 if (toWho == NET_MESSAGE_RECIPIENT_ALL) {
-                    playerDone[confirmMsg->m_from] = 1;
+                    playerDone[pConfirmMsg->m_from] = 1;
                     for (int i = 0; i < NUM_PLAYERS; ++i) {
                         if (m_players[i].isHuman() && !playerDone[i]
                                 && i != g_game->getLocalPlayerGamePos()) {
@@ -8878,7 +8881,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                 break;
 
             case RS_CHAT_MSG: {
-                CChatMsg* receivedMsg = static_cast<CChatMsg*>(confirmMsg);
+                CChatMsg* receivedMsg = static_cast<CChatMsg*>(pConfirmMsg);
                 receiveChat(receivedMsg->m_text, receivedMsg->m_from);
                 if (inGame) {
                     g_advManager->completeDraw(0);

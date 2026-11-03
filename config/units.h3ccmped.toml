@@ -20,12 +20,12 @@
 #                               archive (the same ResourceManager anonymous
 #                               scope)
 #   zlib and Victor             the game's prebuilt objects, byte-identical
-#   GzBuf.cpp (gzinflatebuf)    /O2 /Ob2: retail expands _mustGetC and
-#                               zlibBytes in TGzInflateBuf's constructor and
-#                               underflow, as the game's /Ob2 build does
+#   GzBuf.cpp (gzinflatebuf)    /O2 (default /Ob1): _mustGetC and zlibBytes
+#                               are explicitly inline. Adding /Ob2 is
+#                               byte-flat for the current complete unit.
 #   zlib's callers              /Gr, as the game and the map editor build
 #                               the same files: GzBuf.cpp (gzinflatebuf,
-#                               /O2 /Ob2 plus /Gr) and lodfile.cpp (the
+#                               /O2 plus /Gr) and lodfile.cpp (the
 #                               Libraries profile plus /Gr) reach the /Gr
 #                               zlib objects as @crc32@12, @inflate@8 and
 #                               @uncompress@16 through zlib.h's plain

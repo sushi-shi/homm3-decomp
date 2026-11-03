@@ -464,27 +464,38 @@ Where the original may have had such statements:
   CreatureType.cpp 4, Artifact.cpp/.h 5, ResourceManager.cpp 1, ...) are
   game source too. Port one where its anchor statement survives in the
   Complete body; Loki's are RoE-era bodies.
-* Three functions take Loki's full set only at a loss and keep none of
-  it (choosing which proven asserts to keep would steer the inliner):
+* Historical assertion probes exposed incomplete source models in these
+  functions. A lower score does not disprove trusted Loki assertions, and
+  selecting only the byte-neutral subset would steer the inliner:
   - TObjectType::setImageName: any two of its three asserts are neutral
     (99.15), all three give 87.98. Its Complete body is a revision of
     Loki's (it reads the mask through an LODFile handle).
-  - TGzInflateBuf's constructor: Loki's three asserts take the campaign
-    editor's /Ob1 copy from 93.45 to 99.95 (TDataError then expands at
-    retail's _mustGetC sites) but the game's /Ob2 copy from 100 to 94.98;
-    any one alone is neutral in the game; the map editor's /O1 /Ob2 copy
-    stays 99.93 either way. The game's budget trace (`homm3 vc6
-    predict-inline --tu gzinflatebuf --root ??0TGzInflateBuf`, cb 868,
-    budget 1736) puts the wall at the two FHCRC reads: retail calls
-    TDataError at the first (nested budget (B - 56) / 5 must stay below
-    its cb 78) and expands it at the second ((B - 112) / 4 at least 78),
-    where B is the root budget left at the first read, 441 now. That
-    holds for B in 424..445; one assert (+4) gives 445, all three (+12)
-    give 453, and `--cb-window` finds no root cb that fits. The game copy
-    would have to spend 8..29 more budget before that read, or be 4..14
-    tuples smaller, than ours; the Mac copy's call sequence (0x220ae4)
-    is the same as ours and Dreamcast has no copy, so nothing yet
-    identifies that difference (open lead).
+  - TGzInflateBuf's constructor is now exact in all three Windows images
+    with all three Loki assertions retained. The missing context was the
+    shared stream EOF contract: `_getC` returns `traits_type::eof()`, both
+    magic checks and `_mustGetC` compare with it, and `underflow` returns it.
+    The deflating half already uses that contract. Mac's expanded -1 values
+    and Loki's older libio port are compatible with it, but do not uniquely
+    prove the helper spelling. The combined caller/reader model gives game
+    100%, campaign 100% (from 93.50%), and preserves map-editor 100%.
+    The `_m_pSrcBuf` assertion belongs inside `if (m_ok)`, as Loki's branch
+    `0x081d338a -> 0x081d3781` bypasses it on raw pass-through. Native
+    TAutoArrayPtr field names and ctor/get/release `throw()` specifications
+    are also restored; those changes alone were byte-neutral.
+
+    The failed partial models explain why discarding the assertions was the
+    wrong inference: all three with literal EOFs made campaign exact but
+    moved game to 95.00%; changing only `_mustGetC` to traits::eof recovered
+    game but moved campaign to 88.46%. VC6 counts the fully expanded EOF
+    helpers in its front-end caller/callee accounting even though the
+    machine-level sentinel remains -1. The old assertion-free trace (root
+    cb 868, budget 1736) located the sensitive decision at the two FHCRC
+    reads: retail retains TDataError at the first and expands it at the
+    second. That budget diagnosis identified missing source context; it did
+    not justify selecting assertion subsets or adding padding.
+    Explicit /Ob2 for the campaign profile was byte-flat. Reusing zlibBytes
+    for both constructor casts with the assertions measured campaign 89.25%;
+    that alternative is not adopted. Dreamcast has no GzBuf compiland.
   - getArmyName (CreatureType.h; DC 296..307 leaves 297..298
     unrecorded): its assert costs combatMessage (0x492840) 100 -> 98.07.
 * Ported since, all byte-neutral: CSpriteFrame.cpp's 71 (the renderers'

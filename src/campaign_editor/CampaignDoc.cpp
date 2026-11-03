@@ -642,8 +642,13 @@ VA(0x00413600, 0x9e0)
 // 27..29: map construction, const TCreateFailure&, after allocating/reading pData;
 // 24..31: map-loading and metadata-application loops, const exception&.
 // Chained name/description reads retain the two retail 512-byte buffers.
-// Direct long/readValue file-version and early-bool probes did not close the
-// initial-read inlining and remaining temporary-lifetime differences.
+// The first field expands the raw four-byte read; operator>> adds a typed
+// wrapper whose nested inline allowance retains _read<int> instead.
+// Retail saves the decoded difficulty bool before setName/setDescription,
+// then reuses the input-byte slot for music. Keep that value lifetime.
+// Advance and continue on a version mismatch; retail keeps that increment
+// beside the comparison. The three map-name empty() calls also preserve the
+// second string reader's retained end() call. Together these recover all bytes.
 pair<auto_ptr<TCampaign>, int> loadCampaign(CFile* pFile)
 {
     auto_ptr<TCampaign> pCampaign;
@@ -656,12 +661,15 @@ pair<auto_ptr<TCampaign>, int> loadCampaign(CFile* pFile)
         try {
             TRawIStream iStream(&inflateBuf);
             int fileVersion;
-            iStream >> fileVersion;
-            for (campaignVersion = 0;; campaignVersion++) {
+            iStream.read(reinterpret_cast<char*>(&fileVersion), sizeof(fileVersion));
+            for (campaignVersion = 0;;) {
                 if (campaignVersion >= kNumFileVersions)
                     throw new TCampaignDocInvalidFileVersion(fileVersion, kCurrentFileVersion);
-                if (fileVersion == kFileVersions[campaignVersion])
-                    break;
+                if (fileVersion != kFileVersions[campaignVersion]) {
+                    ++campaignVersion;
+                    continue;
+                }
+                break;
             }
             int type = readValue<signed char>(iStream);
             pCampaign = auto_ptr<TCampaign>(new TCampaign(type));
@@ -670,11 +678,10 @@ pair<auto_ptr<TCampaign>, int> loadCampaign(CFile* pFile)
             string name;
             string description;
             iStream >> name >> description;
-            signed char bDifficultyChoice;
-            iStream >> bDifficultyChoice;
+            bool bDifficultyChoice = readValue<signed char>(iStream) != 0;
             pCampaign->setName(name);
             pCampaign->setDescription(description);
-            pCampaign->setBDifficultyChoice(bDifficultyChoice != 0);
+            pCampaign->setBDifficultyChoice(bDifficultyChoice);
             if (fileVersion >= 5) {
                 int music = readValue<signed char>(iStream);
                 pCampaign->setMusic(music);
@@ -690,7 +697,7 @@ pair<auto_ptr<TCampaign>, int> loadCampaign(CFile* pFile)
     try {
         for (scenario = 0; scenario < pCampaign->getMapTraits().m_numRegions; scenario++) {
             TScenarioRecord& record = records[scenario];
-            if (record.m_mapFileName.length() == 0)
+            if (record.m_mapFileName.empty())
                 continue;
             auto_ptr<char> pData(new char[record.m_mapSize]);
             if (pData.get() == NULL)
@@ -711,10 +718,10 @@ pair<auto_ptr<TCampaign>, int> loadCampaign(CFile* pFile)
         for (scenario = 0; scenario < pCampaign->getMapTraits().m_numRegions; scenario++) {
             TScenarioRecord& record = records[scenario];
             pCampaign->modifyScenario(scenario).setRegionColor(record.m_regionColor);
-            if (record.m_mapFileName.length() == 0)
+            if (record.m_mapFileName.empty())
                 continue;
             for (unsigned int other = 0; other < pCampaign->getMapTraits().m_numRegions; other++) {
-                if (other != scenario && records[other].m_mapFileName.length() != 0 && record.m_prerequisites[other])
+                if (other != scenario && !records[other].m_mapFileName.empty() && record.m_prerequisites[other])
                     pCampaign->setBPrerequisite(scenario, other, true);
             }
             TScenario& rScenario = pCampaign->modifyScenario(scenario);

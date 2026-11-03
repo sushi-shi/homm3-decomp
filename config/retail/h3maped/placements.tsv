@@ -77,7 +77,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00003b89	0x4d	func	?set@?$bitset@$0JA@@std@@QAEAAV12@I_N@Z	rmg	external	masked body (77 bytes, 1 relocations) unique at a census start
 0x00003bd6	0x5a	func	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	artifact	external	referenced by ?set@?$bitset@$0BD@@std@@QAEAAV12@I_N@Z at +0xe
 0x00003c30	0x5a	func	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	rmg	external	referenced by ?set@?$bitset@$0JA@@std@@QAEAAV12@I_N@Z at +0x11
-0x00003c8a	0x35	func	?find_if@std@@YA?AV?$TConstBitsetIterator@$0JA@@@V2@0V?$binder2nd@U?$not_equal_to@_N@std@@@1@@Z	artifact	external	referenced by ?_removeItem@TArtifactsDlg@@AAEXH@Z at +0xbc
+0x00003c8a	0x35	func	?find_if@std@@YA?AV?$TConstBitsetIterator@$0JA@@@V2@0V?$binder2nd@U?$not_equal_to@_N@std@@@1@@Z	artifact	external	referenced by ?_insertItem@TArtifactsDlg@@AAEHHW4TArtifact@@W4TArtifactSlot@@@Z at +0x1bc
 0x00004700	0x39	func	?getMessage@TArtifactPropsGeneralPage@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	ArtifactPropsSheet	external	masked body (57 bytes, 3 relocations) unique at a census start
 0x00004ae0	0x52	func	??0TArtifactContainer@THeroPrototype@@QAE@XZ	Hero	external	referenced by ??0THero@@QAE@ABUTObjectType@@W4TPlayer@@@Z at +0xac
 0x00004b4e	0x2d	func	??1TArtifactContainer@THeroPrototype@@QAE@XZ	GameMap	external	referenced by ??1TArtifactsDlg@@UAE@XZ at +0x29
@@ -3046,7 +3046,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0017c7c4	0x2	data	??_C@_01FBAH@1?$AA@	MapSpecsGeneralPage	external	referenced by ?OnLimitHeroLevelCheck@TMapSpecsGeneralPage@@IAEXXZ at +0x3a
 0x0017c7c8	0x4	data	?akArtifactSlotTraits@@3AAY0BD@$$CBUTArtifactSlotTraits@@A	artifact	external	referenced by ?OnInitDialog@TEditArtifactDlg@@MAEHXZ at +0x113
 0x0017c7cc	0x4	data	?akArtifactTraits@@3AAY0JA@$$CBUTArtifactTraits@@A	artifact	external	referenced by ?_isPlayable@_TImpl@TGameMap@@QBE_NXZ at +0x7f
-0x0017c7d0	0x4	data	?g_combinationArtifacts@@3PBUTCombinationArtifact@@B	artifact	external	referenced by ?_removeItem@TArtifactsDlg@@AAEXH@Z at +0x93
+0x0017c7d0	0x4	data	?g_combinationArtifacts@@3PBUTCombinationArtifact@@B	artifact	external	referenced by ?_insertItem@TArtifactsDlg@@AAEHHW4TArtifact@@W4TArtifactSlot@@@Z at +0x190
 0x0017c7d4	0xd	data	??_C@_0N@GIEN@artslots?4txt?$AA@	artifact	external	string literal referenced by ?InitializeArtifactTraitsTable@@YA_NXZ
 0x0017c7e4	0xd	data	??_C@_0N@GEJI@artraits?4txt?$AA@	artifact	external	referenced by ?InitializeArtifactTraitsTable@@YA_NXZ at +0x11
 0x0017c840	0x2	data	??_C@_01BJG@?6?$AA@	EditRumorDlg	external	referenced by ?OnOK@TEditRumorDlg@@MAEXXZ at +0x1d
