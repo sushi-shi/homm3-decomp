@@ -170,8 +170,8 @@ DC_ADDRESS(0x11bb40, 0x20)
 unsigned char CDPlayHeroes::sysMsgDestroyPlayerOrGroup(
     DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId)
 {
-    if (message->m_playerType == DPPLAYERTYPE_PLAYER) {
-        handlePlayerDrop(message->m_dpId);
+    if (message->dwPlayerType == DPLAY_PLAYER_TYPE_PLAYER) {
+        handlePlayerDrop(message->dpId);
         return 1;
     }
     return CDPlay::sysMsgDestroyPlayerOrGroup(message, toId);
@@ -209,9 +209,9 @@ bool CDPlayHeroes::pollRemote()
         queueMsg(netMsg);
     }
 
-    if (m_res != DPLAY_RECEIVE_ERROR_NO_MESSAGES) {
+    if (m_hRes != DPLAY_RECEIVE_ERROR_NO_MESSAGES) {
         char description[256];
-        getErrorDesc(m_res, description);
+        getErrorDesc(m_hRes, description);
         g_logFile.log(DATA_COMPGEN(0x00682a98, dplayReceiveErrorLog,
                                 "DPlay Receive error [%s]"),
                     description);
@@ -1736,7 +1736,7 @@ bool testIfLobbyLaunched()
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, registryKey, 0, KEY_READ, &key)
         == ERROR_SUCCESS) {
         RegCloseKey(key);
-        return g_dPlay->testLobbied();
+        return g_dPlay->TestLobbied();
     }
 
     const char* appNameStart = strrchr(registryKey, '\\');
@@ -1749,7 +1749,7 @@ bool testIfLobbyLaunched()
     g_dPlay->registerApp(
         appName, fileName, commandLine, guidHeroes3,
         executableName[0] ? executableName : 0);
-    return g_dPlay->testLobbied();
+    return g_dPlay->TestLobbied();
 }
 
 // E:\gamedcs\remote.cpp:1960 - the PC path adds the MPlayer host/client
@@ -1848,8 +1848,8 @@ unsigned char lobbyLaunchConnect()
     if (!connection)
         return 0;
 
-    if (connection->m_flags & DPLAY_CONNECTION_CREATE_SESSION) {
-        connection->m_sessionDesc->m_flags |=
+    if (connection->dwFlags & DPLAY_CONNECTION_CREATE_SESSION) {
+        connection->lpSessionDesc->dwFlags |=
             DPLAY_SESSION_MIGRATE_HOST | DPLAY_SESSION_KEEP_ALIVE;
         g_logFile.log(DATA_COMPGEN(0x00682d68, lobbyIsHost,
                                 "We are the host...."));
@@ -1859,10 +1859,10 @@ unsigned char lobbyLaunchConnect()
     }
     g_logFile.log(DATA_COMPGEN(0x00682d2c, lobbyMaxPlayers,
                             "CDPlayLobby::Connect - MaxPlayers: %d"),
-                connection->m_sessionDesc->m_maxPlayers);
+                connection->lpSessionDesc->dwMaxPlayers);
     g_logFile.log(DATA_COMPGEN(0x00682d00, lobbyCurrentPlayers,
                             "CDPlayLobby::Connect - CurrentPlayers: %d"),
-                connection->m_sessionDesc->m_currentPlayers);
+                connection->lpSessionDesc->dwCurrentPlayers);
 
     if (!g_dPlay->setConnectionSettings(0, connection)) {
         g_logFile.log(DATA_COMPGEN(0x00682cdc, lobbySetSettingsError,
@@ -1888,7 +1888,7 @@ unsigned char lobbyLaunchConnect()
     g_logFile.log(DATA_COMPGEN(0x00682c7c, lobbyConnected,
                             "Successful connect!"));
     strncpy(g_config.m_networkDefaultName,
-            connection->m_playerName->m_shortNameA, 21);
+            connection->lpPlayerName->lpszShortNameA, 21);
     delete connection;
     g_config.m_networkDefaultName[21] = 0;
     g_logFile.log(DATA_COMPGEN(0x00682c6c, lobbyUserName,

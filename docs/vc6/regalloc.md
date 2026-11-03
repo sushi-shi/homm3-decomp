@@ -2087,3 +2087,36 @@ layer's destination row. The pasted expression
 first, and regrouping it is byte-identical. The row accessor
 `TBitmapBase::getLine(y)` binds the argument before its body and raises the
 function from 89.87% to 97.58% (100% with its remaining source facts).
+
+## Separate nested argument evaluation before diagnosing a register wall
+
+`TMultiPlayerWindow::OnSearch` (`0x511660`) reaches 100% from 89.8072%
+by staging the first session in a named local:
+
+```cpp
+CDPlaySession* session = m_sessions->get(0);
+if (!joinSession(session, 0)) {
+```
+
+The nested spelling prepares JoinSession's null password before calling
+`get(0)`. Retail completes `get(0)` first, then pushes the password and
+returned session. The sibling modem/direct join flows also use a session
+local. A controlled two-source comparison reproduced both objects; the
+ordinary targeted build confirmed all 51 multiplayer-window functions exact.
+The negative failure guard and saved-error lifetime remain unchanged.
+
+This small source-order correction also restores EDI=`this`, ESI=`-1`,
+the smaller frame and four return paths. The previous model called the
+ESI/EDI swap a source-local impossibility caused by C1 handle state. A passive
+allocator trace, verified byte-identical apart from the COFF timestamp,
+instead observed the saved error receiving ESI at priority 40, the cached
+`-1` receiving EDI at priority -65, and `this` receiving ESI at priority -89
+in the mismatching source. These are interacting live ranges, not proof that
+the declaration order of `this` makes a source correction impossible.
+
+An independently identity-checked inline trace also disproved the old
+all-destructors-retained diagnosis: both versions expand the first two
+`CMPInputDlg` destructors and retain the last three. Missing late call sites
+in the mismatching object were merged cleanup paths. Check argument staging
+and actual pass decisions before treating aggregate call counts or a
+register-role heuristic as a causal explanation.

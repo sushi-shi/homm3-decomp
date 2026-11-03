@@ -8,6 +8,16 @@
 
 #include "array.h"
 
+// Complete uses the SDK ANSI aliases and their inherited COM interfaces.
+#include <dplay.h>
+#include <dplobby.h>
+
+SIZE(DPNAME, 0x10);
+SIZE(DPSESSIONDESC2, 0x50);
+SIZE(DPLCONNECTION, 0x28);
+SIZE(DPMSG_CREATEPLAYERORGROUP, 0x30);
+SIZE(DPAPPLICATIONDESC2, 0x38);
+
 class CDPlayConnection;
 class CDPlayAddressElement;
 class CDPlayGroup;
@@ -15,117 +25,10 @@ class CDPlayMsg;
 
 class CDPlaySession;
 template<class T> class CAutoArray;
-struct DPCAPS;
-struct DPCOMPOUNDADDRESSELEMENT;
-struct DPLCONNECTION;
-struct DPNAME;
-struct DPSESSIONDESC2;
-struct DPMSG_ADDGROUPTOGROUP;
-struct DPMSG_ADDPLAYERTOGROUP;
-struct DPMSG_CHAT;
-struct DPMSG_CREATEPLAYERORGROUP;
-struct DPMSG_DESTROYPLAYERORGROUP;
-struct DPMSG_GENERIC;
-struct DPMSG_SECUREMESSAGE;
-struct DPMSG_SETPLAYERORGROUPDATA;
-struct DPMSG_SETPLAYERORGROUPNAME;
-struct DPMSG_SETSESSIONDESC;
-struct DPMSG_STARTSESSION;
-
-// DirectPlay 6 structures used by remote's retail lobby-connect path. The
-// layouts are published in the Dreamcast CodeView stream and independently
-// fixed on PC by the field loads in LobbyLaunchConnect.
-struct DPNAME {
-public:
-    unsigned long m_size;
-    unsigned long m_flags;
-    union {
-        unsigned short* m_shortName;
-        char* m_shortNameA;
-    };
-    union {
-        unsigned short* m_longName;
-        char* m_longNameA;
-    };
-};
-SIZE(DPNAME, 0x10);
-
-struct DPSESSIONDESC2 {
-public:
-    unsigned long m_size;
-    unsigned long m_flags;
-    GUID m_guidInstance;
-    GUID m_guidApplication;
-    unsigned long m_maxPlayers;
-    unsigned long m_currentPlayers;
-    union {
-        unsigned short* m_sessionName;
-        char* m_sessionNameA;
-    };
-    union {
-        unsigned short* m_password;
-        char* m_passwordA;
-    };
-    unsigned long m_reserved1;
-    unsigned long m_reserved2;
-    unsigned long m_user1;
-    unsigned long m_user2;
-    unsigned long m_user3;
-    unsigned long m_user4;
-};
-SIZE(DPSESSIONDESC2, 0x50);
-
-struct DPLCONNECTION {
-public:
-    unsigned long m_size;
-    unsigned long m_flags;
-    DPSESSIONDESC2* m_sessionDesc;
-    DPNAME* m_playerName;
-    GUID m_guidSp;
-    void* m_address;
-    unsigned long m_addressSize;
-};
-SIZE(DPLCONNECTION, 0x28);
-
-// DirectPlay's creation notification: DC type 0x2a2a proves all nine
-// fields and the 48-byte layout. Original fields: dwType, dwPlayerType,
-// dpId, dwCurrentPlayers, lpData, dwDataSize, dpnName, dpIdParent, dwFlags.
-struct DPMSG_CREATEPLAYERORGROUP {
-public:
-    unsigned long m_type;
-    unsigned long m_playerType;
-    unsigned long m_dpId;
-    unsigned long m_currentPlayers;
-    void* m_data;
-    unsigned long m_dataSize;
-    DPNAME m_dpnName;
-    unsigned long m_dpIdParent;
-    unsigned long m_flags;
-};
-SIZE(DPMSG_CREATEPLAYERORGROUP, 0x30);
-
-// DirectPlay's player/group destruction notification. remote.obj's override
-// of the system-message slot reads only the leading discriminator and the
-// id of the station that left, which is what fixes them at +4 and +8; the
-// tail follows dplay.h's published record so the struct is not a fake.
-struct DPMSG_DESTROYPLAYERORGROUP {
-public:
-    unsigned long m_type;
-    unsigned long m_playerType;
-    unsigned long m_dpId;
-    void* m_localData;
-    unsigned long m_localDataSize;
-    void* m_remoteData;
-    unsigned long m_remoteDataSize;
-    DPNAME m_dpnName;
-    unsigned long m_dpIdParent;
-    unsigned long m_flags;
-};
-
-// dplay.h's DPPLAYERTYPE_ pair, the domain of the field above.
+// Game-facing player-kind domain, using the SDK discriminants.
 enum EDPlayerType {
-    DPPLAYERTYPE_GROUP = 0,
-    DPPLAYERTYPE_PLAYER = 1
+    DPLAY_PLAYER_TYPE_GROUP = DPPLAYERTYPE_GROUP,
+    DPLAY_PLAYER_TYPE_PLAYER = DPPLAYERTYPE_PLAYER
 };
 
 enum EDPlayConnectionFlags {
@@ -137,9 +40,7 @@ enum EDPlaySessionFlags {
     DPLAY_SESSION_KEEP_ALIVE = 0x40
 };
 
-// The SDK macro values are also the exact HRESULT immediates used by the
-// DirectPlay send path. The domain lives here instead of importing DPLAY.H's
-// anonymous typedef structs over these hand-owned forward declarations.
+// Game-facing send errors retain their SDK HRESULT values.
 enum EDPlaySendError {
     DPLAY_SEND_ERROR_INVALID_PARAMETER = 0x80070057,
     DPLAY_SEND_ERROR_INVALID_PLAYER = 0x88770096
@@ -179,18 +80,18 @@ public:
     CDPlaySession(const DPSESSIONDESC2* session)
     {
         if (session) {
-            m_flags = session->m_flags;
-            m_guidInstance = session->m_guidInstance;
-            m_guidApp = session->m_guidApplication;
-            m_maxPlayers = session->m_maxPlayers;
-            m_playerCount = session->m_currentPlayers;
-            m_user1 = session->m_user1;
-            m_user2 = session->m_user2;
-            m_user3 = session->m_user3;
-            m_user4 = session->m_user4;
-            strcpy(m_sessionName, session->m_sessionNameA);
-            if (session->m_passwordA)
-                strcpy(m_password, session->m_passwordA);
+            m_flags = session->dwFlags;
+            m_guidInstance = session->guidInstance;
+            m_guidApp = session->guidApplication;
+            m_maxPlayers = session->dwMaxPlayers;
+            m_playerCount = session->dwCurrentPlayers;
+            m_user1 = session->dwUser1;
+            m_user2 = session->dwUser2;
+            m_user3 = session->dwUser3;
+            m_user4 = session->dwUser4;
+            strcpy(m_sessionName, session->lpszSessionNameA);
+            if (session->lpszPasswordA)
+                strcpy(m_password, session->lpszPasswordA);
             else
                 m_password[0] = 0;
         }
@@ -392,6 +293,8 @@ public:
 // menu and oldmain. Retail bodies also prove the complete base data layout.
 class CDPlay {
 public:
+    DPCAPS m_caps;  // +0x04; first public field in DC field list 0x2a35.
+
     CDPlay();
     virtual ~CDPlay();
     virtual unsigned char init();
@@ -461,7 +364,7 @@ public:
 
     // E:\gamedcs\dxplay.h:375
     DC_ADDRESS(0x101d98, 0x6)
-    long getLastError() { return m_res; }
+    long getLastError() { return m_hRes; }
     virtual unsigned char send(void* data, unsigned long size,
         unsigned long idFrom, unsigned long idTo, unsigned char guaranteed);
     virtual unsigned char sendChat(char* msg, unsigned long idFrom,
@@ -488,6 +391,17 @@ public:
         unsigned long* numMsgs, unsigned long* numBytes);
 
 protected:
+    // Native DC field list 0x2a35 places the data before protected methods.
+    IDirectPlay4A* m_lpDP;  // +0x2c: DC m_lpDP; Complete creates IDirectPlay4A.
+    GUID m_guid;  // +0x30
+    long m_hRes;  // +0x40: DC field list 0x2a35 proves this name and long type.
+    CAutoArray<CDPlaySession>* m_pSessionArray;  // +0x44
+    CAutoArray<CDPlayConnection>* m_pConnectionArray;  // +0x48
+    CAutoArray<CDPlayGroup>* m_pGroupArray;  // +0x4c
+    CAutoArray<CDPlayPlayer>* m_pPlayerArray;  // +0x50
+    unsigned char m_connected;  // +0x54
+    unsigned char m_inSession;  // +0x55
+    bool m_isHost;  // +0x56 (original m_isHost)
 
     VA(0x00496cc0, 0x5)
     DC_ADDRESS(0x08bf14, 0x4)
@@ -603,16 +517,8 @@ public:
     friend int __stdcall enumConnectionsCallback(const GUID* lpguidSP, void* connection, unsigned long connectionSize, const DPNAME* name, unsigned long flags, void* context);
     friend int __stdcall enumGroupsCallback(unsigned long dpid, unsigned long playerType, const DPNAME* name, unsigned long flags, void* context);
     friend int __stdcall enumPlayersCallback(unsigned long dpid, unsigned long playerType, const DPNAME* name, unsigned long flags, void* context);
-    // Protected (not private): CDPlayLobby's own methods write m_lpDP, m_hRes,
-    // m_isHost and the array pointers directly, exactly as retail does.
-    // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
-    // offsets. The intervening names are Dreamcast CodeView's and agree
-    // with the PC methods; DPCAPS stays opaque until a retail body needs it.
-    char m_caps[0x28];  // +0x04
 
 protected:
-    void* m_dp;  // +0x2c
-    GUID m_guid;  // +0x30
     // The DirectPlay enum trampolines are file-scope callbacks that forward to
     // these virtuals through the lpContext object; keep them reachable without
     // reordering (vtable slots 58-61 are unchanged).
@@ -626,18 +532,6 @@ protected:
         const GUID* lpguidSP, void* connection,
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
-    long m_res;  // +0x40, DC long / SDK HRESULT
-    CAutoArray<CDPlaySession>* m_sessionArray;  // +0x44
-    CAutoArray<CDPlayConnection>* m_connectionArray;  // +0x48
-    CAutoArray<CDPlayGroup>* m_groupArray;  // +0x4c
-    CAutoArray<CDPlayPlayer>* m_playerArray;  // +0x50
-    unsigned char m_connected;  // +0x54
-    unsigned char m_inSession;  // +0x55
-    bool m_isHost;  // +0x56 (original m_isHost)
-    // Dreamcast CDPlay ends with connected/inSession/isHost at
-    // 84/85/86. Retail retains the same bytes and 0x58-byte size;
-    // this last byte aligns the complete object.
-    char m_tailPadding;
 
 };
 SIZE(CDPlay, 0x58);
@@ -670,7 +564,7 @@ public:
                                        unsigned long size);
     unsigned char sendLobbyMsg(unsigned long appId, void* data, unsigned long size);
     unsigned char receiveLobbyMsg(unsigned long appId, CDPlayMsg* msg);
-    bool testLobbied();
+    bool TestLobbied();
     virtual unsigned char enumLobbyConnections(
         CAutoArray<CDPlayConnection>* connectionArray);
     virtual unsigned char setGroupConnectionSettings(
@@ -692,18 +586,17 @@ public:
     virtual unsigned char getIPAddress(
         unsigned long dpid, char* ipAddress);
 
-protected:
-    virtual unsigned char handleSystemLobbyMsg(
-        unsigned long appId, CDPlayMsg* msg);
-
 public:
     // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     // DC 0x8bba4 and retail 0x499e20 directly call this protected virtual.
-    friend int __stdcall enumAddressCallback(const GUID* guidDataType, unsigned long dataSize, const void* data, void* context);
+    friend int __stdcall EnumAddressCallback(const GUID& guidDataType, unsigned long dwDataSize, const void* lpData, void* lpContext);
 
 protected:
-    void* m_lobby;  // +0x58
-    CAutoArray<CDPlayAddressElement>* m_addressArray;  // +0x5c
+    // DC: IDirectPlayLobby2* m_lpLobby; Complete creates IID_IDirectPlayLobby3A.
+    IDirectPlayLobby3A* m_lpLobby;  // +0x58
+    CAutoArray<CDPlayAddressElement>* m_pAddressArray;  // +0x5c
+    virtual unsigned char handleSystemLobbyMsg(
+        unsigned long appId, CDPlayMsg* msg);
     // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     virtual unsigned char addAddressEnum(
         const GUID* guid, unsigned long dataSize, const void* data);

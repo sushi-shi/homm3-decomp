@@ -7625,7 +7625,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
 
     if (g_remoteOn) {
         DPSESSIONDESC2* sessionDesc = g_dPlay->getCurrSession();
-        sessionDesc->m_flags |= 0x21;
+        sessionDesc->dwFlags |= 0x21;
         g_dPlay->updateSessionDesc(sessionDesc);
         ::operator delete(sessionDesc);
     }
