@@ -1155,6 +1155,440 @@ per case — the negative form folds the three `return 1` tails into
   a register value; `neg/sbb/neg` for `!= 0` of a CALL result (value already
   in EAX); `neg/sbb/inc` for `== 0`)
 
+`CDPlayLobby::TestLobbied` (`0x498b70`) improves from 88.4210% to 96.4912%
+by recording the final HRESULT in each return path. The failure-first guard
+preserves retail's three branches and four returns; the stores combine into
+one executed write. The only remaining difference is `test; pop edi; store;
+jge` versus retail's `test; store; pop edi; jge`. All 85 exact siblings retain
+MAX. This is a source model supported by effects and control flow, not proof
+of a unique original spelling; Dreamcast compiles this Windows body out.
+
+The former direct-store model provides a measured conditional-select
+control. A passive trace of pinned SP3 C2 12.00.8447
+reproduces all 53,191 object bytes except the COFF timestamp. Three conditional
+branches and four return pseudos survive global optimization. Pass RVA
+`0x27954`, through recognizer `0x2ee61`, replaces the final diamond with
+select opcode `0x18f` and reduces returns from four to three; subsequent
+lowering emits `setge` (`0x129`). This is earlier than tail merging.
+
+The eligibility call at `0x2f020` to `0x4b550` accepts constant 1/0 operands
+of type `0x2001`. At cost gate `0x4b79a`, the usable cost is 2 and the
+threshold is 10 (CPU 5, option bit 23 set). The neighboring CPU/size-speed
+thresholds are 9 and 12, so that threshold alone does not justify changing
+the compiler profile. The recognizer rejects extra predecessors to the
+result arm. A single shared failure label does avoid conversion, but emits
+only two returns. Sharing just the initial HRESULT failure or allocation
+failure with the final failure gives three returns; later epilogue handling
+does not restore retail's four. These are not matching source fixes.
+Severity and success switches retain extra extraction/dispatch instructions.
+They do not explain the four-return layout recovered by per-path recording.
+
+A separate pre-allocation exit-suffix duplicator (`0x2a996`, called at
+`0x68552`) does not rescue those shared-failure models. It examines only the
+penultimate block, not every shared false-return block. A passive replay of
+the preserved shared-failure IL reproduces all 53,175 object bytes and
+observes `0x3b96` returning zero at `0x2aa03`: after leading labels, the
+selected block contains only end marker kind `0x19`. It therefore rejects
+at `0x2aa0a`, before its payload-count (at most two) or predecessor-product
+(at most eight) gates. The actual false/true result assignments are in
+earlier blocks. The mixed-sharing and per-arm snapshots have the same empty
+final join. No evidenced cleanup or common exit operation supplies the
+missing executable suffix; moving the fetch-status write there would also
+change the query/allocation failure paths.
+
+A distinct later pass, `0x39f2d` at driver call `0x68695`, does duplicate
+shared epilogues. Both walks require an unconditional transfer (kind `0x11`,
+zero `tuple+0x20`); the three conditional failure edges in each preserved
+shared-failure model fail this entry gate before cost evaluation. Existing
+identity-gated checkpoints show one native return becoming two in the fully
+shared model, or three in the mixed-sharing models, as their unconditional
+jumps become epilogues. The active copy limit is 20 encoded bytes, not the
+earlier suffix pass's payload count. It is not the failing condition here.
+
+A fully assigned nested bool result, with one common source return and no
+entry default live across calls, supplies a distinct control. With per-arm
+final status recording it reproduces the identical 96.4912% lobby section
+and all four native returns. With a common final status store it reproduces
+the 88.4210% three-return `setge` body. Thus a single source return is compatible
+with the four-exit layout, but these coherent result-lifetime changes do not
+resolve the store/restore order. Both full-TU controls reproduce.
+
+The per-path model has a member store plus a return in each arm, so it
+survives conditional-select conversion without a select event. An identity-
+checked trace reproduces 53,351 object bytes. Restore insertion `0x335cd`
+places `epop EDI` before the comparison. The first `0x3465c` pass cannot
+combine the stores: its dispatch at `0x34867` skips common-prefix hoister
+`0x36423` while per-function flag `0xac348` is 1. The driver clears that flag
+at `0x68660`, and the second invocation moves the common store immediately
+before `jge`. Both stores already had equivalent operands before the first
+invocation; a changed operand is not what enables the second one. Scheduling
+at `0x3ad9b` then moves the test ahead of `epop`, leaving the residual order.
+The earlier generic checkpoint `0x683e6` already gives both stores identical
+destination descriptors, memory identity/value number and HRESULT source;
+a shared-reference spelling has no demonstrated address-equality defect to
+repair. Both `0x3465c` calls are after allocation and EPOP insertion. The
+gate clears only after native/register cleanup `0x34d29`, so it is not a
+pre/post-allocation switch. The late hoister explicitly accepts return arms
+through `0x364e4`/`0x86cea`. No source-controlled setter of the phase flag
+was found in the bounded static audit.
+
+Restore placement itself follows register-use regions, not status writes.
+Inside `0x335cd`, worker `0x33bc5` propagates per-block register-use masks
+and `0x34393` chooses region boundaries. At a terminal conditional branch,
+`0x3427e` also backs over its preceding comparison when operand-use check
+`0x21bab` finds no use of the restored register. The per-path model's EAX
+comparison does not use EDI; its status stores are still in successor blocks,
+so EDI restoration lands before the comparison. The direct-store control
+already has `SETGE` instead of a terminal branch and restores EDI after its
+result operations. Existing identity-checked captures show both placements.
+This explains the mechanism without establishing the missing source shape.
+
+Passive dependency and ready-list traces reproduce the same 53,351 bytes.
+There is no direct or transitive `epop` → member-store dependency in the
+final block: both depend independently on the final call and precede `jge`.
+The test has priority `0x6000`; `epop EDI` and the store both have `0x4000`.
+Their earlier sequence keys are 10 and 12, respectively, so the equal-
+priority ready list keeps `epop` first. The scheduler chooses the test in
+cycle 6, then `epop` and the store in cycle 7. This is an observed scheduling
+tie, not a demonstrated alias barrier or proof of source-local impossibility.
+
+Scheduling is followed by copy cleanup (`0x3bdf5`, `0x3c273`) and can therefore
+precede removal of a real intermediate copy or unused save/restore pair.
+The existing per-arm capture retains its tail through checkpoints `0x68718`,
+`0x6872b`, `0x68768` and `0x68788`; final emission lowers EPOP/branch encodings
+without swapping the store and restore. The first cleanup requires tuple
+flag bit 4, produced by allocation-repair helper `0x3311e` and cleared by the
+scheduler for multi-instruction issue groups. This is an identified producer,
+not a complete inventory of that flag's writers. The current tail has flag 1.
+
+A separate passive capture of the existing bool value-before-status model
+reproduces 53,313 object bytes outside the timestamp. All 70 tuples survive
+those late cleanup checkpoints; its ordinary CL-to-AL copies also have flag 1.
+Retargeting the bool definition to AL before the intervening HRESULT store
+would overwrite the EAX value the store still needs. The second cleanup's
+intervening-use checks compare both reads and writes, including overlapping
+register slices. A newly measured Win32 `BOOL` value-before-status control
+scores 83.9474% and reproduces: four returns remain, but each final arm has
+ECX constant state followed by XOR EAX / TEST ECX / SETNE AL normalization.
+Neither the ordinary copies nor this wider local supplies a matching late
+simplification; no datatype or helper change is adopted from this diagnostic.
+
+Sharing the actual HRESULT write between query failure and fetch failure is
+a distinct, semantically valid source control: successful query recording
+still precedes allocation, allocation failure returns separately, and each
+completed COM phase records its result once. This model reproduces 81.4035%
+and three native returns. Its shared failure block keeps the status store;
+the final success path keeps a separate store. Multiple incoming paths
+prevent both the simple select conversion and the late prefix hoist, whose
+`0x364e4` gate requires a singly referenced target. No earlier transformation
+splits this block into retail's separate failure exits. The measured output
+therefore supplies no new ordering improvement or helper to adopt.
+
+A fresh scored `compile-m dxplay` capture of the adopted per-path source
+reproduces the plain replay under the inert shim, then emits one lobby
+assembly at 96.4912% across both phase values and all 64 declaration offsets.
+The result has 134 state labels including the captured control and five
+TU-wide callee-prefix rounds; TestLobbied itself has no inline callees, so
+those prefix rounds add no distinct local boundary. Its source digest is
+checked against the live TU. This rules out the modeled state axes for this
+source, beyond merely observing deterministic repeated compiles. It does
+not cover changed helper bodies, declaration semantics or unknown compiler
+state, and it does not justify arbitrary header insertion.
+
+Two scratch-only ordinary helper extractions test whether an inline boundary
+changes that result: one takes `long& status, HRESULT result` and owns the
+same failure-first per-arm recording/return; the other also owns the final
+`GetConnectionSettings` call. Neither adds an `inline` keyword or a pragma.
+VC6 auto-inlines both and emits the identical lobby section, including all
+four calls and the restore/store reversal, at 96.4912%. All 86 TU scores
+are identical; the baseline and both candidate objects reproduce.
+Recording the status before the guard inside either helper instead restores
+the direct-store `setge` body (88.4210%); those controls also reproduce.
+For all four extractions, isolated IL captures reproduce the candidate lobby
+bytes and pass plain-versus-inert-shim equality. Crossing phase 0/1 with the
+single helper's compiled-prefix 0/1 state produces no change in any of the
+16 replays at the captured declaration offset. Both per-arm models also
+retain one identical assembly across the full phase 0/1 x declaration offsets
+0..63 x helper compiled-prefix 0/1 product: 256 replays each, 512 total.
+The captured candidates and inert-shim controls reproduce before each grid.
+Thus the added helper parameters and bindings do not reveal a handle-state
+interaction in these models. The common-recording models, which already
+lose the native four-return shape, were checked only at their captured offset.
+These are compiler-mechanism controls, not recovered helper definitions. The
+native class method lists provide `getLastError` and the existing connection
+wrappers, but no status recorder; the existing accessor controls also leave
+this residual unchanged. Neither diagnostic helper is adopted. This bounded
+result does not exclude a different, independently supported helper model.
+
+Const or entry-scope result declarations, explicit `else`, assignment in the
+guard, recording within comma returns, a shared query/fetch HRESULT and a
+common bool result all reproduce 96.4912%. Success-first recording and three
+nested positive-guard forms merge the early false exits and score 55.0%.
+Conditional expressions with the status write in each comma arm also retain
+96.4912%, whether returned directly or through a named bool; success-first
+conditional recording again scores 55.0%.
+Switch dispatch combined with per-arm recording does not close the gap:
+the `SUCCEEDED` true case keeps four returns but adds `setge`/decrement
+(90.1754%); its false case, `FAILED` true case and SDK severity-error case
+merge to two returns (55.0%, 49.7368% and 48.6842%, respectively).
+The failure-first model is
+retained without added operations, helper bodies or lifetime barriers.
+
+The DC-proven `IDirectPlayLobby2*` field is a distinct historical interface
+hypothesis, not proof of Complete's declaration. Complete creates Lobby3A
+and uses its `RegisterApplication`/`ConnectEx` slots. A controlled Lobby2A
+field with casts only at those two newer calls reproduces every dxplay score
+and the identical TestLobbied section at 96.4912%. The pinned SDK derives
+Lobby2 and Lobby3 separately from Lobby1, so those casts are reinterpretations,
+not static downcasts. Retain the simpler Lobby3A field; this declaration
+alternative does not explain the residual.
+
+Under that model, a `DPLCONNECTION*` buffer, a named `HGLOBAL` allocation
+followed by `GlobalLock`, and their combination with `GHND` all retain
+96.4912%. The SDK parameter is `LPVOID`; the structure pointer is compatible
+with the returned data, not mandated by the declaration. `GlobalAllocPtr`
+expands to the existing nested allocation/lock calls and adds no lifetime.
+Retesting SDK predicates with the raw HRESULT preserved for the later store
+retains four returns but introduces an EAX-to-ECX copy: `IS_ERROR` adds
+mask/compare instructions (90.8772%), while `HRESULT_SEVERITY` adds
+shift/mask/compare instructions (89.1228%). Neither changes the restore/store
+order or provides a missing owner/helper model.
+The archived [DirectX 6.1 DPChat `ConnectUsingLobby` sample](https://github.com/NickCis/directx-6-1-sdk-samples/blob/fcd9eac7bb7d85a331dabd4521d67891692b2255/dplay/src/dpchat/lobby.cpp)
+contains the same size query, `GlobalAllocPtr(GHND, size)` allocation and
+fetch sequence. Its shared failure label owns real COM releases and
+`GlobalFreePtr`, and the function returns an HRESULT after establishing a
+connection. Those operations are absent from retail TestLobbied; the sample
+therefore supplies neither a missing cleanup lifetime nor proof of HoMM3's
+return structure. Keep the SDK macro interpretation distinct from an original
+source attribution.
+
+A common Win32 `BOOL` result also fails: it scores 82.1930% and retains
+int-to-bool conversion instructions in both final exits; the `bool` control
+stays at 96.4912%.
+Initializing a phase-local `BOOL` after the fetch and updating it in one arm
+also leaves three returns and an ECX result followed by `setne`: a common
+status write before the guard scores 87.8070%/81.7544% for true/false
+defaults, versus 85.4386%/79.2105% when recorded after the guard. Giving the
+failure arm its own immediate return folds both defaults back to the direct
+store/`setge` body (88.4210%). These controls reproduce. The older entry-
+default `BOOL` controls already had a bool function interface; interface
+recovery is not a reason to repeat them.
+
+Returning the validated buffer (`buf != 0`) from the success arm of the
+per-path recording model reproduces the identical full-TU object at
+96.4912%. The existing null guard lets VC6 reduce that result to true;
+it does not alter the restore/store ordering.
+
+Moving a common bool result's assignment before the status store in each
+arm scores 90.9649%: it prevents store combination and retains CL-to-AL
+copies in both exits. The status-before-value control remains 96.4912%.
+Selecting the bool before one common status store folds back to `setge`
+(87.7018% with explicit arms, 88.4210% with `SUCCEEDED`). Initializing that
+bool immediately after the call and changing it in just one branch retains
+the branch but only three returns: default true scores 92.3509%, default
+false 82.8772%; both retain extra CL operations. These controlled full-TU
+comparisons reproduce and supply no improvement to adopt.
+Default-result forms with per-arm status recording also keep only three
+returns. Initializing after the final call uses CL (true: 89.9825%, false:
+83.7544%); initializing before it keeps BL across the call (true: 87.1930%,
+false: 82.7895%). Neither removes the extra result operations.
+Giving the failure arm its own immediate `return ok` restores 96.4912%
+for both defaults at entry, before the final call and after it, without
+changing the remaining instruction-order difference.
+
+An exact native analogue, `deque<int>::iterator::operator++` at `0x449230`,
+does emit compare/store/restore/branch. Its `_Next` store is part of the
+precondition, and the taken arm performs real pointer updates. It therefore
+does not present a constant-return diamond to the select pass and cannot
+justify an extra operation or helper in `TestLobbied`.
+Extending this comparison to exact functions larger than 500 bytes finds
+two more compare/store/restore/branch sites: `getProtectionValue` at
+`0x43990f` stores state for the expanded duration calculation, and
+`loadSoundHeaders` at `0x598687` stores the opened campaign archive handle
+before a branch that reads and allocates headers. Neither is a constant-bool
+return diamond; neither supplies a missing lobby operation.
+A wider scan of all 12,022 admitted retail function ranges, without a score
+filter, finds 19 instances of the narrow compare/test, memory-destination
+MOV, POP(s), conditional-branch sequence. All have scored owners, and
+TestLobbied is the only non-exact owner. Five additional large-function
+sites are EH-state stores: `initMainClasses`, three `num_get::do_get`
+instantiations and the town-screen constructor. Their branches retain real
+construction/destruction work, not a constant-bool result selection. These
+sites do not justify adding a cleanup lifetime to the lobby probe. The scan
+is a bounded instruction-pattern search, not an exhaustive source-shape proof.
+
+The recognizer also requires the condition producer to be the immediately
+preceding tuple (`0x2eea9`). Computing a bool success/failure snapshot before
+recording the HRESULT tests that gate without adding an operation. Both
+spellings still reproduce 88.4210%. A passive trace reproduces all 53,351
+object bytes: input IR preserves the predicate before the member store, but
+normalization between checkpoints `0x683c5` and `0x683e6` removes the bool
+temporary and places the HRESULT comparison after the store. The adjacency
+gate then passes. Retail's `test; store; pop; jge` ordering alone therefore
+does not recover that source ordering.
+
+Internal passive captures locate that normalization in global propagation
+`0x11703`, with full 53,351-byte identity preserved. Call `0x12347` to
+`0x1117e` sinks the predicate's defining compare/select/assignment chain
+across the independent member store to its use. Substitution at `0x12396`,
+assignment removal at `0x1239d` and queued simplification then leave the
+original HRESULT comparison. Admission at `0x12141` requires a single-use
+state: a second qualifying use changes definition byte `+0x13` from `0x0a`
+to `0x0b`. Type compatibility, control-region checks and actual intervening
+operand dependencies also constrain movement; a memory write is not an
+unconditional barrier.
+
+Reusing the saved success predicate in the existing guard and success return
+tests that gate without adding an operation. With one common status store,
+both guard polarities score 87.7018% and retain `setge cl; mov al,cl` with
+three returns. Returning it from the failure arm scores 84.9123% and adds
+a second bool test/normalization. Combining predicate reuse with per-arm
+status recording keeps four returns in the failure-first forms, but retains
+`setge cl; test cl,cl`: success-value return scores 91.9123%, failure-value
+return 91.9298%. Success-first recording merges the exits again (45.4386%,
+two returns). All controls reproduce. Thus a second use changes early
+propagation as predicted, but these ordinary forms do not remove the later
+materialization or close the restore/store residual.
+The same two-use model with a Win32 `BOOL` predicate is also worse. Common
+status recording scores 79.3860% with three returns, retaining ECX clearing,
+`setge cl`, an ECX test and `setne al`. Per-arm recording retains four
+returns at 90.0000%, but still needs the ECX materialization/test before its
+branch. Returning the predicate from either the success or failure arm gives
+the same object within each recording model. All four source controls
+reproduce; widening the saved predicate does not remove the residual.
+
+Computing `SUCCEEDED` only in the success return after the failure guard
+also fails to preserve a useful distinction. With one pre-guard status write,
+local HRESULT, member HRESULT and named-bool returns all reproduce 88.4210%
+and three returns. Per-arm writes with either raw or member status returns
+normalize to the existing four-return 96.4912% body. Using the existing
+inherited `getLastError()` accessor in that success return gives the same
+88.4210%/96.4912% results. These controls cover a predicate computed inside
+the surviving arm, separately from the earlier saved-bool reuse probes.
+
+Combining the allocation and fetch guards with short-circuit expressions
+recovers store-before-restore only by changing other retail structure.
+`return buf && SUCCEEDED(m_hRes = fetch(...))` and the equivalent negated
+failure expression score 87.0175%: both merge the allocation/fetch failure
+returns, reverse the final branch and materialize an EAX-sized result.
+Explicit positive/negative guards and a named success bool merge further to
+two returns (58.5088%). A named failure bool returned negated keeps three
+returns but adds normalization (75.0877%). A conditional-expression return
+scores 77.5263% directly or 57.8070% through a named bool, retaining `setge`.
+Combining all three checks also merges the exits (58.5088%). These full-TU
+controls reproduce; none improves the retained four-return model.
+
+The two result arms must each contain only one assignment or return, apart
+from metadata. Indirect selected operands (kind 6) reject conversion; constant
+1/0 operands pass. Different operand type words do not themselves reject it:
+cold block `0x7fae5` coerces the second operand to the first operand's type.
+These are measured compiler constraints, not grounds for adding qualifiers,
+memory reads or extra side effects to the game source.
+
+Full-TU, reproduced profile controls reject a size-mode explanation: `/O1`
+and `/O2 /Os` lower this function to 66.2281% and lose 78 exact siblings;
+`/O2 /Og-` lowers it to 25.8421% and loses all 85 exact siblings. A fully
+nested positive-guard model with one bool result avoids select conversion,
+but keeps that result in BL and emits one return, not four. Direct severity-
+bit guards and dispatches also score below the signed-status baseline.
+Returning the initialized bool on both early failures does not repair that
+lifetime: assigning true on success retains BL and scores 80.3333%; direct
+status assignment or a final failure guard still emits the baseline `setge`.
+Restoring the independently proven bool interfaces and result locals across
+the TU preserves its 85 exact functions without changing this residual.
+A reproduced `/G3` control emits identical code and relocation identities
+for the whole TU, retaining the same 88.4210% lobby score.
+Repeating CPU-profile controls on the adopted per-arm model gives identical
+objects with `/G4` and `/G5`. `/GB` also reproduces the identical full-TU
+object: the pinned CL driver maps it to the same frontend/backend `-G5`
+actions and `_M_IX86=500` definition as `/G5`. `/G6` lowers the lobby to
+80.2632% and changes 74 previously exact sibling bodies; the scheduling
+residual does not justify a profile change.
+
+Alias-profile controls also fail to explain the residual. `/Oa` changes
+receiver allocation and retains separate final restores (83.3333%);
+`/Ow` retains the same 96.4912% lobby body and restore/store order. Both
+controls reproduce and change other TU bodies; neither profile is adopted.
+
+A reproduced VC5 SP3 C1XX/C2 control with the same VC6 headers also retains
+`setge`, lowers the lobby score to 77.7193% and loses 59 exact siblings.
+VC5 cannot parse the unused inline `TRuntimeError()` string temporary, so
+this isolated comparison uses its declaration alone in both controls; the
+VC6 control still reproduces all 86 live scores. Repeating this control on
+the adopted per-arm model gives 83.8597% under VC5, against 96.4912% under
+VC6, with 59 previously exact sibling scores lower. Both compilations
+reproduce. VC5 retains four returns and hoists the common status store, but
+saves EDI before the query and restores it separately on all four exits;
+it does not reproduce retail's save around the fetch and restore before
+its final branch. The isolated header workaround again leaves all 86 VC6
+control scores unchanged. Neither source model supports a VC5 explanation.
+The Collector's executable (SHA-256
+`0da1c7772567f2ad4bf2314d07e8b617c40893c80601b39607cafdf025eb6247`)
+contains the same 110 lobby bytes at the same RVA as pinned GOG Complete.
+The later Buka build retains that body too, apart from its two IAT operands.
+A reproduced SP5 control keeps all 86 comparison scores and emits the same
+lobby section bytes/relocations as SP3; see the
+[alternate-build comparison](../oracles/alternate-builds.md#buka-vc6-sp5).
+The newer per-arm model was separately reproduced with the verified RTM
+front/back ends and SP5: all 86 scores remain unchanged at the current
+96.4912% lobby baseline. Its emitted lobby section is byte-identical across
+the three compiler versions; RTM also reproduces the full normalized object.
+The independently verified 1999 Windows demo also retains the desired
+store-before-restore order, without an EBP frame. Our per-arm source under
+`/Oy` has the same lobby section with SP3 and full RTM, and still reverses
+that pair. Linux stubs the higher-level launch test instead of supplying
+this Windows body. See the [alternate-build evidence](../oracles/alternate-builds.md#windows-roe-demo-1999).
+
+Query/fetch-loop controls are also distinct from retail. A counter loop
+that returns inside its second iteration retains one virtual-call site
+(19.4211%). Letting the fixed two-iteration loop finish before checking the
+fetch status does not enable unrolling: both common-status (11.5263%) and
+per-arm final-status (12.1228%) forms retain one virtual-call site, a phase
+counter/back edge and only two returns. Both reproduce and preserve the
+required query-status write before allocation, so the failure is measured
+codegen rather than a missing protocol operation. Pointer-phase loops emit
+two sites but only two returns (44.7368%/57.8070%).
+A bounded static audit identifies one relevant counted-loop prerequisite:
+`0x434e1` collects source blocks with successors outside the loop into
+`loop+0x20`; `0x45514` requires exactly one such block, the latch, before
+recovering a count into `loop+0x28`. The early-return models violate that
+source CFG prerequisite. Two follow-up single-exit models retain a success
+flag and skip subsequent protocol work after failure. They preserve the
+calls/status-write paths, but still do not unroll: common recording scores
+26.4737%, per-arm recording 23.0000%, both with one virtual-call site, a
+counter/back edge, BL result state and one return. Thus removing the early
+exits is insufficient; this is not a claim that the inspected count gate is
+the complete unroller policy or that calls categorically forbid unrolling.
+All four post-loop controls reproduce. Exhaustive
+success/failure/severity switches without a fallback do not improve the
+baseline either.
+The SDK `IS_ERROR` macro uses unsigned shift-by-31 rather than
+`HRESULT_SEVERITY`'s signed shift and mask. Both guard polarities reproduce
+82.0175%: VC6 emits high-bit `and`/`cmp` followed by `setne`, not four exits.
+Clearing `buf` on failed fetch and then returning `buf != 0` retains `jge`,
+but also keeps the pointer in EDI and emits a final `test`/`setne` (75.0%).
+Selecting `buf` or null with a conditional expression instead emits
+`setl`/masking and pointer normalization (64.2982%). Both controls reproduce;
+neither recovers the separate constant-return epilogues.
+
+A single-pass `do/while(false)` with failure breaks tests a different shared-
+exit model without repeating any operation. With an entry default true,
+direct/per-arm recording scores 44.0175%/39.0175% and retains two returns;
+default false scores 32.9474%/36.4561% and retains one. All keep BL alive
+across calls. The false/per-arm form does recover `test; store; pop edi`,
+but adds result operations and merges exits. This demonstrates another
+restore-region outcome, not evidence for adding an otherwise unnecessary
+one-shot scope around the final fetch.
+
+The recognizer's protected-branch flag (+9 bit 8) is not an ordinary-loop
+lever. Separate passive probes reproduce all 4,153 object bytes: `0x187`
+appears in C++ catch transfer, `0x188/189` in finally transfer/continuation,
+`0x18b` in EH scope lowering and `0x18c` with nonreturning calls; `0x18a`
+remains unidentified. The tested ordinary if/switch/while constructs emit
+none of this family. No such exception or nonreturning operation is evidenced
+in TestLobbied. The x86 opcode-name table at `0xa5a88` ends at `_last`
+(`0x144`); reading past it does not recover names for these generic opcodes.
+
 ### D14. Word/byte extraction spellings (four measured forms)
 `textntry.cpp:87-97`: `(code & 0xFF00) >> 8` emits the byte-register extract
 `xor edx,edx; mov dl,ch` with NO re-widening; byte-narrowed spellings land

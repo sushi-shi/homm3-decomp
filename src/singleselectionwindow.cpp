@@ -2623,6 +2623,11 @@ int CEnterNameEdit::onKeyPress(message* msg)
     return textEntryWidget::onKeyPress(msg);
 }
 
+// The native two-call body is retained. After DirectPlay interface recovery,
+// placing this TU's own header before implementation-only library imports
+// restores the inlined OnEnter stack slots and reload order (99.8710 -> 100%).
+// SDK-before-array, redundant dplay.h removal and prefs.h regrouping are flat.
+// See docs/vc6/regalloc.md for the header controls and reference-freshness audit.
 VA(0x0057cee0, 0xFD)
 DC_ADDRESS(0x149290, 0x28)
 MAC_ADDRESS(0x186a58, 0x64)

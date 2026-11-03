@@ -2087,3 +2087,72 @@ layer's destination row. The pasted expression
 first, and regrouping it is byte-identical. The row accessor
 `TBitmapBase::getLine(y)` binds the argument before its body and raises the
 function from 89.87% to 97.58% (100% with its remaining source facts).
+
+## Separate nested argument evaluation before diagnosing a register wall
+
+`TMultiPlayerWindow::OnSearch` (`0x511660`) reaches 100% from 89.8072%
+by staging the first session in a named local:
+
+```cpp
+CDPlaySession* session = m_sessions->get(0);
+if (!joinSession(session, 0)) {
+```
+
+The nested spelling prepares JoinSession's null password before calling
+`get(0)`. Retail completes `get(0)` first, then pushes the password and
+returned session. The sibling modem/direct join flows also use a session
+local. A controlled two-source comparison reproduced both objects; the
+ordinary targeted build confirmed all 51 multiplayer-window functions exact.
+The negative failure guard and saved-error lifetime remain unchanged.
+
+This small source-order correction also restores EDI=`this`, ESI=`-1`,
+the smaller frame and four return paths. The previous model called the
+ESI/EDI swap a source-local impossibility caused by C1 handle state. A passive
+allocator trace, verified byte-identical apart from the COFF timestamp,
+instead observed the saved error receiving ESI at priority 40, the cached
+`-1` receiving EDI at priority -65, and `this` receiving ESI at priority -89
+in the mismatching source. These are interacting live ranges, not proof that
+the declaration order of `this` makes a source correction impossible.
+
+An independently identity-checked inline trace also disproved the old
+all-destructors-retained diagnosis: both versions expand the first two
+`CMPInputDlg` destructors and retain the last three. Missing late call sites
+in the mismatching object were merged cleanup paths. Check argument staging
+and actual pass decisions before treating aggregate call counts or a
+register-role heuristic as a causal explanation.
+
+## Network interface recovery: reference freshness and one header-order effect
+
+The first split of PR #218 reported six fewer exact CUR rows. Inspection
+separated two causes; treating all six as VC6 scheduling noise was incorrect.
+The committed MAX/HIST columns remained 100% for all six throughout.
+
+Five rows (`basic_string::_Copy` in adventuremapwindow,
+`advManager::receiveHeroTownData`, and the window manager's `doDialog`,
+`doDialogDraw` and `doQuickView`) had matching instructions and one unresolved
+exception-handler reference each. Their consumers had been recompiled after
+retail target generation. Refreshing those targets from the current objects
+restored all five to 100% without a source edit. A header-recovery validation
+must refresh the affected consumers' targets after recompiling them, as well
+as the TUs that own renamed public symbols.
+
+`CEnterNameEdit::onKillFocus` (`0x57cee0`) had a real difference: the inlined
+`onEnter` expansion exchanged the stack slots for `this` and the player index,
+then reloaded EDI/ESI in the opposite order after `writePrefs`. Calls and
+references agreed. Dreamcast lines 1831 and 1833 prove the existing two calls;
+Mac also supports the `onEnter` expansion followed by the base focus handler.
+No function-body or helper change was warranted. The Dreamcast audit checked
+these anchors but reported a pre-existing Clang `std::min` coverage error.
+
+Moving the TU's own `singleselectionwindow.h` include before its
+implementation-only library headers restored 100%. Moving the SDK imports
+before `array.h`, omitting the redundant direct `dplay.h` import (already
+included by `dplobby.h`), and moving `prefs.h` into the game-header group were
+flat controls and were discarded. The retained include order is an ordinary
+header arrangement with a measured retail match, not proof of unique original
+include order. The full Windows comparison against the initial interface
+commit reports six CUR improvements, no regressions and 4,824 unchanged rows.
+
+The final CodeWarrior check scores 49 available pairs in the affected TU
+(20 exact); all 41 previously banked available pairs retain availability
+and scores. This is supporting source evidence, not a new Mac matching goal.

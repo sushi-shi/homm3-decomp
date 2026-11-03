@@ -1019,8 +1019,21 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
     return buf;
 }
 
-// Record the final HRESULT on each exit to preserve retail's separate bool
-// return paths. The remaining mismatch is the status store versus POP EDI order.
+// Each final path records the fetched HRESULT before returning its bool.
+// This preserves retail's three guards and four returns: VC6 retains the
+// status stores through conditional-select conversion, then combines them.
+// The direct pre-guard store folded the last diamond to setge (88.4210%).
+// No extra operation or status write occurs on an executed path.
+// Residual (96.4912%): ours emits test; pop edi; store; jge, whereas retail
+// emits test; store; pop edi; jge. All other instructions and return paths
+// agree. A passive compiler trace locates the store hoist after epop insertion;
+// see docs/vc6/behavior-catalog.md D13 for the phase evidence.
+// Const/entry result declarations, assignment in the guard, explicit else,
+// comma returns, shared query/fetch result and common bool return are flat.
+// Success-first recording merges the early false exits (55.0%). Earlier
+// direct-store result, pointer, loop and SDK status controls do not close it.
+// DC compiles lines 1352..1379 out. Both Collector's and Buka retain the same
+// retail body (Buka differs only in the GlobalAlloc/GlobalLock IAT operands).
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order
 DC_ADDRESS(0x08b69c, 0x4)

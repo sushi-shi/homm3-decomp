@@ -1458,6 +1458,10 @@ bool TMultiPlayerWindow::onTCP()
 // their folded general-text indices (459, 463, 456, then GetErrorDesc), and
 // the Dreamcast xref graph independently records exactly four NormalDialog
 // calls plus JoinSession, InitRemote, CAutoArray::Destroy and CHourGlass.
+// Retail expands the first two ~CMPInputDlg sites and retains the three
+// late destructor calls. A byte-identity-gated C2 trace reproduces those
+// decisions (caller cb 574, budget 1148). The missing late call sites in a
+// mismatching build come from merged cleanup paths, not over-inlining.
 VA(0x00511660, 0x666)  // caller slot + complete TCP search flow
 DC_ADDRESS(0x10196c, 0x294)
 // Native OnSearch public QAA_NXZ (DC file 0x5aceb7); protocol and
@@ -1494,8 +1498,10 @@ bool TMultiPlayerWindow::OnSearch()
         return 0;
     }
 
-    // Stage the selected session before joining; this preserves retail's
-    // register allocation and separate failure cleanup paths.
+    // Retail finishes Get before staging JoinSession's password argument.
+    // The named session (also used by the sibling join flows) restores that
+    // order and all four cleanup exits: nested Get scored 89.8072%, this 100%.
+    // Keep the negative guard and the error snapshot before the first dialog.
     CDPlaySession* session = m_sessions->get(0);
     if (!joinSession(session, 0)) {
         char sErr[256];
