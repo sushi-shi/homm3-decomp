@@ -1355,6 +1355,13 @@ return 91.9298%. Success-first recording merges the exits again (45.4386%,
 two returns). All controls reproduce. Thus a second use changes early
 propagation as predicted, but these ordinary forms do not remove the later
 materialization or close the restore/store residual.
+The same two-use model with a Win32 `BOOL` predicate is also worse. Common
+status recording scores 79.3860% with three returns, retaining ECX clearing,
+`setge cl`, an ECX test and `setne al`. Per-arm recording retains four
+returns at 90.0000%, but still needs the ECX materialization/test before its
+branch. Returning the predicate from either the success or failure arm gives
+the same object within each recording model. All four source controls
+reproduce; widening the saved predicate does not remove the residual.
 
 Computing `SUCCEEDED` only in the success return after the failure guard
 also fails to preserve a useful distinction. With one pre-guard status write,
