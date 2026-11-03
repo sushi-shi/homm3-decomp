@@ -69,6 +69,12 @@ the nested inlining boundary; restoring native count staging and simplifying
 the interface do not move it. No helper was removed, and no unused native
 `tempText[100]`, invented code, cast, or pragma was added to steer the budget.
 
+A shared counted-byte zero loop was also checked against the native RMG
+terrain clear lead. It preserves Windows scores but drops town's Mac result
+64.550265% -> 49.358974%: the bulk clear call disappears and test<70> moves
+from offset 1200 to 1420. It supplies no RMG Windows gain either. The probe is
+rejected; the shared helper keeps memset without a size-dependent policy.
+
 Evidence and disposable source-family material remain under
 `build/packed-counted-recovery/` and
 `build/source-families/b02bfc9924c9225f8b8b/`. No full build or mock behavior
