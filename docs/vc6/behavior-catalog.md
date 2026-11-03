@@ -1194,6 +1194,17 @@ before `jge`. Both stores already had equivalent operands before the first
 invocation; a changed operand is not what enables the second one. Scheduling
 at `0x3ad9b` then moves the test ahead of `epop`, leaving the residual order.
 
+Restore placement itself follows register-use regions, not status writes.
+Inside `0x335cd`, worker `0x33bc5` propagates per-block register-use masks
+and `0x34393` chooses region boundaries. At a terminal conditional branch,
+`0x3427e` also backs over its preceding comparison when operand-use check
+`0x21bab` finds no use of the restored register. The per-path model's EAX
+comparison does not use EDI; its status stores are still in successor blocks,
+so EDI restoration lands before the comparison. The direct-store control
+already has `SETGE` instead of a terminal branch and restores EDI after its
+result operations. Existing identity-checked captures show both placements.
+This explains the mechanism without establishing the missing source shape.
+
 Passive dependency and ready-list traces reproduce the same 53,351 bytes.
 There is no direct or transitive `epop` → member-store dependency in the
 final block: both depend independently on the final call and precede `jge`.
@@ -1223,6 +1234,16 @@ order or provides a missing owner/helper model.
 A common Win32 `BOOL` result also fails: it scores 82.1930% and retains
 int-to-bool conversion instructions in both final exits; the `bool` control
 stays at 96.4912%.
+
+Moving a common bool result's assignment before the status store in each
+arm scores 90.9649%: it prevents store combination and retains CL-to-AL
+copies in both exits. The status-before-value control remains 96.4912%.
+Selecting the bool before one common status store folds back to `setge`
+(87.7018% with explicit arms, 88.4210% with `SUCCEEDED`). Initializing that
+bool immediately after the call and changing it in just one branch retains
+the branch but only three returns: default true scores 92.3509%, default
+false 82.8772%; both retain extra CL operations. These controlled full-TU
+comparisons reproduce and supply no improvement to adopt.
 
 An exact native analogue, `deque<int>::iterator::operator++` at `0x449230`,
 does emit compare/store/restore/branch. Its `_Next` store is part of the
