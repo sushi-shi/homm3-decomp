@@ -919,6 +919,9 @@ bool TWitchHut::isCustomized() const
 // Current VC6 vetoes the recovered writer 38/12 despite cb97/budget1000;
 // retail expands its identical operation. MAX 100 -> 14.16%, with historical
 // peak retained. Const[]/explicit-inline probes were byte-flat, not a fix.
+// An 18-state zero-init/ascending-loop family also left this at 14.1628%.
+// Unlike Town's retained getter ordering, no positive boundary contradiction
+// was found here: the dead version slot can hold an inlined writer's buffer.
 VA(0x0048f8a1, 0x62)
 void TWitchHut::write(TRawOStream* pOStream, int version) const
 {
