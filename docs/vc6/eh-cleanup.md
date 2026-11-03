@@ -24,6 +24,59 @@ None of the first three notices that retail's body opens one **more** cleanup
 region than ours — i.e. that retail constructs a temporary we never wrote, or
 that a call we constant-fold is a call retail could throw from.
 
+## Matching catch structure does not prove the try entry point
+
+PR #199 closes `game::newMap(const char*, ...)` at `0x004c0520` by moving
+path-buffer construction before `try`. Only `TGzFile` construction, the
+stream-based `newMap` call and stream lifetime remain inside the typed
+`TOpenFailure` catch. The string operations, filename and helper calls are
+unchanged. Against the current Complete profile this raises 99.38% to 100%
+(all 262 bytes), with no regression among the other 293 `game` rows.
+
+The committed investigation explains the missed case. `dd05dd894` classified
+the zero-state store as compiler bookkeeping after comparing instructions,
+returns and the catch/funclet graph. `61a852c33` recorded stream-scope and
+success-return variants, but retained path preparation inside the protected
+region. These controls did not test where that region starts. The comment's
+claim that this was not an unrecovered source action was stronger than the
+evidence. Moving the try entry lets VC6 reuse the already-zero EAX for its
+state store instead of materializing zero separately.
+
+When only an EH-state store differs, inspect the **first protected statement**
+and the preparation preceding object construction, as well as lifetime ends,
+catch types and unwind maps. Equal CFGs, calls and catch graphs do not establish
+equal protected instruction ranges. Test meaningful scope boundaries before
+classifying the residual as compiler-state noise; do not add dummy operations
+or artificial cleanup scopes.
+
+### Other explicit try/catch bodies below 100% MAX
+
+Audit snapshot after merging #199 (`2e1b91c80`): game scores are from the fresh
+VC6 comparison; editor scores are their committed ledgers, not new editor
+measurements. The inventory covers authored C++ `try` bodies in configured game
+and editor sources and headers. It excludes generated/runtime/STL exception
+machinery without an authored try body. The header-defined
+`SavedGameHeader::load` is already 100%.
+
+| Image | Function | VA | MAX | Scope review |
+| --- | --- | --- | ---: | --- |
+| Game | `game::transmitSaveGame` | `0x004cafd0` | 97.4264% | Filename/preparation already precede the narrow `TGzFile` open/write catch; first instruction mismatch is later in transfer-init construction. |
+| Map editor | `TArtifactsDlg::_insertItem` | `0x00404e90` | 90.5556% | Nested catches roll back inserted list/slot state; recorded residual concerns component-iteration loop layout. |
+| Map editor | `ResourceManager::Open` | `0x004dbe40` | 99.9737% | Outer error conversion and inner archive cleanup have distinct scopes; the game copy is exact. No equivalent path-preparation error established. |
+| Campaign editor | `TCampaignScenarioMap::TCampaignScenarioMap` | `0x0040a1f0` | 99.9062% | Version preparation already precedes try; recorded residual is the stream wrapper's stack slot. |
+| Campaign editor | `loadCampaign` | `0x00413600` | 94.5946% | Source records three retail protected-state ranges; buffer construction precedes the first read catch. Temporary/inlining differences remain. |
+| Campaign editor | `TGzInflateBuf::TGzInflateBuf` | `0x00425700` | 93.4988% | Nested bool catches restore consumed magic bytes; buffer and zlib setup already precede them. Other image copies are exact. |
+| Campaign editor | `ResourceManager::Open` | `0x00444ea0` | 99.9737% | Same shared source as the map-editor row; no new scope fix claimed. |
+
+For `transmitSaveGame`, the fresh comparison has 122 matching CFG blocks,
+63 matching branches, 101 matching call entries and 172 matching references.
+Its first difference is at caller offset `+0x31a`, in the later
+`CGameTransmitInitMsg` construction, rather than the compressed-file try block.
+The other rows are investigation leads, not claims that catch movement will
+improve them. PR #199's available Mac `game` comparisons also preserve all 77
+banked pairs; this wrapper's exact Mac comparison remains unavailable because
+an anonymous TOC literal is unresolved.
+
 ## A catch continuation can look like an unmatched function
 
 Before reconstructing a frameless queue entry, check incoming jumps and the
