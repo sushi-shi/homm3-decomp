@@ -1249,6 +1249,15 @@ merge to two returns (55.0%, 49.7368% and 48.6842%, respectively).
 The failure-first model is
 retained without added operations, helper bodies or lifetime barriers.
 
+The DC-proven `IDirectPlayLobby2*` field is a distinct historical interface
+hypothesis, not proof of Complete's declaration. Complete creates Lobby3A
+and uses its `RegisterApplication`/`ConnectEx` slots. A controlled Lobby2A
+field with casts only at those two newer calls reproduces every dxplay score
+and the identical TestLobbied section at 96.4912%. The pinned SDK derives
+Lobby2 and Lobby3 separately from Lobby1, so those casts are reinterpretations,
+not static downcasts. Retain the simpler Lobby3A field; this declaration
+alternative does not explain the residual.
+
 Under that model, a `DPLCONNECTION*` buffer, a named `HGLOBAL` allocation
 followed by `GlobalLock`, and their combination with `GHND` all retain
 96.4912%. The SDK parameter is `LPVOID`; the structure pointer is compatible
