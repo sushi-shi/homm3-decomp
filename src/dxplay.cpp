@@ -1017,32 +1017,8 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
     return buf;
 }
 
-// Residual (88.4210%): the two-call probe is byte-right; retail's final
-// `m_hRes >= 0` is a jge to separate return-1/return-0 epilogues, while our
-// CL folds either polarity to `setge al`. `why-branch` measures 57/3/4
-// instructions/branches/returns in retail versus 51/2/3 here, classifies the
-// residual as D6 plus D8/D13 branchless folding, and finds no catalog lever.
-// A 24-state batch of early/nested/single-pass exits, byte-result forms,
-// and separate GlobalAlloc/GlobalLock lifetimes also leaves 88.4211% best.
-// A named result initialized to zero and assigned in the success arm is a
-// negative control: it falls to 85.33% without recovering the extra exit.
-// A 24-source return-width/assignment/label batch stays at 88.4211%; a
-// further 17 nested-guard and scoped-return forms also fail to improve it.
-// The unchanged baseline is retained; scope/goto variants score at most
-// 77.5439% and do not reproduce retail's fourth return path.
-// Restoring Complete's public bool return type is byte-flat at 88.4211%,
-// including both remote.cpp callers; it preserves the branch-folding residual.
-// Sixteen connection-validity result controls (two reproduced objects) are
-// also flat at 88.4210%: returning the already validated buffer, with implicit
-// or explicit bool conversion, does not restore the branch. Both final test
-// polarities and void*/DPLCONNECTION* buffer types preserve all 86 exact
-// siblings. The missing separate exits remain unexplained.
-// Eight native-bool literal/polarity controls under the restored signature
-// emit one reproduced object: true/false versus integer return constants
-// leaves the same branchless result and all sibling scores unchanged.
-// DC compiles 1352..1379 out; GHND 0x42 plus GlobalLock is windowsx.h's
-// GlobalAllocPtr. The DirectPlay-sample goto FAILURE spelling with a
-// FAILED(hr) test falls to 54.30% (2026-09-29).
+// Record the final HRESULT on each exit to preserve retail's separate bool
+// return paths. The remaining mismatch is the status store versus POP EDI order.
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order
 DC_ADDRESS(0x08b69c, 0x4)
@@ -1055,10 +1031,13 @@ bool CDPlayLobby::testLobbied()
     void* buf = GlobalLock(GlobalAlloc(0x42, size));
     if (!buf)
         return 0;
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->GetConnectionSettings(0, buf, &size);
-    if (m_res >= 0)
-        return 1;
-    return 0;
+    HRESULT result = static_cast<IDirectPlayLobby3A*>(m_lobby)->GetConnectionSettings(0, buf, &size);
+    if (FAILED(result)) {
+        m_res = result;
+        return false;
+    }
+    m_res = result;
+    return true;
 }
 
 VA(0x00498be0, 0x31)
