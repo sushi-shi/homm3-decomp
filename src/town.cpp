@@ -340,13 +340,9 @@ int town::load(TAbstractFile* infile, int saveVersion)
 // load above. It always writes the modern length-prefixed name, it packs
 // field_38/field_34/field_33 back into one byte, and it re-packs the
 // bitset<70> into 70 bytes of which only the first nine carry bits.
-// The mutable counted writer preserves Windows 100%. Mac remains available,
-// 64.6164 -> 64.5503%, with the same linked extent and named call sites.
-// Both versions retain memset where native calls bzero; both retain the native
-// mutable-proxy path to test<70>. See the source abstraction annotation below.
 VA(0x005bd2f0, 0x402)
 DC_ADDRESS(0x165988, 0x3d4)
-MAC_ADDRESS(0x1b2290, 0x5e8) // MAC_ABSTRACTION_FROM(tokens1:cf216604c9e5,64.6164): restore the complete mutable writePackedBitsCount operation expanded at native Mac 0x1b2714..0x1b27a8 while preserving the caller-owned 70-byte buffer, signed spell bound, proxy access and raw write-count guard. Same linked extent and named calls; score 64.5503. See docs/matching/packed-bit-writers.md.
+MAC_ADDRESS(0x1b2290, 0x5e8)  // carcass promotion; anchor-callee armyGroup::save; caller game::Save's town pool
 int town::save(TAbstractFile* outfile)
 {
     char charBuffer;
@@ -434,10 +430,12 @@ int town::save(TAbstractFile* outfile)
         < sizeof(m_mageGuildSpells))
         return -1;
 
-    // The saved-game format writes all 70 bytes, including 61 zero padding
-    // bytes: Mac 0x1b2718/0x1b278c; DC town.cpp:728..738 names outBuf[70].
-    if (writePackedBitsCount(outfile, SpellDisabledMask, hero::NUM_SPELLS,
-            spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
+    memset(spellBuf, 0, sizeof(spellBuf));
+    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        if (SpellDisabledMask[spell])
+            spellBuf[spell / 8] |= 1 << (spell % 8);
+    }
+    if (outfile->write(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
 
     charBuffer = static_cast<char>(

@@ -2087,10 +2087,10 @@ game	?resize@?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@QAEXIAB
 game	?resize@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@QAEXIABUtype_university@@@Z	100.0000	100.0000	100.0000	0xd4800	-
 game	?resize@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXIABVgenerator@@@Z	100.0000	100.0000	100.0000	0xd4500	-
 game	?resize@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXIABVtown@@@Z	100.0000	100.0000	100.0000	0xcf410	-
-game	?save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	88.3414	88.3414	95.4451	0xc4f10	tokens1:c1c994383699
+game	?save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	95.4451	95.4451	95.4451	0xc4f10	tokens1:d98664d08a89
 game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbe140	tokens1:43d243ea72bf
 game	?save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0	tokens1:ccc683ca5891
-game	?save@game@@AAEHPAVTAbstractFile@@@Z	92.2229	92.2229	98.6650	0xbe3f0	tokens1:5d589d6f060b
+game	?save@game@@AAEHPAVTAbstractFile@@@Z	92.8076	92.8076	98.6650	0xbe3f0	tokens1:8369adf85cd5
 game	?save@generator@@QAE_NPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0	tokens1:3de7c2f6368f
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xba670	tokens1:dca6820716e0
 game	?saveBoatPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40	tokens1:c43bccd59268
@@ -2632,7 +2632,7 @@ mapcell	?saveMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HH@Z	100.0000	100.0000	1
 mapcell	?saveMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x104a40	tokens1:eeb8c8b3ed71
 mapcell	?saveMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVMonsterData@@@Z	100.0000	100.0000	100.0000	0x101980	tokens1:8985bbf29198
 mapcell	?saveObject@NewfullMap@@QAEHPAVTAbstractFile@@AAVCObject@@@Z	100.0000	100.0000	100.0000	0x103640	tokens1:4e188315d7c6
-mapcell	?saveObjectType@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObjectType@@@Z	94.0864	94.0864	100.0000	0x103c40	tokens1:1f242b791223
+mapcell	?saveObjectType@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObjectType@@@Z	100.0000	100.0000	100.0000	0x103c40	tokens1:effc4304407a
 mapcell	?saveTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc390	tokens1:2c4067f783eb
 mapcell	?saveTownEventList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc770	tokens1:27fce2ff2ad2
 mapcell	?saveTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfef10	tokens1:608cfe207418
@@ -3523,8 +3523,8 @@ rmg	?write@type_spell_scroll@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.00
 rmg	?write@type_town@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1332f0	tokens1:e6289e33c9b3
 rmg	?write@type_witch_hut@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:fbd718bf737d
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:13741c51120f
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.3396	97.0908	97.4546	0x149cb0	tokens1:4ffadb7f9162
-rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	91.2554	91.2554	100.0000	0x14ae30	tokens1:bb0ed5ba5334
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	97.0829	97.0908	97.4546	0x149cb0	tokens1:4ffadb7f9162
+rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:faace9822d6e
 rmg	__h3cg$rmg$queue_list_dtor$TRmgPoint	0.0000	100.0000	100.0000	0x14c6a0	-
 rmg	__h3cg$rmg$static_dtor$riverDeltaOffsets	100.0000	100.0000	100.0000	0x149790	-
 rmg	__h3cg$rmg$std_copy$Int	0.0000	100.0000	100.0000	0x1093c0	-
@@ -4449,7 +4449,7 @@ town	?isLegalBuilding@town@@QBE_NW4type_building_id@@@Z	100.0000	100.0000	100.00
 town	?load@town@@QAEHPAVTAbstractFile@@H@Z	99.9718	99.9718	99.9718	0x1bcd60	tokens1:17bf4efee929
 town	?placeInMap@town@@QAEXHJ_N@Z	100.0000	100.0000	100.0000	0x1c13b0	tokens1:2f77a5a16d92
 town	?removeGarrisonHero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390	tokens1:c73cc112a1b0
-town	?save@town@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x1bd2f0	tokens1:ba07a7824b8a
+town	?save@town@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x1bd2f0	tokens1:cf216604c9e5
 town	?set@?$bitset@$0DA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x106780	-
 town	?setSummoningGenerator@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bd750	tokens1:291e81c425c7
 town	?showBuildingRewards@@YIXPBVtown@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1c0220	tokens1:5c1845c236c4
