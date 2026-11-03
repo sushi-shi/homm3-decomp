@@ -11013,14 +11013,21 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
 //   ..
 //   40 41 .. 46  P   (bit 47)
 // Both footprint passes restart the bit counter and share its lifetime.
-// The two terrain operations below use the canonical packed writer: game MAX
-// 100 -> 91.26%, with the same named retained calls. The editor also has
-// permuted bit/x/y stack homes. Keep supported helpers through these residuals.
+// Mac 0x24fb44..0x24fc44 uses one two-byte buffer for both terrain masks,
+// signed /8 and %8 (srawi/addze), and signed comparisons against ten. This
+// is the counted writer's signed-index family, not the unsigned-index
+// success writer retained for the six writeMapHeader mask instantiations.
+// Game residual: memset of two bytes becomes one word store; retail has two
+// byte stores. A counted clear is score-flat and regresses town's Mac bulk
+// clear. Editor retains the outer counted writer where retail expands
+// it and retains _Xran; scalar writeValue call probes leave that boundary
+// unchanged. Keep the helpers and native coordinate accessor paths.
 VA(0x0054AE30, 0x2C5)
-MAC_ADDRESS(0x24f980, 0x398) // MAC_ABSTRACTION_FROM(tokens1:faace9822d6e,20.5128): restore the two complete ten-bit writePackedBits operations expanded at native Mac 0x24fb44..0x24fc44, preserving getRecommendedTerrainMask and the existing coordinate helper paths. Shared writer owns counted zero fill and unsigned packing; comparison scores 20.2331 after recovery. See docs/matching/packed-bit-writers.md.
+MAC_ADDRESS(0x24f980, 0x398) // Signed counted writers and the shared buffer recover 20.8861%, above the earlier 20.5128% pre-follow-up pair; no abstraction waiver is needed.
 VA_AT(h3maped, 0x004ad3eb, 0x255)
 void writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
 {
+    unsigned char terrainMask[2];
     int nameLength = prototype->getImageName().size();
     {
         int length = nameLength;
@@ -11055,8 +11062,10 @@ void writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
         outfile->write(mask, sizeof(mask));
     }
     // Native Mac 0x24fb44..0x24fc44 expands the two ten-bit writers.
-    writePackedBits(outfile, prototype->_m_terrainMask);
-    writePackedBits(outfile, prototype->getRecommendedTerrainMask());
+    writePackedBitsCount<sizeof(terrainMask)>(
+        outfile, prototype->getTerrainMask(), kNumTerrainTypes, terrainMask);
+    writePackedBitsCount<sizeof(terrainMask)>(
+        outfile, prototype->getRecommendedTerrainMask(), kNumTerrainTypes, terrainMask);
     {
         int value = prototype->getType();
         outfile->write(&value, sizeof(value));
