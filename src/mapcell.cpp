@@ -3806,6 +3806,12 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     return usedDefaultMask ? READ_OBJECT_TYPE_DEFAULT_MASK : 1;
 }
 
+// Counted mask writes share the native mutable bitset/proxy path while keeping
+// DC's one outBuf[6], signed index and unsigned sizeof(buffer)*8 bound.
+// Residual after recovery: 100 -> 94.09% Windows; VC6 expands all four writers,
+// but retains bitset<48>::test for shadow/trigger where retail expands test
+// and retains _Xran. C2 trace reproduces the object (cb 289, budget 1000).
+// Keep the shared helper; no artificial caller mass or inline pin is justified.
 // The final Write returns 1, not 0, on success.
 VA(0x00503c40, 0x2B9)
 DC_ADDRESS(0x0f22cc, 0x4b6)
@@ -3823,38 +3829,25 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
         return -1;
 
     unsigned char packed[6];
-    int i;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_drawCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
-    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
+    if (static_cast<unsigned>(writePackedBitsCount(
+            outfile, tempObjectType->m_drawCells, sizeof(packed) * 8,
+            packed, sizeof(packed))) < sizeof(packed))
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_passableCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
-    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
+    if (static_cast<unsigned>(writePackedBitsCount(
+            outfile, tempObjectType->m_passableCells, sizeof(packed) * 8,
+            packed, sizeof(packed))) < sizeof(packed))
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_shadowCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
-    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
+    if (static_cast<unsigned>(writePackedBitsCount(
+            outfile, tempObjectType->m_shadowCells, sizeof(packed) * 8,
+            packed, sizeof(packed))) < sizeof(packed))
         return -1;
 
-    memset(packed, 0, sizeof(packed));
-    for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_triggerCells[i])
-            packed[i / 8] |= 1 << (i % 8);
-    }
-    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
+    if (static_cast<unsigned>(writePackedBitsCount(
+            outfile, tempObjectType->m_triggerCells, sizeof(packed) * 8,
+            packed, sizeof(packed))) < sizeof(packed))
         return -1;
 
     short typeValue = tempObjectType->m_objectType;

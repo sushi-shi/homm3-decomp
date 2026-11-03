@@ -11012,15 +11012,15 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
 //    8  9 .. 14 15
 //   ..
 //   40 41 .. 46  P   (bit 47)
-// Both footprint passes restart the bit counter. Sharing its lifetime keeps
-// the game exact. Editor residual: the bit/x/y stack homes are permuted,
-// with the same calls and control flow.
+// Both footprint passes restart the bit counter and share its lifetime.
+// The two terrain operations below use the canonical packed writer: game MAX
+// 100 -> 91.26%, with the same named retained calls. The editor also has
+// permuted bit/x/y stack homes. Keep supported helpers through these residuals.
 VA(0x0054AE30, 0x2C5)
-MAC_ADDRESS(0x24f980, 0x398) // MAC_ABSTRACTION_FROM(tokens1:faace9822d6e,22.7371): retail Mac 0x24fa14..0x24fa24 maps each cell as subfic 6-y, slwi 3, subf x, addi -1, the (height - y) * width - x - 1 form of Loki's TObjectType::_getBitPos now in objecttype.h; the candidate emits that sequence with permuted bit/x/y registers. Mac comparison scores 20.5128.
+MAC_ADDRESS(0x24f980, 0x398) // MAC_ABSTRACTION_FROM(tokens1:faace9822d6e,20.5128): restore the two complete ten-bit writePackedBits operations expanded at native Mac 0x24fb44..0x24fc44, preserving getRecommendedTerrainMask and the existing coordinate helper paths. Shared writer owns counted zero fill and unsigned packing; comparison scores 20.2331 after recovery. See docs/matching/packed-bit-writers.md.
 VA_AT(h3maped, 0x004ad3eb, 0x255)
 void writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
 {
-    unsigned char terrainMask[2];
     int nameLength = prototype->getImageName().size();
     {
         int length = nameLength;
@@ -11054,22 +11054,9 @@ void writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
             }
         outfile->write(mask, sizeof(mask));
     }
-    {
-        terrainMask[0] = 0;
-        terrainMask[1] = 0;
-        for (int terrain = 0; terrain < 10; ++terrain)
-            if (prototype->_m_terrainMask.test(terrain))
-                terrainMask[terrain / 8] |= 1 << (terrain % 8);
-        outfile->write(terrainMask, sizeof(terrainMask));
-    }
-    {
-        terrainMask[0] = 0;
-        terrainMask[1] = 0;
-        for (int terrain = 0; terrain < 10; ++terrain)
-            if (prototype->getRecommendedTerrainMask().test(terrain))
-                terrainMask[terrain / 8] |= 1 << (terrain % 8);
-        outfile->write(terrainMask, sizeof(terrainMask));
-    }
+    // Native Mac 0x24fb44..0x24fc44 expands the two ten-bit writers.
+    writePackedBits(outfile, prototype->_m_terrainMask);
+    writePackedBits(outfile, prototype->getRecommendedTerrainMask());
     {
         int value = prototype->getType();
         outfile->write(&value, sizeof(value));

@@ -129,13 +129,16 @@ void readBitset(TRawIStream& stream, std::bitset<N>& bits)
         bits.set(i, (aByte[i / 8] & (1 << (i % 8))) != 0);
 }
 
+// Loki 0x0837b380/0x0837b580 retain the complete writer and const subscript.
+// VC6's const subscript forwards to test, preserving the checked retail path.
+// Explicit inline was byte-flat in the editor probe; no declaration proves it.
 template <size_t N>
 void writeBitset(TRawOStream& stream, const std::bitset<N>& bits)
 {
     unsigned char aByte[(N + 7) / 8];
     std::fill_n(aByte, sizeof(aByte), 0);
     for (size_t i = 0; i < N; i++)
-        if (bits.test(i))
+        if (bits[i])
             aByte[i / 8] |= 1 << (i % 8);
     stream << aByte;
 }
