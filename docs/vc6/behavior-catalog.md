@@ -1258,8 +1258,13 @@ the direct-store `setge` body (88.4210%); those controls also reproduce.
 For all four extractions, isolated IL captures reproduce the candidate lobby
 bytes and pass plain-versus-inert-shim equality. Crossing phase 0/1 with the
 single helper's compiled-prefix 0/1 state produces no change in any of the
-16 replays. This tests the newly introduced callee-order boundary at the
-captured declaration offset, not a full offset sweep of these helper models.
+16 replays at the captured declaration offset. Both per-arm models also
+retain one identical assembly across the full phase 0/1 x declaration offsets
+0..63 x helper compiled-prefix 0/1 product: 256 replays each, 512 total.
+The captured candidates and inert-shim controls reproduce before each grid.
+Thus the added helper parameters and bindings do not reveal a handle-state
+interaction in these models. The common-recording models, which already
+lose the native four-return shape, were checked only at their captured offset.
 These are compiler-mechanism controls, not recovered helper definitions. The
 native class method lists provide `getLastError` and the existing connection
 wrappers, but no status recorder; the existing accessor controls also leave
