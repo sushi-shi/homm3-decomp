@@ -1321,6 +1321,18 @@ inherited `getLastError()` accessor in that success return gives the same
 88.4210%/96.4912% results. These controls cover a predicate computed inside
 the surviving arm, separately from the earlier saved-bool reuse probes.
 
+Combining the allocation and fetch guards with short-circuit expressions
+recovers store-before-restore only by changing other retail structure.
+`return buf && SUCCEEDED(m_hRes = fetch(...))` and the equivalent negated
+failure expression score 87.0175%: both merge the allocation/fetch failure
+returns, reverse the final branch and materialize an EAX-sized result.
+Explicit positive/negative guards and a named success bool merge further to
+two returns (58.5088%). A named failure bool returned negated keeps three
+returns but adds normalization (75.0877%). A conditional-expression return
+scores 77.5263% directly or 57.8070% through a named bool, retaining `setge`.
+Combining all three checks also merges the exits (58.5088%). These full-TU
+controls reproduce; none improves the retained four-return model.
+
 The two result arms must each contain only one assignment or return, apart
 from metadata. Indirect selected operands (kind 6) reject conversion; constant
 1/0 operands pass. Different operand type words do not themselves reject it:
@@ -1342,8 +1354,16 @@ the TU preserves its 85 exact functions without changing this residual.
 A reproduced `/G3` control emits identical code and relocation identities
 for the whole TU, retaining the same 88.4210% lobby score.
 Repeating CPU-profile controls on the adopted per-arm model gives identical
-objects with `/G4` and `/G5`. `/G6` lowers the lobby to 80.2632% and loses
-74 exact siblings; the scheduling residual does not justify a profile change.
+objects with `/G4` and `/G5`. `/GB` also reproduces the identical full-TU
+object: the pinned CL driver maps it to the same frontend/backend `-G5`
+actions and `_M_IX86=500` definition as `/G5`. `/G6` lowers the lobby to
+80.2632% and changes 74 previously exact sibling bodies; the scheduling
+residual does not justify a profile change.
+
+Alias-profile controls also fail to explain the residual. `/Oa` changes
+receiver allocation and retains separate final restores (83.3333%);
+`/Ow` retains the same 96.4912% lobby body and restore/store order. Both
+controls reproduce and change other TU bodies; neither profile is adopted.
 
 A reproduced VC5 SP3 C1XX/C2 control with the same VC6 headers also retains
 `setge`, lowers the lobby score to 77.7193% and loses 59 exact siblings.
