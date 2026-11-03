@@ -1047,6 +1047,10 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
 // HRESULT severity/success switches retain separate exits (best 90.8772%)
 // but leave extra shift/setcc/dispatch instructions absent in retail; keep
 // the direct signed-status guard until a supported source model closes it.
+// Identity-checked SP3 C2 trace locates the fold in conditional-select pass
+// 0x27954, before tail merging: cost 2 passes threshold 10. A shared failure
+// label avoids it but leaves two returns (three if only one early failure
+// shares it). See docs/vc6/behavior-catalog.md D13.
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order
 DC_ADDRESS(0x08b69c, 0x4)

@@ -1155,6 +1155,26 @@ per case — the negative form folds the three `return 1` tails into
   a register value; `neg/sbb/neg` for `!= 0` of a CALL result (value already
   in EAX); `neg/sbb/inc` for `== 0`)
 
+`CDPlayLobby::TestLobbied` (`0x498b70`, still 88.4210%) provides a measured
+conditional-select residual. A passive trace of pinned SP3 C2 12.00.8447
+reproduces all 53,191 object bytes except the COFF timestamp. Three conditional
+branches and four return pseudos survive global optimization. Pass RVA
+`0x27954`, through recognizer `0x2ee61`, replaces the final diamond with
+select opcode `0x18f` and reduces returns from four to three; subsequent
+lowering emits `setge` (`0x129`). This is earlier than tail merging.
+
+The eligibility call at `0x2f020` to `0x4b550` accepts constant 1/0 operands
+of type `0x2001`. At cost gate `0x4b79a`, the usable cost is 2 and the
+threshold is 10 (CPU 5, option bit 23 set). The neighboring CPU/size-speed
+thresholds are 9 and 12, so that threshold alone does not justify changing
+the compiler profile. The recognizer rejects extra predecessors to the
+result arm. A single shared failure label does avoid conversion, but emits
+only two returns. Sharing just the initial HRESULT failure or allocation
+failure with the final failure gives three returns; later epilogue handling
+does not restore retail's four. These are not matching source fixes.
+Severity and success switches retain extra extraction/dispatch instructions.
+Keep the natural signed-status guard while this source distinction is open.
+
 ### D14. Word/byte extraction spellings (four measured forms)
 `textntry.cpp:87-97`: `(code & 0xFF00) >> 8` emits the byte-register extract
 `xor edx,edx; mov dl,ch` with NO re-widening; byte-narrowed spellings land
