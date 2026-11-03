@@ -4208,7 +4208,7 @@ soundmgr	?stopSample@soundManager@@QAEXPAVds_memsample@@@Z	100.0000	100.0000	100
 soundmgr	?switchAmbientMusic@soundManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x19a1e0	tokens1:86373379ec38
 soundmgr	?threadStopMP3@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19b080	tokens1:1ea5c0a8a4ea
 soundmgr	?waitEndSample@@YIXUSAMPLE2@@H@Z	100.0000	100.0000	100.0000	0x19a4c0	tokens1:99e9fd8d1ade
-soundmgr	?waitEndSampleThread@@YAXPAX@Z	91.9474	91.9474	92.0000	0x19a6b0	tokens1:0fa698cefc27
+soundmgr	?waitEndSampleThread@@YAXPAX@Z	100.0000	100.0000	100.0000	0x19a6b0	tokens1:ba5ff2bde026
 soundmgr	?waitSample@soundManager@@QAEXPAVds_memsample@@H@Z	100.0000	100.0000	100.0000	0x199ec0	tokens1:1d4fdbac2a2d
 spellbookwindow	??0TSpellbookWindow@@QAE@ABVhero@@PBVarmyGroup@@W4TSpellContext@0@H@Z	100.0000	100.0000	100.0000	0x19bdf0	tokens1:caecc5516e26
 spellbookwindow	??1TSpellbookWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x19c8f0	tokens1:9e53f07f9dd1

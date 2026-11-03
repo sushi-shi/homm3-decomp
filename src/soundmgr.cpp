@@ -642,12 +642,11 @@ void launchSample(const char* sampleName, int maxTime, int channel)
 }
 
 // E:\gamedcs\soundmgr.cpp:911
-// A counted for-loop with its timer initialized inside the eligibility
-// guard scores 87.32% versus 92%; retail initializes that timer before
-// the guard. Preserve the original helper query and body update order.
-// An explicit infinite loop with the same query/time exit is byte-flat;
-// the residual is the expanded query's receiver/zero-result path, not
-// the named AIL_end_sample import's extra underscore in delinked labels.
+// Retail initializes the timer before the sample guard. Keeping shutdown
+// first in the while condition reproduces the inlined query's split cleanup
+// entry and register reuse: all 275 bytes match. The earlier separate entry
+// guard/body-end break scored 91.95%; moving timer initialization inside the
+// eligibility guard in a counted for-loop scored 87.32%.
 VA(0x0059a6b0, 0x113)  // address-taken + packet layout, retail-only
 void __cdecl waitEndSampleThread(void* arglist)
 {
