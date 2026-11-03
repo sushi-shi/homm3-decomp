@@ -37,6 +37,24 @@ byte-identical to the `homm1-decomp-buka` and `homm2-buka` targets.
   unchanged moved bytes 41 times under SP3 and 44 under SP5 (of about 1,580).
   The steadiness of homm1/homm2 comes from `/Od`, not from the compiler build.
 
+`CDPlayLobby::TestLobbied` gives a focused network control. Buka's body at
+`0x004982f0` agrees with all 110 GOG bytes at `0x00498b70` after masking only
+the two absolute IAT operands: `GlobalAlloc` (`0x63a0b8` → `0x63b0bc`) and
+`GlobalLock` (`0x63a0b4` → `0x63b0b8`). Both import identities were checked;
+the final `jge` and four returns are identical. The executable was re-extracted
+from [the documented Platinum disc](https://archive.org/details/homm-antologiya-platinum-buka),
+`autorun/launch/Setup3` → `Program_Executable_Files/Heroes3.exe`, and has SHA-256
+`2b777dcf02706adf6aaa98ed02f906ebc2f0ef3dd6ab00d434257b6dce60b0f0`.
+
+Compiling current `dxplay` with the pinned HoMM1 SP5 passes, while keeping
+the SP3 SDK and unit profile, reproduces all 86 SP3 comparison scores.
+`TestLobbied`'s section bytes and relocations are identical under both
+compilers: both still emit `setge` and score 88.4210%. The baseline and SP5
+objects were each reproduced independently. This isolates a source/context
+distinction that changing from SP3 to SP5 alone does not repair; it does not
+prove a unique original C++ spelling. See the conditional-select evidence in
+[behavior-catalog.md D13](../vc6/behavior-catalog.md#d13-bool-materialization).
+
 ## Loki Linux (GCC 2.95.2)
 
 - **Hierarchy:** the g++ type-info functions encode every polymorphic class

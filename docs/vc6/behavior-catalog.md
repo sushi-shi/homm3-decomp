@@ -1175,12 +1175,32 @@ does not restore retail's four. These are not matching source fixes.
 Severity and success switches retain extra extraction/dispatch instructions.
 Keep the natural signed-status guard while this source distinction is open.
 
+The recognizer also requires the condition producer to be the immediately
+preceding tuple (`0x2eea9`). Computing a bool success/failure snapshot before
+recording the HRESULT tests that gate without adding an operation. Both
+spellings still reproduce 88.4210%. A passive trace reproduces all 53,351
+object bytes: input IR preserves the predicate before the member store, but
+normalization between checkpoints `0x683c5` and `0x683e6` removes the bool
+temporary and places the HRESULT comparison after the store. The adjacency
+gate then passes. Retail's `test; store; pop; jge` ordering alone therefore
+does not recover that source ordering.
+
+The two result arms must each contain only one assignment or return, apart
+from metadata. Indirect selected operands (kind 6) reject conversion; constant
+1/0 operands pass. Different operand type words do not themselves reject it:
+cold block `0x7fae5` coerces the second operand to the first operand's type.
+These are measured compiler constraints, not grounds for adding qualifiers,
+memory reads or extra side effects to the game source.
+
 Full-TU, reproduced profile controls reject a size-mode explanation: `/O1`
 and `/O2 /Os` lower this function to 66.2281% and lose 78 exact siblings;
 `/O2 /Og-` lowers it to 25.8421% and loses all 85 exact siblings. A fully
 nested positive-guard model with one bool result avoids select conversion,
 but keeps that result in BL and emits one return, not four. Direct severity-
 bit guards and dispatches also score below the signed-status baseline.
+Returning the initialized bool on both early failures does not repair that
+lifetime: assigning true on success retains BL and scores 80.3333%; direct
+status assignment or a final failure guard still emits the baseline `setge`.
 Restoring the independently proven bool interfaces and result locals across
 the TU preserves its 85 exact functions without changing this residual.
 A reproduced `/G3` control emits identical code and relocation identities
@@ -1194,12 +1214,19 @@ VC6 control still reproduces all 86 live scores. This does not support an
 older-compiler explanation. The Collector's executable (SHA-256
 `0da1c7772567f2ad4bf2314d07e8b617c40893c80601b39607cafdf025eb6247`)
 contains the same 110 lobby bytes at the same RVA as pinned GOG Complete.
+The later Buka build retains that body too, apart from its two IAT operands.
+A reproduced SP5 control keeps all 86 comparison scores and emits the same
+lobby section bytes/relocations as SP3; see the
+[alternate-build comparison](../oracles/alternate-builds.md#buka-vc6-sp5).
 
 Query/fetch-loop controls are also distinct from retail: a two-iteration
 counter loop retains one virtual-call site (19.4211%); pointer-phase loops
 emit two sites but only two returns (44.7368%/57.8070%). Exhaustive
 success/failure/severity switches without a fallback do not improve the
 baseline either.
+The SDK `IS_ERROR` macro uses unsigned shift-by-31 rather than
+`HRESULT_SEVERITY`'s signed shift and mask. Both guard polarities reproduce
+82.0175%: VC6 emits high-bit `and`/`cmp` followed by `setne`, not four exits.
 Clearing `buf` on failed fetch and then returning `buf != 0` retains `jge`,
 but also keeps the pointer in EDI and emits a final `test`/`setne` (75.0%).
 Selecting `buf` or null with a conditional expression instead emits
