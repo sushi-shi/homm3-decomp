@@ -1229,6 +1229,10 @@ nested positive-guard forms merge the early false exits and score 55.0%.
 Conditional expressions with the status write in each comma arm also retain
 96.4912%, whether returned directly or through a named bool; success-first
 conditional recording again scores 55.0%.
+Switch dispatch combined with per-arm recording does not close the gap:
+the `SUCCEEDED` true case keeps four returns but adds `setge`/decrement
+(90.1754%); its false case, `FAILED` true case and SDK severity-error case
+merge to two returns (55.0%, 49.7368% and 48.6842%, respectively).
 The failure-first model is
 retained without added operations, helper bodies or lifetime barriers.
 
@@ -1348,6 +1352,11 @@ The newer per-arm model was separately reproduced with the verified RTM
 front/back ends and SP5: all 86 scores remain unchanged at the current
 96.4912% lobby baseline. Its emitted lobby section is byte-identical across
 the three compiler versions; RTM also reproduces the full normalized object.
+The independently verified 1999 Windows demo also retains the desired
+store-before-restore order, without an EBP frame. Our per-arm source under
+`/Oy` has the same lobby section with SP3 and full RTM, and still reverses
+that pair. Linux stubs the higher-level launch test instead of supplying
+this Windows body. See the [alternate-build evidence](../oracles/alternate-builds.md#windows-roe-demo-1999).
 
 Query/fetch-loop controls are also distinct from retail: a two-iteration
 counter loop retains one virtual-call site (19.4211%); pointer-phase loops

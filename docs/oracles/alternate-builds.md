@@ -10,6 +10,7 @@ remain the verdict, as AGENTS.md requires.
 | Build | Where | Compiler | Optimisation | Symbols |
 | :---- | :---- | :------- | :----------- | :------ |
 | GOG Complete 4.0, 2000-09-08 (target) | pinned | VC6 SP3: CL 8168, C1XX 8472, C2 8447 | `/O2 /Ob2 /Oy-` | none |
+| Windows RoE demo, March 1999 | preserved `h3demo.exe` installer, SHA-256 `83cbb631…9c315` | Rich: 145 C++ objects stamped 8168 | lobby body omits frame pointer; exact TU options unknown | no PE debug directory |
 | Buka «Полное собрание» 4.0, 2003-04-16 | archive.org `homm-antologiya-platinum-buka` (`autorun/launch/Setup3`) and `geroi-mexa-i-magii-novogodnee` (`Heroes3Setup`); identical `Heroes3.exe`, sha256 `2b777dcf…b0f0` | VC6 SP5: CL 8804, C1XX 8964, C2 8966, the same toolchain as the homm1/homm2 Buka targets | `/O2` with a frame pointer, like GOG | none |
 | Loki Linux, RoE 1.2, 1999-11-15 | archive.org `heroes3-linux` (`heroes3_linux.bin`, MODE1/2352) | GCC 2.95.2 19991024; libraries egcs-2.91.66 | `-O2 -funroll-loops -fno-exceptions`, default `-mcpu=pentiumpro` | stripped; g++ RTTI kept |
 | Classic Mac PEF | pinned | CodeWarrior Pro 6 | see `config/mac` | stripped |
@@ -57,6 +58,39 @@ prove a unique original C++ spelling. See the conditional-select evidence in
 Subsequent per-path HRESULT recording restores the four returns under SP3
 and reaches 96.4912%; only the final member-store/EDI-restore order differs.
 
+## Windows RoE demo (1999)
+
+The [preserved demo installer](https://github.com/GeorgeK1ng/heroes3demo/blob/main/h3demo.exe)
+is 98,265,058 bytes, SHA-256
+`83cbb6319386d6deba65273f53a60395fda8cce74cc24177b2ac3560ded9c315`,
+matching the independently recorded [VCMI size/hash](https://github.com/vcmi/vcmi/issues/2126).
+Its outer MSZip cabinet contains InstallShield `data1.hdr`/`data1.cab`;
+`Program Files/h3demo.exe` extracts to 2,068,480 bytes, SHA-256
+`fd9e66162d6632abdcfa686188bde15a1fd2a0fba8324da92a25be6cbaf754e3`.
+Neither installer nor game was executed for this comparison.
+
+`TestLobbied` is identified at `0x004810f0`, 102 bytes: the same two lobby
+slot-`0x20` calls, buffer-size error guard, allocation/lock and status stores
+as Complete. Its IAT operands resolve to `GlobalAlloc` at `0x5b40f4` and
+`GlobalLock` at `0x5b40f0`. Two direct calls at `0x505e03` and `0x505eb9`
+belong to the registry/bootstrap caller at `0x505d90`, independently anchored
+by the DirectPlay application key and `RegOpenKeyExA`/`RegCloseKey` imports.
+
+The demo omits the EBP frame but retains three guards and four returns.
+At `0x481144` its tail is `test eax,eax; mov [esi+40h],eax; pop edi; jge`,
+the same store-before-restore order required by Complete. Rich records
+145 C++ objects at build 8168 and none at 8447. This is aggregate RTM-era
+evidence, not proof of one TU's exact compiler options.
+
+An isolated `/Oy` control of the adopted per-arm source emits the same lobby
+section under verified SP3 and full RTM passes, with reproduction controls
+passing. Both still put `pop edi` before the member store; query and fetch
+argument staging differ from the demo as well. The earlier native body confirms
+the operation and ordering without supplying a missing source statement or
+justifying a change to Complete's compiler profile. Small evidence files and
+the extracted executable are retained under ignored `build/network-exact/roe-demo/`;
+the installer and temporary cabinets were removed after verification.
+
 ## Loki Linux (GCC 2.95.2)
 
 - **Hierarchy:** the g++ type-info functions encode every polymorphic class
@@ -94,6 +128,24 @@ and reaches 96.4912%; only the final member-store/EDI-restore order differs.
     `checkSpreadsheetResource`, `widget::initializeLinks`/`initializeHelpText`.
 - **Verdict:** GCC is a secondary oracle, not a replacement target. Loki is
   RoE 1.2 with port edits, and its class layouts and STL differ from Complete.
+
+The lobby path is not a Windows-body oracle. In all three checked Linux
+executables, the caller of the unique lobby-launch log string reaches a
+nine-byte false-return stub corresponding to `testIfLobbyLaunched`:
+
+| Binary | Call site | Stub |
+| :----- | :-------- | :--- |
+| CD 1.2 `bin/x86/heroes3` | `0x812a233` | `0x81682cc` |
+| 1.3.1a `heroes3` | `0x812e3e7` | `0x816d69c` |
+| 1.3.1a `heroes3.dynamic` | `0x8133687` | `0x817293c` |
+
+Each stub is `55 89 e5 b0 00 89 ec 5d c3`; none calls `TestLobbied`.
+Their SHA-256s, in the same order, are
+`6ac14c00be1704b9cb729b0eabc6100e3f566190e2c5ac5b5dd5f857450eed5c`,
+`745a465d19d5f54fd80bba1a9dcdc482371ecabc92e3527724da4acfb5e5f30f`
+and `6fd0db595138cedacd2bcf03e3cb324d3e9807958fd9a06c592a10119d475925`.
+The stripped symbols do not independently locate the lobby member; this
+caller-level result does not establish absence of every unreferenced stub.
 
 ## Mac evidence for the unstable (CUR≠MAX) functions
 
