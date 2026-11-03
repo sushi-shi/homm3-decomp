@@ -1,10 +1,6 @@
 # MANUALLY RATCHETED - homm3.cleanliness.board floors; build
 # rolls them DOWN-only, `board --update` is the only bless.
 C-style casts	0
-# PR #218: reviewed native IDirectPlay4A*/IDirectPlayLobby3A* recovery adds
-# three SDK void** output conversions in CDPlay::Init, CDPlayLobby::Init and
-# CDPlayLobby::Connect. These COM ABI boundaries replace the old void* fields;
-# retain the typed interfaces and account for their explicit named casts.
 reinterpret_casts	24
 volatile qualifiers	0
 inline-gate artifacts	0
