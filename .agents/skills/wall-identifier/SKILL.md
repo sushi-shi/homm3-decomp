@@ -127,7 +127,7 @@ looks worse.
 | **eh-cleanup** | the `[ebp-4]` EH state transcript diverges (COUNT / ORDER) | read the funclets | **object lifetimes** — a statement or temporary is missing, or a callee is nothrow on one side; see below |
 | **inliner** | out-of-line CALL multiset diverges (a callee inlined on one side only; A8/A9/A12) | `predict-inline` | **budget starvation** — usually NOT a local edit; *finish the caller's body* |
 | **control-flow** | CFG/branch shape diverges — block count, ret count, loop rotation, merged-return (D-family) | `why-branch` | loop form / merged-return placement / case order / ternary / bool spelling — often local |
-| **register-homing** | schedule aligned, register bindings permuted (ESI/EDI swap), memory-homing, spill (B-family) | `why-reg --model` | pseudo-creation order — local ONLY when the swapped value is a named local; else C1 handle-state |
+| **register-homing** | schedule aligned, register bindings permuted (ESI/EDI swap), memory-homing, spill (B-family) | `why-reg --model` | argument staging, lifetimes, priorities/interference or TU state; the creation-order heuristic alone cannot distinguish them |
 | **masked-equal** | reg-dist 0 AND flow-dist 0 but objdiff < 100 | — | displacement/reloc only (C9/D21) — **not a real wall**, don't grind |
 | **include-set** | a header/type edit moved an *unrelated* function's score | `il-diff` | front-end symbol-handle renumbering — match retail's include closure (TU-global) |
 
@@ -181,16 +181,17 @@ The solvers are still worth running first — a why-branch mutation closed
 readGarrisonData outright — but the verdict is always the ratchet's.
 
 ### register walls — use the model (v2)
-`homm3 vc6 why-reg <src> --fn F --against <unit:F> --model`. The allocator is RE'd
-(`docs/vc6/regalloc.md`): one preference order **EAX ECX EDX ESI EDI EBX EBP**,
-first-fit per pseudo in **creation order**; call-crossing values get ESI/EDI/EBX
-in order (the B1 swap), byte-sized values lose ESI/EDI/EBP (B15 char homing). v2
-predicts the exact assignment, names the transposed value, and proposes the ONE
-creation-order edit — then confirms in ONE compile. Crucially it also **proves
-when the residual is unreachable**: if the value that must move first is
-`this`/a parameter/a call result, no local spelling reaches it — it's front-end
-**handle-state (C1)**, and the answer is to converge the TU, not edit the body.
-`--sweep` falls back to the v1 blind mutation search.
+`homm3 vc6 why-reg <src> --fn F --against <unit:F> --model` proposes a
+register-role explanation and a source probe. Its creation-order model is a
+heuristic, not proof that a residual is unreachable by local source changes.
+The actual allocator uses priorities, costs and interference; see
+`docs/vc6/regalloc.md` section 3b. In `TMultiPlayerWindow::OnSearch`, the model
+called the `this`/constant ESI/EDI swap a C1 handle-state wall, but staging
+`m_sessions->get(0)` before `joinSession` restored retail argument order and
+closed 89.8072% to 100%. Inspect nested argument staging, temporary lifetimes
+and actual allocation decisions before attributing a parameter or constant's
+register to immutable creation order. Confirm hypotheses with the ordinary
+VC6 comparison. `--sweep` falls back to the v1 mutation search.
 
 ### include-set walls (the C1 flagship)
 When adding an unused struct/type or a header edit non-monotonically moves an
