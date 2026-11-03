@@ -1183,6 +1183,19 @@ does not restore retail's four. These are not matching source fixes.
 Severity and success switches retain extra extraction/dispatch instructions.
 They do not explain the four-return layout recovered by per-path recording.
 
+A separate pre-allocation exit-suffix duplicator (`0x2a996`, called at
+`0x68552`) does not rescue those shared-failure models. It examines only the
+penultimate block, not every shared false-return block. A passive replay of
+the preserved shared-failure IL reproduces all 53,175 object bytes and
+observes `0x3b96` returning zero at `0x2aa03`: after leading labels, the
+selected block contains only end marker kind `0x19`. It therefore rejects
+at `0x2aa0a`, before its payload-count (at most two) or predecessor-product
+(at most eight) gates. The actual false/true result assignments are in
+earlier blocks. The mixed-sharing and per-arm snapshots have the same empty
+final join. No evidenced cleanup or common exit operation supplies the
+missing executable suffix; moving the fetch-status write there would also
+change the query/allocation failure paths.
+
 The per-path model has a member store plus a return in each arm, so it
 survives conditional-select conversion without a select event. An identity-
 checked trace reproduces 53,351 object bytes. Restore insertion `0x335cd`
