@@ -3,7 +3,7 @@
 # census, manifest or shared-source change.
 # generator: homm3.census.placements
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-11-02
+# date: 2026-11-03
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	kind	name	unit	linkage	evidence
 0x00001020	0x15d	func	??0runtime_error@std@@QAE@ABV01@@Z	gzinflatebuf	external	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0x9
@@ -4217,7 +4217,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000c83d8	0x8	data	_?pNames@?1??InitializePrimarySkillTraitsTable@@YAXXZ@4V?$TAutoArrayPtr@D@@A	PrimarySkillTraits	internal	referenced by ?InitializePrimarySkillTraitsTable@@YAXXZ at +0x2d
 0x000c83e0	0x10	data	?aHeroPrimarySkillTraitsImp@?A0xa9f2831508e54a8a@@3PAUTPrimarySkillTraits@THero@@A	PrimarySkillTraits	external	referenced by ?InitializePrimarySkillTraitsTable@@YAXXZ at +0x198
 0x000c83f0	0x1	data	_?$S273@?1??InitializePrimarySkillTraitsTable@@YAXXZ@4EA	PrimarySkillTraits	internal	referenced by ?InitializePrimarySkillTraitsTable@@YAXXZ at +0xf
-0x000c8740	0x10	data	?aHeroSkillMasteryTraitsImp@?A0x4645b7a5ec4771bc@@3PAUTSkillMasteryTraits@THero@@A	SkillMasteryTraits	external	referenced by ?InitializeSkillMasteryTraitsTable@@YAXXZ at +0x198
+0x000c8740	0xc	data	?aHeroSkillMasteryTraitsImp@?A0x4645b7a5ec4771bc@@3PAUTSkillMasteryTraits@THero@@A	SkillMasteryTraits	external	referenced by ?InitializeSkillMasteryTraitsTable@@YAXXZ at +0x198
 0x000c8750	0x8	data	_?pNames@?1??InitializeSkillMasteryTraitsTable@@YAXXZ@4V?$TAutoArrayPtr@D@@A	SkillMasteryTraits	internal	referenced by ?InitializeSkillMasteryTraitsTable@@YAXXZ at +0x2d
 0x000c8758	0x1	data	_?$S273@?1??InitializeSkillMasteryTraitsTable@@YAXXZ@4EA	SkillMasteryTraits	internal	referenced by ?InitializeSkillMasteryTraitsTable@@YAXXZ at +0xf
 0x000c875c	0x1	data	_?$S10@?1??initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	spelldefs	internal	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x18
