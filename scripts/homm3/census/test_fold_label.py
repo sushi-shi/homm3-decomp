@@ -1,7 +1,7 @@
 """placements.fold_label: which name labels an address several bodies reach."""
 import unittest
 
-from homm3.census.placements import fold_label, sole_choice
+from homm3.census.placements import fold_label, foreign_to_claim, relocation_identity, sole_choice
 
 
 class FoldLabelTests(unittest.TestCase):
@@ -38,6 +38,34 @@ class FoldLabelTests(unittest.TestCase):
         self.assertEqual(fold_label(set(names), names, bodies, definers, owned,
                                     lambda name: name == '?accept@TVCCaptureTown'),
                          '?accept@TVCCaptureTown')
+
+    def test_same_array_different_fields_are_not_an_icf_fold(self):
+        names = {'a': {0x10}, 'b': {0x10}}
+        relocs = {1: ('contexts', 6)}
+        bodies = {'a': (b'\xa1\x00\x00\x00\x00\xc3', relocs),
+                  'b': (b'\xa1\x08\x00\x00\x00\xc3', relocs)}
+        self.assertNotEqual(relocation_identity(*bodies['a']),
+                            relocation_identity(*bodies['b']))
+        self.assertIsNone(fold_label(set(names), names, bodies, self.definers, set()))
+        self.assertTrue(foreign_to_claim('a', {'b'}, bodies))
+
+    def test_different_referents_make_masked_admission_ambiguous(self):
+        body = b'\xa1\x00\x00\x00\x00\xc3'
+        self.assertNotEqual(relocation_identity(body, {1: ('sprites', 6)}),
+                            relocation_identity(body, {1: ('bitmaps', 6)}))
+
+    def test_equal_referents_and_addends_can_fold(self):
+        names = {'a': {0x10}, 'b': {0x10}}
+        body = (b'\xa1\x08\x00\x00\x00\xc3', {1: ('contexts', 6)})
+        bodies = dict.fromkeys(names, body)
+        self.assertEqual(fold_label(set(names), names, bodies, self.definers, set()), 'a')
+
+    def test_calls_to_proven_folded_destructors_can_fold(self):
+        names = {'a': {0x10}, 'b': {0x10}, 'dtorA': {0x20}, 'dtorB': {0x20}}
+        body = b'\xe8\x00\x00\x00\x00\xc3'
+        bodies = {'a': (body, {1: ('dtorA', 20)}),
+                  'b': (body, {1: ('dtorB', 20)})}
+        self.assertEqual(fold_label({'a', 'b'}, names, bodies, self.definers, set()), 'a')
 
 
 class SoleChoiceTests(unittest.TestCase):

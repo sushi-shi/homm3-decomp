@@ -5,9 +5,9 @@ import unittest
 from homm3.census.placements import foreign_to_claim
 
 BODIES = {
-    "claimed": (b"", {0x10: ("dword_writer", 20)}),
-    "twin": (b"", {0x10: ("dword_writer", 20)}),
-    "other": (b"", {0x10: ("short_writer", 20)}),
+    "claimed": (bytes(20), {0x10: ("dword_writer", 20)}),
+    "twin": (bytes(20), {0x10: ("dword_writer", 20)}),
+    "other": (bytes(20), {0x10: ("short_writer", 20)}),
 }
 
 

@@ -1687,7 +1687,7 @@ def _demangle_key(mangled: str):
     # destination and const-reference source to carry the same builtin type;
     # a conversion overload must not borrow this source claim's identity.
     construct_scalar = re.fullmatch(
-        r"\?_Construct@std@@YIXPA([CDEFGHIJK])AB\1@Z", mangled)
+        r"\?_Construct@std@@Y[AI]XPA([CDEFGHIJK])AB\1@Z", mangled)
     if construct_scalar:
         return (f"{DEQUE_PRIMITIVE_ELEMENT[construct_scalar.group(1)]}"
                 "@std_construct")

@@ -1793,6 +1793,14 @@ def manifest_bytes(rows, refuted=None) -> bytes:
     be lowered for placement - not source defects)."""
     out = ["\t".join(HEADER)]
     types = declared_types()
+    # A legacy copy of a folded COMDAT has the same retail definition as
+    # its section-backed copy. Prefer that observed alignment to the legacy
+    # size/type estimate (notably __CTA1_N: observed 8, estimated 4).
+    observed_alignments = defaultdict(set)
+    for r in rows:
+        if "section_ordinal" in r:
+            key = r["name"], r["rva"], r["size"], r["storage"]
+            observed_alignments[key].add(r.get("alignment", r["section"]["alignment"]))
     for r in rows:
         placed = "section_ordinal" in r
         if placed:
@@ -1803,6 +1811,10 @@ def manifest_bytes(rows, refuted=None) -> bytes:
             if align != modelled and refuted is not None:
                 refuted.append((r["rva"], r["name"], r["size"], kind,
                                 modelled, align))
+        observed = observed_alignments.get(
+            (r["name"], r["rva"], r["size"], r["storage"]), ())
+        if not placed and len(observed) == 1:
+            align = next(iter(observed))
         out.append("\t".join([
             r["name"], r["object"], "0x%x" % r["rva"], "0x%x" % r["size"],
             r["storage"], "0x%x" % align,

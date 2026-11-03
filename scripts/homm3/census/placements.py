@@ -417,6 +417,17 @@ def rtti_class(symbol: str) -> str | None:
     return None
 
 
+def relocation_identity(body, relocs):
+    """Referents include their COFF addends, not only their symbol names.
+
+    The archive sprite/bitmap searches reference the same context array at
+    different member offsets. Masking those offsets invents an ICF fold and
+    lets the wrong search infer a second base address for the array.
+    """
+    return tuple((site, ref, kind, struct.unpack_from("<I", body, site)[0])
+                 for site, (ref, kind) in sorted(relocs.items()))
+
+
 def foreign_to_claim(name, claimed, bodies):
     """Whether the image's own VA() claims (`claimed`, the names one address
     holds) cover bodies whose relocation referents differ from `name`'s.
@@ -427,7 +438,7 @@ def foreign_to_claim(name, claimed, bodies):
     (one writes shorts, the other dwords). `bodies`: name -> (body, relocs)."""
     claimed = [other for other in claimed if other in bodies]
     return bool(claimed) and name not in claimed and all(
-        sorted(bodies[other][1].items()) != sorted(bodies[name][1].items())
+        relocation_identity(*bodies[other]) != relocation_identity(*bodies[name])
         for other in claimed)
 
 
@@ -484,10 +495,11 @@ def fold_label(at, names, bodies, definers, owned, rowable=lambda name: True):
     shapes = set()
     for name in group:
         body, relocs = bodies[name]
-        masked = bytearray(body)
-        for site in relocs:
-            masked[site:site + 4] = b"\0\0\0\0"
-        shapes.add((bytes(masked), tuple(sorted(relocs))))
+        # Admission already separates ambiguous referents. Independently
+        # anchored compiler aliases may call differently named folded
+        # destructors, but their relocation addends must still agree.
+        shapes.add((bytes(body), tuple(sorted((site, kind)
+                                             for site, (_ref, kind) in relocs.items()))))
     return group[0] if len(shapes) == 1 else None
 
 
@@ -726,7 +738,7 @@ def derive(log=print, want_suggestions=False):
         for site in relocs:
             shape[site:site + 4] = b"\0\0\0\0"
         referents_of_shape[(bytes(shape), tuple(sorted(relocs)))].add(
-            tuple(sorted((site, ref) for site, (ref, _kind) in relocs.items())))
+            relocation_identity(body, relocs))
     for unit, name, body, relocs in compiled:
         mask = bytearray(len(body))
         for site in relocs:

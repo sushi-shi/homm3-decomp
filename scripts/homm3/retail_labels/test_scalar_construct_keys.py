@@ -10,9 +10,10 @@ from homm3.retail_labels import source
 class ScalarConstructKeysTest(unittest.TestCase):
     def test_observed_unsigned_byte_and_other_integer_types(self):
         for code, owner in source.DEQUE_PRIMITIVE_ELEMENT.items():
-            with self.subTest(owner=owner):
-                symbol = f"?_Construct@std@@YIXPA{code}AB{code}@Z"
-                self.assertEqual(source._demangle_key(symbol), owner + "@std_construct")
+            for convention in ('A', 'I'):
+                with self.subTest(owner=owner, convention=convention):
+                    symbol = f"?_Construct@std@@Y{convention}XPA{code}AB{code}@Z"
+                    self.assertEqual(source._demangle_key(symbol), owner + "@std_construct")
 
     def test_mismatched_types_qualifiers_and_overloads_do_not_join(self):
         for symbol in (
@@ -20,7 +21,7 @@ class ScalarConstructKeysTest(unittest.TestCase):
             "?_Construct@std@@YIXPAEAAE@Z",
             "?_Construct@std@@YIXPBEABE@Z",
             "?_Construct@std@@YIXPAEABE0@Z",
-            "?_Construct@std@@YAXPAEABE@Z",
+            "?_Construct@std@@YAXPAEABD@Z",
             "?_Construct@another@@YIXPAEABE@Z",
         ):
             with self.subTest(symbol=symbol):
