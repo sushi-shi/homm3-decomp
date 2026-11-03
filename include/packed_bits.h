@@ -74,6 +74,8 @@ inline int writePackedBits(TAbstractFile* outfile, const std::bitset<N>& bits)
 // This inferred API is distinct from the const writer's success result.
 // Inline preserves native Mac expansion through the mutable proxy to test;
 // an ordinary template retains a writer call absent from those native loops.
+// A counted-byte clear is Windows-flat but drops Mac town 64.5503 -> 49.3590;
+// it removes the bulk clear and moves test<70>. Keep this native bulk operation.
 template <size_t WireBytes, class Bits, class Count>
 inline int writePackedBitsCount(TAbstractFile* outfile, Bits& bits,
                                 Count bitCount, unsigned char* packed)
