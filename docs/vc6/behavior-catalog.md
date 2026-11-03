@@ -1438,9 +1438,27 @@ store-before-restore order, without an EBP frame. Our per-arm source under
 that pair. Linux stubs the higher-level launch test instead of supplying
 this Windows body. See the [alternate-build evidence](../oracles/alternate-builds.md#windows-roe-demo-1999).
 
-Query/fetch-loop controls are also distinct from retail: a two-iteration
-counter loop retains one virtual-call site (19.4211%); pointer-phase loops
-emit two sites but only two returns (44.7368%/57.8070%). Exhaustive
+Query/fetch-loop controls are also distinct from retail. A counter loop
+that returns inside its second iteration retains one virtual-call site
+(19.4211%). Letting the fixed two-iteration loop finish before checking the
+fetch status does not enable unrolling: both common-status (11.5263%) and
+per-arm final-status (12.1228%) forms retain one virtual-call site, a phase
+counter/back edge and only two returns. Both reproduce and preserve the
+required query-status write before allocation, so the failure is measured
+codegen rather than a missing protocol operation. Pointer-phase loops emit
+two sites but only two returns (44.7368%/57.8070%).
+A bounded static audit identifies one relevant counted-loop prerequisite:
+`0x434e1` collects source blocks with successors outside the loop into
+`loop+0x20`; `0x45514` requires exactly one such block, the latch, before
+recovering a count into `loop+0x28`. The early-return models violate that
+source CFG prerequisite. Two follow-up single-exit models retain a success
+flag and skip subsequent protocol work after failure. They preserve the
+calls/status-write paths, but still do not unroll: common recording scores
+26.4737%, per-arm recording 23.0000%, both with one virtual-call site, a
+counter/back edge, BL result state and one return. Thus removing the early
+exits is insufficient; this is not a claim that the inspected count gate is
+the complete unroller policy or that calls categorically forbid unrolling.
+All four post-loop controls reproduce. Exhaustive
 success/failure/severity switches without a fallback do not improve the
 baseline either.
 The SDK `IS_ERROR` macro uses unsigned shift-by-31 rather than
