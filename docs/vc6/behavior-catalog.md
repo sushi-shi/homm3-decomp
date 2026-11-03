@@ -1210,6 +1210,17 @@ nested positive-guard forms merge the early false exits and score 55.0%.
 The failure-first model is
 retained without added operations, helper bodies or lifetime barriers.
 
+Under that model, a `DPLCONNECTION*` buffer, a named `HGLOBAL` allocation
+followed by `GlobalLock`, and their combination with `GHND` all retain
+96.4912%. The SDK parameter is `LPVOID`; the structure pointer is compatible
+with the returned data, not mandated by the declaration. `GlobalAllocPtr`
+expands to the existing nested allocation/lock calls and adds no lifetime.
+Retesting SDK predicates with the raw HRESULT preserved for the later store
+retains four returns but introduces an EAX-to-ECX copy: `IS_ERROR` adds
+mask/compare instructions (90.8772%), while `HRESULT_SEVERITY` adds
+shift/mask/compare instructions (89.1228%). Neither changes the restore/store
+order or provides a missing owner/helper model.
+
 The recognizer also requires the condition producer to be the immediately
 preceding tuple (`0x2eea9`). Computing a bool success/failure snapshot before
 recording the HRESULT tests that gate without adding an operation. Both
