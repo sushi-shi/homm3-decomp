@@ -1252,8 +1252,15 @@ same failure-first per-arm recording/return; the other also owns the final
 `GetConnectionSettings` call. Neither adds an `inline` keyword or a pragma.
 VC6 auto-inlines both and emits the identical lobby section, including all
 four calls and the restore/store reversal, at 96.4912%. All 86 TU scores
-are identical; the baseline and both candidate objects reproduce. These
-are compiler-mechanism controls, not recovered helper definitions. The
+are identical; the baseline and both candidate objects reproduce.
+Recording the status before the guard inside either helper instead restores
+the direct-store `setge` body (88.4210%); those controls also reproduce.
+For all four extractions, isolated IL captures reproduce the candidate lobby
+bytes and pass plain-versus-inert-shim equality. Crossing phase 0/1 with the
+single helper's compiled-prefix 0/1 state produces no change in any of the
+16 replays. This tests the newly introduced callee-order boundary at the
+captured declaration offset, not a full offset sweep of these helper models.
+These are compiler-mechanism controls, not recovered helper definitions. The
 native class method lists provide `getLastError` and the existing connection
 wrappers, but no status recorder; the existing accessor controls also leave
 this residual unchanged. Neither diagnostic helper is adopted. This bounded
