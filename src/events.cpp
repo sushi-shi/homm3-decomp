@@ -602,14 +602,8 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
 // DC 320 reads the signed shipyard owner byte directly, and 330 reads
 // the unsigned boat-coordinate bytes for type_point's constructor.
 // Mac 0xa95b8..0xa95c0 and 0xa961c..0xa9648 retain those field accesses.
-// The only DC local is boat_point; direct ShipyardInfo member expressions
-// replace whole-word shift temporaries and recover 85.4808 -> 90.89%.
-// [2026-08-27] Residual (91.93%): retail packs boat_point's three
-// bitfields with an interleaved XOR-into-word idiom reading z through the
-// point parameter's own packed dword (4*p / sar 2); our field-by-field
-// short stores are close but order the packing differently. The 3-arg
-// type_point constructor measured WORSE (85.51). A packed-bitfield store
-// ordering wall.
+// The only DC local is boat_point; the ShipyardInfo fields are read directly.
+// createBoat takes its level from the point parameter.
 VA(0x0049e2e0, 0x38B)
 DC_ADDRESS(0x0903b4, 0x2a4)
 MAC_ADDRESS(0x0a9580, 0x400)  // dc-bracket forced, ret 0xc=p4
@@ -663,7 +657,7 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
         && g_game->createBoat(
                cell->m_shipyardInfo.boatX,
                cell->m_shipyardInfo.boatY,
-               boatPoint.m_z, g_netLocalGamePos, 0, 1) != -1) {
+               point.m_z, g_netLocalGamePos, 0, 1) != -1) {
         g_game->m_players[g_netLocalGamePos].m_resources[GOLD] -= 1000;
         g_game->m_players[g_netLocalGamePos].m_resources[WOOD] -= 10;
     }
@@ -1640,21 +1634,9 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
 // rollover-name tables pick generator_name, the guarded prompt is a
 // block-scoped string destroyed before the combat, and the AI tail hands
 // an owned-or-unowned dwelling to AI_PurchaseCreatures.
-// [2026-08-27] Residual (99.0902%): our CL keeps `&guards` (lea ebx+0x1c)
-// live in EDI across the HasCreatures call and reuses it for the scan
-// loop; retail recomputes the lea at both sites and stores the prompt's
-// EH state as an immediate. why-reg: bindings agree at every first def,
-// divergence past them (allocator CSE state, 11 slots). The
-// generatorType/index locals, the inverted CREATURE_GENERATOR_1 arm and
-// the shared GeneratorEvent tail above are measured (74.81 -> 99.09).
-// Fresh 2026-09-01 source/structure comparison localizes the first mismatch
-// to that same pair: retail passes `&guards` in ECX then recomputes its LEA
-// after prompt construction, while this compile keeps it in EDI. The other
-// 114/115 blocks are an alignment cascade from this one allocator choice,
-// not evidence for a source control-flow rewrite.
-// Naming the HasCreatures result (94.82%) or the guards reference (90.78%)
-// worsens VC6; naming getOwner scores 99.07%, and a typed generator pointer
-// is byte-flat. Keep the canonical calls and current reference lifetime.
+// DC 1558 re-tests the owner after the hostile-owner block, at function
+// scope: the friendly branch of 1523 jumps straight to it, so the claim
+// test runs on both paths.
 VA(0x004a18b0, 0x79A)
 DC_ADDRESS(0x092814, 0x52a)
 MAC_ADDRESS(0x0acbec, 0x7c8)  // dc-bracket forced, ret 0x10=p5
@@ -1701,10 +1683,10 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                          &currentGenerator.m_guards, -1, 1, 0))
                 return;
         }
-        if (!g_game->onSameTeam(currentGenerator.getOwner(),
-                                g_netLocalGamePos))
-            g_game->claimGenerator(id, g_netLocalGamePos);
     }
+    if (!g_game->onSameTeam(currentGenerator.getOwner(),
+                            g_netLocalGamePos))
+        g_game->claimGenerator(id, g_netLocalGamePos);
 
     if (humanPlayer) {
         if (generatorCount != CREATURE_GENERATOR_1) {
