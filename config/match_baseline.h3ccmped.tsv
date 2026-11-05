@@ -205,7 +205,7 @@ Campaign	?getType@TCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x7df0	tokens1:13
 Campaign	?getline@std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@1@AAV21@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0xe110	-
 Campaign	?getline@std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@1@AAV21@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@D@Z	100.0000	100.0000	100.0000	0x10010	-
 Campaign	?importText@TCampaign@@QAEXAAV?$basic_istream@DU?$char_traits@D@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x7b90	tokens1:30d377b7eb7c
-Campaign	?importText@_TImpl@TCampaign@@QAEXAAV?$basic_istream@DU?$char_traits@D@std@@@std@@H@Z	99.9866	99.9866	99.9866	0x5fc0	tokens1:d096e1932d85
+Campaign	?importText@_TImpl@TCampaign@@QAEXAAV?$basic_istream@DU?$char_traits@D@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x5fc0	tokens1:d096e1932d85
 Campaign	?insert@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@_N@2@ABU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@Z	100.0000	100.0000	100.0000	0xb370	-
 Campaign	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEXPAV?$auto_ptr@VTScenarioStartingBonus@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0xbd00	-
 Campaign	?insert@?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@QAEXPAVTScenario@@IABV3@@Z	100.0000	100.0000	100.0000	0xb850	-
@@ -1046,7 +1046,7 @@ ScenarioPropsProloguePage	?setPrologue@TScenarioPropsProloguePage@@MBEXAAVTScena
 ScenarioPropsProloguePage	?update@TScenarioPropsProloguePageBase@@QAEXXZ	100.0000	100.0000	100.0000	0x2c310	tokens1:047429e14f63
 ScenarioPropsProloguePage	__h3cg$ScenarioPropsProloguePage$basic_string_compare_substr$char	0.0000	0.0000	0.0000	0x2d8a0	-
 ScenarioPropsProloguePage	__h3cg$ScenarioPropsProloguePage$static_dtor$apPreviews	100.0000	100.0000	100.0000	0x2d470	-
-ScenarioPropsSheet	??0TScenarioPropsSheet@@QAE@PAVCWnd@@PAVTCampaignDoc@@H@Z	99.0685	99.0685	99.0685	0x2d940	tokens1:6ee27ae8ad41
+ScenarioPropsSheet	??0TScenarioPropsSheet@@QAE@PAVCWnd@@PAVTCampaignDoc@@H@Z	99.0436	99.0685	99.0685	0x2d940	tokens1:6ee27ae8ad41
 ScenarioPropsSheet	??1TScenarioPropsSheet@@UAE@XZ	100.0000	100.0000	100.0000	0x2df80	tokens1:5d48e173b89a
 ScenarioPropsSheet	??_GTScenarioPropsSheet@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2df60	-
 ScenarioPropsSheet	?DoModal@TScenarioPropsSheet@@UAEHXZ	100.0000	100.0000	100.0000	0x2e220	tokens1:a6923d3b8437
@@ -1407,8 +1407,8 @@ palette	??_GTPalette16@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4a9e0	-
 palette	??_GTPalette24@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4ab80	-
 palette	?AdjustHSV@TPalette24@@QAEXMMMM@Z	100.0000	100.0000	100.0000	0x4abe0	-
 palette	?Convert24to16@TPalette16@@AAEXPBEHHHHHH@Z	100.0000	100.0000	100.0000	0x4aac0	-
-palette	?HSVToRGB@@YAXMMMPAI00@Z	100.0000	100.0000	100.0000	0x4af80	-
-palette	?RGBToHSV@@YAXIIIPAM00@Z	100.0000	100.0000	100.0000	0x4ae20	-
+palette	?HSVToRGB@@YAXMMMPAI00@Z$RVA4af80	100.0000	100.0000	100.0000	0x4af80	-
+palette	?RGBToHSV@@YAXIIIPAM00@Z$RVA4ae20	100.0000	100.0000	100.0000	0x4ae20	-
 palette	?getSize@TPalette16@@UBEIXZ	100.0000	100.0000	100.0000	0x4ab50	-
 palette	?getSize@TPalette24@@UBEIXZ	100.0000	100.0000	100.0000	0x4abd0	-
 resource	??0logic_error@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1ff0	-

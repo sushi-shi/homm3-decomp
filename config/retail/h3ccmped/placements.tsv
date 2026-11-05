@@ -346,7 +346,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0001c3b0	0x1e	func	??_GCComboBox@@UAEPAXI@Z	CampaignPropsDlg	external	vtable of CComboBox (RTTI) slot 1
 0x0001c3d0	0x1e	func	??_GCEdit@@UAEPAXI@Z	CampaignPropsDlg	external	vtable of CEdit (RTTI) slot 1
 0x0001ca80	0x1ad	func	?InitializeCreatureTypeTraitsTable@@YAEXZ	creaturetype	external	masked body (429 bytes, 14 relocations) unique at a census start
-0x0001cc30	0x31a	func	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	external	masked body (794 bytes, 52 relocations) unique at a census start
+0x0001cc30	0x31a	func	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	internal	masked body (794 bytes, 52 relocations) unique at a census start
 0x0001cf50	0x17	func	__h3cg$creaturetype$static_dtor$creatureTypeAbilities	creaturetype	external	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x2b2
 0x0001cf70	0x17	func	__h3cg$creaturetype$static_dtor$creatureTypePluralNames	creaturetype	external	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xe0
 0x0001cf90	0x17	func	__h3cg$creaturetype$static_dtor$creatureTypeNames	creaturetype	external	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x4d
@@ -782,8 +782,8 @@ rva	size	kind	name	unit	linkage	evidence
 0x0004abc0	0xb	func	??1TPalette24@@UAE@XZ	palette	external	referenced by ?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z at +0x2bc
 0x0004abd0	0x6	func	?getSize@TPalette24@@UBEIXZ	palette	external	vtable of TPalette24 (RTTI) slot 2
 0x0004abe0	0x235	func	?AdjustHSV@TPalette24@@QAEXMMMM@Z	palette	external	masked body (565 bytes, 20 relocations) unique at a census start
-0x0004ae20	0x159	func	?RGBToHSV@@YAXIIIPAM00@Z	palette	external	referenced by ?AdjustHSV@TPalette24@@QAEXMMMM@Z at +0x68
-0x0004af80	0x2d0	func	?HSVToRGB@@YAXMMMPAI00@Z	palette	external	referenced by ?AdjustHSV@TPalette24@@QAEXMMMM@Z at +0x1d6
+0x0004ae20	0x159	func	?RGBToHSV@@YAXIIIPAM00@Z	palette	internal	referenced by ?AdjustHSV@TPalette24@@QAEXMMMM@Z at +0x68
+0x0004af80	0x2d0	func	?HSVToRGB@@YAXMMMPAI00@Z	palette	internal	referenced by ?AdjustHSV@TPalette24@@QAEXMMMM@Z at +0x1d6
 0x0004b290	0xf0	func	?SetPixelFormat@CSpriteFrame@@SAXIII@Z	cspriteframe	external	masked body (240 bytes, 2 relocations) unique at a census start
 0x0004b380	0x1e	func	??_GBitmap24Bit@@UAEPAXI@Z	bitmap24	external	vtable of Bitmap24Bit (RTTI) slot 0
 0x0004b3a0	0xb0	func	??0Bitmap24Bit@@QAE@PBDHHPBEH@Z	bitmap24	external	masked body (176 bytes, 8 relocations) unique at a census start
@@ -4238,7 +4238,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000c8f30	0x10	data	_rampartGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$rampartGenerator1 at +0x2
 0x000c8f40	0x8	data	_randomGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$randomGenerator3 at +0x2
 0x000c8f48	0x8	data	_randomGenerator4	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$randomGenerator4 at +0x2
-0x000c8f50	0x1f0	data	?aInfernoBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aInfernoBuildingTraits at +0x8
+0x000c8f50	0x1ec	data	?aInfernoBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aInfernoBuildingTraits at +0x8
 0x000c9140	0x8	data	_randomGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$randomGenerator2 at +0x2
 0x000c9148	0x1ec	data	?aCastleBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aCastleBuildingTraits at +0x8
 0x000c9334	0x1c	data	?_s_akBaseName@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@0PAPBDA	TownTypeTraits	external	referenced by 0x00032b40 at +0x1c7
@@ -4268,7 +4268,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000c9c28	0x10	data	_dungeonGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator1 at +0x2
 0x000c9c38	0x1f0	data	?aFortressBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aFortressBuildingTraits at +0x8
 0x000c9e28	0x10	data	_dungeonGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator2 at +0x2
-0x000c9e38	0xc	data	_necropolisGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator6 at +0x2
+0x000c9e38	0x10	data	_necropolisGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator6 at +0x2
 0x000c9e48	0x10	data	_fortressGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$fortressGenerator6 at +0x2
 0x000c9e58	0x10	data	_necropolisGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator7 at +0x2
 0x000c9e68	0x10	data	_castleGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator2 at +0x2
@@ -4315,7 +4315,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000ca528	0x10	data	_necropolisGenerator5	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator5 at +0x2
 0x000ca538	0x1f0	data	?aRampartBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aRampartBuildingTraits at +0x8
 0x000ca728	0x8	data	_randomGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$randomGenerator7 at +0x2
-0x000ca730	0xc	data	_towerGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$towerGenerator3 at +0x2
+0x000ca730	0x10	data	_towerGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$towerGenerator3 at +0x2
 0x000ca740	0x10	data	_rampartGenerator5	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$rampartGenerator5 at +0x2
 0x000ca750	0xc	data	_rampartGenerator4	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$rampartGenerator4 at +0x2
 0x000ca75c	0x1	data	_?$S270@?1??initialize@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@SAXXZ@4EA	TownTypeTraits	internal	referenced by 0x00032b40 at +0xf

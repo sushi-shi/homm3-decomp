@@ -159,7 +159,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0000c9b0	0x20	func	?copy@std@@YAPAHPBH0PAH@Z	Hero	external	masked body (32 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x0000cc46	0x1b8	func	?InitializeCreatureTypeTraitsTable@@YAEXZ	creaturetype	external	masked body (440 bytes, 15 relocations) unique at a census start
 0x0000cdfe	0x13	func	?GetNumberOfRows@TSpreadsheetResource@@QBEHXZ	creaturetype	external	masked body (19 bytes, 0 relocations) unique at a census start
-0x0000ce11	0x277	func	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	external	masked body (631 bytes, 58 relocations) unique at a census start
+0x0000ce11	0x277	func	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	internal	masked body (631 bytes, 58 relocations) unique at a census start
 0x0000d088	0x17	func	__h3cg$creaturetype$static_dtor$creatureTypeAbilities	creaturetype	external	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x23b
 0x0000d09f	0x17	func	__h3cg$creaturetype$static_dtor$creatureTypePluralNames	creaturetype	external	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xaa
 0x0000d0b6	0x17	func	__h3cg$creaturetype$static_dtor$creatureTypeNames	creaturetype	external	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x3e
@@ -1008,7 +1008,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00041c36	0x8e	func	??0TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	masked body (142 bytes, 9 relocations) unique at a census start
 0x00041cc4	0xaa	func	??0?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	referenced by 0x00041c36 at +0x59
 0x00041d6e	0x7a	func	??0TGenerator@@QAE@ABV0@@Z	GUIGameObject	external	referenced by 0x00041cc4 at +0x65
-0x00041de8	0x57	func	??0TFlaggableObject@@QAE@ABV0@@Z	GUIGameObject	external	referenced by ??0TGarrison@@QAE@ABV0@@Z at +0x4e
+0x00041de8	0x57	func	??0TFlaggableObject@@QAE@ABV0@@Z	GUIGameObject	external	referenced by ??0TRandomGenerator@@QAE@ABV0@@Z at +0x6c
 0x00042038	0x8e	func	??0TGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	masked body (142 bytes, 9 relocations) unique at a census start
 0x000420c6	0xaa	func	??0?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	masked body (170 bytes, 10 relocations) unique at a census start
 0x00042170	0x80	func	??0TAbandonedMine@@QAE@ABV0@@Z	GUIGameObject	external	masked body (128 bytes, 7 relocations) unique at a census start
@@ -2661,8 +2661,8 @@ rva	size	kind	name	unit	linkage	evidence
 0x000e4b30	0xb	func	??1TPalette24@@UAE@XZ	palette	external	referenced by ?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z at +0x2bc
 0x000e4b40	0x6	func	?getSize@TPalette24@@UBEIXZ	palette	external	vtable of TPalette24 (RTTI) slot 2
 0x000e4b50	0x235	func	?AdjustHSV@TPalette24@@QAEXMMMM@Z	palette	external	masked body (565 bytes, 20 relocations) unique at a census start
-0x000e4d90	0x159	func	?RGBToHSV@@YAXIIIPAM00@Z	palette	external	referenced by ?AdjustHSV@TPalette24@@QAEXMMMM@Z at +0x68
-0x000e4ef0	0x2d0	func	?HSVToRGB@@YAXMMMPAI00@Z	palette	external	referenced by ?AdjustHSV@TPalette24@@QAEXMMMM@Z at +0x1d6
+0x000e4d90	0x159	func	?RGBToHSV@@YAXIIIPAM00@Z	palette	internal	referenced by ?AdjustHSV@TPalette24@@QAEXMMMM@Z at +0x68
+0x000e4ef0	0x2d0	func	?HSVToRGB@@YAXMMMPAI00@Z	palette	internal	referenced by ?AdjustHSV@TPalette24@@QAEXMMMM@Z at +0x1d6
 0x000e51c0	0x1e	func	??_GTTextResource@@UAEPAXI@Z	textresource	external	vtable of TTextResource (RTTI) slot 0
 0x000e51e0	0x1fb	func	??0TTextResource@@QAE@PBDH0@Z	textresource	external	masked body (507 bytes, 8 relocations) unique at a census start
 0x000e53e0	0x49	func	??1TTextResource@@UAE@XZ	textresource	external	masked body (73 bytes, 4 relocations) unique at a census start
