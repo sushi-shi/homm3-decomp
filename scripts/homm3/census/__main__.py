@@ -151,6 +151,11 @@ def derive(log=print):
             masks[section.name] = find_relocs.literal_mask(image.blob(section))
             sites.update(find_relocs.data_sites(image, section, nonpointer_data=fixed_data))
     from homm3.census import code_operands
+    split = code_operands.misaligned(census, sites)
+    for rva in split:
+        del sites[rva]
+    if split:
+        log(f"[census] {len(split)} linear operand(s) inside descent-decoded instructions pruned")
     recovered = 0
     for rva, site in code_operands.sites(census).items():
         if rva not in sites:
