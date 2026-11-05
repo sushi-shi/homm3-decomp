@@ -24,6 +24,18 @@ class ReviewedRuntimeNamesTest(unittest.TestCase):
         self.assertEqual(reviewed_runtime_names(
             {0x100}, [label('base')], [derived]), ([label('base')], []))
 
+    def test_reviewed_owner_symbol_after_its_section_base_takes_precedence(self):
+        # exsup3.obj-like section: eight bytes precede the public symbol.
+        derived = row('derived', ownership='whole-section')
+        self.assertEqual(reviewed_runtime_names(
+            {0x100, 0x108}, [label('base', 0x108)], [derived],
+            exports=[label('derived', 0x108)]), ([label('derived', 0x108)], []))
+        # Another member's equal symbol is not this row's export.
+        other = (0x108, 'derived', 'LIBCPMT', 'other.obj')
+        self.assertEqual(reviewed_runtime_names(
+            {0x100, 0x108}, [label('base', 0x108)], [derived], exports=[other]),
+            ([label('base', 0x108)], [other]))
+
     def test_reviewed_owner_and_existing_code_fold_behavior(self):
         self.assertEqual(reviewed_runtime_names({0x100}, [], [row('narrow'), row('wide')]),
                          ([label('narrow')], [label('wide')]))

@@ -195,12 +195,18 @@ def reviewed_code_sites(image, rows, archives):
     return sites
 
 
-def _reviewed_runtime_sections(image, rows, archives):
-    """Complete native-checked, explicitly reviewed code-owner sections."""
+def _reviewed_sections(image, rows, archives, kind):
+    """Complete native-checked `ownership=whole-section` rows of one kind.
+
+    The row's COFF section must exist in its pinned archive member, have the
+    row's size, lie wholly inside one image section of the matching kind
+    (executable for code, initialized non-executable for data) and agree with
+    the image in every fixed byte. Yields (rva, section, obj, library, row).
+    """
     from homm3.verify.library_code import archive, section as object_section, differences
-    from homm3.compare.canonicalize import FUNCTION_TYPE
+    code = kind == 'code'
     for row in rows:
-        if row['kind'] != 'code' or row.get('ownership') != 'whole-section':
+        if row['kind'] != kind or row.get('ownership') != 'whole-section':
             continue
         library = row['library'].rsplit('.', 1)[0]
         path = archives.get(library)
@@ -213,10 +219,22 @@ def _reviewed_runtime_sections(image, rows, archives):
         section = object_section(row['library'], row['member'], obj, number)
         rva = int(row['rva'], 16)
         mapped = image.section_of(rva)
-        if (not section.code or section.size <= 0 or int(row['size'], 0) != section.size
-                or mapped is None or not mapped.executable
+        if (section.code != code or section.bss or section.size <= 0
+                or int(row['size'], 0) != section.size
+                or mapped is None or mapped.executable != code
                 or rva + section.size > mapped.rva + mapped.size):
             continue
+        offset = mapped.raw_offset + rva - mapped.rva
+        if differences(section, image.data[offset:offset + section.size]):
+            continue
+        yield rva, section, obj, library, row
+
+
+def _reviewed_runtime_sections(image, rows, archives):
+    """Complete native-checked, explicitly reviewed code-owner sections."""
+    from homm3.compare.canonicalize import FUNCTION_TYPE
+    for rva, section, obj, library, row in _reviewed_sections(image, rows, archives, 'code'):
+        number = section.number
         public = [symbol for symbol in obj.symbols.values()
                   if symbol.section == number and symbol.storage_class == EXTERNAL
                   and (symbol.typ & 0x30) == FUNCTION_TYPE
@@ -229,9 +247,6 @@ def _reviewed_runtime_sections(image, rows, archives):
         if not any(symbol.name == row['symbol'] and 0 <= symbol.value < section.size
                    for symbol in named):
             continue
-        offset = mapped.raw_offset + rva - mapped.rva
-        if differences(section, image.data[offset:offset + section.size]):
-            continue
         yield rva, section, public, named, library, row
 
 
@@ -242,28 +257,8 @@ def reviewed_fixed_data_words(image, rows, archives):
     from scalar payloads, including three-letter locale codes such as ENC.
     The literal heuristic cannot make that distinction for three-byte text.
     """
-    from homm3.verify.library_code import archive, section as object_section, differences
     fixed = set()
-    for row in rows:
-        if row['kind'] != 'data' or row.get('ownership') != 'whole-section':
-            continue
-        path = archives.get(row['library'].rsplit('.', 1)[0])
-        if path is None or not path.is_file():
-            continue
-        obj = archive(path)[0].get(row['member'])
-        number = int(row['section'])
-        if obj is None or not 1 <= number <= len(obj.sections):
-            continue
-        section = object_section(row['library'], row['member'], obj, number)
-        rva = int(row['rva'], 16)
-        mapped = image.section_of(rva)
-        if (section.code or section.bss or section.size <= 0
-                or int(row['size'], 0) != section.size or mapped is None
-                or mapped.executable or rva + section.size > mapped.rva + mapped.size):
-            continue
-        offset = mapped.raw_offset + rva - mapped.rva
-        if differences(section, image.data[offset:offset + section.size]):
-            continue
+    for rva, section, _obj, _library, _row in _reviewed_sections(image, rows, archives, 'data'):
         # Unknown relocation kinds cannot establish fixed-byte ownership.
         if any(kind not in (6, 20) for _site, kind, _index in section.relocations):
             continue
@@ -334,12 +329,18 @@ def reviewed_runtime_names(starts, runtime, reviewed, aliases=(), *, exports=())
     # The heuristic may pick an inlined base destructor instead of the
     # retained derived destructor; that is not an independently proved ICF
     # alias. Only validated section exports can establish this precedence.
+    # Exports carry the native symbol offset; a row's RVA is its section
+    # base, so match the row's symbol by section identity and extent.
     exports = tuple(exports)
-    admitted = {(int(row['rva'], 16), row['symbol']) for row in reviewed
-                if row['kind'] == 'code' and row.get('ownership') == 'whole-section'
-                and row['symbol'] != '-'}
-    preferred = {rva: name for rva, name, _lib, _member in exports
-                 if (rva, name) in admitted}
+    admitted = defaultdict(list)
+    for row in reviewed:
+        if (row['kind'] == 'code' and row.get('ownership') == 'whole-section'
+                and row['symbol'] != '-'):
+            low = int(row['rva'], 16)
+            admitted[(row['library'].rsplit('.', 1)[0], row['member'], row['symbol'])].append(
+                (low, low + int(row['size'], 0)))
+    preferred = {rva: name for rva, name, library, member in exports
+                 if any(low <= rva < high for low, high in admitted.get((library, member, name), ()))}
     # A reviewed `ownership=source` alias leaves ownership with its source
     # copy. More precise template-vtable matching must not reclassify that
     # placed source COMDAT as library-owned merely because its bytes also
