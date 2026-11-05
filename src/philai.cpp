@@ -1021,25 +1021,17 @@ static inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
 // the same field walks and control flow after inlining: guardians,
 // experience/resources, primary and secondary skills, artifacts, spells,
 // then joinable creatures.
-// The SecondarySkills loop's duplicated `value +=` is DELIBERATE, and the
-// merge is measured (polish 16). It is the whole of AI_value_of_event's
-// one remaining branch-polarity divergence: retail cross-jumps the two arms
-// onto ONE `imul ecx,[ebp-4] / add esi,ecx` tail and reaches it with
-// `jl` where this compile duplicates the tail and emits `jge`. Writing the
-// merge in source DOES close the polarity - branches go from one flip to
-// clean - and costs 0.0331 anyway (97.7399 -> 97.7068, and the skeleton's
-// exact-block count FALLS 34 -> 25), because the merged form transposes the
-// enclosing loop's registers: retail and the duplicated form both hold the
-// index in EAX and the accumulator in ESI, the merged form swaps them.
-// FOUR spellings were measured and all produce the byte-identical object at
-// 97.7068 - a named `int amount = level` with `amount = level - current_level`,
-// the same with `amount -= current_level`, reusing `level` itself as the
-// accumulator (no new local at all), and a `goto` into an explicit
-// `add_skill:` label reproducing retail's jump exactly. A fifth, an
-// if/else-if/else chain with a trailing `continue`, is worse still (97.16,
-// and the polarity flip comes back). The merge is therefore a FIXED POINT
-// this compiler reaches from any source shape; the cost is the register
-// transposition, not the spelling, so do not re-try the merge family.
+// SecondarySkills loop: the two tests read the hero's level through
+// separate getSecondarySkill calls, as retail's redundant second
+// `test dl,dl` shows. VC6 merges the repeated loads after branch threading, so
+// the skill-count failure falls into the else-if test and the first arm's
+// `value +=` cross-jumps onto the second arm's `imul/add` tail (`jl` into
+// it). A single current-level local lets VC6 thread that edge to the loop
+// increment and duplicate the tail instead (`jge`, one block short, 98.89%).
+// Dreamcast 2006 holds both vector reads; 2012..2017 keep the
+// if / else / nested-if bodies. The spell loop passes the element directly
+// (DC 2028 is one statement); a named SpellID local shifts the rotating
+// scratch-register cursor for every later arm (99.43 -> 99.56%).
 // With this TU, removing inline retains a VC6 call that retail expands;
 // CodeWarrior retains the call with either declaration.
 DC_ADDRESS(0x1105d8, 0x230)
@@ -1075,13 +1067,16 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
     for (unsigned int secondaryIndex = 0;
          secondaryIndex < blackBox->m_secondarySkills.size();
          ++secondaryIndex) {
-        signed char currentLevel = currentHero->getSecondarySkill(
-            blackBox->m_secondarySkills[secondaryIndex].m_type);
+        TSecondarySkill skill =
+            blackBox->m_secondarySkills[secondaryIndex].m_type;
         int level = blackBox->m_secondarySkills[secondaryIndex].m_level;
-        if (currentLevel == 0 && currentHero->m_skillCount < kNumSecSkillsPerHero)
+        if (currentHero->getSecondarySkill(skill) == 0
+            && currentHero->m_skillCount < kNumSecSkillsPerHero)
             value += level * primarySkillValue;
-        else if (currentLevel > 0 && currentLevel < level)
-            value += (level - currentLevel) * primarySkillValue;
+        else if (currentHero->getSecondarySkill(skill) > 0
+                 && currentHero->getSecondarySkill(skill) < level)
+            value += (level - currentHero->getSecondarySkill(skill))
+                * primarySkillValue;
     }
 
     value += blackBox->m_artifacts.size()
@@ -1091,8 +1086,7 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
             ARTIFACT_SPELLBOOK)) {
         for (unsigned int spell = 0;
              spell < blackBox->m_spells.size(); ++spell) {
-            SpellID spellId = blackBox->m_spells[spell];
-            value += valueOfLearning(currentHero, spellId);
+            value += valueOfLearning(currentHero, blackBox->m_spells[spell]);
         }
     }
 
@@ -1142,12 +1136,13 @@ static long valueOfBank(const hero* currentHero, NewmapCell* cell)
 // one value statement, with the size reused in the gold and special-resource
 // terms. Complete expands the two cell accessors and this helper into
 // AI_value_of_event's CAMPFIRE arm; retail proves the 100-gold unit and the
-// same left-to-right double expression.
+// same left-to-right double expression. The size keeps the accessor's
+// short type; an int local costs the CAMPFIRE arm's scratch registers.
 DC_ADDRESS(0x1108e0, 0xd6)
 MAC_ADDRESS(0x1426c8, 0x6c)
 int valueOfCampfire(playerData* player, NewmapCell* cell)
 {
-    int size = cell->getCampfireSize();
+    short size = cell->getCampfireSize();
     return static_cast<int>(
         size * 100 * player->m_ai.m_resourceValue[GOLD]
         + size * player->m_ai.m_resourceValue[cell->getCampfireResource()]);
@@ -3787,8 +3782,14 @@ static int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
 // now sees budget 86 (< 115), so retail's school, spring and well calls stay
 // out of line and the Mercenary Camp (cb 52) expands as retail does.
 // `predict-inline --cb-window` had placed retail at 1808..1823 for the old
-// helper costs. Remaining call decision: BlackBox's merged secondary skill
-// tail. Preserve all canonical helper paths.
+// helper costs. All call decisions, blocks and branches now agree. Two
+// residuals remain: the inlined library sum adds power into knowledge's
+// register (`add edi,esi`; every operand order and grouping measured is
+// byte-identical), and the SEER arm folds the vector base into the 19-byte
+// index chain where retail scales the index first (the same access in
+// advManager::dispatchEvent compiles retail's way; a hut reference, a
+// begin() spelling and int/short index casts do not reach it here).
+// Preserve all canonical helper paths.
 DC_ADDRESS(0x113e24, 0x986)
 long aiValueOfEvent(const hero* currentHero, type_point point,
                        long& moveCost)
