@@ -3054,13 +3054,11 @@ DC_ADDRESS(0x111834, 0xc4)
 MAC_ADDRESS(0x143bf4, 0xc4)
 static int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
 {
-    if ((1 << cell->m_extraInfo) & currentHero->m_magicSchoolFlags) {
+    if ((1 << cell->m_extraInfo) & currentHero->m_magicSchoolFlags)
         return 0;
-    }
     playerData* player = currentHero->getPlayer();
-    if (player->m_resources[GOLD] < 1000) {
+    if (player->m_resources[GOLD] < 1000)
         return 0;
-    }
 
     // DC 2602 acquires power, 2605 knowledge, then 2608 calls max.
     long powerValue = currentHero->getValueOfPower();
@@ -3715,9 +3713,8 @@ static long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
-    if (!info->magicSpringIsFull()) {
+    if (!info->magicSpringIsFull())
         return 0;
-    }
 
     // DC records one value-type target local, not a path-to-target copy;
     // separate declaration/assignment keeps the retained call in
@@ -3727,9 +3724,8 @@ static long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
     if (target.isValid() && moveCost > 300) {
         NewmapCell* destination = g_game->getCell(target);
         if (destination->m_type != MAGIC_WELL
-            && destination->m_type != MAGIC_SPRING) {
+            && destination->m_type != MAGIC_SPRING)
             return 0;
-        }
     }
     return currentHero->getValueOfSpring();
 }
