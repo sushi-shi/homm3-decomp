@@ -36,7 +36,7 @@ class FixedLibraryDataTests(unittest.TestCase):
     def test_fixed_code_is_excluded_and_relocated_pointer_remains(self):
         image, fixed = self.fixed()
         self.assertEqual(fixed, {0x30004})
-        census = SimpleNamespace(image=image, nonpointer_data=fixed,
+        census = SimpleNamespace(image=image, nonpointer_data=fixed, literal_masks={},
                                  in_text=lambda rva: 0x1000 <= rva < 0x40000)
         self.assertEqual(data_code_pointers(census), [(0x2000, 0x30000)])
         image.in_image = lambda value: 0x401000 <= value < 0x440000

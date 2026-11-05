@@ -148,7 +148,7 @@ def derive(log=print):
         if section.executable:
             sites.update(find_relocs.code_sites(image, section, walk_tables=True))
         else:
-            masks[section.name] = find_relocs.literal_mask(image.blob(section))
+            masks[section.name] = functions.section_literal_mask(census, section)
             sites.update(find_relocs.data_sites(image, section, nonpointer_data=fixed_data))
     from homm3.census import code_operands
     split = code_operands.misaligned(census, sites)

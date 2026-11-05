@@ -63,6 +63,8 @@ class Census:
     #: the image pin's `census_joins_catch_bodies`: see `tail_limit`
     catch_bodies: bool = False
     nonpointer_data: frozenset = frozenset()
+    #: (section rva, wide) -> find_relocs.literal_mask: see `section_literal_mask`
+    literal_masks: dict = field(default_factory=dict, repr=False)
 
     def __post_init__(self):
         text = next(s for s in self.image.sections if s.executable)
@@ -317,22 +319,31 @@ def funcinfo_funclets(census):
     return out
 
 
-def data_code_pointers(census):
+def section_literal_mask(census, sec, wide=True):
+    """`find_relocs.literal_mask` of one data section, computed once."""
+    key = (sec.rva, wide)
+    if key not in census.literal_masks:
+        from homm3.census.find_relocs import literal_mask
+        census.literal_masks[key] = literal_mask(census.image.blob(sec), wide=wide)
+    return census.literal_masks[key]
+
+
+def data_code_pointers(census, wide=True):
     """Aligned data dwords outside string literals: (code target, site).
 
     Import-name tails such as ``GetClassLongA`` can encode an in-range code
     address (``ngA\0``). They are text, not callback/function boundaries.
-    Use the same literal evidence as the relocation census.
+    Use the same literal evidence as the relocation census. Start discovery
+    passes `wide=False`: the narrow tails are its evidence, and a UTF-16
+    reading could hide a genuine run of low code pointers (0x00410041).
     """
-    from homm3.census.find_relocs import literal_mask
     image, base = census.image, census.image.image_base
     out = []
     for sec in data_sections(image):
         blob = image.blob(sec)
-        mask = literal_mask(blob)
+        mask = section_literal_mask(census, sec, wide)
         for off in range(0, len(blob) - 3, 4):
-            if (any(mask[off:off + 4])
-                    or sec.rva + off in getattr(census, 'nonpointer_data', ())):
+            if any(mask[off:off + 4]) or sec.rva + off in census.nonpointer_data:
                 continue
             v = struct.unpack_from("<I", blob, off)[0]
             if census.in_text(v - base):
@@ -470,7 +481,7 @@ def run(image, log=print, catch_bodies=False, reviewed_starts=None, nonpointer_d
     funclets = funcinfo_funclets(c)
     for r, info, kind, state in funclets:
         c.funclets.setdefault(r, (info, kind, state))
-    pointers = data_code_pointers(c)
+    pointers = data_code_pointers(c, wide=False)
     sites = {site for _t, site in pointers}
     # data pointers inside a run of code pointers (vtables, dispatch and
     # initializer tables) are strong; isolated ones are weak
@@ -804,6 +815,16 @@ def _merge_pass(c, parents, catches, flow, vetoed, alignment):
     def aligned(rva):
         return alignment > 1 and not rva % alignment
 
+    continuation_parents = []
+
+    def owns_continuation(piece, owner):
+        if not continuation_parents:
+            continuation_parents.append([(label, parents.get(c.funclets[handler][0]))
+                                         for label, handler in c.continuations.items()])
+        reached = c.reached.get(piece, ())
+        return any(label in reached and parent == owner
+                   for label, parent in continuation_parents[0])
+
     def follows(prev, owner, piece):
         """Why `piece` does not directly follow the extent of `owner` and the
         pieces merged into it up to `prev`, else None."""
@@ -852,11 +873,7 @@ def _merge_pass(c, parents, catches, flow, vetoed, alignment):
         # A catch's returned continuation belongs to its FuncInfo parent.
         # That positive ownership evidence outweighs incidental alignment of
         # an internal branch target (campaign InitInstance has such a tail).
-        contains_continuation = any(
-            label in c.reached.get(piece, ())
-            and parents.get(c.funclets[handler][0]) == owner
-            for label, handler in c.continuations.items())
-        if why is None and aligned(piece) and not contains_continuation:
+        if why is None and aligned(piece) and not owns_continuation(piece, owner):
             why = f"starts on a {alignment}-byte boundary"
         if why is not None:
             refused.append((piece, owner, "tail", why))

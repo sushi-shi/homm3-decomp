@@ -216,11 +216,13 @@ def printable(byte):
     return 0x20 <= byte < 0x7F or byte in (9, 10, 13)
 
 
-def literal_mask(blob, minimum=4):
+def literal_mask(blob, minimum=4, wide=True):
     """Flag every byte that belongs to a plausible string literal.
 
     A pointer never lives inside one, and on a low-based 32-bit image the tail
     of a narrow literal is indistinguishable from an address on its own.
+    `wide` adds UTF-16LE runs; a run of low code pointers such as 0x00410041
+    can read as one, so a caller seeding functions may want narrow text only.
     """
     mask = bytearray(len(blob))
     run = 0
@@ -233,7 +235,7 @@ def literal_mask(blob, minimum=4):
         run = 0
 
     index = 0                                                  # UTF-16LE cells
-    while index + 1 < len(blob):
+    while wide and index + 1 < len(blob):
         if printable(blob[index]) and blob[index + 1] == 0:
             end = index
             while (end + 1 < len(blob) and printable(blob[end])
