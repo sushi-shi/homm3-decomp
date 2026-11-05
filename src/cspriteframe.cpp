@@ -913,6 +913,9 @@ inline void CSpriteFrame::Clip(int& sx, int& sy, int& sw, int& sh,
 // row loop as one enclosing lifetime: lineDst advances directly by dpitch.
 // Loki's packet-reading loop keeps code/count decoding inside the skip loop
 // and exits when the requested source column lies in the current run.
+// Every run holds at least one pixel, and the renderers copy runs with
+// `do ... while (--count)`: retail has no entry test, and a for/while form
+// adds one (2026-11-05: eight renderers fall from 100% to 78-98%).
 VA(0x0047c570, 0x465)
 DC_ADDRESS(0x075810, 0x310)
 MAC_ADDRESS(0x08b710, 0x430)  // unique PC/DC renderer identity; retail byte verdict

@@ -7291,13 +7291,13 @@ void game::setWeeklyRecruits(int playerPos)
 
         m_heroAvailability[heroId] = 64;
         newHero = getHero(heroId);
-        backpackSlot = HERO_BACKPACK_CAPACITY - 1;
-        do {
+        backpackSlot = HERO_BACKPACK_CAPACITY;
+        while (backpackSlot--) {
             artifact = newHero->getBackpack(backpackSlot);
             if (artifact.m_artifactId != -1
                 && newHero->equipArtifact(artifact, -1))
                 newHero->removeBackpackArtifact(backpackSlot);
-        } while (backpackSlot--);
+        }
 
         newHero->m_mana = static_cast<short>(newHero->getMaxMana());
         setRandomHeroArmies(heroId, 0, 0);

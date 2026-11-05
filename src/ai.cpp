@@ -2128,8 +2128,8 @@ void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
         long directions = currentArmy->getMultiHeadDirections(hex, target,
                                                                   enemyHex);
         long hit = 0;
-        long direction = 7;
-        do {
+        long direction = 8;
+        while (direction-- > 0) {
             if (!(directions & (1 << direction)))
                 continue;
             long adjacent = currentArmy->getAdjacentHex(hex, direction);
@@ -2145,7 +2145,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
                 continue;
             hit |= bit;
             simulateSimpleAttack(currentArmy, victim, 0, 0, 0);
-        } while (direction-- > 0);
+        }
         return;
     }
 

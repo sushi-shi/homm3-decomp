@@ -1407,10 +1407,8 @@ void hero::updateSpellList()
 {
     std::copy(m_inSpellbook, m_inSpellbook + NUM_SPELLS, m_availableSpells);
 
-    int remaining = 19;
-    const type_artifact* slot = m_equipped;
-    do {
-        type_artifact current = *slot;
+    for (int slot = 0; slot < 19; ++slot) {
+        type_artifact current = m_equipped[slot];
         int artifactId = current.m_artifactId;
         long extra = current.m_extra;
         if (artifactId != ARTIFACT_NONE) {
@@ -1442,8 +1440,7 @@ void hero::updateSpellList()
                 }
             }
         }
-        slot++;
-    } while (--remaining);
+    }
 }
 
 // Original: THeroScreenWindow::HeroMessageUpdate; hero.cpp:1594

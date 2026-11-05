@@ -1424,12 +1424,9 @@ VA(0x00571800, 0x3D)
 MAC_ADDRESS(0x1680f4, 0x94)  // anchor-vtable
 void type_resource_quest::takePayment(hero* currentHero)
 {
-    int* questResource = m_resources;
     long* playerResource = g_game->m_players[currentHero->m_owner].m_resources;
-    int count = 7;
-    do {
-        *playerResource++ -= *questResource++;
-    } while (--count);
+    for (int i = 0; i < 7; ++i)
+        playerResource[i] -= m_resources[i];
 }
 
 VA(0x00571840, 0x29D)

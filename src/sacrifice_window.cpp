@@ -1529,11 +1529,9 @@ int type_sacrifice_window::allCreatures(message& msg)
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
             static_cast<type_sacrifice_window*>(msg.m_window);
-        long slot = armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
-        do {
-            window->setCreatureSacrifice(
-                slot, window->getMaxAmount(slot));
-        } while (slot--);
+        long slot = armyGroup::ARMY_GROUP_SLOT_COUNT;
+        while (slot--)
+            window->setCreatureSacrifice(slot, window->getMaxAmount(slot));
         window->m_creatureSlider->setState(
             window->m_creatureSlider->getMaximum() - 1);
         window->updateExperience();

@@ -2454,10 +2454,7 @@ army* combatManager::findResurrectionTarget(int side, int hex,
     }
     if (cell.m_attributes & hexcell::blocked)
         return 0;
-    int i = cell.m_bodiesInHex - 1;
-    if (i < 0)
-        return 0;
-    do {
+    for (int i = cell.m_bodiesInHex - 1; i >= 0; --i) {
         army* corpse = &m_armies[cell.m_deadArmySide[i]]
                               [cell.m_deadArmySlot[i]];
         if (cell.m_deadArmySide[i] != side)
@@ -2479,7 +2476,7 @@ army* combatManager::findResurrectionTarget(int side, int hex,
         if (validSpellTargetArmy(SPELL_RESURRECTION, side, corpse, 1,
                                  creatureSpell))
             return corpse;
-    } while (--i >= 0);
+    }
     return 0;
 }
 
@@ -2545,10 +2542,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
     }
     if (cell->m_attributes & hexcell::blocked)
         return 0;
-    int i = cell->m_bodiesInHex - 1;
-    if (i < 0)
-        return 0;
-    do {
+    for (int i = cell->m_bodiesInHex - 1; i >= 0; --i) {
         army* corpse = &m_armies[cell->m_deadArmySide[i]]
                               [cell->m_deadArmySlot[i]];
         if (cell->m_deadArmySide[i] != side)
@@ -2569,7 +2563,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
         }
         if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, corpse, 1, 0))
             return corpse;
-    } while (--i >= 0);
+    }
     return 0;
 }
 
@@ -4460,8 +4454,7 @@ void combatManager::earthquake(int level)
         m_saveScreenPostGrid->Grab(g_windowManager->m_screenBitmap, 0, 0);
         const int shakeDelay = static_cast<int>(
             combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 15.0f);
-        int pass = 3;
-        do {
+        for (int pass = 0; pass < 3; ++pass) {
             for (int step = 0; step < 15; step++) {
                 unsigned long shakeTil = GameTime::get() + shakeDelay;
                 pollSound();
@@ -4472,7 +4465,7 @@ void combatManager::earthquake(int level)
                 updateCombatArea();
                 GameTime::delayTil(shakeTil);
             }
-        } while (--pass);
+        }
         m_backgroundDrawn = 0;
         drawFrame(1, 0, 0, 0, 1, 0);
     }

@@ -119,8 +119,7 @@ unsigned char initializeCreatureBankTraits()
         traits->m_name = resource[0];
 
         type_creature_bank_level* level = traits->m_levels;
-        int levelsLeft = CREATURE_BANK_LEVEL_COUNT;
-        do {
+        for (int levelIndex = 0; levelIndex < CREATURE_BANK_LEVEL_COUNT; ++levelIndex) {
             level->m_guards.initialize();
             for (int slot = 0; slot < CREATURE_BANK_GUARD_TYPE_COUNT + 1; ++slot) {
                 if (guardTypes[bank][slot] == CREATURE_NONE)
@@ -133,7 +132,7 @@ unsigned char initializeCreatureBankTraits()
 
             ++row;
             ++level;
-        } while (--levelsLeft);
+        }
 
     }
 

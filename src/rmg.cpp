@@ -10725,8 +10725,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     }
 
     generatedHumanTowns -= m_humanPlayerCount;
-    int reversePlayer = 7;
-    do {
+    int reversePlayer = 8;
+    while (reversePlayer--) {
         if (canBeHuman[reversePlayer]
             && !m_fixedHumanPlayers[reversePlayer]
             && generatedHumanTowns > 0) {
@@ -10734,7 +10734,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             canBeHuman[reversePlayer] = 0;
             --generatedHumanTowns;
         }
-    } while (reversePlayer-- != 0);
+    }
 
     m_computerPlayerCount = m_humanPlayerCount = 0;
 #if defined(HOMM3_RMG_HOTFIX)
