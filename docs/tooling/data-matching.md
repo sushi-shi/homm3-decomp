@@ -32,9 +32,11 @@ it does not own every byte up to the next address. Parse failures, extern-only
 claims, ambiguous identities and overlaps remain explicit coverage gaps.
 
 Header-defined static objects can carry address metadata in an analysis-only
-`DATA` extern redeclaration. Keep that redeclaration under
-`__clang__ || HOMM3_SOURCE_OWNERSHIP`: VC6 can emit a second initializer even
-for an extern redeclaration after the definition. Clang ignores the late
+`DATA` extern redeclaration. Keep that redeclaration under `__clang__`:
+VC6 can emit a second initializer even for an extern redeclaration after the
+definition. The label pass parses with Clang, while the source-ownership
+parse, which undefines `__clang__`, inventories functions and needs no data
+metadata; a game TU never tests the private `HOMM3_SOURCE_OWNERSHIP` define. Clang ignores the late
 `annotate` attribute, so extraction reads a leading `DATA(...)` inside the
 typed redeclaration's own source range. It does not attach nearby comments
 or infer a missing type. The campaign `<iostream>` Init/_Winit objects use

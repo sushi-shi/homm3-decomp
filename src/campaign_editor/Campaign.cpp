@@ -24,8 +24,9 @@ VA_COMPGEN(0x00410860, 0xa, STATIC_CTOR, _Wios_init)
 
 // Address metadata for the objects defined in the pinned <iostream> header.
 // VC6 must see only that definition: even an extern redeclaration makes it
-// emit another constructor. Clang reads these DATA annotations for labels.
-#if defined(__clang__) || defined(HOMM3_SOURCE_OWNERSHIP)
+// emit a second constructor for each object. This is analysis metadata, not
+// a recovered declaration; Clang's label pass reads these DATA annotations.
+#ifdef __clang__
 namespace std {
 DATA(0x004c6f4d) extern ios_base::Init _Ios_init;
 DATA(0x004c6f4c) extern _Winit _Wios_init;
