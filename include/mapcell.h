@@ -24,26 +24,16 @@ class CObject;
 
 #include "adventureobjecttype.h"
 
-// The save-version <25 views used by mapcell.cpp's retail-only compatibility
-// pass. The legacy layouts are published by the Dreamcast CodeView record;
-// the current layouts are fixed by retail's seven conversion arms. They are
-// canonical declarations even though only mapcell.obj converts serialized
-// legacy dwords.
+// The save-version <25 extra-info layouts read by mapcell.cpp's retail-only
+// compatibility pass. They are published by the Dreamcast CodeView record;
+// the pass writes the converted fields through NewmapCell's current typed
+// extra-info members.
 struct LegacyArtifactInfo {
 public:
     signed long m_price : 4;
     signed long m_guard : 8;
     signed long m_resourcePrice : 4;
     unsigned long m_guardQty : 15;
-    unsigned long m_custom : 1;
-};
-
-struct CurrentArtifactInfo {
-public:
-    signed long m_price : 4;
-    signed long m_guard : 9;
-    signed long m_resourcePrice : 4;
-    unsigned long m_guardQty : 14;
     unsigned long m_custom : 1;
 };
 
@@ -94,17 +84,6 @@ public:
     unsigned long m_tail : 5;
 };
 
-struct CurrentUpgradeWagonInfo {
-public:
-    unsigned long m_resourceAmount : 5;
-    unsigned long m_visitedBits : 8;
-    unsigned long m_full : 1;
-    unsigned long m_hasArtifact : 1;
-    signed long m_artifact : 10;
-    signed long m_resource : 4;
-    unsigned long m_tail : 3;
-};
-
 struct LegacyTombInfo {
 public:
     unsigned long m_full : 1;
@@ -112,13 +91,6 @@ public:
     unsigned long m_visitedBits : 8;
     signed long m_artifact : 8;
     unsigned long m_tail : 11;
-};
-
-struct CurrentVisitedInfo {
-public:
-    unsigned long m_head : 5;
-    unsigned long m_visitedBits : 8;
-    unsigned long m_tail : 19;
 };
 
 struct ShipyardInfo {
@@ -1078,7 +1050,7 @@ SIZE(MonsterData, 0x30);
 // it finishes, together with the save version, and it returns at once unless
 // that version is below 25; older saves go through a seven-arm jump table on
 // the cell's object type that repacks extraInfo's bitfields into their current
-// positions. The body is enrolled as a documented compiler wall.
+// positions.
 
 // A free function, so /Gr makes it __fastcall - which is what retail emits:
 // the cell in ECX, the save version in EDX.

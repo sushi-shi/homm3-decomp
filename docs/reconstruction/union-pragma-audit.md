@@ -54,6 +54,7 @@ lifetimes and TU state still need recovery before removing those dependencies.
 | Marketplace artifact state | `TMarketArtifactList` byte/enum/integer pointer views | DC `DoBlackMarket` takes `TArtifact*`; both actual producers already own seven-element `TArtifact` arrays. Correct the entry signature, pass `TBlackMarket::m_artifacts`, and use one native pointer throughout. All five header consumers preserve their whole raw COFF section bytes, function locations and relocation destinations under the evidenced signature rename. |
 | `NewfullMap::readObjectType` | Full-width integer/enum `convertedType` | Read the four-byte wire value into its native enum local and commit only after the short-read guard. This is a Complete ownership hypothesis, not the DC `int_buffer` spelling. The diagnostic queries the committed record, positively supported by DC row 3619. Only 18 stack-displacement bytes change; the function retains 99.9633% and all other mapcell functions are byte-identical. |
 | `initializeCreatureBankTraits` | Reward-table `creatureTypeFromInt` | DC proves both tables are mutable function-static `TCreatureType` arrays owned by this loader. Restore those owners, the enum's consumed names and the direct enum assignment. All 66 emitted dwords match writable retail data; the reader's canonical static helper also lifts the loader from 89.4550% to 97.5355%. |
+| `upgradeCellExtraInfo` | `CurrentUpgradeExtraInfo` overlay of the cell and its `CurrentArtifactInfo` / `CurrentUpgradeWagonInfo` / `CurrentVisitedInfo` views | Retail's seven conversion arms write the same bit positions as NewmapCell's typed extra-info members. Writing through `m_artifactInfo`, `m_wagonInfo`, `m_cellVisitedInfo` and the other arms, after snapshotting the legacy dword, reaches 100%. |
 
 The puzzle control is instructive: flattening row and piece into one short-array
 index scored 96.4516% / 96.6598%. A 36-state family of actual pointer/value
@@ -70,8 +71,8 @@ pins, alternate declarations or dummy operations were introduced.
 | Enum/raw views of record fields | 3 | Migrate readers and writers together before removing |
 | Pointer adapters/views | 8 | Two intentional ABI views; six adapters requiring owner/call-boundary recovery |
 | Numeric bit/width views | 7 | Intentional representations |
-| Tagged, packed or external-layout unions | 15 | Preserve actual shared-storage representations |
-| **Total** | **63** | **24 intentional representations; 39 reconstruction adapters/workarounds** |
+| Tagged, packed or external-layout unions | 14 | Preserve actual shared-storage representations |
+| **Total** | **62** | **23 intentional representations; 39 reconstruction adapters/workarounds** |
 
 The 30 scalar adapters are accounted for below. A local definition with two
 declarators (for example `building, bestBuilding`) counts once. Each connects
@@ -106,7 +107,7 @@ admission a blanket waiver for every integer-to-enum conversion. The next step
 is canonical ownership and real input-domain recovery, preserving the attested
 public ABI rather than changing parameter types solely to satisfy callers.
 
-The other 32 remaining definitions are exhaustively grouped here. The later
+The other 31 remaining definitions are exhaustively grouped here. The later
 byte-ownership check removed `TBlendMask`: retail's `s_div2mask` is a two-byte
 unsigned short at 0x6968a4, followed by the distinct RLE code byte at 0x6968a6.
 The previous four-byte union overlapped that byte. The natural declaration
@@ -122,7 +123,7 @@ retail reads do not establish a four-byte allocation.
 | Local pointer payloads: `advmgr::drawRolloverText`, two hero-screen portrait sends, `swapmgr::textPointerPayload` | 4 | Current retained broadcast overload takes an integer payload. Recover its real call/expansion decision before switching to the message-pointer overload; do not invent a text overload solely to hide the conversion. |
 | `TFloatLongBits` / `TDoubleLongBits` in bitmap16 and palette; the two `viewwrld::ftol` locals | 6 | Actual float/double bit reinterpretation and low-word extraction for the magic-constant conversion. Numeric casts are not equivalent. Keep the representation unless an equally evidenced implementation replaces it. |
 | DirectPlay `DPNAME`, `DPSESSIONDESC2`, `DPCHAT` narrow/wide string slots | 5 | External ABI alternatives occupy the same fields. |
-| `ExtraInfoUnion`, CObject extra-info, NewmapCell extra-info, `LegacyUpgradeExtraInfo`, `CurrentUpgradeExtraInfo` | 5 | Tagged map-object payloads and legacy/current serialized bit layouts. |
+| `ExtraInfoUnion`, CObject extra-info, NewmapCell extra-info, `LegacyUpgradeExtraInfo` | 4 | Tagged map-object payloads and the legacy serialized bit layouts. |
 | NewmapCell flags and TObjectCell packed X/Y offset byte | 2 | Real bitfield/raw views of the same allocation units. |
 | Hero-specific ability payload, seer reward payload, palette array/object view | 3 | Kind-dependent payloads and an actual common backing representation. |
 
