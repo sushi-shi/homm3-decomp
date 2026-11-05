@@ -1675,8 +1675,13 @@ static unsigned char doCampaignWindow()
 // E:\gamedcs\kb.cpp:1988. Complete retains this static helper out of line
 // at 0x4f0490. Retail independently proves the modal object's 0x1970 size,
 // the cancel/okay pair, the map-header refresh, and the final boolean.
-// An explicit empty CANCEL case plus OK case scores 94.92%: VC6 drops the
-// empty case and emits cmp, where retail keeps sub/je/dec/jne.
+// DC 2003 (CANCEL test, then OK test, shared return at 2032) and Mac's
+// 0x7802 compare tree support a switch with an empty CANCEL arm. That switch
+// scores 94.92%: VC6 drops the empty case and emits cmp, where retail keeps
+// sub/je/dec/jne. Measured 2026-11-05: OK first, an explicit default, a
+// switch local or braces are all 94.92%; switching on dialogReturn - CANCEL
+// scores 98.58%, and if/else-if chains 98.30%. Only a goto from the CANCEL
+// arm to a label after the switch keeps the case (100%); it is not adopted.
 VA(0x004f0490, 0xFB)
 DC_ADDRESS(0x0e1630, 0x110)
 MAC_ADDRESS(0x11171c, 0xec)
@@ -1839,27 +1844,14 @@ static int g_useWaveout;
 // `/NWCGRAIL` unlocks the developer menu set EarlySetup loads at the end.
 // Every switch checks the characters it needs are still inside the string
 // before reading them. The return is unconditionally 1.
-// Residual (99.63%): one encoding choice - retail zeroes the gbMPlayer
-// BYTE with an immediate (`mov byte ptr [mem], 0`) while our compile
-// spends the already-zeroed EBX on it (`mov byte ptr [mem], bl`), one
-// byte shorter. Everything else - blocks, branches, calls and every
-// other store - is identical. Store position is not the handle:
-// measured 2026-09-06, `gbMPlayer = 0;` moved to the head of the run is
-// byte-flat at 99.6273 and moved to its foot is 99.5983. Restoring the
-// Dreamcast-proven `bool` declaration (and spelling the value `false`) also
-// leaves this one-byte encoding choice unchanged. Starting showUsage at the
-// scan instead of entry introduces a second zeroing move (98.29%); making
-// that local bool changes register assignments (99.47%). Neither reproduces
-// the native register use, so the entry declaration remains.
-// The DC/Mac reset order, copying the default name before the resets, and
-// their combination also fail to close it (four source states, three objects).
-// The register diagnostic's 42 catalog probes find no closer encoding.
+// showUsage is declared with the parser locals and cleared in the reset
+// sequence before the scan.
 VA(0x004f0690, 0x238)
 DC_ADDRESS(0x0e1990, 0x1fe)
 MAC_ADDRESS(0x111b1c, 0x84)  // anchor-caller (EarlySetup) + gcCommandLine walk
 int interpretCommandLine()
 {
-    int showUsage = 0;
+    int showUsage;
     int i;
     int length;
 
@@ -1870,6 +1862,7 @@ int interpretCommandLine()
     g_debugLevel = 0;
     g_noSound = 0;
     g_limitPlayer = 0;
+    showUsage = 0;
     strcpy(g_mapName, (*g_generalText)[GENERAL_TEXT_DEFAULT_MAP_FILENAME]);
     length = strlen(g_commandLine);
     strupr(g_commandLine);
