@@ -1349,17 +1349,10 @@ TCampaignBrief::ScenarioStruct::~ScenarioStruct()
 // placement x to -1, and the availability table follows - the new id takes
 // the record's owner, the old one goes back to the tavern pool. Name
 // provisional.
-// 2026-09-07: 98.4901 -> 99.9509 by reading setup.m_owner directly in the
-// GetNewHeroId call; the prior named int owner rotated EAX/ECX/EDX throughout
-// the copy. heroClass remains a named THeroClass because that fixes its
-// evaluation before the direct owner read. All 38 blocks, 20 branches and 5
-// calls agree. The only remaining code delta exchanges the compiler copy's
-// two stack homes: retail puts setup at [ebp-0x14] and the source/destination
-// delta at [ebp-0x10], while this compile does the reverse. Rejected controls:
-// pointer versus reference and function-scope heroClass/newHeroId are
-// byte-flat; binding setup after the guard falls to 97.55; signed-char owner
-// scored 94.62, unsigned-char owner 97.41, explicit operator= and naming the
-// destination before the copy 98.46. Do not manufacture a spill carrier.
+// setup.m_owner is read directly in the getNewHeroId call after the named
+// heroClass. The new slot is bound first and receives a copy of the indexed
+// original slot; Mac 0x942cc..0x94484 likewise forms the new slot's address
+// once and uses it for the copy and every later store.
 // The major recovery still depends on game.h's HeroExtra pads not being
 // members: retail's generated assignment skips every one of them.
 VA(0x00486110, 0x32F)
@@ -1377,8 +1370,8 @@ void game::rehomeCampaignHeroSetup(int heroId)
         return;
     }
 
-    m_heroSetup[newHeroId] = setup;
     HeroExtra& newSetup = m_heroSetup[newHeroId];
+    newSetup = m_heroSetup[heroId];
     newSetup.m_id = newHeroId;
     setup.m_location.m_x = -1;
     m_heroAvailability[newHeroId] = setup.m_owner;
@@ -2742,24 +2735,17 @@ bool SCampaign::campaignComplete()
 
 // Mac 0x986e8..0x98798 expands getHero for the player and garrison lists;
 // 0x987c8..0x988a4 performs the same hero lookup with five constant IDs.
-// Keep those canonical accessor calls too. VC6 folds their constant guards
-// and restores the surrounding vector temporary/insert decisions, raising
-// 85.8314 -> 99.4789% in a reproduced two-state family without MAX losses.
-// Starting the score counter at its loop, as native 0x98584 does, restores
-// the remaining store order and reaches 99.9847%; an entry initializer is
-// premature. Both late-declaration forms reproduce the same object.
+// Keep those canonical accessor calls too; VC6 folds their constant guards.
+// The score counter starts at its loop, as native 0x98584 does.
 // Both empty pool vectors have separate full-expression lifetimes at native
 // 0x98520..0x9857c; retain their push_back calls and temporary destruction.
 // The entry's current-map score lookup at 0x984a0..0x984b0 is the canonical
 // getCurrentScenario operation; keep that accessor as well.
-// The remaining difference swaps the score loop's index/byte-offset stack
-// homes. Signed index and late bare declaration are flat; naming the score
-// row loses ground. The register model's heroId/pool declaration swap also
-// worsens the residual, so retain the native acquisition order.
-// Every guarded statement is braced. Braces add front-end cost without code:
-// the garrison push_back's insert wrapper needs a caller cb of at least
-// 1042 (1039 unbraced) to expand as retail, and getScore's later size() at
-// least 1050, once that insert spends its share (99.78 -> 99.98%).
+// One signed index serves the score, excluded-hero, player-hero and town
+// loops. Retain the native heroId/pool acquisition order.
+// Every guarded statement is braced; the unbraced spelling leaves the
+// garrison push_back's insert wrapper and getScore's later size() out of
+// line, unlike retail.
 VA(0x00489820, 0x600)
 MAC_ADDRESS(0x098484, 0x4b0)  // anchor-caller(oldmain end-of-campaign arm), retail-only
 void SCampaign::completeCurrentMap(
@@ -2784,16 +2770,17 @@ void SCampaign::completeCurrentMap(
 
     m_crossoverArrayIndex = scenario.m_index;
 
-    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
-        if (m_mapScores[i].m_completed
-            && m_mapScores[i].m_completeOrder > scenario.m_completeOrder) {
-            scenario.m_completeOrder = m_mapScores[i].m_completeOrder;
+    int index;
+    for (index = 0; index < m_mapScores.size(); ++index) {
+        if (m_mapScores[index].m_completed
+            && m_mapScores[index].m_completeOrder > scenario.m_completeOrder) {
+            scenario.m_completeOrder = m_mapScores[index].m_completeOrder;
         }
     }
     ++scenario.m_completeOrder;
 
-    for (unsigned int excluded = 0; excluded < m_assignedCarryover.size(); ++excluded) {
-        int heroId = m_assignedCarryover[excluded];
+    for (index = 0; index < m_assignedCarryover.size(); ++index) {
+        int heroId = m_assignedCarryover[index];
         int pool = m_carryOverHeroes.size();
         while (pool--) {
             std::vector<hero>& pooled = getCrossoverHeroes(pool);
@@ -2820,12 +2807,12 @@ void SCampaign::completeCurrentMap(
     }
 
     playerData* player = &g_game->m_players[gamePos];
-    for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
-        crossover.push_back(*g_game->getHero(player->m_heroes[heroIndex]));
+    for (index = 0; index < player->m_numHeroes; ++index) {
+        crossover.push_back(*g_game->getHero(player->m_heroes[index]));
     }
 
-    for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
-        town* thisTown = g_game->getTown(player->m_townIds[townIndex]);
+    for (index = 0; index < player->m_numTowns; ++index) {
+        town* thisTown = g_game->getTown(player->m_townIds[index]);
         if (thisTown->m_garrisonHeroId >= 0) {
             crossover.push_back(*g_game->getHero(thisTown->m_garrisonHeroId));
         }
