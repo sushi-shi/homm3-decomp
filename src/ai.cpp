@@ -16,6 +16,7 @@
 #include "prefs.h"
 #include "sample.h"
 #include "soundmgr.h"
+#include "mashup.h"
 
 // THE HEAD OF ai.obj, 0x41e190..0x41eac0 (2026-09-05). The three rows
 // between the compiland's ten terrain.h bitset initializers
@@ -2484,6 +2485,11 @@ MAC_ADDRESS(0x0253d4, 0x170)
 unsigned char combatManager::doSpellAI()
 {
     m_nextAction = 0;
+    // Mashup: the HoMM2 side's spells come from HoMM2's own spell AI.
+    if (mashupIsH2Side(m_currentSide))
+        return 0;
+    if (mashupScriptedH3Cast(this))
+        return 1;
     if (m_spellsCast[m_currentSide])
         return 0;
     if (m_creaturePlacement)
@@ -2494,7 +2500,8 @@ unsigned char combatManager::doSpellAI()
         && g_game->isHuman(m_playerIds[m_currentSide])
         && !((m_autoCombatOn || g_goSolo)
              && g_config.m_combatAutoSpells)
-        && !isQuickCombat())
+        && !isQuickCombat()
+        && !g_mashupMode)
         return 0;
     long side = m_currentSide;
     if (!canCastSpells(side, 1))

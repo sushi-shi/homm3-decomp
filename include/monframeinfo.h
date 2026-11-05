@@ -1,6 +1,7 @@
 #ifndef HOMM3_MONFRAMEINFO_H
 #define HOMM3_MONFRAMEINFO_H
 
+#include "creaturecapacity.h"
 #include "va.h"
 
 // PROVEN layout (retail parser 0x50ca00): 0x54 stride byte-derived from
@@ -25,6 +26,9 @@ SIZE(SMonFrameInfo, 84);
 // The DC bound is 122 (its RoE-era roster); retail's bss extent
 // 0x6998e0..0x69ca18 (mousemgr's latches) is exactly 150 * 0x54 -
 // Complete's creature capacity - so the retail bound is 150.
-extern const SMonFrameInfo (&g_monFrameInfo)[150];
+extern const SMonFrameInfo (&g_monFrameInfo)[CREATURE_TYPE_CAPACITY];
+
+// Mashup: writable view used to register the HoMM2 creatures at startup.
+SMonFrameInfo& mutableMonFrameInfo(int id);
 
 #endif  /* HOMM3_MONFRAMEINFO_H */

@@ -34,6 +34,7 @@
 #include "textresource.h"
 #include "wingraph.h"
 #include "winmgr.h"
+#include "mashup.h"
 
 // SpellCastWorkChance's board-wide ban: it refuses every spell of level
 // 3 and up the moment EITHER combat hero wields artifact 0x53, walking
@@ -690,6 +691,8 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         ? 0 : m_heroes[m_currentSide];
     hero* const otherHero = m_heroes[otherSide];
     const SSpellTraits* traits = &g_spellTraits[spellId];
+    if (!isMonsterSpell)
+        mashupNoteHeroCast(castingHero, spellId);  // mashup: spell rotation
 
     TSkillMastery mastery;
     if (!isMonsterSpell) {
@@ -756,23 +759,15 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // tests the already-nonzero value against SPELL_CASTER_ARTIFACT.
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
         if (m_currentSide == 0)
-            castX = g_combatHeroSprites[
-                g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                + g_heroTraits[castingHero->m_id].m_sex].m_castX - 43;
+            castX = combatHeroSprite(castingHero).m_castX - 43;
         else
             castX = m_creatureSprites[1]->getWidth()
-                - g_combatHeroSprites[
-                    g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                    + g_heroTraits[castingHero->m_id].m_sex].m_castX + 693;
-        castY = g_combatHeroSprites[
-            g_heroClasses[castingHero->m_heroClass].m_townType * 2
-            + g_heroTraits[castingHero->m_id].m_sex].m_castY - 19;
+                - combatHeroSprite(castingHero).m_castX + 693;
+        castY = combatHeroSprite(castingHero).m_castY - 19;
 
         m_cmbtHeroFrameType[m_currentSide] = 4;
         for (int frame = 0;
-             frame < g_combatHeroSprites[
-                 g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                 + g_heroTraits[castingHero->m_id].m_sex].m_castFrame; frame++) {
+             frame < combatHeroSprite(castingHero).m_castFrame; frame++) {
             m_cmbtHeroFrameIndex[m_currentSide] = frame;
             drawFrame(1, 0, 0, 100, 1, 1);
         }
@@ -1644,9 +1639,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // update in this order.
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
         int nframes = m_creatureSprites[m_currentSide]->getNumFrames(4);
-        for (int frame = g_combatHeroSprites[
-                 g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                 + g_heroTraits[castingHero->m_id].m_sex].m_castFrame;
+        for (int frame = combatHeroSprite(castingHero).m_castFrame;
              frame < nframes; ++frame) {
             m_cmbtHeroFrameIndex[m_currentSide] = frame;
             drawFrame(1, 0, 0, 100, 1, 1);
@@ -4831,6 +4824,8 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
     const SSpellTraits* traits = &g_spellTraits[spell];
 
     if (m_magicTerrain == MAGIC_TERRAIN_CURSED_GROUND && traits->m_level > 1)
+        return 0.0f;
+    if (g_mashupMode && mashupIsH2SpellImmune(creature))
         return 0.0f;
     if (traits->m_level > 2) {
         if ((m_heroes[0]

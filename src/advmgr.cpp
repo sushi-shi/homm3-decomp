@@ -54,6 +54,7 @@
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"
+#include "mashup.h"
 
 // DC name: suffix (char[20] in the Dreamcast build). Retail saveGame passes
 // 0x691268 to sprintf/strcat, and this TU's verified terrain-mask initializers
@@ -1293,6 +1294,12 @@ int advManager::main(message& msg)
         }
         g_game->nextPlayer();
         return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (mashupRunPendingBattle()) {
+        msg.m_id = MESSAGE_EXECUTIVE;
+        msg.m_codeX = EXECUTIVE_COMMAND_TERMINATE_LOOP;
+        return MESSAGE_DISPATCH_FORWARD;
     }
 
     if (g_foregroundApp)

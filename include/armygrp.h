@@ -1,6 +1,7 @@
 #ifndef HOMM3_ARMYGRP_H
 #define HOMM3_ARMYGRP_H
 
+#include "creaturecapacity.h"
 #include "va.h"
 
 #include "abstractfile.h"
@@ -702,7 +703,10 @@ const unsigned int g_ctaAlive = 0x10;
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
 // akCreatureTypeTraits (a const reference to the 150-entry array).
-extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
+extern const TCreatureTypeTraits (&g_creatureTypeTraits)[CREATURE_TYPE_CAPACITY];
+
+// Mashup: writable view used to register the HoMM2 creatures at startup.
+TCreatureTypeTraits& mutableCreatureTypeTraits(int id);
 
 // CreatureBackgroundNames: neutral first, then the nine town alignments.
 // Index with alignment + 1 so neutral alignment -1 selects the first entry.

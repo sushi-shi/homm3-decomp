@@ -270,7 +270,12 @@ public:
     int m_castY;
     int m_castFrame;
 };
-extern const TCombatHeroSprite g_combatHeroSprites[18];
+enum {
+    COMBAT_HERO_SPRITE_H2 = 18,     // mashup: the HoMM2 Knight, Necromancer, Warlock
+    COMBAT_HERO_SPRITE_COUNT = 21
+};
+extern const TCombatHeroSprite g_combatHeroSprites[COMBAT_HERO_SPRITE_COUNT];
+const TCombatHeroSprite& combatHeroSprite(const class hero* commander);
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -326,6 +331,8 @@ enum CombatHeroFrameType {
 };
 
 class combatManager : public baseManager {
+    friend struct MashupAccess;  // mashup.cpp
+
 public:
     // Original public CombatSpeedMod[3] (DC ?CombatSpeedMod@combatManager@@2QBMB).
     // Complete stores the three animation-speed factors at 0x63cf7c.
@@ -2019,6 +2026,15 @@ public:
     unsigned int m_flags;  // +0x8
 };
 SIZE(TSpellEffectTraits, 0xc);
+enum {
+    RETAIL_SPELL_EFFECT_TRAITS_COUNT = 83,
+    MASHUP_EFFECT_H2_GOOD_MORALE = 109,
+    MASHUP_EFFECT_H2_BAD_MORALE = 110,
+    MASHUP_EFFECT_H2_GOOD_LUCK = 111,
+    MASHUP_EFFECT_H2_BAD_LUCK = 112,
+    MASHUP_EFFECT_H2_LICH_CLOUD = 113,
+    SPELL_EFFECT_TRAITS_COUNT = 114  // + the mashup's HoMM2 effects
+};
 extern const TSpellEffectTraits g_spellEffectTraits[];
 
 // The moat's per-town base damage, at .rdata 0x63bd18 and indexed by

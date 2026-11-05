@@ -842,3 +842,13 @@ unit = "log"
 source = "src/log.cpp"
 flags = "game_o2_mt_gr_windows"
 compare = false
+
+[[unit]]
+unit = "mashup"
+source = "src/mashup.cpp"
+flags = "game_o2_mt_gr_windows"
+
+[[unit]]
+unit = "mashup_h2fx"
+source = "src/mashup_h2fx.cpp"
+flags = "game_o2_mt_gr_windows"

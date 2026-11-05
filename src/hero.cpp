@@ -49,6 +49,7 @@
 #include "town.h"
 #include "widget.h"
 #include "winmgr.h"
+#include "mashup.h"
 
 DATA(0x00698a88) type_artifact g_heroScreenDraggedArtifact;
 DATA(0x00698a94) int g_stablesMovementBonus;
@@ -2134,7 +2135,8 @@ void hero::checkLevel()
                     m_lastMagicSchoolLevel = m_level;
             }
 
-            if (!g_inSetup && m_owner >= 0 &&
+            // Mashup: no level-up dialogs; the AI picks as for any computer hero.
+            if (!g_inSetup && !g_mashupMode && m_owner >= 0 &&
                 g_game->isLocalHuman(m_owner)) {
                 launchSample("nwherolv.82m", -1, 3);
                 if (g_remoteOn)

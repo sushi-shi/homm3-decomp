@@ -1,4 +1,5 @@
 #include "va.h"
+#include "creaturecapacity.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +15,7 @@ namespace {
 // Original akCreatureTypeTraits references these 150 writable rows. Retail
 // initializers retain sprite/sample names and flags before crtraits.txt loads.
 DATA(0x006703b8)
-TCreatureTypeTraits g_creatureTypeTraitsStorage[150] = {
+TCreatureTypeTraits g_creatureTypeTraitsStorage[CREATURE_TYPE_CAPACITY] = {
     { TOWN_CASTLE, 0, "pike", "cpkman.def", 0x10, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { TOWN_CASTLE, 0, "halb", "chalbd.def", 0x10, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { TOWN_CASTLE, 1, "lcrs", "clcbow.def", 0x14, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -164,13 +165,32 @@ TCreatureTypeTraits g_creatureTypeTraitsStorage[150] = {
     { eTownNeutral, 4, "ball", "smbal.def", 0x31445, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { eTownNeutral, 0, "faid", "smtent.def", 0x20441, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { eTownNeutral, 0, "cart", "smcart.def", 0x20440, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    { eTownNeutral, 0, "", "", 0x20444, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { eTownNeutral, 0, "", "", 0x20444, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },    // Mashup: the HoMM2 Knight roster (ids 150..160). Stats, names and
+    // costs are filled from the HoMM2 tables by the mashup at startup; the
+    // sprites live in h2mash.lod and the sounds (prefix H2xx) in h2mash.snd,
+    // both converted from HEROES2.AGG.
+    { eTownNeutral, 0, "H2PS", "h2cpeas.def", 0x10, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { eTownNeutral, 1, "H2AR", "h2carchr.def", 0x14, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { eTownNeutral, 1, "H2AR", "h2crangr.def", 0x8014, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { eTownNeutral, 2, "H2PK", "h2cpike.def", 0x10, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { eTownNeutral, 2, "H2PK", "h2cvpike.def", 0x10, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { eTownNeutral, 3, "H2SW", "h2cswrd.def", 0x10, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { eTownNeutral, 3, "H2SW", "h2cmswrd.def", 0x10, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { eTownNeutral, 4, "H2CV", "h2ccavlr.def", 0x11, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { eTownNeutral, 4, "H2CV", "h2cchamp.def", 0x11, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { eTownNeutral, 5, "H2PL", "h2cpalad.def", 0x8010, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { eTownNeutral, 5, "H2PL", "h2ccrusd.def", 0x8010, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
 }
 
 DATA(0x006747b0)
-const TCreatureTypeTraits (&g_creatureTypeTraits)[150] = g_creatureTypeTraitsStorage;
+const TCreatureTypeTraits (&g_creatureTypeTraits)[CREATURE_TYPE_CAPACITY] = g_creatureTypeTraitsStorage;
+
+TCreatureTypeTraits& mutableCreatureTypeTraits(int id)
+{
+    return g_creatureTypeTraitsStorage[id];
+}
 
 void initializeCreatureTypeTraits(int id,
     const std::vector<char*, std::allocator<char*> >& values);
@@ -356,14 +376,14 @@ void initializeCreatureTypeTraits(int id,
     DATA_COMPGEN_GUARD(0x00696640, creatureTypeStringsGuard,
                        creatureTypeNames)
     DATA(0x006963e8)
-    static TAutoStrPtr creatureTypeNames[150];
+    static TAutoStrPtr creatureTypeNames[CREATURE_TYPE_CAPACITY];
 
     creatureTypeNames[id].set(new char[strlen(values[0]) + 1]);
     strcpy(creatureTypeNames[id].get(), values[0]);
     traits.m_name = creatureTypeNames[id].get();
 
     DATA(0x00696644)
-    static TAutoStrPtr creatureTypePluralNames[150];
+    static TAutoStrPtr creatureTypePluralNames[CREATURE_TYPE_CAPACITY];
 
     creatureTypePluralNames[id].set(new char[strlen(values[1]) + 1]);
     strcpy(creatureTypePluralNames[id].get(), values[1]);
@@ -392,7 +412,7 @@ void initializeCreatureTypeTraits(int id,
     traits.m_wanderingHigh = atoi(values[22]);
 
     DATA(0x00696190)
-    static TAutoStrPtr creatureTypeAbilities[150];
+    static TAutoStrPtr creatureTypeAbilities[CREATURE_TYPE_CAPACITY];
 
     creatureTypeAbilities[id].set(new char[strlen(values[23]) + 1]);
     strcpy(creatureTypeAbilities[id].get(), values[23]);

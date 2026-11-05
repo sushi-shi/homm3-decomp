@@ -11,6 +11,7 @@
 #include "resourcemanager.h"
 #include "terrain.h"
 #include "wingraph.h"
+#include "mashup.h"
 
 // SetPointer's re-entrancy latch - the byte immediately after the
 // timer latches, tested and set around the whole swap (name
@@ -523,6 +524,10 @@ DC_ADDRESS(0x0ff3e0, 0x68)
 MAC_ADDRESS(0x217a34, 0x88)
 void mouseManager::showPointer(bool force)
 {
+    // Mashup recordings (/MA): nobody uses the mouse, so the pointer never
+    // shows and stays out of the video.
+    if (g_mashupAutoClose)
+        return;
     TCSLock lock(&m_sectionMouse);
     if (force)
         m_hideCount = 1;

@@ -39,6 +39,7 @@ void saturateGraphics();
 // Complete adds an error-code output to Dreamcast's two-boolean form. The
 // sole retail caller passes an int*, and the catch handler stores through it.
 bool open(bool openSprites, bool openBitmaps, int* errorCode);
+bool addMashupArchives();  // mashup: opens h2mash.lod and h2mash.snd
 void close();
 void expunge();
 unsigned char report(const char* filename);

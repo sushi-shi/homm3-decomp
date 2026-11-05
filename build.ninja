@@ -1102,6 +1102,20 @@ build build/objdiff/base/log.obj: cl src/log.cpp | $
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = log
 build log: phony build/objdiff/base/log.obj
+build build/objdiff/base/mashup.obj: cl src/mashup.cpp | $
+    scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
+    scripts/homm3/core/compile_receipt.py config/units.toml $
+    config/project.toml
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
+  unit = mashup
+build mashup: phony build/objdiff/base/mashup.obj
+build build/objdiff/base/mashup_h2fx.obj: cl src/mashup_h2fx.cpp | $
+    scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
+    scripts/homm3/core/compile_receipt.py config/units.toml $
+    config/project.toml
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
+  unit = mashup_h2fx
+build mashup_h2fx: phony build/objdiff/base/mashup_h2fx.obj
 build build/mac/obj/adler32.o: mwcc vendor/zlib-1.1.3/adler32.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
@@ -2323,6 +2337,22 @@ build build/mac/obj/log.o: mwcc src/log.cpp | scripts/homm3/mac/cc_wrap.py $
     scripts/homm3/mac/object.py config/mac/units.toml
   unit = log
 build mac$:log: phony build/mac/obj/log.o
+build build/mac/obj/mashup.o: mwcc src/mashup.cpp | $
+    scripts/homm3/mac/cc_wrap.py config/units.toml $
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
+  unit = mashup
+build mac$:mashup: phony build/mac/obj/mashup.o
+build build/mac/obj/mashup_h2fx.o: mwcc src/mashup_h2fx.cpp | $
+    scripts/homm3/mac/cc_wrap.py config/units.toml $
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
+  unit = mashup_h2fx
+build mac$:mashup_h2fx: phony build/mac/obj/mashup_h2fx.o
 build mac-objects: phony build/mac/obj/adler32.o build/mac/obj/compress.o $
     build/mac/obj/crc32.o build/mac/obj/deflate.o build/mac/obj/gzio.o $
     build/mac/obj/infblock.o build/mac/obj/infcodes.o $
@@ -2393,7 +2423,8 @@ build mac-objects: phony build/mac/obj/adler32.o build/mac/obj/compress.o $
     build/mac/obj/campaign.o build/mac/obj/campaignmusic.o $
     build/mac/obj/tiles.o build/mac/obj/victor.o $
     build/mac/obj/victor_flip.o build/mac/obj/victor_loadpcx.o $
-    build/mac/obj/victor_pcx_kernels.o build/mac/obj/log.o
+    build/mac/obj/victor_pcx_kernels.o build/mac/obj/log.o $
+    build/mac/obj/mashup.o build/mac/obj/mashup_h2fx.o
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -2482,7 +2513,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
     build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
-    build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj
+    build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj $
+    build/objdiff/base/mashup.obj build/objdiff/base/mashup_h2fx.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -2571,7 +2603,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
     build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
-    build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj
+    build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj $
+    build/objdiff/base/mashup.obj build/objdiff/base/mashup_h2fx.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -2661,6 +2694,7 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
     build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
-    build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj | $
+    build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj $
+    build/objdiff/base/mashup.obj build/objdiff/base/mashup_h2fx.obj | $
     scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE

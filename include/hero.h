@@ -346,6 +346,8 @@ extern int g_stablesMovementBonus;
 // second claim on the same RVA is a fatal duplicate at delink time.
 
 class hero : public type_obscuring_object {
+    friend struct MashupAccess;  // mashup.cpp
+
 public:
     enum {
         CLASS_NAME_OVERRIDE_HERO_ID = 27,

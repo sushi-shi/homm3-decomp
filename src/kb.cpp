@@ -34,6 +34,7 @@
 #include "iconwdgt.h"
 #include "inputmgr.h"
 #include "kbwin.h"
+#include "mashup.h"
 #include "log.h"
 #include "mainmenu.h"
 #include "message.h"
@@ -1062,6 +1063,13 @@ int oldmain()
     g_windowManager->m_screenBitmap->fillRect(0, 0, 800, 600, 0);
     g_windowManager->updateScreen(0, 0, 800, 600);
 
+    if (g_mashupMode) {
+        g_mouseManager->showPointer(false);
+        mashupMain();
+        shutDown(0);
+        return 0;
+    }
+
     if (!g_lobbyLaunched) {
         g_mouseManager->hidePointer();
         if (g_showIntro || g_firstTimeThrough) {
@@ -1891,6 +1899,11 @@ int interpretCommandLine()
             case 'S':
                 if (i + 2 < length)
                     g_noSound = 1 - (g_commandLine[i + 2] - '0');
+                break;
+            case 'M':
+                g_mashupMode = 1;
+                if (i + 2 < length && toupper(g_commandLine[i + 2]) == 'A')
+                    g_mashupAutoClose = 1;
                 break;
             }
         }

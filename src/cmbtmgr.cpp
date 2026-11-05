@@ -53,6 +53,7 @@
 #include "viewarmywindow.h"
 #include "widget.h"
 #include "winmgr.h"
+#include "mashup.h"
 
 // Initial contents recovered from the pinned Complete image.
 DATA(0x0063cf7c) const float combatManager::s_combatSpeedMod[3] = { 1.0f, 0.6299999952316284f, 0.4000000059604645f };
@@ -89,7 +90,7 @@ DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[7][7] = {
     { 0, 1, 2, 4, 5, 6, 0 },
     { 0, 1, 2, 3, 4, 5, 6 }
 };
-DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[18] = {
+DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[COMBAT_HERO_SPRITE_COUNT] = {
     { "CH00.DEF", 92, 67, 5 },
     { "CH01.DEF", 94, 54, 5 },
     { "CH02.DEF", 102, 62, 5 },
@@ -107,8 +108,24 @@ DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[18] = {
     { "CH014.DEF", 99, 58, 5 },
     { "CH015.DEF", 95, 52, 5 },
     { "CH16.DEF", 99, 58, 5 },
-    { "CH17.DEF", 95, 52, 5 }
+    { "CH17.DEF", 95, 52, 5 },
+    // Mashup: the HoMM2 Knight, Necromancer and Warlock (h2mash.lod), cast
+    // point and release frame from HoMM2's own combat hero table.
+    { "H2CHERO.DEF", 96, 85, 3 },
+    { "H2CHERON.DEF", 96, 85, 3 },
+    { "H2CHEROW.DEF", 96, 85, 3 }
 };
+
+// Mashup: the HoMM2 hero has his own sprite; every other hero picks by
+// town and sex as in retail.
+const TCombatHeroSprite& combatHeroSprite(const hero* commander)
+{
+    if (mashupIsH2Hero(commander))
+        return g_combatHeroSprites[COMBAT_HERO_SPRITE_H2 + mashupH2CombatHeroSpriteOffset()];
+    return g_combatHeroSprites[
+        2 * g_heroClasses[commander->m_heroClass].m_townType
+        + g_heroTraits[commander->m_id].m_sex];
+}
 DATA(0x0063cf88) const combatManager::TArcherTraits combatManager::s_archerTraits[9] = {
     { static_cast<TCreatureType>(2) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, 780, 238, 648, 566, 596, 80, "plcbowx.def" },
     { CREATURE_WOOD_ELF, 786, 240, 625, 563, 595, 81, "pelfx.def" },
@@ -120,7 +137,7 @@ DATA(0x0063cf88) const combatManager::TArcherTraits combatManager::s_archerTrait
     { static_cast<TCreatureType>(100) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, 795, 230, 626, 575, 580, 85, "pplizax.def" },
     { CREATURE_STORM_ELEMENTAL, 783, 225, 636, 575, 595, 105, "cprgtix.def" }
 };
-DATA(0x00641e08) const TSpellEffectTraits g_spellEffectTraits[83] = {
+DATA(0x00641e08) const TSpellEffectTraits g_spellEffectTraits[SPELL_EFFECT_TRAITS_COUNT] = {
     { "C10spW.def", "Prayer", 256 },
     { "C11spA0.def", "Lightning_Bolt", 2 },
     { "C01spA0.def", "AirShield", 1 },
@@ -203,7 +220,41 @@ DATA(0x00641e08) const TSpellEffectTraits g_spellEffectTraits[83] = {
     { "sp12_.def", "Regenerate", 257 },
     { "c07spe0.def", "DeathStare", 1 },
     { "c0acid.def", "AcidBreath", 1 },
-    { "poof.def", "Poof", 0 }
+    { "poof.def", "Poof", 0 },
+    // Mashup: HoMM2 combat spell effects (h2mash.lod), from 83 on.
+    { "H2SE32.DEF", "", 1 },
+    { "H2SE33.DEF", "", 1 },
+    { "H2SE15.DEF", "", 1 },
+    { "H2SE01.DEF", "", 1 },
+    { "H2SE40.DEF", "", 257 },
+    { "H2SE24.DEF", "", 1 },
+    { "H2SE02.DEF", "", 1 },
+    { "H2SE28.DEF", "", 1 },
+    { "H2SE21.DEF", "", 2 },
+    { "H2SE30.DEF", "", 0 },
+    { "H2SE31.DEF", "", 0 },
+    { "H2SE29.DEF", "", 2 },
+    { "H2SE08.DEF", "", 1 },
+    { "H2SE06.DEF", "", 1 },
+    { "H2SE07.DEF", "", 1 },
+    { "H2SE22.DEF", "", 2 },
+    { "H2SE36.DEF", "", 1 },
+    { "H2SE35.DEF", "", 1 },
+    { "H2SE25.DEF", "", 2 },
+    { "H2SE26.DEF", "", 2 },
+    { "H2SE19.DEF", "", 1 },
+    { "H2SE34.DEF", "", 1 },
+    { "H2SE13.DEF", "", 1 },
+    { "H2SE27.DEF", "", 2 },
+    { "H2SE23.DEF", "", 259 },
+    { "H2SE20.DEF", "", 1 },
+    // Mashup: HoMM2 morale and luck (MASHUP_EFFECT_H2_*).
+    { "H2SEMRLG.DEF", "", 1 },
+    { "H2SEMRLB.DEF", "", 1 },
+    { "H2SELCKG.DEF", "", 2 },  // HoMM2's rainbow ends above the head
+    { "H2SELCKB.DEF", "", 1 },
+    // Mashup: the HoMM2 Lich's cloud (MASHUP_EFFECT_H2_LICH_CLOUD).
+    { "H2SELICH.DEF", "", 1 },
 };
 DATA(0x0063c7c8) const combatManager::TObstacleInfo combatManager::s_obstacleInfo[91] = {
     { 1, 0, 1, 2, 2, 1, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObDino1.def" },
@@ -861,9 +912,7 @@ void combatManager::loadIcons()
         m_cmbtHeroFrameIndex[side] = 0;
         if (m_heroes[side]) {
             m_creatureSprites[side] = ResourceManager::getSprite(
-                g_combatHeroSprites[
-                    2 * g_heroClasses[m_heroes[side]->m_heroClass].m_townType
-                    + g_heroTraits[m_heroes[side]->m_id].m_sex].m_defName);
+                combatHeroSprite(m_heroes[side]).m_defName);
             m_heroFlagSprites[side] = ResourceManager::getSprite(side == 0
                 ? DATA_COMPGEN(0x0066ff04, leftFlagSpriteName, "CmFlagL.def")
                 : DATA_COMPGEN(0x0066fef8, rightFlagSpriteName, "CmFlagR.def"));
@@ -964,7 +1013,8 @@ void combatManager::loadArmies(unsigned char isSurrounded)
         hero* combatHero = m_heroes[side];
         armyGroup* group = m_armyGroups[side];
         const unsigned char grouped =
-            combatHero && (combatHero->m_formation & 1) && m_sideIsAi[side];
+            combatHero && (combatHero->m_formation & 1)
+            && (m_sideIsAi[side] || g_mashupMode);  // mashup: AI sides too
         const int layout = group->getNumArmies() - 1;
         // Mac0x6ed50 initializes the placement counter after the layout call.
         // This order also restores Windows' known-zero comparison.
@@ -1602,10 +1652,15 @@ void combatManager::checkApplyGoodMorale(int group, int index)
     if (sRandom(1, 24) > stack->getMorale(1))
         return;
     stack->m_monInfo.m_attributes = (stack->m_monInfo.m_attributes & ~creatureDone) | creatureMorale;
+    if (g_mashupMode)
+        mashupLog("good morale: side %d %s (morale %d)", group, stack->getName(),
+                  stack->getMorale(1));
     if (!isQuickCombat()) {
-        SAMPLE2 sample = loadPlaySample(
-            DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
-        spellEffect(20, stack, 100, 0);
+        // Mashup: a HoMM2 stack shows HoMM2's morale.
+        bool h2 = mashupIsH2Creature(stack->m_creatureType);
+        SAMPLE2 sample = loadPlaySample(h2 ? "H2BGOODMRLE.wav"
+            : DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
+        spellEffect(h2 ? MASHUP_EFFECT_H2_GOOD_MORALE : 20, stack, 100, 0);
         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_MORALE_FORMAT),
             stack->getName());
         m_combatWindow->combatMessage(g_text, 1, 0);
@@ -1626,13 +1681,15 @@ int combatManager::checkApplyBadMorale(int group, int index)
             if (m_sideIsAi[group] || sRandom(1, 4) != 1) {
                 stack->m_monInfo.m_attributes |= creatureDone;
                 if (!isQuickCombat()) {
-                    SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
+                    // Mashup: a HoMM2 stack shows HoMM2's morale.
+                    bool h2 = mashupIsH2Creature(stack->m_creatureType);
+                    SAMPLE2 sample = loadPlaySample(h2 ? "H2BBADMRLE.wav" : DATA_COMPGEN(
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
                     sprintf(g_text,
                         g_generalText->getText(GENERAL_TEXT_BAD_MORALE_FORMAT),
                         stack->getName());
                     m_combatWindow->combatMessage(g_text, 1, 0);
-                    spellEffect(30, stack, 100, 1);
+                    spellEffect(h2 ? MASHUP_EFFECT_H2_BAD_MORALE : 30, stack, 100, 1);
                     waitEndSample(sample, -1);
                 }
                 return 1;
@@ -3755,6 +3812,7 @@ void combatManager::updateArmyLuckAndMorale()
                             m_hasAngelicAlliance[ownerSide]);
         }
     }
+    mashupUpdateMoraleLuck(this);
 }
 
 // DC cmbtmgr.cpp:4584 names const SMonFrameInfo& sMonFrameInfo; retail

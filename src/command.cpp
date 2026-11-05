@@ -8,6 +8,7 @@
 #include "command.h"
 
 #include "cmbtmgr.h"
+#include "mashup.h"
 #include "combatcontrolsubwindow.h"
 #include "combatoptionswindow.h"
 #include "combatresultswindow.h"
@@ -768,6 +769,9 @@ MAC_ADDRESS(0x082f20, 0x28c)  // anchor-global + retained nullary caller, retail
 bool combatManager::isComputerAction(const army* currentArmy)
 {
     if (isQuickCombat())
+        return 1;
+    // Mashup: every stack on both sides is played by an AI.
+    if (g_mashupMode)
         return 1;
 
     hero* owner = currentArmy->getController();
@@ -1954,6 +1958,12 @@ void combatManager::doVictory(int winningGroup)
     }
     if (g_goSolo)
         g_dialogDeadline = GameTime::get() + 2000;
+    if (g_mashupMode) {
+        mashupLog("mashup: results screen");
+        // `/MA`: the results screen closes by itself (unattended runs).
+        if (g_mashupAutoClose)
+            g_dialogDeadline = GameTime::get() + 8000;
+    }
 
     if (winningGroup != -1 && m_playerIds[winningGroup] != -1
         && g_game->isLocalHuman(m_playerIds[winningGroup])) {
@@ -2206,6 +2216,15 @@ DC_ADDRESS(0x06ee60, 0x338)
 MAC_ADDRESS(0x086388, 0x3c4)  // exhaustive command order-map + call graph
 void combatManager::checkGetAIMove()
 {
+    // Mashup: both armies fight to the end, no retreat or surrender.
+    if (g_mashupMode) {
+        if (mashupIsH2Side(m_currentSide))
+            mashupChooseH2Action(this);
+        else
+            doCompAI(m_currentSide);
+        return;
+    }
+
     unsigned char isHuman = 0;
     if (m_playerIds[m_currentSide] >= 0
             && g_game->isHuman(m_playerIds[m_currentSide]))

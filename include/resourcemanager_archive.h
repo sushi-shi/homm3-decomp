@@ -40,6 +40,10 @@ public:
 SIZE(TBitmapResourceHeader, 0x0c);
 
 struct TResourceLODSlot;
+enum {
+    RESOURCE_LOD_SLOT_MASHUP = 8,  // HoMM2 creature sprites (mashup)
+    RESOURCE_LOD_SLOT_COUNT = 9
+};
 extern TResourceLODSlot g_resourceLodSlots[];
 extern TResourceArchiveContext g_resourceArchiveContexts[4];
 

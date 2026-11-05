@@ -36,6 +36,7 @@
 #include "town.h"
 #include "townmgr.h"
 #include "winmgr.h"
+#include "mashup.h"
 
 // Retail table initializers, in the layouts used by their named consumers.
 DATA(0x00660878) long g_wideDirectionRingIndex[8] = { 0, 1, 2, 4, 5, 6, 7, 3 };
@@ -120,6 +121,8 @@ void army::setRetaliationCount()
     if (m_creatureType == ARMY_CREATURE_GRIFFIN)
         m_retaliationCount++;
     if (m_creatureType == ARMY_CREATURE_ROYAL_GRIFFIN)
+        m_retaliationCount = 5000;
+    if (g_mashupMode && mashupH2UnlimitedRetaliation(m_creatureType))
         m_retaliationCount = 5000;
     if (getSpellTime(SPELL_COUNTERSTRIKE))
         m_retaliationCount += m_counterstrokeBonus;
@@ -424,6 +427,9 @@ void army::loadResources()
 
     if (is(creatureShootingArmy)) {
         const char* missileName;
+        if (g_mashupMode && mashupIsH2Creature(m_creatureType))
+            missileName = mashupH2MissileName(m_creatureType);
+        else
         switch (m_creatureType) {
         case CREATURE_ARCHER:
         case CREATURE_MARKSMAN:
@@ -1290,7 +1296,9 @@ void army::rangeAttack(army* armyToAttack)
     if (!getOwner()
         || !getOwner()->isWieldingArtifact(ARTIFACT_AMMO_CART))
         m_monInfo.m_numShots--;
-    if (m_creatureType == CREATURE_MAGOG) {
+    if (g_mashupMode && mashupIsH2Lich(m_creatureType)) {
+        mashupH2LichCloud(this, armyToAttack);
+    } else if (m_creatureType == CREATURE_MAGOG) {
         long effect = g_spellTraits[SPELL_FIREBALL].m_effect;
         if (effect != -1
             && !g_combatManager->isQuickCombat()) {
@@ -1718,6 +1726,10 @@ MAC_ADDRESS(0x04c804, 0xa84)  // anchor-global
 void army::doPostAttack(army* target, int attackDamage, int killedCount,
                           int totalLife)
 {
+    if (g_mashupMode && mashupIsH2Creature(m_creatureType)) {
+        mashupH2PostAttack(this, target, attackDamage, killedCount);
+        return;
+    }
     switch (m_creatureType) {
     case CREATURE_VAMPIRE_LORD:
         if (target->is(creatureAlive)) {
@@ -2222,6 +2234,10 @@ MAC_ADDRESS(0x04e014, 0x160)
 inline void army::checkLuck()
 {
     m_luckStatus = 0;
+    if (g_mashupMode && mashupIsH2Creature(m_creatureType)) {
+        mashupCheckH2Luck(this);
+        return;
+    }
     if (getController() && m_luck > 0) {
         // Mac 0x4e084 calls sRandom; Windows folds its body with random.
         if (sRandom(1, 24) <= min(m_luck, 3)) {
@@ -3023,9 +3039,14 @@ inline long army::damageEnemy(army* enemy, int* damageOut, int* killed,
     long fireDamage = 0;
     if (!enemy)
         return 0;
-    long damage = computeBaseDamage(0);
-    *damageOut = adjustDamage(enemy, damage, isShot, 0, m_joustBonus,
-                             &fireDamage);
+    if (g_mashupMode && mashupIsH2Creature(m_creatureType)) {
+        // Mashup: a HoMM2 creature hits by HoMM2's formula.
+        *damageOut = mashupH2Damage(this, enemy, isShot);
+    } else {
+        long damage = computeBaseDamage(0);
+        *damageOut = adjustDamage(enemy, damage, isShot, 0, m_joustBonus,
+                                 &fireDamage);
+    }
     *killed = enemy->damage(*damageOut);
     m_luckStatus = 0;
     return fireDamage;

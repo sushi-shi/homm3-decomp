@@ -602,7 +602,7 @@ void ResourceManager::close()
 {
     expunge();
 
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < RESOURCE_LOD_SLOT_COUNT; ++i)
         g_resourceLodSlots[i].m_file.clear();
 }
 
@@ -1343,13 +1343,20 @@ TSoundHeaderDescriptor::TSoundHeaderDescriptor(
 {
 }
 
+// Mashup: the HoMM2 sounds (h2mash.snd), the fourth sound archive.
+static SoundHeaderStruct* g_soundHeaderMashup = 0;
+static int g_soundCountMashup = 0;
+static HANDLE g_soundFileMashup = INVALID_HANDLE_VALUE;
+
 // Retail CRT 0x5592b0 binds campaign, installed, then CD sound archives.
 DATA(0x0069e500)
-TSoundHeaderDescriptor g_soundHeaderDescriptors[3] = {
+TSoundHeaderDescriptor g_soundHeaderDescriptors[4] = {
     TSoundHeaderDescriptor(&g_soundHeaderCampaign, &g_soundCountCampaign,
                            &g_soundFileCampaign),
     TSoundHeaderDescriptor(&g_soundHeader, &g_soundCount, &g_soundFile),
-    TSoundHeaderDescriptor(&g_soundHeaderCd, &g_soundCountCd, &g_soundFileCd)
+    TSoundHeaderDescriptor(&g_soundHeaderCd, &g_soundCountCd, &g_soundFileCd),
+    TSoundHeaderDescriptor(&g_soundHeaderMashup, &g_soundCountMashup,
+                           &g_soundFileMashup)
 };
 
 // ECX/EDX carry name/auto_ptr and ret 4 removes the size output. The direct
@@ -1724,7 +1731,8 @@ CSprite* ResourceManager::getSprite(const char* name)
 }
 
 DATA(0x0069d870)
-TResourceLODSlot g_resourceLodSlots[8] = {
+// Mashup: a ninth slot holds the HoMM2 creature sprites (h2mash.lod).
+TResourceLODSlot g_resourceLodSlots[RESOURCE_LOD_SLOT_COUNT] = {
     DATA_COMPGEN(0x00682ef8, resourceBitmapArchiveName, "h3bitmap.lod"),
     DATA_COMPGEN(0x00682ee8, resourceSpriteArchiveName, "h3sprite.lod"),
     DATA_COMPGEN(0x00682ed8, resourceAbBitmapArchiveName, "h3ab_bmp.lod"),
@@ -1732,8 +1740,39 @@ TResourceLODSlot g_resourceLodSlots[8] = {
     DATA_COMPGEN(0x00682eb8, resourcePBitmapArchiveName, "h3pbitma.lod"),
     DATA_COMPGEN(0x00682ea8, resourcePSpriteArchiveName, "h3psprit.lod"),
     DATA_COMPGEN(0x00682e98, resourceAbPBitmapArchiveName, "h3abp_bm.lod"),
-    DATA_COMPGEN(0x00682e88, resourceAbPSpriteArchiveName, "h3abp_sp.lod")
+    DATA_COMPGEN(0x00682e88, resourceAbPSpriteArchiveName, "h3abp_sp.lod"),
+    "h2mash.lod"
 };
+
+// Mashup: the HoMM2 creature sprites first (they also carry the extended
+// creature portrait DEFs), then Complete's sprite archives.
+static const int g_mashupContext3Sprites[3] = { RESOURCE_LOD_SLOT_MASHUP, 1, 3 };
+static const int g_mashupContext3Bitmaps[3] = { RESOURCE_LOD_SLOT_MASHUP, 0, 2 };
+static const int g_mashupContext3Sounds[3] = { 3, 1, 0 };
+
+bool ResourceManager::addMashupArchives()
+{
+    if (!openArchiveResource(RESOURCE_LOD_SLOT_MASHUP))
+        return false;
+    g_resourceArchiveContexts[3].m_sprites.m_count = 3;
+    g_resourceArchiveContexts[3].m_sprites.m_indices = g_mashupContext3Sprites;
+    // ...and the HoMM2 hero portraits.
+    g_resourceArchiveContexts[3].m_bitmaps.m_count = 3;
+    g_resourceArchiveContexts[3].m_bitmaps.m_indices = g_mashupContext3Bitmaps;
+
+    // The HoMM2 creature, spell and battle sounds, laid out like heroes3.snd.
+    g_soundFileMashup = CreateFileA("data\\h2mash.snd", GENERIC_READ, FILE_SHARE_READ,
+        0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+    if (g_soundFileMashup == INVALID_HANDLE_VALUE)
+        return false;
+    DWORD read;
+    ReadFile(g_soundFileMashup, &g_soundCountMashup, 4, &read, 0);
+    g_soundHeaderMashup = new SoundHeaderStruct[g_soundCountMashup + 2];
+    ReadFile(g_soundFileMashup, g_soundHeaderMashup, 48 * g_soundCountMashup, &read, 0);
+    g_resourceArchiveContexts[3].m_sounds.m_count = 3;
+    g_resourceArchiveContexts[3].m_sounds.m_indices = g_mashupContext3Sounds;
+    return true;
+}
 
 // Retail CRT 0x559320 supplies these twelve read-only lists and their
 // counts. LOD indices address g_resourceLodSlots; sound indices address

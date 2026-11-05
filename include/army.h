@@ -192,6 +192,8 @@ public:
 };
 
 class army {
+    friend struct MashupAccess;  // mashup.cpp
+
 public:
     // Dreamcast Army.h enum; retail Teleport passes the two corresponding
     // immediate values to the independently located play_sample body.
