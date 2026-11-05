@@ -381,7 +381,5 @@ public:
 SIZE(type_transformer_slot, 0x50);
 
 std::string convertWithCommas(long value);
-void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
-                     const type_artifact_offering& offering);
 
 #endif  /* HOMM3_SACRIFICE_WINDOW_H */

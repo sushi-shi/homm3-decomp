@@ -24,6 +24,14 @@ static inline long ftol(double d)
     return *static_cast<long*>(static_cast<void*>(&d));
 }
 
+// DC RGBToHSV and HSVToRGB are (static) procedures of this file, as are
+// bitmap24.cpp's own copies; the palette adjusters call them before their
+// bodies.
+static void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
+                     float* h, float* s, float* v);
+static void HSVToRGB(float h, float s, float v,
+                     unsigned int* r, unsigned int* g, unsigned int* b);
+
 VA(0x00522650, 0x16)
 DC_ADDRESS(0x10a2a8, 0x48)
 MAC_ADDRESS(0x13b73c, 0x40)
@@ -733,8 +741,8 @@ void TPalette24::AdjustHSV(float hue, float hueAdjust,
 VA(0x00523190, 0x160)
 DC_ADDRESS(0x10c370, 0x1f2)
 MAC_ADDRESS(0x13c794, 0x1c8)
-void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
-              float* h, float* s, float* v)
+static void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
+                     float* h, float* s, float* v)
 {
     static const float redHue = 0.0f;
 
@@ -776,8 +784,8 @@ void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
 VA(0x005232f0, 0x2EC)
 DC_ADDRESS(0x10c564, 0x34c)
 MAC_ADDRESS(0x13c95c, 0x248)
-void HSVToRGB(float h, float s, float v,
-              unsigned int* r, unsigned int* g, unsigned int* b)
+static void HSVToRGB(float h, float s, float v,
+                     unsigned int* r, unsigned int* g, unsigned int* b)
 {
     if (s != 0.0f) {
         const float f = static_cast<float>(fmod(h * 6.0f, 1.0));
@@ -892,14 +900,14 @@ void TPalette24::adjustHSV(float hue, float hue_adjust, float saturation_adjust,
 
 // E:\gamedcs\palette.cpp:827
 // Retail body reconstructed above at 0x00523190; dc 0x10c370.
-void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
+static void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:862
 // Retail body reconstructed above at 0x005232f0; dc 0x10c564.
-void HSVToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
+static void HSVToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
 {
     // @stub
 }

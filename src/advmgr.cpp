@@ -2398,14 +2398,14 @@ void advManager::drawRolloverText(char* text)
                                   rollover->m_width, rollover->m_height);
 }
 
-void getCreatureBankHelpText(char* buffer, NewmapCell* cell,
+static void getCreatureBankHelpText(char* buffer, NewmapCell* cell,
     type_creature_bank_type type, long playerId, const char* separator,
     unsigned char showFullList);
-void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell,
+static void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell,
     GlobalInfoFlags type, const char* separator1, const char* separator2);
-void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell,
+static void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell,
     const char* separator1, const char* separator2);
-void setWitchHutHelpText(char* buffer, hero* currentHero,
+static void setWitchHutHelpText(char* buffer, hero* currentHero,
     NewmapCell* cell, const char* separator1, const char* separator2);
 
 // E:\gamedcs\advmgr.cpp:3146
@@ -3314,7 +3314,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
 VA(0x0040d3f0, 0x27C)
 DC_ADDRESS(0x00b3bc, 0x3cc)
 MAC_ADDRESS(0x00b2a8, 0x19c)  // anchor-callee
-void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_type type, long playerId, const char* separator, unsigned char showFullList)
+static void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_type type, long playerId, const char* separator, unsigned char showFullList)
 {
     strcpy(buffer, g_constCreatureBankTraits[type].m_name.c_str());
     strcat(buffer, separator);
@@ -3377,7 +3377,7 @@ void getMineHelpText(char* buffer, NewmapCell* cell, long playerId,
 VA(0x0040d8d0, 0x229)
 DC_ADDRESS(0x00b788, 0x1a8)
 MAC_ADDRESS(0x00b5c8, 0x1c0)
-void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell, GlobalInfoFlags type, const char* separator1, const char* separator2)
+static void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell, GlobalInfoFlags type, const char* separator1, const char* separator2)
 {
     g_game->getLocalPlayerGamePos();
     strcpy(buffer, g_quickViewText[cell->m_type]);
@@ -3407,7 +3407,7 @@ void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell, Global
 VA(0x0040db00, 0x1BD)
 DC_ADDRESS(0x00b930, 0x17c)
 MAC_ADDRESS(0x00b788, 0x1c0)
-void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const char* separator1, const char* separator2)
+static void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const char* separator1, const char* separator2)
 {
     strcpy(buffer, g_quickViewText[102]);
     if (!cell->m_isTrigger)
@@ -3443,7 +3443,7 @@ void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const ch
 VA(0x0040dcc0, 0x1E4)
 DC_ADDRESS(0x00bd84, 0x128)
 MAC_ADDRESS(0x00bd70, 0x1a4)
-void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const char* separator1, const char* separator2)
+static void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const char* separator1, const char* separator2)
 {
     strcpy(buffer, g_quickViewText[113]);
     if (!cell->m_isTrigger)

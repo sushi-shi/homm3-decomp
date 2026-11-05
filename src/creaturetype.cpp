@@ -173,7 +173,7 @@ TCreatureTypeTraits g_creatureTypeTraitsStorage[150] = {
 DATA(0x006747b0)
 const TCreatureTypeTraits (&akCreatureTypeTraits)[150] = g_creatureTypeTraitsStorage;
 
-void initializeCreatureTypeTraits(int id,
+static void initializeCreatureTypeTraits(int id,
     const std::vector<char*, std::allocator<char*> >& values);
 
 // Provisional name: Mac retains this source helper immediately before
@@ -337,7 +337,7 @@ private:
 VA(0x0047b480, 0x322)
 DC_ADDRESS(0x071b40, 0x350)
 MAC_ADDRESS(0x088dec, 0x320)
-void initializeCreatureTypeTraits(int id,
+static void initializeCreatureTypeTraits(int id,
     const std::vector<char*, std::allocator<char*> >& values)
 {
     assert(id >= 0 && id <= g_creatureTypeLast);

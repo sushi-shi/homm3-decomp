@@ -53,11 +53,11 @@
 // enumerator in artifact.h and reaches here through hero.h.
 const int g_artifactRecantersCloak = 0x53;
 
-int handleSacrificeBeneficiary(message& msg);
-int handleCastSacrifice(message& msg);
-int handleCastSpell(message& msg);
-int handleCastWallSpell(message& msg);
-int handleCastTeleport(message& msg);
+static int handleSacrificeBeneficiary(message& msg);
+static int handleCastSacrifice(message& msg);
+static int handleCastSpell(message& msg);
+static int handleCastWallSpell(message& msg);
+static int handleCastTeleport(message& msg);
 static int handleGetTeleportDestination(message& msg);
 void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex);
 static int updateSpellTarget(long hex);
@@ -1751,7 +1751,7 @@ static unsigned char g_sacrificeBeneficiaryValidTarget;
 VA(0x005a2d00, 0x184)
 DC_ADDRESS(0x151e94, 0x1c6)
 MAC_ADDRESS(0x1932a8, 0x238)
-int handleSacrificeBeneficiary(message& msg)
+static int handleSacrificeBeneficiary(message& msg)
 {
     hero* castingHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
@@ -1811,7 +1811,7 @@ static int g_sacrificeIndexIsValid;
 VA(0x005a2e90, 0x1D4)
 DC_ADDRESS(0x15205c, 0x1e2)
 MAC_ADDRESS(0x1934e0, 0x270)
-int handleCastSacrifice(message& msg)
+static int handleCastSacrifice(message& msg)
 {
     hero* castingHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
@@ -1947,7 +1947,7 @@ static long g_castSpellIndexToCastOn = -1;
 VA(0x005a3070, 0x1D8)
 DC_ADDRESS(0x152558, 0x262)
 MAC_ADDRESS(0x1937e0, 0x148)
-int handleCastSpell(message& msg)
+static int handleCastSpell(message& msg)
 {
     g_combatManager->doAnimations();
     switch (msg.m_id) {
@@ -1997,7 +1997,7 @@ static long g_castWallIndexToCastOn = -1;
 VA(0x005a3250, 0x31C)
 DC_ADDRESS(0x1527bc, 0x258)
 MAC_ADDRESS(0x193928, 0x2a8)  // retail order+handler call
-int handleCastWallSpell(message& msg)
+static int handleCastWallSpell(message& msg)
 {
     hero* castingHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
@@ -2069,7 +2069,7 @@ static long g_castTeleportPreviousHex = -1;
 VA(0x005a3570, 0x184)
 DC_ADDRESS(0x152a14, 0x166)
 MAC_ADDRESS(0x193bd0, 0x228)
-int handleCastTeleport(message& msg)
+static int handleCastTeleport(message& msg)
 {
     switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE: {

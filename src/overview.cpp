@@ -87,8 +87,8 @@ DATA(0x00640300) static const int g_overviewHelpIds[8] = {
     19, 20, 21, 22, 23, 24, 18, 25
 };
 
-long getLastBackpackIndex(long heroNumber);
-void updateBackpack(int slot);
+static long getLastBackpackIndex(long heroNumber);
+static void updateBackpack(int slot);
 
 // 90.9107 -> 91.7418 (2026-09-05): the town row's TWO `iLookup` chains
 // carry their default in a FINAL `else` ARM, not in a leading assignment.
@@ -1153,7 +1153,7 @@ static void updateArtifacts(int slot)
 VA(0x00522470, 0x15E)
 DC_ADDRESS(0x107668, 0x180)
 MAC_ADDRESS(0x136cb0, 0x1cc)
-void updateBackpack(int slot)
+static void updateBackpack(int slot)
 {
     int i = 0;
     int slotOff = slot * 200 + 200;
@@ -1190,7 +1190,7 @@ void updateBackpack(int slot)
 VA(0x005225d0, 0x55)
 DC_ADDRESS(0x1078e8, 0x8c)
 MAC_ADDRESS(0x136e7c, 0x90)
-long getLastBackpackIndex(long heroNumber)
+static long getLastBackpackIndex(long heroNumber)
 {
     if (heroNumber >= g_game->getLocalPlayer()->m_numHeroes)
         return 0;

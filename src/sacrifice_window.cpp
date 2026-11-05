@@ -20,6 +20,12 @@
 #include "viewarmywindow.h"
 #include "winmgr.h"
 
+// DC update_offering is a (static) procedure of this file; the window's
+// mode switches call it before its body.
+static void updateOffering(iconWidget* artifactWidget,
+                           textWidget* valueWidget,
+                           const type_artifact_offering& offering);
+
 // Complete adds the nineteenth SoD equipment slot to DC's 18-pair table.
 DATA(0x00641228) static const long g_slotDefinitions[kNumArtifactSlots + 1][2] = {
     {143, 18}, {202, 230}, {143, 68}, {17, 57}, {196, 172},
@@ -816,8 +822,9 @@ void type_sacrifice_window::setArtifactMode()
 VA(0x00562c70, 0x124)
 DC_ADDRESS(0x125aac, 0x90)
 MAC_ADDRESS(0x159150, 0xf8)
-void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
-                     const type_artifact_offering& offering)
+static void updateOffering(iconWidget* artifactWidget,
+                           textWidget* valueWidget,
+                           const type_artifact_offering& offering)
 {
     updateArtifactWidget(artifactWidget, offering);
 

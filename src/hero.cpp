@@ -1860,10 +1860,10 @@ TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
 // caller FIRST, so the helper needs a declaration here. Being only
 // declared is also what keeps /Ob2 from expanding it - retail calls it
 // four times.
-TSecondarySkill getSkillAward(const hero* currentHero,
-                                TSkillMastery minLevel,
-                                TSkillMastery maxLevel,
-                                TSecondarySkill excluded);
+static TSecondarySkill getSkillAward(const hero* currentHero,
+                                       TSkillMastery minLevel,
+                                       TSkillMastery maxLevel,
+                                       TSecondarySkill excluded);
 
 // E:\gamedcs\hero.cpp:2147
 // The level-up loop. Three TLevelUpWindow locals live in three mutually
@@ -2046,7 +2046,7 @@ void hero::checkLevel()
 VA(0x004dad00, 0x283)
 DC_ADDRESS(0x0ccf78, 0x204)
 MAC_ADDRESS(0x0f66f0, 0x3d0)  // anchor-caller + arity
-TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, TSkillMastery maxLevel, TSecondarySkill excluded)
+static TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, TSkillMastery maxLevel, TSecondarySkill excluded)
 {
     const THeroClassTraits& classTraits =
         akHeroClassTraits[currentHero->m_heroClass];
