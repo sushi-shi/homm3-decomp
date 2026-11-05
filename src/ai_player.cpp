@@ -3819,15 +3819,11 @@ DATA(0x00660500) static long g_constThresholds[6] = {
     1000, 150, 100, 75, 50, 25
 };
 
-// DC4145 passes path[destination_index].point straight to TeleportTo; its
-// by-value copy is the argument temporary, and DC records no destination
-// local. The single mana-source Boolean expression also recovers the Mac
-// flag lifetime. Keep the recorded DC local spellings; the naming-only
-// control is byte-flat.
-// Keep the direct path argument: DC4145 copies it separately from start_point,
-// and Mac 0x345d4 passes it without storing to that local. Reusing start_point
-// reaches Windows100 but lowers Mac79.3785 to78.4819; an assignment argument
-// lowers Mac further to77.4373. Neither proves a new source boundary.
+// DC4145 copies the destination point to its own stack slot (sp+0x44),
+// separate from start_point (sp+0x24); DC's local list is a lower bound.
+// A named destination copy reproduces all 1217 retail bytes, including the
+// EDX mana-cost argument after teleportTo; passing the path cell's point
+// directly leaves that argument in EAX. Keep the recorded DC local spellings.
 DC_ADDRESS(0x034630, 0x44a)
 static unsigned char attemptTeleport(hero* current_hero,
                                       std::vector<pathCell>& path,
@@ -3867,12 +3863,8 @@ static unsigned char attemptTeleport(hero* current_hero,
     }
 
     long castsRemaining = (current_hero->m_mana - 20) / mana_cost;
-    // Retail keeps this source object live in EBX across get_target/get_cell.
-    // Dreamcast's local inventory is a lower bound and cannot expose an
-    // optimizer-only pointer alias.
-    game* currentGame = g_game;
     TAdventureObjectType targetType =
-        currentGame->getCell(current_hero->getTarget())->m_type;
+        g_game->getCell(current_hero->getTarget())->m_type;
     atManaSource = targetType == MAGIC_WELL || targetType == MAGIC_SPRING;
     if (castsRemaining > 6)
         castsRemaining = 6;
@@ -3946,8 +3938,8 @@ static unsigned char attemptTeleport(hero* current_hero,
         }
     } while (pathIndex < destination_index);
 
-    g_advManager->teleportTo(current_hero, path[destination_index].m_point, 0,
-                             0, 1, 0);
+    type_point destination = path[destination_index].m_point;
+    g_advManager->teleportTo(current_hero, destination, 0, 0, 1, 0);
     current_hero->useSpell(mana_cost);
     ++current_hero->m_dWalkSpellsCast;
     return 1;
