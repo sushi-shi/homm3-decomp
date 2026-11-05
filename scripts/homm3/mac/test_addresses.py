@@ -155,6 +155,30 @@ class TestMacAddressScan(unittest.TestCase):
         self.assertEqual(problems, [])
         self.assertIsNone(claims[0].windows_va)
 
+    def test_editor_claims_stay_outside_a_mac_pairing(self):
+        # Editor VA_AT/VA_COMPGEN_AT lines are not Windows game claims. Inside
+        # a generated block they detach its Mac claim; between MAC_ADDRESS and
+        # its definition they replace the definition's label.
+        claims, _, problems = scan(
+            'VA_COMPGEN(0x00401000, 0x10, IMPLICIT_DTOR, A)\n'
+            'MAC_COMPGEN_ADDRESS(0x100, 0x10, IMPLICIT_DTOR, A)\n\n'
+            '// an editor fold\n'
+            'VA_COMPGEN_AT(h3maped, 0x0049b3b6, 0xb, IMPLICIT_DTOR, B)\n\n'
+            'VA_AT(h3maped, 0x0049bad6, 0xd) // editor copy\n'
+            'VA(0x00402000, 0x10)\nMAC_ADDRESS(0x200, 0x10)\nC::~C() {}\n')
+        self.assertEqual(problems, [])
+        self.assertEqual([(c.windows_va, c.label) for c in claims],
+                         [(0x401000, ''), (0x402000, 'C::~C')])
+
+    def test_rmg_editor_claims_keep_their_mac_pairs(self):
+        root = Path(__file__).resolve().parents[3]
+        claims, _, problems = addresses.scan_text(
+            (root / 'src/rmg.cpp').read_text(errors='replace'), 'src/rmg.cpp')
+        self.assertEqual(problems, [])
+        by_offset = {claim.offset: claim for claim in claims}
+        self.assertEqual(by_offset[0x22d02c].windows_va, 0x530ee0)
+        self.assertEqual(by_offset[0x230448].label, 'type_object::~type_object')
+
     def test_misaligned_or_malformed_spans_fail(self):
         for text in ("MAC_ADDRESS(0x102, 0x10)\nvoid f()\n{\n}\n",
                      "MAC_ADDRESS(0x100, 0x0)\nvoid f()\n{\n}\n",

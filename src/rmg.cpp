@@ -676,11 +676,11 @@ TRmgMapItem::TRmgMapItem()
 }
 
 VA_COMPGEN(0x00530EE0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
+MAC_COMPGEN_ADDRESS(0x22d02c, 0x84, IMPLICIT_DTOR, TRmgMapItem)
 
 // buildZoneBoundaries unwinds its local template through the connection
 // vector at +0xc4; the trivial vector destructor folds with the byte vector.
 VA_COMPGEN_AT(h3maped, 0x0049b3b6, 0xb, IMPLICIT_DTOR, TRmgTemplateZone)
-MAC_COMPGEN_ADDRESS(0x22d02c, 0x84, IMPLICIT_DTOR, TRmgMapItem)
 
 // The array constructor at 0x530e90 calls this initializer after constructing
 // m_objects, and type_random_map::clear calls it for every allocated cell.
@@ -2223,9 +2223,9 @@ void type_black_box::write(TAbstractFile* outfile, int version)
 // an explicit empty derived destructor adds its own vptr store as well.
 // With the body visible, base and ownable destructors have identical 13-byte
 // bodies and the same base-vtable relocation, proving their ICF identity.
+VA_AT(h3maped, 0x0049bad6, 0xd) // type_black_box unwind; base vtable and reference release
 VA(0x005338D0, 0x0D)
 MAC_ADDRESS(0x230448, 0x58)
-VA_AT(h3maped, 0x0049bad6, 0xd) // type_black_box unwind; base vtable and reference release
 type_object::~type_object()
 {
     --m_properties->m_refCount;
