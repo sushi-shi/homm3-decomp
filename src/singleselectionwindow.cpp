@@ -196,8 +196,18 @@ public:
     unsigned char m_flag;       // +0x1e0, the window's +0x37f byte
     // Retail stores the preceding flag as one byte; these three bytes
     // align the following integer payload to a four-byte boundary.
-    char m_paddingBeforeExtras[3];
-    int m_extras[8];            // +0x1e4, the window's +0x18a0 run
+    char m_paddingBeforeMapSize[3];
+    // The window's RandomMapOptions, as flat fields: an array or a nested
+    // RandomMapOptions here lowers CNewPlayerUpdateProc::finish (which
+    // inlines sendSetupInfo) from 100% to 87%.
+    int m_mapSize;              // +0x1e4
+    int m_mapLevels;            // +0x1e8
+    int m_humanPlayerCount;     // +0x1ec
+    int m_humanTeamCount;       // +0x1f0
+    int m_computerPlayerCount;  // +0x1f4
+    int m_computerTeamCount;    // +0x1f8
+    int m_waterContent;         // +0x1fc
+    int m_monsterStrength;      // +0x200
 
     CNewSetupInfoMsg(SGameSetupOptions* setup);
 };
@@ -1845,18 +1855,10 @@ public:
     virtual unsigned char ignoreKey(message* msg);  // slot 16
 };
 
-// Retail expands the nested CNetMsg constructor in the scenario arm and
-// retains it in the filter arm; our object reverses those two choices.
-// By the /Ob2 trace the scenario site sees 57 against CNetMsg's 60; retail
-// needs 15..58 more budget before it (e.g. one of the earlier message
-// constructors costing at most 40). An initializer-list CScrollMsg is flat.
-// All other blocks agree. In-class bodies, ordinary member initializers
-// and the equivalent nested/flat option chains are byte-flat controls.
-// Budget replay (2026-09-29): retail's set needs sendSetupInfo at IL cost
-// 132..159 (ours 174) or this caller at cb 508..521 (ours 355). Copying the
-// eight extras with memcpy emits rep movsd (73.51%). DC and Mac show no
-// accessor calls in either body. Passing the flag and extras through a
-// CNewSetupInfoMsg constructor argument list drops this body to 58.46%.
+// DC and Mac show no accessor calls in either body. sendSetupInfo copies
+// the flag and the eight random-map options into the message one field at
+// a time; memcpy (rep movsd) or passing them through the CNewSetupInfoMsg
+// constructor do not match.
 // E:\gamedcs\singleselectionwindow.cpp:1393
 VA(0x005795A0, 0x2CA)
 DC_ADDRESS(0x1484c8, 0x1b0)
@@ -2697,14 +2699,14 @@ VA(0x0057D170, 0x1DF7)
 MAC_ADDRESS(0x1756bc, 0x1c50)
 void TSingleSelectionWindow::createRandomMapOptionWidgets()
 {
-    m_randomMapOptions[0] = MAP_DIMENSION_MEDIUM;
-    m_randomMapOptions[1] = 2;
-    m_randomMapOptions[2] = -1;
-    m_randomMapOptions[3] = -1;
-    m_randomMapOptions[4] = 0;
-    m_randomMapOptions[5] = -1;
-    m_randomMapOptions[6] = SCENARIO_FILTER_CATEGORY_ANY;
-    m_randomMapOptions[7] = -1;
+    m_randomMapOptions.m_mapSize = MAP_DIMENSION_MEDIUM;
+    m_randomMapOptions.m_mapLevels = 2;
+    m_randomMapOptions.m_humanPlayerCount = -1;
+    m_randomMapOptions.m_humanTeamCount = -1;
+    m_randomMapOptions.m_computerPlayerCount = 0;
+    m_randomMapOptions.m_computerTeamCount = -1;
+    m_randomMapOptions.m_waterContent = RMG_WATER_RANDOM;
+    m_randomMapOptions.m_monsterStrength = -1;
 
     m_widgets.push_back(new textWidget(
         58, 82, 99, 31, g_generalText->GetText(GENERAL_TEXT_MAP_SIZE), "smalfont.fnt",
@@ -2866,8 +2868,8 @@ void TSingleSelectionWindow::createRandomMapOptionWidgets()
         57, 535, 337, 40, 0x14f, "RanShow.def", 0, 1, 0, 0, 2));
 }
 
-// Complete-only model: the AI bound selects an operand reference; the
-// player/human bounds use value wrappers.
+// Complete-only model: the computer-player bound selects an operand
+// reference (std::min); the two team bounds use value wrappers.
 VA(0x0057ef70, 0x3B9)
 MAC_ADDRESS(0x17730c, 0x480)
 void TSingleSelectionWindow::updateRandomMapOptionWidgets()
@@ -2877,7 +2879,7 @@ void TSingleSelectionWindow::updateRandomMapOptionWidgets()
     int i;
     for (i = 0x119; i <= 0x11c; ++i)
         widgetClearStatus(i, 0x10);
-    switch (m_randomMapOptions[0]) {
+    switch (m_randomMapOptions.m_mapSize) {
     case MAP_DIMENSION_SMALL:
         widgetSetStatus(0x119, 0x10);
         break;
@@ -2891,72 +2893,72 @@ void TSingleSelectionWindow::updateRandomMapOptionWidgets()
         widgetSetStatus(0x11c, 0x10);
         break;
     }
-    if (m_randomMapOptions[1] == 1)
+    if (m_randomMapOptions.m_mapLevels == 1)
         widgetClearStatus(0x11d, 0x10);
     else
         widgetSetStatus(0x11d, 0x10);
     for (i = 0x11f; i <= 0x127; ++i)
         widgetClearStatus(i, 0x10);
-    int lo = m_randomMapOptions[2];
-    int hi = m_randomMapOptions[2];
-    if (m_randomMapOptions[2] == -1) {
-        lo = 1;
-        hi = 8;
+    int minHumanPlayerCount = m_randomMapOptions.m_humanPlayerCount;
+    int maxHumanPlayerCount = m_randomMapOptions.m_humanPlayerCount;
+    if (m_randomMapOptions.m_humanPlayerCount == -1) {
+        minHumanPlayerCount = 1;
+        maxHumanPlayerCount = 8;
     }
-    if (m_randomMapOptions[2] == -1)
+    if (m_randomMapOptions.m_humanPlayerCount == -1)
         widgetSetStatus(0x127, 0x10);
     else
-        widgetSetStatus(m_randomMapOptions[2] + 0x11e, 0x10);
+        widgetSetStatus(m_randomMapOptions.m_humanPlayerCount + 0x11e, 0x10);
     for (i = 0x129; i <= 0x131; ++i)
         widgetClearStatus(i, 0x10);
-    for (i = 0x12a; i < hi + 0x129; ++i)
+    for (i = 0x12a; i < maxHumanPlayerCount + 0x129; ++i)
         widgetClearStatus(i, 0x1000);
     for (; i <= 0x130; ++i)
         widgetSetStatus(i, 0x1000);
-    int lastFilter = m_randomMapOptions[3];
-    if (lastFilter == -1)
+    int humanTeamCount = m_randomMapOptions.m_humanTeamCount;
+    if (humanTeamCount == -1)
         widgetSetStatus(0x131, 0x10);
     else {
-        int selectedFilter = min(hi, lastFilter);
+        int selectedFilter = min(maxHumanPlayerCount, humanTeamCount);
         widgetSetStatus(selectedFilter + 0x129, 0x10);
     }
     for (i = 0x133; i <= 0x13b; ++i)
         widgetClearStatus(i, 0x10);
-    for (i = 0x134; i <= 0x13b - lo; ++i)
+    for (i = 0x134; i <= 0x13b - minHumanPlayerCount; ++i)
         widgetClearStatus(i, 0x1000);
     for (; i <= 0x13a; ++i)
         widgetSetStatus(i, 0x1000);
-    int aiFilter = m_randomMapOptions[4];
-    int n = std::min(8 - lo, aiFilter);
-    if (aiFilter == -1) {
-        n = 8 - lo;
+    int computerPlayerCount = m_randomMapOptions.m_computerPlayerCount;
+    int maxComputerPlayerCount = std::min(8 - minHumanPlayerCount, computerPlayerCount);
+    if (computerPlayerCount == -1) {
+        maxComputerPlayerCount = 8 - minHumanPlayerCount;
         widgetSetStatus(0x13b, 0x10);
     } else {
-        widgetSetStatus(n + 0x133, 0x10);
+        widgetSetStatus(maxComputerPlayerCount + 0x133, 0x10);
     }
     for (i = 0x13d; i <= 0x144; ++i)
         widgetClearStatus(i, 0x10);
-    for (i = 0x13e; i < n + 0x13d; ++i)
+    for (i = 0x13e; i < maxComputerPlayerCount + 0x13d; ++i)
         widgetClearStatus(i, 0x1000);
     for (; i <= 0x143; ++i)
         widgetSetStatus(i, 0x1000);
-    int humanFilter = m_randomMapOptions[5];
-    if (humanFilter == -1)
+    int computerTeamCount = m_randomMapOptions.m_computerTeamCount;
+    if (computerTeamCount == -1)
         widgetSetStatus(0x144, 0x10);
     else
-        widgetSetStatus(min(n, humanFilter) + 0x13d, 0x10);
+        widgetSetStatus(min(maxComputerPlayerCount, computerTeamCount) + 0x13d, 0x10);
     for (i = 0x146; i <= 0x149; ++i)
         widgetClearStatus(i, 0x10);
-    if (m_randomMapOptions[6] == SCENARIO_FILTER_CATEGORY_ANY)
+    if (m_randomMapOptions.m_waterContent == RMG_WATER_RANDOM)
         widgetSetStatus(0x149, 0x10);
     else
-        widgetSetStatus(m_randomMapOptions[6] + 0x146, 0x10);
+        widgetSetStatus(m_randomMapOptions.m_waterContent + 0x146, 0x10);
     for (i = 0x14b; i <= 0x14e; ++i)
         widgetClearStatus(i, 0x10);
-    if (m_randomMapOptions[7] == -1)
+    if (m_randomMapOptions.m_monsterStrength == -1)
         widgetSetStatus(0x14e, 0x10);
     else
-        widgetSetStatus(m_randomMapOptions[7] + 0x14b, 0x10);
+        widgetSetStatus(m_randomMapOptions.m_monsterStrength + 0x14b, 0x10);
 }
 
 // The version-data guards use std::auto_ptr<int>, which performs scalar deletion.
@@ -3210,7 +3212,7 @@ void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
     NewSMapHeader header;
     header.m_lossCondition.m_type = -1;
     header.m_victoryCondition.m_type = -1;
-    header.m_hasTwoLayers = m_randomMapOptions[1] > 1;
+    header.m_hasTwoLayers = m_randomMapOptions.m_mapLevels > 1;
     header.m_difficulty = 1;
     header.m_isPlayable = 1;
     if (m_commonGameVersion == SINGLE_SELECTION_CONTEXT_2
@@ -3219,16 +3221,16 @@ void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
     else
         header.m_version = m_commonGameVersion == SINGLE_SELECTION_CONTEXT_1 ? 21 : 14;
     header.m_minNumHumanPlayers = 1;
-    if (m_randomMapOptions[2] == -1)
+    if (m_randomMapOptions.m_humanPlayerCount == -1)
         header.m_maxNumHumanPlayers = 8;
     else
         header.m_maxNumHumanPlayers =
-            static_cast<unsigned char>(m_randomMapOptions[2]);
-    if (m_randomMapOptions[2] == -1 || m_randomMapOptions[4] == -1)
+            static_cast<unsigned char>(m_randomMapOptions.m_humanPlayerCount);
+    if (m_randomMapOptions.m_humanPlayerCount == -1 || m_randomMapOptions.m_computerPlayerCount == -1)
         header.m_numPlayers = 8;
     else
         header.m_numPlayers =
-            static_cast<unsigned char>(m_randomMapOptions[2] + m_randomMapOptions[4]);
+            static_cast<unsigned char>(m_randomMapOptions.m_humanPlayerCount + m_randomMapOptions.m_computerPlayerCount);
 
     for (int i = 0; i < NUM_PLAYERS; ++i) {
         header.m_teamInfo[i] = static_cast<char>(i);
@@ -3243,7 +3245,7 @@ void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
         else
             header.m_playerSlotAttributes[i].m_canBeComputer = 0;
     }
-    header.m_size = m_randomMapOptions[0];
+    header.m_size = m_randomMapOptions.m_mapSize;
     header.m_numTeams = 0;
 
     memset(m_localHeader.m_heroAvailability, -1,
@@ -3928,34 +3930,19 @@ int TSingleSelectionWindow::getFileSpecNbr()
     return (m_loadMode || m_saveMode) + g_selectionCampaignMode;
 }
 
-// Mac retains this source choice; inlined in getHeaders and onMapFileNameMsg.
+// Mac retains this helper as guarded returns; retail inlines it in
+// getHeaders and onMapFileNameMsg.
 MAC_ADDRESS(0x175674, 0x48)
 char* TSingleSelectionWindow::getHeaderDirectory()
 {
-    return const_cast<char*>(m_randomMapMode
-        ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
-        : (m_loadMode || m_saveMode
-               ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
-               : DATA_COMPGEN(0x006772d0, mapsDir, "maps")));
+    if (m_randomMapMode)
+        return const_cast<char*>(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"));
+    if (m_loadMode || m_saveMode)
+        return const_cast<char*>(DATA_COMPGEN(0x00677d70, gamesDir, "games"));
+    return const_cast<char*>(DATA_COMPGEN(0x006772d0, mapsDir, "maps"));
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3475
-// Residual (87.0700%, polish-45 - first full evidence pass on this row):
-// pure OVER-inline, two sites, both one level deeper than retail.
-//   * `pHeaders->clear()` lowers to `copy(end(),end(),begin())` + `_Destroy`
-//     + `_Last = _S`.  Retail CALLS `vector<GameSelectionHeadersStruct>::
-//     _Destroy(_S,_Last)` (retail's reference at call slot 8); this compile
-//     expands that loop in line, which is the whole 40-vs-37 block and
-//     24-vs-22 conditional-branch gap.
-//   * `temp`'s destructor: retail CALLS `~NewSMapHeader`, this compile
-//     expands it into two `basic_string::_Tidy` calls plus `~CMapHeaderData`
-//     - the two base-only calls at +0x2e3 and +0x2f4.
-// Everything else pairs 22/22 (the six "different" rows are the delinker's
-// ICF twins under another instantiation's name; the ratchet runs at
-// function_reloc_diffs=none and ignores them).  Per docs/vc6/inliner.md the
-// over-inline direction means this caller presents a LARGER front-end cb or
-// fewer candidate sites than retail's, so the levers are caller mass and site
-// count - not a `clear()`/`erase()` spelling and not a pragma.
 VA(0x00582B40, 0x345)
 DC_ADDRESS(0x137da8, 0x916)
 MAC_ADDRESS(0x17a914, 0x204)  // anchor-global dir ternary m_randomMapMode/64/65 over "random_maps"(0x6836ac)/"maps"(0x6772d0)/"games"(0x677d70) + _chdir - the directory-scan opener; order-map GetHeaders..MakeHeroFilter onto 0x582b40..0x583890 (GetFileSpecNbr excluded by arity below), size 0.36x
@@ -5214,10 +5201,10 @@ VA(0x005860E0, 0x4CC)
 MAC_ADDRESS(0x17dee0, 0x428)
 unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 {
-    int humanPlayerCount = m_randomMapOptions[2];
-    int humanTeamCount = m_randomMapOptions[3];
-    int computerPlayerCount = m_randomMapOptions[4];
-    int computerTeamCount = m_randomMapOptions[5];
+    int humanPlayerCount = m_randomMapOptions.m_humanPlayerCount;
+    int humanTeamCount = m_randomMapOptions.m_humanTeamCount;
+    int computerPlayerCount = m_randomMapOptions.m_computerPlayerCount;
+    int computerTeamCount = m_randomMapOptions.m_computerTeamCount;
 
     if (humanPlayerCount == -1) {
         int seated = 0;
@@ -5254,8 +5241,8 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
             computerTeamCount = humanPlayerCount;
     }
 
-    int waterContent = m_randomMapOptions[6];
-    int monsterStrength = m_randomMapOptions[7] - 1;
+    int waterContent = m_randomMapOptions.m_waterContent;
+    int monsterStrength = m_randomMapOptions.m_monsterStrength - 1;
     if (monsterStrength == -2)
         monsterStrength = rand() % 3 - 1;
 
@@ -5273,8 +5260,8 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 
     int result;
     {
-        TRandomMapRequest request(m_randomMapOptions[0], m_randomMapOptions[0],
-                                  m_randomMapOptions[1]);
+        TRandomMapRequest request(m_randomMapOptions.m_mapSize, m_randomMapOptions.m_mapSize,
+                                  m_randomMapOptions.m_mapLevels);
         TRandomMapProgress progress(1);
 
         request.m_humanPlayerCount = humanPlayerCount;
@@ -5641,23 +5628,23 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     }
 
     case SSW_FILTER_MAP_SMALL:
-        m_randomMapOptions[0] = MAP_DIMENSION_SMALL;
+        m_randomMapOptions.m_mapSize = MAP_DIMENSION_SMALL;
         refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_MAP_MEDIUM:
-        m_randomMapOptions[0] = MAP_DIMENSION_MEDIUM;
+        m_randomMapOptions.m_mapSize = MAP_DIMENSION_MEDIUM;
         refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_MAP_LARGE:
-        m_randomMapOptions[0] = MAP_DIMENSION_LARGE;
+        m_randomMapOptions.m_mapSize = MAP_DIMENSION_LARGE;
         refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_MAP_XLARGE:
-        m_randomMapOptions[0] = MAP_DIMENSION_EXTRA_LARGE;
+        m_randomMapOptions.m_mapSize = MAP_DIMENSION_EXTRA_LARGE;
         refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_MAP_ALL:
-        m_randomMapOptions[1] = SCENARIO_FILTER_CATEGORY_ANY - m_randomMapOptions[1];
+        m_randomMapOptions.m_mapLevels = 3 - m_randomMapOptions.m_mapLevels;  // 1 <-> 2
         refreshRandomMapOptionWidgets();
         break;
 
@@ -5669,12 +5656,12 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_PLAYERS_FIRST + 5:
     case SSW_FILTER_PLAYERS_FIRST + 6:
     case SSW_FILTER_PLAYERS_LAST:
-        m_randomMapOptions[2] = msg->m_codeY - SSW_FILTER_PLAYERS_FIRST + 1;
+        m_randomMapOptions.m_humanPlayerCount = msg->m_codeY - SSW_FILTER_PLAYERS_FIRST + 1;
         refreshRandomMapOptionWidgets();
         rebuildRandomMapPlayerSetup();
         break;
     case SSW_FILTER_PLAYERS_ANY:
-        m_randomMapOptions[2] = -1;
+        m_randomMapOptions.m_humanPlayerCount = -1;
         refreshRandomMapOptionWidgets();
         rebuildRandomMapPlayerSetup();
         break;
@@ -5686,12 +5673,12 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_HUMANS_FIRST + 5:
     case SSW_FILTER_HUMANS_FIRST + 6:
     case SSW_FILTER_HUMANS_LAST:
-        m_randomMapOptions[3] = msg->m_codeY - SSW_FILTER_HUMANS_FIRST;
+        m_randomMapOptions.m_humanTeamCount = msg->m_codeY - SSW_FILTER_HUMANS_FIRST;
         refreshRandomMapOptionWidgets();
         rebuildRandomMapPlayerSetup();
         break;
     case SSW_FILTER_HUMANS_ANY:
-        m_randomMapOptions[3] = -1;
+        m_randomMapOptions.m_humanTeamCount = -1;
         refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_TEAMS_FIRST:
@@ -5702,12 +5689,12 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_TEAMS_FIRST + 5:
     case SSW_FILTER_TEAMS_FIRST + 6:
     case SSW_FILTER_TEAMS_LAST:
-        m_randomMapOptions[4] = msg->m_codeY - SSW_FILTER_TEAMS_FIRST;
+        m_randomMapOptions.m_computerPlayerCount = msg->m_codeY - SSW_FILTER_TEAMS_FIRST;
         refreshRandomMapOptionWidgets();
         rebuildRandomMapPlayerSetup();
         break;
     case SSW_FILTER_TEAMS_ANY:
-        m_randomMapOptions[4] = -1;
+        m_randomMapOptions.m_computerPlayerCount = -1;
         refreshRandomMapOptionWidgets();
         rebuildRandomMapPlayerSetup();
         break;
@@ -5718,28 +5705,28 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_VERSION_FIRST + 4:
     case SSW_FILTER_VERSION_FIRST + 5:
     case SSW_FILTER_VERSION_LAST:
-        m_randomMapOptions[5] = msg->m_codeY - SSW_FILTER_VERSION_FIRST;
+        m_randomMapOptions.m_computerTeamCount = msg->m_codeY - SSW_FILTER_VERSION_FIRST;
         refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_VERSION_ANY:
-        m_randomMapOptions[5] = -1;
+        m_randomMapOptions.m_computerTeamCount = -1;
         refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_CATEGORY_FIRST:
     case SSW_FILTER_CATEGORY_FIRST + 1:
     case SSW_FILTER_CATEGORY_FIRST + 2:
     case SSW_FILTER_CATEGORY_LAST:
-        m_randomMapOptions[6] = msg->m_codeY - SSW_FILTER_CATEGORY_FIRST;
+        m_randomMapOptions.m_waterContent = msg->m_codeY - SSW_FILTER_CATEGORY_FIRST;
         refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_DURATION_FIRST:
     case SSW_FILTER_DURATION_FIRST + 1:
     case SSW_FILTER_DURATION_LAST:
-        m_randomMapOptions[7] = msg->m_codeY - SSW_FILTER_DURATION_FIRST;
+        m_randomMapOptions.m_monsterStrength = msg->m_codeY - SSW_FILTER_DURATION_FIRST;
         refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_DURATION_ANY:
-        m_randomMapOptions[7] = -1;
+        m_randomMapOptions.m_monsterStrength = -1;
         refreshRandomMapOptionWidgets();
         break;
     case SSW_RANDOM_MAPS:
@@ -6595,13 +6582,11 @@ bool TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
 // the third assignment is still refused (budget 238 < cb 257) and the tail
 // expands as retail does (90.52%). Assigning the selection row directly,
 // like the transfer and header rows, instead of through a `sel` reference
-// gives 91.19%. Residual: retail calls CNetMsg's constructor in the first
-// request and expands it in the second, where this compile does the
-// opposite; traced pools were 185/3 = 61 and 81/1 against its cb 59, so
-// retail spent more root budget before the selection assignment (or has
-// one more cost-free root after the last request). Controls: empty() for
-// the size test is flat; one shared `return 1` after both arms drops to
-// 86.73%.
+// gives 91.19%; getHeaderDirectory's guarded returns raise it to 96.68%,
+// where the call sequence agrees with retail. Residual: this compile saves
+// ebx in the prologue where retail does not (register allocation).
+// Controls: empty() for the size test is flat; one shared `return 1` after
+// both arms drops to 86.73%.
 VA(0x00589710, 0x40F)
 DC_ADDRESS(0x140664, 0xa)
 MAC_ADDRESS(0x180c24, 0x668)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg
@@ -6765,14 +6750,14 @@ unsigned char TSingleSelectionWindow::sendSetupInfo(
 {
     CNewSetupInfoMsg msg(&g_game->m_setup);
     msg.m_flag = m_randomMapSelected;
-    msg.m_extras[0] = m_randomMapOptions[0];
-    msg.m_extras[1] = m_randomMapOptions[1];
-    msg.m_extras[2] = m_randomMapOptions[2];
-    msg.m_extras[3] = m_randomMapOptions[3];
-    msg.m_extras[4] = m_randomMapOptions[4];
-    msg.m_extras[5] = m_randomMapOptions[5];
-    msg.m_extras[6] = m_randomMapOptions[6];
-    msg.m_extras[7] = m_randomMapOptions[7];
+    msg.m_mapSize = m_randomMapOptions.m_mapSize;
+    msg.m_mapLevels = m_randomMapOptions.m_mapLevels;
+    msg.m_humanPlayerCount = m_randomMapOptions.m_humanPlayerCount;
+    msg.m_humanTeamCount = m_randomMapOptions.m_humanTeamCount;
+    msg.m_computerPlayerCount = m_randomMapOptions.m_computerPlayerCount;
+    msg.m_computerTeamCount = m_randomMapOptions.m_computerTeamCount;
+    msg.m_waterContent = m_randomMapOptions.m_waterContent;
+    msg.m_monsterStrength = m_randomMapOptions.m_monsterStrength;
     transmitRemoteDataDPID(&msg, dpid, false, true);
     return 1;
 }
@@ -6872,14 +6857,14 @@ bool TSingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
     CNewSetupInfoMsg* msg = static_cast<CNewSetupInfoMsg*>(netMsg);
     g_game->m_setup = msg->m_setup;
     m_randomMapSelected = msg->m_flag;
-    m_randomMapOptions[0] = msg->m_extras[0];
-    m_randomMapOptions[1] = msg->m_extras[1];
-    m_randomMapOptions[2] = msg->m_extras[2];
-    m_randomMapOptions[3] = msg->m_extras[3];
-    m_randomMapOptions[4] = msg->m_extras[4];
-    m_randomMapOptions[5] = msg->m_extras[5];
-    m_randomMapOptions[6] = msg->m_extras[6];
-    m_randomMapOptions[7] = msg->m_extras[7];
+    m_randomMapOptions.m_mapSize = msg->m_mapSize;
+    m_randomMapOptions.m_mapLevels = msg->m_mapLevels;
+    m_randomMapOptions.m_humanPlayerCount = msg->m_humanPlayerCount;
+    m_randomMapOptions.m_humanTeamCount = msg->m_humanTeamCount;
+    m_randomMapOptions.m_computerPlayerCount = msg->m_computerPlayerCount;
+    m_randomMapOptions.m_computerTeamCount = msg->m_computerTeamCount;
+    m_randomMapOptions.m_waterContent = msg->m_waterContent;
+    m_randomMapOptions.m_monsterStrength = msg->m_monsterStrength;
     m_durationIndex = g_game->m_setup.m_turnDuration;
     m_durationSlider->setState(m_durationIndex);
     drawWindow(0, 0xffff0001, 0xffff);
@@ -8583,7 +8568,10 @@ VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // d
 // `mov ebx,[ebp-4]` loop tail. Nested seat guards vs continues and a positive
 // level-change scope vs the early return are byte-flat controls. Restoring
 // UpdateTown's GetCompPlayerInPos call is also byte-flat, including its
-// independently exact retained body.
+// independently exact retained body. Folding each `required` expression
+// into the bitset subscript reaches 100%; if/else assignment and one shared
+// `required` are flat at 98.89%; bitset::test() adds the range check
+// (92.17%). Mac computes the 2/1/0 index, then calls bitset<4>::test.
 VA(0x0058e700, 0x2F9)
 DC_ADDRESS(0x13b178, 0xb4)
 MAC_ADDRESS(0x186224, 0x1e8)  // header-declared identity + anchor-callee AddNewPlayer/TurnOffAdvancedOptions, retail-only

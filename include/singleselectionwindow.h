@@ -428,6 +428,22 @@ public:
 };
 SIZE(CSingleSelectionNetMsgHandler, 0x10);
 
+// Complete-only random-map generator options (window +0x18a0). Role-derived
+// names: generateRandomMap (0x5860e0) consumes them for the generator
+// request and updateRandomMapOptionWidgets selects one button per field.
+// -1 selects "random" for the counts and the strength.
+struct RandomMapOptions {
+    int m_mapSize;              // +0x00, MAP_DIMENSION_*
+    int m_mapLevels;            // +0x04, 1 or 2
+    int m_humanPlayerCount;     // +0x08
+    int m_humanTeamCount;       // +0x0c, capped by the human player count
+    int m_computerPlayerCount;  // +0x10, capped by 8 - human players
+    int m_computerTeamCount;    // +0x14, capped by the computer player count
+    int m_waterContent;         // +0x18, ERmgWaterContent, widgets 0x146..0x149
+    int m_monsterStrength;      // +0x1c, widgets 0x14b..0x14e
+};
+SIZE(RandomMapOptions, 0x20);
+
 // The game-selection megawindow. DC reports size 2928 with SH4 STL; the
 // retail extent 0x1970 is frame-derived from advmgr's SaveGame (window local
 // ebp-0x19ec..ebp-0x7c around an __alloca_probe frame). The members below are
@@ -663,12 +679,12 @@ public:
     int m_townHeadingId;  // +0x189c
 
     // Project-owned boundary for the Complete-only random-map state/controls.
-    // Eight setup dwords CNewSetupInfoMsg carries behind the
-    // SGameSetupOptions copy; the random-map controls read them back out.
-    // Role-derived: generateRandomMap (0x5860e0) consumes these eight
-    // options for dimensions, layers, player/team counts, monsters and water.
-    // CNewSetupInfoMsg transmits this same option array to the other peers.
-    int m_randomMapOptions[8];  // 0x18a0
+    // CNewSetupInfoMsg carries these eight dwords behind the
+    // SGameSetupOptions copy, as flat fields copied one store at a time.
+    // Every access uses a fixed field. Window-side flat members instead of an
+    // aggregate lower rebuildRandomMapPlayerSetup from 97.69% to 94.97%; an
+    // array or a nested struct both keep it, so the names live in a struct.
+    RandomMapOptions m_randomMapOptions;  // 0x18a0
     // Complete-only random-map filter controls. CreateFilterWidgets constructs
     // each family explicitly, then walks these contiguous pointer arrays to
     // select the disabled/highlight frames and register them with the window.
