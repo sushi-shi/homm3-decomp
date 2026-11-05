@@ -96,6 +96,43 @@ public:
               TPalette16& pal, bool hflip,
               bool tblit) const;
 
+    // DC field list 0x1787 declares these public accessors. Loki retains
+    // their header bodies at 0x81a4668..0x81a4773; only the cropped
+    // accessors keep DC source lines (CSpriteFrame.h:87-90), so the others
+    // sit beside them without a claimed source order.
+    // @dc-declaration-only: 0x1799
+    int GetDataSize() const { return DataSize; }
+    // @dc-declaration-only: 0x1799
+    int GetImageSize() const { return ImageSize; }
+    // @dc-declaration-only: 0x179a
+    TEncodingMethod GetEncodingMethod() const { return EncodingMethod; }
+    // Width loads in retail CSprite::DrawPointer identify this field.
+    // @dc-declaration-only: 0x1799
+    int GetWidth() const { return Width; }
+    // Height loads in retail CSprite::DrawPointer identify this field.
+    // @dc-declaration-only: 0x1799
+    int GetHeight() const { return Height; }
+
+    // CSpriteFrame.h:87-90. DC emits standalone copies; inlined in the
+    // consumers.
+    DC_ADDRESS(0x04cb90, 0x4)
+    int GetCroppedWidth() const { return CroppedWidth; }
+
+    DC_ADDRESS(0x08734c, 0x4)
+    int GetCroppedHeight() const { return CroppedHeight; }
+
+    DC_ADDRESS(0x04cb94, 0x4)
+    int GetCroppedX() const { return CroppedX; }
+
+    DC_ADDRESS(0x04cb98, 0x4)
+    int GetCroppedY() const { return CroppedY; }
+
+    // @dc-declaration-only: 0x1799
+    int GetPitch() const { return Pitch; }
+    // @dc-declaration-only: 0x179b
+    unsigned char* GetMap() { return map; }
+    TPixel GetPixel(int x, int y) const;
+
     // CSpriteFrame.h:147-148. Dreamcast emits this header wrapper as a
     // standalone function; inlined.
     DC_ADDRESS(0x074068, 0x68)
@@ -234,41 +271,6 @@ public:
     void DrawTileScaled25(int sx, int sy, int sw, int sh,
         unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
         TPalette16& pal, bool hFlipped, bool vFlipped) const;
-    // DC declarations plus retained Loki header accessor bodies at
-    // 0x81a4668..0x81a4773; source placement is inferred from their grouping.
-    int GetDataSize() const { return DataSize; }
-    int GetImageSize() const { return ImageSize; }
-    TEncodingMethod GetEncodingMethod() const { return EncodingMethod; }
-    // DC CSpriteFrame field list records these public const accessors;
-    // CSprite::DrawPointer expands the corresponding retail width/height loads.
-    // Width loads in retail CSprite::DrawPointer identify this field.
-    // The DC declaration survives, but no body source location does.
-    // Header ownership is provisional; no source order is claimed.
-    // @dc-declaration-only: 0x1799
-    int GetWidth() const { return Width; }
-    // Height loads in retail CSprite::DrawPointer identify this field.
-    // The DC declaration survives, but no body source location does.
-    // Header ownership is provisional; no source order is claimed.
-    // @dc-declaration-only: 0x1799
-    int GetHeight() const { return Height; }
-
-    // CSpriteFrame.h:87-90. DC emits standalone copies; inlined in the
-    // consumers.
-    DC_ADDRESS(0x04cb90, 0x4)
-    int GetCroppedWidth() const { return CroppedWidth; }
-
-    DC_ADDRESS(0x08734c, 0x4)
-    int GetCroppedHeight() const { return CroppedHeight; }
-
-    DC_ADDRESS(0x04cb94, 0x4)
-    int GetCroppedX() const { return CroppedX; }
-
-    DC_ADDRESS(0x04cb98, 0x4)
-    int GetCroppedY() const { return CroppedY; }
-
-    int GetPitch() const { return Pitch; }
-    TPixel* GetMap() { return map; }
-    TPixel GetPixel(int x, int y) const;
 
     static void SetPixelFormat(unsigned rmask, unsigned gmask,
                                unsigned bmask);
