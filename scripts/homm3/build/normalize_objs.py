@@ -386,10 +386,12 @@ def _canonicalize_equivalent_relocations(
 
     base_functions: dict[str, list[canon.Symbol]] = {}
     target_functions: dict[str, list[canon.Symbol]] = {}
+    # A source `static` function is a storage-class-3 definition; it owns its
+    # relocations exactly as an external one does.
     for coff, table in ((base, base_functions), (target, target_functions)):
         for symbol in coff.symbols.values():
             if (symbol.section > 0 and symbol.typ == FUNCTION_TYPE and
-                    symbol.storage_class == EXTERNAL_STORAGE):
+                    symbol.storage_class in (EXTERNAL_STORAGE, STATIC_STORAGE)):
                 table.setdefault(symbol.name, []).append(symbol)
 
     base_pairs: dict[tuple[str, int], canon.Relocation] = {}

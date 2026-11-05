@@ -19,7 +19,8 @@ from homm3.build.test_eh_handler_normalization import (
 def _base(*, literal: int = 0x00401020,
           field_addend: int = 4, anchor_addend: int = 0,
           source_name: str = "source",
-          literal_relocation_type: int | None = None) -> bytes:
+          literal_relocation_type: int | None = None,
+          owner_storage_class: int = 2) -> bytes:
     text = (b"\x05" + struct.pack("<I", literal) +
             b"\xa1" + struct.pack("<I", field_addend) +
             b"\xa1" + struct.pack("<I", anchor_addend) + b"\xc3")
@@ -30,7 +31,7 @@ def _base(*, literal: int = 0x00401020,
     return _coff(
         (FixtureSection(".text", text, tuple(relocations)),),
         (
-            _symbol("probe", 0, 1, FUNCTION_TYPE, 2),
+            _symbol("probe", 0, 1, FUNCTION_TYPE, owner_storage_class),
             _symbol(source_name, 0, 0, 0, 2),
         ),
     )
@@ -129,6 +130,14 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
         self.assertEqual(normalized.symbols[rows[6].symbol_index].name,
                          "owner")
         self.assertEqual(rows[11].symbol_index, 3)
+
+    def test_static_candidate_function_owns_its_relocations(self):
+        # A source `static` definition (storage class 3) is paired with the
+        # retail function exactly as an external one is.
+        _, literals, aggregates = _canonicalize_equivalent_relocations(
+            _base(owner_storage_class=3), _target(), AUTHORITY,
+            image_base=0x400000)
+        self.assertEqual((literals, aggregates), (1, 1))
 
     def test_wrong_candidate_literal_stays_visible(self):
         before = _target()
