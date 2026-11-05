@@ -3941,23 +3941,8 @@ std::vector<int> g_invalidPlacementList;
 // counterpart.  Retail's two calls prove the later helper boundary directly,
 // and fatal caller contracts preserve it against re-inlining.
 
-// Wall (99.88535%, 2026-08-22): all 32 blocks, all 32 edges, the 157
-// instructions and their register bindings agree.  The only code delta is
-// one post-RA reload schedule after the inlined string comparison: retail
-// restores ESI before EAX/EDI, while this compile restores it after them.
-// `why-reg --model` classifies the two unpaired slots as the B16/C3/C4
-// schedule family, not a register-binding defect.  Direct/reference/pointer
-// candidate spellings, && versus split conditions, compare() versus ==,
-// signed/unsigned and reused/block-scoped loop counters, and every adjacent
-// declaration-order mutation either preserve this transpose or get worse.
-// Rechecked 2026-08-30: binding objectTypes[i] to a CObjectType& and splitting
-// the short-circuit into an explicit continue are byte-flat at 99.88535%;
-// declaring extra after typeIndex keeps the 421-byte size but falls to
-// 95.93630%.  The coherent original spelling remains the peak.
-// The other asm-report row is cosmetic: this TU's Dinkumware `_Nullstr`
-// COFF symbol and the target's source-owned pooled empty-literal symbol both
-// resolve to 0x63a608; no DATA_COMPGEN binding exists in mapcell.obj because
-// the literal's physical owner is another compiland.
+// Each deserialized type's image name is bound once and compared with every
+// candidate record of the same class and extra value.
 // Mac 0:0x1270c0..0x127278 is the same later helper: it clears 232 per-class
 // lists, scans 0x38-byte types backwards by extra and image name, and has the
 // same two reader calls. Declaration order, equality operand order and
@@ -3978,11 +3963,12 @@ void NewfullMap::rebuildObjectTypeIndex()
     for (int i = 0; i < m_objectTypes.size(); ++i) {
         int objectClass = m_objectTypes[i].m_objectType;
         int extra = m_objectTypes[i].m_extra;
+        const std::string& imageName = m_objectTypes[i].m_imageName;
         int typeIndex = m_objectTypeIndex[objectClass].size();
         while (typeIndex--) {
             CObjectType& candidate = m_objectTypeIndex[objectClass][typeIndex];
             if (candidate.m_extra == extra
-                && candidate.m_imageName == m_objectTypes[i].m_imageName)
+                && candidate.m_imageName == imageName)
                 break;
         }
         if (typeIndex >= 0)
