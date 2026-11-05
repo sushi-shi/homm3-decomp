@@ -2946,7 +2946,7 @@ philai	?getSchoolValue@@YIJPBVhero@@W4TSecondarySkill@@@Z	100.0000	100.0000	100.
 philai	?getSeerSkillRewardValue@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0x124630	tokens1:cea012e3c0f8
 philai	?getSkillValue@@YIJPBVhero@@W4TSecondarySkill@@E@Z	86.4960	86.4960	86.5040	0x124690	tokens1:a767d8b91071
 philai	?getTurnAIVars@philAI@@QAEXH@Z	97.8723	97.8723	97.8723	0x127960	tokens1:221248c58af9
-philai	?getValueOfSpring@@YIJPBVhero@@PBVNewmapCell@@G@Z	100.0000	100.0000	100.0000	0x12b810	tokens1:0bfff128da9c
+philai	?getValueOfSpring@@YIJPBVhero@@PBVNewmapCell@@G@Z	100.0000	100.0000	100.0000	0x12b810	tokens1:8817a3a901f1
 philai	?getValueOfWell@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510	tokens1:06614c0f8d43
 philai	?luckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80	tokens1:ef10e07752b8
 philai	?moraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0	tokens1:c2e4b27b2528
@@ -2963,7 +2963,7 @@ philai	?valueOfEnemyTown@@YIJPBVhero@@PBVtown@@FPAVNewmapCell@@@Z	100.0000	100.0
 philai	?valueOfExperience@@YIMPBVhero@@ABVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x127710	tokens1:1cdcccdec5fe
 philai	?valueOfGenerator@@YIHPBVhero@@HHHPAVNewmapCell@@H@Z	100.0000	100.0000	100.0000	0x129a30	tokens1:a0b47cf6dbb9
 philai	?valueOfLearning@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x1298d0	tokens1:a08e2c20ac1e
-philai	?valueOfMagicSchool@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129f90	tokens1:e6c2b740758e
+philai	?valueOfMagicSchool@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129f90	tokens1:5f3970451a85
 philai	?valueOfMine@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a010	tokens1:3e8816944ee8
 philai	?valueOfMonsters@@YIJPBVhero@@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12a140	tokens1:408ff137d671
 philai	?valueOfMoveSource@@YIHPBVhero@@JFAAJ@Z	100.0000	100.0000	100.0000	0x12a1e0	tokens1:ba67496d18fc
