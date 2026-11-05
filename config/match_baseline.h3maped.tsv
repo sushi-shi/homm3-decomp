@@ -4232,7 +4232,7 @@ Options	?setZoom@SOptions@@YAXH@Z	100.0000	100.0000	100.0000	0x92fdc	tokens1:a98
 Options	__h3cg$Options$static_ctor$g_dirtMask	99.6875	99.6875	99.6875	0x92cdb	-
 Options	__h3cg$Options$static_ctor$g_grassMask	99.6875	99.6875	99.6875	0x92d33	-
 Options	__h3cg$Options$static_ctor$g_lavaMask	99.6875	99.6875	99.6875	0x92e0f	-
-Options	__h3cg$Options$static_ctor$g_rockMask	99.6875	100.0000	100.0000	0x92e67	-
+Options	__h3cg$Options$static_ctor$g_rockMask	100.0000	100.0000	100.0000	0x92e67	-
 Options	__h3cg$Options$static_ctor$g_roughMask	99.6875	99.6875	99.6875	0x92db7	-
 Options	__h3cg$Options$static_ctor$g_sandMask	99.6875	99.6875	99.6875	0x92d07	-
 Options	__h3cg$Options$static_ctor$g_snowMask	99.6875	99.6875	99.6875	0x92d5f	-

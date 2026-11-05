@@ -1157,14 +1157,14 @@ cspriteframe	??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@@Z	100.0000	100.00
 cspriteframe	??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@HHHH@Z	100.0000	100.0000	100.0000	0x7c360	tokens1:8747924e5a0d
 cspriteframe	??1CSpriteFrame@@UAE@XZ	100.0000	100.0000	100.0000	0x7c430	tokens1:935326e6c0e1
 cspriteframe	??_GCSpriteFrame@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x7c280	-
-cspriteframe	?Draw@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7c570	tokens1:b7ed947ec4cc
-cspriteframe	?DrawAdvObjImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG@Z	100.0000	100.0000	100.0000	0x7d0a0	tokens1:75d715f767c1
-cspriteframe	?DrawAdvObjShadowImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_N@Z	100.0000	100.0000	100.0000	0x7d930	tokens1:76d637ea3d5c
-cspriteframe	?DrawAdvObjWithFlagAlpha@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@G_N@Z	100.0000	100.0000	100.0000	0x7d4f0	tokens1:a7b56a6fb7fe
+cspriteframe	?Draw@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7c570	tokens1:affecb5dec78
+cspriteframe	?DrawAdvObjImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG@Z	100.0000	100.0000	100.0000	0x7d0a0	tokens1:1bf8f1a550ad
+cspriteframe	?DrawAdvObjShadowImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_N@Z	100.0000	100.0000	100.0000	0x7d930	tokens1:3687cac9ad9f
+cspriteframe	?DrawAdvObjWithFlagAlpha@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@G_N@Z	100.0000	100.0000	100.0000	0x7d4f0	tokens1:cc8c802582d6
 cspriteframe	?DrawCreatureImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG2@Z	100.0000	100.0000	100.0000	0x7c9e0	tokens1:25392c5a31b4
-cspriteframe	?DrawSpellEffect@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7ef60	tokens1:6fdb31085de4
-cspriteframe	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7dd40	tokens1:1a9b7cd9a0f3
-cspriteframe	?DrawTileShadow@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7e820	tokens1:a8dd67758860
+cspriteframe	?DrawSpellEffect@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7ef60	tokens1:c69a7e41e8a0
+cspriteframe	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7dd40	tokens1:abd9833802f1
+cspriteframe	?DrawTileShadow@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7e820	tokens1:09f89a7aa011
 cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	100.0000	100.0000	100.0000	0x7c460	tokens1:0172ccda01da
 cspriteframe	?getSize@CSpriteFrame@@UBEIXZ	100.0000	100.0000	100.0000	0x7c560	tokens1:e80f98ba113c
 cursor	??9type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x82340	tokens1:964dd1e46326
@@ -2135,7 +2135,7 @@ game	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfef0	-
 game	?test@?$bitset@$0BM@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd17d0	-
 game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
-game	?transmitSaveGame@game@@QAEHHH_N0@Z	100.0000	100.0000	100.0000	0xcafd0	tokens1:f9f97a8930e9
+game	?transmitSaveGame@game@@QAEHHH_N0@Z	99.9778	100.0000	100.0000	0xcafd0	tokens1:f9f97a8930e9
 game	?turnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	tokens1:09ac63bef778
 game	?turnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	tokens1:b9f191ddf209
 game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	tokens1:9bea0f215987
@@ -2455,7 +2455,7 @@ kb	?memError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	tokens1:1ba3cc8bae3d
 kb	?normalDialog@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6570	tokens1:3256171b57ce
 kb	?normalDialogHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf08d0	tokens1:290ebd6d5d36
 kb	?normalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	tokens1:ae15beacb170
-kb	?oldmain@@YIHXZ	88.5930	88.5930	88.6306	0xee3e0	tokens1:40c300a1cb50
+kb	?oldmain@@YIHXZ	88.5909	88.5930	88.6306	0xee3e0	tokens1:40c300a1cb50
 kb	?pickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	tokens1:e6bf0ad066ce
 kb	?playFramedVideo@@YIXHPBD@Z	100.0000	100.0000	100.0000	0xee1b0	tokens1:9fc70bf01c6c
 kb	?playerDead@@YIXH@Z	100.0000	100.0000	100.0000	0xf11a0	tokens1:c5674b5eecba
@@ -3290,7 +3290,7 @@ rmg	??1TRmgZone@@QAE@XZ	100.0000	100.0000	100.0000	0x132b50	tokens1:12b0e6dad538
 rmg	??1t_abstract_random_generator@@UAE@XZ	100.0000	100.0000	100.0000	0x1363b0	tokens1:bcc1edf8a519
 rmg	??1t_quest_artifact@@UAE@XZ	100.0000	100.0000	100.0000	0x1339f0	tokens1:07f2e21a243a
 rmg	??1type_black_box@@UAE@XZ	100.0000	100.0000	100.0000	0x1336b0	377ae490e249
-rmg	??1type_object@@UAE@XZ	100.0000	100.0000	100.0000	0x1338d0	tokens1:12341612fd7c
+rmg	??1type_object@@UAE@XZ	100.0000	100.0000	100.0000	0x1338d0	tokens1:3982beda34fc
 rmg	??1type_progress_bar@@UAE@XZ	100.0000	100.0000	100.0000	0x130e70	tokens1:67225dfdc0cc
 rmg	??1type_random_map@@UAE@XZ	100.0000	100.0000	100.0000	0x1310b0	tokens1:409c8a49d4c4
 rmg	??1type_random_map_generator@@UAE@XZ	100.0000	100.0000	100.0000	0x137df0	tokens1:7b4f74b499ac
@@ -3523,7 +3523,7 @@ rmg	?write@type_spell_scroll@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.00
 rmg	?write@type_town@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1332f0	tokens1:e6289e33c9b3
 rmg	?write@type_witch_hut@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:fbd718bf737d
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:13741c51120f
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	97.0908	97.0908	97.4546	0x149cb0	tokens1:4ffadb7f9162
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	97.0829	97.0908	97.4546	0x149cb0	tokens1:4ffadb7f9162
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:faace9822d6e
 rmg	__h3cg$rmg$queue_list_dtor$TRmgPoint	0.0000	100.0000	100.0000	0x14c6a0	-
 rmg	__h3cg$rmg$static_dtor$riverDeltaOffsets	100.0000	100.0000	100.0000	0x149790	-
@@ -3595,7 +3595,7 @@ rmg_terrain	?getTileGroundShape@TNormalTerrainTypeTraits@@UAEHH@Z	100.0000	100.0
 rmg_terrain	?getTileGroundShape@TRockTraits@@UAEHH@Z	100.0000	100.0000	100.0000	0x1b3a80	tokens1:b3d1ce9ca9fd
 rmg_terrain	?getTransitionStrength@TRmgTerrainPainter@@QAEHABV?$TPoint@I@@H@Z	100.0000	100.0000	100.0000	0x1b6fd0	tokens1:98d7520f1ff2
 rmg_terrain	?hasDifferentOuterAxisNeighbour@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@ABUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b6e00	tokens1:27a70d318049
-rmg_terrain	?hasMatchingDiagonalNeighbour@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@ABUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b6ba0	tokens1:cacb4ce3a7f7
+rmg_terrain	?hasMatchingDiagonalNeighbour@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@ABUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b6ba0	tokens1:4431703f6112
 rmg_terrain	?hasMultipleAdjSimilarSpans@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x1b6810	tokens1:285ef4985f8e
 rmg_terrain	?hasSpecialTiles@TNormalTerrainTypeTraits@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3840	tokens1:d0e06ba30027
 rmg_terrain	?hasSpecialTiles@TRockTraits@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3a40	tokens1:2454ea236ec9
@@ -4662,7 +4662,7 @@ victor	?victorUploadPalette@@YGHPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x20381
 victor	?victorValidateBitmap@@YGHPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x2039a0	tokens1:81b291f931eb
 victor	?victorValidateImage@@YGHPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x2038b0	tokens1:95486ee5b58c
 victor_bits	?victorExtractBits@@YGXPAEPBEHH@Z	100.0000	100.0000	100.0000	0x2047b0	tokens1:f3c87d5541fa
-victor_bits	?victorInsertBits@@YGXPAEPBEHH@Z	99.5370	100.0000	100.0000	0x204720	tokens1:caff31e13f22
+victor_bits	?victorInsertBits@@YGXPAEPBEHH@Z	100.0000	100.0000	100.0000	0x204720	tokens1:caff31e13f22
 victor_flip	?flipimage@@YGHPAUimgdes@@0@Z	100.0000	100.0000	100.0000	0x203b20	tokens1:3424aff74822
 victor_loadpcx	?loadpcx@@YGHPBDPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x203e00	tokens1:f1b085eefc2a
 victor_locks	?victorDestroyLock0@@YAXXZ	100.0000	100.0000	100.0000	0x204620	tokens1:08893f65c4d3
