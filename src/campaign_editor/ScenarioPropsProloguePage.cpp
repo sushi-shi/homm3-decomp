@@ -195,6 +195,12 @@ BOOL TScenarioPropsProloguePageBase::OnInitDialog()
 // recovers the first music comparison's ECX/EDX homes, but still expands both
 // string comparisons. Member and friend equality emitted the same caller;
 // keep the existing member interface and canonical getter chain.
+// The inline trace replays retail's call (and changes nothing else) only
+// with two more top-level candidate sites after the first equality and
+// before the auto_ptr's destruction (`predict-inline --add 4:2` or 19:2):
+// they divide the d1 budget so the d4 compare(pos, n, s, count) site gets
+// 104 < 133. Sites after the destructor instead refuse its string _Tidy.
+// No such source site is evidenced yet.
 VA(0x0042cd00, 0x24f)
 void TScenarioPropsProloguePageBase::OnOK()
 {
@@ -331,3 +337,8 @@ void TScenarioPropsEpiloguePage::removePrologue(TScenario& scenario) const
 {
     scenario.removeEpilogue();
 }
+
+// OnOK's first prologue comparison (0x42cdb4) is the only retail caller of
+// this retained compare(pos, n, s, count). The current OnOK expands it, so
+// no COFF symbol pairs the claim until that call is recovered.
+VA_COMPGEN(0x0042d8a0, 0x69, BASIC_STRING_COMPARE_SUBSTR, char)

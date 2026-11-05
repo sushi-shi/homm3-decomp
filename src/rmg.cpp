@@ -5736,6 +5736,12 @@ void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
 VA_COMPGEN(0x0054C1E0, 0x1E9, VECTOR_RESIZE, Short)
 
 VA_COMPGEN(0x0054C3D0, 0x12, VECTOR_SIZE, Short)
+// The editor's 18-byte copy follows its resize<short> (0x4ae18f) unpadded;
+// propagateZoneDistances' entry (0x4a3595) is its only retail caller, since
+// the editor's resize expands both size() calls the game's keeps. Every
+// editor object currently expands that entry call too, so no COFF symbol
+// pairs this claim until the caller's budget decision is recovered.
+VA_COMPGEN_AT(h3maped, 0x004ae1eb, 0x12, VECTOR_SIZE, Short)
 
 // BuildZoneBoundaries passes the count from before the radial sites were
 // added and its live Voronoi diagram. Extra-to-extra edges become completed
