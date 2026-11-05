@@ -1310,6 +1310,7 @@ b8 TRmgTerrainPainter::hasMatchingDiagonalNeighbour(
     // The guarded initializer registers atexit(0x5b6df0), this table's empty
     // cleanup, placed right after this function.
     VA_COMPGEN(0x005b6df0, 0x1, STATIC_DTOR, firstDiagonalOffsets)
+    VA_COMPGEN_AT(h3maped, 0x004bcd42, 0x1, STATIC_DTOR, firstDiagonalOffsets)
     DATA(0x006A5260)
     static TPoint<int> firstDiagonalOffsets[4][2] = {
         { TPoint<int>(-1, 1), TPoint<int>(1, -1) },
@@ -1589,6 +1590,8 @@ VA_COMPGEN(0x005b8a40, 0x59, TREE_LBOUND, TPoint_unsigned_int)
 VA_COMPGEN(0x005b8b60, 0x59, TREE_UBOUND, TPoint_unsigned_int)
 
 VA_COMPGEN(0x005b4860, 0x6e, IMPLICIT_DTOR, set)
+// Both work-set members unwind through this retained editor wrapper.
+VA_COMPGEN_AT(h3maped, 0x004bb67c, 0x5, IMPLICIT_DTOR, set)
 
 // erase(key) in TTerrainPlacementOp::changeTerrain retains Dinkumware's
 // public distance wrapper and its category-dispatched overload. The wrapper
@@ -1766,6 +1769,7 @@ DATA(0x006a4ca0)
 static TNormalTerrainTypeTraits g_rmgWaterRule(0, 0, 0, 33, g_rmgWaterPatternEntries);
 
 VA_COMPGEN(0x005b3d60, 0x23, STATIC_CTOR, g_rmgWaterRule)
+VA_COMPGEN_AT(h3maped, 0x004bacce, 0x17, STATIC_CTOR, g_rmgWaterRule)
 
 VA_COMPGEN(0x005b3d90, 0x0a, STATIC_DTOR, g_rmgWaterRule)
 DATA(0x006a48c8)

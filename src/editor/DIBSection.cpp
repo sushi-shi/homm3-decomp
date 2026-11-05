@@ -8,6 +8,10 @@
 #include "va.h"
 #include "editor/DIBSection.h"
 
+// Campaign bitmap destructors unwind through this base vptr restoration.
+// Its seven bytes and TBitmapBase<unsigned short> vtable identify the body.
+VA_COMPGEN_AT(h3ccmped, 0x0041d480, 0x7, IMPLICIT_DTOR, TBitmapBase)
+
 VA(0x0040d1c2, 0x28)
 T16bppDIBSection::T16bppDIBSection()
 {

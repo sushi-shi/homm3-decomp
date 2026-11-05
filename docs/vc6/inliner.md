@@ -3142,6 +3142,19 @@ decoder call in `ecaa9d412` left 94.9221% with the old peak retained. Keep the
 canonical chain: neither that old peak nor the trace justifies flattening a
 helper or adding an inline-depth pragma.
 
+The campaign editor supplies a complementary budget example. Loki's retained
+`readBitset<9>` (0x837b920) and `<48>` (0x837b630) extract each bit with a
+right shift and `& 1`. Restoring that expression in the canonical pointer
+helper lowers its VC6 cost from 89 to 87. Five expansions in
+`TScenarioCrossover::read` before its 129-to-144 copy save ten budget units:
+the copy enters with 391 instead of 381 and gives proxy assignment 43
+instead of 41. Assignment then expands, while its nested `set<144>` stays
+called, as at native 0x40817e. The newly emitted 96-byte specialization at
+0x40f940 is exact. This is a recovered helper expression, not a forced
+template instantiation. The containing reader is still non-exact; its
+right-shift loop differs from retail's mask/test sequence, and the new
+helper boundary does not establish a complete caller reconstruction.
+
 ## Single-edit replay scans and what they settle (2026-10-09)
 
 A whole-unit trace plus `inline_replay` can test every single source-shape

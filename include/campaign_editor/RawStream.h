@@ -160,14 +160,16 @@ inline TRawOStream& operator<<(TRawOStream& stream, const std::string& value)
 
 // A bit set as the map format packs it: (N + 7) / 8 bytes, bit 0 of byte 0
 // first.
-// Loki 0x0837b920 retains readBitset<9> with a bitset output pointer.
+// Loki 0x0837b920 retains readBitset<9> with a bitset output pointer;
+// its 0x0837b986 shift/AND and readBitset<48>'s 0x0837b696 use right-shift
+// extraction, followed by the ordinary bitset proxy assignment.
 template <size_t N>
 inline void readBitset(TRawIStream& stream, std::bitset<N>* bits)
 {
     unsigned char bytes[(N + 7) / 8];
     stream >> bytes;
     for (unsigned int i = 0; i < N; i++)
-        (*bits)[i] = (bytes[i / 8] & (1 << (i % 8))) != 0;
+        (*bits)[i] = (bytes[i / 8] >> (i % 8)) & 1;
 }
 
 // Loki 0x0837b580 clears the full buffer before const-subscript packing.

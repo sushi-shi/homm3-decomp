@@ -81,6 +81,20 @@ class TailJoinTest(unittest.TestCase):
         merged, _refused = functions.merges(census(text, starts), {}, tails=True)
         self.assertEqual(merged, {0x1010: 0x1000})
 
+    def test_parent_catch_continuation_proves_an_aligned_tail(self):
+        text = bytes.fromhex("85c0740c") + b"\x90" * 12 + bytes.fromhex("90c3")
+        starts = {0x1000: "call", 0x1010: "tail"}
+        c = census(text, starts)
+        c.funclets[0x1020] = (0x900, "catch", 0)
+        c.continuations[0x1011] = 0x1020
+        merged, refused = functions.merges(c, {0x900: 0x1000}, tails=True, alignment=16)
+        self.assertEqual((merged, refused), ({0x1010: 0x1000}, []))
+
+        # A continuation returned by another function's catch proves nothing
+        # about this owner's aligned branch target.
+        merged, refused = functions.merges(c, {0x900: 0x2000}, tails=True, alignment=16)
+        self.assertEqual((merged, refused[0][3]), ({}, "starts on a 16-byte boundary"))
+
     def test_switch_off_keeps_piece(self):
         c = census(BODY + bytes.fromhex("c3"), {0x1000: "call", 0x100c: "tail", 0x1010: "call"})
         self.assertEqual(functions.merges(c, {}), ({}, []))

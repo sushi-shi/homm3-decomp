@@ -3,23 +3,23 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3maped.exe sha256=4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37 size=2134016
-# date: 2026-10-25
+# date: 2026-11-03
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	name	library	member
 0xd463a	??1?$CComPtr@UIColumnsInfo@@@ATL@@QAE@XZ	NAFXCW	occsite.obj
 0xd463a	??1?$CComPtr@UIRowset@@@ATL@@QAE@XZ	NAFXCW	occsite.obj
 0xd463a	??1?$CComPtr@UIRowsetChange@@@ATL@@QAE@XZ	NAFXCW	occsite.obj
 0xe5d2b	?_CallMemberFunction1@@YGXPAX00@Z	LIBCMT	trnsctrl.obj
-0xe7e20	__alloca_probe	LIBCMT	chkstk.obj
-0xe9fe0	__strcmpi	LIBCMT	stricmp.obj
+0xe7e20	__chkstk	LIBCMT	chkstk.obj
+0xe9fe0	__stricmp	LIBCMT	stricmp.obj
 0xea0b0	_fmod	LIBCMT	87fmod.obj
 0xf666e	__Stold	LIBCPMT	xstod.obj
 0xfe5ce	?Create@CStatusBarCtrl@@QAEHKABUtagRECT@@PAVCWnd@@I@Z	NAFXCW	winctrl2.obj
 0xfe5ce	?Create@CToolBarCtrl@@QAEHKABUtagRECT@@PAVCWnd@@I@Z	NAFXCW	winctrl2.obj
 0xff514	?QueryInterface@XFontNotification@COleControl@@UAGJABU_GUID@@PAPAX@Z	NAFXCW	ctlprop.obj
+0xff6a9	??0CByteArray@@QAE@XZ	NAFXCW	array_b.obj
 0xff6a9	??0CDWordArray@@QAE@XZ	NAFXCW	array_d.obj
 0xff6a9	??0CObArray@@QAE@XZ	NAFXCW	array_o.obj
-0xff6a9	??0CPtrArray@@QAE@XZ	NAFXCW	array_p.obj
 0xff6a9	??0CStringArray@@QAE@XZ	NAFXCW	array_s.obj
 0xff6a9	??0CUIntArray@@QAE@XZ	NAFXCW	array_u.obj
 0xff6a9	??0CWordArray@@QAE@XZ	NAFXCW	array_w.obj
@@ -45,5 +45,5 @@ rva	name	library	member
 0x1112f1	?GetNextDocTemplate@CDocManager@@UBEPAVCDocTemplate@@AAPAU__POSITION@@@Z	NAFXCW	docmgr.obj
 0x1146d8	?GetMessageString@COleControl@@UBEXIAAVCString@@@Z	NAFXCW	ctlcore.obj
 0x118392	??1CTempDC@@UAE@XZ	NAFXCW	wingdi.obj
-0x11ac80	??1?$CThreadLocal@VAFX_MODULE_THREAD_STATE@@@@QAE@XZ	NAFXCW	afxstate.obj
+0x11ac80	??1?$CThreadLocal@V_AFXCTL_AMBIENT_CACHE@@@@QAE@XZ	NAFXCW	ctlquick.obj
 0x11c332	?QueryInterface@XOleDocument@CDocObjectServer@@UAGJABU_GUID@@PAPAX@Z	NAFXCW	oledocob.obj

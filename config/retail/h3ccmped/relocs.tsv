@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-10-25
+# date: 2026-11-03
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 site_rva	kind
 0x1023	dir32
@@ -1784,6 +1784,7 @@ site_rva	kind
 0x1a620	dir32
 0x1a624	dir32
 0x1a628	dir32
+0x1a633	dir32
 0x1a723	dir32
 0x1a74c	dir32
 0x1a807	dir32
@@ -9145,6 +9146,7 @@ site_rva	kind
 0x6b4ca	dir32
 0x6b4ce	dir32
 0x6b4d2	dir32
+0x6b4d7	dir32
 0x6b50f	dir32
 0x6b54f	dir32
 0x6b57b	dir32
@@ -25395,28 +25397,21 @@ site_rva	kind
 0xc4f78	dir32
 0xc4f80	dir32
 0xc4f88	dir32
-0xc4f8c	dir32
 0xc4f90	dir32
 0xc4f98	dir32
-0xc4f9c	dir32
 0xc4fa0	dir32
 0xc4fa8	dir32
 0xc4fb0	dir32
 0xc4fb8	dir32
-0xc4fbc	dir32
 0xc4fc0	dir32
 0xc4fc8	dir32
 0xc4fd0	dir32
 0xc4fd8	dir32
 0xc4fe0	dir32
-0xc4fe4	dir32
 0xc4fe8	dir32
-0xc4fec	dir32
 0xc4ff0	dir32
 0xc4ff8	dir32
-0xc4ffc	dir32
 0xc5000	dir32
-0xc5004	dir32
 0xc5008	dir32
 0xc5010	dir32
 0xc5018	dir32
@@ -25426,29 +25421,21 @@ site_rva	kind
 0xc5038	dir32
 0xc5040	dir32
 0xc5048	dir32
-0xc504c	dir32
 0xc5050	dir32
 0xc5058	dir32
 0xc5060	dir32
 0xc5068	dir32
-0xc506c	dir32
 0xc5070	dir32
 0xc5078	dir32
-0xc507c	dir32
 0xc5080	dir32
 0xc5088	dir32
-0xc508c	dir32
 0xc5090	dir32
-0xc5094	dir32
 0xc5098	dir32
-0xc509c	dir32
 0xc50a0	dir32
 0xc50a8	dir32
 0xc50b0	dir32
 0xc50b8	dir32
-0xc50bc	dir32
 0xc50c0	dir32
-0xc50c4	dir32
 0xc50c8	dir32
 0xc50d0	dir32
 0xc50d8	dir32
@@ -25456,15 +25443,11 @@ site_rva	kind
 0xc50e8	dir32
 0xc50f0	dir32
 0xc50f8	dir32
-0xc50fc	dir32
 0xc5100	dir32
-0xc5104	dir32
 0xc5108	dir32
-0xc510c	dir32
 0xc5110	dir32
 0xc5118	dir32
 0xc5120	dir32
-0xc5124	dir32
 0xc5128	dir32
 0xc5130	dir32
 0xc5138	dir32

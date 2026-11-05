@@ -15,6 +15,15 @@ def label(name, rva=0x100):
 
 
 class ReviewedRuntimeNamesTest(unittest.TestCase):
+    def test_complete_reviewed_owner_disambiguates_an_expanded_base_destructor(self):
+        derived = row('derived', ownership='whole-section')
+        self.assertEqual(reviewed_runtime_names(
+            {0x100}, [label('base')], [derived], [label('derived')],
+            exports=[label('derived')]), ([label('derived')], []))
+        # Without a native-checked export the row alone cannot override it.
+        self.assertEqual(reviewed_runtime_names(
+            {0x100}, [label('base')], [derived]), ([label('base')], []))
+
     def test_reviewed_owner_and_existing_code_fold_behavior(self):
         self.assertEqual(reviewed_runtime_names({0x100}, [], [row('narrow'), row('wide')]),
                          ([label('narrow')], [label('wide')]))
@@ -47,6 +56,15 @@ class ReviewedRuntimeNamesTest(unittest.TestCase):
                                                 [row('wide', 'alias'), row('wide', 'alias')],
                                                 [label('wide')]),
                          ([label('narrow')], [label('wide')]))
+
+    def test_reviewed_alias_preserves_a_placed_source_comdat(self):
+        self.assertEqual(reviewed_runtime_names(
+            {0x100}, [label('narrow')], [row('narrow', 'alias')],
+            [label('wide')], source_owned={0x100}), ([], []))
+        # An actual code owner remains runtime-owned.
+        self.assertEqual(reviewed_runtime_names(
+            {0x100}, [label('narrow')], [row('narrow'), row('wide', 'alias')],
+            source_owned={0x100}), ([label('narrow')], [label('wide')]))
 
     def test_equal_primary_name_is_not_its_own_alias(self):
         self.assertEqual(reviewed_runtime_names({0x100}, [label('narrow')],

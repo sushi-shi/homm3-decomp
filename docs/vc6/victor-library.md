@@ -293,6 +293,30 @@ are all worse. Compiling the same source with the C front end gives the
 same allocation, so the C++ build is kept. Probe and
 search scripts were disposable and are not kept.
 
+## Shared declarations and the editors' last register mismatch
+
+The pinned game and both Complete editors contain the same 132-byte
+`victorInsertBits`, after accounting for its two mask-table addresses. Its
+last operation loads the destination into BL, combines the inverse mask and
+saved bits in CL, then stores CL. The current-source game MAX was already
+100%, but later builds used DL for this operation; both editors therefore
+remained at 99.54%. A recorded MAX is not a claim about today's object.
+
+The last exact checkpoint predates the move of the lock cleanup bodies to
+`victor_locks.cpp`. That move added eight lock-storage extern declarations to
+`victor.h`, visible even to the unrelated bit helpers. Moving those externs
+beside their sole cross-TU consumer in `victor_locks.cpp` restores the exact
+insertion bytes without changing either bit helper. The definitions remain
+in `victor.cpp`, and the shared lock type remains in the header. This is an
+ordinary declaration-ownership choice supported by the actual consumers;
+the original vendor header layout is not recovered. Equivalent rewrites of
+the final mask expression and the shared NO_STRICT define were byte-flat.
+
+This is another reason to inspect a shared interface's consumers when a
+small register residual appears after unrelated work. It does not justify
+unused declarations, arbitrary header permutations, or changing a helper's
+semantics to steer allocation.
+
 ## Linked data of unlinked Victor code
 
 Retail keeps the data of Victor objects whose functions it drops: the JPEG,

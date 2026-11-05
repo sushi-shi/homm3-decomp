@@ -64,6 +64,31 @@ void clean() { DATA(0x00401000) static unsigned char values[5] = { 1 }; }
         self.assertEqual(facts[0x1000]['size'], 5)
         self.assertTrue(facts[0x1000]['source'].startswith('probe.cpp:'))
 
+    def test_header_static_redeclaration_keeps_typed_address_metadata(self):
+        facts, errors = self.parse('''
+#include "dependency.h"
+namespace std { DATA(0x00401000) extern Init init; }
+''', 'namespace std { struct Init { Init(); }; static Init init; }\n')
+        self.assertFalse(errors)
+        self.assertEqual(facts[0x1000]['size'], 1)
+        self.assertTrue(facts[0x1000]['internal'])
+        self.assertTrue(facts[0x1000]['defined'])
+        self.assertEqual(facts[0x1000]['name'], '_init')
+
+    def test_extern_without_a_definition_does_not_claim_storage(self):
+        facts, errors = self.parse('DATA(0x00401000) extern int elsewhere;\n')
+        self.assertFalse(errors)
+        self.assertFalse(facts[0x1000]['defined'])
+
+    def test_comment_before_unannotated_redeclaration_is_not_an_address(self):
+        facts, errors = self.parse('''
+static int value;
+// DATA(0x00401000)
+extern int value;
+''')
+        self.assertFalse(errors)
+        self.assertFalse(facts)
+
     def test_static_in_anonymous_namespace_takes_cl_c_name(self):
         # cl 12 names `static` data in a source file's anonymous namespace
         # `_name` (retail rmg.obj); without `static` the scope stays mangled.
@@ -78,7 +103,7 @@ DATA(0x00404000) static int fileStatic = 1;
         self.assertFalse(errors)
         self.assertEqual(facts[0x1000]['name'], '_table')
         self.assertIn('?A0x', facts[0x2000]['name'])
-        self.assertNotEqual(facts[0x3000]['name'], '_inner')
+        self.assertEqual(facts[0x3000]['name'], '_inner')
         self.assertEqual(facts[0x4000]['name'], '_fileStatic')
 
 

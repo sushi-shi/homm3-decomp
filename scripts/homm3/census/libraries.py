@@ -56,7 +56,7 @@ STATIC = 3
 #: runtime's template bodies are the project units' to place.
 FOLDED_LIBRARY = "NAFXCW"
 #: A class's primary vtable symbol.
-VTABLE = re.compile(r"^\?\?_7(\w+)@@6B@$")
+VTABLE = re.compile(r"^\?\?_7(.+)@@6B@$")
 #: A class's scalar or vector deleting destructor.
 DELETING = re.compile(r"^\?\?_[GE](.+)@@[QUI]AEPAXI@Z$")
 
@@ -235,6 +235,46 @@ def _reviewed_runtime_sections(image, rows, archives):
         yield rva, section, public, named, library, row
 
 
+def reviewed_fixed_data_words(image, rows, archives):
+    """Aligned fixed words of complete reviewed library data are not pointers.
+
+    A native-checked COFF section distinguishes its relocatable addresses
+    from scalar payloads, including three-letter locale codes such as ENC.
+    The literal heuristic cannot make that distinction for three-byte text.
+    """
+    from homm3.verify.library_code import archive, section as object_section, differences
+    fixed = set()
+    for row in rows:
+        if row['kind'] != 'data' or row.get('ownership') != 'whole-section':
+            continue
+        path = archives.get(row['library'].rsplit('.', 1)[0])
+        if path is None or not path.is_file():
+            continue
+        obj = archive(path)[0].get(row['member'])
+        number = int(row['section'])
+        if obj is None or not 1 <= number <= len(obj.sections):
+            continue
+        section = object_section(row['library'], row['member'], obj, number)
+        rva = int(row['rva'], 16)
+        mapped = image.section_of(rva)
+        if (section.code or section.bss or section.size <= 0
+                or int(row['size'], 0) != section.size or mapped is None
+                or mapped.executable or rva + section.size > mapped.rva + mapped.size):
+            continue
+        offset = mapped.raw_offset + rva - mapped.rva
+        if differences(section, image.data[offset:offset + section.size]):
+            continue
+        # Unknown relocation kinds cannot establish fixed-byte ownership.
+        if any(kind not in (6, 20) for _site, kind, _index in section.relocations):
+            continue
+        reloc_bytes = {b for site, _kind, _index in section.relocations
+                       for b in range(site, site + 4)}
+        for word in range((-rva) % 4, section.size - 3, 4):
+            if all(byte not in reloc_bytes for byte in range(word, word + 4)):
+                fixed.add(rva + word)
+    return fixed
+
+
 def reviewed_runtime_anchors(image, rows, archives):
     """Explicit original function anchors, never guessed gap starts.
 
@@ -279,7 +319,7 @@ def reviewed_runtime_exports(image, rows, archives, functions):
                 exports.add((entry, symbol.name, library, row['member']))
     return sorted(exports)
 
-def reviewed_runtime_names(starts, runtime, reviewed, aliases=(), *, exports=()):
+def reviewed_runtime_names(starts, runtime, reviewed, aliases=(), *, exports=(), source_owned=()):
     """Merge reviewed owners and aliases without making aliases owners.
 
     A native vtable can prove two template identities at one folded body.
@@ -290,9 +330,27 @@ def reviewed_runtime_names(starts, runtime, reviewed, aliases=(), *, exports=())
     """
     starts = set(starts)
     reviewed = tuple(reviewed)
-    result = list(runtime)
+    # A reviewed complete section disambiguates equal-byte library bodies.
+    # The heuristic may pick an inlined base destructor instead of the
+    # retained derived destructor; that is not an independently proved ICF
+    # alias. Only validated section exports can establish this precedence.
+    exports = tuple(exports)
+    admitted = {(int(row['rva'], 16), row['symbol']) for row in reviewed
+                if row['kind'] == 'code' and row.get('ownership') == 'whole-section'
+                and row['symbol'] != '-'}
+    preferred = {rva: name for rva, name, _lib, _member in exports
+                 if (rva, name) in admitted}
+    # A reviewed alias explicitly leaves ownership with its source copy.
+    # More precise template-vtable matching must not reclassify that placed
+    # source COMDAT as library-owned merely because its bytes also agree.
+    owners = {int(row['rva'], 16) for row in reviewed if row['kind'] == 'code'}
+    source_aliases = ({int(row['rva'], 16) for row in reviewed if row['kind'] == 'alias'}
+                      & set(source_owned)) - owners
+    result = [label for label in runtime if label[0] not in source_aliases
+              and (label[0] not in preferred or label[1] == preferred[label[0]])]
     names_at = {rva: name for rva, name, _library, _member in result}
-    alternate = set(aliases)
+    alternate = {label for label in aliases if label[0] not in source_aliases
+                 and label[1] != preferred.get(label[0])}
     def add(label):
         rva, name, _library, _member = label
         if rva not in names_at:

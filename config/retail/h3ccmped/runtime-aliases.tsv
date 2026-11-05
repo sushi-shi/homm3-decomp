@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-10-25
+# date: 2026-11-03
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	name	library	member
 0x36f44	??1COccManager@@UAE@XZ	NAFXCW	occmgr.obj
@@ -37,12 +37,11 @@ rva	name	library	member
 0x3e6cc	??4COleVariant@@QAEABV0@PBUtagVARIANT@@@Z	NAFXCW	olevar.obj
 0x4dd97	?seekpos@?$basic_filebuf@GU?$char_traits@G@std@@@std@@MAE?AV?$fpos@H@2@V32@H@Z	LIBCPMT	wiostrea.obj
 0x4e419	?flush@?$basic_ostream@GU?$char_traits@G@std@@@std@@QAEAAV12@XZ	LIBCPMT	wiostrea.obj
-0x4e595	??1?$basic_streambuf@GU?$char_traits@G@std@@@std@@UAE@XZ	LIBCPMT	wiostrea.obj
 0x4f9f9	?_CallMemberFunction1@@YGXPAX00@Z	LIBCMT	trnsctrl.obj
 0x502cd	??1bad_typeid@@UAE@XZ	LIBCMT	rtti.obj
-0x51550	__alloca_probe	LIBCMT	chkstk.obj
+0x51550	__chkstk	LIBCMT	chkstk.obj
 0x53230	_fmod	LIBCMT	87fmod.obj
-0x53270	__strcmpi	LIBCMT	stricmp.obj
+0x53270	__stricmp	LIBCMT	stricmp.obj
 0x653a2	?QueryInterface@XFontNotification@COleControl@@UAGJABU_GUID@@PAPAX@Z	NAFXCW	ctlprop.obj
 0x65537	??0CPtrList@@QAE@H@Z	NAFXCW	list_p.obj
 0x65537	??0CStringList@@QAE@H@Z	NAFXCW	list_s.obj
@@ -50,9 +49,9 @@ rva	name	library	member
 0x655bf	?NewNode@CPtrList@@IAEPAUCNode@1@PAU21@0@Z	NAFXCW	list_p.obj
 0x65630	?AddTail@CPtrList@@QAEPAU__POSITION@@PAX@Z	NAFXCW	list_p.obj
 0x656b4	?Find@CPtrList@@QBEPAU__POSITION@@PAXPAU2@@Z	NAFXCW	list_p.obj
+0x656d7	??0CByteArray@@QAE@XZ	NAFXCW	array_b.obj
 0x656d7	??0CDWordArray@@QAE@XZ	NAFXCW	array_d.obj
 0x656d7	??0CObArray@@QAE@XZ	NAFXCW	array_o.obj
-0x656d7	??0CPtrArray@@QAE@XZ	NAFXCW	array_p.obj
 0x656d7	??0CStringArray@@QAE@XZ	NAFXCW	array_s.obj
 0x656d7	??0CUIntArray@@QAE@XZ	NAFXCW	array_u.obj
 0x656d7	??0CWordArray@@QAE@XZ	NAFXCW	array_w.obj
@@ -76,5 +75,5 @@ rva	name	library	member
 0x7b12d	??1CTempWnd@@UAE@XZ	NAFXCW	wincore.obj
 0x7b32a	??1CWindowlessDC@@UAE@XZ	NAFXCW	ctlnownd.obj
 0x7b371	??1CTempGdiObject@@UAE@XZ	NAFXCW	wingdi.obj
-0x7d503	??1?$CThreadLocal@VAFX_MODULE_THREAD_STATE@@@@QAE@XZ	NAFXCW	afxstate.obj
+0x7d503	??1?$CThreadLocal@V_AFXCTL_AMBIENT_CACHE@@@@QAE@XZ	NAFXCW	ctlquick.obj
 0x7eb7a	?QueryInterface@XOleDocument@CDocObjectServer@@UAGJABU_GUID@@PAPAX@Z	NAFXCW	oledocob.obj

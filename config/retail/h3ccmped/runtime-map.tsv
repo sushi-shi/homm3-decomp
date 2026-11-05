@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-10-25
+# date: 2026-11-03
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	name	library	member
 0xf1d0	??1locale@std@@QAE@XZ	LIBCPMT	ios.obj
@@ -362,7 +362,7 @@ rva	name	library	member
 0x4e46e	??0?$basic_istream@GU?$char_traits@G@std@@@std@@QAE@PAV?$basic_streambuf@GU?$char_traits@G@std@@@1@_N@Z	LIBCPMT	wiostrea.obj
 0x4e4d6	??0?$basic_istream@GU?$char_traits@G@std@@@std@@QAE@W4_Uninitialized@1@@Z	LIBCPMT	wiostrea.obj
 0x4e535	??0?$basic_filebuf@GU?$char_traits@G@std@@@std@@QAE@PAU_iobuf@@@Z	LIBCPMT	wiostrea.obj
-0x4e595	??1?$basic_streambuf@DU?$char_traits@D@std@@@std@@UAE@XZ	LIBCPMT	iostream.obj
+0x4e595	??1?$basic_streambuf@GU?$char_traits@G@std@@@std@@UAE@XZ	LIBCPMT	wiostrea.obj
 0x4e5a3	?overflow@?$basic_streambuf@GU?$char_traits@G@std@@@std@@MAEGG@Z	LIBCPMT	wiostrea.obj
 0x4e5aa	?underflow@?$basic_streambuf@GU?$char_traits@G@std@@@std@@MAEGXZ	LIBCPMT	wiostrea.obj
 0x4e5af	?uflow@?$basic_streambuf@GU?$char_traits@G@std@@@std@@MAEGXZ	LIBCPMT	wiostrea.obj
@@ -496,7 +496,7 @@ rva	name	library	member
 0x51350	_strlen	LIBCMT	strlen.obj
 0x513cb	__mbsnbcmp	LIBCMT	mbsnbcmp.obj
 0x514ba	__ismbcdigit	LIBCMT	ismbdgt.obj
-0x51550	__chkstk	LIBCMT	chkstk.obj
+0x51550	__alloca_probe	LIBCMT	chkstk.obj
 0x5157f	__ismbcspace	LIBCMT	ismbspc.obj
 0x5160e	__dosmaperr	LIBCMT	dosmap.obj
 0x51681	__errno	LIBCMT	dosmap.obj
@@ -559,7 +559,7 @@ rva	name	library	member
 0x53230	_atan2	LIBCMT	87ctriga.obj
 0x5323a	__CIfmod	LIBCMT	87fmod.obj
 0x53244	fFMOD	LIBCMT	87fmod.obj
-0x53270	__stricmp	LIBCMT	stricmp.obj
+0x53270	__strcmpi	LIBCMT	stricmp.obj
 0x53340	_setlocale	LIBCMT	setlocal.obj
 0x53586	__setlocale_set_cat	LIBCMT	setlocal.obj
 0x536a1	__setlocale_get_all	LIBCMT	setlocal.obj
@@ -1006,7 +1006,7 @@ rva	name	library	member
 0x65659	?RemoveHead@CPtrList@@QAEPAXXZ	NAFXCW	list_p.obj
 0x6567d	?RemoveAt@CPtrList@@QAEXPAU__POSITION@@@Z	NAFXCW	list_p.obj
 0x656b4	?Find@CObList@@QBEPAU__POSITION@@PAVCObject@@PAU2@@Z	NAFXCW	list_o.obj
-0x656d7	??0CByteArray@@QAE@XZ	NAFXCW	array_b.obj
+0x656d7	??0CPtrArray@@QAE@XZ	NAFXCW	array_p.obj
 0x656ee	??_GCPtrArray@@UAEPAXI@Z	NAFXCW	array_p.obj
 0x6570a	??1CPtrArray@@UAE@XZ	NAFXCW	array_p.obj
 0x65737	?SetSize@CPtrArray@@QAEXHH@Z	NAFXCW	array_p.obj
@@ -1286,6 +1286,7 @@ rva	name	library	member
 0x6b14d	?GetErrorMessage@CFileException@@UAEHPADIPAI@Z	NAFXCW	filex.obj
 0x6b1ed	?AfxThrowFileException@@YGXHJPBD@Z	NAFXCW	filex.obj
 0x6b258	?OsErrorToException@CFileException@@SGHJ@Z	NAFXCW	filex.obj
+0x6b4d6	?GetRuntimeClass@CObject@@UBEPAUCRuntimeClass@@XZ	NAFXCW	objcore.obj
 0x6b4dc	?IsKindOf@CObject@@QBEHPBUCRuntimeClass@@@Z	NAFXCW	objcore.obj
 0x6b4ee	?AfxDynamicDownCast@@YAPAVCObject@@PAUCRuntimeClass@@PAV1@@Z	NAFXCW	objcore.obj
 0x6b50e	?CreateObject@CRuntimeClass@@QAEPAVCObject@@XZ	NAFXCW	objcore.obj
@@ -2081,7 +2082,7 @@ rva	name	library	member
 0x7d45b	??1_AFX_CTL3D_STATE@@UAE@XZ	NAFXCW	app3d.obj
 0x7d49c	??1_AFX_CTL3D_THREAD@@UAE@XZ	NAFXCW	app3d.obj
 0x7d4d2	?AfxGetCtl3dState@@YGPAV_AFX_CTL3D_STATE@@XZ	NAFXCW	app3d.obj
-0x7d503	??1?$CThreadLocal@V_AFXCTL_AMBIENT_CACHE@@@@QAE@XZ	NAFXCW	ctlquick.obj
+0x7d503	??1?$CThreadLocal@VAFX_MODULE_THREAD_STATE@@@@QAE@XZ	NAFXCW	afxstate.obj
 0x7d512	??1_AFXCTL_AMBIENT_CACHE@@UAE@XZ	NAFXCW	ctlquick.obj
 0x7d529	??1?$CProcessLocal@V_AFX_DB_STATE@@@@QAE@XZ	NAFXCW	dbcore.obj
 0x7d558	?AfxEnableWin40Compatibility@@YGXXZ	NAFXCW	auxdata.obj

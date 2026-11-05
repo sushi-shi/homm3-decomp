@@ -5,8 +5,10 @@
 #include <string.h>
 
 #include <algorithm>
-#include <istream>
-#include <ostream>
+// CRT slots 26/27 construct the two <iostream> header statics at
+// 0x4c6f4d/0x4c6f4c and register their matching Init/_Winit destructors.
+// The separate istream/ostream headers do not emit those proven objects.
+#include <iostream>
 
 #include "va.h"
 #include "bitset_iterator.h"
@@ -16,6 +18,19 @@
 #include "editor/GameMapHeader.h"
 #include "campaign_editor/Campaign.h"
 #include "campaign_editor/CampaignEditorText.h"
+
+VA_COMPGEN(0x00410820, 0xa, STATIC_CTOR, _Ios_init)
+VA_COMPGEN(0x00410860, 0xa, STATIC_CTOR, _Wios_init)
+
+// Address metadata for the objects defined in the pinned <iostream> header.
+// VC6 must see only that definition: even an extern redeclaration makes it
+// emit another constructor. Clang reads these DATA annotations for labels.
+#if defined(__clang__) || defined(HOMM3_SOURCE_OWNERSHIP)
+namespace std {
+DATA(0x004c6f4d) extern ios_base::Init _Ios_init;
+DATA(0x004c6f4c) extern _Winit _Wios_init;
+}
+#endif
 
 class TCampaign::_TImpl {
 public:
@@ -916,6 +931,11 @@ TScenarioCrossover::TScenarioCrossover()
     setBRetained(eRetainSpells, true);
 }
 
+// Loki's readBitset shift/AND lowers that helper's VC6 cost from 89 to 87.
+// Five expansions before the 129-to-144 copy raise its child share 41->43:
+// proxy assignment then expands and set<144> remains called, as at 0x40817e.
+// This restores that boundary, not the whole caller; other inlining and
+// instruction differences remain (the unchanged caller's prior MAX holds).
 VA(0x00407ee0, 0x36b)
 void TScenarioCrossover::read(TRawIStream& stream, int version)
 {
@@ -973,6 +993,11 @@ void TScenarioCrossover::write(TRawOStream& stream, int version) const
 // Their _Xran calls reach the already paired 0x40bc20 and 0x40fc10 bodies.
 VA_COMPGEN(0x0040b2c0, 0x31, BITSET_TEST, bitset5)
 VA_COMPGEN(0x0040fa00, 0x34, BITSET_TEST, bitset145)
+
+// The retained 129-to-144 copy in read() expands proxy assignment and calls
+// set(index, bool). Its 144 bound and _Xran edge at 0x403170 identify this
+// specialization; Loki's right-shift readBitset expression recovers emission.
+VA_COMPGEN(0x0040f940, 0x60, BITSET_SET, bitset144)
 
 VA(0x00408440, 0x1c)
 TScenarioPrologue::TScenarioPrologue()

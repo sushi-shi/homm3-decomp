@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-10-25
+# date: 2026-11-03
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	slot
 0x7b138	1
@@ -393,7 +393,14 @@ rva	slot
 0x44270	309
 0x442e0	310
 0x44510	313
+0x493b0	314
+0x493c0	314
+0x493d0	314
 0x4cd65	323
+0x4d060	324
+0x4d06c	324
+0x4d1f0	325
+0x4d1fc	325
 0x4d58e	326
 0x4d5bb	327
 0x4d5ea	328
@@ -401,6 +408,8 @@ rva	slot
 0x4d646	330
 0x4d675	331
 0x4d6a4	332
+0x4dfb3	333
+0x4dfbf	333
 0x4dfdf	334
 0x4e009	335
 0x4e036	336
@@ -410,10 +419,17 @@ rva	slot
 0x4e103	340
 0x4e147	341
 0x4e176	342
+0x4edc1	343
+0x4edcd	343
+0x4f327	344
+0x4f333	344
+0x4f354	345
+0x4f375	346
 0x1ed0	-
 0x3e60	-
 0x10840	-
 0x10880	-
+0x36f44	-
 0x37255	-
 0x44280	-
 0x442f0	-

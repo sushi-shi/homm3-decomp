@@ -1879,6 +1879,11 @@ VA_COMPGEN(0x0055e440, 0xFF, CLASS_CTOR, basic_stringbuf)
 VA_COMPGEN(0x0055d530, 0xC2, IMPLICIT_DTOR, basic_ostringstream)
 // The Libraries archive keeps basic_ostream<char>'s vbase vtable fixup apart.
 VA_COMPGEN_AT(h3maped, 0x004dd4c0, 0xf, IMPLICIT_DTOR, basic_ostream)
+VA_COMPGEN_AT(h3ccmped, 0x00445ec0, 0xf, IMPLICIT_DTOR, basic_ostream)
+
+// Campaign stream destructors and EH cleanups call this retained base
+// destructor: streambuf vptr, locale reference release, and _Lockit pair.
+VA_COMPGEN_AT(h3ccmped, 0x00415930, 0x4d, IMPLICIT_DTOR, basic_streambuf)
 
 VA_COMPGEN(0x0055dcf0, 0x50F, TREE_ERASE_ITERATOR, TCacheMapKey)
 

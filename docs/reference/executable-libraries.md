@@ -180,9 +180,43 @@ reviewed row places (`WinMainCRTStartup`, `CCmdTarget::OnEvent`). Such a gap
 extends over that body, and the parent's section is offered from its start.
 An external the body reaches that the runtime map names at its target, with a
 single library definition, is placed with it. These closed three of the
-campaign editor's last four gaps (1,474 B, 6 rows); `CObject::GetRuntimeClass`
-at 0x46b4d6 stays open because the census has no relocation site for the
-class pointer it loads.
+campaign editor's last four gaps (1,474 B, 6 rows). The remaining
+`CObject::GetRuntimeClass` at 0x46b4d6 is now proved against objcore.obj:
+function descent recovers the class-pointer operand missed by linear
+disassembly. The map editor's eight-byte virtual-call thunks at 0x4cd7ca
+and 0x4cd7d2 are named independently by CDialog's native IDOK/IDCANCEL
+message-map entries and match dlgcore.obj's retained thunk sections.
+
+The function census also ignores pointer-looking words inside string
+literals. Eight campaign entries were NOP padding reached only by the final
+characters of import names, such as `ngA` in GetClassLongA. These are not
+missing source functions. Catch continuation ownership keeps InitInstance's
+aligned internal branch inside its parent when those false seeds disappear.
+Pure atexit-registration helpers called from a CRT initializer inherit that
+initializer's category, just as its tail-jumped registrar does; an arbitrary
+constructor call still does not establish compiler-generated ownership.
+
+A ninth campaign padding entry came from `ENC\0` in the CRT's language
+table. Unlike longer strings, this three-letter code is not covered by the
+literal heuristic. The reviewed 520-byte `getqloc.obj` `___rg_language`
+section at RVA 0xc4f60 proves which words are fixed payload and which carry
+COFF relocations. Only the former are excluded from function seeds and
+relocation candidates; all fixed bytes must agree before applying the rule.
+
+Template names also need the vtable identity check. Its former `\w+` match
+silently skipped names such as `basic_streambuf<wchar_t>`, allowing the
+campaign destructor at RVA 0x4e595 to be labeled as the narrow specialization.
+Its stored vtable at 0x4916b0 proves the wide specialization. The narrow
+77-byte destructor at 0x415930 is separately emitted by the recovered game
+source. An admitted library alias does not take ownership away from an
+already placed source COMDAT. Regression tests cover both distinctions.
+
+Conversely, a complete reviewed section chooses the retained identity when
+an expanded base destructor has the same bytes. Map-editor 0x4f59f6 matches
+both `logic_error` and `length_error` in string.obj, including their shared
+base-vtable store. The reviewed section 45 and the `length_error` deleting
+destructor establish the latter owner; the census must not replace it with
+the former name, which the image already retains as a source COMDAT.
 
 ## Link readiness
 

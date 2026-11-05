@@ -31,6 +31,19 @@ A relocation target without a known extent remains a zero-sized address anchor;
 it does not own every byte up to the next address. Parse failures, extern-only
 claims, ambiguous identities and overlaps remain explicit coverage gaps.
 
+Header-defined static objects can carry address metadata in an analysis-only
+`DATA` extern redeclaration. Keep that redeclaration under
+`__clang__ || HOMM3_SOURCE_OWNERSHIP`: VC6 can emit a second initializer even
+for an extern redeclaration after the definition. Clang ignores the late
+`annotate` attribute, so extraction reads a leading `DATA(...)` inside the
+typed redeclaration's own source range. It does not attach nearby comments
+or infer a missing type. The campaign `<iostream>` Init/_Winit objects use
+this mechanism. VC6 names explicit namespace statics with their bare C
+names, including named namespaces; the canonical declaration establishes
+their internal linkage even when the metadata declaration says `extern`.
+Only a definition visible in that parsed TU establishes storage ownership;
+a bare extern with no definition remains an extern-only claim.
+
 An error confined to one function body withholds that function's local data;
 clean functions can still contribute their typed declarations. Header and
 signature errors withhold the affected parse. Diagnostics remain in the

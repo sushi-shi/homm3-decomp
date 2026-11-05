@@ -108,11 +108,11 @@ def vc5_data(name: str, *, internal: bool) -> str:
     return out
 
 
-def anonymous_static(identifier: str) -> str:
-    """cl 12's spelling of a `static` variable declared directly in a source
-    file's anonymous namespace: the C name `_identifier`, as for a file
-    static. (Without `static`, cl mangles the anonymous scope `?%<path>@`;
-    clang mangles both as `?A0x<hash>@`.) Retail-pinned by rmg.obj's
+def namespace_static(identifier: str) -> str:
+    """cl 12 spells explicit namespace statics as C names, `_identifier`.
+    This includes named namespaces and header definitions redeclared extern.
+    Without `static`, cl mangles an anonymous scope as `?%<path>@`, while
+    Clang mangles both as `?A0x<hash>@`. Retail-pinned by rmg.obj's
     g_rmgLandRiverDeltaIndex, g_rmgTownNativeTerrains and g_rmg*Names."""
     return "_" + identifier
 

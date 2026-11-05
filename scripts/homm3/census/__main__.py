@@ -112,8 +112,9 @@ def derive(log=print):
     reviewed = paths.retail_dir() / "runtime-contributions.tsv"
     reviewed_rows = read_tsv(reviewed)[2] if reviewed.is_file() else []
     anchors = libraries.reviewed_runtime_anchors(image, reviewed_rows, archives)
+    fixed_data = libraries.reviewed_fixed_data_words(image, reviewed_rows, archives)
     census = functions.run(image, log=log, catch_bodies=joins_catch_bodies(),
-                           reviewed_starts=anchors)
+                           reviewed_starts=anchors, nonpointer_data=fixed_data)
     from homm3.census import eh
     folded = {}
     catches, tails = folds_catch_handlers(), joins_tails()
@@ -148,7 +149,15 @@ def derive(log=print):
             sites.update(find_relocs.code_sites(image, section, walk_tables=True))
         else:
             masks[section.name] = find_relocs.literal_mask(image.blob(section))
-            sites.update(find_relocs.data_sites(image, section))
+            sites.update(find_relocs.data_sites(image, section, nonpointer_data=fixed_data))
+    from homm3.census import code_operands
+    recovered = 0
+    for rva, site in code_operands.sites(census).items():
+        if rva not in sites:
+            sites[rva] = site
+            recovered += 1
+    if recovered:
+        log(f"[census] {recovered} absolute operand(s) recovered from function descent")
     extra = 0
     for rva, site in libraries.reviewed_code_sites(image, reviewed_rows, archives).items():
         if rva in sites:
@@ -184,8 +193,11 @@ def derive(log=print):
     starts = {r for r, _s, _d in rows}
     exports = libraries.reviewed_runtime_exports(
         image, reviewed_rows, archives, {r: size for r, size, _d in rows})
+    placements_path = paths.retail_dir() / "placements.tsv"
+    source_owned = {int(row['rva'], 16) for row in read_tsv(placements_path)[2]
+                    if row['kind'] == 'func'} if placements_path.is_file() else set()
     runtime, aliases = libraries.reviewed_runtime_names(
-        starts, runtime, reviewed_rows, aliases, exports=exports)
+        starts, runtime, reviewed_rows, aliases, exports=exports, source_owned=source_owned)
     atexit = next((r for r, n, _l, _m in runtime if n == "_atexit"), None)
     if atexit is not None:
         thunks += eh.registration_rows(census, thunks, atexit)

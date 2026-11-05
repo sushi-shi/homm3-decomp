@@ -248,16 +248,18 @@ def literal_mask(blob, minimum=4):
     return mask
 
 
-def data_sites(image, section, use_mask=True, aligned=True):
+def data_sites(image, section, use_mask=True, aligned=True, nonpointer_data=()):
     """Aligned in-image dwords in one data section, outside the literal pool."""
     blob = image.blob(section)
     mask = literal_mask(blob) if use_mask else bytearray(len(blob))
     sites = {}
     for offset in range(0, len(blob) - 3, 4 if aligned else 1):
+        rva = section.rva + offset
+        if rva in nonpointer_data:
+            continue
         value = struct.unpack_from("<I", blob, offset)[0]
         if not image.in_image(value) or any(mask[offset:offset + 4]):
             continue
-        rva = section.rva + offset
         sites[rva] = Site(rva, value, "data", section.name)
     return sites
 

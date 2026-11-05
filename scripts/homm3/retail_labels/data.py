@@ -69,6 +69,7 @@ def _declarations(path: Path, profiles, *, bodies=False, reached=None):
     if errors and (not bodies or bad_bodies is None):
         return {}, errors
     facts = {}
+    source = path.read_bytes()
     pending = list(tu.cursor.get_children())
     while pending:
         cursor = pending.pop()
@@ -84,6 +85,16 @@ def _declarations(path: Path, profiles, *, bodies=False, reached=None):
         addresses = [int(match[1], 16) - profiles.project.image.image_base
                      for text in annotations
                      if (match := re.fullmatch(r'data:(0x[0-9a-fA-F]+)', text))]
+        if not addresses and not cursor.is_definition():
+            # Clang drops annotate on an extern redeclaration after a header
+            # definition ("attribute declaration must precede definition").
+            # Its typed VAR_DECL still owns the DATA invocation. Read only
+            # its leading source range, never nearby text/comments. Clang's
+            # token iterator starts at the macro definition in this case.
+            spelling = source[cursor.extent.start.offset:cursor.extent.end.offset]
+            match = re.match(rb'DATA\s*\(\s*(0x[0-9a-fA-F]+)\s*\)', spelling)
+            if match:
+                addresses = [int(match[1], 16) - profiles.project.image.image_base]
         if not addresses:
             continue
         ty = cursor.type.get_canonical()
@@ -96,19 +107,21 @@ def _declarations(path: Path, profiles, *, bodies=False, reached=None):
             errors.append(f'{cursor.location}: DATA declaration has no complete type/name')
             continue
         parent = cursor.semantic_parent
-        if (cursor.storage_class == cx.StorageClass.STATIC
-                and parent is not None and parent.kind == cx.CursorKind.NAMESPACE
-                and not parent.spelling
-                and parent.semantic_parent.kind == cx.CursorKind.TRANSLATION_UNIT):
-            name = msvc_names.anonymous_static(cursor.spelling)
+        if (cursor.canonical.storage_class == cx.StorageClass.STATIC
+                and parent is not None and parent.kind == cx.CursorKind.NAMESPACE):
+            name = msvc_names.namespace_static(cursor.spelling)
         else:
             name = msvc_names.data(cursor.mangled_name, decorated=True,
                                    internal=cursor.linkage != cx.LinkageKind.EXTERNAL)
         if profiles.compiler_for_source(path) == 'msvc5.0':
             name = msvc_names.vc5_data(
                 name, internal=cursor.linkage != cx.LinkageKind.EXTERNAL)
+        # A source annotation can redeclare an object whose actual definition
+        # is in an included header. That is a definition in this TU, unlike
+        # a bare extern whose storage lives in an unauthored compiland.
+        definition = cursor.get_definition()
         fact = dict(name=name, size=size, type=cursor.type.spelling,
-                    defined=cursor.is_definition(),
+                    defined=definition is not None and definition.is_definition(),
                     internal=cursor.linkage != cx.LinkageKind.EXTERNAL,
                     source=f'{path.relative_to(profiles.project.root)}:{cursor.location.line}')
         for address in addresses:

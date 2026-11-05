@@ -876,6 +876,29 @@ renaming the TU's statics moved both masks to 2 mod 4 and every AND became a
 word. `.bss` order is name-hashed ([data layout](data-layout.md)), hence the
 name sensitivity. Which blend term VC6 schedules first also moved with TU
 names in `cspriteframe`.
+
+The map editor retains DWORD ANDs for `div4mask` at 0x5a991c, while the
+game retains WORD ANDs at 0x6968aa. The shared source's four remaining
+editor mismatches are ten mask-width instructions; the field remains the
+native-proven `unsigned short`. Restoring the cropped-constructor `bool`,
+native class declaration order and getters, local RLE constants, `TPixel`
+and the encoders/renderers' `TOffset`/`TDstPixel` aliases preserves the
+game's 14 exact functions but leaves those editor widths unchanged. DC
+places the two file RLE constants on adjacent source lines 46/47, but its
+symbol-record order does not order their definitions against the masks.
+Loki likewise interleaves masks with RTTI and places known later local
+statics before their file-scope inputs. Neither is evidence for reordering
+those definitions, changing the mask type, or adding padding.
+
+An unchanged-source compiler control also leaves the residual intact:
+SP3, SP3 C1XX with RTM C2, and full RTM C1XX/C2 emit identical sprite
+instruction/relocation listings and place `div4mask` at `.bss+0xe`.
+The full RTM front end is the locally provenance-recorded 12.00.8168
+C1XX (`4095e9e8...`); the repository's ordinary RTM overlay is intended
+for C/zlib and still contains SP3 C1XX, so it alone is not a C++ RTM test.
+No production profile changed. The editors' Rich totals do not uniquely
+attribute this compiland: reviewed identical library sections can represent
+several possible archive members.
 - evidence: `src/cspriteframe.cpp` drawSpellEffect and drawTileShadow notes
 - status: observed; the width is the global's placement, the order behind it unmodelled
 - probe: none (needs the full TU)

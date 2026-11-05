@@ -605,6 +605,10 @@ VA_COMPGEN(0x00515010, 0x198, BASIC_STRING_RESIZE, char)
 VA_COMPGEN(0x00514130, 0x7E, IMPLICIT_DTOR, TUniqueSet)
 MAC_COMPGEN_ADDRESS(0x223810, 0x88, IMPLICIT_DTOR, TUniqueSet)
 
+// The map editor retains the string-index map destructor as a jump to its
+// named _Tree destructor; TUniqueSet<string> unwinds through this wrapper.
+VA_COMPGEN_AT(h3maped, 0x00490079, 0x5, IMPLICIT_DTOR, map)
+
 // COMDAT pairing: basic_istream<char>'s streambuf constructor (the `_Bool`
 // tie-parameter arm - the only istream ctor this object emits).
 VA_COMPGEN(0x005151b0, 0xAA, CLASS_CTOR, basic_istream)

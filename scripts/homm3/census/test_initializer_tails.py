@@ -94,6 +94,19 @@ class RegistrationRowsTest(unittest.TestCase):
         self.assertEqual(eh.cleanup_rows(c, {0x1000, 0x1030}, 0x1060),
                          [(0x1050, '-')])
 
+    def test_direct_calls_to_registrars_inherit_the_slot(self):
+        c = self.census()
+        # An initializer can call both an ordinary constructor and a pure
+        # registrar. The constructor remains an ordinary function.
+        call = bytes.fromhex('e80b000000e826000000c3')
+        original = c.image
+        code = bytearray(original.blob(original.sections[0]))
+        code[:len(call)] = call
+        c = functions.run(Image(bytes(code)), log=lambda _: None)
+        self.assertEqual(eh.registration_rows(c, [(0x1000, 7)], 0x1060),
+                         [(0x1030, 7)])
+        self.assertNotIn((0x1010, 7), eh.registration_rows(c, [(0x1000, 7)], 0x1060))
+
     def test_a_different_callee_is_not_atexit_registration(self):
         self.assertEqual(eh.registration_rows(self.census(), [(0x1000, 7)], 0x1020), [])
 

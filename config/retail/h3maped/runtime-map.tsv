@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3maped.exe sha256=4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37 size=2134016
-# date: 2026-10-25
+# date: 2026-11-03
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	name	library	member
 0x16fd	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z	LIBCPMT	ios.obj
@@ -57,6 +57,8 @@ rva	name	library	member
 0x60a70	??1CFileException@@UAE@XZ	NAFXCW	doccore.obj
 0x61849	?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@2@_N@Z	LIBCPMT	iostream.obj
 0x6e583	?GetMenuStringA@CMenu@@QBEHIAAVCString@@I@Z	NAFXCW	filelist.obj
+0xcd7ca	??_9@$BME@AE	NAFXCW	dlgcore.obj
+0xcd7d2	??_9@$BMI@AE	NAFXCW	dlgcore.obj
 0xcd7da	_InitMultipleMonitorStubs	NAFXCW	wincore.obj
 0xcd8b2	_xMonitorFromRect@8	NAFXCW	wincore.obj
 0xcd908	_xMonitorFromWindow@8	NAFXCW	wincore.obj
@@ -445,7 +447,7 @@ rva	name	library	member
 0xe7d30	__CIsqrt	LIBCMT	sqrt.obj
 0xe7d44	_sqrt	LIBCMT	sqrt.obj
 0xe7dec	__ftol	LIBCMT	ftol.obj
-0xe7e20	__chkstk	LIBCMT	chkstk.obj
+0xe7e20	__alloca_probe	LIBCMT	chkstk.obj
 0xe7e4f	_abs	LIBCMT	abs.obj
 0xe7e60	_strcmp	LIBCMT	strcmp.obj
 0xe7ee4	_WinMainCRTStartup	LIBCMT	wincrt0.obj
@@ -516,7 +518,7 @@ rva	name	library	member
 0xe9f5b	__fsopen	LIBCMT	fopen.obj
 0xe9f8c	_fopen	LIBCMT	fopen.obj
 0xe9f9f	_fputc	LIBCMT	fputc.obj
-0xe9fe0	__stricmp	LIBCMT	stricmp.obj
+0xe9fe0	__strcmpi	LIBCMT	stricmp.obj
 0xea0b0	_atan2	LIBCMT	87ctriga.obj
 0xea0ba	__CIfmod	LIBCMT	87fmod.obj
 0xea0c4	fFMOD	LIBCMT	87fmod.obj
@@ -1097,7 +1099,7 @@ rva	name	library	member
 0xff691	?CopyTo@CArchiveStream@@UAGJPAUIStream@@T_ULARGE_INTEGER@@PAT3@2@Z	NAFXCW	arcstrm.obj
 0xff699	?SetSize@CArchiveStream@@UAGJT_ULARGE_INTEGER@@@Z	NAFXCW	arcstrm.obj
 0xff6a1	?Commit@CArchiveStream@@UAGJK@Z	NAFXCW	arcstrm.obj
-0xff6a9	??0CByteArray@@QAE@XZ	NAFXCW	array_b.obj
+0xff6a9	??0CPtrArray@@QAE@XZ	NAFXCW	array_p.obj
 0xff6c0	??_GCPtrArray@@UAEPAXI@Z	NAFXCW	array_p.obj
 0xff6dc	??1CPtrArray@@UAE@XZ	NAFXCW	array_p.obj
 0xff709	?SetSize@CPtrArray@@QAEXHH@Z	NAFXCW	array_p.obj
@@ -2319,7 +2321,7 @@ rva	name	library	member
 0x11abd8	??1_AFX_CTL3D_STATE@@UAE@XZ	NAFXCW	app3d.obj
 0x11ac19	??1_AFX_CTL3D_THREAD@@UAE@XZ	NAFXCW	app3d.obj
 0x11ac4f	?AfxGetCtl3dState@@YGPAV_AFX_CTL3D_STATE@@XZ	NAFXCW	app3d.obj
-0x11ac80	??1?$CThreadLocal@V_AFXCTL_AMBIENT_CACHE@@@@QAE@XZ	NAFXCW	ctlquick.obj
+0x11ac80	??1?$CThreadLocal@VAFX_MODULE_THREAD_STATE@@@@QAE@XZ	NAFXCW	afxstate.obj
 0x11ac8f	??1_AFXCTL_AMBIENT_CACHE@@UAE@XZ	NAFXCW	ctlquick.obj
 0x11acd0	?AfxEnableWin40Compatibility@@YGXXZ	NAFXCW	auxdata.obj
 0x11ad00	?AfxEnableWin31Compatibility@@YGXXZ	NAFXCW	auxdata.obj

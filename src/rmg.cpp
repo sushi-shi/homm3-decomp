@@ -676,6 +676,10 @@ TRmgMapItem::TRmgMapItem()
 }
 
 VA_COMPGEN(0x00530EE0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
+
+// buildZoneBoundaries unwinds its local template through the connection
+// vector at +0xc4; the trivial vector destructor folds with the byte vector.
+VA_COMPGEN_AT(h3maped, 0x0049b3b6, 0xb, IMPLICIT_DTOR, TRmgTemplateZone)
 MAC_COMPGEN_ADDRESS(0x22d02c, 0x84, IMPLICIT_DTOR, TRmgMapItem)
 
 // The array constructor at 0x530e90 calls this initializer after constructing
@@ -2221,6 +2225,7 @@ void type_black_box::write(TAbstractFile* outfile, int version)
 // bodies and the same base-vtable relocation, proving their ICF identity.
 VA(0x005338D0, 0x0D)
 MAC_ADDRESS(0x230448, 0x58)
+VA_AT(h3maped, 0x0049bad6, 0xd) // type_black_box unwind; base vtable and reference release
 type_object::~type_object()
 {
     --m_properties->m_refCount;
@@ -5683,8 +5688,10 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
 // both images reproduces the call (and nothing else) only with a count
 // accessor around it plus one more top-level candidate site anywhere in the
 // seed/pop/relaxation statements (898 / 22 < 42). No such site is evidenced
-// yet, so the direct size() stays. The editor also reloads the pending end
-// between the size test and back().
+// yet, so the direct size() stays. Native editor 0x4a35ce keeps the pending
+// end in EAX through back() at 0x4a35e5; it does not reload that pointer.
+// Using !pending.empty() adds the standard empty()->size() boundary but
+// does not recover the entry call and lowers this implementation's match.
 VA(0x0053D8E0, 0x1EC)
 MAC_ADDRESS(0x23f218, 0x2f0) // anchor-callee 0x53dcd2/0x53e020; Complete-only, ret 4
 VA_AT(h3maped, 0x004a3554, 0x1bc)

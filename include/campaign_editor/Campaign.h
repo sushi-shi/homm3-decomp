@@ -467,7 +467,8 @@ public:
 
     bool operator==(const TScenarioPrologue& other) const
     {
-        return m_movie == other.m_movie && m_music == other.m_music && m_text == other.m_text;
+        return getMovie() == other.getMovie() && getMusic() == other.getMusic()
+               && getText() == other.getText();
     }
 
 private:

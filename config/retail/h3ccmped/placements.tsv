@@ -825,7 +825,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00063ab0	0x53	func	?victorDecodeRleBytes@@YAHPAE0H@Z	victor_pcx_kernels	external	masked body (83 bytes, 0 relocations) unique at a census start
 0x00063b10	0x63	func	?victorUnpackFourPlanes@@YAXPAEPBEHH@Z	victor_pcx_kernels	external	masked body (99 bytes, 0 relocations) unique at a census start
 0x00063b80	0x34	func	?victorConvertRgbPlanesToBgr@@YAXPAEPBEH@Z	victor_pcx_kernels	external	masked body (52 bytes, 0 relocations) unique at a census start
-0x00063cc0	0x84	func	?victorInsertBits@@YGXPAEPBEHH@Z	victor_bits	external	referenced by ?flipimage@@YGHPAUimgdes@@0@Z at +0x26a
+0x00063cc0	0x84	func	?victorInsertBits@@YGXPAEPBEHH@Z	victor_bits	external	masked body (132 bytes, 2 relocations) unique at a census start
 0x00063d50	0x73	func	?victorExtractBits@@YGXPAEPBEHH@Z	victor_bits	external	masked body (115 bytes, 1 relocations) unique at a census start
 0x000876a0	0x1	data	?_C@?1??_Nullstr@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@CAPBDXZ@4DB	resourcemanager	external	referenced by ?reportMissingTypedResource@@YAXPBDH0@Z at +0x3ab
 0x000876b4	0x4	data	?npos@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@2IB	resourcemanager	external	referenced by ?reportMissingTypedResource@@YAXPBDH0@Z at +0x32c
@@ -892,8 +892,8 @@ rva	size	kind	name	unit	linkage	evidence
 0x0009152c	0x4	data	__real@4@3fe08000000100000000	bitmap24	external	referenced by ?RGBToHSV@@YAXIIIPAM00@Z at +0x5f
 0x00091530	0x4	data	__real@4@401dfffffffe00000000	bitmap24	external	referenced by ?HSVToRGB@@YAXMMMPAI00@Z at +0x3a
 0x00091534	0x4	data	_?redHue@?1??RGBToHSV@@YAXIIIPAM00@Z@4MB	bitmap24	internal	referenced by ?RGBToHSV@@YAXIIIPAM00@Z at +0xea
-0x00093050	0x8	data	_g_victorLeadingBits$S29135	victor_bits	internal	referenced by ?victorInsertBits@@YGXPAEPBEHH@Z at +0x23
-0x00093058	0x8	data	_g_victorTrailingBits$S29136	victor_bits	internal	referenced by ?victorExtractBits@@YGXPAEPBEHH@Z at +0x18
+0x00093050	0x8	data	_g_victorLeadingBits$S29127	victor_bits	internal	referenced by ?victorInsertBits@@YGXPAEPBEHH@Z at +0x23
+0x00093058	0x8	data	_g_victorTrailingBits$S29128	victor_bits	internal	referenced by ?victorInsertBits@@YGXPAEPBEHH@Z at +0x29
 0x00098560	0x1c	data	__CT??_R0?AVexception@@@8??0exception@@QAE@ABV0@@Z12	resourcemanager	external	referenced by __CTA2?AVbad_cast@std@@ at +0x8
 0x00098580	0x1c	data	__CT??_R0?AVruntime_error@std@@@8??0runtime_error@std@@QAE@ABV01@@Z28	gzinflatebuf	external	referenced by __CTA5?AVTAllocationFailure@@ at +0x10
 0x000985a0	0x1c	data	__CT??_R0?AVTDebugBreak@@@8129	gzinflatebuf	external	referenced by __CTA5?AVTAllocationFailure@@ at +0xc
@@ -4238,7 +4238,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000c8f30	0x10	data	_rampartGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$rampartGenerator1 at +0x2
 0x000c8f40	0x8	data	_randomGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$randomGenerator3 at +0x2
 0x000c8f48	0x8	data	_randomGenerator4	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$randomGenerator4 at +0x2
-0x000c8f50	0x1f0	data	?aInfernoBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aInfernoBuildingTraits at +0x8
+0x000c8f50	0x1ec	data	?aInfernoBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aInfernoBuildingTraits at +0x8
 0x000c9140	0x8	data	_randomGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$randomGenerator2 at +0x2
 0x000c9148	0x1ec	data	?aCastleBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aCastleBuildingTraits at +0x8
 0x000c9334	0x1c	data	?_s_akBaseName@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@0PAPBDA	TownTypeTraits	external	referenced by 0x00032b40 at +0x1c7
@@ -4302,7 +4302,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000ca210	0x10	data	_castleGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator7 at +0x2
 0x000ca220	0x10	data	_rampartGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$rampartGenerator6 at +0x2
 0x000ca230	0x10	data	_necropolisGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$necropolisGenerator3 at +0x2
-0x000ca240	0x10	data	_towerGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$towerGenerator1 at +0x2
+0x000ca240	0xc	data	_towerGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$towerGenerator1 at +0x2
 0x000ca250	0x10	data	_strongholdGenerator4	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$strongholdGenerator4 at +0x2
 0x000ca260	0x10	data	_towerGenerator5	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$towerGenerator5 at +0x2
 0x000ca270	0x78	data	?aTownTypeTraitsImp@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTTypeTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aTownTypeTraitsImp at +0x13

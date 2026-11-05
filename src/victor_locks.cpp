@@ -10,6 +10,16 @@
 
 #include "victor.h"
 
+// The records the lock cleanups release (defined in src/victor.cpp).
+extern VictorLock g_victorLock0;
+extern VictorLock g_victorLock1;
+extern VictorLock g_victorLock2;
+extern VictorLock g_victorLock3;
+extern VictorLock g_victorLock4;
+extern VictorLock g_victorLock5;
+extern VictorLock g_victorLock6;
+extern VictorLock g_victorLock7;
+
 // The eight lock cleanups, one per VictorLock in address order; each
 // releases g_victorLock<n> (g_victorModuleCleanups[8-n]): test the
 // initialized flag at +0x18, DeleteCriticalSection, clear the flag. Both

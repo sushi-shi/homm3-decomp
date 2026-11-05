@@ -70,35 +70,23 @@ enum TRawRowUnrollEntry {
 
 class CSpriteFrame : public resource {
 public:
+    // Native nested pixel type and enum (DC fieldlist 0x1787).
+    typedef unsigned char TPixel;
+    enum { PixelSize = 1 };
+
     CSpriteFrame();
-    CSpriteFrame(const char* name, unsigned char cropped);
-    CSpriteFrame(const char* name, int w, int h, unsigned char* data,
+    // Dreamcast public symbol: ??0CSpriteFrame@@QAA@PBD_N@Z.
+    CSpriteFrame(const char* name, bool cropped);
+    CSpriteFrame(const char* name, int w, int h, TPixel* data,
                  int csize, TEncodingMethod encoding);
-    CSpriteFrame(const char* name, int w, int h, unsigned char* data,
+    CSpriteFrame(const char* name, int w, int h, TPixel* data,
                  int csize, TEncodingMethod encoding,
                  int cw, int ch, int cx, int cy);
     virtual ~CSpriteFrame();
     void clear();
-    unsigned char GetPixel(int x, int y) const;
     int Crop();
     void Encode(TEncodingMethod method);
-    static unsigned short div2mask;
-    static unsigned short div4mask;
 
-private:
-    int DataSize;
-    int ImageSize;
-    TEncodingMethod EncodingMethod;
-    int Width;
-    int Height;
-    int CroppedWidth;
-    int CroppedHeight;
-    int CroppedX;
-    int CroppedY;
-    int Pitch;
-    unsigned char* map;
-
-public:
     virtual unsigned int getSize() const;
     // Original Draw/Draw* and private Clip* publics encode _N for flip,
     // transparency and alpha flags; repeated bools use mangling backreferences.
@@ -107,20 +95,6 @@ public:
               int dx, int dy, int dw, int dh, int dpitch,
               TPalette16& pal, bool hflip,
               bool tblit) const;
-
-    // CSpriteFrame.h:87-90. DC emits standalone copies; inlined in the
-    // consumers.
-    DC_ADDRESS(0x04cb90, 0x4)
-    int GetCroppedWidth() const { return CroppedWidth; }
-
-    DC_ADDRESS(0x08734c, 0x4)
-    int GetCroppedHeight() const { return CroppedHeight; }
-
-    DC_ADDRESS(0x04cb94, 0x4)
-    int GetCroppedX() const { return CroppedX; }
-
-    DC_ADDRESS(0x04cb98, 0x4)
-    int GetCroppedY() const { return CroppedY; }
 
     // CSpriteFrame.h:147-148. Dreamcast emits this header wrapper as a
     // standalone function; inlined.
@@ -231,19 +205,6 @@ public:
         DrawTileShadow(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                        pal, hflip, vflip);
     }
-    // DC CSpriteFrame field list records these public const accessors;
-    // CSprite::DrawPointer expands the corresponding retail width/height loads.
-    // Width loads in retail CSprite::DrawPointer identify this field.
-    // The DC declaration survives, but no body source location does.
-    // Header ownership is provisional; no source order is claimed.
-    // @dc-declaration-only: 0x1799
-    int GetWidth() const { return Width; }
-    // Height loads in retail CSprite::DrawPointer identify this field.
-    // The DC declaration survives, but no body source location does.
-    // Header ownership is provisional; no source order is claimed.
-    // @dc-declaration-only: 0x1799
-    int GetHeight() const { return Height; }
-
     // DC CSpriteFrame.h:198..200: canonical zero-flag wrapper.
     // DrawSpellEffect calls it at DC line 3792; inlined there, calling
     // DrawAdvObjWithFlagAlpha with flagcolor=0.
@@ -273,19 +234,64 @@ public:
     void DrawTileScaled25(int sx, int sy, int sw, int sh,
         unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
         TPalette16& pal, bool hFlipped, bool vFlipped) const;
+    // DC declarations plus retained Loki header accessor bodies at
+    // 0x81a4668..0x81a4773; source placement is inferred from their grouping.
+    int GetDataSize() const { return DataSize; }
+    int GetImageSize() const { return ImageSize; }
+    TEncodingMethod GetEncodingMethod() const { return EncodingMethod; }
+    // DC CSpriteFrame field list records these public const accessors;
+    // CSprite::DrawPointer expands the corresponding retail width/height loads.
+    // Width loads in retail CSprite::DrawPointer identify this field.
+    // The DC declaration survives, but no body source location does.
+    // Header ownership is provisional; no source order is claimed.
+    // @dc-declaration-only: 0x1799
+    int GetWidth() const { return Width; }
+    // Height loads in retail CSprite::DrawPointer identify this field.
+    // The DC declaration survives, but no body source location does.
+    // Header ownership is provisional; no source order is claimed.
+    // @dc-declaration-only: 0x1799
+    int GetHeight() const { return Height; }
+
+    // CSpriteFrame.h:87-90. DC emits standalone copies; inlined in the
+    // consumers.
+    DC_ADDRESS(0x04cb90, 0x4)
+    int GetCroppedWidth() const { return CroppedWidth; }
+
+    DC_ADDRESS(0x08734c, 0x4)
+    int GetCroppedHeight() const { return CroppedHeight; }
+
+    DC_ADDRESS(0x04cb94, 0x4)
+    int GetCroppedX() const { return CroppedX; }
+
+    DC_ADDRESS(0x04cb98, 0x4)
+    int GetCroppedY() const { return CroppedY; }
+
+    int GetPitch() const { return Pitch; }
+    TPixel* GetMap() { return map; }
+    TPixel GetPixel(int x, int y) const;
+
     static void SetPixelFormat(unsigned rmask, unsigned gmask,
                                unsigned bmask);
+    static unsigned short div2mask;
+    static unsigned short div4mask;
 
 private:
     int importPCXFile(const char* filename);
     int importCroppedPCXFile(const char* filename);
+    int DataSize;
+    int ImageSize;
+    TEncodingMethod EncodingMethod;
+    int Width;
+    int Height;
+    int CroppedWidth;
+    int CroppedHeight;
+    int CroppedX;
+    int CroppedY;
+    int Pitch;
+    TPixel* map;
     void EncodeGeneral();
     void EncodeTileset();
     void EncodeAdvObj();
-    void ClipScaled25(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
-        int dw, int dh, bool hflip, bool vflip) const;
-    void ClipScaled50(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
-        int dw, int dh, bool hflip, bool vflip) const;
     void DrawCreatureImpl(int sx, int sy, int sw, int sh,
                           unsigned short* dst, int dx, int dy, int dw,
                           int dh, int dpitch, TPalette16& pal,
@@ -302,6 +308,10 @@ private:
     void Clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
               int dw, int dh, bool hflip,
               bool vflip) const;
+    void ClipScaled50(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
+        int dw, int dh, bool hflip, bool vflip) const;
+    void ClipScaled25(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
+        int dw, int dh, bool hflip, bool vflip) const;
 };
 SIZE(CSpriteFrame, 0x48);
 

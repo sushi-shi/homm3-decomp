@@ -92,42 +92,43 @@ JMP0 = b"\xe9\x00\x00\x00\x00"
 
 
 def registration_rows(c, initializers, atexit):
-    """The separate atexit registration tails of CRT initializer wrappers.
+    """Pure atexit-registration helpers reached by CRT initializers.
 
-    A wrapper's first callee is not classified here: a call alone does not
-    prove that it is compiler-generated. Only the minimal registration body
-    reached by the wrapper's direct tail jump inherits its initializer slot.
+    A direct call or final jump can name a separate registrar. Only the
+    complete ``push cleanup; call _atexit; pop ecx; ret`` body inherits the
+    initializer's slot; an arbitrary constructor call proves no ownership.
     """
-    from homm3.census.functions import call_then_tail_thunk
     base = c.image.image_base
     known = {rva for rva, _slot in initializers}
     rows = []
     for start, slot in initializers:
-        seen = c.reached.get(start, set())
-        if not call_then_tail_thunk(c, start, seen):
-            continue
-        jump = c.insn(start + c.insn(start).size)
-        target = (jump.operands[0].imm & 0xFFFFFFFF) - base
-        if target not in c.starts or target in known:
-            continue
-        order = sorted(c.reached.get(target, ()))
-        if len(order) != 4:
-            continue
-        push, call, pop, ret = [c.insn(r) for r in order]
-        if not (push.mnemonic == "push" and push.operands[0].type == x86.X86_OP_IMM
-                and call.mnemonic == "call" and call.operands[0].type == x86.X86_OP_IMM
-                and pop.mnemonic == "pop" and pop.operands[0].type == x86.X86_OP_REG
-                and pop.operands[0].reg == x86.X86_REG_ECX
-                and ret.mnemonic == "ret" and not ret.operands):
-            continue
-        if any(a.address + a.size != b.address
-               for a, b in zip((push, call, pop), (call, pop, ret))):
-            continue
-        cleanup = (push.operands[0].imm & 0xFFFFFFFF) - base
-        callee = (call.operands[0].imm & 0xFFFFFFFF) - base
-        if callee == atexit and cleanup in c.starts:
-            rows.append((target, slot))
-            known.add(target)
+        targets = set()
+        for site in c.reached.get(start, ()):
+            ins = c.insn(site)
+            if ins.mnemonic in ("call", "jmp") and ins.operands \
+                    and ins.operands[0].type == x86.X86_OP_IMM:
+                targets.add((ins.operands[0].imm & 0xFFFFFFFF) - base)
+        for target in sorted(targets):
+            if target not in c.starts or target in known:
+                continue
+            order = sorted(c.reached.get(target, ()))
+            if len(order) != 4:
+                continue
+            push, call, pop, ret = [c.insn(r) for r in order]
+            if not (push.mnemonic == "push" and push.operands[0].type == x86.X86_OP_IMM
+                    and call.mnemonic == "call" and call.operands[0].type == x86.X86_OP_IMM
+                    and pop.mnemonic == "pop" and pop.operands[0].type == x86.X86_OP_REG
+                    and pop.operands[0].reg == x86.X86_REG_ECX
+                    and ret.mnemonic == "ret" and not ret.operands):
+                continue
+            if any(a.address + a.size != b.address
+                   for a, b in zip((push, call, pop), (call, pop, ret))):
+                continue
+            cleanup = (push.operands[0].imm & 0xFFFFFFFF) - base
+            callee = (call.operands[0].imm & 0xFFFFFFFF) - base
+            if callee == atexit and cleanup in c.starts:
+                rows.append((target, slot))
+                known.add(target)
     return rows
 
 

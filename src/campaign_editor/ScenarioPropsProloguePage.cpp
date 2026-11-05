@@ -191,7 +191,10 @@ BOOL TScenarioPropsProloguePageBase::OnInitDialog()
 
 // The first value comparison retains string::compare in retail; the last
 // expands it. Standard rel_ops and member inequality wrappers did not recover
-// that distinction, so retain the existing canonical equality helper.
+// that distinction. Equality through the existing movie/music/text getters
+// recovers the first music comparison's ECX/EDX homes, but still expands both
+// string comparisons. Member and friend equality emitted the same caller;
+// keep the existing member interface and canonical getter chain.
 VA(0x0042cd00, 0x24f)
 void TScenarioPropsProloguePageBase::OnOK()
 {

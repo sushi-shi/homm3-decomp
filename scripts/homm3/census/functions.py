@@ -62,6 +62,7 @@ class Census:
     stubs: dict = field(default_factory=dict)        # EH registration stub -> FuncInfo
     #: the image pin's `census_joins_catch_bodies`: see `tail_limit`
     catch_bodies: bool = False
+    nonpointer_data: frozenset = frozenset()
 
     def __post_init__(self):
         text = next(s for s in self.image.sections if s.executable)
@@ -317,12 +318,22 @@ def funcinfo_funclets(census):
 
 
 def data_code_pointers(census):
-    """Aligned data dwords that point into .text: (target, site)."""
+    """Aligned data dwords outside string literals: (code target, site).
+
+    Import-name tails such as ``GetClassLongA`` can encode an in-range code
+    address (``ngA\0``). They are text, not callback/function boundaries.
+    Use the same literal evidence as the relocation census.
+    """
+    from homm3.census.find_relocs import literal_mask
     image, base = census.image, census.image.image_base
     out = []
     for sec in data_sections(image):
         blob = image.blob(sec)
+        mask = literal_mask(blob)
         for off in range(0, len(blob) - 3, 4):
+            if (any(mask[off:off + 4])
+                    or sec.rva + off in getattr(census, 'nonpointer_data', ())):
+                continue
             v = struct.unpack_from("<I", blob, off)[0]
             if census.in_text(v - base):
                 out.append((v - base, sec.rva + off))
@@ -452,8 +463,8 @@ def table_seeds_after_calls(run_targets, covered, ends, sites, min_run=8):
             and run_length(s) >= min_run]
 
 
-def run(image, log=print, catch_bodies=False, reviewed_starts=None):
-    c = Census(image, catch_bodies=catch_bodies)
+def run(image, log=print, catch_bodies=False, reviewed_starts=None, nonpointer_data=()):
+    c = Census(image, catch_bodies=catch_bodies, nonpointer_data=frozenset(nonpointer_data))
     pe = struct.unpack_from("<I", image.data, 0x3C)[0]
     entry = struct.unpack_from("<I", image.data, pe + 24 + 16)[0]
     funclets = funcinfo_funclets(c)
@@ -838,7 +849,14 @@ def _merge_pass(c, parents, catches, flow, vetoed, alignment):
             if why is None and not aligned(piece) and c.starts[piece] == "tail":
                 refused.append((piece, owner, "tail", f"0x{owner:x} never jumps or falls into it"))
             continue
-        if why is None and aligned(piece):
+        # A catch's returned continuation belongs to its FuncInfo parent.
+        # That positive ownership evidence outweighs incidental alignment of
+        # an internal branch target (campaign InitInstance has such a tail).
+        contains_continuation = any(
+            label in c.reached.get(piece, ())
+            and parents.get(c.funclets[handler][0]) == owner
+            for label, handler in c.continuations.items())
+        if why is None and aligned(piece) and not contains_continuation:
             why = f"starts on a {alignment}-byte boundary"
         if why is not None:
             refused.append((piece, owner, "tail", why))
@@ -888,14 +906,8 @@ def _flow(c):
                 v = c.dword(table + 4 * i)
                 if v is not None:
                     flow.refs[v - base].add((table + 4 * i, "jump table"))
-    # a string's tail can read as an address (`.?AVTScenario@@` ends in
-    # 0x0040406f): no pointer lives inside a literal
-    from homm3.census.find_relocs import literal_mask
-    masks = {sec.rva: (sec, literal_mask(c.image.blob(sec))) for sec in data_sections(c.image)}
     for target, site in data_code_pointers(c):
-        sec, mask = masks[c.image.section_of(site).rva]
-        if not any(mask[site - sec.rva:site - sec.rva + 4]):
-            flow.refs[target].add((site, "data"))
+        flow.refs[target].add((site, "data"))
     return flow
 
 
