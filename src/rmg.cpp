@@ -3025,7 +3025,8 @@ TRmgTreasureGroup::TRmgTreasureGroup()
 // without width/height locals costs 130, so discard still expands this body
 // in assembleTreasureGroup and placeZoneTreasures. The canonical
 // two-coordinate lookup expands here but is called by retail reset copies at
-// 0x547625/0x547717. Keep its one ordinary body in this TU.
+// 0x547625/0x547717. Keep its one ordinary body in this TU. The cell count
+// is height * width.
 VA(0x00535040, 0xC6)
 MAC_ADDRESS(0x232e70, 0xa8) // anchor-callee 0x5473d2; thiscall, ret 0; retail-only
 void TRmgTreasureGroup::reset()
@@ -3036,7 +3037,7 @@ void TRmgTreasureGroup::reset()
     m_hasGuard = 0;
     m_ready = 0;
     TRmgMapItem* item = m_map.getMapItem(0, 0);
-    int count = m_map.getWidth() * m_map.getHeight();
+    int count = m_map.getHeight() * m_map.getWidth();
     while (count--) {
         item->setTerrain(eTerrainDirt, 0, 0, 0);
         ++item;
@@ -5027,8 +5028,8 @@ void type_random_map_generator::calculateZoneBounds()
 // Direct table expressions preserve retail's unusual sentinel/version loop;
 // caching one town entry lets VC6 fold it away. Named scaled-width/height
 // locals are flat. The retained chooseCreatureTownType call is restored.
-// Residual: vector erase expands here but is retained in retail, and the
-// dimension products / bounds normalization exchange operand scheduling.
+// The centered square's span is the larger of the horizontal and vertical
+// extents, horizontal first.
 VA(0x0053BCB0, 0x33B)
 MAC_ADDRESS(0x23cd84, 0x458)
 void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
@@ -5068,7 +5069,7 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     }
     int minimumY, minimumX, maximumY, maximumX;
     getInitialZoneBounds(minimumY, minimumX, maximumY, maximumX);
-    int span = max(maximumY - minimumY, maximumX - minimumX);
+    int span = max(maximumX - minimumX, maximumY - minimumY);
     int size = max(m_map.m_mapWidth, m_map.m_mapHeight);
     minimumY = (minimumY - span + maximumY) / 2;
     minimumX = (minimumX - span + maximumX) / 2;
@@ -9594,8 +9595,7 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
 // calls stay out of line, leaving each discard enough to expand reset. The
 // same call in the first loop shrinks this body's budget, as does a
 // reference to the selected range (retail re-indexes it for both assembly
-// calls). Mac 0x24b844 clears the counts by memset. The residual is the
-// retail ICF copies' labels on the clear/erase/destructor twins.
+// calls). Mac 0x24b844 clears the counts by memset.
 VA(0x00547360, 0x460)
 MAC_ADDRESS(0x24b6e8, 0x358)
 VA_AT(h3maped, 0x004aab7e, 0x210)
