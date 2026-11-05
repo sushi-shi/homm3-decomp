@@ -5951,7 +5951,7 @@ rmg	?hasConnectedOutline@type_random_map@@QAEEABV?$vector@UTRmgPoint@@V?$allocat
 rmg	?hasPlayerSlots@TRmgTemplate@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x9ba1b	-
 rmg	?initializeDistances@TRmgZone@@QAEXH@Z	100.0000	100.0000	100.0000	0x9b61b	tokens1:a3043373c099
 rmg	?initializeObjectGenerators@type_random_map_generator@@QAEXXZ	88.3248	90.2515	90.2515	0x9f95a	-
-rmg	?initializeZones@type_random_map_generator@@QAEXPAUTRmgTemplate@@@Z	99.7210	99.7210	99.7210	0xa218c	-
+rmg	?initializeZones@type_random_map_generator@@QAEXPAUTRmgTemplate@@@Z	99.7253	99.7253	99.7253	0xa218c	-
 rmg	?insert@?$list@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@QAE?AViterator@12@V312@ABUTRmgPoint@@@Z	100.0000	100.0000	100.0000	0xae5a8	-
 rmg	?insert@?$vector@EV?$allocator@E@std@@@std@@QAEXPAEIABE@Z	100.0000	100.0000	100.0000	0x8d27c	-
 rmg	?insert@?$vector@FV?$allocator@F@std@@@std@@QAEXPAFIABF@Z	100.0000	100.0000	100.0000	0xae308	-
