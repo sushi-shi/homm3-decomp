@@ -427,19 +427,10 @@ extern long g_hypnotizeTurns[kNumMasteries];
 // section layout does not have to agree with.
 extern const long g_chainLightningTargets[kNumMasteries];
 
-double valueOfLuckAndMorale(long value, long change,
-                                double goodValueMultiplier,
-                                double badValueMultiplier);
 double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);
 long aiGetAttackDamage(const army& currentArmy, long ourHits,
                           const army& enemy, bool ranged,
                           long distance);
-long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex,
-                          long troopCount, const army* enemy, long enemyHex,
-                          const type_AI_combat_parameters* estimate);
-long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex,
-                      long troopCount, const army* enemy, long enemyHex,
-                      const type_AI_combat_parameters* estimate);
 
 #endif  /* HOMM3_AI_TACTICAL_H */

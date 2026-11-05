@@ -919,10 +919,10 @@ void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, 
     }
 }
 
-void findAttackHexes(const army* ourArmy, long targetHex, long start,
-                       long stop, long limitCost,
-                       const searchArray* currentSearchArray,
-                       std::vector<long>* result);
+static void findAttackHexes(const army* ourArmy, long targetHex, long start,
+                              long stop, long limitCost,
+                              const searchArray* currentSearchArray,
+                              std::vector<long>* result);
 
 // E:\gamedcs\ai.cpp:1121
 // No retail slot: a static with a single call site, inlined.
@@ -1021,7 +1021,7 @@ void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy,
 VA(0x00420060, 0x1FB)
 DC_ADDRESS(0x025308, 0x9e)
 MAC_ADDRESS(0x021a9c, 0x124)
-void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop, long limitCost, const searchArray* currentSearchArray, std::vector<long>* result)
+static void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop, long limitCost, const searchArray* currentSearchArray, std::vector<long>* result)
 {
     for (long direction = start; direction < stop; direction++) {
         long hex = ourArmy->getAdjacentHex(targetHex, direction);

@@ -200,7 +200,23 @@ const unsigned short g_aiDayOfWeekSunday = 7;
 int aiResourceCost(long playerId, const int* resources);
 int aiResourceCost(const playerData* player, const int* resources);
 long aiGetSpellValue(const hero* ourHero, SpellID spell);
-bool considerHiring(long playerId, hero* candidate);
+static bool considerHiring(long playerId, hero* candidate);
+// DC records these as (static) procedures of this file; their callers
+// precede the bodies.
+static unsigned char canTakeTown(const hero* attackingHero,
+                                 const town* defendingTown);
+static long findMagusHutValue(long playerId, unsigned char exploreMode);
+static long findAllDestinations(hero* currentHero,
+                                searchArray* currentSearchArray,
+                                std::vector<HeroDestination>& destinations,
+                                long maxDistance, unsigned char hiringHero,
+                                unsigned char allowSpells,
+                                unsigned char exploreMode);
+static int netValueOfLocation(hero* currentHero,
+                              HeroDestination& destination,
+                              long* strategicMap,
+                              struct pathCell* currentPathCell,
+                              searchArray* currentSearchArray);
 const std::bitset<TOWN_TYPE_COUNT>& getAngelicAllianceAlignments();
 int canBuy(const town* currTown, int buildingId);
 double getTradeRatio(EGameResource source, EGameResource dest,
@@ -309,7 +325,7 @@ void type_town_threat_checker::markTowns(hero* enemyHero,
 VA(0x00428410, 0x160)
 DC_ADDRESS(0x02dc00, 0x140)
 MAC_ADDRESS(0x02abe0, 0x238)
-unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown)
+static unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown)
 {
     armyGroup attackingArmy = attackingHero->m_army;
     armyGroup defendingArmy = defendingTown->getArmy();
@@ -814,7 +830,7 @@ void type_AI_player::startTurn()
 VA(0x00429910, 0x195)
 DC_ADDRESS(0x02efc8, 0x17e)
 MAC_ADDRESS(0x02c62c, 0x1c4)
-long findMagusHutValue(long playerId, unsigned char exploreMode)
+static long findMagusHutValue(long playerId, unsigned char exploreMode)
 {
     long value = 0;
     type_point point;
@@ -917,7 +933,7 @@ static long sumPlayerDwellings(long playerId)
 VA(0x00429d50, 0x3F9)
 DC_ADDRESS(0x02f694, 0x20c)
 MAC_ADDRESS(0x02d03c, 0x3a8)
-void fillProhibitedArray(playerData* player, bool* prohibited)
+static void fillProhibitedArray(playerData* player, bool* prohibited)
 {
     long humanStrength;
     int income[NUM_RESOURCES];
@@ -1274,16 +1290,16 @@ void type_AI_player::doResourceTrade(int* supply)
     calculateDemand();
 }
 
-long valueOfDwelling(town* currentTown, short dwelling,
-                       bool* prohibited, int* extraCost);
-long valueOfDwellingUpgrade(town* currentTown, short dwelling,
+static long valueOfDwelling(town* currentTown, short dwelling,
+                              bool* prohibited, int* extraCost);
+static long valueOfDwellingUpgrade(town* currentTown, short dwelling,
                                int* extraCost);
-int valueOfCastleUpgrade(town* currentTown, int* extraCost);
-long valueOfHorde(town* currentTown, type_building_id building,
-                    bool* prohibited, int* extraCost);
-long valueOfHordeUpgrade(town* currentTown, type_building_id building,
+static int valueOfCastleUpgrade(town* currentTown, int* extraCost);
+static long valueOfHorde(town* currentTown, type_building_id building,
+                           bool* prohibited, int* extraCost);
+static long valueOfHordeUpgrade(town* currentTown, type_building_id building,
                             bool* prohibited, int* extraCost);
-long valueOfHall(town* currentTown, type_building_id building);
+static long valueOfHall(town* currentTown, type_building_id building);
 int aiResourceCost(const playerData* player, const int* resources);
 int canBuy(const town* currTown, int buildingId);
 
@@ -1608,7 +1624,7 @@ bool type_AI_player::purchaseBuilding(
 VA(0x0042b520, 0x8b)
 DC_ADDRESS(0x02f4b0, 0x96)
 MAC_ADDRESS(0x02cc84, 0x138)
-long valueOfDwelling(town* currentTown, short dwelling, bool* prohibited, int* extraCost)
+static long valueOfDwelling(town* currentTown, short dwelling, bool* prohibited, int* extraCost)
 {
     TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
     if (prohibited[creature])
@@ -1625,7 +1641,7 @@ long valueOfDwelling(town* currentTown, short dwelling, bool* prohibited, int* e
 VA(0x0042b5b0, 0xbe)
 DC_ADDRESS(0x02f548, 0xb4)
 MAC_ADDRESS(0x02cdbc, 0x190)
-long valueOfDwellingUpgrade(town* currentTown, short dwelling, int* extraCost)
+static long valueOfDwellingUpgrade(town* currentTown, short dwelling, int* extraCost)
 {
     short baseDwelling = dwelling - 7;
     TCreatureType creature = g_dwellingType[currentTown->m_type][baseDwelling];
@@ -1644,7 +1660,7 @@ long valueOfDwellingUpgrade(town* currentTown, short dwelling, int* extraCost)
 VA(0x0042b670, 0x111)
 DC_ADDRESS(0x02f8a0, 0xf8)
 MAC_ADDRESS(0x02d478, 0x1bc)  // MAC_ABSTRACTION_FROM(tokens1:26385da3c159,42.5676): original g_dwellingType and akCreatureTypeTraits tables replace the flattened dwelling index; masked shape rises from 51 to 72 of 111 instructions.
-int valueOfCastleUpgrade(town* currentTown, int* extraCost)
+static int valueOfCastleUpgrade(town* currentTown, int* extraCost)
 {
     long value = 0;
     if (g_game->m_mapHeader.m_victoryCondition.m_type
@@ -1674,7 +1690,7 @@ int valueOfCastleUpgrade(town* currentTown, int* extraCost)
 VA(0x0042b790, 0x62)
 DC_ADDRESS(0x02f9bc, 0xcc)
 MAC_ADDRESS(0x02d674, 0x124)
-long valueOfHorde(town* currentTown, type_building_id building, bool* prohibited, int* extraCost)
+static long valueOfHorde(town* currentTown, type_building_id building, bool* prohibited, int* extraCost)
 {
     type_horde_effect* horde = currentTown->getHordeEffect(building);
     TCreatureType creature = horde->m_creature;
@@ -1689,7 +1705,7 @@ long valueOfHorde(town* currentTown, type_building_id building, bool* prohibited
 VA(0x0042b800, 0xa2)
 DC_ADDRESS(0x02fa88, 0xa2)
 MAC_ADDRESS(0x02d798, 0x17c)
-long valueOfHordeUpgrade(town* currentTown, type_building_id building, bool* prohibited, int* extraCost)
+static long valueOfHordeUpgrade(town* currentTown, type_building_id building, bool* prohibited, int* extraCost)
 {
     type_horde_effect* horde = currentTown->getHordeEffect(building);
     if (!horde)
@@ -1708,7 +1724,7 @@ long valueOfHordeUpgrade(town* currentTown, type_building_id building, bool* pro
 VA(0x0042b8b0, 0x130)
 DC_ADDRESS(0x02fb2c, 0x280)
 MAC_ADDRESS(0x02d914, 0x1b8)
-long valueOfHall(town* currentTown, type_building_id building)
+static long valueOfHall(town* currentTown, type_building_id building)
 {
     long value = 0;
     if (currentTown->m_threateningHeroes > 0)
@@ -2673,8 +2689,8 @@ void aiArrangeArmy(armyGroup& currentArmy)
     }
 }
 
-long splitArmy(armyGroup* currentArmy, short index, short limit,
-                short openSlots);
+static long splitArmy(armyGroup* currentArmy, short index, short limit,
+                       short openSlots);
 
 // Original: split_armies; ai_player.cpp:2817
 // This static ordinary helper owns only splitting and its early returns.
@@ -2791,8 +2807,8 @@ void aiArrangeArmyForCombat(hero* currentHero, const hero* enemyHero,
 VA(0x0042dd70, 0xdc)
 DC_ADDRESS(0x0325bc, 0xb4)
 MAC_ADDRESS(0x031150, 0xf8)
-long splitArmy(armyGroup* currentArmy, short index, short limit,
-                short openSlots)
+static long splitArmy(armyGroup* currentArmy, short index, short limit,
+                       short openSlots)
 {
     TCreatureType type = currentArmy->m_armyTypes[index];
     int pieces = akCreatureTypeTraits[type].AI_value
@@ -3292,10 +3308,10 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 // caller mass. Recovered locals, helper boundaries, condition groups and the
 // unnamed get_location temporary are retained through the expected dips.
 // Forward prototypes: all three bodies sit later in RVA order.
-long markDestinations(hero* currentHero, long maxDistance,
-                       searchArray* currentSearchArray,
-                       unsigned short* friendlyDistances,
-                       type_search_type searchType);
+static long markDestinations(hero* currentHero, long maxDistance,
+                              searchArray* currentSearchArray,
+                              unsigned short* friendlyDistances,
+                              type_search_type searchType);
 long aiValueOfEvent(const hero* currentHero, type_point point,
                        long& moveCost);
 
@@ -3312,11 +3328,11 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
 VA(0x0042edd0, 0x79b)
 DC_ADDRESS(0x033038, 0x3ca)
 MAC_ADDRESS(0x031f7c, 0x558)  // anchor-callee + arity
-long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
-                           std::vector<HeroDestination>& destinations,
-                           long maxDistance, unsigned char hiringHero,
-                           unsigned char allowSpells,
-                           unsigned char exploreMode)
+static long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
+                                  std::vector<HeroDestination>& destinations,
+                                  long maxDistance, unsigned char hiringHero,
+                                  unsigned char allowSpells,
+                                  unsigned char exploreMode)
 {
     HeroDestination point;
     long currentValue;
@@ -3465,10 +3481,10 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
 VA(0x0042f570, 0x40e)
 DC_ADDRESS(0x032a84, 0x3ac)
 MAC_ADDRESS(0x03180c, 0x4b4)  // anchor-callee + arity
-long markDestinations(hero* currentHero, long maxDistance,
-                       searchArray* currentSearchArray,
-                       unsigned short* friendlyDistances,
-                       type_search_type searchType)
+static long markDestinations(hero* currentHero, long maxDistance,
+                              searchArray* currentSearchArray,
+                              unsigned short* friendlyDistances,
+                              type_search_type searchType)
 {
     long levelSize = g_mapWidth * g_mapHeight;
     // DC 3054 evaluates the whole-map cell count and discards it; the
@@ -3556,7 +3572,7 @@ long markDestinations(hero* currentHero, long maxDistance,
 VA(0x0042f980, 0x2c9)
 DC_ADDRESS(0x033854, 0x1f6)
 MAC_ADDRESS(0x032a90, 0x454)  // anchor-callee unique (Random, FindAdjacentMonster)
-int netValueOfLocation(hero* currentHero, HeroDestination& destination,
+static int netValueOfLocation(hero* currentHero, HeroDestination& destination,
                           long* strategicMap, pathCell* currentPathCell,
                           searchArray* currentSearchArray)
 {
@@ -4283,7 +4299,7 @@ int canBuy(const town* currTown, int buildingId);
 VA(0x00431800, 0x3c2)
 DC_ADDRESS(0x0354bc, 0x32e)
 MAC_ADDRESS(0x03590c, 0x528)  // MAC_ABSTRACTION_FROM(tokens1:a1e94b485a5a,25.3030): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
-bool considerHiring(long playerId, hero* candidate)
+static bool considerHiring(long playerId, hero* candidate)
 {
     playerData& player = g_game->m_players[playerId];
     long total = totalArtifactValue(candidate, playerId);
@@ -5168,11 +5184,12 @@ long aiGetValueOfArtifact(const type_artifact& artifact, long playerId)
     return best;
 }
 
-long removeNegativeArtifacts(hero* ourHero);
-unsigned char addArtifact(hero* ourHero, type_artifact artifact,
-                           long* baseValue, hero* sourceHero,
-                           long sourceSlot, long* sourceValue,
-                           long bestChange);
+static long removeNegativeArtifacts(hero* ourHero);
+static long getFullValue(const hero* ourHero);
+static unsigned char addArtifact(hero* ourHero, type_artifact artifact,
+                                  long* baseValue, hero* sourceHero,
+                                  long sourceSlot, long* sourceValue,
+                                  long bestChange);
 
 VA(0x00433b40, 0x6d)
 DC_ADDRESS(0x037a58, 0x74)
@@ -5196,7 +5213,7 @@ void aiEquipArtifacts(hero* ourHero)
 VA(0x00433bb0, 0xad)
 DC_ADDRESS(0x0377f0, 0xa8)
 MAC_ADDRESS(0x038ffc, 0x100)
-long removeNegativeArtifacts(hero* ourHero)
+static long removeNegativeArtifacts(hero* ourHero)
 {
     type_artifact artifact(ARTIFACT_NONE);
     long bestValue = getFullValue(ourHero);
@@ -5226,7 +5243,7 @@ long removeNegativeArtifacts(hero* ourHero)
 VA(0x00433c60, 0x1b3)
 DC_ADDRESS(0x037588, 0x266)
 MAC_ADDRESS(0x038db8, 0x244)
-long getFullValue(const hero* ourHero)
+static long getFullValue(const hero* ourHero)
 {
     type_spellvalue caster(ourHero);
     long value = 0;
@@ -5275,10 +5292,10 @@ long getFullValue(const hero* ourHero)
 VA(0x00433e20, 0x1bf)
 DC_ADDRESS(0x037898, 0x1c0)
 MAC_ADDRESS(0x0390fc, 0x248)
-unsigned char addArtifact(hero* ourHero, type_artifact artifact,
-                           long* baseValue, hero* sourceHero,
-                           long sourceSlot, long* sourceValue,
-                           long bestChange)
+static unsigned char addArtifact(hero* ourHero, type_artifact artifact,
+                                  long* baseValue, hero* sourceHero,
+                                  long sourceSlot, long* sourceValue,
+                                  long bestChange)
 {
     if (ourHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
         return 0;

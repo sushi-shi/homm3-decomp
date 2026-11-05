@@ -18,6 +18,19 @@
 DATA(0x00660858) long g_hypnotizeTurns[kNumMasteries] = { 1, 1, 2, 3 };
 DATA(0x0063b7c8) const long g_chainLightningTargets[kNumMasteries] = { 4, 4, 5, 5 };
 
+// DC records these appraisals as (static) procedures of this file; their
+// callers precede the bodies.
+static double valueOfLuckAndMorale(long value, long change,
+                                   double goodValueMultiplier,
+                                   double badValueMultiplier);
+static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex,
+                              long troopCount, const army* enemy,
+                              long enemyHex,
+                              const type_AI_combat_parameters* estimate);
+static long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex,
+                           long troopCount, const army* enemy, long enemyHex,
+                           const type_AI_combat_parameters* estimate);
+
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
 // <algorithm> min/max macros expand to those) but they are NOT the
@@ -99,7 +112,7 @@ double aiValueOfMorale(long morale, long change)
 VA(0x00435850, 0x102)
 DC_ADDRESS(0x03c29c, 0x2be)
 MAC_ADDRESS(0x03cb04, 0x1a0)
-double valueOfLuckAndMorale(long value, long change, double goodValueMultiplier, double badValueMultiplier)
+static double valueOfLuckAndMorale(long value, long change, double goodValueMultiplier, double badValueMultiplier)
 {
     if (change > 0) {
         if (value >= 3)
@@ -530,7 +543,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
 VA(0x00436620, 0x13A)
 DC_ADDRESS(0x03c608, 0xfe)
 MAC_ADDRESS(0x03ccf4, 0x184)
-long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
+static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
 {
     long alreadyChecked = 1 << enemy->index;
     long validDirections = ourArmy->getMultiHeadDirections(ourHex, enemy, enemyHex);
@@ -563,7 +576,7 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long tro
 VA(0x00436760, 0xDF)
 DC_ADDRESS(0x03c708, 0x108)
 MAC_ADDRESS(0x03ce78, 0x160)
-long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
+static long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
 {
     long direction = ourArmy->getAttackDirection(ourHex, enemy, enemyHex);
     long breathHex = ourArmy->getAdjacentHex(ourHex, direction);

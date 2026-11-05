@@ -35,8 +35,6 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
 // proves the const reference and long player id; retail retains 0x433aa0.
 // E:\gamedcs\ai_player.cpp:5684
 long aiGetValueOfArtifact(const type_artifact& artifact, long playerId);
-long getFullValue(const hero* ourHero);
-long removeNegativeArtifacts(hero* ourHero);
 long aiGetShipCost(const hero* ourHero, type_point point);
 
 // Full DC layout (classes.csv: 152 B, 6 members, 2 statics) and every
@@ -253,23 +251,11 @@ public:
     // (compgenx). The type_point member supplies its implicit construction.
 };
 
-long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
-                           std::vector<HeroDestination>& destinations,
-                           long maxDistance, unsigned char hiringHero,
-                           unsigned char allowSpells,
-                           unsigned char exploreMode);
-int netValueOfLocation(hero* currentHero, HeroDestination& destination,
-                          long* strategicMap, struct pathCell* currentPathCell,
-                          searchArray* currentSearchArray);
 int aiChooseDestination(hero* currentHero, long maxDistance,
                           HeroDestination& bestPoint,
                           long& bestRawValue,
                           bool allowSpells,
                           bool exploreMode);
-
-unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown);
-long findMagusHutValue(long playerId, unsigned char exploreMode);
-void fillProhibitedArray(playerData* player, bool* prohibited);
 
 extern const char* g_resourceNames[8];
 extern char g_aiResourceWarningFormat[];
