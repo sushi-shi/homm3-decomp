@@ -581,8 +581,8 @@ void CSpriteFrame::EncodeTileset()
         }
     }
     if (hasControlPixels) {
-        static const unsigned int kOpaqueRunCode = 7;
-        static const unsigned int kMaxRunLength = 32;
+        static const unsigned int kOpaqueRunCode = ePackedRleLiteral;
+        static const unsigned int kMaxRunLength = ePackedRleMaxRunLength;
         unsigned int linesToGo = CroppedHeight;
         unsigned int newDataSize = CroppedHeight * sizeof(TOffset);
         unsigned char* source = map;
@@ -659,8 +659,8 @@ void CSpriteFrame::EncodeAdvObj()
 {
     typedef unsigned short TOffset;
 
-    static const unsigned int kOpaqueRunCode = 7;
-    static const unsigned int kMaxRunLength = 32;
+    static const unsigned int kOpaqueRunCode = ePackedRleLiteral;
+    static const unsigned int kMaxRunLength = ePackedRleMaxRunLength;
     int oldWidth = CroppedWidth;
     int right = CroppedX + oldWidth;
     int newCroppedX = CroppedX - (CroppedX & 31);
@@ -1371,7 +1371,7 @@ void CSpriteFrame::DrawAdvObjImpl(int sx, int sy, int sw, int sh,
     typedef unsigned short TOffset;
     typedef unsigned short TDstPixel;
 
-    static const unsigned char kOpaqueRunCode = 7;
+    static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     const TDstPixel* palette;
     unsigned int cellsPerLine;
@@ -1562,7 +1562,7 @@ void CSpriteFrame::DrawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
     typedef unsigned short TOffset;
     typedef unsigned short TDstPixel;
 
-    static const unsigned char kOpaqueRunCode = 7;
+    static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     const TDstPixel* palette;
     unsigned int cellsPerLine;
@@ -1756,7 +1756,7 @@ void CSpriteFrame::DrawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
     typedef unsigned short TOffset;
     typedef unsigned short TDstPixel;
 
-    static const unsigned char kOpaqueRunCode = 7;
+    static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     unsigned int cellsPerLine;
     const TOffset* cellOffset;
@@ -1948,7 +1948,7 @@ void CSpriteFrame::DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
     typedef unsigned short TOffset;
     typedef unsigned short TDstPixel;
 
-    static const unsigned char kOpaqueRunCode = 7;
+    static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     if (EncodingMethod == eEncodeGeneralRLE) {
         Draw(sw, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hFlipped, 1);
@@ -2379,7 +2379,7 @@ void CSpriteFrame::DrawTileShadow(int sx, int sy, int sw, int sh,
     typedef unsigned short TOffset;
     typedef unsigned short TDstPixel;
 
-    static const unsigned char kOpaqueRunCode = 7;
+    static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     if (EncodingMethod == eEncodeRaw)
         return;
@@ -2948,7 +2948,7 @@ void CSpriteFrame::DrawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh,
     typedef unsigned short TOffset;
     typedef unsigned short TDstPixel;
 
-    static const unsigned char kOpaqueRunCode = 7;
+    static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     assert(EncodingMethod == eEncodeAdvObjRLE);
     ClipScaled50(sx, sy, sw, sh, dx, dy, dw, dh, false, false);
@@ -3060,7 +3060,7 @@ void CSpriteFrame::DrawAdvObjShadowScaled50(int sx, int sy, int sw, int sh,
     typedef unsigned short TOffset;
     typedef unsigned short TDstPixel;
 
-    static const unsigned char kOpaqueRunCode = 7;
+    static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     assert(EncodingMethod == eEncodeAdvObjRLE);
     ClipScaled50(sx, sy, sw, sh, dx, dy, dw, dh, false, false);
@@ -3181,7 +3181,7 @@ void CSpriteFrame::DrawTileScaled50(int sx, int sy, int sw, int sh,
     typedef unsigned short TOffset;
     typedef unsigned short TDstPixel;
 
-    static const unsigned char kOpaqueRunCode = 7;
+    static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     assert(EncodingMethod == eEncodeTilesetRLE || EncodingMethod == eEncodeRaw);
     ClipScaled50(sx, sy, sw, sh, dx, dy, dw, dh, hFlipped, vFlipped);
@@ -3629,7 +3629,7 @@ void CSpriteFrame::DrawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh,
     typedef unsigned short TOffset;
     typedef unsigned short TDstPixel;
 
-    static const unsigned char kOpaqueRunCode = 7;
+    static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     assert(EncodingMethod == eEncodeAdvObjRLE);
     ClipScaled25(sx, sy, sw, sh, dx, dy, dw, dh, false, false);
@@ -3752,7 +3752,7 @@ void CSpriteFrame::DrawAdvObjShadowScaled25(int sx, int sy, int sw, int sh,
     typedef unsigned short TOffset;
     typedef unsigned short TDstPixel;
 
-    static const unsigned char kOpaqueRunCode = 7;
+    static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     assert(EncodingMethod == eEncodeAdvObjRLE);
     ClipScaled25(sx, sy, sw, sh, dx, dy, dw, dh, false, false);
@@ -3879,7 +3879,7 @@ void CSpriteFrame::DrawTileScaled25(int sx, int sy, int sw, int sh,
     typedef unsigned short TOffset;
     typedef unsigned short TDstPixel;
 
-    static const unsigned char kOpaqueRunCode = 7;
+    static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     assert(EncodingMethod == eEncodeTilesetRLE || EncodingMethod == eEncodeRaw);
     ClipScaled25(sx, sy, sw, sh, dx, dy, dw, dh, hFlipped, vFlipped);

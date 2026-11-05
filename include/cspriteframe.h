@@ -50,6 +50,8 @@ enum TRleControlCode {
 
 // The packed tile/adventure RLE stores a three-bit tag and a five-bit
 // run length. Tag 7 introduces literal palette bytes; general RLE uses 255.
+// DC CodeView keeps function-local kOpaqueRunCode/kMaxRunLength statics in
+// each packed encoder and decoder (constant .data); they take these values.
 enum TPackedRleControlCode {
     ePackedRleLiteral = 7,
     ePackedRleMaxRunLength = 32
