@@ -1158,13 +1158,13 @@ cspriteframe	??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@HHHH@Z	100.0000	10
 cspriteframe	??1CSpriteFrame@@UAE@XZ	100.0000	100.0000	100.0000	0x7c430	tokens1:935326e6c0e1
 cspriteframe	??_GCSpriteFrame@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x7c280	-
 cspriteframe	?Draw@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7c570	tokens1:affecb5dec78
-cspriteframe	?DrawAdvObjImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG@Z	100.0000	100.0000	100.0000	0x7d0a0	tokens1:1bf8f1a550ad
-cspriteframe	?DrawAdvObjShadowImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_N@Z	100.0000	100.0000	100.0000	0x7d930	tokens1:3687cac9ad9f
-cspriteframe	?DrawAdvObjWithFlagAlpha@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@G_N@Z	100.0000	100.0000	100.0000	0x7d4f0	tokens1:cc8c802582d6
+cspriteframe	?DrawAdvObjImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG@Z	100.0000	100.0000	100.0000	0x7d0a0	tokens1:f052f0c7a478
+cspriteframe	?DrawAdvObjShadowImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_N@Z	100.0000	100.0000	100.0000	0x7d930	tokens1:0b271451d5f3
+cspriteframe	?DrawAdvObjWithFlagAlpha@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@G_N@Z	100.0000	100.0000	100.0000	0x7d4f0	tokens1:00bde767ce5b
 cspriteframe	?DrawCreatureImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG2@Z	100.0000	100.0000	100.0000	0x7c9e0	tokens1:25392c5a31b4
 cspriteframe	?DrawSpellEffect@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7ef60	tokens1:c69a7e41e8a0
-cspriteframe	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7dd40	tokens1:abd9833802f1
-cspriteframe	?DrawTileShadow@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7e820	tokens1:09f89a7aa011
+cspriteframe	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7dd40	tokens1:b339430cbece
+cspriteframe	?DrawTileShadow@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	100.0000	100.0000	100.0000	0x7e820	tokens1:7517b10ff28d
 cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	100.0000	100.0000	100.0000	0x7c460	tokens1:0172ccda01da
 cspriteframe	?getSize@CSpriteFrame@@UBEIXZ	100.0000	100.0000	100.0000	0x7c560	tokens1:e80f98ba113c
 cursor	??9type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x82340	tokens1:964dd1e46326
@@ -3290,7 +3290,7 @@ rmg	??1TRmgZone@@QAE@XZ	100.0000	100.0000	100.0000	0x132b50	tokens1:12b0e6dad538
 rmg	??1t_abstract_random_generator@@UAE@XZ	100.0000	100.0000	100.0000	0x1363b0	tokens1:bcc1edf8a519
 rmg	??1t_quest_artifact@@UAE@XZ	100.0000	100.0000	100.0000	0x1339f0	tokens1:07f2e21a243a
 rmg	??1type_black_box@@UAE@XZ	100.0000	100.0000	100.0000	0x1336b0	377ae490e249
-rmg	??1type_object@@UAE@XZ	100.0000	100.0000	100.0000	0x1338d0	tokens1:3982beda34fc
+rmg	??1type_object@@UAE@XZ	100.0000	100.0000	100.0000	0x1338d0	tokens1:12341612fd7c
 rmg	??1type_progress_bar@@UAE@XZ	100.0000	100.0000	100.0000	0x130e70	tokens1:67225dfdc0cc
 rmg	??1type_random_map@@UAE@XZ	100.0000	100.0000	100.0000	0x1310b0	tokens1:409c8a49d4c4
 rmg	??1type_random_map_generator@@UAE@XZ	100.0000	100.0000	100.0000	0x137df0	tokens1:7b4f74b499ac
