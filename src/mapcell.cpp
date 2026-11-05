@@ -1045,9 +1045,9 @@ void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion)
         cell->m_artifactInfo.m_custom = legacy.m_artifactInfo.m_custom;
         if (!cell->m_artifactInfo.m_custom) {
             cell->m_artifactInfo.m_guard =
-                static_cast<TCreatureType>(legacy.m_artifactInfo.m_guard);
+                legacy.m_artifactInfo.m_guard;
             cell->m_artifactInfo.m_resourcePrice =
-                static_cast<EGameResource>(legacy.m_artifactInfo.m_resourcePrice);
+                legacy.m_artifactInfo.m_resourcePrice;
             cell->m_artifactInfo.m_guardQty =
                 legacy.m_artifactInfo.m_guardQty;
         }
@@ -1091,11 +1091,11 @@ void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion)
     case WAGON:
         legacy.m_value = cell->m_extraInfo;
         cell->m_wagonInfo.m_artifact =
-            static_cast<TArtifact>(legacy.m_wagonInfo.m_artifact);
+            legacy.m_wagonInfo.m_artifact;
         cell->m_wagonInfo.m_full = legacy.m_wagonInfo.m_full;
         cell->m_wagonInfo.m_hasArtifact = legacy.m_wagonInfo.m_hasArtifact;
         cell->m_wagonInfo.m_resource =
-            static_cast<EGameResource>(legacy.m_wagonInfo.m_resource);
+            legacy.m_wagonInfo.m_resource;
         cell->m_wagonInfo.m_resourceAmount =
             legacy.m_wagonInfo.m_resourceAmount;
         cell->m_cellVisitedInfo.m_visited = legacy.m_wagonInfo.m_visitedBits;

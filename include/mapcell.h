@@ -31,8 +31,8 @@ class CObject;
 struct LegacyArtifactInfo {
 public:
     signed long m_price : 4;
-    signed long m_guard : 8;
-    signed long m_resourcePrice : 4;
+    TCreatureType m_guard : 8;
+    EGameResource m_resourcePrice : 4;
     unsigned long m_guardQty : 15;
     unsigned long m_custom : 1;
 };
@@ -79,8 +79,8 @@ public:
     unsigned long m_visitedBits : 8;
     unsigned long m_full : 1;
     unsigned long m_hasArtifact : 1;
-    signed long m_artifact : 8;
-    signed long m_resource : 4;
+    TArtifact m_artifact : 8;
+    EGameResource m_resource : 4;
     unsigned long m_tail : 5;
 };
 
