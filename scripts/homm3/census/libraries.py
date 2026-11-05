@@ -319,7 +319,7 @@ def reviewed_runtime_exports(image, rows, archives, functions):
                 exports.add((entry, symbol.name, library, row['member']))
     return sorted(exports)
 
-def reviewed_runtime_names(starts, runtime, reviewed, aliases=(), *, exports=(), source_owned=()):
+def reviewed_runtime_names(starts, runtime, reviewed, aliases=(), *, exports=()):
     """Merge reviewed owners and aliases without making aliases owners.
 
     A native vtable can prove two template identities at one folded body.
@@ -340,12 +340,14 @@ def reviewed_runtime_names(starts, runtime, reviewed, aliases=(), *, exports=(),
                 and row['symbol'] != '-'}
     preferred = {rva: name for rva, name, _lib, _member in exports
                  if (rva, name) in admitted}
-    # A reviewed alias explicitly leaves ownership with its source copy.
-    # More precise template-vtable matching must not reclassify that placed
-    # source COMDAT as library-owned merely because its bytes also agree.
+    # A reviewed `ownership=source` alias leaves ownership with its source
+    # copy. More precise template-vtable matching must not reclassify that
+    # placed source COMDAT as library-owned merely because its bytes also
+    # agree. This is reviewed input: the generated placements are derived
+    # from this census and cannot decide it without a feedback loop.
     owners = {int(row['rva'], 16) for row in reviewed if row['kind'] == 'code'}
-    source_aliases = ({int(row['rva'], 16) for row in reviewed if row['kind'] == 'alias'}
-                      & set(source_owned)) - owners
+    source_aliases = {int(row['rva'], 16) for row in reviewed
+                      if row['kind'] == 'alias' and row.get('ownership') == 'source'} - owners
     result = [label for label in runtime if label[0] not in source_aliases
               and (label[0] not in preferred or label[1] == preferred[label[0]])]
     names_at = {rva: name for rva, name, _library, _member in result}

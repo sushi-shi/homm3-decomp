@@ -59,12 +59,17 @@ class ReviewedRuntimeNamesTest(unittest.TestCase):
 
     def test_reviewed_alias_preserves_a_placed_source_comdat(self):
         self.assertEqual(reviewed_runtime_names(
-            {0x100}, [label('narrow')], [row('narrow', 'alias')],
-            [label('wide')], source_owned={0x100}), ([], []))
+            {0x100}, [label('narrow')], [row('narrow', 'alias', ownership='source')],
+            [label('wide')]), ([], []))
         # An actual code owner remains runtime-owned.
         self.assertEqual(reviewed_runtime_names(
-            {0x100}, [label('narrow')], [row('narrow'), row('wide', 'alias')],
-            source_owned={0x100}), ([label('narrow')], [label('wide')]))
+            {0x100}, [label('narrow')],
+            [row('narrow'), row('wide', 'alias', ownership='source')]),
+            ([label('narrow')], [label('wide')]))
+        # A plain alias row does not decide body ownership.
+        self.assertEqual(reviewed_runtime_names(
+            {0x100}, [label('narrow')], [row('narrow', 'alias')]),
+            ([label('narrow')], []))
 
     def test_equal_primary_name_is_not_its_own_alias(self):
         self.assertEqual(reviewed_runtime_names({0x100}, [label('narrow')],

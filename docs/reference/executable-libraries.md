@@ -209,7 +209,10 @@ campaign destructor at RVA 0x4e595 to be labeled as the narrow specialization.
 Its stored vtable at 0x4916b0 proves the wide specialization. The narrow
 77-byte destructor at 0x415930 is separately emitted by the recovered game
 source. An admitted library alias does not take ownership away from an
-already placed source COMDAT. Regression tests cover both distinctions.
+already placed source COMDAT: such alias rows declare `ownership=source` in
+`runtime-contributions.tsv`. The census reads that reviewed declaration, not
+the generated placements, which are themselves derived from the census.
+Regression tests cover both distinctions.
 
 Conversely, a complete reviewed section chooses the retained identity when
 an expanded base destructor has the same bytes. Map-editor 0x4f59f6 matches

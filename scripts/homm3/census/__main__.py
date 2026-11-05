@@ -193,11 +193,8 @@ def derive(log=print):
     starts = {r for r, _s, _d in rows}
     exports = libraries.reviewed_runtime_exports(
         image, reviewed_rows, archives, {r: size for r, size, _d in rows})
-    placements_path = paths.retail_dir() / "placements.tsv"
-    source_owned = {int(row['rva'], 16) for row in read_tsv(placements_path)[2]
-                    if row['kind'] == 'func'} if placements_path.is_file() else set()
     runtime, aliases = libraries.reviewed_runtime_names(
-        starts, runtime, reviewed_rows, aliases, exports=exports, source_owned=source_owned)
+        starts, runtime, reviewed_rows, aliases, exports=exports)
     atexit = next((r for r, n, _l, _m in runtime if n == "_atexit"), None)
     if atexit is not None:
         thunks += eh.registration_rows(census, thunks, atexit)

@@ -360,6 +360,12 @@ ownership. EH, zlib and initializer classifications retain precedence; no
 internal symbol is invented. The declaration does not waive library-code or
 generated-code verification.
 
+An `alias` row can instead declare `ownership=source`: an image unit's
+COMDAT, placed by source, owns that folded body. The census then never names
+it runtime code, even when a library body has the same bytes. This is
+reviewed input; the census must not read the generated `placements.tsv`,
+which is derived from the census's own runtime map.
+
 Runtime-map and zlib labels, and model data claims of the same name, yield to
 verified sections that define them; a differently named claim inside a
 verified section remains and shows as an overlap. Credited code fill is the
