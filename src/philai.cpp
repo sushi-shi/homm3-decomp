@@ -399,10 +399,9 @@ long valueOfBlackMarket(const hero* currentHero,
 
     const TBlackMarket& market = g_game->m_blackMarkets[cell->m_extraInfo];
     long value = 0;
-    for (int artifact = 0; artifact < 7; ++artifact) {
+    for (int artifact = 0; artifact < 7; ++artifact)
         value += getArtifactPurchaseValue(
             market.m_artifacts[artifact], 5, g_currentPlayer->m_resources);
-    }
     return value;
 }
 
@@ -985,9 +984,8 @@ static inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
 
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
-    if (info->isCustomized()) {
+    if (info->isCustomized())
         return valueOfCustomItem(currentHero, cell, value);
-    }
 
     if (info->isDefendedArtifact()) {
         armyGroup monsters(info->getArtifactDefender(),
@@ -1052,9 +1050,10 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
     int value = 0;
     BlackBoxData* blackBox = cell->getBlackBox();
 
-    if (blackBox->m_hasCustomGuardians)
+    if (blackBox->m_hasCustomGuardians) {
         value = aiValueOfCombat(
             currentHero, 0, blackBox->m_guardians, 0, cell);
+    }
 
     if (blackBox->m_experienceBonus > 0) {
         value += blackBox->m_experienceBonus
@@ -1097,10 +1096,13 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
         }
     }
 
+    // DC 2038..2039 skip an empty slot with its own if (dc 0x1107be) before
+    // the braced CanJoin arm; the guardian arm above is braced (dc 0x1105fe).
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         int creature = blackBox->m_creatures.m_armies[slot];
-        if (creature != CREATURE_NONE
-            && currentHero->m_army.canJoin(creature)) {
+        if (creature == CREATURE_NONE)
+            continue;
+        if (currentHero->m_army.canJoin(creature)) {
             value += blackBox->m_creatures.m_numTroops[slot]
                 * akCreatureTypeTraits[creature].AI_value;
         }
@@ -1197,8 +1199,16 @@ inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
 }
 
 // Windows 0x528b3c/0x528b93 and Mac 0x142e38/0x142e94 select the
-// non-Sunday benefit from the day low bit. Mac also retains an unreachable
-// third morale/luck path at 0x142ef4; do not invent dead source calls for it.
+// non-Sunday benefit from the day low bit. The day tests sit in a braced
+// `moveCost <= movePoints` block that the earlier guard makes always true:
+// Dreamcast 2257..2267 (coincident scopes at dc 0x110df4, unbraced day
+// returns) and Mac 0x142e28 both keep its else path, morale plus half the
+// luck value (DC __divd by the literal 2.0 at dc 0x1110fc, Mac fmadd by
+// 0.5 at 0x142f34). VC6 folds the dead test, but its second moveCost use
+// is why retail loads moveCost once into EDI (0x528b13) for the guard at
+// 0x528b2e; without it the IDOL arm reloads it there. The path's front-end
+// cost is also part of what makes aiValueOfEvent retain its school and
+// spring calls.
 DC_ADDRESS(0x110db4, 0x1d4)
 MAC_ADDRESS(0x142dd8, 0x184)
 inline long valueOfIdol(const hero* currentHero, long moveCost)
@@ -1210,19 +1220,22 @@ inline long valueOfIdol(const hero* currentHero, long moveCost)
     if (moveCost > currentHero->m_movePoints)
         return 0;
 
-    if (g_game->m_day == DAY_OF_WEEK_SUNDAY) {
-        return static_cast<long>(
-            aiValueOfMorale(
-                currentHero->getMorale(0, 0, 1), 1)
-            + aiValueOfLuck(
+    if (moveCost <= currentHero->m_movePoints) {
+        if (g_game->m_day == DAY_OF_WEEK_SUNDAY)
+            return static_cast<long>(
+                aiValueOfMorale(
+                    currentHero->getMorale(0, 0, 1), 1)
+                + aiValueOfLuck(
+                    currentHero->getLuck(0, 0, 1), 1));
+        if (g_game->m_day & 1)
+            return static_cast<long>(aiValueOfLuck(
                 currentHero->getLuck(0, 0, 1), 1));
+        return static_cast<long>(aiValueOfMorale(
+            currentHero->getMorale(0, 0, 1), 1));
     }
-    if (g_game->m_day & 1) {
-        return static_cast<long>(aiValueOfLuck(
-            currentHero->getLuck(0, 0, 1), 1));
-    }
-    return static_cast<long>(aiValueOfMorale(
-        currentHero->getMorale(0, 0, 1), 1));
+    return static_cast<long>(
+        aiValueOfMorale(currentHero->getMorale(0, 0, 1), 1)
+        + aiValueOfLuck(currentHero->getLuck(0, 0, 1), 1) / 2);
 }
 
 // E:\\gamedcs\\philai.cpp:2274. Dreamcast recovers this as one expression
@@ -1285,12 +1298,11 @@ inline long valueOfHeroEvent(const hero* currentHero,
         short townId = static_cast<short>(g_game->getTownId(x, y, z));
         long value = aiValueOfCombat(
             currentHero, secondHero, secondHero->m_army, 0, cell);
-        if (moveCost <= currentHero->m_movePoints) {
+        if (moveCost <= currentHero->m_movePoints)
             value = static_cast<long>(
                 static_cast<float>(value)
                 + static_cast<float>(secondHero->m_bounty + 10000)
                     * type_AI_player::getAttackBonus(secondHero->m_owner));
-        }
 
         if (townId < 0)
             return value;
@@ -3042,11 +3054,13 @@ DC_ADDRESS(0x111834, 0xc4)
 MAC_ADDRESS(0x143bf4, 0xc4)
 static int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
 {
-    if ((1 << cell->m_extraInfo) & currentHero->m_magicSchoolFlags)
+    if ((1 << cell->m_extraInfo) & currentHero->m_magicSchoolFlags) {
         return 0;
+    }
     playerData* player = currentHero->getPlayer();
-    if (player->m_resources[GOLD] < 1000)
+    if (player->m_resources[GOLD] < 1000) {
         return 0;
+    }
 
     // DC 2602 acquires power, 2605 knowledge, then 2608 calls max.
     long powerValue = currentHero->getValueOfPower();
@@ -3701,8 +3715,9 @@ static long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
-    if (!info->magicSpringIsFull())
+    if (!info->magicSpringIsFull()) {
         return 0;
+    }
 
     // DC records one value-type target local, not a path-to-target copy;
     // separate declaration/assignment keeps the retained call in
@@ -3712,8 +3727,9 @@ static long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
     if (target.isValid() && moveCost > 300) {
         NewmapCell* destination = g_game->getCell(target);
         if (destination->m_type != MAGIC_WELL
-            && destination->m_type != MAGIC_SPRING)
+            && destination->m_type != MAGIC_SPRING) {
             return 0;
+        }
     }
     return currentHero->getValueOfSpring();
 }
@@ -3761,18 +3777,22 @@ static int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
 // DC's free MoraleIncreaseValue/LuckIncreaseValue calls became hero members
 // in Complete: retail passes their receiver in ECX at the retained sites.
 // A tomb guard falling through to the survivor appraisal recovers retail's
-// shared backpack check (94.8578 -> 95.23%). Together with long school
-// acquisition locals and the single assigned spring target, six source states
-// produce five objects and five reproduced elites; the best gives 96.6915%
-// with no sibling MAX loss. School and spring retained bodies stay exact.
-// Five school-result/debit lifetimes yield three reproduced objects, no gain.
-// Remaining call decisions: the first bank size(), magic school and power
-// school still expand where retail retains calls; BlackBox's merged secondary
-// skill tail also remains unresolved. Preserve all canonical helper paths.
-// `homm3 vc6 reach` (2026-10-07): magic school (cb 111) is admitted with 226
-// left after 36 charged sites. Retail still expands the next arm's spring
-// (134), so its remaining budget is not simply lower: the target is a magic-
-// school cost above 226 there, or arms ordered spring-before-school.
+// shared backpack check (94.8578 -> 95.23%). School and spring retained
+// bodies stay exact.
+// Dreamcast's switch body has no case-level scopes: every arm's `if` opens
+// its own statement/body pair directly at depth 5/6 (dc 0x114348 garden,
+// 0x114510 shipyard, 0x1145ba training grounds, 0x114678 tomb, 0x1146a8
+// wheel, 0x114756 windmill). The arms therefore use the cell's
+// ExtraInfoUnion base and its shipyard_info arm directly rather than braced
+// locals, the fountain and wheel returns are unbraced, and the windmill
+// joins its two tests on one line (4111, br=2). These forms, with
+// valueOfIdol's dead else path and BlackBox's DC creature-slot `continue`,
+// take the gated trace from caller cb 1911 to 1851: the magic-school site
+// now sees budget 86 (< 115), so retail's school, spring and well calls stay
+// out of line and the Mercenary Camp (cb 52) expands as retail does.
+// `predict-inline --cb-window` had placed retail at 1808..1823 for the old
+// helper costs. Remaining call decision: BlackBox's merged secondary skill
+// tail. Preserve all canonical helper paths.
 DC_ADDRESS(0x113e24, 0x986)
 long aiValueOfEvent(const hero* currentHero, type_point point,
                        long& moveCost)
@@ -3847,14 +3867,10 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
             return 0;
         if (moveCost > currentHero->m_movePoints)
             return 0;
-        if (cell->playerKnowsCell(currentHero->m_owner)) {
-            const ExtraInfoUnion* info =
-                static_cast<const ExtraInfoUnion*>(
-                    static_cast<const void*>(cell));
+        if (cell->playerKnowsCell(currentHero->m_owner))
             return static_cast<int>(aiValueOfLuck(
                 currentHero->getLuck(0, 0, 1),
-                info->m_fountainInfo.m_luck));
-        }
+                cell->m_fountainInfo.m_luck));
         return static_cast<int>(aiValueOfLuck(
             currentHero->getLuck(0, 0, 1), 1));
     case FOUNTAIN_OF_YOUTH:
@@ -3903,17 +3919,13 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case MONSTER:
         return valueOfMonsters(currentHero, cell, point);
 
-    case MYSTICAL_GARDEN: {
-        const ExtraInfoUnion* info =
-            static_cast<const ExtraInfoUnion*>(
-                static_cast<const void*>(cell));
-        if (!info->gardenIsFull())
+    case MYSTICAL_GARDEN:
+        if (!cell->gardenIsFull())
             return 0;
         return static_cast<long>(
             (player->m_ai.m_resourceValue[GOLD] * 500.0
              + player->m_ai.m_resourceValue[GEMS] * 5.0)
             / 2.0);
-    }
 
     case OASIS:
         return valueOfMoveSource(
@@ -3952,14 +3964,11 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case SEPULCHER:
     case SHIPWRECK:
         return valueOfBank(currentHero, cell);
-    case SHIPYARD: {
-        const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
-            static_cast<const void*>(&cell->m_extraInfo));
+    case SHIPYARD:
         if (g_game->onSameTeam(
-                info->owner, g_netLocalGamePos))
+                cell->m_shipyardInfo.owner, g_netLocalGamePos))
             return 0;
         return 1000;
-    }
     case SHRINE1:
     case SHRINE2:
     case SHRINE3:
@@ -3983,15 +3992,12 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         return valueOfTown(
             currentHero, point.m_x, point.m_y, point.m_z,
             static_cast<short>(moveCost));
-    case TRAINING_GROUNDS: {
-        const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
-            static_cast<const void*>(cell));
+    case TRAINING_GROUNDS:
         if (currentHero->m_trainingGroundsFlags
-            & (1UL << info->getItemId()))
+            & (1UL << cell->getItemId()))
             return 0;
         return static_cast<int>(
             currentHero->m_turnExperienceToRvRatio * 1000.0f);
-    }
     case TREASURE_CHEST:
         return valueOfTreasure(currentHero);
     case TREE_OF_KNOWLEDGE:
@@ -4004,43 +4010,29 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         return valueOfWarFactory(currentHero, moveCost);
     case WAR_SCHOOL:
         return valueOfWarSchool(currentHero, cell);
-    case WARRIOR_TOMB: {
-        const ExtraInfoUnion* info =
-            static_cast<const ExtraInfoUnion*>(
-                static_cast<const void*>(cell));
-        if (info->playerKnowsCell(g_netLocalGamePos))
+    case WARRIOR_TOMB:
+        if (cell->playerKnowsCell(g_netLocalGamePos))
             return 0;
         // An unvisited tomb shares the survivor appraisal below.
-    }
     case SHIPWRECK_SURVIVOR:
         if (const_cast<hero*>(currentHero)
                 ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
             return 0;
         return static_cast<int>(g_currentPlayer->m_ai.m_turnValueOfAvgArtifact);
-    case WATER_WHEEL: {
-        const ExtraInfoUnion* info =
-            static_cast<const ExtraInfoUnion*>(
-                static_cast<const void*>(cell));
-        if (info->playerKnowsCell(g_netLocalGamePos)) {
+    case WATER_WHEEL:
+        if (cell->playerKnowsCell(g_netLocalGamePos))
             return static_cast<long>(
-                info->getWheelGold() * player->m_ai.m_resourceValue[GOLD]);
-        }
+                cell->getWheelGold() * player->m_ai.m_resourceValue[GOLD]);
         return static_cast<long>(
             player->m_ai.m_resourceValue[GOLD] * 1000.0);
-    }
     case WATERING_HOLE:
         return valueOfMoveSource(
             currentHero, 0x40, 200, moveCost);
-    case WINDMILL: {
-        const ExtraInfoUnion* info =
-            static_cast<const ExtraInfoUnion*>(
-                static_cast<const void*>(cell));
-        if (info->playerKnowsCell(g_netLocalGamePos)) {
-            if (info->getWindmillAmount() == 0)
-                return 0;
-        }
+    case WINDMILL:
+        if (cell->playerKnowsCell(g_netLocalGamePos)
+            && cell->getWindmillAmount() == 0)
+            return 0;
         return g_currentPlayer->m_ai.m_averageResourceValue * 9 / 2;
-    }
     case WITCH_HUT:
         return valueOfWitchHut(currentHero, cell);
     }
