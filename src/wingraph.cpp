@@ -85,6 +85,12 @@ void setPlayerPaletteColors(TPalette24& pal, int whichPlayer)
            32 * 3);
 }
 
+// DC DDSD and DDCleanUpWinGraphics are (static) procedures of this file;
+// their callers precede the bodies. mousemgr.h declares the static
+// ddSetFullScreenStatus its mouseManager friendship names.
+static void ddsd(int ddErr, char* file, int line);
+static void ddCleanUpWinGraphics();
+
 // DDCreatePrimary and DDSetupClipper are ordinary source-static helpers.
 // DC DDInitGraphics calls them at 231/247, on opposite sides of the pixel
 // format publication; inlined in ddInitGraphics, with v1 interfaces in place
@@ -581,7 +587,7 @@ static void ddReleaseMouseSurfaces()
 // E:\gamedcs\wingraph.cpp:1313
 VA(0x006006E0, 0xCBF)  // DC DDSD identity + retail literals/CFG + HoMM2 lineage
 DC_ADDRESS(0x199724, 0x978)
-void ddsd(int ddErr, char* file, int line)
+static void ddsd(int ddErr, char* file, int line)
 {
     char temp[200];
 
@@ -1279,7 +1285,7 @@ void cleanUpWinGraphics()
 
 VA(0x006018a0, 0x100)  // wrapper tail-jump + DirectDraw release chain
 DC_ADDRESS(0x19a09c, 0x76)
-void ddCleanUpWinGraphics()
+static void ddCleanUpWinGraphics()
 {
     if (g_directDraw) {
         g_directDraw->RestoreDisplayMode();
@@ -1369,7 +1375,7 @@ void resizeWindow(int windowX, int windowY)
 // masks are declared red/green/blue.
 VA(0x00601a00, 0x31C)  // anchor-caller (SetFullScreenStatus) + dc order
 DC_ADDRESS(0x19a234, 0x1ac)
-unsigned char ddSetFullScreenStatus(int newStatus)
+static unsigned char ddSetFullScreenStatus(int newStatus)
 {
     int status = newStatus;
     Bitmap16Bit savedScreen(800, 600);

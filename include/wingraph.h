@@ -39,9 +39,6 @@ void cleanUpWinGraphics();                               // 0x601890
 int appPaint(void* hwnd, void* hdc);                     // 0x601820
 void initGraphics();
 void ddInitGraphics();
-void ddCleanUpWinGraphics();                             // 0x6018a0
-unsigned char ddSetFullScreenStatus(int newStatus);     // 0x601a00
-void ddsd(int ddErr, char* file, int line);           // 0x6006e0
 int getDesktopWidth();                                   // 0x6014c0
 int getDesktopHeight();                                  // 0x6014d0
 // GetDesktopInfo's verdict: the engine's 16-bit surfaces need a desktop
@@ -50,9 +47,6 @@ int getDesktopHeight();                                  // 0x6014d0
 enum { DESKTOP_REQUIRED_BITS_PER_PIXEL = 16 };
 unsigned char getDesktopInfo();
 long ddRestoreSurfaces();                                // 0x6013a0
-
-void ddCleanUpWinGraphics();                             // 0x6018a0
-unsigned char ddSetFullScreenStatus(int newStatus);     // 0x601a00
 
 // The windowed frame DDSetFullScreenStatus restores, written as a raw
 // immediate by retail (0x10ca0000); the style decomposes exactly. The 565

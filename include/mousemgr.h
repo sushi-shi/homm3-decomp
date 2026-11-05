@@ -10,6 +10,10 @@
 
 struct IDirectDrawSurface;
 
+// DC DDSetFullScreenStatus is a (static) wingraph.cpp procedure; declare it
+// static before mouseManager befriends it so the friend names that function.
+static unsigned char ddSetFullScreenStatus(int newStatus);
+
 // Bootstrap VIEW: button::Main pumps messages through the inherited
 // baseManager::Main slot.
 // Byte-proven by the retail ctor 0x50cb50: the baseManager base ends
