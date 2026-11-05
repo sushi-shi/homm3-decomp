@@ -1702,6 +1702,17 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
     }
 }
 
+// Queue this stack for the next combat redraw. No native counterpart:
+// DC do_attack calls MarkCreatureEffect directly and Mac expands the
+// marking at each doAttack site. Retail doAttack's three marking sequences
+// fit one expanded helper per site; the slot copy follows
+// combatManager::checkChangeHighlighter's marking.
+void army::markForEffect()
+{
+    int slot = index;
+    g_combatManager->markCreatureEffect(getOwningSide(), slot);
+}
+
 // E:\gamedcs\army.cpp:2044
 // One swing, fully resolved: mark who gets hit (the hydra's whole
 // adjacency mask - widened by the Cerberus's two ring neighbours - or
@@ -1713,19 +1724,17 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // fresh full blind).
 
 // Dreamcast records the three MarkCreatureEffect source calls; the
-// canonical helper is retained at each site and expands in retail. Mac
-// 0x4d3e8 expands the same owning-side accessor for this stack as for
-// the target and the stack behind it; keep that accessor at all three sites.
+// canonical helper expands through markForEffect at each retail site.
+// Mac 0x4d3e8 expands the same owning-side accessor for this stack as for
+// the target and the stack behind it.
 
 // Original public ?do_attack@army@@AAA_NPAV1@H@Z proves this overload is
 // private and returns bool. The direction overload is the public entry;
 // all calls to the single-swing helper remain inside army. Mac forwards
 // CheckSpecialAttack's byte result, replacing it with true for fresh blind.
 // Mac 0x4d3e8, 0x4d488 and 0x4d4e4 load the same full-width side
-// returned by getOwningSide at each marking site. Missing retained DC calls
-// do not disprove those expansions. Restoring the three canonical calls is
-// byte-flat at 99.9232%; the residual is two effect-address decompositions
-// and the independent EDI/EBX reload order after the hydra call.
+// returned by getOwningSide at each marking site. Residual: the EDI/EBX
+// reload order after the hydra call.
 VA(0x00441610, 0x6A0)
 DC_ADDRESS(0x046bec, 0x3c2)
 MAC_ADDRESS(0x04d288, 0x638)  // corroborates
@@ -1763,7 +1772,7 @@ bool army::doAttack(army* armyToAttack, int direction)
         }
     }
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(getOwningSide(), index);
+    markForEffect();
     checkLuck();
     int damage = 0;
     int killed = 0;
@@ -1775,11 +1784,9 @@ bool army::doAttack(army* armyToAttack, int direction)
         doMultiHeadAttack(attackMask, &damage, &killed,
                              &fireDamage);
     } else {
-        g_combatManager->markCreatureEffect(armyToAttack->getOwningSide(),
-                                            armyToAttack->index);
+        armyToAttack->markForEffect();
         if (behind)
-            g_combatManager->markCreatureEffect(behind->getOwningSide(),
-                                                behind->index);
+            behind->markForEffect();
         totalLife = armyToAttack->getTotalHitPoints(0);
         fireDamage = damageEnemy(armyToAttack, &damage, &killed, 0);
         if (fireDamage > 0)

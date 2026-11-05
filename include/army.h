@@ -828,6 +828,7 @@ public:
                               bool ranged, long distance) const;
     void getBerserkTargets(std::vector<army*>& armies) const;
     int getOwningSide() const;
+    void markForEffect();
     int getControllingSide() const;
     hero* getOwner() const;
     hero* getController() const;
