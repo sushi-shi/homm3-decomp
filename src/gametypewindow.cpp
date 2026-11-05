@@ -111,6 +111,9 @@ TGameTypeWindow::~TGameTypeWindow()
     g_gameTypeWindow = 0;
 }
 
+// DC GameTypeWindowHandler is a (static) procedure of this file.
+static int gameTypeWindowHandler(message& msg);
+
 VA(0x004d5910, 0x2C)
 DC_ADDRESS(0x0c94f8, 0x2c)
 MAC_ADDRESS(0x0f15e8, 0x58)
@@ -124,7 +127,7 @@ void TGameTypeWindow::doModal()
 VA(0x004d5940, 0x220)
 DC_ADDRESS(0x0c9524, 0x230)
 MAC_ADDRESS(0x0f1640, 0x2c0)
-int gameTypeWindowHandler(message& msg)
+static int gameTypeWindowHandler(message& msg)
 {
     unsigned char exitFlag = 0;
     unsigned char redraw = 0;

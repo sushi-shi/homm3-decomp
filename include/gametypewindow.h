@@ -44,8 +44,6 @@ private:
 };
 SIZE(TGameTypeWindow, 0x50);
 
-int gameTypeWindowHandler(message& msg);
-
 // Cross-TU menu-mode latch; oldmain owns the setup and both front-end menus
 // consume it.
 extern int g_noCdRom;

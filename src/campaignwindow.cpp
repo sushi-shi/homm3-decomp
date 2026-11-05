@@ -311,6 +311,10 @@ TCampaignWindow::~TCampaignWindow()
     }
 }
 
+// DC CampaignWindowHandler is a (static) procedure of this file. Retail /Gr
+// passes the message in ECX, as DoDialog's TDialogHandler does.
+static int campaignWindowHandler(message& msg);
+
 VA(0x0045f2c0, 0x2C)
 DC_ADDRESS(0x05bd68, 0x2c)
 MAC_ADDRESS(0x06ad48, 0x58)
@@ -331,7 +335,7 @@ DATA(0x0066cad8) static int g_lastCampaignHoverId = -1;
 VA(0x0045f2f0, 0x26C)
 DC_ADDRESS(0x05bd94, 0x1b0)
 MAC_ADDRESS(0x06ada0, 0x318)  // DoModal address-take + Complete video/widget CFG
-int campaignWindowHandler(message& msg)
+static int campaignWindowHandler(message& msg)
 {
     int exitFlag = 0;
 

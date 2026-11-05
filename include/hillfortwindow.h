@@ -29,6 +29,9 @@ extern const float g_afUpgradeCostFactor[7];
 //     `add ebx,0x50` and touches every member below through it, and clears
 //     totalCost with `lea edi,[this+0x27c]` / `mov ecx,7` / `rep stosd`.
 static void updateHillFort(unsigned char update);
+// DC HillFortWindowHandler is (static) too; the class befriends it. Retail
+// /Gr passes the message by reference in ECX, matching DoDialog.
+static int hillFortWindowHandler(message& msg);
 
 class THillFortWindow : public heroWindow {
     // Recovered UpdateHillFort calls this window's private Recalculate.
@@ -175,8 +178,5 @@ private:
     TCreatureType getCreatureType(int slotnum) const { return m_slot[slotnum].m_type; }
 };
 SIZE(THillFortWindow, 0x2a0);
-
-// Retail /Gr passes the message by reference in ECX, matching DoDialog.
-int hillFortWindowHandler(message& msg);
 
 #endif  /* HOMM3_HILLFORTWINDOW_H */

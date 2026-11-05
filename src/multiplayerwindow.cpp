@@ -368,7 +368,7 @@ CHeroSessions::CHeroSessions()
 {
 }
 
-void sliderGames(int state, heroWindow* parentWindow);
+static void sliderGames(int state, heroWindow* parentWindow);
 
 // The same focus/navigation/base-key helper as CHotSeatEdit, before
 // updating the dialog.
@@ -544,7 +544,7 @@ VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
 VA(0x0050ee10, 0x2a)
 DC_ADDRESS(0x100408, 0x28)
 MAC_ADDRESS(0x21ab24, 0x54)
-void sliderGames(int state, heroWindow* parentWindow)
+static void sliderGames(int state, heroWindow* parentWindow)
 {
     g_multiPlayerWindow->m_currentIndex = state;
     g_multiPlayerWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);

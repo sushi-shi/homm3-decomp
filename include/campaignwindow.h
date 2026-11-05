@@ -117,9 +117,6 @@ public:
     void hideText();
 };
 
-// Retail /Gr passes the message in ECX, as DoDialog's TDialogHandler does.
-int campaignWindowHandler(message& msg);
-
 // Complete-only initialized campaign-preview table at retail 0x66c498:
 // twenty 0x50-byte rows, one per campaign, indexed by `id -
 // CAMPAIGN_FIRST_ID`. Every one of the eight descriptor dwords is

@@ -77,6 +77,4 @@ extern int g_combatResult;
 // this tree defines it yet, so no DATA claim.
 extern const char* g_combatResultMusic[6];
 
-int combatResultsWindowHandler(message& msg);
-
 #endif  /* HOMM3_COMBATRESULTSWINDOW_H */

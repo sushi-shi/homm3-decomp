@@ -68,6 +68,9 @@ DATA(0x0069955c) extern int g_showHighScore;
 // the destructor independently reads those same final two slots.
 // DC retains UpdateCreatures as a free TU helper, preceding the handler.
 static void updateCreatures();
+// DC HighScoreWindowHandler is the (static) dialog callback the class
+// befriends.
+static int highScoreWindowHandler(message& msg);
 class CHighScoreEdit : public textEntryWidget {
 public:
     CHighScoreEdit* m_nextEdit;

@@ -232,7 +232,6 @@ DATA(0x0067f1f4) static int g_highScoreRanks[2] = { -1, -1 };
 DATA(0x006991c0) THighScoreWindow* g_highScoreWindow;
 DATA(0x006993cc) highScoreManager* g_highScoreManager;
 DATA(0x0069955c) int g_showHighScore;
-int highScoreWindowHandler(message& msg);
 
 // The dialog methods originate in hiscore.cpp; their declarations retain
 // the default branch's hiscore.h location.
@@ -803,7 +802,7 @@ static void updateCreatures()
 VA(0x004ea1d0, 0x458)
 DC_ADDRESS(0x0d8970, 0x3a4)
 MAC_ADDRESS(0x10bd7c, 0x300)
-int highScoreWindowHandler(message& msg)
+static int highScoreWindowHandler(message& msg)
 {
     bool endDialog = false;
     pollSound();

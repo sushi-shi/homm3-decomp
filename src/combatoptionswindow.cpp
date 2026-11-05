@@ -302,7 +302,7 @@ void TCombatOptionsWindow::highlightMouseShadow()
 VA(0x0046f7b0, 0x72A)
 DC_ADDRESS(0x067b7c, 0x51c)
 MAC_ADDRESS(0x07d680, 0x6f4)  // DoModal address-take + complete message CFG
-int combatOptionsWindowHandler(message& msg)
+static int combatOptionsWindowHandler(message& msg)
 {
     unsigned char exitFlag = 0;
     pollSound();

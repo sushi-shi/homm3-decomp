@@ -6,6 +6,12 @@
 class message;
 class textWidget;
 
+// DC CombatOptionsWindowHandler is a (static) combatoptionswindow.cpp
+// procedure; declaring it before the class lets the friend name it. Retail
+// /Gr passes the message by reference in ECX, matching DoDialog's
+// byte-proven TDialogHandler type.
+static int combatOptionsWindowHandler(message& msg);
+
 // Retail's destructor proves the heroWindow base and vtable 0x63d448.
 // DoModal reads/writes bPrefsChanged at +0x4c; the constructor's final
 // derived-member store and the Dreamcast field list identify the pointer at
@@ -92,10 +98,6 @@ private:
     void highlightMouseShadow();
 };
 SIZE(TCombatOptionsWindow, 0x54);
-
-// Retail /Gr passes the message by reference in ECX, matching DoDialog's
-// byte-proven TDialogHandler type.
-int combatOptionsWindowHandler(message& msg);
 
 // Shared Help.txt rows owned by text.cpp at 0x6a55a8. The handler reads
 // m_rclick, explaining the load base 0x6a55ac and the eight-byte stride.

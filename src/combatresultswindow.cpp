@@ -442,6 +442,9 @@ void TCombatResultsWindow::close(unsigned char update)
     heroWindow::close(update);
 }
 
+// DC CombatResultsWindowHandler is a (static) procedure of this file.
+static int combatResultsWindowHandler(message& msg);
+
 VA(0x00471b70, 0x14)
 DC_ADDRESS(0x069268, 0x64)
 MAC_ADDRESS(0x07fbfc, 0x34)
@@ -453,7 +456,7 @@ void TCombatResultsWindow::doModal()
 VA(0x00471b90, 0x84)
 DC_ADDRESS(0x0692cc, 0xd8)
 MAC_ADDRESS(0x07fc30, 0x104)
-int combatResultsWindowHandler(message& msg)
+static int combatResultsWindowHandler(message& msg)
 {
     unsigned char exitFlag = 0;
 

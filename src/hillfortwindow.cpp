@@ -559,7 +559,7 @@ void THillFortWindow::handleClick(message& msg)
 VA(0x004e8850, 0x369)
 DC_ADDRESS(0x0d7458, 0x294)
 MAC_ADDRESS(0x10a0c8, 0x32c)  // DoModal address-take
-int hillFortWindowHandler(message& msg)
+static int hillFortWindowHandler(message& msg)
 {
     pollSound();
     bool closeWindow = 0;
