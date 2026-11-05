@@ -3031,7 +3031,8 @@ TRmgTreasureGroup::TRmgTreasureGroup()
 // in assembleTreasureGroup and placeZoneTreasures. The canonical
 // two-coordinate lookup expands here but is called by retail reset copies at
 // 0x547625/0x547717. Keep its one ordinary body in this TU. The cell count
-// is height * width.
+// is height * width, outermost extent first, as in the game's
+// levels * height * width map buffer sizes.
 VA(0x00535040, 0xC6)
 MAC_ADDRESS(0x232e70, 0xa8) // anchor-callee 0x5473d2; thiscall, ret 0; retail-only
 void TRmgTreasureGroup::reset()
@@ -4832,6 +4833,9 @@ int type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
     return result;
 }
 
+// The bounds come back top, left, bottom, right (minimum y, minimum x,
+// maximum y, maximum x), the order of a QuickDraw Rect. The y-first order is
+// the original's: TRmgPoint keeps x at +0 and getMapItem indexes rows by y.
 VA(0x0053B1F0, 0xFE)
 MAC_ADDRESS(0x23c2e4, 0x170)
 void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimumX,
