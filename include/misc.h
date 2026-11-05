@@ -15,7 +15,6 @@ int sRandom(int lower, int upper);
 void checkConfigFile();             // 0x50b260
 void setGameDefaults();             // 0x50b4d0
 void setDefaultCombatOptions();     // 0x50b700
-void readPrefsFromRegistry();
 void writePrefsToRegistry();        // 0x50be10
 void writePrefs();                  // 0x50c1b0
 std::string formatString(const char* format, ...);  // 0x50c600

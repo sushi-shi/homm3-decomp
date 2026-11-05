@@ -346,7 +346,9 @@ void InitializeAdvObjectTypeTraitsTable();
 unsigned char initializeExtraInfoText();
 unsigned char initializeHeroSpecificAbilitiesTable();
 unsigned char initializeCampaignMusicTable();
-int interpretCommandLine();
+static int interpretCommandLine();
+// DC InitMainClasses is (static); EarlySetup calls it before its body.
+static void initMainClasses();
 bool initializeAdventureEventText();
 unsigned char InitializeSpellTraitsTable();
 unsigned char InitializeHeroTraitsTable();
@@ -492,7 +494,7 @@ int earlySetup()
 VA(0x004edb40, 0x256)
 DC_ADDRESS(0x0df4e4, 0x1ec)
 MAC_ADDRESS(0x10ecd0, 0x1ac)
-void initMainClasses()
+static void initMainClasses()
 {
     g_executive = new executive;
     g_inputManager = new inputManager;
@@ -896,7 +898,7 @@ const int g_campaignOrdinalLast = 20;
 // locally for the same reason.
 void waitForReadyToPlayMsg();
 bool saveGame(bool campaignWinMode);
-void showCongrats(int hsType);
+static void showCongrats(int hsType);
 
 static int doNewGame();
 static unsigned char doCampaignWindow();
@@ -1849,7 +1851,7 @@ static int g_useWaveout;
 VA(0x004f0690, 0x238)
 DC_ADDRESS(0x0e1990, 0x1fe)
 MAC_ADDRESS(0x111b1c, 0x84)  // anchor-caller (EarlySetup) + gcCommandLine walk
-int interpretCommandLine()
+static int interpretCommandLine()
 {
     int showUsage;
     int i;
@@ -3605,7 +3607,7 @@ std::string getCampaignName();
 VA(0x004f3f60, 0x357)
 DC_ADDRESS(0x0e4330, 0x1be)
 MAC_ADDRESS(0x115c34, 0x2a8)  // anchor-callee (CongratsWait/AddScoreToHighScore) + "Win Scenario"
-void showCongrats(int hsType)
+static void showCongrats(int hsType)
 {
     std::string landName;
     int baseScore;

@@ -12,6 +12,10 @@
 #include "terrain.h"
 #include "wingraph.h"
 
+// DC ReadPrefsFromRegistry is a (static) procedure of this file; readPrefs
+// calls it before its body.
+static void readPrefsFromRegistry();
+
 // Initial contents recovered from the pinned Complete image.
 
 // Use the timer during video playback so the game RNG sequence stays unchanged.
@@ -405,7 +409,7 @@ void readPrefs()
 // evidence; do not manufacture dead code to imitate the patch bytes.
 VA(0x0050b7b0, 0x657)  // anchor-callgraph (called by ReadPrefs)
 DC_ADDRESS(0x0fdbc0, 0x10)
-void readPrefsFromRegistry()
+static void readPrefsFromRegistry()
 {
     DWORD cbData;
     HKEY key;

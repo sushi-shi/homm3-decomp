@@ -9,13 +9,10 @@ void appExit();                         // 0x4f7fa0
 void process1WindowsMessage();          // 0x4f7fb0
 void kbChangeMenu(HMENU newMenu);       // 0x4f8180, fastcall under /Gr
 void setNoDialogMenus(int noMenus);     // 0x4f81e0, fastcall under /Gr
-void setMenus(HMENU menu, int enabled);
 BOOL CALLBACK appAbout(HWND dialog, UINT message, WPARAM messageParam,
     LPARAM messageData);                // 0x4f8140
 LRESULT appCommand(HWND window, UINT message, WPARAM messageParam,
     LPARAM messageData);                // 0x4f8060, fastcall under /Gr
-LRESULT CALLBACK appWndProc(HWND window, UINT message,
-    WPARAM messageParam, LPARAM messageData);  // 0x4f7c00
 
 // The three surviving menu commands (homm2 kbwin.h values; homm3
 // dropped the four window-size entries but kept the IDs, byte-proven

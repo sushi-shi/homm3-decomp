@@ -266,7 +266,6 @@ void __fastcall getQuickviewSize(const char* text, int* width,
 // then the whole LoadGameData table run - NOT InitMainClasses, whose own
 // body is the twelve manager `new`s at 0x4edb40.
 int earlySetup();                                        // 0x4ed650
-void initMainClasses();                                  // 0x4edb40
 int oldmain();
 void creditsWait();
 void showCredits();

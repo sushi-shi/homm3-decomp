@@ -22,13 +22,17 @@
 
 // Every cross-TU callee and global now comes from its owner's header
 // (inputmgr.h message bridges, game.h Imm hooks, misc.h WritePrefs,
-// kb.h InitMainClasses/oldmain/GameUnsaved/gText/bForegroundApp,
+// kb.h oldmain/GameUnsaved/gText/bForegroundApp,
 // wingraph.h AppPaint/InitGraphics, textresource.h's gpGeneralText).
 // NOTE the timeGetTime import-form split: this TU takes the
 // IAT form from mmsystem.h via <windows.h> and must never see
 // winmm_thunks.h's plain declaration (see that header).
 
 static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw);
+// DC AppWndProc and SetMenus are (static) procedures of this file.
+static LRESULT CALLBACK appWndProc(HWND window, UINT message,
+    WPARAM messageParam, LPARAM messageData);
+static void setMenus(HMENU menu, int enabled);
 
 VA(0x004f7a30, 0x1CF)
 DC_ADDRESS(0x0e7c90, 0x8e)
@@ -113,7 +117,7 @@ static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
 // AppWndProc retains its AppCommand call at +0x359 without an inline fence.
 VA(0x004f7c00, 0x394)
 DC_ADDRESS(0x0e7e38, 0x180)
-LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
+static LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
     switch (message) {
         case WM_CREATE:
@@ -354,7 +358,7 @@ void setNoDialogMenus(int noMenus)
 
 VA(0x004f8220, 0xB2)
 DC_ADDRESS(0x0e8054, 0x4)
-void setMenus(HMENU menu, int enabled)
+static void setMenus(HMENU menu, int enabled)
 {
     int count;
     unsigned int commandId;
