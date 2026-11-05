@@ -63,14 +63,13 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 MAX by module:
 
-| Module        | Units | Functions exact MAX | Fuzzy MAX |
-| :------------ | ----: | ------------------: | --------: |
-| `game`        |   164 | 5487 / 5552 (98.8%) |    99.77% |
-| `rmg`         |     6 |   421 / 477 (88.3%) |    97.94% |
-| `zlib-1.1.3`  |    12 |    56 / 56 (100.0%) |   100.00% |
-| `codec`       |     3 |     49 / 53 (92.5%) |    99.99% |
-| `victor`      |     7 |    26 / 26 (100.0%) |   100.00% |
-| `(unmatched)` |     — |        0 / 1 (0.0%) |      0.0% |
+| Module       | Units | Functions exact MAX | Fuzzy MAX |
+| :----------- | ----: | ------------------: | --------: |
+| `game`       |   164 | 5487 / 5552 (98.8%) |    99.77% |
+| `rmg`        |     6 |   421 / 478 (88.1%) |    97.93% |
+| `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
+| `codec`      |     3 |     49 / 53 (92.5%) |    99.99% |
+| `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |
 
 Library and compiler-generated code (outside the scores; each function verified against what produced it):
 
@@ -97,13 +96,12 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 MAX by module:
 
-| Module        | Units | Functions exact MAX | Fuzzy MAX |
-| :------------ | ----: | ------------------: | --------: |
-| `game`        |    44 | 1440 / 1485 (97.0%) |    99.21% |
-| `zlib-1.1.3`  |    12 |    56 / 56 (100.0%) |   100.00% |
-| `codec`       |     3 |    41 / 41 (100.0%) |   100.00% |
-| `victor`      |     7 |    26 / 26 (100.0%) |   100.00% |
-| `(unmatched)` |     — |        0 / 1 (0.0%) |      0.0% |
+| Module       | Units | Functions exact MAX | Fuzzy MAX |
+| :----------- | ----: | ------------------: | --------: |
+| `game`       |    44 | 1440 / 1486 (96.9%) |    99.16% |
+| `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
+| `codec`      |     3 |    41 / 41 (100.0%) |   100.00% |
+| `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |
 
 Library and compiler-generated code (outside the scores; each function verified against what produced it):
 

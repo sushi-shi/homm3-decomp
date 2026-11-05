@@ -1044,6 +1044,7 @@ ScenarioPropsProloguePage	?removePrologue@TScenarioPropsProloguePage@@MBEXAAVTSc
 ScenarioPropsProloguePage	?setPrologue@TScenarioPropsEpiloguePage@@MBEXAAVTScenario@@V?$auto_ptr@VTScenarioPrologue@@@std@@@Z	100.0000	100.0000	100.0000	0x2d6a0	tokens1:5e6999e11141
 ScenarioPropsProloguePage	?setPrologue@TScenarioPropsProloguePage@@MBEXAAVTScenario@@V?$auto_ptr@VTScenarioPrologue@@@std@@@Z	100.0000	100.0000	100.0000	0x2d570	tokens1:b1f7b2e3bfb9
 ScenarioPropsProloguePage	?update@TScenarioPropsProloguePageBase@@QAEXXZ	100.0000	100.0000	100.0000	0x2c310	tokens1:047429e14f63
+ScenarioPropsProloguePage	__h3cg$ScenarioPropsProloguePage$basic_string_compare_substr$char	0.0000	0.0000	0.0000	0x2d8a0	-
 ScenarioPropsProloguePage	__h3cg$ScenarioPropsProloguePage$static_dtor$apPreviews	100.0000	100.0000	100.0000	0x2d470	-
 ScenarioPropsSheet	??0TScenarioPropsSheet@@QAE@PAVCWnd@@PAVTCampaignDoc@@H@Z	99.0685	99.0685	99.0685	0x2d940	tokens1:6ee27ae8ad41
 ScenarioPropsSheet	??1TScenarioPropsSheet@@UAE@XZ	100.0000	100.0000	100.0000	0x2df80	tokens1:5d48e173b89a

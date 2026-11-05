@@ -6084,6 +6084,7 @@ rmg	?writePackedBits@@YAHPAVTAbstractFile@@ABV?$bitset@$0JA@@std@@@Z	100.0000	10
 rmg	?writePackedBits@@YAHPAVTAbstractFile@@ABV?$bitset@$0JM@@std@@@Z	100.0000	100.0000	100.0000	0xaed89	-
 rmg	?writeRmgObjectPrototype@@YAXPAVTAbstractFile@@PAUTObjectType@@@Z	99.6471	99.6471	99.6471	0xad3eb	tokens1:a0e5370d69ee
 rmg	__h3cg$rmg$static_dtor$riverDeltaOffsets	100.0000	100.0000	100.0000	0xac3de	-
+rmg	__h3cg$rmg$vector_size$Short	0.0000	0.0000	0.0000	0xae1eb	-
 rmg_river	??0TRiverEraseOp@@QAE@PAVTAbstractMap@TRiverOp@@@Z	100.0000	100.0000	100.0000	0xb3d3c	tokens1:1a014b3bd501
 rmg_river	??0TRiverPlacementOp@@QAE@PAVTAbstractMap@TRiverOp@@HABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0xb3c4e	tokens1:27496ecd43cd
 rmg_river	??1TRiverEraseOp@@UAE@XZ	100.0000	100.0000	100.0000	0xb3d35	-
