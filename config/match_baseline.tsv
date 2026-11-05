@@ -2922,7 +2922,7 @@ philai	?aiResourceCost@@YIHJPBH@Z	100.0000	100.0000	100.0000	0x126cc0	tokens1:30
 philai	?aiResourceCost@@YIHPBVplayerData@@PBH@Z	100.0000	100.0000	100.0000	0x126c70	tokens1:80f0a16ee213
 philai	?aiSetHeroBonuses@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127760	tokens1:236c9d57907f
 philai	?aiValueOfEvent@@YIJPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12bd10	tokens1:8593588cb3f2
-philai	?aiValueOfEvent@@YIJPBVhero@@Utype_point@@AAJ@Z	98.8855	98.8855	98.8855	0x128040	tokens1:778f866583bc
+philai	?aiValueOfEvent@@YIJPBVhero@@Utype_point@@AAJ@Z	99.5780	99.5780	99.5780	0x128040	tokens1:778f866583bc
 philai	?aiVisitBlackMarket@@YIXPAVhero@@PAUTBlackMarket@@@Z	100.0000	100.0000	100.0000	0x1243f0	tokens1:10c0ecf8213d
 philai	?aiVisitHillFort@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127bb0	tokens1:2cb8eb6ead3f
 philai	?aiVisitSirens@@YIHPBVhero@@AAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x127ec0	tokens1:b6b5e0497d5d
