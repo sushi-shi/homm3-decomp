@@ -201,57 +201,61 @@ const int g_townNameFixedLength = 13;
 // generatorBonus, mageGuildSpellCounts, the three building masks, the
 // mage-guild spell grid, a 70-BYTE buffer unpacked one BIT at a time into
 // the bitset<70>, and a packed byte that splits three ways.
-// Retail reuses dead parameter homes for the byte-read buffer and town-name
-// length. Separating the address-taken length buffer from its decoded short
-// reaches 99.9718%; four stack-offset differences remain. Local reordering
-// and wider buffer types do not close them. An artificial scope that ends
-// before name assignment reaches 100%, but has no supported source purpose.
-// Both the existing readLittleEndianValue<unsigned short> call and a reader
-// owning one scalar through readValue(infile, value) reproduce 97.3173%:
-// the short buffer lifetime fits, but _Grow's max_size remains out of line.
-// Short/int/unsigned decoded lengths without redundant masks are byte-flat.
-// The combined reader models were measured across all five consumer units.
-// Mac 0x1b1f70..0x1b2010 shows scalar read/byte swap, payload read/NUL and
-// ordinary string assignment in each version arm; it supplies no distinct
-// string wrapper to justify another lifetime or inline-budget boundary.
+// DC rows put each checked read call and its compare on separate lines, like
+// game::save's DC-named `count = gzwrite(...)` idiom, so every checked read
+// stores its byte count before the test. The modern name length comes from
+// the little-endian value reader; Mac 0x1b1f70..0x1b2010 shows the scalar
+// read/byte swap, payload read/NUL and ordinary string assignment in each
+// version arm.
 // DC locals: char_buffer, uchar_buffer, and inBuf[70].
 VA(0x005bcd60, 0x586)
 DC_ADDRESS(0x165628, 0x360)
 MAC_ADDRESS(0x1b1c9c, 0x5f4)  // carcass promotion; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
 int town::load(TAbstractFile* infile, int saveVersion)
 {
+    int count;
     char charBuffer;
     unsigned char ucharBuffer;
     unsigned char inBuf[hero::NUM_SPELLS];
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     m_id = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     m_owner = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     m_builtThisTurn = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     m_threateningHeroes = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     m_type = charBuffer;
-    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
+    count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    if (count < sizeof(ucharBuffer))
         return -1;
     m_mapX = ucharBuffer;
-    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
+    count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    if (count < sizeof(ucharBuffer))
         return -1;
     m_mapY = ucharBuffer;
-    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
+    count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    if (count < sizeof(ucharBuffer))
         return -1;
     m_mapZ = ucharBuffer;
-    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
+    count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    if (count < sizeof(ucharBuffer))
         return -1;
     boatX = ucharBuffer;
-    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
+    count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    if (count < sizeof(ucharBuffer))
         return -1;
     boatY = ucharBuffer;
 
@@ -261,77 +265,65 @@ int town::load(TAbstractFile* infile, int saveVersion)
     m_garrisonHeroId = loadHeroId(infile, saveVersion);
     m_visitingHeroId = loadHeroId(infile, saveVersion);
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     m_mageLevel = charBuffer;
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     m_isGrouped = charBuffer;
 
     if (saveVersion >= g_saveVersionTownNameString) {
-        // Keep the address-taken file buffer separate from the decoded
-        // length retained across the next virtual read (Mac 0x1b1f90..1b1fc0).
-        // Residual: retail's buffer has a shorter lifetime than this local.
-        // A bare block around the read reproduces it exactly but is no source
-        // evidence; the matching inline readers (readLittleEndianValue<unsigned
-        // short>, or readValue with LITTLE_ENDIAN_SHORT) cost VC6's budget and
-        // leave m_name's assignment out of line (97.32%; it needs this
-        // caller at cb >= 987, the reader gives 978). Mac also argues for the
-        // decode in the caller: retail zero-extends the lhbrx result into the
-        // unsigned short local (clrlwi, then r26), which the reader's return
-        // folds away (Mac 88.32% -> 56.43%).
-        // Probe (2026-10-25): DC rows put each read call and its compare on
-        // separate lines, like game::save's DC-named `count = gzwrite(...)`
-        // idiom. Spelling every checked read here as `count = read(...);
-        // if (count < size)` raises this caller to cb 1103 and is byte-flat
-        // on both targets (99.97% / Mac 88.32%); with it the value reader
-        // above reaches Windows 100%, but Mac still falls to 56.43% (the
-        // inlined reader's local gets its own slot: frame 0xc0 vs 0xb0).
-        unsigned short storedNameLength;
-        infile->read(&storedNameLength, sizeof(storedNameLength));
-        unsigned short nameLength = LITTLE_ENDIAN_SHORT(storedNameLength);
-        infile->read(g_text, nameLength & 0xffff);
-        g_text[nameLength & 0xffff] = 0;
+        unsigned short nameLength = readLittleEndianValue<unsigned short>(infile);
+        infile->read(g_text, nameLength);
+        g_text[nameLength] = 0;
         m_name = g_text;
     } else {
         infile->read(g_text, g_townNameFixedLength);
         m_name = g_text;
     }
 
-    if (infile->read(m_population, sizeof(m_population)) < sizeof(m_population))
+    count = infile->read(m_population, sizeof(m_population));
+    if (count < sizeof(m_population))
         return -1;
     infile->read(m_generatorBonus, sizeof(m_generatorBonus));
-    if (infile->read(m_mageGuildSpellCounts, sizeof(m_mageGuildSpellCounts))
-        < sizeof(m_mageGuildSpellCounts))
+    count = infile->read(m_mageGuildSpellCounts, sizeof(m_mageGuildSpellCounts));
+    if (count < sizeof(m_mageGuildSpellCounts))
         return -1;
-    if (infile->read(&m_populationMask, sizeof(m_populationMask)) < sizeof(m_populationMask))
+    count = infile->read(&m_populationMask, sizeof(m_populationMask));
+    if (count < sizeof(m_populationMask))
         return -1;
-    if (infile->read(&m_fullBuildingMask, sizeof(m_fullBuildingMask)) < sizeof(m_fullBuildingMask))
+    count = infile->read(&m_fullBuildingMask, sizeof(m_fullBuildingMask));
+    if (count < sizeof(m_fullBuildingMask))
         return -1;
-    if (infile->read(&m_legalBuildings, sizeof(m_legalBuildings)) < sizeof(m_legalBuildings))
+    count = infile->read(&m_legalBuildings, sizeof(m_legalBuildings));
+    if (count < sizeof(m_legalBuildings))
         return -1;
-    if (infile->read(m_mageGuildSpells, sizeof(m_mageGuildSpells))
-        < sizeof(m_mageGuildSpells))
+    count = infile->read(m_mageGuildSpells, sizeof(m_mageGuildSpells));
+    if (count < sizeof(m_mageGuildSpells))
         return -1;
 
-    if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+    count = infile->read(inBuf, sizeof(inBuf));
+    if (count < sizeof(inBuf))
         return -1;
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         SpellDisabledMask[spell] =
             (inBuf[spell / 8] & (1 << (spell % 8))) != 0;
     }
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
     m_manaVortexFull = charBuffer & 1;
     m_pondAmount = (charBuffer >> 1) & 7;
     m_pondResource = charBuffer >> 4;
 
-    if (infile->read(&m_summoningType, sizeof(m_summoningType))
-        < sizeof(m_summoningType))
+    count = infile->read(&m_summoningType, sizeof(m_summoningType));
+    if (count < sizeof(m_summoningType))
         return -1;
-    if (infile->read(&m_summoningPopulation, sizeof(m_summoningPopulation))
-        < sizeof(m_summoningPopulation))
+    count = infile->read(&m_summoningPopulation, sizeof(m_summoningPopulation));
+    if (count < sizeof(m_summoningPopulation))
         return -1;
     return 0;
 }
@@ -1311,16 +1303,12 @@ long town::getLegionBonus(long dwelling) const
 // The assembled getter's const qualifier is inferred from this const caller;
 // both retained bonus helpers remain exact with that connected interface.
 //
-// The conditional return in getCastleGrowthBonus reduces its VC6 cost from
-// 84 to 72. Its nested hasBuilding then receives 68 instead of 53 budget
-// units, enough for the 62-unit body: getGrowthRate reaches 97.8947%.
-// All 28 blocks and three retained calls agree. The six residual instruction
-// rows are the generator-bonus load width and associated operand scheduling.
-// Twelve promoted/narrow/named bonus consumers and eight Grail return forms
-// do not close that tail; the register model finds no transposed local pair.
-// Thirty-six caller/assembled-helper lifetime forms alone also gave no gain.
-// Nine consistent short-contribution forms and the DC-proven long generator
-// storage likewise leave the tail unchanged; retain the recovered field type.
+// Residual (97.89%): all 28 blocks and three retained calls agree. Retail
+// loads only the low word of the generator bonus, and its operand schedule
+// follows. Direct m_generatorBonus indexing or a const long& getter
+// reproduce that load, but DC's town.h getter (dc:0x181404) returns long by
+// value; casts, a named bonus, the short dwelling argument and getter
+// parameter types stay at the residual.
 VA(0x005bfb60, 0x266)
 DC_ADDRESS(0x167748, 0xfe)
 MAC_ADDRESS(0x1b5414, 0x1fc)
