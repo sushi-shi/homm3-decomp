@@ -4,11 +4,20 @@ Recover C++ that reproduces Heroes III Complete's Windows map and campaign
 editors, reusing the game's recovered source. Keep the inherited game checkpoint
 separate from editor matching results.
 
+## Source layout
+
+Keep existing game/shared implementations directly in `src/` and declarations
+directly in `include/`. New map-editor code belongs in `src/editor/` and
+`include/editor/`; campaign-editor code belongs in `src/campaign_editor/` and
+`include/campaign_editor/`. Keep one canonical definition of shared code and
+admit new C/C++ files through the build/ownership tooling. Do not relocate the
+inherited tree into a `game/` directory as part of editor reconstruction.
+
 ## Evidence
 
 - Retail bytes are authoritative: **English GOG Complete 4.0 (engine 3.2)**,
   `HEROES3.EXE`, fixed base `0x00400000`. The exact size and SHA-256 are in
-  [README.md](README.md#pinned-target).
+  [README.md](README.md#inherited-game-checkpoint).
 - Editor identities and compiler settings must be established against their own
   pinned executables. Shared source does not imply identical bytes or addresses.
 - Historical source facts, including Dreamcast evidence, remain in owning source

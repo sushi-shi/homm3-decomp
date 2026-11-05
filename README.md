@@ -1,15 +1,141 @@
 # homm3-editor
 
 Binary-matching decompilation of the **Heroes of Might and Magic III Complete**
-map and campaign editors, reusing the game's recovered C++ structure and behavior.
-The existing game build provides the shared-source checkpoint while editor
-matching is established.
+Windows map editor (`h3maped.exe`) and campaign editor (`h3ccmped.exe`), reusing
+the game's recovered C++ source.
 
-This repository does **not** contain executables or resources. Supply your own
-legally obtained copies of the pinned Windows executables. Dreamcast and Mac
+This repository contains no executables or game resources. Supply your own
+legally obtained copies of the pinned Windows binaries. Dreamcast and Mac
 inputs are not part of this worktree; historical evidence remains in source comments.
 
-The following scores describe the inherited game target, not editor coverage.
+## Pinned targets
+
+Both editors come from GOG's `setup_homm3_complete_2.0.0.16.exe` release. They
+are MSVC 6.0 PE32 images at base `0x00400000`, built on 5 September 2000.
+
+| Target | Executable | Size | SHA-256 |
+| --- | --- | ---: | --- |
+| Map editor | `h3maped.exe` | 2,134,016 bytes | `4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37` |
+| Campaign editor | `h3ccmped.exe` | 1,212,416 bytes | `93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1` |
+
+The Steam copies have identical code and resource sections, but different
+whole-file hashes because of certificate metadata. Input verification requires
+the GOG files above. See [editor provenance and matching](docs/matching/editors.md)
+for the comparison and compiler evidence.
+
+## Quickstart
+
+Use Nix with flakes enabled. The current initializer also requires the pinned
+`HEROES3.EXE` for the inherited shared-source checkpoint, described below.
+
+```sh
+nix develop .#build
+export HOMM3_DIR="$PWD"
+gh auth login        # needed for the toolchain download
+homm3 init --exe /path/to/HEROES3.EXE \
+  --map-editor-exe /path/to/h3maped.exe \
+  --campaign-editor-exe /path/to/h3ccmped.exe
+
+homm3 editor h3maped gzinflatebuf
+homm3 editor h3ccmped gzinflatebuf
+```
+
+`homm3 init` verifies supplied executables and sets up VC6 and Wine. The editor
+commands freshly compile the shared TU with the provisional `/O1` profile and
+write isolated objects and JSON reports under `build/editor/<target>/<profile>/`.
+Use `--json` to print a report or `--profile NAME` to select another profile
+from `config/units.toml`. This does not yet build runnable editors.
+
+### Current editor coverage
+
+| Target | Reviewed function spans | Reviewed CRT identities | Shared-source pilot |
+| --- | ---: | ---: | --- |
+| `h3maped` | 4 | 3 | `TGzInflateBuf::getByte`: all 84 bytes exact at `0x0044960f` |
+| `h3ccmped` | 3 | 3 | No exact `getByte` counterpart found |
+
+The CRT entries are included in the function-span counts. Editor inventories
+live separately in [`config/retail/h3maped/`](config/retail/h3maped/) and
+[`config/retail/h3ccmped/`](config/retail/h3ccmped/). These are small reviewed seeds,
+not complete censuses, so no editor completion percentage is reported.
+
+The discovery command compares complete unrelocated bytes against reviewed
+spans. Functions with relocations and hits without reviewed boundaries need
+further analysis. A broader [direct fingerprint pass](docs/matching/editors.md#direct-coff-fingerprints)
+compiled all 152 source units with `/O1` and found shared-source, MFC, CRT and
+zlib candidates without using Ghidra boundaries. Zlib strongly favors its own
+`/O2` profile. These findings have not been added to the seed TSVs.
+
+A [direct comparison between the editors](docs/matching/editors.md#common-code-across-the-editors)
+pairs 1,309 function candidates, including 127 unnamed pairs. Their code ranges
+and reference evidence remain separate from reviewed inventory coverage.
+
+The [reviewed engine map](docs/matching/editor-engine.md) records 157 source-owned
+map-editor identities, extending the original 108 anchors through named calls,
+vtables and function order. It also identifies both artifact-mask helpers in the
+campaign editor. The address tables and evidence are preserved in documentation;
+full generated analysis stays under ignored `build/`. All TSVs remain unchanged.
+
+### Source layout
+
+Keep the existing game/shared files at the roots of `src/` and `include/`.
+Editor-specific code uses matching subdirectories:
+
+```text
+src/
+  artifact.cpp          # Existing game/shared implementation
+  rmg.cpp
+  editor/               # Map-editor implementation
+  campaign_editor/      # Campaign-editor implementation
+
+include/
+  artifact.h            # Existing game/shared declarations
+  rmg.h
+  editor/               # Map-editor declarations
+  campaign_editor/      # Campaign-editor declarations
+```
+
+Shared code keeps one canonical definition in its existing file. Each editor
+will select the required shared TUs with its own compiler settings and outputs.
+The editor directories are placeholders for reconstruction; new C/C++ files
+must be admitted to the build and ownership tooling when added. Original source
+paths remain provenance evidence, without requiring a directory-for-directory
+copy of the original tree.
+
+### IDE setup
+
+Enable your editor's clangd integration and open the repository root. The Nix
+shell provides clangd and generates `compile_commands.json`; launch your editor
+from that shell. The compilation database refreshes on shell entry and during
+builds. Run `homm3 init` first to install the compiler headers.
+
+### Continue matching
+
+Choose the editor explicitly with `homm3 editor h3maped <TU>` or
+`homm3 editor h3ccmped <TU>`. Read the recorded source evidence and the selected
+editor's assembly before changing shared C++. Verify each editor address and
+helper identity independently; a game's `VA` annotation is not an editor claim.
+
+The [matching guide](AGENTS.md) covers source recovery and validation. The
+[editor notes](docs/matching/editors.md) describe the pilot's limits and next
+steps; the [documentation index](docs/README.md) covers the inherited tooling.
+
+## Inherited game checkpoint
+
+`homm3 build`, `homm3 status` and `homm3 sema` currently target the original
+**English GOG Complete 4.0 (engine 3.2)** game. They provide a shared-source
+checkpoint; their addresses and scores do not describe either editor.
+
+```
+file        HEROES3.EXE
+size        2,732,032 bytes
+sha256      057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274
+timestamp   8 September 2000, built by MSVC 6.0
+```
+
+Run `homm3 build` to verify that checkpoint after shared-source changes.
+
+<details>
+<summary>Inherited game matching scores</summary>
 
 <!-- match-score:start -->
 
@@ -40,91 +166,11 @@ _Excluded from the % above — generated/library code, not independent reconstru
 
 <!-- match-score:end -->
 
-The score ledger always keeps `CUR <= MAX <= HIST`. CUR is the latest full
-build; MAX is the best score observed for the function's current source hash;
-HIST is its all-time peak across source revisions. Tooling prioritizes MAX.
-Unrelated CUR dips keep MAX and are silent. A function's own hash change resets
-MAX to its new CUR; a lower MAX is reported, but is not a build failure.
-`HIST > MAX` identifies historical peaks worth investigating.
+The game ledger keeps `CUR <= MAX <= HIST`: CUR is the latest build, MAX is the
+best score for the current function source, and HIST is its all-time peak.
+These values are separate from editor discovery results.
 
-See the [documentation](docs/README.md) and [reconstruction debt checklist](docs/todos/reconstruction_debt.md).
-
-## Pinned target
-
-The editors are pinned to GOG's `setup_homm3_complete_2.0.0.16.exe` release.
-See [editor inputs and matching](docs/matching/editors.md) for hashes, Steam
-equivalence, the `/O1` pilot and current coverage limits.
-
-The inherited game checkpoint uses the **English GOG Heroes III Complete 4.0 (engine 3.2)** executable:
-
-```
-file        HEROES3.EXE
-size        2,732,032 bytes
-sha256      057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274
-timestamp   8 September 2000, built by MSVC 6.0
-```
-
-## Quickstart
-
-You need Nix with flakes enabled and your own copy of the game executable
-listed above for the shared-source checkpoint. From the repository root:
-
-```sh
-nix develop .#build
-export HOMM3_DIR="$PWD"
-gh auth login        # needed for the toolchain download
-HOMM3_EXE=/absolute/path/to/HEROES3.EXE homm3 init
-
-homm3 build          # build all modules, compare with retail, and run checks
-```
-
-`homm3 init` verifies the executable and sets up the VC6 toolchain and Wine.
-The build compiles and compares reconstructed code; it does not yet produce
-a playable game.
-
-To stage the editors and run the first shared-source comparison:
-
-```sh
-homm3 init --map-editor-exe /path/to/h3maped.exe \
-  --campaign-editor-exe /path/to/h3ccmped.exe
-homm3 editor h3maped gzinflatebuf
-```
-
-Editor discovery writes isolated objects and reports under `build/editor/`.
-The reviewed function and runtime inventories are initial seeds; game scores
-do not measure editor progress.
-
-### IDE setup
-
-Enable your editor's clangd integration and open the repository root.
-The development shell provides clangd and generates `compile_commands.json`;
-launch your editor from that shell so it can find the tools. The compilation
-database refreshes on shell entry and during builds. Run `homm3 init` first
-to set up the compiler headers needed for code navigation.
-
-### Improve a function
-
-1. Run `homm3 status functions` and choose a function whose MAX is below 100%.
-2. Inspect its retail assembly and the evidence recorded beside its source before editing.
-   For example, `0x00524dd0` belongs to `src/philai.cpp`:
-
-   ```sh
-   homm3 sema disasm 0x00524dd0
-   homm3 sema diff 0x00524dd0 --structure
-   homm3 sema diff 0x00524dd0 --source
-   ```
-
-3. Edit the C++, rebuild its module, and inspect the remaining differences:
-
-   ```sh
-   homm3 build --fast philai
-   homm3 sema diff 0x00524dd0 --summary
-   ```
-
-4. Repeat, then run `homm3 build` for the full checks before submitting changes.
-
-Replace the example address and module with your target. The
-[matching guide](AGENTS.md) covers the full evidence pass and reconstruction rules.
+</details>
 
 ## License
 
