@@ -12,7 +12,6 @@
 
 struct type_point;
 
-unsigned char doTavern();
 void doMapTavern(type_point point);
 
 // The nine columns of the thieves' guild table, in the order

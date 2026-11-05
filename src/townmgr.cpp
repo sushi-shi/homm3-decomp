@@ -712,8 +712,10 @@ DATA(0x006aa9f8) const type_artifact g_blacksmithArtifacts[TOWN_TYPE_COUNT] = {
 
 void setWinText(heroWindow* win, int winId);
 
-char* getBuildingInfo(const town* thisTown, int buildingId,
-                      unsigned char includeTitle, unsigned char extended);
+static char* getBuildingInfo(const town* thisTown, int buildingId,
+                             unsigned char includeTitle, unsigned char extended);
+// DC DoTavern is (static); DoMapTavern calls it before its body.
+static unsigned char doTavern();
 
 // The selected entry of the town-locator row. Ten image-wide references,
 // every one inside townmgr's bracket, so this compiland owns it; only
@@ -4448,7 +4450,7 @@ void townManager::doPortalOfSummoning()
 VA(0x005d2a40, 0x335)
 DC_ADDRESS(0x174f78, 0x1e8)
 MAC_ADDRESS(0x1cf8f0, 0x208)
-char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includeTitle, unsigned char extended)
+static char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includeTitle, unsigned char extended)
 {
     char buffer[400];
     int type = thisTown->m_type;
@@ -6603,7 +6605,7 @@ void doMapTavern(type_point point)
 VA(0x005d7ec0, 0x3EA)
 DC_ADDRESS(0x17ad8c, 0x35a)
 MAC_ADDRESS(0x1d5cdc, 0x4a4)  // anchor-caller(DoMapTavern 0x5d7e90) + anchor-callee(TTavernWindow ctor 0x5d70b0 + BroadcastMessage) + arity(bare ret)
-unsigned char doTavern()
+static unsigned char doTavern()
 {
     g_castleOpen = 1;
     g_tavernWindow = new TTavernWindow(0xca, 0x30);

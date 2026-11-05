@@ -25,9 +25,14 @@
 #include "widget.h"
 #include "winmgr.h"
 
-void tradeResourceSlider(int state, heroWindow* parentWindow);
-void giveResourceSlider(int state, heroWindow* parentWindow);
-void sellCreatureSlider(int state, heroWindow* parentWindow);
+static void tradeResourceSlider(int state, heroWindow* parentWindow);
+static void giveResourceSlider(int state, heroWindow* parentWindow);
+static void sellCreatureSlider(int state, heroWindow* parentWindow);
+
+// The shared body all six market entry points tail into once they have
+// seeded the static market state. The Dreamcast roster has it `static`;
+// retail keeps it out of line because six call sites reach it.
+static void doMarket();
 
 // Market state the slider callbacks reach (declared ahead of their
 // definitions inside the dialog band below; the rest of the file-static
@@ -251,7 +256,7 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
 VA(0x005e1600, 0x14)
 DC_ADDRESS(0x181a34, 0x1a)
 MAC_ADDRESS(0x1e3560, 0x30)
-void tradeResourceSlider(int state, heroWindow* parentWindow)
+static void tradeResourceSlider(int state, heroWindow* parentWindow)
 {
     g_rightAmount = state;
     g_tradeWindow->update(1);
@@ -474,7 +479,7 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
 VA(0x005e3670, 0x14)
 DC_ADDRESS(0x181a50, 0x1a)
 MAC_ADDRESS(0x1e3590, 0x30)
-void giveResourceSlider(int state, heroWindow* parentWindow)
+static void giveResourceSlider(int state, heroWindow* parentWindow)
 {
     g_rightAmount = state;
     g_giveWindow->update(1);
@@ -1214,7 +1219,7 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
 VA(0x005e9c60, 0x14)
 DC_ADDRESS(0x181a6c, 0x1a)
 MAC_ADDRESS(0x1e35c0, 0x30)
-void sellCreatureSlider(int state, heroWindow* parentWindow)
+static void sellCreatureSlider(int state, heroWindow* parentWindow)
 {
     g_rightAmount = state;
     g_sellCreatureWindow->update(1);
@@ -1476,7 +1481,7 @@ void doBlackMarket(hero* inHero, TArtifact* blackArtifacts)
 VA(0x005ea130, 0x49c)
 DC_ADDRESS(0x188708, 0x4cc)
 MAC_ADDRESS(0x1f4f84, 0x5d8)  // anchor-callee (from 6 entry points) + linkorder
-void doMarket()
+static void doMarket()
 {
     message msg;
 

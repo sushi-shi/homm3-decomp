@@ -1391,9 +1391,9 @@ void extendedDialog(const char* text,
 const char* getBuildingName(int townType, int buildingId);
 
 // DC retains vector-reference parameters; both native caller ABIs agree.
-void showBuildingRewards(const town* thisTown,
+static void showBuildingRewards(const town* thisTown,
                            std::vector<type_dialog_resource>& rewards);
-void showCreatureRewards(const town* thisTown,
+static void showCreatureRewards(const town* thisTown,
                            std::vector<type_dialog_resource>& rewards);
 
 // The reward dialog flushes in batches of eight rows (the extended
@@ -1403,7 +1403,7 @@ static const int g_rewardDialogBatch = 8;
 VA(0x005c0220, 0x1DA)
 DC_ADDRESS(0x167958, 0x132)
 MAC_ADDRESS(0x1b57d8, 0x198)
-void showBuildingRewards(const town* thisTown,
+static void showBuildingRewards(const town* thisTown,
                            std::vector<type_dialog_resource>& rewards)
 {
     std::string text;
@@ -1430,7 +1430,7 @@ void showBuildingRewards(const town* thisTown,
 VA(0x005c0400, 0x26F)
 DC_ADDRESS(0x167a8c, 0x1b0)
 MAC_ADDRESS(0x1b5970, 0x220)  // anchor-caller (give_event_reward)
-void showCreatureRewards(const town* thisTown,
+static void showCreatureRewards(const town* thisTown,
                            std::vector<type_dialog_resource>& rewards)
 {
     std::string msg;
@@ -1527,7 +1527,7 @@ void town::giveEventReward(const TTownEvent& thisEvent)
 }
 
 // The shipyard helper is defined later in this source file.
-unsigned char checkShipyardSquare(town* currentTown, long x, long y);
+static unsigned char checkShipyardSquare(town* currentTown, long x, long y);
 
 VA(0x005c08c0, 0x3CE)
 DC_ADDRESS(0x167ff4, 0x33c)
@@ -1670,7 +1670,7 @@ void town::initialize(const TownExtra* townSetup)
 VA(0x005c0c90, 0x89)
 DC_ADDRESS(0x167f68, 0x8a)
 MAC_ADDRESS(0x1b5f84, 0xc8)
-unsigned char checkShipyardSquare(town* currentTown, long x, long y)
+static unsigned char checkShipyardSquare(town* currentTown, long x, long y)
 {
     if (x >= 0) {
         if (x < g_mapWidth) {

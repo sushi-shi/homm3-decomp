@@ -286,11 +286,6 @@ SIZE(TSellCreatureWindow, 0x68);
 
 long getMarketValue(EGameResource resource);
 
-// The shared body all six market entry points tail into once they have
-// seeded the static market state. The Dreamcast roster has it `static`;
-// retail keeps it out of line because six call sites reach it, so the
-// linkage difference cannot change its callers' code.
-void doMarket();
 void doTradingPost();
 void doMarketplace();
 void doArtifactMerchants();
