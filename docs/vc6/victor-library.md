@@ -305,10 +305,10 @@ remained at 99.54%. A recorded MAX is not a claim about today's object.
 The last exact checkpoint predates the move of the lock cleanup bodies to
 `victor_locks.cpp`. That move added eight lock-storage extern declarations to
 `victor.h`, visible even to the unrelated bit helpers. Moving those externs
-beside their sole cross-TU consumer in `victor_locks.cpp` restores the exact
-insertion bytes without changing either bit helper. The definitions remain
-in `victor.cpp`, and the shared lock type remains in the header. This is an
-ordinary declaration-ownership choice supported by the actual consumers;
+to `victor_locks.h`, included only by the defining `victor.cpp` and the
+consuming `victor_locks.cpp`, restores the exact insertion bytes without
+changing either bit helper. The shared lock type remains in `victor.h`.
+This is an ordinary declaration-ownership choice supported by the actual consumers;
 the original vendor header layout is not recovered. Equivalent rewrites of
 the final mask expression and the shared NO_STRICT define were byte-flat.
 

@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "victor.h"
+#include "victor_locks.h"
 
 // The allocation mode occupies zero-initialized storage in retail .data's
 // virtual tail; the worker receives its current value as argument five.
