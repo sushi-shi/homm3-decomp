@@ -46,7 +46,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 static void moveHero(hero* currentHero, long* dangerZones,
                      unsigned char isLastHero, bool& exploreMode);
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
-long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
+static long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
                                  EGameResource* bestResource);
 TCreatureType siegeArtifactToCreature(TArtifact engine);
 TCreatureType UpgradedCreatureType(TCreatureType type);
@@ -64,9 +64,9 @@ int aiResourceCost(long playerId, const int* resources);
 static long valueOfUniversity(const hero* currentHero,
                          type_university* university,
                          unsigned char mustPay);
-void buyArtifacts(hero* currentHero, town* currentTown);
-void buySiegeEngine(hero* currentHero, town* currentTown,
-                      type_building_id building, TArtifact engine);
+static void buyArtifacts(hero* currentHero, town* currentTown);
+static void buySiegeEngine(hero* currentHero, town* currentTown,
+                             type_building_id building, TArtifact engine);
 
 long type_AI_creature_swapper::getSwapValue(
     const hero* currentHero, const armyGroup* sourceArmy,
@@ -75,8 +75,8 @@ long type_AI_creature_swapper::getSwapValue(
 long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
     const armyGroup& defendingArmy, const town* defendingTown,
     NewmapCell* cell);
-long valueOfReinforcing(hero* currentHero, town* currentTown,
-                          short moveCost);
+static long valueOfReinforcing(hero* currentHero, town* currentTown,
+                                 short moveCost);
 long valueOfTownVisitBonuses(const hero* currentHero, town* currentTown);
 int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
     long pathfinding, long endRoad, long flying, long waterWalking,
@@ -195,8 +195,8 @@ void aiEnterGarrison(hero* currentHero, garrison* ourGarrison)
                     hasAngelicAlliance);
 }
 
-void buyArtifacts(hero* currentHero, TArtifact* artifactList,
-                   long marketCount);
+static void buyArtifacts(hero* currentHero, TArtifact* artifactList,
+                          long marketCount);
 
 VA(0x005243f0, 0x8)
 DC_ADDRESS(0x10db64, 0x10)
@@ -343,8 +343,8 @@ static long getArtifactPurchaseValue(
 VA(0x00524400, 0x149)
 DC_ADDRESS(0x10da30, 0xb8)
 MAC_ADDRESS(0x13dce4, 0x108)  // anchor-global
-void buyArtifacts(hero* currentHero, TArtifact* artifactList,
-                   long marketCount)
+static void buyArtifacts(hero* currentHero, TArtifact* artifactList,
+                          long marketCount)
 {
     // DC records the resource output at function scope.
     EGameResource resource;
@@ -630,14 +630,14 @@ static void clearShipyards(playerData* player)
 
 // Source-order declarations for helpers whose retained Complete bodies live
 // later in retail RVA order.
-int netValueOfArtifact(const hero* currentHero, int artifactValue,
+static int netValueOfArtifact(const hero* currentHero, int artifactValue,
     int goldCost, int resourceCost, EGameResource resourceType);
-long valueOfCustomItem(const hero* currentHero, NewmapCell* cell,
+static long valueOfCustomItem(const hero* currentHero, NewmapCell* cell,
     long itemValue);
-long valueOfLearning(const hero* currentHero, SpellID spell);
+static long valueOfLearning(const hero* currentHero, SpellID spell);
 static long getArtifactPurchaseValue(
     TArtifact artifactId, long marketCount, long* funds);
-long valueOfEnemyTown(const hero* currentHero, const town* enemyTown,
+static long valueOfEnemyTown(const hero* currentHero, const town* enemyTown,
                          short moveCost, NewmapCell* cell);
 
 // Original: move_hero; philai.cpp:934
@@ -1501,7 +1501,7 @@ inline int valueOfShrine(const hero* currentHero, NewmapCell* cell)
 VA(0x00524550, 0xD2)
 DC_ADDRESS(0x10d7b8, 0x164)
 MAC_ADDRESS(0x13daa8, 0x140)
-long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
+static long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
     EGameResource* bestResource)
 {
     long price = akArtifactTraits[artifact].m_cost;
@@ -2071,7 +2071,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
 VA(0x005259e0, 0x205)
 DC_ADDRESS(0x10db74, 0x150)
 MAC_ADDRESS(0x13debc, 0x1e0)  // MAC_ABSTRACTION_FROM(tokens1:7356389b5c96,99.7917): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
-void buyArtifacts(hero* currentHero, town* currentTown)
+static void buyArtifacts(hero* currentHero, town* currentTown)
 {
     if (currentTown->m_type != TOWN_TOWER
         && currentTown->m_type != TOWN_DUNGEON)
@@ -2159,8 +2159,8 @@ static long valueOfUniversity(const hero* currentHero, NewmapCell* cell)
 VA(0x00525ca0, 0x11e)
 DC_ADDRESS(0x10e118, 0x114)
 MAC_ADDRESS(0x13f3b4, 0x274)
-void buySiegeEngine(hero* currentHero, town* currentTown,
-                      type_building_id building, TArtifact engine)
+static void buySiegeEngine(hero* currentHero, town* currentTown,
+                             type_building_id building, TArtifact engine)
 {
     if (currentHero->hasArtifact(engine))
         return;
@@ -2848,7 +2848,7 @@ static long getArtifactPurchaseValue(
 VA(0x005297d0, 0x36)
 DC_ADDRESS(0x10e028, 0x3c)
 MAC_ADDRESS(0x13f1d4, 0x80)
-long valueOfWarFactory(const hero* currentHero, long moveCost)
+static long valueOfWarFactory(const hero* currentHero, long moveCost)
 {
     return valueOfWarFactory(currentHero, ARTIFACT_FIRST_AID_TENT,
                                 moveCost)
@@ -2859,7 +2859,7 @@ long valueOfWarFactory(const hero* currentHero, long moveCost)
 VA(0x00529810, 0x7c)
 DC_ADDRESS(0x110174, 0x170)
 MAC_ADDRESS(0x141d98, 0xb8)
-int netValueOfArtifact(const hero* currentHero, int artifactValue,
+static int netValueOfArtifact(const hero* currentHero, int artifactValue,
     int goldCost, int resourceCost, EGameResource resourceType)
 {
     playerData* player = &g_game->m_players[currentHero->m_owner];
@@ -2876,7 +2876,7 @@ int netValueOfArtifact(const hero* currentHero, int artifactValue,
 VA(0x00529890, 0x40)
 DC_ADDRESS(0x1103c4, 0x42)
 MAC_ADDRESS(0x141f90, 0x80)
-long valueOfCustomItem(const hero* currentHero, NewmapCell* cell, long itemValue)
+static long valueOfCustomItem(const hero* currentHero, NewmapCell* cell, long itemValue)
 {
     TreasureData* treasure = g_advManager->getTreasureData(cell);
     if (treasure->m_hasCustomGuardians)
@@ -2901,7 +2901,7 @@ static int valueOfSpell(const hero* currentHero, SpellID spell)
 VA(0x005298d0, 0x4b)
 DC_ADDRESS(0x1105ac, 0x2c)
 MAC_ADDRESS(0x142254, 0x50)
-long valueOfLearning(const hero* currentHero, SpellID spell)
+static long valueOfLearning(const hero* currentHero, SpellID spell)
 {
     if (akSpellTraits[spell].m_level
         > currentHero->getSecondarySkill(eSecSkillWisdom) + 2)
@@ -2916,7 +2916,7 @@ static long valueOfBank(const hero* currentHero, NewmapCell* cell);
 VA(0x00529a30, 0x27f)
 DC_ADDRESS(0x1109b8, 0x24c)
 MAC_ADDRESS(0x142734, 0x318)
-int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* cell, int moveCost)
+static int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* cell, int moveCost)
 {
     generator currentGenerator;
     long value = 0;
@@ -2969,7 +2969,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
 VA(0x00529cb0, 0x2d9)
 DC_ADDRESS(0x11105c, 0x2cc)
 MAC_ADDRESS(0x142fe0, 0x308)
-long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short moveCost, NewmapCell* cell)
+static long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short moveCost, NewmapCell* cell)
 {
     int creatureCost[NUM_RESOURCES];
     unsigned char includeGrowth;
@@ -3040,7 +3040,7 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
 VA(0x00529f90, 0x72)
 DC_ADDRESS(0x111834, 0xc4)
 MAC_ADDRESS(0x143bf4, 0xc4)
-int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
+static int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_magicSchoolFlags)
         return 0;
@@ -3058,7 +3058,7 @@ int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
 VA(0x0052a010, 0x12a)
 DC_ADDRESS(0x111970, 0x12c)
 MAC_ADDRESS(0x143d3c, 0x184)
-int valueOfMine(const hero* currentHero, NewmapCell* cell)
+static int valueOfMine(const hero* currentHero, NewmapCell* cell)
 {
     mine* currentMine = g_game->getMine(cell->m_extraInfo);
     long value = 0;
@@ -3091,7 +3091,7 @@ int valueOfMine(const hero* currentHero, NewmapCell* cell)
 VA(0x0052a140, 0x96)
 DC_ADDRESS(0x111a9c, 0xe0)
 MAC_ADDRESS(0x143ec0, 0x108)
-long valueOfMonsters(const hero* currentHero, NewmapCell* cell, type_point point)
+static long valueOfMonsters(const hero* currentHero, NewmapCell* cell, type_point point)
 {
     int typedCreature;
     typedCreature = cell->m_objectIndex;
@@ -3119,7 +3119,7 @@ int valueOfMoveSource(const hero* currentHero, long flag,
 VA(0x0052a2b0, 0xc5)
 DC_ADDRESS(0x111d68, 0xae)
 MAC_ADDRESS(0x1441e0, 0x104)
-int valueOfObelisk(NewmapCell* cell, long playerId)
+static int valueOfObelisk(NewmapCell* cell, long playerId)
 {
     if (g_game->m_obeliskFlags[cell->m_extraInfo] & (1 << playerId))
         return 0;
@@ -3141,7 +3141,7 @@ int valueOfObelisk(NewmapCell* cell, long playerId)
 VA(0x0052a380, 0x1c)
 DC_ADDRESS(0x111e34, 0x6e)
 MAC_ADDRESS(0x1442f8, 0x28)
-int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
+static int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_powerSchoolFlags)
         return 0;
@@ -3151,7 +3151,7 @@ int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
 VA(0x0052a3a0, 0x61)
 DC_ADDRESS(0x111ea4, 0xae)
 MAC_ADDRESS(0x144320, 0xa0)
-int valueOfPrison(NewmapCell* cell, playerData* player)
+static int valueOfPrison(NewmapCell* cell, playerData* player)
 {
     if (g_currentPlayer->m_numHeroes >= playerData::HERO_SLOT_COUNT)
         return 0;
@@ -3166,7 +3166,7 @@ const int g_pyramidSpellLevel = 5;
 VA(0x0052a410, 0xF5)
 DC_ADDRESS(0x111f54, 0x118)
 MAC_ADDRESS(0x1443c0, 0x144)
-long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
+static long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
 {
     short owner = currentHero->m_owner;
     if (cell->playerKnowsCell(owner) && !cell->pyramidIsGuarded())
@@ -3196,7 +3196,7 @@ long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
 VA(0x0052a510, 0xdf)
 DC_ADDRESS(0x11206c, 0x7c)
 MAC_ADDRESS(0x144504, 0x140)
-long getValueOfWell(const hero* currentHero, unsigned short moveCost)
+static long getValueOfWell(const hero* currentHero, unsigned short moveCost)
 {
     if (currentHero->m_flags & 1)
         return 0;
@@ -3214,7 +3214,7 @@ long getValueOfWell(const hero* currentHero, unsigned short moveCost)
 VA(0x0052a5f0, 0x108)
 DC_ADDRESS(0x1120e8, 0xd0)
 MAC_ADDRESS(0x144644, 0xd4)
-int valueOfRallyFlag(const hero* currentHero, long& moveCost)
+static int valueOfRallyFlag(const hero* currentHero, long& moveCost)
 {
     if (currentHero->m_flags & 0x10000)
         return 0;
@@ -3227,13 +3227,13 @@ int valueOfRallyFlag(const hero* currentHero, long& moveCost)
             currentHero->getMorale(0, 0, 1), 1));
 }
 
-long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
-                         short amount);
+static long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
+                                short amount);
 
 VA(0x0052a700, 0x10)
 DC_ADDRESS(0x1121b8, 0x50)
 MAC_ADDRESS(0x144718, 0x2c)
-int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell)
+static int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell)
 {
     TCreatureType creature = H3_ENUM_DECODE(TCreatureType, cell->m_objectIndex);
     return valueOfRecruiting(currentHero, creature,
@@ -3243,8 +3243,8 @@ int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell)
 VA(0x0052a710, 0xad)
 DC_ADDRESS(0x110c90, 0x66)
 MAC_ADDRESS(0x142b98, 0xdc)
-long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
-                         short amount)
+static long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
+                                short amount)
 {
     type_AI_creature_purchaser purchaser(
         currentHero->m_owner, creature, &amount, 0);
@@ -3260,7 +3260,7 @@ long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
 VA(0x0052a7c0, 0xa8)
 DC_ADDRESS(0x112260, 0x14c)
 MAC_ADDRESS(0x144818, 0xfc)
-long valueOfResource(const hero* currentHero, NewmapCell* cell, playerData* player)
+static long valueOfResource(const hero* currentHero, NewmapCell* cell, playerData* player)
 {
     long combatValue = 0;
     long amount;
@@ -3284,7 +3284,7 @@ long valueOfResource(const hero* currentHero, NewmapCell* cell, playerData* play
 VA(0x0052a870, 0x4F)
 DC_ADDRESS(0x1123ac, 0xdc)
 MAC_ADDRESS(0x144914, 0x8c)
-int valueOfSeaChest(const hero* currentHero, NewmapCell* cell)
+static int valueOfSeaChest(const hero* currentHero, NewmapCell* cell)
 {
     playerData* player = currentHero->getPlayer();
     if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
@@ -3297,7 +3297,7 @@ int valueOfSeaChest(const hero* currentHero, NewmapCell* cell)
 VA(0x0052a8c0, 0x9a)
 DC_ADDRESS(0x112510, 0xdc)
 MAC_ADDRESS(0x144a54, 0xe8)
-int valueOfScroll(const hero* currentHero, NewmapCell* cell)
+static int valueOfScroll(const hero* currentHero, NewmapCell* cell)
 {
     SpellID spell;
     if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
@@ -3324,7 +3324,7 @@ int valueOfScroll(const hero* currentHero, NewmapCell* cell)
 VA(0x0052a960, 0x158)
 DC_ADDRESS(0x1126d0, 0x9c)
 MAC_ADDRESS(0x144c58, 0x170)
-int valueOfSirens(const hero* currentHero)
+static int valueOfSirens(const hero* currentHero)
 {
     armyGroup army = currentHero->m_army;
     int oldValue = army.getAIValue();
@@ -3342,7 +3342,7 @@ int valueOfSirens(const hero* currentHero)
 VA(0x0052aac0, 0xB9)
 DC_ADDRESS(0x11276c, 0xc4)
 MAC_ADDRESS(0x144dc8, 0x98)
-int valueOfStables(const hero* currentHero, long& moveCost)
+static int valueOfStables(const hero* currentHero, long& moveCost)
 {
     int value = 0;
     if (!(currentHero->m_flags & 2)) {
@@ -3373,7 +3373,7 @@ DATA(0x00640558) static const TArtifact g_legionArtifacts[5] = {
 VA(0x0052ab80, 0x505)
 DC_ADDRESS(0x112914, 0x4be)
 MAC_ADDRESS(0x145390, 0x500)
-long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
+static long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
 {
     short townId = static_cast<short>(g_game->getTownId(x, y, z));
     type_point point(static_cast<short>(x), static_cast<short>(y),
@@ -3477,7 +3477,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
 VA(0x0052b090, 0x14e)
 DC_ADDRESS(0x112830, 0xe4)
 MAC_ADDRESS(0x144e60, 0x1a0)
-long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
+static long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
 {
     long playerId = currentHero->m_owner;
     playerData* player = &g_game->m_players[playerId];
@@ -3586,7 +3586,7 @@ long valueOfTownVisitBonuses(const hero* currentHero, town* currentTown)
 VA(0x0052b4e0, 0xbf)
 DC_ADDRESS(0x112f6c, 0x160)
 MAC_ADDRESS(0x145a1c, 0x124)
-int valueOfTreasure(const hero* currentHero)
+static int valueOfTreasure(const hero* currentHero)
 {
     playerData* player = currentHero->getPlayer();
     int experiencePart = static_cast<int>(
@@ -3665,7 +3665,7 @@ static int valueOfTree(const hero* currentHero, NewmapCell* cell)
 VA(0x0052b710, 0x7e)
 DC_ADDRESS(0x113324, 0x5c)
 MAC_ADDRESS(0x145d4c, 0xc0)
-int valueOfWagon(NewmapCell* cell, long playerId)
+static int valueOfWagon(NewmapCell* cell, long playerId)
 {
     if (cell->playerKnowsCell(static_cast<short>(playerId)))
         return 0;
@@ -3679,7 +3679,7 @@ int valueOfWagon(NewmapCell* cell, long playerId)
 VA(0x0052b790, 0x71)
 DC_ADDRESS(0x113380, 0x10a)
 MAC_ADDRESS(0x145e0c, 0xb8)
-int valueOfWarSchool(const hero* currentHero, NewmapCell* cell)
+static int valueOfWarSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_warSchoolFlags)
         return 0;
@@ -3696,7 +3696,7 @@ int valueOfWarSchool(const hero* currentHero, NewmapCell* cell)
 VA(0x0052b810, 0xe1)
 DC_ADDRESS(0x11348c, 0x7e)
 MAC_ADDRESS(0x145ec4, 0x140)
-long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
+static long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
                          unsigned short moveCost)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
@@ -3721,7 +3721,7 @@ long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
 VA(0x0052b900, 0xb6)
 DC_ADDRESS(0x113da0, 0x84)
 MAC_ADDRESS(0x146004, 0x130)
-int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
+static int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
 {
     ExtraInfoUnion* info =
         static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));

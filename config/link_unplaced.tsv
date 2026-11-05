@@ -11,9 +11,9 @@ unit	name	bytes	reason
 *	??8?$bitset@$0BD@@std@@QBE_NABV01@@Z	48	emitted by artifact.cpp's explicit `template class std::bitset<19>` (kept for set's exact body); retail retains no such member
 *	??_ETCampaignSpellScrollBonus@@UAEPAXI@Z	48	present at the 4650cdf19 baseline; not traced yet
 *	?getMapExtra@@YIHUtype_point@@@Z	64	out-of-line copy of the DC inline getMapExtra(type_point) (advmgr.h); retail expands every caller
+*	?getTarget@hero@@QBE?AUtype_point@@XZ	80	philai's aiValueOfEvent calls it out of line once the Dreamcast-static valueOfMagicSchool/getValueOfSpring expand into it (issue #224); retail emits aiValueOfEvent before those helpers and calls them, so it expands this inline copy instead
 *	?set@?$bitset@$0BM@@std@@QAEAAV12@I_N@Z	96	present at the 4650cdf19 baseline; not traced yet
-*	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	112	present at the 4650cdf19 baseline; not traced yet
-*	?test@?$bitset@$0JM@@std@@QBE_NI@Z	64	present at the 4650cdf19 baseline; not traced yet
+*	?valueOfMercenaryCamp@@YIHPBVhero@@PAVNewmapCell@@@Z	80	philai's aiValueOfEvent calls it out of line once the Dreamcast-static valueOfMagicSchool/getValueOfSpring expand into it (issue #224); retail emits aiValueOfEvent before those helpers and calls them, so it expands this inline copy instead
 adventuremapwindow	_$E*	32	dynamic initializers (_$E<n>): STATIC_CTOR/STATIC_DTOR claims carry __h3cg names and no claim binds VC6's numbered symbols; retail keeps the counterparts (rmg_river's ctype id guard is 0x55ef00)
 adventureoptionswindow	_$E*	1008	dynamic initializers (_$E<n>): STATIC_CTOR/STATIC_DTOR claims carry __h3cg names and no claim binds VC6's numbered symbols; retail keeps the counterparts (rmg_river's ctype id guard is 0x55ef00)
 advmgr	_$E*	128	dynamic initializers (_$E<n>): STATIC_CTOR/STATIC_DTOR claims carry __h3cg names and no claim binds VC6's numbered symbols; retail keeps the counterparts (rmg_river's ctype id guard is 0x55ef00)

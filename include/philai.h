@@ -56,13 +56,12 @@ void aiJoinDecision(hero* currentHero, TCreatureType creature,
 // Source-real appraisal boundaries used by AI_value_of_event. Several are
 // expanded or revision-adapted in Complete, but keeping these declarations
 // makes the recovered Dreamcast dispatch state explicit while their bodies
-// are promoted independently.
+// are promoted independently. The appraisals Dreamcast records as (static)
+// procedures are declared only by their philai.cpp bodies.
 long valueOfBlackMarket(const hero* currentHero,
                            const NewmapCell* cell);
 int valueOfCampfire(playerData* player, NewmapCell* cell);
 int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell);
-int valueOfGenerator(const hero* currentHero, int x, int y, int z,
-                     NewmapCell* cell, int moveCost);
 long valueOfGarrison(const hero* currentHero, NewmapCell* cell);
 long valueOfIdol(const hero* currentHero, long moveCost);
 int valueOfFlotsam(playerData* player);
@@ -76,39 +75,13 @@ inline long valueOfHillFort(const hero* currentHero,
 inline int valueOfLibrary(const hero* currentHero,
                                  NewmapCell* cell);
 inline int valueOfLighthouse(NewmapCell* cell);
-int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell);
 inline int valueOfMercenaryCamp(const hero* currentHero,
                                        NewmapCell* cell);
 inline long valueOfMagusHut(long playerId);
-int valueOfMine(const hero* currentHero, NewmapCell* cell);
-long valueOfMonsters(const hero* currentHero, NewmapCell* cell,
-                       type_point point);
 int valueOfMoveSource(const hero* currentHero, long flag, short increase,
                          long& moveCost);
-int valueOfObelisk(NewmapCell* cell, long playerId);
-int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell);
-int valueOfPrison(NewmapCell* cell, playerData* player);
-long valueOfPyramid(const hero* currentHero, NewmapCell* cell);
-long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
-                         unsigned short moveCost);
-long getValueOfWell(const hero* currentHero, unsigned short moveCost);
-int valueOfRallyFlag(const hero* currentHero, long& moveCost);
-int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell);
-long valueOfResource(const hero* currentHero, NewmapCell* cell,
-                     playerData* player);
-int valueOfSeaChest(const hero* currentHero, NewmapCell* cell);
 int valueOfSkeleton(const hero* currentHero, NewmapCell* cell);
-int valueOfScroll(const hero* currentHero, NewmapCell* cell);
 inline int valueOfShrine(const hero* currentHero, NewmapCell* cell);
-int valueOfSirens(const hero* currentHero);
-int valueOfStables(const hero* currentHero, long& moveCost);
-long valueOfTown(const hero* currentHero, int x, int y, int z,
-                   short moveCost);
-int valueOfTreasure(const hero* currentHero);
-int valueOfWagon(NewmapCell* cell, long playerId);
-long valueOfWarFactory(const hero* currentHero, long moveCost);
-int valueOfWarSchool(const hero* currentHero, NewmapCell* cell);
-int valueOfWitchHut(const hero* currentHero, NewmapCell* cell);
 
 void aiEnterTown(hero* currentHero, town* currentTown);
 
