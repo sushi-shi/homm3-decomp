@@ -7909,11 +7909,10 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int e
 // DC's twelve locals include short objectToConvert (sp+0x12), not int;
 // the entry load and later comparison preserve that signed interpretation.
 // Keep its recorded local identities, named tempSprite, and the canonical
-// isCapitol/isCastle calls. The frame and all 44 block sizes match retail.
-// Residual 99.9756%: the string assignment's inlined _Eos terminator encodes
-// [eax+ecx] instead of [ecx+eax], NOT a NewfullMap::cell difference. Eight
-// type/declaration/call models and five recorded-name models reproduce the
-// same score; do not replace a proven helper or invent a local for that byte.
+// isCapitol/isCastle calls. The image name is assigned through a reference
+// to the copied type's string. Assigning the member directly, or through
+// assign(), leaves the inlined _Eos terminator encoded [eax+ecx] instead of
+// retail's [ecx+eax] (99.98%); reusing the reference for GetSprite does too.
 // DC lines 9245/9246 store the monster cell type before the local type.
 // Restoring that order, explicit iterator sequencing and the town predicates'
 // public-symbol-proven bool returns are all byte-flat; the latter also preserve
@@ -7969,7 +7968,8 @@ void game::convertObject(NewmapCell* tempCell)
     }
 
     int oldType = objectType->m_objectType;
-    objectType->m_imageName = tempText;
+    std::string& imageName = objectType->m_imageName;
+    imageName = tempText;
     objectType->m_objectType = type;
     objectType->m_extra = tempCell->m_objectIndex;
     CSprite* tempSprite =

@@ -1710,8 +1710,8 @@ void overviewSliderCallback(int state, heroWindow* parentWindow)
 // Windows; Mac 0x139bcc keeps it as a two-case genType switch. The repeated
 // indexings and that switch are also the /Ob2 candidates that make retail
 // call insert(P, x) for the two mine appends but expand it later
-// (92.98 -> 99.54%). The remainder is ICF naming of the item-record vector
-// helpers and localPlayer's register home across the garrison pass.
+// (92.98 -> 99.54%). The count widget pointer is declared with the loop
+// index, and the garrison pass adds items under a positive ownership test.
 // Probes: indexing the shipyard player directly in the loop condition
 // (99.12%) and comparing `localPlayer != owner` in the garrison pass
 // (99.53%) are both worse; the player reference stays.
@@ -1752,13 +1752,14 @@ TOverviewWindow::TOverviewWindow()
         731, 45, 66, 398, 39, "FlagBack.pcx", 0x800));
 
     int i;
+    textWidget* countWidget;
     for (i = 0; i < 7; ++i) {
         m_widgets.push_back(new iconWidget(
             739, i * 57 + 47, 50, 50, i + 40, "FlagPort.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
         // Both appends reuse the allocation result: Mac 1385fc/138670,
         // retail [-0x24]. The second vector does not read the first back.
-        textWidget* countWidget = new textWidget(
+        countWidget = new textWidget(
             739, i * 57 + 81, 50, 16, "",
             "smalfont.fnt", font::PRIMARY, -1,
             font::RIGHT_JUSTIFIED, 0, 8);
@@ -1894,16 +1895,15 @@ TOverviewWindow::TOverviewWindow()
     }
 
     for (i = 0; i < g_game->m_garrisons.size(); ++i) {
-        if (g_game->m_garrisons[i].m_playerOwner != localPlayer)
-            continue;
-
-        NewmapCell* cell = g_game->m_worldMap.cell(
-            g_game->m_garrisons[i].m_mapX, g_game->m_garrisons[i].m_mapY,
-            g_game->m_garrisons[i].m_mapZ);
-        if (cell->m_objectIndex == 0) {
-            addFlaggableItem('S');
-        } else {
-            addFlaggableItem('T');
+        if (g_game->m_garrisons[i].m_playerOwner == localPlayer) {
+            NewmapCell* cell = g_game->m_worldMap.cell(
+                g_game->m_garrisons[i].m_mapX, g_game->m_garrisons[i].m_mapY,
+                g_game->m_garrisons[i].m_mapZ);
+            if (cell->m_objectIndex == 0) {
+                addFlaggableItem('S');
+            } else {
+                addFlaggableItem('T');
+            }
         }
     }
 

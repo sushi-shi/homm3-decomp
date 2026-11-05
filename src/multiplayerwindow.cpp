@@ -1494,14 +1494,14 @@ bool TMultiPlayerWindow::OnSearch()
         return 0;
     }
 
-    // Stage the selected session before joining; this preserves retail's
-    // register allocation and separate failure cleanup paths.
+    // Join the first (only) enumerated session.
     CDPlaySession* session = m_sessions->get(0);
     if (!joinSession(session, 0)) {
-        char sErr[256];
         long lastError = g_dPlay->getLastError();
         normalDialog(g_generalText->GetText(GENERAL_TEXT_SESSION_CONNECTION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
+        // Original DC local name: sErr.
+        char sErr[256];
         g_dPlay->getErrorDesc(lastError, sErr);
         normalDialog(sErr, 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);

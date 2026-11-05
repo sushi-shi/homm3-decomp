@@ -122,6 +122,11 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     // call each that retail expands. Before recovering the setter, all 24
     // buffer declaration orders were byte-flat; moving the setter before the
     // constructor is byte-flat. DC records no widget-vector local.
+    // Probes: assigning m_townSprite in the row constructor's body (99.56%)
+    // plus staging the five difficulty buttons through one reused pointer
+    // (99.92% alone) reach 100% together. Neither is adopted: the row class
+    // has no DC counterpart, and DC lines 432..436 record one
+    // new/construct/push_back statement per difficulty button.
     char tempText[256];
     char lossText[1024];
     char tempName[256];
