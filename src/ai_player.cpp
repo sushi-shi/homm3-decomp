@@ -3449,7 +3449,8 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
 // player seeds a friendly allied search from that hero's path target (or
 // position when the target is invalid) and folds each visited cell's cost
 // plus the friend's remaining-target cost into the friendly-distance map,
-// clipped to the patrol radius. Returns the danger under the hero's feet.
+// clipped to that friend's patrol radius. Returns the danger under the
+// hero's feet.
 // DC lines 3060/3078 nest get_location in get_danger_value/SeedPosition;
 // Complete expands both into separate point temporaries at entry. DC line
 // 3053 names level_size; line 3054 calls GetNumMapLevels and multiplies by
@@ -3461,8 +3462,14 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
 // coordinates (3102), and fills the function-scope point field by field
 // from the path target and then the position (3109..3115). Accessor
 // getTarget()/getLocation() for the friend cost Windows 91.17 -> 83.69%;
-// the DC form reaches 92.35%. Residual: whole-body EBX/EDI role swap for
-// currentHero (why-reg: only a synthetic zero-local carrier moves it).
+// the DC form reaches 92.35%. Exact (100%) with four DC-backed facts: DC
+// 3141 and retail test the FRIEND's patrol radius (r9/esi), not the current
+// hero's; DC 3095/3096 are separate rows for the hero id and GetHero; DC
+// 3102 builds the friend's cell point as an unnamed get_cell argument; and
+// DC 3144 forms the distance-slot address before 3146's cost. Measured: the
+// receiver fix alone 95.58, plus the slot pointer 97.34, plus the unnamed
+// point 97.76; inlining movePoints 96.62; DC local names, point-first
+// declarations and a named friendPoint were flat or lower.
 VA(0x0042f570, 0x40e)
 DC_ADDRESS(0x032a84, 0x3ac)
 MAC_ADDRESS(0x03180c, 0x4b4)  // anchor-callee + arity
@@ -3494,11 +3501,12 @@ static long markDestinations(hero* currentHero, long maxDistance,
         type_point(currentHero->m_x, currentHero->m_y, currentHero->m_z), 0);
 
     for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
-        hero* friendly = g_game->getHero(g_currentPlayer->m_heroes[i]);
+        int heroId = g_currentPlayer->m_heroes[i];
+        hero* friendly = g_game->getHero(heroId);
         if (friendly == currentHero)
             continue;
-        type_point friendPoint(friendly->m_x, friendly->m_y, friendly->m_z);
-        pathCell* friendCell = currentSearchArray->getCell(friendPoint, 0);
+        pathCell* friendCell = currentSearchArray->getCell(
+            type_point(friendly->m_x, friendly->m_y, friendly->m_z), 0);
         if (!friendCell->m_visited)
             continue;
 
@@ -3530,12 +3538,13 @@ static long markDestinations(hero* currentHero, long maxDistance,
         for (int j = static_cast<int>(friendlySearch.getVisitedCount());
              j-- != 0;) {
             pathCell* visited = friendlySearch.getVisitedCell(j);
-            if (currentHero->isInPatrolRadius(visited->m_point)) {
-                int index = visited->m_point.m_z * levelSize
-                    + visited->m_point.m_y * g_mapWidth + visited->m_point.m_x;
+            if (friendly->isInPatrolRadius(visited->m_point)) {
+                unsigned short* distance = &friendlyDistances[
+                    visited->m_point.m_z * levelSize
+                    + visited->m_point.m_y * g_mapWidth + visited->m_point.m_x];
                 unsigned short cost = visited->m_cost + extraCost;
-                if (cost < friendlyDistances[index])
-                    friendlyDistances[index] = cost;
+                if (cost < *distance)
+                    *distance = cost;
             }
         }
     }
