@@ -2545,7 +2545,7 @@ mapcell	?calculateCellExtra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	100.0000	100.0000
 mapcell	?capacity@?$vector@USecondarySkillData@@V?$allocator@USecondarySkillData@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x10ad90	-
 mapcell	?cellIsTrigger@NewmapCell@@QBE_NXZ	100.0000	100.0000	100.0000	0xfcc80	tokens1:fca32e09a0fb
 mapcell	?clear@?$vector@PAVCMapObjectData@@V?$allocator@PAVCMapObjectData@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x8b4a0	-
-mapcell	?copy@std@@YIPAUSecondarySkillData@@PAU2@00@Z	100.0000	100.0000	100.0000	0x10adb0	-
+mapcell	?copy@std@@YIPAUSecondarySkillData@@PAU2@00@Z	0.0000	100.0000	100.0000	0x10adb0	-
 mapcell	?copy@std@@YIPAUtype_creature_bank@@PAU2@00@Z	100.0000	100.0000	100.0000	0x109620	-
 mapcell	?copy@std@@YIPAUtype_university@@PAU2@00@Z	100.0000	100.0000	100.0000	0x1095e0	-
 mapcell	?copy@std@@YIPAVTTimedEvent@@PAV2@00@Z	100.0000	100.0000	100.0000	0x1093f0	-
@@ -2586,7 +2586,7 @@ mapcell	?insert@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@
 mapcell	?insert@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXPAVgenerator@@IABV3@@Z	100.0000	100.0000	100.0000	0x1090b0	-
 mapcell	?isDiggable@NewmapCell@@QBE_NXZ	100.0000	100.0000	100.0000	0xfccf0	tokens1:17e1efd6a689
 mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	100.0000	100.0000	100.0000	0xfdbc0	tokens1:d2f17f0246cb
-mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@AAVBlackBoxData@@H@Z	91.5586	91.5586	96.1450	0x100430	tokens1:fcb58c805f66
+mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@AAVBlackBoxData@@H@Z	96.1407	96.1407	96.1450	0x100430	tokens1:14d26ddcbd36
 mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200	tokens1:7b9c824c4184
 mapcell	?loadMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HHH@Z	100.0000	100.0000	100.0000	0xfe920	tokens1:052c29434fa5
 mapcell	?loadMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x104b70	tokens1:584a27bcfe88

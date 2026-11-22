@@ -1977,19 +1977,21 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 
 // DC records the BlackBoxData reference and function-scope
 // int_buffer, short_buffer, char_buffer, count (read status), number (list
-// length), and x; its asm stores the result of every one of the 17 reads to
-// count, so each read here is `count = infile->read(...)`, including the
-// unchecked artifact byte. Mac reuses scalar homes +0x60/+0x5d across the
-// resource and skill reads; the creature reader owns the versioned read.
-// Adopted shape: the artifact byte is read into an int local and cast with
-// (TArtifact), 91.44% -> 91.56%. Dropping the stored count statuses (direct
-// `infile->read(...) < size` compares) reaches 96.79% but contradicts the DC
-// stores at all 17 reads, so it is not kept. Flat probes: resize argument
-// forms (number, charBuffer, int(number)), number as int, declaration order,
-// signed charBuffer, raw enum casts instead of H3_ENUM_DECODE, artifact mask.
-// Residual: retail keeps the list length in ebx and the vector in edi around
-// the resize/erase expansions and calls an insert instantiation merged with
-// vector<widget*>; ours spills the length and uses other registers.
+// length), and x; all six locals and the NUM_RESOURCES/kNumPrimarySkills
+// bounds are kept. Mac reuses scalar homes +0x60/+0x5d across the resource
+// and skill reads, and the creature reader owns the versioned unchecked read.
+// Only the first checked read stores its status in count. Dreamcast stores
+// count after all 17 reads, but retail's inlining of the three list resizes
+// matches a body with almost no stored statuses (91.56% with all of them,
+// 96.14% with the first only), so the Windows source is taken to differ from
+// the older Dreamcast build here. Each artifact byte is read into intBuffer and
+// narrowed through unsigned char, which is retail's dword load + and 0xff; an
+// int local read with sizeof(int) also scores higher but would read four
+// bytes per artifact. Flat probes: resize argument forms (number, charBuffer,
+// int(number)), number as int, declaration order, signed charBuffer, raw enum
+// casts instead of H3_ENUM_DECODE, the artifact mask / static_cast spellings.
+// Residual: retail keeps the list length in ebx and the vector in edi across
+// the resize/erase expansions.
 // Secondary-skill resize expands erase into copy/_Destroy where retail
 // retains erase. Routing every read through readValue lowers the caller to
 // 83.58% through vector inlining.
@@ -2015,89 +2017,74 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
             return -1;
     }
 
-    count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (count < sizeof(intBuffer))
+    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
         return -1;
     thisBox.m_experienceBonus = intBuffer;
-    count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (count < sizeof(intBuffer))
+    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
         return -1;
     thisBox.m_manaBonus = intBuffer;
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     thisBox.m_moraleBonus = charBuffer;
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     thisBox.m_luckBonus = charBuffer;
 
     for (x = 0; x < NUM_RESOURCES; ++x) {
-        count = infile->read(&intBuffer, sizeof(intBuffer));
-        if (count < sizeof(intBuffer))
+        if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
             return -1;
         thisBox.m_resQty[x] = intBuffer;
     }
     for (x = 0; x < kNumPrimarySkills; ++x) {
-        count = infile->read(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
             return -1;
         thisBox.m_primarySkillBonus[x] = charBuffer;
     }
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     thisBox.m_secondarySkills.resize(number);
     for (x = 0; x < number; ++x) {
-        count = infile->read(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
             return -1;
         // Mac 0x12298c..0x1229d8 stores enum words directly after each read.
         thisBox.m_secondarySkills[x].m_type =
             H3_ENUM_DECODE(TSecondarySkill, charBuffer);
-        count = infile->read(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
             return -1;
         thisBox.m_secondarySkills[x].m_level =
             H3_ENUM_DECODE(TSkillMastery, charBuffer);
     }
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     thisBox.m_artifacts.resize(number);
     for (x = 0; x < number; ++x) {
-        int artifact;
-        count = infile->read(&artifact, sizeof(unsigned char));
-        thisBox.m_artifacts[x] = (TArtifact)artifact;
+        infile->read(&intBuffer, sizeof(unsigned char));
+        thisBox.m_artifacts[x] = (TArtifact)(unsigned char)intBuffer;
     }
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     thisBox.m_spells.resize(number);
     for (x = 0; x < number; ++x) {
-        count = infile->read(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
             return -1;
         thisBox.m_spells[x] = H3_ENUM_DECODE(ESpellId, charBuffer);
     }
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     thisBox.m_creatures.initialize();
     for (x = 0; x < number; ++x) {
         thisBox.m_creatures.m_armies[x] =
             readSavedCreatureId(infile, saveVersion);
-        count = infile->read(&shortBuffer, sizeof(shortBuffer));
-        if (count < sizeof(shortBuffer))
+        if (infile->read(&shortBuffer, sizeof(shortBuffer)) < sizeof(shortBuffer))
             return -1;
         thisBox.m_creatures.m_numTroops[x] = shortBuffer;
     }
