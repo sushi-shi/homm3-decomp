@@ -4650,6 +4650,11 @@ void TSingleSelectionWindow::doModal(bool fade)
 // carrier doses were byte-flat. No release-VERIFY carrier is evidenced.
 // All six orders of the three recorded entry locals emit identical VC6
 // bytes; the residual begins in expanded player-lookup branches.
+// 2026-11-22: the multiplayer fill loops use `break` on a full pool and the
+// multiplayer arm ends in an else-less tail, so retail's loop-exit epilogue
+// copies appear (72 -> 54 differing rows). Residual: getThisPlayer's inlined
+// register choice in the first host arm. Flat: guard order, `!= 0`, field
+// store order, unconditional inner isMultiPlayer, function-scope player.
 VA(0x00584C40, 0x40D)
 DC_ADDRESS(0x13b22c, 0x4d8)
 MAC_ADDRESS(0x17c9b0, 0x384)  // anchor-callee OnNewPlayerMsg 0x589fa0 + SetCurrentMap call it no-arg; head calls UpdateGameVars 0x583580; body is DC SetHumanSlot's seat walk verbatim, size 0.84x
@@ -4685,22 +4690,22 @@ void TSingleSelectionWindow::setHumanSlot()
                         && !m_players.getPlayerInPos(i)) {
                     int freePlayer = m_players.getUnassignedPlayerPos();
                     if (freePlayer == -1)
-                        return;
+                        break;
                     m_players.m_humanPlayers[freePlayer].m_playerPos = i;
                 }
             }
+            return;
         } else {
             int i;
             for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
                 if (mp->m_playerSlotAttributes[i].m_canBeHuman) {
                     int freePlayer = m_players.getUnassignedPlayerPos();
                     if (freePlayer == -1)
-                        return;
+                        break;
                     m_players.m_humanPlayers[freePlayer].m_playerPos = i;
                 }
             }
         }
-        return;
     } else {
         int x;
         for (x = 0; x < CNetPlayerHandler::MAX_PLAYERS; ++x) {
@@ -4759,10 +4764,10 @@ void TSingleSelectionWindow::setHumanSlot()
             }
             return;
         }
+        player = getThisPlayer();
+        if (player)
+            player->m_playerPos = -1;
     }
-    player = getThisPlayer();
-    if (player)
-        player->m_playerPos = -1;
 }
 
 // Dreamcast preserves this helper; Complete inlines it into the six sort
