@@ -2349,11 +2349,12 @@ army* combatManager::findSpellTarget(ESpellId spell, long side, long hex,
 // probes (four source states, one reproduced object) are byte-identical.
 // The force-field wall shape is selected with the less-than mastery test
 // (`mastery < eMasteryAdvanced ? [0] : [1]`), which fixes the branch
-// polarity (97.70 -> 97.97). Residual: the FIRE_WALL loop, where retail keeps
-// the wall count in EBX and spills m_currentSide to the mastery slot; ours
-// does the reverse. Failed probes (all <= 97.97): a `c ? 3 : 2` count, the
-// index declared before the count, the bound inline, while/do/for-init
-// loops, a side local before or after the count, and indexing the cell twice.
+// polarity (97.70 -> 97.97). The FIRE_WALL count `2 + (mastery > eMasteryBasic)`
+// puts the count in EBX and spills m_currentSide like retail (97.97 -> 99.74);
+// `>= eMasteryAdvanced` in any spelling, `c ? 3 : 2`, a pre-declared index,
+// inline bounds, while/do/for-init loops, a side local, count-down and double
+// cell indexing all keep the reversed allocation. Residual: retail's setge
+// where this emits setg.
 VA(0x005a39c0, 0x2B4)
 DC_ADDRESS(0x152edc, 0x228)
 MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity
@@ -2391,13 +2392,7 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
         }
         return 0;
     } else if (spellId == SPELL_FIRE_WALL) {
-        // Mac retail branches between these lengths; the arithmetic
-        // shorthand compiled to a different PowerPC instruction shape.
-        long wallCells;
-        if (mastery < eMasteryAdvanced)
-            wallCells = 2;
-        else
-            wallCells = 3;
+        long wallCells = 2 + (mastery > eMasteryBasic);
         for (long i = 0; i < wallCells; i++) {
             long hex = getSpellWallHex(targetIndex, i, m_currentSide);
             const hexcell* cell = &m_cells[hex];
