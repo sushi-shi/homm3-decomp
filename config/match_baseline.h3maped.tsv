@@ -6220,7 +6220,7 @@ rmg_voronoi	?connectEdges@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@PAU2@0@Z	100.0000	100
 rmg_voronoi	?createEdge@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTRmgPoint@@PAUTRmgZone@@01@Z	100.0000	100.0000	100.0000	0xcc955	-
 rmg_voronoi	?detach@TRmgHalfEdge@@QAEXXZ	100.0000	100.0000	100.0000	0xcc670	-
 rmg_voronoi	?flip@TRmgHalfEdge@@QAEXXZ	100.0000	100.0000	100.0000	0xcc68e	-
-rmg_voronoi	?isPointOnSegment@TRmgHalfEdge@@QBEEUTRmgPoint@@@Z	59.0147	59.0147	59.0147	0xcc6f2	-
+rmg_voronoi	?isPointOnSegment@TRmgHalfEdge@@QBEEUTRmgPoint@@@Z	62.5147	62.5147	62.5147	0xcc6f2	-
 rmg_voronoi	?isRmgPointInsideCircle@@YAEUTRmgPoint@@000@Z	86.4167	86.4167	86.4167	0xccc7a	tokens1:546629283b0a
 rmg_voronoi	?length@TRmgVector@@QBEHXZ	100.0000	100.0000	100.0000	0xcc5ad	-
 rmg_voronoi	?locate@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTRmgPoint@@@Z	100.0000	100.0000	100.0000	0xcca55	-

@@ -17,7 +17,7 @@ executables.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,588 |   99.11% | last measured score                            |
+| CUR   |           4,587 |   99.11% | last measured score                            |
 | MAX   |           4,597 |   99.15% | best result for each function's current source |
 | HIST  |           4,608 |   99.27% | all-time peak across source revisions          |
 
@@ -66,7 +66,7 @@ MAX by module:
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
 | `game`       |   164 | 5487 / 5552 (98.8%) |    99.77% |
-| `rmg`        |     6 |   421 / 478 (88.1%) |    97.94% |
+| `rmg`        |     6 |   421 / 478 (88.1%) |    97.95% |
 | `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`      |     3 |     49 / 53 (92.5%) |    99.99% |
 | `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |
