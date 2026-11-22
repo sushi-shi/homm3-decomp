@@ -551,8 +551,8 @@ static long checkMatch(long player, long firstX, long firstY,
                 continue;
             if (!(getMapExtra(point) & playerMask))
                 continue;
-            type_AI_puzzle_tile tile(g_game->getCell(point), point);
-            if (puzzleMap[firstX][firstY] == tile)
+            if (puzzleMap[firstX][firstY] ==
+                type_AI_puzzle_tile(g_game->getCell(point), point))
                 ++matches;
             else
                 return 0;
@@ -577,7 +577,8 @@ static long checkMatch(long player, long firstX, long firstY,
 // Omitting DC's unused first-tile snapshot gives the same score. The remaining
 // differences are four size-only blocks with matching branch/call structure.
 // Whole-board references, long census counters and uncast RECT bounds retain
-// Windows 95.1081%; Mac reference selectors remain a non-exact source lead.
+// Windows 95.80%; residual is the ebx/edi assignment of the first scan loop.
+// Mac reference selectors remain a non-exact source lead.
 VA(0x0052cf10, 0x5B4)
 DC_ADDRESS(0x115be8, 0x37c)
 MAC_ADDRESS(0x148488, 0x574)  // anchor-caller AI_attempt_puzzle_guess +0x39d
