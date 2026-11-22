@@ -5663,6 +5663,18 @@ void aiInitialize()
 // with the original body assignment is byte-flat for constructor and caller.
 // Six vector-reference/pointer and effect-local lifetime combinations emit
 // identical objects at 97.50%; these do not change the Alliance inline budget.
+
+// 97.47 -> 99.97: DC gives the artifact read (4938) and the clear (4941)
+// separate rows with no reference line between them, and push_back (5031)
+// reuses the CSE'd vector address. A TArtifact id local indexing the table
+// at clear and push_back makes the first block exact (retail folds the
+// table base into the first _Last load before lea). The typed local's cast
+// also raises caller cb 1362 -> 1364, which gives the Alliance arm the 63
+// nested units its combat base needs and leaves the undead-cloak arm at 49,
+// as retail. An int id is 95.23 (inline decision swaps to the cloak arm);
+// the TArtifact id plus a vector reference is 97.03 (first block regresses).
+// Residual: retail labels the ICF-folded std::copy and vector::insert
+// targets by their fold mates.
 VA(0x00434100, 0x490)
 DC_ADDRESS(0x035f08, 0x2be)
 MAC_ADDRESS(0x036748, 0x4b4)  // tail target/fresh frame + DC helper
@@ -5670,9 +5682,8 @@ static void initializeArtifactEffects()
 {
     const int* definition = g_aiArtifactEffectDefinitions;
     while (*definition >= 0) {
-        std::vector<type_artifact_effect*>& effects =
-            g_constArtifactEffects[*definition++];
-        effects.clear();
+        TArtifact artifact = (TArtifact)*definition++;
+        g_constArtifactEffects[artifact].clear();
         while (*definition >= 0) {
             EArtifactEffectKind kind = (EArtifactEffectKind)*definition++;
             type_artifact_effect* effect;
@@ -5761,7 +5772,7 @@ static void initializeArtifactEffects()
                     effect = new type_statue_of_legion_artifact;
                     break;
             }
-            effects.push_back(effect);
+            g_constArtifactEffects[artifact].push_back(effect);
         }
         ++definition;
     }
