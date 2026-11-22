@@ -123,6 +123,12 @@ VA_COMPGEN(0x004800e0, 0x23, STATIC_CTOR, allMapViews)
 VA_COMPGEN(0x00480103, 0xa, STATIC_DTOR, allMapViews)
 VA_COMPGEN(0x00485485, 0x23, CLASS_CTOR, set)
 VA_COMPGEN(0x0048010d, 0x5, IMPLICIT_DTOR, TMapView_set)
+// The 17-byte std::_Construct body that the pointer and enum set inserts
+// (set<TMapView*>, set<TMapDoc*>, set<THeroClass>) and GameMap's set<int>
+// call in retail; /OPT:ICF folds the identical scalar copies onto it. Keyed
+// as the int copy (resourcemanager.cpp claims a second, unfolded one at
+// 0x4de4d0). set<int>::_Insert in GameMap still pairs with that other claim.
+VA_COMPGEN(0x00486b63, 0x11, STD_CONSTRUCT, int)
 
 VA(0x00480112, 0x6)
 BEGIN_MESSAGE_MAP(TObjectPropsDlg, CDialog)
