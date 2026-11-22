@@ -1025,14 +1025,12 @@ long type_AI_player::getTotalValue(long basicValue, int* cost)
     return basicValue * 1000 / totalCost;
 }
 
-// Residual (99.25%): the reserve clamp is a ternary on the reserved-funds
-// load (a named `reserve` local with an if scored 85.8).  The only masked
-// difference left is the shared this+0x40-style base register: retail
-// addresses reserve/supply/demand off the demand slot ([edx-0x38]/[edx-0x1c]/
-// [edx]) while this compile uses the reserve slot as base.  Failed probes:
-// int/bool flags, limit declared in-branch, push_back of the expression,
-// postincrement, swapped cost/supply guard (91.7; with the ternary 89.1),
-// avail-first (87.3), ternary/min()/max() availability clamps, negated demand.
+// Exact: the reserve clamp is a ternary on the reserved-funds load, and the
+// supply-minus-demand cap is written inline (no `available` local), which
+// makes VC6 base the array addressing on the demand slot as retail does.
+// Failed probes: named reserve local with if (85.8), int/bool flags, limit
+// declared in-branch, push_back of the expression, postincrement, swapped
+// guard order, avail-first local, ternary/min()/max() clamps, negated demand.
 // E:\gamedcs\ai_player.cpp:1383
 VA(0x0042a2b0, 0x1BF)
 DC_ADDRESS(0x030334, 0x196)
@@ -1061,10 +1059,10 @@ bool type_AI_player::checkTradeSupply(const int* cost, long number,
                                     ? 20
                                     : m_reservedFunds[resource];
 
-            int available = static_cast<int>(m_resourceSupply[resource]
-                                             - m_resourceDemand[resource]);
-            if (supply[resource] > available)
-                supply[resource] = available;
+            if (supply[resource]
+                > m_resourceSupply[resource] - m_resourceDemand[resource])
+                supply[resource] =
+                    m_resourceSupply[resource] - m_resourceDemand[resource];
             if (supply[resource] <= 0)
                 supply[resource] = 0;
             else
