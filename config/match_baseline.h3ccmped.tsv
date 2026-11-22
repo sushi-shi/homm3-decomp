@@ -623,7 +623,7 @@ CampaignMapWnd	??0TError@TMemoryDC@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x39
 CampaignMapWnd	??1?$auto_ptr@VCToolTipCtrl@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x2e260	-
 CampaignMapWnd	??1?$vector@UTRegionImages@TCampaignMapWnd@@V?$allocator@UTRegionImages@TCampaignMapWnd@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x1afe0	-
 CampaignMapWnd	??1CMenu@@UAE@XZ	100.0000	100.0000	100.0000	0x1af30	-
-CampaignMapWnd	??1TCampaignMapWnd@@UAE@XZ	98.8256	98.8256	98.8256	0x197b0	-
+CampaignMapWnd	??1TCampaignMapWnd@@UAE@XZ	100.0000	100.0000	100.0000	0x197b0	tokens1:165fdd4263ca
 CampaignMapWnd	??1TMemoryDC@@UAE@XZ	100.0000	100.0000	100.0000	0x3ae0	-
 CampaignMapWnd	??1TRegionImages@TCampaignMapWnd@@QAE@XZ	100.0000	100.0000	100.0000	0x19ea0	-
 CampaignMapWnd	??4?$TResourcePtr@VBitmap816@@@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x1af90	-
