@@ -4652,9 +4652,12 @@ void TSingleSelectionWindow::doModal(bool fade)
 // bytes; the residual begins in expanded player-lookup branches.
 // 2026-11-22: the multiplayer fill loops use `break` on a full pool and the
 // multiplayer arm ends in an else-less tail, so retail's loop-exit epilogue
-// copies appear (72 -> 54 differing rows). Residual: getThisPlayer's inlined
-// register choice in the first host arm. Flat: guard order, `!= 0`, field
-// store order, unconditional inner isMultiPlayer, function-scope player.
+// copies appear (72 -> 54 differing rows). The first host arm reads the
+// alignment through one `(random ? local : selected).m_setup` ternary (94.44 ->
+// 96.75). Residual: `this` lands in ECX not EBX there, and retail stores
+// playerPos after the header address is formed. Flat: guard order, `!= 0`,
+// nested isHost/size ifs, unconditional inner isMultiPlayer, function-scope
+// player; worse: per-arm stores, getThisPlayer reshapes, player-first guard.
 VA(0x00584C40, 0x40D)
 DC_ADDRESS(0x13b22c, 0x4d8)
 MAC_ADDRESS(0x17c9b0, 0x384)  // anchor-callee OnNewPlayerMsg 0x589fa0 + SetCurrentMap call it no-arg; head calls UpdateGameVars 0x583580; body is DC SetHumanSlot's seat walk verbatim, size 0.84x
@@ -4724,14 +4727,10 @@ void TSingleSelectionWindow::setHumanSlot()
                 CNetPlayerHandlerPlayer* player;
                 player = getThisPlayer();
                 if (player) {
-                    if (m_randomMapSelected) {
-                        player->m_playerPos = x;
-                        player->m_townIndex = m_localHeader.m_setup.m_alignment[x];
-                    } else {
-                        player->m_playerPos = x;
-                        player->m_townIndex =
-                            m_selectionHeaders[m_currentMap].m_setup.m_alignment[x];
-                    }
+                    player->m_playerPos = x;
+                    player->m_townIndex = (m_randomMapSelected
+                        ? m_localHeader
+                        : m_selectionHeaders[m_currentMap]).m_setup.m_alignment[x];
                 }
             }
             return;
