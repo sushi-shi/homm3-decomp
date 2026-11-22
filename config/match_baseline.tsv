@@ -341,7 +341,7 @@ ai_player	?canTakeTown@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x284
 ai_player	?canTradeResources@type_AI_player@@IAE_NQBHQAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	86.6234	86.6234	86.6478	0x2a580	tokens1:ed8beafbc8a5
 ai_player	?checkMoveSpell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	100.0000	100.0000	100.0000	0x309a0	tokens1:011e555c4686
 ai_player	?checkTowns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0	tokens1:1a6741dd8d89
-ai_player	?checkTradeSupply@type_AI_player@@IAE_NQBHJQAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8036	85.8333	85.8333	0x2a2b0	tokens1:885ae37eb26c
+ai_player	?checkTradeSupply@type_AI_player@@IAE_NQBHJQAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	99.2500	99.2500	99.2500	0x2a2b0	tokens1:f83d2bc7c5c8
 ai_player	?chooseWeakestArmy@type_AI_creature_swapper@@IAEJ_N0@Z	100.0000	100.0000	100.0000	0x2c690	tokens1:3ab5d5499491
 ai_player	?clearMarks@type_town_threat_checker@@UBEXXZ	100.0000	100.0000	100.0000	0x28260	tokens1:dd5a2e58bf98
 ai_player	?considerHiring@@YI_NJPAVhero@@@Z	100.0000	100.0000	100.0000	0x31800	tokens1:07e0316b3ae0
@@ -2586,7 +2586,7 @@ mapcell	?insert@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@
 mapcell	?insert@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXPAVgenerator@@IABV3@@Z	100.0000	100.0000	100.0000	0x1090b0	-
 mapcell	?isDiggable@NewmapCell@@QBE_NXZ	100.0000	100.0000	100.0000	0xfccf0	tokens1:17e1efd6a689
 mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	100.0000	100.0000	100.0000	0xfdbc0	tokens1:d2f17f0246cb
-mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@AAVBlackBoxData@@H@Z	91.4435	91.4435	96.1450	0x100430	tokens1:ce1c3c423af8
+mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@AAVBlackBoxData@@H@Z	91.5586	91.5586	96.1450	0x100430	tokens1:fcb58c805f66
 mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200	tokens1:7b9c824c4184
 mapcell	?loadMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HHH@Z	100.0000	100.0000	100.0000	0xfe920	tokens1:052c29434fa5
 mapcell	?loadMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x104b70	tokens1:584a27bcfe88
@@ -4096,7 +4096,7 @@ singleselectionwindow	?sendPlayerFaces@TSingleSelectionWindow@@QAEXXZ	100.0000	1
 singleselectionwindow	?setCurrentMap@TSingleSelectionWindow@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x185500	tokens1:549fd7b71f54
 singleselectionwindow	?setDifficultyHiLite@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x186060	tokens1:77f55059a4f6
 singleselectionwindow	?setFilter@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x185d90	tokens1:0139ff7e38ff
-singleselectionwindow	?setHumanSlot@TSingleSelectionWindow@@QAEXXZ	91.0411	91.0411	91.0411	0x184c40	tokens1:118d82c98f73
+singleselectionwindow	?setHumanSlot@TSingleSelectionWindow@@QAEXXZ	94.4384	94.4384	94.4384	0x184c40	tokens1:e2f999bb4c6e
 singleselectionwindow	?setMapHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x182e90	tokens1:01537e3c512c
 singleselectionwindow	?setNewPlayerSlot@TSingleSelectionWindow@@QAEXPAVCNetPlayerInfo@@@Z	98.8866	98.8866	98.8866	0x18e700	tokens1:8ab5b2b63201
 singleselectionwindow	?setNextPlayer@CNetPlayerHandler@@QAE_NH@Z	100.0000	100.0000	100.0000	0x177ae0	tokens1:dfff76c51df3
@@ -4285,7 +4285,7 @@ spells	?spellCastWorks@combatManager@@QBE_NHJPBVarmy@@_NJ@Z	100.0000	100.0000	10
 spells	?spellTargetMessage@combatManager@@QAEXHH_N@Z	100.0000	100.0000	100.0000	0x1a8690	tokens1:857cf661bb13
 spells	?summonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	100.0000	100.0000	100.0000	0x1a7080	tokens1:74e53530110a
 spells	?updateSpellTarget@@YIHJ@Z	100.0000	100.0000	100.0000	0x19f700	tokens1:c856968dd457
-spells	?validSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@HH_NJ@Z	97.6962	97.6962	97.6962	0x1a39c0	tokens1:332b07d06176
+spells	?validSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@HH_NJ@Z	97.9663	97.9663	97.9663	0x1a39c0	tokens1:f06f87a8713e
 spells	?validSpellTargetArmy@combatManager@@QBE_NHHPBVarmy@@_NJ@Z	100.0000	100.0000	100.0000	0x1a3c80	tokens1:c11331729942
 spells	?viewSpells@combatManager@@QBEHXZ	100.0000	100.0000	100.0000	0x19e900	tokens1:c799d9f7bfb5
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20	tokens1:7c486d98d02f
