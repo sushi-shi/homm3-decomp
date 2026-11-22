@@ -5504,14 +5504,33 @@ void type_random_map_generator::recenterZone(TRmgZone* zone)
 // Island mode redraws an inset polygon toward the zone's center, with
 // displacement clamped from one quarter to one half of each radius.
 // The recovered interior-fill call restores the complete retail call
-// sequence; the clamp argument order, direct displacement-vector
-// construction (no temporary point subtraction) and the retained long clamp
-// result are native. The map editor keeps the inset point in ESI/EDI and
-// adds the offset in registers, so the point is translated by value
-// (point = point + offset) rather than through operator+=; each boundary
-// vertex constructs its own offset.
-// Residual: clamp temporary homes, vector multiply/divide scheduling and the
-// reverse-loop register roles.
+// sequence; the clamp argument order and direct displacement-vector
+// construction (no temporary point subtraction) are native. The clamp goes
+// through the by-value includes.h max/min wrappers: their argument copies
+// give the map editor's exact selector code, which the long reference
+// selectors lose (editor 92.74 -> 96.88). The map editor keeps the inset point in ESI/EDI
+// and adds the offset in registers, so the point is translated by value
+// (point = point + offset) rather than through operator+= (editor 78.27);
+// it decrements count in its frame slot (while (count--); a separate loop
+// index drops the editor to 3.01) and builds each boundary vertex's offset
+// in place, x store before the y load, which assigning to the first delta
+// loses (editor 93.01).
+// Residual, both images: the scaled offset. Retail copies the displacement
+// (mov ecx,[eax]; mov eax,ecx), multiplies the y component in place and the
+// copy by x; VC6 here loads m_y and multiplies by the displacement register,
+// as it does at the exact `perpendicular * displacement / length` sites.
+// That is the editor's only difference. In the game it also decides the
+// register roles: retail keeps length in EBX and count in its frame slot,
+// we keep count in EBX and length in ECX, and the frame is 0x44 against
+// 0x3c (retail and the editor show one vector slot for both blocks).
+// Operator bodies that break the retained 0x5fdcd0/0x5fdcf0 (copy then
+// scale, y-first assignment) reach 94.20-95.95 here, so the remaining gap
+// is that one expansion, not the loop. Failed probes: constructor, reversed
+// operand, y-first and named-component operator*; result-form operator/;
+// nested or argument-position clamps; cppMin/cppMax called directly; long,
+// unsigned and cast displacement; split scale and divide statements;
+// a shared or per-loop length; static inset helpers (the editor's /O1 keeps
+// them out of line).
 VA(0x0053D1C0, 0x1B9)
 MAC_ADDRESS(0x23eaac, 0x2b0) // anchor-callee 0x53e70f; thiscall, ret 4
 VA_AT(h3maped, 0x004a30c2, 0x182)
@@ -5524,10 +5543,8 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
     TRmgVector delta(center.m_x - point.m_x, center.m_y - point.m_y);
     int length = delta.length();
     if (length > 0) {
-        // Both clamps bind long references (retail's two-temporary
-        // selector shape); by-value int helpers lose it.
-        long displacement = std::max<long>(4, length / 4);
-        displacement = std::min<long>(displacement, length / 2);
+        int displacement = max(4, length / 4);
+        displacement = min(displacement, length / 2);
         delta = delta * displacement / length;
         point = point + delta;
     }
@@ -5537,8 +5554,8 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
         TRmgVector offset(center.m_x - point.m_x, center.m_y - point.m_y);
         length = offset.length();
         if (length > 0) {
-            long displacement = std::max<long>(4, length / 4);
-            displacement = std::min<long>(displacement, length / 2);
+            int displacement = max(4, length / 4);
+            displacement = min(displacement, length / 2);
             offset = offset * displacement / length;
             point = point + offset;
         }

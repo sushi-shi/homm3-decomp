@@ -17,7 +17,7 @@ executables.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,588 |   99.11% | last measured score                            |
+| CUR   |           4,588 |   99.10% | last measured score                            |
 | MAX   |           4,596 |   99.14% | best result for each function's current source |
 | HIST  |           4,607 |   99.27% | all-time peak across source revisions          |
 
@@ -26,7 +26,7 @@ MAX by module:
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
 | `game`       |   123 | 3855 / 3997 (96.4%) |    99.23% |
-| `rmg`        |     6 |   324 / 370 (87.6%) |    97.44% |
+| `rmg`        |     6 |   324 / 370 (87.6%) |    97.43% |
 | `network`    |     4 |   279 / 280 (99.6%) |    99.99% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |   100.00% |
 | `codec`      |     4 |    43 / 43 (100.0%) |   100.00% |
@@ -66,7 +66,7 @@ MAX by module:
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
 | `game`       |   164 | 5487 / 5552 (98.8%) |    99.77% |
-| `rmg`        |     6 |   421 / 478 (88.1%) |    97.93% |
+| `rmg`        |     6 |   421 / 478 (88.1%) |    97.94% |
 | `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`      |     3 |     49 / 53 (92.5%) |    99.99% |
 | `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |

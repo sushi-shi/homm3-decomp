@@ -4232,7 +4232,7 @@ Options	?setZoom@SOptions@@YAXH@Z	100.0000	100.0000	100.0000	0x92fdc	tokens1:a98
 Options	__h3cg$Options$static_ctor$g_dirtMask	99.6875	99.6875	99.6875	0x92cdb	-
 Options	__h3cg$Options$static_ctor$g_grassMask	99.6875	99.6875	99.6875	0x92d33	-
 Options	__h3cg$Options$static_ctor$g_lavaMask	99.6875	99.6875	99.6875	0x92e0f	-
-Options	__h3cg$Options$static_ctor$g_rockMask	100.0000	100.0000	100.0000	0x92e67	-
+Options	__h3cg$Options$static_ctor$g_rockMask	99.6875	100.0000	100.0000	0x92e67	-
 Options	__h3cg$Options$static_ctor$g_roughMask	99.6875	99.6875	99.6875	0x92db7	-
 Options	__h3cg$Options$static_ctor$g_sandMask	99.6875	99.6875	99.6875	0x92d07	-
 Options	__h3cg$Options$static_ctor$g_snowMask	99.6875	99.6875	99.6875	0x92d5f	-
@@ -5968,7 +5968,7 @@ rmg	?insert@?$vector@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@QAEPAUTRmg
 rmg	?insert@?$vector@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@QAEXPAUTRmgPoint@@IABU3@@Z	100.0000	100.0000	100.0000	0x72b5	-
 rmg	?insert@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QAEXPAUTRmgZoneConnection@@IABU3@@Z	100.0000	100.0000	100.0000	0xae8a5	-
 rmg	?insertRmgWorkItem@@YAXAAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@AAV?$vector@HV?$allocator@H@std@@@2@UTRmgMapPosition@@H@Z	100.0000	100.0000	100.0000	0xa489d	-
-rmg	?insetIslandZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	92.7403	92.7403	92.7403	0xa30c2	tokens1:4350986d9e2c
+rmg	?insetIslandZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	96.8766	96.8766	96.8766	0xa30c2	tokens1:cc3ddc1b5015
 rmg	?isPassable@TRmgMapItem@@QBEEXZ	100.0000	100.0000	100.0000	0x9a1d8	-
 rmg	?isPlacementBlocked@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@HE@Z	100.0000	100.0000	100.0000	0x9a6f9	-
 rmg	?joinExtraZones@type_random_map_generator@@QAEXHPAVTRmgVoronoi@@@Z	95.1367	95.1367	95.1367	0xa3710	tokens1:09434d42394a

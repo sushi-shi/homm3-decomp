@@ -3441,7 +3441,7 @@ rmg	?insert@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std
 rmg	?insert@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@QAEXPAUTRmgNoiseRegion@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d5c0	-
 rmg	?insert@?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@QAEPAUTRmgObjectPlacementRule@@PAU3@ABU3@@Z	100.0000	100.0000	100.0000	0x14c730	-
 rmg	?insert@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QAEPAUTRmgZoneConnection@@PAU3@ABU3@@Z	100.0000	100.0000	100.0000	0x14c970	-
-rmg	?insetIslandZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	78.8713	78.8713	78.8713	0x13d1c0	tokens1:10e78090c4ce
+rmg	?insetIslandZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	76.0409	76.0409	78.8713	0x13d1c0	tokens1:f3520f33dd59
 rmg	?isPlacementBlocked@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@HE@Z	100.0000	100.0000	100.0000	0x1318b0	tokens1:f3f3199e4e0f
 rmg	?joinExtraZones@type_random_map_generator@@QAEXHPAVTRmgVoronoi@@@Z	85.3963	85.3963	85.3963	0x13dad0	tokens1:d0d3bfa06299
 rmg	?loadObjectPrototypes@t_abstract_random_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x136200	tokens1:bb8b019592d1
