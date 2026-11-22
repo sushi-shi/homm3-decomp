@@ -5316,6 +5316,10 @@ void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 // its _Xlen/_Grow/_Eos chain. A four-state family of resource declaration
 // order and independent artifact/list counters passed both controls and
 // reproduced two distinct objects without score movement; keep this form.
+// The gold-after-artifacts test uses size() > 0 (retail keeps the sar; != 0
+// folds to a mask test, 98.71 -> 98.81). Residual: this/loop register swap
+// (retail this=edi), k init placement, retail reads resource.m_qualifier for
+// the resource count (that probe scored 89.7). A for-scoped k did not move.
 VA(0x004abdc0, 0x6D0)
 DC_ADDRESS(0x09a898, 0x532)
 MAC_ADDRESS(0x0b8ca8, 0x618)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6
@@ -5378,7 +5382,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
             if (bank.m_resources[j] > 0) {
                 resource.m_resource = j;
                 resource.m_qualifier = bank.m_resources[j];
-                if (j == GOLD && bank.m_artifacts.size() != 0)
+                if (j == GOLD && bank.m_artifacts.size() > 0)
                     resource.m_resource = 0x24;
                 resources.push_back(resource);
                 result = formatString(
