@@ -1025,26 +1025,14 @@ long type_AI_player::getTotalValue(long basicValue, int* cost)
     return basicValue * 1000 / totalCost;
 }
 
-// Residual (85.8333%, polish-45 - first full evidence pass on this row):
-// blocks (31/31), branches (17/17) and the report-level call view AGREE, so
-// the whole 63 B is induction-variable HOMING.  The loop needs four
-// call-crossing values - &supply[resource], trade_qty, this+0x40 (the shared
-// base for reserved_funds/resource_supply/resource_demand) and
-// &player->resources[resource] - plus the constant `cost - supply` byte
-// difference.  Retail parks only TWO in registers (ESI = supply, EDX =
-// this+0x40, which is live only on the else path and therefore never crosses
-// push_back) and keeps player->resources in memory at [ebp+0x14] and the
-// constant at [ebp-0x8]; that leaves EDI free, so retail loads
-// `cost[resource]` into EDI for the `> 0` test and divides with `idiv edi`.
-// This compile keeps player->resources in EDX and this+0x40 in EDI, so the
-// `> 0` test has to use EAX, EAX is then needed for the dividend, and the
-// divisor is re-read as the memory operand `idiv [ecx+esi]` (plus the extra
-// `mov ecx,[ebp+0x14]` that costs the byte delta).  Dreamcast agrees with the
-// source as written: dc loads cost[resource] twice (bp 1398 and the
-// `cmp/pl` at 0x303a8) and reuses the SECOND load as the __divls divisor, so
-// a single hoisted `int resource_cost` above the statement would contradict
-// it.  Per docs/vc6/regalloc.md 5 this is first-fit fed a different pseudo
-// processing order - the C1 handle-state class.
+// Residual (99.25%): the reserve clamp is a ternary on the reserved-funds
+// load (a named `reserve` local with an if scored 85.8).  The only masked
+// difference left is the shared this+0x40-style base register: retail
+// addresses reserve/supply/demand off the demand slot ([edx-0x38]/[edx-0x1c]/
+// [edx]) while this compile uses the reserve slot as base.  Failed probes:
+// int/bool flags, limit declared in-branch, push_back of the expression,
+// postincrement, swapped cost/supply guard (91.7; with the ternary 89.1),
+// avail-first (87.3), ternary/min()/max() availability clamps, negated demand.
 // E:\gamedcs\ai_player.cpp:1383
 VA(0x0042a2b0, 0x1BF)
 DC_ADDRESS(0x030334, 0x196)
@@ -1069,10 +1057,9 @@ bool type_AI_player::checkTradeSupply(const int* cost, long number,
             limit = player->m_resources[resource] / cost[resource] + 1;
             tradeQty.push_back(limit);
         } else {
-            int reserve = m_reservedFunds[resource];
-            if (reserve < 20)
-                reserve = 20;
-            supply[resource] -= reserve;
+            supply[resource] -= m_reservedFunds[resource] < 20
+                                    ? 20
+                                    : m_reservedFunds[resource];
 
             int available = static_cast<int>(m_resourceSupply[resource]
                                              - m_resourceDemand[resource]);
