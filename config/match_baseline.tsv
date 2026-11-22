@@ -341,7 +341,7 @@ ai_player	?canTakeTown@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x284
 ai_player	?canTradeResources@type_AI_player@@IAE_NQBHQAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	86.6234	86.6234	86.6478	0x2a580	tokens1:ed8beafbc8a5
 ai_player	?checkMoveSpell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	100.0000	100.0000	100.0000	0x309a0	tokens1:011e555c4686
 ai_player	?checkTowns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0	tokens1:1a6741dd8d89
-ai_player	?checkTradeSupply@type_AI_player@@IAE_NQBHJQAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	99.2500	99.2500	99.2500	0x2a2b0	tokens1:f83d2bc7c5c8
+ai_player	?checkTradeSupply@type_AI_player@@IAE_NQBHJQAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	100.0000	100.0000	100.0000	0x2a2b0	tokens1:4470b3da1fa8
 ai_player	?chooseWeakestArmy@type_AI_creature_swapper@@IAEJ_N0@Z	100.0000	100.0000	100.0000	0x2c690	tokens1:3ab5d5499491
 ai_player	?clearMarks@type_town_threat_checker@@UBEXXZ	100.0000	100.0000	100.0000	0x28260	tokens1:dd5a2e58bf98
 ai_player	?considerHiring@@YI_NJPAVhero@@@Z	100.0000	100.0000	100.0000	0x31800	tokens1:07e0316b3ae0
@@ -2998,7 +2998,7 @@ puzzlewindow	??1TPuzzleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12c5a0	tokens
 puzzlewindow	??_GTPuzzleWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12c570	-
 puzzlewindow	?aiAttemptPuzzleGuess@@YI?AUtype_point@@J@Z	100.0000	100.0000	100.0000	0x12c9b0	tokens1:fa684b0b8de0
 puzzlewindow	?mark_puzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0	tokens1:6ffe072775fb
-puzzlewindow	?matchPuzzle@@YI?AUtype_point@@JAAY1BD@BB@Utype_AI_puzzle_tile@@@Z	95.1081	95.1081	95.3093	0x12cf10	tokens1:6e283ea5c4e6
+puzzlewindow	?matchPuzzle@@YI?AUtype_point@@JAAY1BD@BB@Utype_AI_puzzle_tile@@@Z	95.7966	95.7966	95.7966	0x12cf10	tokens1:6e283ea5c4e6
 puzzlewindow	?test@?$bitset@$0DA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x1067e0	-
 puzzlewindow	?updatePuzzle@TPuzzleWindow@@QAEHH@Z	100.0000	100.0000	100.0000	0x12c6c0	tokens1:8e09ca14bfe0
 puzzlewindow	?windowHandler@TPuzzleWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x12c640	tokens1:a1fa75b3880f
@@ -4096,7 +4096,7 @@ singleselectionwindow	?sendPlayerFaces@TSingleSelectionWindow@@QAEXXZ	100.0000	1
 singleselectionwindow	?setCurrentMap@TSingleSelectionWindow@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x185500	tokens1:549fd7b71f54
 singleselectionwindow	?setDifficultyHiLite@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x186060	tokens1:77f55059a4f6
 singleselectionwindow	?setFilter@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x185d90	tokens1:0139ff7e38ff
-singleselectionwindow	?setHumanSlot@TSingleSelectionWindow@@QAEXXZ	94.4384	94.4384	94.4384	0x184c40	tokens1:e2f999bb4c6e
+singleselectionwindow	?setHumanSlot@TSingleSelectionWindow@@QAEXXZ	96.7480	96.7480	96.7480	0x184c40	tokens1:51811f47cbf4
 singleselectionwindow	?setMapHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x182e90	tokens1:01537e3c512c
 singleselectionwindow	?setNewPlayerSlot@TSingleSelectionWindow@@QAEXPAVCNetPlayerInfo@@@Z	98.8866	98.8866	98.8866	0x18e700	tokens1:8ab5b2b63201
 singleselectionwindow	?setNextPlayer@CNetPlayerHandler@@QAE_NH@Z	100.0000	100.0000	100.0000	0x177ae0	tokens1:dfff76c51df3
