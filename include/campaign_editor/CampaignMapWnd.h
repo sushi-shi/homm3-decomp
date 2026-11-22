@@ -31,6 +31,7 @@ public:
 class TCampaignMapWnd : public CWnd {
 public:
     TCampaignMapWnd(CWnd* pParent, TCampaignMapWndClient* pClient);
+    virtual ~TCampaignMapWnd();
 
     void initialUpdate();
     void update();
