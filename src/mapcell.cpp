@@ -1977,15 +1977,22 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 
 // DC records the BlackBoxData reference and function-scope
 // int_buffer, short_buffer, char_buffer, count (read status), number (list
-// length), and x. Its stores distinguish status from the list length;
-// preserve those owners even where VC6 optimizes their assignments away.
-// Native Mac reuses scalar homes +0x60/+0x5d across resources and skills.
-// The Complete-only creature reader owns the versioned unchecked read;
-// keep that canonical helper rather than the older DC checked-byte tail.
-// Finite ownership/enum probes retained the same 91.41% residual; the DC
-// declaration-order variant is byte-flat. Secondary-skill resize expands
-// erase into copy/_Destroy where retail retains erase. Routing every read
-// through readValue lowers the caller to 83.58% through vector inlining.
+// length), and x; its asm stores the result of every one of the 17 reads to
+// count, so each read here is `count = infile->read(...)`, including the
+// unchecked artifact byte. Mac reuses scalar homes +0x60/+0x5d across the
+// resource and skill reads; the creature reader owns the versioned read.
+// Adopted shape: the artifact byte is read into an int local and cast with
+// (TArtifact), 91.44% -> 91.56%. Dropping the stored count statuses (direct
+// `infile->read(...) < size` compares) reaches 96.79% but contradicts the DC
+// stores at all 17 reads, so it is not kept. Flat probes: resize argument
+// forms (number, charBuffer, int(number)), number as int, declaration order,
+// signed charBuffer, raw enum casts instead of H3_ENUM_DECODE, artifact mask.
+// Residual: retail keeps the list length in ebx and the vector in edi around
+// the resize/erase expansions and calls an insert instantiation merged with
+// vector<widget*>; ours spills the length and uses other registers.
+// Secondary-skill resize expands erase into copy/_Destroy where retail
+// retains erase. Routing every read through readValue lowers the caller to
+// 83.58% through vector inlining.
 VA(0x00500430, 0x478)
 DC_ADDRESS(0x0ef158, 0x484)
 MAC_ADDRESS(0x122720, 0x49c)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic)
@@ -2064,9 +2071,9 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
     number = charBuffer;
     thisBox.m_artifacts.resize(number);
     for (x = 0; x < number; ++x) {
-        unsigned char artifact;
-        infile->read(&artifact, sizeof(artifact));
-        thisBox.m_artifacts[x] = TArtifact(artifact);
+        int artifact;
+        count = infile->read(&artifact, sizeof(unsigned char));
+        thisBox.m_artifacts[x] = (TArtifact)artifact;
     }
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
