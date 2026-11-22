@@ -3583,9 +3583,16 @@ void game::giveTroopsToNeutralTowns()
 // +0x1eb..+0x246 does the same; inserting GetTeam changes the native behavior.
 // Original public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves bool.
 // DC constructs each pool hero's point with type_point(short,short,short)
-// from its coordinates (no get_location call): 96.28 -> 98.16%. Residual:
-// the lose-hero arm swaps the lchero/poolhero stack slots that the
-// defeat-hero arm assigns like retail; a separate team declaration is flat.
+// from its coordinates (no get_location call): 96.28 -> 98.16%.
+// DC 4156..4160 tests the captured town as IsHumanTeam(GetTeam(owner))
+// with no team local, and names the campaign local `campaign`; both
+// compile byte-identically. Residual: the lose-hero arm swaps the
+// lchero/poolhero stack slots (retail -8/-0x10, like the defeat-hero arm)
+// and the defeat-hero arm swaps esi/edi for i and the owner. Flat probes:
+// either comparison's operand order, heroId=-1 before either point, an
+// owner local, the pool point outside its loop, lchero at function scope,
+// and 1..60 declarations at the top of the TU (no handle-period class).
+// Hoisting the human-team count out of the hero loop drops to 88.29%.
 VA(0x004bf780, 0x6E2)
 DC_ADDRESS(0x0aa7e0, 0x5c4)
 MAC_ADDRESS(0x0d513c, 0x960)  // order-map + whole-function identity
@@ -3602,29 +3609,29 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         }
 
         const int map = m_campaign.m_currentMap;
-        const int campaignNumber = m_campaign.m_currentCampaign;
+        const int campaign = m_campaign.m_currentCampaign;
         if (numLivingPlayers == 1) {
             m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
         } else if (g_inCampaign) {
-            if ((campaignNumber == GAME_CAMPAIGN_5 && map == GAME_SCENARIO_0)
-                || (campaignNumber == GAME_CAMPAIGN_3 && map == GAME_SCENARIO_0)
-                || (campaignNumber == GAME_CAMPAIGN_2 && map == GAME_SCENARIO_1)
-                || (campaignNumber == GAME_CAMPAIGN_8 && map == GAME_SCENARIO_2)
-                || (campaignNumber == GAME_CAMPAIGN_7 && map == GAME_SCENARIO_1)
-                || (campaignNumber == GAME_CAMPAIGN_7 && map == GAME_SCENARIO_3)
-                || (campaignNumber == GAME_CAMPAIGN_7 && map == GAME_SCENARIO_6)
-                || (campaignNumber == GAME_CAMPAIGN_15 && map == GAME_SCENARIO_1)
-                || (campaignNumber == GAME_CAMPAIGN_15 && map == GAME_SCENARIO_2)
-                || (campaignNumber == GAME_CAMPAIGN_15 && map == GAME_SCENARIO_3)
-                || (campaignNumber == GAME_CAMPAIGN_18 && map == GAME_SCENARIO_1)
-                || (campaignNumber == GAME_CAMPAIGN_18 && map == GAME_SCENARIO_8)
-                || (campaignNumber == GAME_CAMPAIGN_18 && map == GAME_SCENARIO_9)
-                || (campaignNumber == GAME_CAMPAIGN_16 && map == GAME_SCENARIO_1)
-                || (campaignNumber == GAME_CAMPAIGN_16 && map == GAME_SCENARIO_2)
-                || (campaignNumber == GAME_CAMPAIGN_16 && map == GAME_SCENARIO_3)
-                || (campaignNumber == GAME_CAMPAIGN_14 && map == GAME_SCENARIO_2)
-                || (campaignNumber == GAME_CAMPAIGN_14 && map == GAME_SCENARIO_3)
-                || (campaignNumber == GAME_CAMPAIGN_14 && map == GAME_SCENARIO_4))
+            if ((campaign == GAME_CAMPAIGN_5 && map == GAME_SCENARIO_0)
+                || (campaign == GAME_CAMPAIGN_3 && map == GAME_SCENARIO_0)
+                || (campaign == GAME_CAMPAIGN_2 && map == GAME_SCENARIO_1)
+                || (campaign == GAME_CAMPAIGN_8 && map == GAME_SCENARIO_2)
+                || (campaign == GAME_CAMPAIGN_7 && map == GAME_SCENARIO_1)
+                || (campaign == GAME_CAMPAIGN_7 && map == GAME_SCENARIO_3)
+                || (campaign == GAME_CAMPAIGN_7 && map == GAME_SCENARIO_6)
+                || (campaign == GAME_CAMPAIGN_15 && map == GAME_SCENARIO_1)
+                || (campaign == GAME_CAMPAIGN_15 && map == GAME_SCENARIO_2)
+                || (campaign == GAME_CAMPAIGN_15 && map == GAME_SCENARIO_3)
+                || (campaign == GAME_CAMPAIGN_18 && map == GAME_SCENARIO_1)
+                || (campaign == GAME_CAMPAIGN_18 && map == GAME_SCENARIO_8)
+                || (campaign == GAME_CAMPAIGN_18 && map == GAME_SCENARIO_9)
+                || (campaign == GAME_CAMPAIGN_16 && map == GAME_SCENARIO_1)
+                || (campaign == GAME_CAMPAIGN_16 && map == GAME_SCENARIO_2)
+                || (campaign == GAME_CAMPAIGN_16 && map == GAME_SCENARIO_3)
+                || (campaign == GAME_CAMPAIGN_14 && map == GAME_SCENARIO_2)
+                || (campaign == GAME_CAMPAIGN_14 && map == GAME_SCENARIO_3)
+                || (campaign == GAME_CAMPAIGN_14 && map == GAME_SCENARIO_4))
                 m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
             else
                 m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
@@ -3674,8 +3681,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
     if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_CAPTURE_TOWN) {
         town* thisTown = getTown(getTownId(
             m_mapHeader.m_victoryCondition.m_townX, m_mapHeader.m_victoryCondition.m_townY, m_mapHeader.m_victoryCondition.m_townZ));
-        int team = getTeam(thisTown->m_owner);
-        if (team >= 0 && isHumanTeam(team))
+        if (isHumanTeam(getTeam(thisTown->m_owner)))
             m_mapHeader.m_victoryCondition.m_type = -1;
     }
 
