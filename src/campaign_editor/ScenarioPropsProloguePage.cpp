@@ -201,6 +201,8 @@ BOOL TScenarioPropsProloguePageBase::OnInitDialog()
 // they divide the d1 budget so the d4 compare(pos, n, s, count) site gets
 // 104 < 133. Sites after the destructor instead refuse its string _Tidy.
 // No such source site is evidenced yet.
+// The new prologue compares on the left (85.57 -> 85.84); swapping the
+// modified-flag comparison operands or null tests moved nothing further.
 VA(0x0042cd00, 0x24f)
 void TScenarioPropsProloguePageBase::OnOK()
 {
@@ -209,7 +211,7 @@ void TScenarioPropsProloguePageBase::OnOK()
         std::auto_ptr<TScenarioPrologue> pPrologue;
         _getPrologue(pPrologue);
         if (pPrologue.get() != NULL) {
-            if (getPrologue(_m_newScenario) == NULL || !(*getPrologue(_m_newScenario) == *pPrologue))
+            if (getPrologue(_m_newScenario) == NULL || !(*pPrologue == *getPrologue(_m_newScenario)))
                 setPrologue(_m_newScenario, pPrologue);
         } else if (getPrologue(_m_newScenario) != NULL) {
             removePrologue(_m_newScenario);
