@@ -2347,6 +2347,13 @@ army* combatManager::findSpellTarget(ESpellId spell, long side, long hex,
 // Native bool result/firstTarget contracts preserve CUR 73.6540% and reset
 // the earlier 96.5992% MAX. Explicit target-presence and bool parity-local
 // probes (four source states, one reproduced object) are byte-identical.
+// The force-field wall shape is selected with the less-than mastery test
+// (`mastery < eMasteryAdvanced ? [0] : [1]`), which fixes the branch
+// polarity (97.70 -> 97.97). Residual: the FIRE_WALL loop, where retail keeps
+// the wall count in EBX and spills m_currentSide to the mastery slot; ours
+// does the reverse. Failed probes (all <= 97.97): a `c ? 3 : 2` count, the
+// index declared before the count, the bound inline, while/do/for-init
+// loops, a side local before or after the count, and indexing the cell twice.
 VA(0x005a39c0, 0x2B4)
 DC_ADDRESS(0x152edc, 0x228)
 MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity
@@ -2399,8 +2406,8 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
                 return 0;
         }
     } else if (spellId == SPELL_FORCE_FIELD) {
-        const TObstacleInfo* shape = mastery >= eMasteryAdvanced
-            ? &s_wallObstacleInfo[1] : &s_wallObstacleInfo[0];
+        const TObstacleInfo* shape = mastery < eMasteryAdvanced
+            ? &s_wallObstacleInfo[0] : &s_wallObstacleInfo[1];
         const unsigned char baseRowIsOdd = rowIsOdd(gridY(targetIndex));
         long wallCells = shape->m_extraHexCount;
         for (long i = 0; i < wallCells; i++) {
