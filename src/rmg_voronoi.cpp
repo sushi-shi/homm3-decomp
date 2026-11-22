@@ -262,17 +262,17 @@ void TRmgHalfEdge::flip()
 // field and keeps dx in a register. The edge's own fields, not its
 // accessors, keep this ordinary member's cost (185 with them) under C1XX's
 // 175 auto-inline save limit, so the game's addSite still expands it.
-// Editor residual: retail computes the edge length before the two endpoint
-// distances (forward-substituted at their tests) and keeps the opposite x in
-// edx; this compile evaluates them in order and spills more. A by-value
-// origin is lower in both images.
+// The edge length is computed first, as retail does (editor 59.01 -> 62.51).
+// Editor residual: retail forward-substitutes the endpoint distances at their
+// tests and keeps the opposite x in edx; this compile spills more. A by-value
+// origin or opposite reference, dy before dx, are lower.
 MAC_ADDRESS(0x25c3ec, 0xf8)
 unsigned char TRmgHalfEdge::isPointOnSegment(TRmgPoint point) const
 {
     TRmgPoint opposite = m_twin->m_sitePosition;
+    s32 edgeDistance = getRmgSquaredDistance(m_sitePosition, opposite);
     s32 firstDistance = getRmgSquaredDistance(point, m_sitePosition);
     s32 secondDistance = getRmgSquaredDistance(point, opposite);
-    s32 edgeDistance = getRmgSquaredDistance(m_sitePosition, opposite);
     if (firstDistance > edgeDistance || secondDistance > edgeDistance)
         return 0;
     const TRmgPoint& origin = m_sitePosition;
