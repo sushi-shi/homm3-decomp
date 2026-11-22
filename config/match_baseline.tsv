@@ -4285,7 +4285,7 @@ spells	?spellCastWorks@combatManager@@QBE_NHJPBVarmy@@_NJ@Z	100.0000	100.0000	10
 spells	?spellTargetMessage@combatManager@@QAEXHH_N@Z	100.0000	100.0000	100.0000	0x1a8690	tokens1:857cf661bb13
 spells	?summonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	100.0000	100.0000	100.0000	0x1a7080	tokens1:74e53530110a
 spells	?updateSpellTarget@@YIHJ@Z	100.0000	100.0000	100.0000	0x19f700	tokens1:c856968dd457
-spells	?validSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@HH_NJ@Z	97.9663	97.9663	97.9663	0x1a39c0	tokens1:f06f87a8713e
+spells	?validSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@HH_NJ@Z	99.7426	99.7426	99.7426	0x1a39c0	tokens1:9ce31ea836fb
 spells	?validSpellTargetArmy@combatManager@@QBE_NHHPBVarmy@@_NJ@Z	100.0000	100.0000	100.0000	0x1a3c80	tokens1:c11331729942
 spells	?viewSpells@combatManager@@QBEHXZ	100.0000	100.0000	100.0000	0x19e900	tokens1:c799d9f7bfb5
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20	tokens1:7c486d98d02f
