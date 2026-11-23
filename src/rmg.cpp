@@ -3946,8 +3946,21 @@ static const int g_rmgDecorationTypes[45] = {
 // 0x235a78..0x235ab4 and 0x235fc0..0x235ff8 copy the position twice more
 // (one copy dead) before the map formula, the pattern CodeWarrior gives that
 // nested by-value forwarder. VC6 then keeps the map lookup out of line at
-// depth 2 in both images, as retail does. Retail's frame is also 0x1c bytes
-// larger, with the four vectors at -0x38/-0x58/-0x48/-0x84.
+// depth 2 in both images, as retail does.
+// Mac 0x235b9c..0x235de0 walks the decoration table by an unsigned index
+// (cmplwi 0x2d) into a held type value and indexes m_objectPrototypes[type]
+// directly; retail likewise keeps this+type*16 and folds the vector offset
+// (add, then +0x38). Mac reuses that index register for the weighted
+// selection and writes properties/candidatePosition to the same slots in
+// both phases, so they share one declaration; both Windows frames then
+// shrink by the 0x1c of a second bounds/position pair. Game residual: the
+// positions/weights push_backs expand insert(P, x) one level deeper than
+// retail, the pending destructor keeps _Destroy, and the first bounds'
+// y/z register homes differ. Editor residual: the positions push_back stays
+// a call and the second lookup's height*z operand order. A reference to
+// m_objectPrototypes[type], a pointer-walked table, z before the bounds,
+// x-then-y bounds order, a hoisted score and reusing item for the
+// neighbour lookup are lower or flat.
 // Candidate anchors put the start cell S under each blocked
 // footprint cell in turn. For a fully blocked 3x2 object they
 // are S and each o; North is up:
@@ -3978,13 +3991,18 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
         // readObjectPlacementRules (0x2348b0) uses for its objectTypes; the
         // decoration table holds object types. The name is provisional.
         std::vector<TAdventureObjectType> objectTypes;
+        TRmgObjectPropertiesRef* properties;
+        TObjectType* prototype;
+        TRmgZoneBounds bounds;
+        TRmgMapPosition candidatePosition;
         int totalWeight = 0;
-        for (const int* type = g_rmgDecorationTypes;
-            type < g_rmgDecorationTypes + sizeof(g_rmgDecorationTypes) / sizeof(g_rmgDecorationTypes[0]); ++type) {
-            std::vector<TRmgObjectPropertiesRef*>& prototypes = m_objectPrototypes[*type];
-            for (unsigned int index = 0; index < prototypes.size(); ++index) {
-                TRmgObjectPropertiesRef* properties = prototypes[index];
-                TObjectType* prototype = properties->m_prototype;
+        unsigned int index;
+        for (index = 0;
+            index < sizeof(g_rmgDecorationTypes) / sizeof(g_rmgDecorationTypes[0]); ++index) {
+            int type = g_rmgDecorationTypes[index];
+            for (unsigned int slot = 0; slot < m_objectPrototypes[type].size(); ++slot) {
+                properties = m_objectPrototypes[type][slot];
+                prototype = properties->m_prototype;
                 if (!properties->m_placementRule
                     || properties->m_placementRule->m_terrainScores[terrain] <= RMG_PLACEMENT_INVALID)
                     continue;
@@ -3992,12 +4010,10 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
                     continue;
                 if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE && prototype->getType() >= MAX_EVENT_TYPE)
                     continue;
-                TRmgZoneBounds bounds;
                 bounds.m_minimumX = position.m_x;
                 bounds.m_minimumY = position.m_y;
                 bounds.m_maximumX = position.m_x + prototype->getWidth();
                 bounds.m_maximumY = position.m_y + prototype->getHeight();
-                TRmgMapPosition candidatePosition;
                 candidatePosition.m_z = position.m_z;
                 for (candidatePosition.m_y = bounds.m_minimumY;
                     candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
@@ -4020,17 +4036,15 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
         if (!candidates.size())
             continue;
         int selected = rand() % totalWeight;
-        unsigned int index;
         for (index = 0; index < candidates.size(); ++index) {
             selected -= weights[index];
             if (selected < 0)
                 break;
         }
-        TRmgObjectPropertiesRef* properties = candidates[index];
-        TRmgMapPosition candidatePosition = positions[index];
-        TObjectType* prototype = properties->m_prototype;
+        properties = candidates[index];
+        candidatePosition = positions[index];
+        prototype = properties->m_prototype;
         addObject(new type_object(properties), candidatePosition);
-        TRmgZoneBounds bounds;
         bounds.m_minimumX = max(candidatePosition.m_x - prototype->getWidth(), 0);
         bounds.m_minimumY = max(candidatePosition.m_y - prototype->getHeight(), 0);
         bounds.m_maximumX = min(candidatePosition.m_x + 2, m_map.m_mapWidth);
@@ -4184,20 +4198,27 @@ type_random_map_generator::~type_random_map_generator()
 // Role-derived ordinary helpers: the retail coordinator snapshots player
 // counts before each pass. Separate lifetimes preserve those parameter values
 // and let VC6 choose the nested findZone/vector call boundaries.
+// One connection record serves every row (Mac keeps it at 0x38(r1)): its
+// address escapes to push_back on an earlier iteration, so each flag store
+// invalidates the field-vector pointer and retail reloads it before every
+// column, exact in the editor. A per-row record keeps the pointer live, and
+// the zone-file field predicate adds null tests retail lacks. Mac 0x237144
+// tests column 76 against ' ' again after column 77's nonempty test; VC6
+// folds that repeated test.
 static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
     TRmgTemplate* mapTemplate, int firstRow, int endRow,
     int humanPlayers, int computerPlayers)
 {
+    TRmgZoneConnection connection;
     for (int connectionRow = firstRow; connectionRow < endRow; ++connectionRow) {
         const TSpreadsheetResource::TStringVector& fields = sheet->GetRow(connectionRow);
-        if (fields.size() > 84 && fields[76][0]
-            && fields[76][0] != ' ' && fields[77][0]) {
+        if (fields.size() > 84 && fields[76][0] && fields[76][0] != ' '
+            && fields[77][0] && fields[76][0] != ' ') {
             int firstZone = atoi(fields[76]);
             int secondZone = atoi(fields[77]);
             TRmgTemplateZone* first = mapTemplate->findZone(firstZone);
             TRmgTemplateZone* second = mapTemplate->findZone(secondZone);
             if (first && second) {
-                TRmgZoneConnection connection;
                 connection.m_destination = second;
                 connection.m_value = atoi(fields[78]);
                 connection.m_unguarded = fields[79][0] && fields[79][0] != ' ';
@@ -4340,8 +4361,7 @@ bool TRmgTemplate::isUsable(s32 humanPlayers, s32 computerPlayers) const
 // seer huts, creature banks): that remaining inline site after the
 // template push_back is what keeps the name's assign(const char*, size_t)
 // a call in the game, as retail does. Residual (game): sheet and template
-// register homes, the volume product's operand order and the expanded
-// connection reader's field-vector reloads. Mac deletes the
+// register homes and the volume product's operand order. Mac deletes the
 // rejected template at two sites (size, then slots); both Windows images
 // keep one destructor/delete pair, and the editor is exact with one. Frame/register homes and field-pointer
 // reloads also differ. The four size() calls and the template push_back's
