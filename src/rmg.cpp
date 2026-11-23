@@ -4872,8 +4872,13 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
 // reference emit the other order. Keeping the connection helper's
 // destination pointer recovers both receiver chains; localizing
 // bestConnections or grouping the connection/bounds phases in scopes does
-// not. Residual: all 110 blocks and 12 calls agree; two indexed-load
-// operands commute and a stack store/load is scheduled differently.
+// not. One function-scope index serves the candidate passes and the zone
+// bounds pass: retail homes the bounds-pass counter in the candidate
+// counter's slot; a separate zone index takes another slot and reorders the
+// bounds-pass stores. Residual: all 110 blocks and 12 calls agree; the two
+// expanded helpers' [connections + offset] loads commute their base/index
+// registers (unsigned helper index, swapped result/slot births and a named
+// second-pass count are flat).
 VA(0x0053B2F0, 0x678)
 MAC_ADDRESS(0x23c454, 0x62c) // anchor-callee 0x53bb38; thiscall, ret 0xc
 void type_random_map_generator::filterZonePositions(
@@ -4902,16 +4907,16 @@ void type_random_map_generator::filterZonePositions(
         }
     }
 
-    for (int candidate = 0; candidate < candidates.size(); ++candidate) {
-        zone->setLevelPosition(candidates[candidate]);
+    for (int i = 0; i < candidates.size(); ++i) {
+        zone->setLevelPosition(candidates[i]);
         int connections = countPlacedZoneConnections(zone);
         if (connections > bestConnections)
             bestConnections = connections;
     }
-    for (candidate = candidates.size() - 1; candidate >= 0; --candidate) {
-        zone->setLevelPosition(candidates[candidate]);
+    for (i = candidates.size() - 1; i >= 0; --i) {
+        zone->setLevelPosition(candidates[i]);
         if (countPlacedZoneConnections(zone) < bestConnections)
-            candidates.erase(candidates.begin() + candidate);
+            candidates.erase(candidates.begin() + i);
     }
 
     int bestSize = 32000;
@@ -4919,11 +4924,11 @@ void type_random_map_generator::filterZonePositions(
     int minimumX = 0;
     int maximumY = 0;
     int maximumX = 0;
-    for (int other = 0; other < m_zones.size(); ++other) {
-        if (m_zones[other] != zone) {
+    for (i = 0; i < m_zones.size(); ++i) {
+        if (m_zones[i] != zone) {
             TRmgMapPosition position;
-            position = m_zones[other]->getLevelPosition();
-            int size = m_zones[other]->getSize();
+            position = m_zones[i]->getLevelPosition();
+            int size = m_zones[i]->getSize();
             minimumY = min(minimumY, position.m_y - size);
             minimumX = min(minimumX, position.m_x - size);
             maximumY = max(maximumY, position.m_y + size + 1);
@@ -4931,24 +4936,24 @@ void type_random_map_generator::filterZonePositions(
         }
     }
     int size = zone->getSize();
-    for (candidate = 0; candidate < candidates.size(); ++candidate) {
-        int candidateMinimumY = min(minimumY, candidates[candidate].m_y - size);
-        int candidateMinimumX = min(minimumX, candidates[candidate].m_x - size);
-        int candidateMaximumY = max(maximumY, candidates[candidate].m_y + size + 1);
-        int candidateMaximumX = max(maximumX, candidates[candidate].m_x + size + 1);
+    for (i = 0; i < candidates.size(); ++i) {
+        int candidateMinimumY = min(minimumY, candidates[i].m_y - size);
+        int candidateMinimumX = min(minimumX, candidates[i].m_x - size);
+        int candidateMaximumY = max(maximumY, candidates[i].m_y + size + 1);
+        int candidateMaximumX = max(maximumX, candidates[i].m_x + size + 1);
         int candidateSize = max(mapSize, candidateMaximumY - candidateMinimumY);
         candidateSize = max(candidateSize, candidateMaximumX - candidateMinimumX);
         bestSize = min(bestSize, candidateSize);
     }
-    for (candidate = candidates.size() - 1; candidate >= 0; --candidate) {
-        int candidateMinimumY = min(minimumY, candidates[candidate].m_y - size);
-        int candidateMinimumX = min(minimumX, candidates[candidate].m_x - size);
-        int candidateMaximumY = max(maximumY, candidates[candidate].m_y + size + 1);
-        int candidateMaximumX = max(maximumX, candidates[candidate].m_x + size + 1);
+    for (i = candidates.size() - 1; i >= 0; --i) {
+        int candidateMinimumY = min(minimumY, candidates[i].m_y - size);
+        int candidateMinimumX = min(minimumX, candidates[i].m_x - size);
+        int candidateMaximumY = max(maximumY, candidates[i].m_y + size + 1);
+        int candidateMaximumX = max(maximumX, candidates[i].m_x + size + 1);
         int candidateSize = max(mapSize, candidateMaximumY - candidateMinimumY);
         candidateSize = max(candidateSize, candidateMaximumX - candidateMinimumX);
         if (bestSize < candidateSize)
-            candidates.erase(candidates.begin() + candidate);
+            candidates.erase(candidates.begin() + i);
     }
 }
 
