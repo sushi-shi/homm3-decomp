@@ -59,7 +59,7 @@ Library and compiler-generated code (outside the scores; each function verified 
 | :---- | --------------: | -------: | :--------------------------------------------- |
 | CUR   |           5,969 |   99.42% | last measured score                            |
 | MAX   |           6,044 |   99.54% | best result for each function's current source |
-| HIST  |           6,057 |   99.63% | all-time peak across source revisions          |
+| HIST  |           6,057 |   99.64% | all-time peak across source revisions          |
 
 MAX by module:
 
@@ -86,19 +86,19 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3ccmped-match-score:start -->
 
-**GOG Complete campaign editor `h3ccmped.exe`: 99.29% matched (MAX)** — 1,566 / 1,609 functions exact (97.3%), weighted by size over 265,949 bytes of code.
+**GOG Complete campaign editor `h3ccmped.exe`: 99.31% matched (MAX)** — 1,566 / 1,609 functions exact (97.3%), weighted by size over 265,949 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           1,560 |   98.71% | last measured score                            |
-| MAX   |           1,566 |   99.29% | best result for each function's current source |
-| HIST  |           1,578 |   99.39% | all-time peak across source revisions          |
+| CUR   |           1,560 |   98.73% | last measured score                            |
+| MAX   |           1,566 |   99.31% | best result for each function's current source |
+| HIST  |           1,578 |   99.42% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |    44 | 1443 / 1486 (97.1%) |    99.18% |
+| `game`       |    44 | 1443 / 1486 (97.1%) |    99.21% |
 | `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`      |     3 |    41 / 41 (100.0%) |   100.00% |
 | `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |
