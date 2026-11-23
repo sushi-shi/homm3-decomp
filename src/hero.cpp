@@ -3300,9 +3300,18 @@ int THeroScreenWindow::exitDialog(message& msg)
 // branches on rightMouse into each comparison and duplicates the slot-pick
 // tail, where the ternary materialised a setne/sete value (91.27 -> 97.32%).
 // rightMouse is a bool: retail pushes its dword home to viewArmy's bool
-// parameter unconverted (97.33%). Passing the dismiss test inline as
-// viewArmy's argument reproduces retail's 1/0 arms there but reshuffles the
-// expanded artifact-click registers (95.92%); a bool local scores 95.37/97.17.
+// parameter unconverted. DC 3775 passes the dismiss test inline as
+// viewArmy's argument (3772 clears divideStatus, 3773..3774 are empty); that
+// gives retail's 1/0 arms and its `this`/localPlayer frame homes. Alone it
+// reshuffled the expanded artifact-click registers (97.33 -> 95.92%);
+// together with the skill popup reading msg.m_codeY directly, as
+// updateHeroScreenStatusBar does, instead of an unevidenced `code` copy, it
+// scores 97.85%. DC 3930 tests the mastery range positively and then
+// breaks. Residual: the inlined backpack rotations, disassembly,
+// backpack removal and getBiography strcmp keep the inline `this`/name copy
+// in a second register where we coalesce it with the load. Byte-flat: int
+// slot, exitFlag after the base call, and a nested `nth < m_skillCount`
+// block; inlining comboType into its test costs 97.75%.
 VA(0x004dd2d0, 0x143E)
 DC_ADDRESS(0x0cf54c, 0xc38)
 MAC_ADDRESS(0x0f96b0, 0xf40)  // anchor-bracket + absent-callees
@@ -3495,12 +3504,11 @@ int THeroScreenWindow::windowHandler(message& msg)
                                    != CREATURE_NONE)
                            || (!rightMouse && g_heroScreenArmySlot == slot)) {
                     g_heroScreenArmyStripLive = 0;
-                    int showDismiss = 0;
-                    if (!g_castleOpen
-                        && g_currentHero->m_army.getNumArmies() > 1)
-                        showDismiss = 1;
                     g_game->viewArmy(g_currentHero->m_army, slot, g_currentHero,
-                                     0, 0x77, 0x14, showDismiss, rightMouse);
+                                     0, 0x77, 0x14,
+                                     !g_castleOpen
+                                         && g_currentHero->m_army.getNumArmies() > 1,
+                                     rightMouse);
                     if (!rightMouse)
                         g_heroScreenArmySlot = HERO_SCREEN_NO_ARMY_SLOT;
                     setupHeroView();
@@ -3626,19 +3634,18 @@ int THeroScreenWindow::windowHandler(message& msg)
             // this widget-id/rightMouse popup or justify a new wrapper.
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            int code = msg.m_codeY;
             int nth;
-            if (code >= THeroScreenWindow::SKILL_ICON_FIRST_ID
-                && code <= THeroScreenWindow::SKILL_ICON_LAST_ID)
-                nth = code - THeroScreenWindow::SKILL_ICON_FIRST_ID;
-            else if (code >= THeroScreenWindow::SKILL_NAME_FIRST_ID
-                     && code <= THeroScreenWindow::SKILL_NAME_LAST_ID)
-                nth = code - THeroScreenWindow::SKILL_NAME_FIRST_ID;
-            else if (code < THeroScreenWindow::SKILL_LEVEL_FIRST_ID
-                     || code > THeroScreenWindow::SKILL_LEVEL_LAST_ID)
-                break;
+            if (msg.m_codeY >= THeroScreenWindow::SKILL_ICON_FIRST_ID
+                && msg.m_codeY <= THeroScreenWindow::SKILL_ICON_LAST_ID)
+                nth = msg.m_codeY - THeroScreenWindow::SKILL_ICON_FIRST_ID;
+            else if (msg.m_codeY >= THeroScreenWindow::SKILL_NAME_FIRST_ID
+                     && msg.m_codeY <= THeroScreenWindow::SKILL_NAME_LAST_ID)
+                nth = msg.m_codeY - THeroScreenWindow::SKILL_NAME_FIRST_ID;
+            else if (msg.m_codeY >= THeroScreenWindow::SKILL_LEVEL_FIRST_ID
+                     && msg.m_codeY <= THeroScreenWindow::SKILL_LEVEL_LAST_ID)
+                nth = msg.m_codeY - THeroScreenWindow::SKILL_LEVEL_FIRST_ID;
             else
-                nth = code - THeroScreenWindow::SKILL_LEVEL_FIRST_ID;
+                break;
             if (nth >= g_currentHero->m_skillCount)
                 break;
             int skill = g_currentHero->getNthSS(nth);
