@@ -1272,39 +1272,21 @@ void TCampaignBonus::setTown(int)
 // by this TU. /Gr passes the hidden return object in ECX and infile in EDX.
 // Retail freezes the resized string buffer, then reads/copies 512-byte chunks.
 
-// Residual (95.1988%): end the scalar-read temporary's scope before string
-// construction, carrying its value into resize and the remaining-byte loop.
-// That restores the string at ebp-0x1c, the EBX result and ESI count, raising
-// 81.6506 -> 95.1988. Changing resize(length) alone is byte-flat at 81.6506;
-// the temporary lifetime is essential. Moving the chunk buffer outside the
-// loop, separate zero assignment, memset/value initialization, signed/long
-// read-word types, and ordinary/template value-return readers are all byte-flat
-// on the scoped form. No speculative helper is retained.
-// Retail still has one immediate zero store to the read word at ebp-0x34;
-// VC6 emits two zero-register stores at ebp-0x24. The allocator temporary,
-// saved infile/result and destination slots differ; the string/resize/copy
-// code and call decisions otherwise align. The passive inline trace shows
-// default construction, resize/append, begin/Freeze, copy and destruction
-// expanding with the retained Grow/Eos/assign calls. No Dreamcast counterpart.
-// Mac 0x93f80 loads the file length with lwbrx; the shared platform macro
-// supplies that byte order while leaving Windows unchanged. Windows
-// 0x485dc5 zeros the read word explicitly; do not discard that initialization.
-// A function-scope, uninitialized-word/count-arm model failed that fact and
-// gave Mac 33.90%, versus 55.17% here. Buffer lifetime placement was flat.
-// Native 0x93f8c copies decoded count into remaining before constructing
-// the string; the loop then reuses count, with separate conditional arms.
-// That lifetime reproduces its r31/r30/r29 count/remaining/destination roles
-// and branch sequence; Windows remains 95.1988% with the same calls.
+// The length word goes through the canonical value reader, as ScenarioStruct::
+// read's map-size word does. Mac 0x93f80 decodes it with lwbrx straight after
+// the read, with no byte-count test (the value form), and VC6 places the
+// inlined reader's word below the saved infile/result slots and emits
+// retail's single zero store at 0x485dc5 itself: 100%. The earlier scoped
+// `length = 0` temporary, kept for that store, reached 95.1988%: VC6 then
+// zeroed the word twice and homed it beside `remaining`. Native 0x93f8c
+// copies the decoded count into remaining before constructing the string;
+// the loop then reuses count, with separate conditional arms (r31/r30/r29
+// count/remaining/destination roles). No Dreamcast counterpart.
 VA(0x00485d90, 0x1BB)
 MAC_ADDRESS(0x093f48, 0xe8)  // anchor-caller(ScenarioStruct::Read +0x2b), retail-only
 std::string readLengthPrefixedString(TAbstractFile* infile)
 {
-    unsigned int count;
-    {
-        unsigned int length = 0;
-        infile->read(&length, sizeof(length));
-        count = LITTLE_ENDIAN_LONG(length);
-    }
+    unsigned int count = readLittleEndianValue<unsigned int>(infile);
     unsigned int remaining = count;
     std::string text;
     text.resize(count);
