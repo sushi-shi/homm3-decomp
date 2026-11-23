@@ -141,17 +141,25 @@ void TTileVRuler::OnWindowPosChanging(WINDOWPOS* lpwndpos)
 // Each number is drawn left to right into a bitmap of its own; its pixels
 // go into the back buffer column by column from the bottom up.
 // Retail clamps the rotated copy's destination as well as its source start.
-// A point-valued highlight destination recovers its native coordinate lifetime
-// and removes an extra size copy. Addressing both bitmaps' rows through
-// getLine restores retail's pixel-pointer order. Retail guards only the column
-// range before the row loop, sets the source start beside the left clamp and
-// opens the highlight's column range before its destination. Residual:
-// register choice in both row loops. A ternary left clamp, declaring the
-// destination pointer first, a for-loop pixel advance, a separate inline copy
+// As in the horizontal ruler's Loki geometry, the label's text position and
+// both rotated copies' destinations are CPoint values (the label bitmap spans
+// the ruler, so its destination column is 0): this reproduces retail's frame
+// (textPos.y stays in a register, textPos.x keeps its own slot) and both copy
+// loops' register choice (98.30 -> 99.98%). Addressing both bitmaps' rows
+// through getLine restores retail's pixel-pointer order. Retail guards only
+// the column range before the row loop, sets the source start beside the left
+// clamp and opens the highlight's column range before its destination.
+// Residual: the label row's source pointer adds the hoisted start before the
+// pixel base (retail adds the base first). Adding the label destination's
+// zero column (99.60%), declaring the destination pointer before or between
+// the source pointers, the source end from getLine + right, folding the start
+// into the clamped left, declaring the start after the right clamp or the
+// destination, and scalar text/destination coordinates score lower; a
+// ternary left clamp, `first +=`, index-address forms and non-const source
+// pointers are flat. Earlier, a for-loop pixel advance, a separate inline copy
 // helper (VC6 keeps it out of line even when forced), SIZE instead of CSize,
-// max for the left clamp, advancing the destination column, a source-point
-// cursor, byte-offset pixel addressing and complete source-rectangle models
-// score lower.
+// advancing the destination column, a source-point cursor, byte-offset pixel
+// addressing and complete source-rectangle models scored lower.
 VA(0x004bfa12, 0x730)
 void TTileVRuler::OnPaint()
 {
@@ -189,26 +197,25 @@ void TTileVRuler::OnPaint()
             CString text;
             text.Format("%d", y);
             CSize textSize = labelDC.GetTextExtent(text);
-            int textX = (tileHeight - textSize.cx) / 2;
-            unsigned int textY = (_m_width - textSize.cy) / 2;
-            labelDC.TextOut(textX, textY, text);
-            int top = (int)textY > 0 ? textY : 0;
-            int left = textX;
+            CPoint textPos((tileHeight - textSize.cx) / 2, (_m_width - textSize.cy) / 2);
+            labelDC.TextOut(textPos.x, textPos.y, text);
+            int top = textPos.y > 0 ? textPos.y : 0;
+            int left = textPos.x;
             if (left <= 1)
                 left = 1;
             int first = left;
-            unsigned int bottom = min(textY + textSize.cy, _m_width);
-            int right = min(textX + textSize.cx, tileHeight);
-            int destY = (y - _m_startTile + 1) * tileHeight - left;
-            if (destY > clipRect.bottom) {
-                first = destY - clipRect.bottom + left;
-                destY = clipRect.bottom;
+            int bottom = min(textPos.y + textSize.cy, _m_width);
+            int right = min(textPos.x + textSize.cx, tileHeight);
+            CPoint destPos(0, (y - _m_startTile + 1) * tileHeight - left);
+            if (destPos.y > clipRect.bottom) {
+                first = destPos.y - clipRect.bottom + left;
+                destPos.y = clipRect.bottom;
             }
             if (first < right) {
-                for (int row = top; row < (int)bottom; row++) {
+                for (int row = top; row < bottom; row++) {
                     const uword* pSrc = labelBitmap.getLine(row) + first;
                     const uword* pSrcEnd = pSrc + (right - first);
-                    uword* pDest = _m_backBuffer.getLine(destY - 1) + row;
+                    uword* pDest = _m_backBuffer.getLine(destPos.y - 1) + row;
                     while (pSrc < pSrcEnd) {
                         *pDest = *pSrc++;
                         pDest = (uword*)((ubyte*)pDest - _m_backBuffer.getPitch());
