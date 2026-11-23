@@ -2838,8 +2838,14 @@ bool TGameMap::_TImpl::_isValidShipyardPlacement(const TLayer& layer, const TGam
 // sign-extends the sex before testing -1. The secondary-skills stream
 // temporary preserves its construction/assignment EH states. Residual:
 // retail keeps ~TArtifactContainer out of line (its nested ~TArray budget
-// falls short here) and the stream in EBX; readValue<string> for the
-// biography scores lower.
+// falls short here) and the stream in EBX. The inline solver fits only a
+// ~TArray<TArtifact, 19> 3+ tuples cheaper or one fewer site after the
+// artifacts (the biography string's constructor or destructor): retail's
+// ~TArtifactContainer then expands ~TArray and the veto keeps it a call.
+// readValue<string> for the biography fixes EBX (93.36) but is an
+// out-of-line call retail does not make. Failed probes: an empty explicit
+// ~TArtifactContainer, named artifact or secondary-skills locals, a
+// signed char sex, a bool experience flag.
 VA(0x00426a65, 0x215)
 void TGameMap::_TImpl::_readHeroSettings(TRawIStream* pIStream, int version)
 {
@@ -3222,6 +3228,15 @@ void TGameMap::_TImpl::_onPlayableAdded(const TPlayableObject* pPlayable, bool b
 // A player's last unit makes the player absent: the first remaining
 // computer-playable player becomes human playable if none is, the teams
 // close up, and each hero the player could hire is offered elsewhere.
+// The has-teams test reads through the const getTeamInfo() accessor and
+// each team loop owns its counter (retail steps the counter before its
+// strength-reduced offset in the closing-up loop). Residual: retail keeps
+// the _TProperties get() of the teamInfo reference out of line (the inline
+// solver fits only heavier handle accessors, ~4 more free sites after it,
+// or a ~93-tuple lighter caller), the first team loop's counter/offset
+// update order and one base+index operand order. Failed probes: the
+// pConstProperties alias with scoped counters alone, a static_cast const
+// handle, a break-index test instead of bTeamInUse, swapped declarations.
 VA(0x00427b17, 0x3d1)
 void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
 {
@@ -3245,8 +3260,7 @@ void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
                 pFirstPlayable->setBHumanPlayable(true);
             }
         }
-        const TRefCountingPtr<_TProperties>& pConstProperties = _m_pProperties;
-        if (pConstProperties->m_pTeamInfo->getBHasTeams()) {
+        if (getTeamInfo().getBHasTeams()) {
             TTeamInfo& teamInfo = *_m_pProperties->m_pTeamInfo;
             assert(_m_pBookkeeping->m_numPlayableSlots >= teamInfo.getNumTeams());
             if (_m_pBookkeeping->m_numPlayableSlots == TTeamInfo::s_kMinTeams) {
@@ -3255,8 +3269,7 @@ void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
                 unsigned int team = teamInfo.getPlayerTeam(owner);
                 teamInfo.setPlayerTeam(owner, 0);
                 bool bTeamInUse = false;
-                unsigned int otherPlayer;
-                for (otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
+                for (unsigned int otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
                     if ((*_m_pProperties->m_paPlayer)[otherPlayer].getBPresent()
                         && teamInfo.getPlayerTeam(TPlayer(otherPlayer)) == team) {
                         bTeamInUse = true;
@@ -3267,7 +3280,7 @@ void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
                     if (teamInfo.getNumTeams() == TTeamInfo::s_kMinTeams) {
                         teamInfo.setBHasTeams(false);
                     } else {
-                        for (otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
+                        for (unsigned int otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
                             if ((*_m_pProperties->m_paPlayer)[otherPlayer].getBPresent()) {
                                 unsigned int otherTeam = teamInfo.getPlayerTeam(TPlayer(otherPlayer));
                                 if (otherTeam > team)
