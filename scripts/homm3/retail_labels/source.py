@@ -2036,11 +2036,16 @@ def vc6_function_name(mangled: str, candidates, unit: str) -> str | None:
     # constructor or a free operator template (`??$?0H@` -> `??0`, `??$?MII@@`
     # -> `??M@`), while Clang keeps it. Confirm each primitive argument in a
     # concrete class specialization of the signature and retain the complete
-    # scope/calling/signature suffix.
+    # scope/calling/signature suffix. A member operator template deduced from
+    # its last const-reference parameter (RawStream.h's `TRawOStream::
+    # operator<< <long>(const long&)`, `??$?6J@...ABJ@Z` -> `??6...ABJ@Z`)
+    # carries its one primitive argument as that parameter's type instead.
     template = re.fullmatch(r'\?\?\$\?([0-9M])([CDEFGHIJK]{1,2})@(.+)', mangled)
-    if template and all(re.search(
+    if template and (all(re.search(
             r'\?\$[A-Za-z_]\w*@' + argument + r'@@', template.group(3))
-            for argument in template.group(2)):
+            for argument in template.group(2))
+            or (len(template.group(2)) == 1
+                and template.group(3).endswith('AB' + template.group(2) + '@Z'))):
         spelling = '??' + template.group(1) + template.group(3)
         if spelling in candidates:
             return spelling

@@ -84,7 +84,12 @@ public:
 
     explicit TRawOStream(std::streambuf* pStreamBuf) : m_pStreamBuf(pStreamBuf) {}
 
+    // The long writer (Loki's counts and the map's dwords). /OPT:ICF folds
+    // the int writer (_writeHeroSettings's experience) onto this body, so
+    // retail calls one address for both.
     template <class T>
+    // VA instance: TRawOStream::operator<< <long>
+    VA(0x0040771d, 0x38)
     TRawOStream& operator<<(const T& value)
     {
         int nWritten = m_pStreamBuf->sputn(reinterpret_cast<const char*>(&value), sizeof(T));
