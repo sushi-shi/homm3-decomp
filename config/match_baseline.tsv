@@ -4236,7 +4236,7 @@ spells	?addBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	10
 spells	?animateMagicArrow@combatManager@@QAEXHHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x19fde0	tokens1:960287a23de8
 spells	?areaEffect@combatManager@@QAEXJHJJ@Z	100.0000	100.0000	100.0000	0x1a4970	tokens1:cae633678af4
 spells	?armageddon@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a4bc0	tokens1:0b1ecbcf08f1
-spells	?castSpell@combatManager@@QAEXHHHHW4TSkillMastery@@J@Z	96.2314	96.2314	96.2314	0x19fe30	tokens1:45bde0d45cac
+spells	?castSpell@combatManager@@QAEXHHHHW4TSkillMastery@@J@Z	97.4284	97.4284	97.4284	0x19fe30	tokens1:42b99628491a
 spells	?chainLightning@combatManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x1a6360	tokens1:cad9beabf921
 spells	?checkFireWall@combatManager@@QAE_NJPAVarmy@@_N@Z	100.0000	100.0000	100.0000	0x19fcd0	tokens1:d3729c6dea49
 spells	?checkLandmine@combatManager@@QAE_NJPAVarmy@@_N@Z	100.0000	100.0000	100.0000	0x19fb40	tokens1:465f202b5a7f
@@ -4261,7 +4261,7 @@ spells	?handleCastWallSpell@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a32
 spells	?handleGetTeleportDestination@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a37d0	tokens1:4b8741bcf77a
 spells	?handleSacrificeBeneficiary@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a2d00	tokens1:db188bbd214a
 spells	?hasValidSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@H_NJ@Z	100.0000	100.0000	100.0000	0x1a40d0	tokens1:49913ba2e9e1
-spells	?initiateSpell@combatManager@@QAEXW4ESpellId@@H@Z	94.4857	94.4857	94.4857	0x19ec50	tokens1:d524c8b12741
+spells	?initiateSpell@combatManager@@QAEXW4ESpellId@@H@Z	95.0692	95.0692	95.0692	0x19ec50	tokens1:5636345e3cfb
 spells	?insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@_N@2@ABH@Z	100.0000	100.0000	100.0000	0x1a9450	-
 spells	?isValidTeleport@combatManager@@QAEEPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x1a3700	tokens1:a7bb22537fbe
 spells	?loadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	100.0000	100.0000	100.0000	0x1a92f0	tokens1:c4b6dfccd9d6
