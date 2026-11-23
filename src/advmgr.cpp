@@ -998,14 +998,20 @@ type_point advManager::get_mouse_map_point() const
 // runs to the scope close before 1393's break, so the route walk's
 // bBreak/bNoMove/bFoughtBattle/i live inside it rather than after an early
 // break. That restores retail's 0x80 frame and the getCell argument's
-// shared temporary slot (97.83 -> 97.87). DC 1282 tests both path targets
-// in one condition, 1286..1292 sit in their own block, 1437/1443 pass
-// temporaries to SetEnvironmentOrigin, and 1431 guards the hero view with
-// one braced condition (all byte-neutral). Residual: the first getLocation
-// construction's y/z bitfield inserts fold into one mask here (retail keeps
-// the out-of-line xor/`and dh` form), getTarget's xor operand order, and
-// the shipyard pair's scheduling. DC 1411's braced town-view guard
-// regresses to 96.26: VC6 then keeps NewfullMap::cell out of line.
+// shared temporary slot. DC 1320/1360 are a `for` over the path steps
+// (decrement block ahead of the `i >= 0` test); VC6 now emits retail's
+// back edge from that loop. DC 1282 tests both path targets in one
+// condition, 1286..1292 sit in their own block, 1437/1443 pass temporaries
+// to SetEnvironmentOrigin, and 1410/1411 and 1431 guard the town and hero
+// views with one braced condition each (byte-neutral). DC 1262..1265 and
+// Mac 0x82cc..0x82fc test the player's hero id ahead of GetCurrHero, and DC
+// 1420 stores the town cell in eventCell (97.87 -> 97.98). Residual: the
+// first getLocation construction's y/z bitfield inserts fold into one mask
+// here (retail keeps the out-of-line xor/`and dh` form), getTarget's load
+// order, and the shipyard pair's scheduling. That last one is TU state: the
+// former `while (1)` walk scored 99.22 with every other byte unchanged, and
+// there a direct getObscuredTown (DC 1398) in place of the getOccupiedTown
+// wrapper flipped it back to 97.98.
 // DC original public ?DoAdvCommand@advManager@@QAAPAVNewmapCell@@AAUtype_point@@@Z
 // proves a type_point reference. Retail immediately accesses the supplied
 // point address; all thirteen adventure callers forward a valid point.
@@ -1022,7 +1028,12 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
     NewmapCell* eventCell = 0;
     message msg;
     triggerPoint.m_x = -1;
-    currHero = g_game->getCurrHero();
+    // DC 1262..1265 and Mac 0x82cc..0x82fc test the acting player's hero id
+    // before GetCurrHero repeats its own -1 guard.
+    if (g_currentPlayer->m_currHeroId == -1)
+        currHero = 0;
+    else
+        currHero = g_game->getCurrHero();
 
     switch (m_advCommand) {
     case ADV_COMMAND_MOVE_HERO:
@@ -1033,7 +1044,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
         currHero->m_pathTargetZ = m_lastMapHover.m_z;
         /* FALLS THROUGH into ADV_COMMAND_WALK_ROUTE - retail's own */
 
-    case ADV_COMMAND_WALK_ROUTE: {
+    case ADV_COMMAND_WALK_ROUTE:
         if (!currHero)
             break;
         if (currHero->m_pathTargetX == -1 || currHero->m_pathTargetY == -1)
@@ -1060,7 +1071,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
         currHero->m_isSleeping = 0;
         m_advWindow->setSleepImage(0);
 
-        if (static_cast<int>(g_searchArray->getPathSteps()) > 0) {
+        if (g_searchArray->getPathSteps() > 0) {
             savedShowRoute = m_showRoute;
             mobilizeCurrHero(1, 0, 0);
             if (g_config.m_showRoute || savedShowRoute) {
@@ -1078,39 +1089,33 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
             int noMove;
             // Before normalization: bFoughtBattle.
             int foughtBattle;
-            int i = g_searchArray->getPathSteps() - 1;
-            if (i >= 0) {
-                while (1) {
-                    {
-                        eventCell = moveHero(g_searchArray->getStep(i),
-                                             i == 0, triggerPoint, &noMove, 0,
-                                             &foughtBattle, 0);
-                        m_advWindow->updateHeroLocator(-1, 1, 1);
-                        if (eventCell)
-                            break;
-                        if (noMove || foughtBattle || g_heroMoveTriggeredEvent)
-                            break;
+            int i;
+            for (i = g_searchArray->getPathSteps() - 1; i >= 0; i--) {
+                eventCell = moveHero(g_searchArray->getStep(i),
+                                     i == 0, triggerPoint, &noMove, 0,
+                                     &foughtBattle, 0);
+                m_advWindow->updateHeroLocator(-1, 1, 1);
+                if (eventCell)
+                    break;
+                if (noMove || foughtBattle || g_heroMoveTriggeredEvent)
+                    break;
 
-                        if (!currHero->isFlying(1) && !currHero->canWalkOnWater(1)) {
-                            process1WindowsMessage();
-                            msg = g_inputManager->getEvent();
-                            while (msg.m_id) {
-                                if (msg.m_id == MESSAGE_KEY_DOWN
-                                    || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
-                                    || msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN
-                                    || msg.m_id == MESSAGE_WIDGET) {
-                                    interrupted = 1;
-                                    stopCursor(1);
-                                    break;
-                                }
-                                process1WindowsMessage();
-                                msg = g_inputManager->getEvent();
-                            }
-                            if (interrupted)
-                                break;
+                if (!currHero->isFlying(1) && !currHero->canWalkOnWater(1)) {
+                    process1WindowsMessage();
+                    msg = g_inputManager->getEvent();
+                    while (msg.m_id) {
+                        if (msg.m_id == MESSAGE_KEY_DOWN
+                            || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
+                            || msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN
+                            || msg.m_id == MESSAGE_WIDGET) {
+                            interrupted = 1;
+                            stopCursor(1);
+                            break;
                         }
+                        process1WindowsMessage();
+                        msg = g_inputManager->getEvent();
                     }
-                    if (--i < 0)
+                    if (interrupted)
                         break;
                 }
             }
@@ -1139,7 +1144,6 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
             checkDimHero();
         }
         break;
-    }
 
     case ADV_COMMAND_VIEW_OBSCURED_TOWN:
         demobilizeCurrHero(0, 1);
@@ -1149,24 +1153,23 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
         eventCell = 0;
         break;
 
-    case ADV_COMMAND_VIEW_TOWN: {
+    case ADV_COMMAND_VIEW_TOWN:
         if (g_currentPlayer->isLocalHuman())
             demobilizeCurrHero(0, 1);
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-        // Before normalization: localPlayer.
-        playerData* viewingPlayer = g_game->getLocalPlayer();
-        if (!viewingPlayer)
-            break;
-        if (viewingPlayer->m_currTownId == -1)
-            break;
-        // Before normalization: currTown.
-        town* viewedTown = g_game->getTown(viewingPlayer->m_currTownId);
-        // The lookup is retained even though its result is discarded.
-        getCell(viewedTown->getLocation());
-        viewedTown->view(0);
-        eventCell = 0;
+        {
+            // Before normalization: localPlayer.
+            playerData* viewingPlayer = g_game->getLocalPlayer();
+            if (viewingPlayer && viewingPlayer->m_currTownId != -1) {
+                // Before normalization: currTown.
+                town* viewedTown = g_game->getTown(viewingPlayer->m_currTownId);
+                // DC 1420 stores the town cell in eventCell before 1423 clears it.
+                eventCell = getCell(viewedTown->getLocation());
+                viewedTown->view(0);
+                eventCell = 0;
+            }
+        }
         break;
-    }
 
     case ADV_COMMAND_VIEW_HERO: {
         // Before normalization: localPlayer.
