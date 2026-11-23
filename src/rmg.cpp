@@ -4872,42 +4872,43 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
 // reference emit the other order. Keeping the connection helper's
 // destination pointer recovers both receiver chains; localizing
 // bestConnections or grouping the connection/bounds phases in scopes does
-// not. One function-scope index serves the candidate passes and the zone
-// bounds pass: retail homes the bounds-pass counter in the candidate
-// counter's slot; a separate zone index takes another slot and reorders the
-// bounds-pass stores. Residual: all 110 blocks and 12 calls agree; the two
-// expanded helpers' [connections + offset] loads commute their base/index
-// registers (unsigned helper index, swapped result/slot births and a named
-// second-pass count are flat).
+// not. One function-scope index serves every pass, as Mac 0x23c454 keeps
+// every loop counter in r27: a separate bounds-pass index takes another
+// slot and reorders its zero stores, a level-block-scoped index commutes the
+// second expanded helper's [connections + offset] load, and separate
+// level-block while counters commute the first. Exact; an unsigned helper
+// index, swapped result/slot births and a named second-pass count were flat
+// before the shared index.
 VA(0x0053B2F0, 0x678)
 MAC_ADDRESS(0x23c454, 0x62c) // anchor-callee 0x53bb38; thiscall, ret 0xc
 void type_random_map_generator::filterZonePositions(
     TRmgZone* zone, std::vector<TRmgMapPosition>& candidates, int mapSize)
 {
     int bestConnections = 0;
+    int i;
     if (m_map.m_numberLevels > 1) {
         unsigned char occupiedLevels[2] = {0, 0};
-        for (int other = 0; other < m_zones.size(); ++other) {
-            if (m_zones[other] != zone)
-                occupiedLevels[m_zones[other]->getLevelPosition().m_z] = 1;
+        for (i = 0; i < m_zones.size(); ++i) {
+            if (m_zones[i] != zone)
+                occupiedLevels[m_zones[i]->getLevelPosition().m_z] = 1;
         }
         if (!occupiedLevels[0] || !occupiedLevels[1]) {
-            int candidate = candidates.size();
-            while (candidate--) {
-                if (!occupiedLevels[candidates[candidate].m_z])
+            i = candidates.size();
+            while (i--) {
+                if (!occupiedLevels[candidates[i].m_z])
                     break;
             }
-            if (candidate > 0) {
-                candidate = candidates.size();
-                while (candidate--) {
-                    if (occupiedLevels[candidates[candidate].m_z])
-                        candidates.erase(candidates.begin() + candidate);
+            if (i > 0) {
+                i = candidates.size();
+                while (i--) {
+                    if (occupiedLevels[candidates[i].m_z])
+                        candidates.erase(candidates.begin() + i);
                 }
             }
         }
     }
 
-    for (int i = 0; i < candidates.size(); ++i) {
+    for (i = 0; i < candidates.size(); ++i) {
         zone->setLevelPosition(candidates[i]);
         int connections = countPlacedZoneConnections(zone);
         if (connections > bestConnections)
