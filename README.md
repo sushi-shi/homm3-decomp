@@ -53,19 +53,19 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:start -->
 
-**GOG Complete map editor `h3maped.exe`: 99.55% matched (MAX)** — 6,044 / 6,165 functions exact (98.0%), weighted by size over 821,690 bytes of code.
+**GOG Complete map editor `h3maped.exe`: 99.55% matched (MAX)** — 6,046 / 6,165 functions exact (98.1%), weighted by size over 821,690 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           5,957 |   99.42% | last measured score                            |
-| MAX   |           6,044 |   99.55% | best result for each function's current source |
-| HIST  |           6,057 |   99.64% | all-time peak across source revisions          |
+| CUR   |           5,970 |   99.42% | last measured score                            |
+| MAX   |           6,046 |   99.55% | best result for each function's current source |
+| HIST  |           6,059 |   99.64% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   164 | 5492 / 5552 (98.9%) |    99.78% |
+| `game`       |   164 | 5494 / 5552 (99.0%) |    99.78% |
 | `rmg`        |     6 |   421 / 478 (88.1%) |    97.95% |
 | `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`      |     3 |     49 / 53 (92.5%) |    99.99% |
@@ -80,7 +80,7 @@ Library and compiler-generated code (outside the scores; each function verified 
 | `init/cleanup thunks` |     3,705 |    1,039 |   82,034 | compiler-generated, verified             | source-emitted CRT bodies, bytes and named relocations                                                |
 | `import thunks`       |        13 |       13 |       78 | linker-generated, verified               | `FF 25` through a named IAT slot (and the pinned import library where one exists)                     |
 
-**Data:** 2,737 / 16,671 referenced data objects claimed (placements and the image's own `DATA()` claims).
+**Data:** 2,747 / 16,671 referenced data objects claimed (placements and the image's own `DATA()` claims).
 
 <!-- h3maped-match-score:end -->
 
