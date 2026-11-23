@@ -354,7 +354,7 @@ ai_player	?dumpExtraCreature@type_AI_creature_swapper@@IAEXXZ	100.0000	100.0000	
 ai_player	?endTurn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x28dd0	tokens1:8564e6f270a5
 ai_player	?erase@?$vector@Utype_creature_source@@V?$allocator@Utype_creature_source@@@std@@@std@@QAEPAUtype_creature_source@@PAU3@0@Z	100.0000	100.0000	100.0000	0x34680	-
 ai_player	?fillProhibitedArray@@YIXPAVplayerData@@PA_N@Z	100.0000	100.0000	100.0000	0x29d50	tokens1:67bddd7e2547
-ai_player	?findAllDestinations@@YIJPAVhero@@PAVsearchArray@@AAV?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@JEEE@Z	96.9206	96.9206	96.9365	0x2edd0	tokens1:b03d47d59b77
+ai_player	?findAllDestinations@@YIJPAVhero@@PAVsearchArray@@AAV?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@JEEE@Z	99.6587	99.6587	99.6587	0x2edd0	tokens1:cadf7ac45133
 ai_player	?findMagusHutValue@@YIJJE@Z	100.0000	100.0000	100.0000	0x29910	tokens1:e0093123ac13
 ai_player	?getAlignments@type_AI_creature_swapper@@IAEXXZ	100.0000	100.0000	100.0000	0x2c060	tokens1:4bcf0454c54c
 ai_player	?getAttackBonus@type_AI_player@@SIMF@Z	100.0000	100.0000	100.0000	0x28710	tokens1:ce604d679e55
@@ -3386,7 +3386,7 @@ rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector
 rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTemplateZone@@H@Z	100.0000	100.0000	100.0000	0x1330a0	tokens1:86dde7afbac7
 rmg	?floodConnectionCosts@type_random_map@@QAEXUTRmgMapPosition@@E@Z	96.9918	96.9918	96.9918	0x131460	tokens1:7d98302f449e
 rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x141780	tokens1:4c502e5aa532
-rmg	?floodWaterZoneDistances@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	94.3180	94.3180	94.3180	0x13f1a0	tokens1:c18e5a0804d2
+rmg	?floodWaterZoneDistances@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	99.9791	99.9791	99.9791	0x13f1a0	tokens1:f936b239fcf6
 rmg	?generate@TRandomMapRequest@@QAE?AW4ERandomMapResult@@PBDPAVtype_progress_bar@@@Z	100.0000	100.0000	100.0000	0x14c090	tokens1:e608ad9d1878
 rmg	?generate@type_artifact_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x1341f0	tokens1:04082922edb0
 rmg	?generate@type_black_box_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134380	tokens1:c1d9c6962f70
@@ -3506,7 +3506,7 @@ rmg	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgHalfEdge@@E@Z	84.83
 rmg	?tryAddObject@TRmgTreasureGroup@@QAEEPAVtype_object@@@Z	100.0000	100.0000	100.0000	0x135970	tokens1:e069c65dbfdd
 rmg	?tryPlaceAdditionalTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHEH@Z	84.3213	84.3213	84.3213	0x144d90	tokens1:bbdd2db0b9cd
 rmg	?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z	95.1070	95.1070	99.4005	0x145990	tokens1:5fb6a03d16dc
-rmg	?tryPlacePrimaryTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHE@Z	96.9793	96.9793	96.9793	0x145250	tokens1:865e04a271c9
+rmg	?tryPlacePrimaryTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHE@Z	100.0000	100.0000	100.0000	0x145250	tokens1:0ec3e4b6edec
 rmg	?updateBounds@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x135df0	tokens1:028861093bed
 rmg	?write@TRmgMapItem@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x132890	tokens1:0c9d60db2681
 rmg	?write@type_black_box@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1336f0	tokens1:79803ada35cf
