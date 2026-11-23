@@ -506,6 +506,18 @@ void TCampaignBrief::updateDifficultyButtons()
 // Current residual (85.29%): setupCurrentTerritory expands, but nested STL
 // construction, string assignment and widget-insert boundaries still differ.
 // Keep the ordinary helper and its source calls while resolving those sites.
+// Region loop: retail (0x459f20..) and Mac (0x65cb0..) both read the
+// region's x/y offsets before the hasMap test, read the region colour once
+// after it, and re-index m_scenarios for each access rather than holding a
+// scenario pointer; the source follows that form (94.32% -> 93.90%).
+// Residuals: retail gives EDI to the colour and homes the 0xa2+i id counter,
+// where VC6 here gives EDI to the counter and homes the colour. Separately,
+// the else-branch NewSMapHeader expansion gets a nested budget of 93 (site
+// 56: 6742 left, 70 sites remaining); retail's out-of-line second string
+// constructor needs <= 87, i.e. ~390 less budget or ~5 more later sites.
+// Measured and rejected: offsets/colour with a scenario local (94.28),
+// offsets only (93.85), colour only (93.55), no colour local (87.85),
+// scenario before offsets (94.24), const or signed-char locals.
 VA(0x004590c0, 0x1319)
 DC_ADDRESS(0x0594b8, 0xc64)
 MAC_ADDRESS(0x065518, 0x1b5c)  // anchor-caller/callee/string/vtable
@@ -606,29 +618,28 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
          regionIndex < mapTraits.m_numRegions; ++regionIndex) {
         const TCampaignMapTraits::TRegionTraits& region =
             mapTraits.m_regionTraits[regionIndex];
-        ScenarioStruct* scenario = m_campaign->m_scenarios[regionIndex];
-        if (scenario->hasMap()) {
+        int x = region.m_offsetX;
+        int y = region.m_offsetY;
+        if (m_campaign->m_scenarios[regionIndex]->hasMap()) {
+            int color = m_campaign->m_scenarios[regionIndex]->m_regionColor;
             if (g_game->m_campaign.m_mapScores[regionIndex].m_completed) {
                 widgets.push_back(new bitmapBorder(
-                                region.m_offsetX, region.m_offsetY, 20, 20,
+                                x, y, 20, 20,
                                 MAP_CONQUERED_1_ID + regionIndex,
-                                region.m_conqueredImageName[
-                                    scenario->m_regionColor],
+                                region.m_conqueredImageName[color],
                                 0x800));
                 m_scenarios[regionIndex].m_available = 0;
             }
             if (m_scenarios[regionIndex].m_available) {
                 widgets.push_back(new bitmapBorder(
-                                region.m_offsetX, region.m_offsetY, 20, 20,
+                                x, y, 20, 20,
                                 MAP_ENABLED_1_ID + regionIndex,
-                                region.m_enabledImageName[
-                                    scenario->m_regionColor],
+                                region.m_enabledImageName[color],
                                 0x800));
                 widgets.push_back(new bitmapBorder(
-                                region.m_offsetX, region.m_offsetY, 20, 20,
+                                x, y, 20, 20,
                                 MAP_SELECTED_1_ID + regionIndex,
-                                region.m_selectedImageName[
-                                    scenario->m_regionColor],
+                                region.m_selectedImageName[color],
                                 0x800));
             }
         } else {
