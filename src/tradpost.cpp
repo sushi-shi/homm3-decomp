@@ -1787,6 +1787,7 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // Mac 0x1f6148..0x1f6164 and 0x1f6230..0x1f624c assign each resource
 // widget ID before its status mask (99.78% Windows). All 54 named calls agree.
 // Earlier word-order controls were flat; volatile scratch aliases remain unsupported.
+// DC 1174..1177 and 1223..1226 select each m_codeX with if/else (score-neutral).
 // DC line 1208 calls the ordinary private ComputeTradeRatios
 // helper (0x18ad48); lines 1210..1213 choose decimal versus inverse text
 // using its outputs. Restore those function-scope Temp locals and the
@@ -1956,8 +1957,10 @@ void TTradeResourceWindow::update(bool update)
                 msg.m_codeX = widget::WIDGET_SET_Y;
                 msg.m_extra = g_resourceValueWidgetY[i];
                 broadcastMessage(msg);
-                msg.m_codeX = (g_selectedArtifact == i) ? widget::WIDGET_SET_STATUS
-                                                     : widget::WIDGET_CLEAR_STATUS;
+                if (g_selectedArtifact == i)
+                    msg.m_codeX = widget::WIDGET_SET_STATUS;
+                else
+                    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = MARKET_SELL_WOOD_ID + i;
                 msg.m_extra = widget::WIDGET_DRAWN;
                 broadcastMessage(msg);
@@ -1989,8 +1992,10 @@ void TTradeResourceWindow::update(bool update)
                     sprintf(g_text, "");
                 }
                 broadcastMessage(msg);
-                msg.m_codeX = (g_leftResource == i) ? widget::WIDGET_SET_STATUS
-                                                 : widget::WIDGET_CLEAR_STATUS;
+                if (g_leftResource == i)
+                    msg.m_codeX = widget::WIDGET_SET_STATUS;
+                else
+                    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = MARKET_BUY_WOOD_ID + i;
                 msg.m_extra = widget::WIDGET_DRAWN;
                 broadcastMessage(msg);
