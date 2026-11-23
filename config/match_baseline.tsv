@@ -3330,7 +3330,7 @@ rmg	?assembleTreasureGroup@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgTr
 rmg	?assignRmgTeams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	tokens1:6d5f8e96bcb0
 rmg	?buildOutline@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132c80	tokens1:9632b09a13ae
 rmg	?buildOverlapPriorities@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132e40	tokens1:218061b3b482
-rmg	?buildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	91.7679	91.7679	91.7679	0x147880	tokens1:a71b143f9531
+rmg	?buildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	99.9942	99.9942	99.9942	0x147880	tokens1:189f431bd297
 rmg	?buildZoneBoundaries@type_random_map_generator@@QAEXPAUTRmgTemplate@@H@Z	100.0000	100.0000	100.0000	0x13e050	tokens1:a0d2dcf9ae73
 rmg	?buildZoneConnectionPaths@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x1405d0	tokens1:e1dfb32722ae
 rmg	?calculateQuestZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	99.9098	99.9098	99.9098	0x14b180	tokens1:7016fa54fb50
