@@ -476,15 +476,26 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 //     the inequality form emits a THIRD full copy of the latch.  +2.28, and
 //     it is the "one extra fall-through copy" the standing note described
 //     from the wrong side.
-//   * `cost = 0` is the FIRST statement of the rock and dimension-door arms,
-//     not the last: retail's `xor esi,esi` precedes the `add word ptr` on
-//     adjusted_cost in both. +0.52.
+//   * `cost = 0` precedes the adjusted_cost add in the rock and
+//     dimension-door arms (retail's `xor esi,esi` before the `add word ptr`).
+//     DC lines 504..507 put the rock arm's zero after teleport_required and
+//     can_stop; that order is byte-flat now and is adopted.
 
-// Residual (99.2000%): the initial Nomad predicate is scheduled differently,
-// then after the second GetCell retail keeps `source` in EDI and the result in
-// EBX while our compiler does the reverse. `why-reg --model` confirms both
-// sides have identical first definitions (ebx@4, esi@30, edi@31), placing the
-// swap beyond the B1 minimum slice.  Rejected at this plateau: swapping the
+// DC SCOPE DEPTHS CLOSE THE EBX/EDI SWAP (99.2022 -> 99.2906, 2026-11-23).
+// DC 592/595/596 and 600/603/604 sit at depths 3/6/7: each direction-mask
+// test is its own `if` enclosing the trigger/traits test, not one `&&` chain.
+// Nesting the two mask tests alone moves `destCell` to EBX and the reloaded
+// `source` to EDI after the second GetCell, as retail does. DC 569/576/578
+// nests the fog/human test the same way (byte-flat, adopted). Also adopted
+// byte-flat from DC: can_stop is cleared before the flag at 563/564, 578/579
+// and 614/615, and 542/544 spell the refill as if/else, not a conditional.
+// Residual (99.2906%): only the initial Nomad predicate. Retail loads
+// currentHero into EAX after storing source_terrain and forms the army
+// `this` with `lea ecx,[eax+0x91]`, then `setg cl`; ours hoists `mov ecx,
+// [ebp+8] / add ecx,0x91` above both stores and takes DL. Byte-flat there:
+// bool, const, `?1:0`, declaring it after `dest`, a function-scope
+// direction, and a hero inline predicate; an `if` assignment regresses to
+// 99.0431%. Earlier probes at the 99.2000% plateau: swapping the
 // srcGround/predicate order (98.4199%); bool, an explicit army pointer, a
 // one-site inline predicate helper, and `register` on either competing value
 // (all byte-flat); and 1/2/4/6 complete local type definitions (byte-flat
@@ -555,9 +566,9 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
 
         long cost;
         if (terrain == eTerrainRock) {
-            cost = 0;
             teleportRequired = 1;
             dest.m_canStop = 0;
+            cost = 0;
             dest.m_adjustedCost += 100;
         } else if (dest.m_dimensionDoor) {
             cost = 0;
@@ -579,8 +590,10 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
         } else {
             if (!source.m_canStop)
                 continue;
-            dest.m_moveLeft = source.m_inBoat ? m_seaMovement
-                                                  : m_landMovement;
+            if (source.m_inBoat)
+                dest.m_moveLeft = m_seaMovement;
+            else
+                dest.m_moveLeft = m_landMovement;
             if (dest.m_flying || dest.m_waterWalking)
                 cost = calcTerrainCost(srcCell, direction, turnMobility,
                                        pathfinding, destCell->m_roadSet,
@@ -590,17 +603,18 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
         }
 
         if (destCell->m_flags0011 & 0x100) {
-            flyingRequired = 1;
             dest.m_canStop = 0;
+            flyingRequired = 1;
         }
 
         if (!(getMapExtra(dest.m_point) & g_curPlayerBit)
-                && searchType != const_AI_enemy_search
-                && (g_currentPlayer->isHuman()
+                && searchType != const_AI_enemy_search) {
+            if (g_currentPlayer->isHuman()
                     || (!(getMapExtra(source.m_point) & g_curPlayerBit)
-                        && g_currentPlayer->m_numTowns > 0))) {
-            flyingRequired = 1;
-            dest.m_canStop = 0;
+                        && g_currentPlayer->m_numTowns > 0)) {
+                dest.m_canStop = 0;
+                flyingRequired = 1;
+            }
         }
 
         if (destCell->m_type == SANCTUARY && destCell->m_isTrigger
@@ -609,18 +623,22 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
             dest.m_canStop = 0;
         }
 
-        if (((1 << direction) & 0x83) && srcCell->cellIsTrigger()
-                && akAdvObjectTypeTraits[srcCell->getMapObject()].m_enterableFromNorth == 0)
-            flyingRequired = 1;
-        if (((1 << direction) & 0x38) && destCell->cellIsTrigger()
-                && akAdvObjectTypeTraits[destCell->getMapObject()].m_enterableFromNorth == 0)
-            continue;
+        if ((1 << direction) & 0x83) {
+            if (srcCell->cellIsTrigger()
+                    && akAdvObjectTypeTraits[srcCell->getMapObject()].m_enterableFromNorth == 0)
+                flyingRequired = 1;
+        }
+        if ((1 << direction) & 0x38) {
+            if (destCell->cellIsTrigger()
+                    && akAdvObjectTypeTraits[destCell->getMapObject()].m_enterableFromNorth == 0)
+                continue;
+        }
 
         if (terrain == eTerrainWater) {
             if (source.m_inBoat) {
                 if (destCell->m_type == BOAT && destCell->m_isTrigger) {
-                    teleportRequired = 1;
                     dest.m_canStop = 0;
+                    teleportRequired = 1;
                 }
                 if (sourceTerrain == eTerrainWater
                         && g_normalDirTable[direction].m_x != 0
