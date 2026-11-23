@@ -93,24 +93,22 @@ void recruitSliderCallback(int state, heroWindow* parentWindow)
 // variable one-to-four creature cards and a final AddWidget registration
 // pass. The resource columns shift right 24 pixels when no alternate
 // resource exists; retail spells that branchlessly in edi.
-// DC line 193 has no shift local: it overwrites the altResource parameter
-// with the 0/24 selection (Locals: none; r10 reused). Writing that
-// parameter reuse as `altResource != -1 ? 0 : 0x18` reproduces retail's
-// inc/neg/sbb selection in EDI and its interleaved vector load
-// (99.01 -> 99.23 in that source state).
-// Measured on the same parameter reuse: `== -1 ? 0x18 : 0` and the if/else
-// 97.08%, `(altResource + 1) ? 0 : 0x18` and a pre-increment 97.35%. The
-// older separate-local forms (ternary, default-then-if, boolean multiply)
-// all stayed at or below 99.01%.
+// DC line 193 stores the 0/24 selection in r10, where it had copied
+// altResource for the base call; this DC records no locals for any of the
+// constructor's scopes (not even the clear-loop index), so that register
+// reuse does not distinguish a parameter overwrite from a separate local.
+// Retail's dead-parameter homes do: a separate `xShift` keeps altResource's
+// [ebp+0x10] occupied until its last use, so the vector temporaries color
+// into x2/y2's [ebp+0x8]/[ebp+0xc] as retail does (99.93 -> 100). The
+// parameter overwrite rotated every temporary home one slot. Writing the
+// selection as `altResource != -1 ? 0 : 0x18` gives retail's inc/neg/sbb
+// in EDI; `== -1 ? 0x18 : 0`, the if/else and default-then-if forms
+// measured lower.
 // DC lines 207/215/218/224 name the four TTextResource::operator[] calls
-// below; restoring that canonical wrapper is VC6 byte-flat at 99.01016%.
+// below; restoring that canonical wrapper is VC6 byte-flat.
 // DC lines 247/249 implement a four-element clear loop, not four source
-// assignments; Mac 0x14e9c8..0x14e9d4 unrolls it. Recovering that local
-// improves 99.2570% -> 99.9271%, two states/two reproduced objects.
-// All 185 CFG blocks, 161 calls and 203 relocations agree. The remaining
-// immediate differences start with allocation/conversion homes at [ebp+0xc]
-// and [ebp+0x10] versus retail's [ebp+0x8] and [ebp+0xc]. Keep the native
-// loop rather than flattening it to four source stores.
+// assignments; Mac 0x14e9c8..0x14e9d4 unrolls it. Keep the native loop
+// rather than flattening it to four source stores.
 VA(0x0054e850, 0x1295)
 DC_ADDRESS(0x118bb4, 0xc08)
 MAC_ADDRESS(0x14d310, 0x186c)  // unique x86/DC structure + constructor call
@@ -118,7 +116,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
                                recruitUnit* recruitInfo)
     : heroWindow(x2, y2, 0x1e5, 0x18b, 0x12)
 {
-    altResource = (altResource != -1) ? 0 : 0x18;
+    int xShift = (altResource != -1) ? 0 : 0x18;
 
     m_widgets.reserve(49);
     m_widgets.push_back(new bitmapBorder(0, 0, 0x1e5, 0x18b, 0,
@@ -144,14 +142,14 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         font::PRIMARY, 0x1f4,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new iconWidget(altResource + 0x4a, 0xf3,
+    m_widgets.push_back(new iconWidget(xShift + 0x4a, 0xf3,
         0x20, 0x20, 0x1f8,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     m_widgets.push_back(new iconWidget(0x7a, 0xf3, 0x20, 0x20, 0x1fc,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new textWidget(altResource + 0x42, 0x117,
+    m_widgets.push_back(new textWidget(xShift + 0x42, 0x117,
         0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -195,14 +193,14 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x20f,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new iconWidget(altResource + 0x14c, 0xf3,
+    m_widgets.push_back(new iconWidget(xShift + 0x14c, 0xf3,
         0x20, 0x20, 0x210,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     m_widgets.push_back(new iconWidget(0x17c, 0xf3, 0x20, 0x20, 0x211,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new textWidget(altResource + 0x144, 0x117,
+    m_widgets.push_back(new textWidget(xShift + 0x144, 0x117,
         0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),

@@ -185,17 +185,28 @@ unsigned char combatManager::failedSiege()
 // DC records iSideFV as int[2], not long[2]. Restoring that array is
 // byte-flat. Native DC publics prove Is/IsActive return bool; the debug
 // type records lower that bool to an unsigned-char primitive.
-// Residual (95.24%): 78 CFG blocks in flow, 54 branches, four returns. The
-// census index's `xor ebx,ebx` is hoisted to the entry (null tests compare
-// against EBX; retail loads/tests and zeroes EBX at `count`), so EDI keeps
-// g_game from the victory test where retail reloads it; the same cascade
-// predates every helper change (the 95.77 peak had it too). The fight-value
-// `imul eax,[edi+0x64]` order follows town::hasBuilding's inline form: it
-// matched while hasBuilding nested getBuildingMask() (not in DC) and with a
-// named __int64 per arm (96.01, but DC lines 326/327 are single statements
-// with no local). Byte-flat here: early first-guard folding, block-local
-// surrenderCost/combatValue/fightValues, raw isActive fields, a named
-// attribute word, `== 0` spelling, and a braceless hasBuilding.
+// DC line 248 is the whole stack walk header: it computes the army
+// pointer before the count and has no row for the pointer increment, so
+// the walk is a for loop whose initializers start with currentArmy. That
+// order gives retail's lea before the m_numArmies load (95.24 -> 95.77);
+// with remaining first the for loop is byte-flat with the old while.
+// The tavern-census index is the for loop's own (96.08); a block-level
+// `long i = 0` let VC6 hoist its zero into EBX at the entry.
+// Residual (96.08%): 78 CFG blocks in flow, 54 branches, four returns.
+// EBX now holds numTowns and the census index lives on the stack, where
+// retail zeroes EBX for the index at `count` and homes numTowns; EDI still
+// keeps g_game from the victory test where retail reloads it. The
+// fight-value `imul eax,[edi+0x64]` order follows town::hasBuilding's
+// inline form: it matched while hasBuilding nested getBuildingMask() (not
+// in DC) and with a named __int64 per arm (96.01, but DC lines 326/327 are
+// single statements with no local). Measured on this source: the DC early
+// return chain for the guards 95.85, the census loop without its
+// numTowns > 0 guard 95.77, `long i = 0` after numTowns 95.77, a split
+// `ratio /=` quotient 95.77; byte-flat: swapped multiply/sum operands, a
+// bool besiegedTownOnly, an implicit denominator conversion. Earlier
+// byte-flat probes: block-local surrenderCost/combatValue/fightValues, raw
+// isActive fields, a named attribute word, `== 0` spelling, and a
+// braceless hasBuilding.
 // Original ?AICheckRetreat@combatManager@@QAA_NXZ proves bool. Its sole
 // value forwarding into AI spellcaster::castSpell also has an original bool
 // parameter; byte return instructions and lowered debug primitives do not
@@ -225,11 +236,10 @@ bool combatManager::aiCheckRetreat()
         long sideFV = m_currentSide;
         long count = 0;
         unsigned char besiegedTownOnly = 0;
-        long i = 0;
         playerData* player = &g_game->m_players[m_heroes[m_currentSide]->m_owner];
         long numTowns = player->m_numTowns;
         if (numTowns > 0) {
-            { for (; i < numTowns; i++) {
+            { for (long i = 0; i < numTowns; i++) {
                     town* currentTown = g_game->getTown(player->m_townIds[i]);
                     if (currentTown->hasBuilding(TAVERN_ID, true)) {
                         count++;
@@ -277,14 +287,15 @@ bool combatManager::aiCheckRetreat()
                     surrenderCost = getSurrenderCost();
                     simulateCombat(m_currentSide, 1);
 
-                    long remaining = m_numArmies[m_currentSide];
-                    army* currentArmy = m_armies[m_currentSide];
-                    while (remaining-- > 0) {
+                    army* currentArmy;
+                    long remaining;
+                    for (currentArmy = m_armies[m_currentSide],
+                         remaining = m_numArmies[m_currentSide];
+                         remaining-- > 0; currentArmy++) {
                         if (!currentArmy->is(creatureImmobilized)
                             && !currentArmy->is(creatureSiegeWeapon)
                             && currentArmy->getTotalHitPoints(1) > 0)
                             break;
-                        currentArmy++;
                     }
                     if (remaining < 0)
                         return 1;
