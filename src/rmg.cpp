@@ -1360,8 +1360,10 @@ void TRmgMapItem::setRiver(int riverType, int frame,
     m_tileData.m_riverFlipY = flipY;
 }
 
-// The editor's remaining difference is the first rectangle row counter's
-// stack home; the packed-field helper and the game caller are exact.
+// Mac 0x22f09c..0x22f0c0 walks one point (-0x20/-0x1c) through both
+// rectangles and copies it as the by-value getMapItem argument; scanning
+// that point (rather than separate x/y counters) also gives the editor's
+// first row counter its retail stack home. Both images are exact.
 VA(0x00532520, 0x205)
 MAC_ADDRESS(0x22ef34, 0x35c)
 void type_river_map::setTile(const TTilePoint& point, const TRmgTerrainTile& tile)
@@ -1371,15 +1373,16 @@ void type_river_map::setTile(const TTilePoint& point, const TRmgTerrainTile& til
     unsigned char present = tile.m_terrain != 0;
     item.m_tileData.m_riverJoinTarget = present;
     if (tile.m_terrain != 0) {
+        TRmgPoint nearby;
         {
             TRmgZoneBounds bounds;
             bounds.m_minimumX = max(static_cast<int>(point.m_x) - 1, 0);
             bounds.m_minimumY = max(static_cast<int>(point.m_y) - 1, 0);
             bounds.m_maximumX = min(static_cast<int>(point.m_x) + 2, m_map->m_mapWidth);
             bounds.m_maximumY = min(static_cast<int>(point.m_y) + 2, m_map->m_mapHeight);
-            for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
-                for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
-                    TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
+            for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
+                for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
+                    TRmgMapItem& neighbour = *m_map->getMapItem(nearby);
                     neighbour.m_tileData.m_nearRiver = 1;
                 }
             }
@@ -1390,9 +1393,9 @@ void type_river_map::setTile(const TTilePoint& point, const TRmgTerrainTile& til
             bounds.m_minimumY = max(static_cast<int>(point.m_y) - 2, 0);
             bounds.m_maximumX = min(static_cast<int>(point.m_x) + 3, m_map->m_mapWidth);
             bounds.m_maximumY = min(static_cast<int>(point.m_y) + 3, m_map->m_mapHeight);
-            for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
-                for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
-                    TRmgMapItem& neighbour = *m_map->getMapItem(x, y);
+            for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
+                for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
+                    TRmgMapItem& neighbour = *m_map->getMapItem(nearby);
                     if (neighbour.m_tile.m_riverType == 0) {
                         neighbour.m_tileData.m_riverOutletTarget = 0;
                     }
@@ -4425,6 +4428,12 @@ void type_random_map_generator::loadTemplates()
     ResourceManager::Dispose(sheet);
 }
 
+// Mac counts every fixed-field loop (mines, mine densities, terrain,
+// monsters, treasure) in one register, r20 (0x236db0..0x23702c), as it does
+// the town countdown: one shared index, which also gives the editor retail's
+// operand order in the mine-count load. Exact in both images; separate
+// per-loop counters, a mine/density-only share and reversed index sums leave
+// the editor at 99.98%.
 VA(0x00538480, 0x687)
 MAC_ADDRESS(0x236a28, 0x694)
 void readRmgTemplateZones(
@@ -4488,16 +4497,17 @@ void readRmgTemplateZones(
                     else
                         slot->m_allowedTowns[townCount] = 0;
                 }
-                for (int mine = 0; mine < 7; ++mine)
-                    slot->m_mineCounts[mine] = atoi(values[32 + mine]);
-                for (int resource = 0; resource < 7; ++resource)
-                    slot->m_mineDensities[resource] = atoi(values[39 + resource]);
+                int index;
+                for (index = 0; index < 7; ++index)
+                    slot->m_mineCounts[index] = atoi(values[32 + index]);
+                for (index = 0; index < 7; ++index)
+                    slot->m_mineDensities[index] = atoi(values[39 + index]);
                 slot->m_useNativeTerrain = isRmgTemplateFieldSet(values[46]);
                 unsigned char anyTerrain = 0;
-                for (int terrain = 0; terrain < 8; ++terrain) {
-                    slot->m_allowedTerrain[terrain] =
-                        isRmgTemplateFieldSet(values[47 + terrain]);
-                    if (slot->m_allowedTerrain[terrain])
+                for (index = 0; index < 8; ++index) {
+                    slot->m_allowedTerrain[index] =
+                        isRmgTemplateFieldSet(values[47 + index]);
+                    if (slot->m_allowedTerrain[index])
                         anyTerrain = 1;
                 }
                 if (!anyTerrain)
@@ -4510,15 +4520,15 @@ void readRmgTemplateZones(
                 default: slot->m_monsterStrength = 3; break;
                 }
                 slot->m_guardsMatchZone = isRmgTemplateFieldSet(values[56]);
-                for (int monster = 0; monster < 10; ++monster)
-                    slot->m_allowedMonsters[monster] =
-                        isRmgTemplateFieldSet(values[57 + monster]);
+                for (index = 0; index < 10; ++index)
+                    slot->m_allowedMonsters[index] =
+                        isRmgTemplateFieldSet(values[57 + index]);
                 if (mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
                     slot->m_allowedMonsters[8] = 0;
-                for (int treasure = 0; treasure < 3; ++treasure) {
-                    slot->m_treasure[treasure].m_minimum = atoi(values[67 + 3 * treasure]);
-                    slot->m_treasure[treasure].m_maximum = atoi(values[68 + 3 * treasure]);
-                    slot->m_treasure[treasure].m_density = atoi(values[69 + 3 * treasure]);
+                for (index = 0; index < 3; ++index) {
+                    slot->m_treasure[index].m_minimum = atoi(values[67 + 3 * index]);
+                    slot->m_treasure[index].m_maximum = atoi(values[68 + 3 * index]);
+                    slot->m_treasure[index].m_density = atoi(values[69 + 3 * index]);
                 }
                 mapTemplate->m_zones.push_back(slot);
             }
@@ -5064,7 +5074,12 @@ void type_random_map_generator::calculateZoneBounds()
 // caching one town entry lets VC6 fold it away. Named scaled-width/height
 // locals are flat. The retained chooseCreatureTownType call is restored.
 // The centered square's span is the larger of the horizontal and vertical
-// extents, horizontal first.
+// extents, horizontal first. Mac counts the two placement passes from 1 to 3
+// (0x23cfa4, 0x23cfe4) and keeps one index register (r28) for all four
+// loops: the scaling loop reuses slotIndex, which also gives the editor's
+// placement counters retail's parameter-home slot (exact in both images).
+// A separate final index, a hoisted declaration and folding minimumSize into
+// mapSize are flat for the editor.
 VA(0x0053BCB0, 0x33B)
 MAC_ADDRESS(0x23cd84, 0x458)
 void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
@@ -5098,7 +5113,7 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
         pendingZone.release();
 #endif
     }
-    for (int pass = 0; pass < 2; ++pass) {
+    for (int pass = 1; pass < 3; ++pass) {
         for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex)
             positionZone(m_zones[slotIndex], mapSize);
     }
@@ -5108,14 +5123,14 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     int size = max(m_map.m_mapWidth, m_map.m_mapHeight);
     minimumY = (minimumY - span + maximumY) / 2;
     minimumX = (minimumX - span + maximumX) / 2;
-    for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
-        TRmgMapPosition position = m_zones[zoneIndex]->getLevelPosition();
+    for (slotIndex = 0; slotIndex < m_zones.size(); ++slotIndex) {
+        TRmgMapPosition position = m_zones[slotIndex]->getLevelPosition();
         position.m_x = (position.m_x - minimumX) * size / span;
         position.m_y = (position.m_y - minimumY) * size / span;
-        m_zones[zoneIndex]->setLevelPosition(position);
-        m_zones[zoneIndex]->m_scaledSize = m_zones[zoneIndex]->m_templateZone->m_size * size / span;
-        m_zones[zoneIndex]->chooseTerrain();
-        m_zones[zoneIndex]->chooseCreatureTownType(m_mapVersion >= 0);
+        m_zones[slotIndex]->setLevelPosition(position);
+        m_zones[slotIndex]->m_scaledSize = m_zones[slotIndex]->m_templateZone->m_size * size / span;
+        m_zones[slotIndex]->chooseTerrain();
+        m_zones[slotIndex]->chooseCreatureTownType(m_mapVersion >= 0);
     }
 }
 
@@ -6889,6 +6904,11 @@ void type_random_map_generator::openConnectionPath(
 // first-draw-minus-second-draw sequence; named delta statements and a
 // separate reverse pointer/count exclusion fall short. Constructor
 // value/reference combinations are neutral; keep its value arguments.
+// Editor residual: register choices for the alignment index, the first
+// product and the final prototype lookup. Flat there: AI_value-first
+// product, signed fill index, no fill-loop properties local, while-form
+// predecrement loops; eligibleCount after creature costs the game 0.6% and
+// aiValue before properties costs the editor 2.8%.
 VA(0x00540B20, 0x240)
 MAC_ADDRESS(0x243208, 0x290) // anchor-callee 0x54203b; thiscall, ret 8; retail-only
 type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
