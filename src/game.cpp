@@ -5730,12 +5730,19 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
 // independent index against it. Preserve that counted loop and the scalar
 // readers; counting the saved total down changes the Windows inline frontier.
 // Mac 0xdaa94 constructs a string at r1+0xa8 before the resize call, passes
-// it nowhere, and destroys it after the loop (0xdab14): an unused function-
-// level string local, DC NewSMapHeader::Read's std::string strTemp. Windows
-// retail shows the same extra _Tidy call and delete. The feature test reads through the bitset's reference proxy, which
-// puts test() at depth 2 where retail refuses it (.test(1) gives 95.21%).
-// Together 74.02 -> 95.89%; retail still calls one more vector size() inside
-// the resize expansion (budget 103/61 here; retail refuses the second).
+// it nowhere, and destroys it after the loop (0xdab14); r1+0xa4 below it is
+// an untouched word, so the unused local is a whole type_map_hero_identity
+// (Mac's 8-byte element). Windows agrees: retail's frame is sub esp,0x3c,
+// four bytes above a bare string local, with the dead word at ebp-0x48 under
+// the string at ebp-0x44 (95.90 -> 96.59%, also fixing the final _Tidy
+// registers). The feature test reads through the bitset's reference proxy,
+// which puts test() at depth 2 where retail refuses it (.test(1) gives
+// 95.21%). Residual: retail also keeps resize's `_N - size()` call out of
+// line (resize body budget 97 here, retail < 84). A diagnostic with two more
+// free inline calls after resize matches exactly, so retail's root has more
+// late candidate sites or about 54 fewer cb. Flat: if-block in place of the
+// return, direct-init name, const bitset reference, char flag reads; a named
+// loop name local loses (95.56% before the identity local).
 VA(0x004c3ef0, 0x498)
 MAC_ADDRESS(0x0da6b4, 0x478)  // sole NewSMapHeader::Read caller + slot stride/layout
 void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
@@ -5797,7 +5804,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     m_defaultPlaceholders = readValue<unsigned char>(infile);
 
     int heroCount = readLittleEndianValue<int>(infile);
-    std::string temp;
+    type_map_hero_identity identity;
     m_heroes.resize(heroCount);
     for (int heroIndex = 0; heroIndex < heroCount; ++heroIndex) {
         // The version-14 return above makes readHeroId's legacy
