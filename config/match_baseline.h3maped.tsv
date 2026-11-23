@@ -4912,7 +4912,7 @@ TileVRuler	??0TTileVRuler@@QAE@PAVCWnd@@IW4TZoom@@@Z	99.8487	99.8487	99.8487	0xb
 TileVRuler	??1TTileVRuler@@UAE@XZ	100.0000	100.0000	100.0000	0xbf7be	tokens1:c95dbe756ef1
 TileVRuler	??_GTTileVRuler@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xbf7a2	-
 TileVRuler	?GetMessageMap@TTileVRuler@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xbf9f6	tokens1:ffad1f08dc67
-TileVRuler	?OnPaint@TTileVRuler@@IAEXXZ	98.2986	98.2986	98.2986	0xbfa12	tokens1:488e4daf35d0
+TileVRuler	?OnPaint@TTileVRuler@@IAEXXZ	99.9788	99.9788	99.9788	0xbfa12	tokens1:5519fd30e9ca
 TileVRuler	?OnSize@TTileVRuler@@IAEXIHH@Z	100.0000	100.0000	100.0000	0xc0142	tokens1:fa7627df9dda
 TileVRuler	?OnWindowPosChanging@TTileVRuler@@IAEXPAUtagWINDOWPOS@@@Z	100.0000	100.0000	100.0000	0xbf9fc	tokens1:e18775fd2c45
 TileVRuler	?_computeHighlightHeight@TTileVRuler@@AAEIPAVCDC@@@Z	100.0000	100.0000	100.0000	0xbf99a	tokens1:eff9bb09c958
