@@ -9742,11 +9742,20 @@ void type_random_map_generator::countPrimaryTownZones()
 // predecessor setter restores the separate coordinate snapshot before the
 // cost store (its spelling remains provisional), and the shared top-tested
 // search follows retail's loop.
-// Residual: the seed inserts and popped-element erases still expand deeper
-// than retail. Both monolith position inserts now retain the two-argument
-// boundary; the underground-gate site still expands it. The final neighbour
-// inserts already select the retail count-insert calls. Keep the canonical
-// helpers while recovering the remaining source/optimizer state.
+// The entrance arms share one next position/cell/cost declared before the
+// switch: retail homes every arm's next position in one slot (-0x3c) inside
+// a 0xb0 frame, and Mac keeps one home (0xec) and one cost register (r8).
+// Each monolith arm forms its cost between the position copy and the cell
+// lookup, as retail schedules it. The entrance test reads one traits
+// reference, like the neighbour test. The neighbour step is a separate
+// value (Mac r3, then r8 = cost + step) chosen by an if/else; that statement
+// mass lets the final neighbour insertion expand both count inserts.
+// Residual (game 99.99%, editor 99.99%): frame-slot colouring only; the
+// two-way arm swaps its subtype and cost-argument homes. One subtype shared
+// by both arms makes the editor exact but rotates the game's direction,
+// road-flag and loop-counter slots (99.97%); a shared loop counter or
+// destination is neutral, and moving the next locals to loop or function
+// scope compiles identically.
 VA(0x00547880, 0x7B1)
 MAC_ADDRESS(0x24bbe0, 0x7e4)  // roadTargets caller + monolith vectors; retail-only
 void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
@@ -9776,10 +9785,13 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
 
         if (objectEntrance) {
             int objectType = mapItem->getObjectType();
-            if (!akAdvObjectTypeTraits[objectType].m_enterableFromNorth
-                && !akAdvObjectTypeTraits[objectType].m_clearedOnVisit)
+            const TAdvObjectTraits& traits = akAdvObjectTypeTraits[objectType];
+            if (!traits.m_enterableFromNorth && !traits.m_clearedOnVisit)
                 direction = 5;
 
+            TRmgMapPosition nextPosition;
+            TRmgMapItem* nextMapItem;
+            int nextCost;
             switch (objectType) {
             case LITH_ONEWAY_ENTRANCE:
             case LITH_ONEWAY_EXIT: {
@@ -9789,9 +9801,9 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
                     if (destination->m_properties->m_prototype->getExtra() != subtype)
                         continue;
 
-                    TRmgMapPosition nextPosition = destination->m_position;
-                    TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
-                    int nextCost = positionCost + 50;
+                    nextPosition = destination->m_position;
+                    nextCost = positionCost + 50;
+                    nextMapItem = m_map.getMapItem(nextPosition);
                     if (nextMapItem->m_movement.m_cost <= nextCost)
                         continue;
 
@@ -9809,9 +9821,9 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
                     if (destination->m_properties->m_prototype->getExtra() != subtype)
                         continue;
 
-                    TRmgMapPosition nextPosition = destination->m_position;
-                    TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
-                    int nextCost = positionCost + 50;
+                    nextPosition = destination->m_position;
+                    nextCost = positionCost + 50;
+                    nextMapItem = m_map.getMapItem(nextPosition);
                     if (nextMapItem->m_movement.m_cost <= nextCost)
                         continue;
 
@@ -9825,10 +9837,10 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
             case UNDERGROUND_GATE: {
                 // Mac 0x24c0b0 copies the position, then stores the other
                 // level's z into the copy, rather than three field stores.
-                TRmgMapPosition nextPosition = position;
+                nextPosition = position;
                 nextPosition.m_z = 1 - position.m_z;
-                TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
-                int nextCost = positionCost + 1;
+                nextMapItem = m_map.getMapItem(nextPosition);
+                nextCost = positionCost + 1;
                 if (nextCost < nextMapItem->m_movement.m_cost) {
                     nextMapItem->setMovementCost(nextCost, position);
                     insertRmgWorkItem(
@@ -9864,12 +9876,14 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
                     continue;
             }
 
-            int nextCost = currentHasRoad
-                               && nextMapItem->m_tile.m_roadType
-                           ? 2 : 20;
+            int stepCost;
+            if (currentHasRoad && nextMapItem->m_tile.m_roadType)
+                stepCost = 2;
+            else
+                stepCost = 20;
             if (direction & 1)
-                nextCost *= 3;
-            nextCost += positionCost;
+                stepCost *= 3;
+            int nextCost = positionCost + stepCost;
 
             if (nextCost >= nextMapItem->m_movement.m_cost)
                 continue;
