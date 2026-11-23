@@ -590,8 +590,9 @@ VA_COMPGEN(0x00412df0, 0x6, RUNTIME_CLASS_GETTER, TCampaignDocInvalidFileVersion
 
 namespace {
 
-// Remaining retail difference: the description length and prologue/epilogue
-// auto_ptr temporaries occupy different stack homes; calls and CFG agree.
+// The name and description go out in one chained expression: written as two
+// statements, the description length shared the name length's stack home and
+// moved the prologue/epilogue auto_ptr temporaries.
 VA(0x00412e00, 0x6f0)
 void saveCampaign(const TCampaign& campaign, int version, CFile* pFile)
 {
@@ -602,8 +603,7 @@ void saveCampaign(const TCampaign& campaign, int version, CFile* pFile)
         TRawOStream oStream(&deflateBuf);
         writeValue<int>(oStream, kFileVersions[version]);
         writeValue<ubyte>(oStream, campaign.getType());
-        oStream << campaign.getName();
-        oStream << campaign.getDescription();
+        oStream << campaign.getName() << campaign.getDescription();
         writeValue<ubyte>(oStream, campaign.getBDifficultyChoice());
         writeValue<ubyte>(oStream, campaign.getMusic());
         for (scenario = 0; scenario < campaign.getMapTraits().m_numRegions; scenario++) {
