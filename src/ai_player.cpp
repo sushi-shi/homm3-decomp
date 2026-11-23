@@ -2887,6 +2887,12 @@ void aiMarkDangerZones(hero* currentHero, long* dangerZones)
 // both retail calls (findAllDestinations +0x694/+0x73f), without either old
 // depth pin. Before the point-overload recovery, direct-map/no-pin measured
 // 93.7016%, and the typed temporary/no-artifact-pin measured 61.8460%.
+// DC's lexical scopes are all function-level if statements whose bodies are
+// lone exits: the helper is a chain of early returns, with `point` declared
+// after the first one (its constructor follows the guess test) and the
+// friendly-distance test as one expression. That flat form lets the caller
+// reload the guess word after the y store as retail does (96.94 -> 99.66%);
+// keeping the declaration inside an `if (guess >= 0)` block did not.
 DC_ADDRESS(0x032e30, 0x208)
 MAC_ADDRESS(0x031cc0, 0x2bc)
 static void checkHolyGrail(
@@ -2895,48 +2901,43 @@ static void checkHolyGrail(
     const unsigned short* friendlyDistances)
 {
     playerData* player = &g_game->m_players[currentHero->m_owner];
-    if (player->m_puzzleGuess.m_x >= 0) {
-        HeroDestination point;
-        point.m_point.m_x = player->m_puzzleGuess.m_x;
-        point.m_point.m_y = player->m_puzzleGuess.m_y;
-        point.m_point.m_z = player->m_puzzleGuess.m_z;
-        point.m_isCritical = 0;
-        pathCell* guessCell = currentSearchArray->getCell(point.m_point, 0);
-        if (guessCell->m_visited) {
-            NewmapCell* mapCell = g_game->getCell(point.m_point);
-            if (!(mapCell->m_type == HERO && mapCell->m_isTrigger)
-                || mapCell->m_extraInfo
-                    == static_cast<unsigned long>(currentHero->m_id)) {
-                if (currentHero->isInPatrolRadius(
-                        point.m_point)) {
-                    point.m_moveCost = guessCell->m_cost;
-                    unsigned short friendlyCost = friendlyDistances[
-                        (point.m_point.m_z * g_mapHeight
-                         + point.m_point.m_y)
-                            * g_mapWidth
-                        + point.m_point.m_x];
-                    if (point.m_moveCost <= friendlyCost) {
-                        if (g_game->m_mapHeader.m_victoryCondition.m_type
-                            == VICTORY_CONDITION_BUILD_GRAIL) {
-                            // Windows0x42f4f4 and Mac0x31edc/0x31ee0
-                            // store the five-million victory objective value.
-                            point.m_value = 5000000;
-                        } else {
-                            point.m_value = aiGetValueOfArtifact(
-                                type_artifact(ARTIFACT_HOLY_GRAIL),
-                                currentHero->m_owner);
-                        }
-                        point.m_moveCost = max(
-                            point.m_moveCost,
-                            currentHero->getMobility()
-                                + currentHero->m_movePoints);
-                        if (point.m_value > 0)
-                            destinations.push_back(point);
-                    }
-                }
-            }
-        }
+    if (player->m_puzzleGuess.m_x < 0)
+        return;
+    HeroDestination point;
+    point.m_point.m_x = player->m_puzzleGuess.m_x;
+    point.m_point.m_y = player->m_puzzleGuess.m_y;
+    point.m_point.m_z = player->m_puzzleGuess.m_z;
+    point.m_isCritical = 0;
+    pathCell* guessCell = currentSearchArray->getCell(point.m_point, 0);
+    if (!guessCell->m_visited)
+        return;
+    NewmapCell* mapCell = g_game->getCell(point.m_point);
+    if (mapCell->m_type == HERO && mapCell->m_isTrigger
+        && mapCell->m_extraInfo
+            != static_cast<unsigned long>(currentHero->m_id))
+        return;
+    if (!currentHero->isInPatrolRadius(point.m_point))
+        return;
+    point.m_moveCost = guessCell->m_cost;
+    if (point.m_moveCost > friendlyDistances[
+            (point.m_point.m_z * g_mapHeight + point.m_point.m_y)
+                * g_mapWidth
+            + point.m_point.m_x])
+        return;
+    if (g_game->m_mapHeader.m_victoryCondition.m_type
+        == VICTORY_CONDITION_BUILD_GRAIL) {
+        // Windows0x42f4f4 and Mac0x31edc/0x31ee0
+        // store the five-million victory objective value.
+        point.m_value = 5000000;
+    } else {
+        point.m_value = aiGetValueOfArtifact(
+            type_artifact(ARTIFACT_HOLY_GRAIL), currentHero->m_owner);
     }
+    point.m_moveCost = max(
+        point.m_moveCost,
+        currentHero->getMobility() + currentHero->m_movePoints);
+    if (point.m_value > 0)
+        destinations.push_back(point);
 }
 
 // E:\gamedcs\ai_player.cpp:3390
@@ -3286,12 +3287,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 // the player's puzzle-guess grail spot, valued 5000000 under the build-grail
 // victory or as the Holy Grail artifact otherwise. Returns the danger under
 // the hero (mark_destinations' result).
-// Residual (96.365%, 80/81 blocks, 54/54 branches): Complete retains the
-// first of three nested vector<HeroDestination>::size calls in the loop's
-// push_back growth expression; this compile retains the latter two only.
-// Dreamcast proves push_back itself, so do not replace it with insert or add
-// caller mass. Recovered locals, helper boundaries, condition groups and the
-// unnamed get_location temporary are retained through the expected dips.
+// Dreamcast proves push_back itself; do not replace it with insert.
 // Forward prototypes: all three bodies sit later in RVA order.
 static long markDestinations(hero* currentHero, long maxDistance,
                               searchArray* currentSearchArray,
@@ -3300,16 +3296,15 @@ static long markDestinations(hero* currentHero, long maxDistance,
 long aiValueOfEvent(const hero* currentHero, type_point point,
                        long& moveCost);
 
-// Residual (96.9365%): all 81 CFG blocks agree in flow/instruction count;
-// 29 call sites align, including vector::size at +0x3fd and both Grail
-// calls. Remaining differences are register allocation/bitfield scheduling and folded
-// template target identities. DC lines 3300/3359 call GetMapExtra(point),
-// not pasted coordinate extraction. Their canonical header overload removes
-// the old missing-size-call mismatch and permits both Grail pins to retire.
-// Controls in the 24-state boundary family: only one point call restored
-// leaves the unpinned caller at 91.0238..91.3555%; a named first-point copy
-// with the typed Grail temporary gives 91.0238%. The original two direct
-// point calls and typed temporary together give the current 96.9365%.
+// Residual (99.6587%): all 81 CFG blocks agree. Left: the 5000000 Grail
+// immediate equals a retail code address and is delinked as a relocation,
+// and a register tie-break at the isInPatrolRadius push (retail eax, ours
+// ecx) that carries into animateBottomView's g_advManager load. DC lines
+// 3300/3359 call GetMapExtra(point), not pasted coordinate extraction; DC
+// 3300 is one if scope, so the trigger/explored test is one condition.
+// Retail loads g_mapWidth first for levelSize where markDestinations' W*H
+// loads g_mapHeight first, hence H*W here (+0.02). Byte-flat probes: a
+// while loop for j, function-scope cell/mapCell, nested trigger test.
 VA(0x0042edd0, 0x79b)
 DC_ADDRESS(0x033038, 0x3ca)
 MAC_ADDRESS(0x031f7c, 0x558)  // anchor-callee + arity
@@ -3324,7 +3319,7 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
     unsigned char protectingTown;
     long levelSize;
 
-    levelSize = g_mapWidth * g_mapHeight;
+    levelSize = g_mapHeight * g_mapWidth;
     int levelCells = g_game->getNumMapLevels() * levelSize;
     unsigned short* friendlyDistances = new unsigned short[levelCells];
     memset(friendlyDistances, -1, levelCells * sizeof(unsigned short));
@@ -3358,11 +3353,10 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
         if (!allowSpells && cell->m_cost < cell->m_adjustedCost)
             continue;
         NewmapCell* mapCell = g_advManager->getCell(cell->m_point);
-        if (!mapCell->m_isTrigger) {
-            if ((getMapExtra(cell->m_point) & g_curPlayerBit)
-                || g_currentPlayer->m_numTowns == 0)
-                continue;
-        }
+        if (!mapCell->m_isTrigger
+            && ((getMapExtra(cell->m_point) & g_curPlayerBit)
+                || g_currentPlayer->m_numTowns == 0))
+            continue;
         if (!currentHero->isInPatrolRadius(cell->m_point))
             continue;
         g_advManager->m_advWindow->animateBottomView(0);
