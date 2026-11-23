@@ -1132,6 +1132,13 @@ static void addReward(std::string& text, const std::string& alternate,
 // addReward (trace site 104, budget 75 against cost 77). A root cb of
 // 2381..2440 (now 2350) flips exactly that site; more also expands earlier
 // showRewards and the erase at site 362.
+// One function-scope int i counts every loop: retail homes the secondary
+// skill and creature counters in the same frame slot (-0x24), and DC keeps
+// the primary and secondary counters in one register (r13). Separate loop
+// counters put them in two slots (95.63 -> 95.65%). Retail's frame is 12
+// bytes larger (0xc0): its loop-body formatString temporaries and later
+// reward records take their own slots. A bool skillGiven is flat; declaring
+// the artifact with the other locals gives 95.02%.
 VA(0x0049fa90, 0x106B)
 DC_ADDRESS(0x09138c, 0x870)
 MAC_ADDRESS(0x0aac80, 0xab0)  // dc-bracket forced, ret 0x18=p7 + format_string reward text
@@ -1144,6 +1151,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     std::string msg(text);
     std::string alternate;
     std::vector<type_dialog_resource> rewards;
+    int i;
     alternate = formatString((*g_adventureEventText)[ADV_EVENT_TEXT_BLACK_BOX_REWARD_FORMAT],
                               currentHero->m_name);
 
@@ -1156,7 +1164,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         rewardGiven = 1;
     }
 
-    for (int i = 0; i < kNumPrimarySkills; i++) {
+    for (i = 0; i < kNumPrimarySkills; i++) {
         if (blackBox->m_primarySkillBonus[i] > 0) {
             if (humanPlayer) {
                 addReward(msg, alternate, rewards,
@@ -1168,9 +1176,9 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         }
     }
 
-    for (unsigned int j = 0; j < blackBox->m_secondarySkills.size(); j++) {
-        TSecondarySkill skill = blackBox->m_secondarySkills[j].m_type;
-        TSkillMastery level = blackBox->m_secondarySkills[j].m_level;
+    for (i = 0; i < blackBox->m_secondarySkills.size(); i++) {
+        TSecondarySkill skill = blackBox->m_secondarySkills[i].m_type;
+        TSkillMastery level = blackBox->m_secondarySkills[i].m_level;
         unsigned char skillGiven = 0;
         if (currentHero->getSecondarySkill(skill) == 0
             && currentHero->m_skillCount < kNumSecSkillsPerHero) {
@@ -1247,37 +1255,37 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     }
     showRewards(msg, rewards, 1);
 
-    for (int k = 0; k < NUM_RESOURCES; k++) {
-        if (blackBox->m_resQty[k] != 0) {
+    for (i = 0; i < NUM_RESOURCES; i++) {
+        if (blackBox->m_resQty[i] != 0) {
             if (humanPlayer) {
-                if (blackBox->m_resQty[k] > 0) {
+                if (blackBox->m_resQty[i] > 0) {
                     addReward(msg, formatString(
                         g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
-                        currentHero->m_name), rewards, EGameResource(k),
-                               blackBox->m_resQty[k]);
+                        currentHero->m_name), rewards, EGameResource(i),
+                               blackBox->m_resQty[i]);
                 } else {
                     addReward(msg, formatString(
                         g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_TREASURE_FORMAT),
-                        currentHero->m_name), rewards, EGameResource(k),
-                               blackBox->m_resQty[k] - 100000);
+                        currentHero->m_name), rewards, EGameResource(i),
+                               blackBox->m_resQty[i] - 100000);
                 }
             }
-            currentHero->giveResource(k, blackBox->m_resQty[k]);
+            currentHero->giveResource(i, blackBox->m_resQty[i]);
             rewardGiven = 1;
         }
     }
     showRewards(msg, rewards, 1);
 
     type_artifact artifact(ARTIFACT_NONE);
-    for (unsigned int m = 0; m < blackBox->m_artifacts.size(); m++) {
+    for (i = 0; i < blackBox->m_artifacts.size(); i++) {
         if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
             if (humanPlayer) {
                 addReward(msg, formatString(
                     g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
                     currentHero->m_name), rewards, RES_ARTIFACT,
-                           blackBox->m_artifacts[m]);
+                           blackBox->m_artifacts[i]);
             }
-            artifact.m_artifactId = blackBox->m_artifacts[m];
+            artifact.m_artifactId = blackBox->m_artifacts[i];
             currentHero->giveArtifact(artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
@@ -1287,10 +1295,10 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     showRewards(msg, rewards, 1);
 
     if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-        for (unsigned int n = 0; n < blackBox->m_spells.size(); n++) {
-            if (akSpellTraits[blackBox->m_spells[n]].m_level
+        for (i = 0; i < blackBox->m_spells.size(); i++) {
+            if (akSpellTraits[blackBox->m_spells[i]].m_level
                     <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
-                && !currentHero->isInSpellbook(blackBox->m_spells[n])) {
+                && !currentHero->isInSpellbook(blackBox->m_spells[i])) {
                 if (humanPlayer) {
                     // Mac 0xab3c8..0xab3e8 assigns the returned string
                     // directly. A named copy adds a CodeWarrior copy ctor
@@ -1304,9 +1312,9 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                     addReward(msg, formatString(
                         g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELL_FORMAT),
                         currentHero->m_name), rewards, RES_SPELL,
-                               blackBox->m_spells[n]);
+                               blackBox->m_spells[i]);
                 }
-                currentHero->addSpell(blackBox->m_spells[n]);
+                currentHero->addSpell(blackBox->m_spells[i]);
                 rewardGiven = 1;
             }
         }
@@ -1320,11 +1328,11 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     // into the same procedure-local long amount at sp+0x24 used for mana;
     // 1069/1078/1081/1086 read that carrier. Reusing it here preserves the
     // native model and improves the full Windows caller 95.28% -> 95.62%.
-    for (int p = 0; p < armyGroup::ARMY_GROUP_SLOT_COUNT; p++) {
+    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         // Read the native creature enum view and pass it directly to the
         // typed AI boundary; legacy Add/GetArmyName accept its int value.
-        TCreatureType type = newCreatures.m_armyTypes[p];
-        amount = newCreatures.m_numTroops[p];
+        TCreatureType type = newCreatures.m_armyTypes[i];
+        amount = newCreatures.m_numTroops[i];
         if (type == CREATURE_NONE)
             continue;
         if (humanPlayer) {
@@ -1340,7 +1348,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                        ((amount & 0xffff) << 16) | (type & 0xffff));
         }
         if (currentHero->m_army.add(type, amount, -1)) {
-            newCreatures.dismiss(p);
+            newCreatures.dismiss(i);
         } else if (humanPlayer) {
             joinDialogNeeded = 1;
         } else {
