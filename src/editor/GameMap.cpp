@@ -2232,10 +2232,15 @@ TPlayerInfo::TTownTypes TGameMap::_TImpl::getDefaultTownTypes(TPlayer player) co
 // Complete's retained test/equality calls. Retail re-reads each player's
 // placeholder set through the bookkeeping handle for begin and every end
 // test, names the main town's layer before the object lookup, and reads the
-// game prototype before the map's. Residual: stack homes and scheduling, and
-// the timed-event count's store order (a named size_type count matches it).
-// Temporary condition visitors, a by-value main-town reference and implicit
-// resize default arguments score lower.
+// game prototype before the map's. A named first iterator gives the older
+// edition's artifact copy retail's argument order and ebx reload. Residual:
+// stack homes (retail's 31-byte reserved array shares its slot with later
+// block locals, as in the reader, so its scope ends early; a bare block
+// reproduces that but has no other evidence), that copy's 0x81 register and
+// a pos store at its return slot, and the timed-event count's store order (a
+// named size_type count matches it). Temporary condition visitors, a by-value
+// main-town reference, implicit resize default arguments and naming the last
+// or destination iterator score lower.
 VA(0x00423b20, 0xc10)
 void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
 {
@@ -2351,8 +2356,8 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
         writeBitset(stream, _m_pProperties->m_disabledArtifacts);
     } else if (_m_version >= GAME_VERSION_AB) {
         bitset<129> disabledArtifacts(0);
-        copy(TConstBitsetIterator<kNumArtifacts>(_m_pProperties->m_disabledArtifacts, 0),
-             TConstBitsetIterator<kNumArtifacts>(_m_pProperties->m_disabledArtifacts, 129),
+        TConstBitsetIterator<kNumArtifacts> first(_m_pProperties->m_disabledArtifacts, 0);
+        copy(first, TConstBitsetIterator<kNumArtifacts>(_m_pProperties->m_disabledArtifacts, 129),
              TBitsetIterator<129>(disabledArtifacts, 0));
         writeBitset(stream, disabledArtifacts);
     }
