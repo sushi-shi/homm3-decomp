@@ -283,6 +283,13 @@ DATA(0x004c6f40) TScenarioStartingBonusWriter bonusWriter;
 // Retail keeps per-case ownership transfers separate and retains the final
 // auto_ptr cleanup. Named owning values, in the resource arm or the other
 // arms, do not recover that cleanup sharing; keep the canonical temporaries.
+// The retained cleanup is the inline budget running out at the resource
+// arm's temporary: the artifact arm's single conditional read leaves the
+// caller lean enough, where an if/else assignment pair kept it inline.
+// Residual: VC6 gives this conditional a short result (movsx ax, then
+// movsx edi); retail widens each branch's read to int directly. Switching
+// on the read itself, an inline amount read, an unsigned skill index, a
+// typed creature local and a !get() test do not recover it.
 VA(0x004115a0, 0x540)
 auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int version)
 {
@@ -309,11 +316,7 @@ auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int ver
     }
     case eBonusArtifact: {
         int hero = readValue<short>(iStream);
-        int artifact;
-        if (version >= 3)
-            artifact = readValue<short>(iStream);
-        else
-            artifact = readValue<signed char>(iStream);
+        int artifact = version >= 3 ? readValue<short>(iStream) : readValue<signed char>(iStream);
         pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusArtifact(hero, artifact));
         break;
     }
@@ -405,6 +408,15 @@ DATA(0x004c6f30) TScenarioStartingOptionsWriter optionsWriter;
 
 // Named and temporary TChoice value constructors do not recover retail
 // starting-options assignment/cleanup boundaries; keep the measured form.
+// Retail's hero (default) arm calls auto_ptr::operator= and ~vector out of
+// line: the inline budget is spent there, about 25-50 caller cb below this
+// form. Constructing each choice as TChoice(<second read>, player) with the
+// player local reproduces retail's loops exactly but leaves the budget too
+// high to refuse operator= (87.6%); reading both values in the constructor
+// arguments (96.9%, contradicted by retail's early player widening and
+// order-dependent) or `case eOptionsNone: return pOptions;` (96.8%,
+// contradicted by retail's compare and single return) hit the budget.
+// `if (type)` and countdown loops do not.
 VA(0x00411ee0, 0x518)
 auto_ptr<TScenarioStartingOptions> readStartingOptions(TRawIStream& iStream, int version)
 {
