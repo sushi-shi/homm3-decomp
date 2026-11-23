@@ -633,6 +633,8 @@ static int g_townArmyCoords[armyGroup::ARMY_GROUP_SLOT_COUNT][2] = {
 // 94.8000 to 94.8201%; changing only its enum element type is byte-flat.
 // Address-arithmetic review (2026-09-10): indexing army_pos by the packed
 // display slot replaces its flattened int* walk and raises 94.0054 to 94.80%.
+// DC line 443 (get_army + GetNumArmies) has its own row before the line-447
+// `if` scope, so the army count is a separate numArmies local (byte-flat).
 VA(0x004521f0, 0x8D4)
 DC_ADDRESS(0x055df4, 0x5c4)
 MAC_ADDRESS(0x060788, 0xcac)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown
@@ -709,7 +711,8 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
     m_widgets.push_back(new textWidget(144, 54, 28, 12, g_text, "tiny.fnt",
         font::WHITE, 0x7d6, 1, 0, 8));
 
-    if (which->getArmy().getNumArmies() > 0) {
+    int numArmies = which->getArmy().getNumArmies();
+    if (numArmies > 0) {
         int id = 0x7d9;
         // DC lines 452/457/476 distinguish army slots from packed display
         // positions. Keep the two-dimensional army_pos table's row boundary.
