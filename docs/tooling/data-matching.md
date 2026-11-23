@@ -101,7 +101,11 @@ that reads the wrong global.
 `build/gen/address_identities.tsv` lists further proven names of retail code
 addresses: symbols a byte-verified library section defines, candidate
 functions a voter calls at a claimed function whose candidate body is exactly
-that retail body (identical-code folding), and import thunks. Normalization
+that retail body (identical-code folding), and import thunks. A library
+function folded onto a game body has no candidate body; an exact reviewed
+`alias` row at that address is its body proof instead (h3maped
+`std::uncaught_exception` at rmg's `xor al,al; ret`). The alias name still
+claims no bytes and no library ownership. Normalization
 (`homm3.build.identity_relocations`) compares a paired target relocation
 under the candidate's symbol only when that symbol has one proven address and
 both sides resolve to the same address and addend. A pairing names an address;

@@ -270,9 +270,31 @@ def library_verdicts(pe, model):
 
 
 def _library_names(verdicts):
+    """{rva: masked names} the library bodies it owns define there.
+
+    An `alias` row's bytes belong to another owner (a library copy, or an
+    image unit's COMDAT under `ownership=source`), so its names stay out:
+    callers read these as library ownership. `library_alias_names` lists them.
+    """
     defined = defaultdict(set)
     for v in verdicts:
         if v.verdict == 'exact' and v.row.kind != 'alias':
+            for rva, name in v.symbols:
+                defined[rva].add(msvc_names.mask(name))
+    return defined
+
+
+def library_alias_names(verdicts):
+    """{rva: masked names} an exact `alias` row's section defines there.
+
+    The section's bytes and named relocations equal the body the linker
+    kept at that address (identical-code folding), so each of its names is
+    a verified body of that address. It owns no bytes: a relocation proof
+    may use these names (`reloc_pairing.address_identities`), byte credit
+    and library ownership may not."""
+    defined = defaultdict(set)
+    for v in verdicts:
+        if v.verdict == 'exact' and v.row.kind == 'alias':
             for rva, name in v.symbols:
                 defined[rva].add(msvc_names.mask(name))
     return defined
