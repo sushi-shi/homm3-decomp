@@ -6300,8 +6300,12 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
 // appends use push_back directly. Mac 0x2410ec..0x241124 copies the full
 // position and planar offset before forming a distinct result, matching the
 // canonical by-value operator+.
-// Residual: seed insertion, popped erasure and shared insertion-helper
-// expansions differ from retail; all 27 blocks keep their flow kinds.
+// The neighbour bounds read through getX()/getY(), as in the identical
+// tests of addObject and the river floods (Mac reads y through the
+// neighbour's address in both). The four free accessor sites leave the
+// popped position's erase out of line and expand the helper's position
+// insert to its count form, as retail does; field reads did the reverse.
+// Residual: only the ICF-folded vector destructor label differs.
 VA(0x0053F1A0, 0x2C6)
 MAC_ADDRESS(0x240ee4, 0x358)
 void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex)
@@ -6320,8 +6324,8 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
         for (int direction = 0; direction < 8; ++direction) {
             TRmgPoint offset = g_rmgDirections[direction];
             TRmgMapPosition next = position + offset;
-            if (next.m_x < 0 || next.m_x >= m_map.getWidth()
-                || next.m_y < 0 || next.m_y >= m_map.getHeight())
+            if (next.getX() < 0 || next.getX() >= m_map.getWidth()
+                || next.getY() < 0 || next.getY() >= m_map.getHeight())
                 continue;
             TRmgMapItem* item = m_map.getMapItem(next);
             if (item->m_zoneState.m_zone != zoneIndex)
@@ -8653,17 +8657,18 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
 // Retail rejects alignment -1, selects a town prototype, tests placement,
 // constructs a 0x28-byte object and sets the zone's primary town position.
 // Mac 0x2490a4..0x2490c4 subtracts the trigger cell's x and y from the
-// chosen position field by field (a copied trigger value keeps the retained
-// type_object constructor); a named unsigned selection restores the chosen
+// chosen position, as addGuard's identical entrance translation
+// (entrance -= TRmgPoint(triggerCell.x(), triggerCell.y())) does at
+// 0x233088..0x2330b4; a copied trigger value keeps the retained
+// type_object constructor. A named unsigned selection restores the chosen
 // coordinate copy, and Y-before-X locals recover the distance calculation.
 // Mac 0x248e34..0x248e88 loads the template zone and copies the level
 // position before constructing the candidate vector, then reads the zone
 // index through that template pointer.
-// Residual: clear() still expands erase into copy/_Destroy; retail retains the folded
-// range-erase body. Direct erase loses the constructor boundary; resize(0)
-// retains erase but adds a size call and conditional absent from retail.
-// Initial zone/prototype snapshots remain differently scheduled. Value,
-// assignment, getter and scalar-lookup controls do not settle those homes.
+// The translation's four free accessor/operator sites leave clear()'s
+// range erase out of line, as retail does; field-wise subtraction expanded
+// it into copy/_Destroy, and reading getTriggerLoc() twice through x()/y()
+// retained erase but split the trigger loads.
 VA(0x00545250, 0x324)
 MAC_ADDRESS(0x248e00, 0x3b4)
 unsigned char type_random_map_generator::tryPlacePrimaryTown(
@@ -8704,8 +8709,7 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
     position = candidates[selected];
     addObject(town, position);
     TTilePoint trigger = prototype->getTriggerLoc();
-    position.m_x -= trigger.m_x;
-    position.m_y -= trigger.m_y;
+    position -= TRmgPoint(trigger.x(), trigger.y());
     zone->m_primaryTownEntrance = position;
     zone->m_hasPrimaryTown = 1;
     m_roadTargets.push_back(position);
