@@ -3765,7 +3765,9 @@ bool TGameMap::_TImpl::_isRandomTownLink(unsigned int linkID) const
 
 // Retail retains TLayer::getPObject here; VC6 currently expands that wrapper.
 // Naming the object or trigger point leaves it unchanged; compound subtraction
-// lowers the match.
+// lowers the match. The C2 trace expands every site and the /O1 size veto
+// keeps only the nested _TImpl::getPObject call; layer.getPObject(id)-> and a
+// getPLayer pointer are flat, the _TImpl::getObjectLoc helper scores 58%.
 VA(0x0042921c, 0x70)
 void TGameMap::_TImpl::_getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const
 {
@@ -5276,6 +5278,9 @@ inline TGameMap::_TImpl::_TPlayerBookkeeping::_TPlayerBookkeeping()
 VA_COMPGEN(0x0042c28f, 0xa4, VECTOR_RESERVE, TCappedObjectTypeInfo)
 VA_COMPGEN(0x0042db3f, 0xf0, TREE_INSERT, TCappedObjectTypeInfo)
 VA_COMPGEN(0x00430930, 0x89, TREE_INIT, TCappedObjectTypeInfo)
+
+// The hero-ID sets' insert, which setHeroID and the hero bookkeeping call.
+VA_COMPGEN(0x0042d20d, 0xf0, TREE_INSERT, int_set)
 
 // The maps' and the object-reference set's implicit destructors, each a tail
 // jump to its tree's destructor that only unwind funclets call: the capped
