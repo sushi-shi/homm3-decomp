@@ -745,7 +745,7 @@ bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	100.0000	100.00
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51820	tokens1:bf1da83bb895
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x50dd0	tokens1:1245c50fac02
 bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51220	tokens1:3b4859bd9c3a
-bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	98.7571	98.7571	98.7571	0x521f0	tokens1:2bae89c16722
+bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	98.7571	98.7571	98.7571	0x521f0	tokens1:06b5cd0e359a
 bottomviewsubwindow	??0bad_cast@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x53cd0	-
 bottomviewsubwindow	??0bad_cast@std@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x54a10	-
 bottomviewsubwindow	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0x515c0	-
@@ -3331,7 +3331,7 @@ rmg	?assignRmgTeams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	tokens1:
 rmg	?buildOutline@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132c80	tokens1:9632b09a13ae
 rmg	?buildOverlapPriorities@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132e40	tokens1:218061b3b482
 rmg	?buildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	99.9942	99.9942	99.9942	0x147880	tokens1:189f431bd297
-rmg	?buildZoneBoundaries@type_random_map_generator@@QAEXPAUTRmgTemplate@@H@Z	100.0000	100.0000	100.0000	0x13e050	tokens1:a0d2dcf9ae73
+rmg	?buildZoneBoundaries@type_random_map_generator@@QAEXPAUTRmgTemplate@@H@Z	100.0000	100.0000	100.0000	0x13e050	tokens1:567d19ba1caa
 rmg	?buildZoneConnectionPaths@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x1405d0	tokens1:e1dfb32722ae
 rmg	?calculateQuestZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	99.9098	99.9098	99.9098	0x14b180	tokens1:7016fa54fb50
 rmg	?calculateZoneBounds@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x13bbb0	tokens1:3bd49f07e8e3
@@ -3341,7 +3341,7 @@ rmg	?canPlaceObject@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPos
 rmg	?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x141960	tokens1:de8bbfa98a50
 rmg	?canPlaceTreasureGroup@type_random_map_generator@@QAEEPAUTRmgTreasureGroup@@UTRmgMapPosition@@PAUTRmgZone@@@Z	99.9052	99.9052	99.9850	0x146c70	tokens1:e5378cb2dedf
 rmg	?canPlaceZone@type_random_map_generator@@QAEEPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x13ad60	tokens1:ae5e5342a44c
-rmg	?carveBranchingPaths@type_random_map_generator@@QAEXXZ	96.1397	96.1397	96.5709	0x143e20	tokens1:fec1027915d6
+rmg	?carveBranchingPaths@type_random_map_generator@@QAEXXZ	99.1238	99.1238	99.1238	0x143e20	tokens1:dbd4921bf4b7
 rmg	?chooseTerrain@TRmgZone@@QAEXXZ	100.0000	100.0000	100.0000	0x132ab0	tokens1:a1f1290e5131
 rmg	?clear@TRmgMapItem@@QAEXXZ	100.0000	100.0000	100.0000	0x130f10	tokens1:c0ddb5521621
 rmg	?clear@type_random_map@@QAEXXZ	100.0000	100.0000	100.0000	0x131140	tokens1:53dcf950987c
@@ -3480,7 +3480,7 @@ rmg	?readRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	
 rmg	?recenterZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x13d0d0	tokens1:ba08a99744b8
 rmg	?releaseReservation@type_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x133c70	tokens1:3abac3fc24db
 rmg	?removeObject@type_random_map_generator@@QAEXPAVtype_object@@@Z	100.0000	100.0000	100.0000	0x14bc50	tokens1:57e92af1c634
-rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x13fcb0	tokens1:81c4bef3a61a
+rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x13fcb0	tokens1:2a7fb09f7a9b
 rmg	?reset@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x135040	tokens1:30c6142f8994
 rmg	?resize@?$vector@FV?$allocator@F@std@@@std@@QAEXIABF@Z	100.0000	100.0000	100.0000	0x14c1e0	-
 rmg	?scoreObjectPlacement@t_abstract_random_generator@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	81.8509	81.8509	84.6788	0x136bc0	tokens1:05a8e6e0d6b8
