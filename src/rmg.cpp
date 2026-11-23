@@ -6419,7 +6419,11 @@ void type_random_map_generator::populateWaterZoneIslands(TRmgZone* zone)
 // dry cell of another zone is seen (0x241a54..0x241a68), and derives the
 // cell rectangle (position - radius + 1 .. position + radius) and the
 // clearance rectangle (position - radius .. position + radius + 1) from it.
-// Residual: rectangle/zone register homes and extra reload blocks. Native
+// Residual: rectangle/zone register homes and extra reload blocks; the editor
+// also swaps the position and nearby frame slots. Swapping their declarations,
+// scoping nearby to the cell, hoisting bounds, reordering the zone lookup or
+// nesting the skips leaves both images flat; a separate clearance rectangle
+// lowers the game 92.63 -> 92.55. Native
 // flat-cell tests cover the three scan phases and connection policies.
 // Preserve the two separate connection-policy tests at 0x53fa3f..0x53fa58;
 // the ordinary findConnection helper and progress call remain canonical.
@@ -8139,7 +8143,7 @@ bool type_random_map_generator::contains(const TRmgPoint& point) const
 // Both containers live within one level, after the seed switch and before
 // the level back edge. Hoisting them contradicts retail's cleanup lifetime.
 // The point difference supplies SUB/SUB/NEG, and canonical terrain/border
-// queries plus squared distance preserve the exact 69-byte range erase.
+// queries preserve the exact 69-byte range erase.
 // The shared bounds query and direct vector operations recover both seed
 // single-inserts, both vector erases, the queue cleanup and the 0x6c frame.
 // Dimension accessors in the entry product and seed switch restore retail
@@ -8150,8 +8154,18 @@ bool type_random_map_generator::contains(const TRmgPoint& point) const
 // Mac expands both bounds queries with direct compares (0x247338..0x247364,
 // 0x2474a8..0x2474d4); writing them out in place lowers the game 96.10 ->
 // 89.10, so the ordinary generator query stays.
+// Mac 0x2472f0..0x247334 materializes middle == first, then middle == last,
+// and lays the patch arm out first (Windows-flat). Mac 0x247548..0x247570
+// stores the mirrored branch end field by field, x first, with no constructed
+// point (game 96.14 -> 98.25). Mac 0x24761c..0x24763c squares the traced end's
+// offset in place, x first and without the operand copies an expansion of
+// getRmgSquaredDistance (y-first body, Mac 0x25c3b4) shows elsewhere; this
+// also recovers the game's direct result read (98.25 -> 99.12).
 // Residual: the coordinate registers (ESI/EDI/EBX for last.x, first.x, last.y; retail
-// ESI/EBX/EDI) and return-copy/distance allocation also differ. Naming an
+// ESI/EBX/EDI) differ; the editor also copies the traced result pointer, folds
+// the level count into its compare, and places the final position between
+// the two containers (frame 0x70). Declaring that position at function scope
+// leaves the editor flat and lowers the game 99.12 -> 91.56. Naming an
 // extra endpoint copy adds a reload absent from retail. Pair-operation
 // helpers lose the container boundaries; shared midpoint and perpendicular
 // helpers disturb the three exact path callers; point getters alone
@@ -8210,7 +8224,10 @@ void type_random_map_generator::carveBranchingPaths()
                 pending.pop_back();
                 TRmgPoint middle((first.m_x + last.m_x + 1) / 2,
                     (first.m_y + last.m_y + 1) / 2);
-                if (middle != first && middle != last) {
+                if (middle == first || middle == last) {
+                    if (contains(first))
+                        m_map.openPathPatch(first.m_x, first.m_y, level);
+                } else {
                     TRmgVector delta = last - first;
                     TRmgVector perpendicular(-delta.m_y, delta.m_x);
                     int length = perpendicular.length();
@@ -8226,12 +8243,11 @@ void type_random_map_generator::carveBranchingPaths()
                         first = middle + perpendicular;
                         branches.push_back(middle);
                         branches.push_back(first);
-                        first = TRmgPoint(middle.m_x - perpendicular.m_x, middle.m_y - perpendicular.m_y);
+                        first.m_x = middle.m_x - perpendicular.m_x;
+                        first.m_y = middle.m_y - perpendicular.m_y;
                         branches.push_back(middle);
                         branches.push_back(first);
                     }
-                } else if (contains(first)) {
-                    m_map.openPathPatch(first.m_x, first.m_y, level);
                 }
             }
             while (branches.size() > 0 && pending.empty()) {
@@ -8240,7 +8256,9 @@ void type_random_map_generator::carveBranchingPaths()
                 last = branches.front();
                 branches.pop_front();
                 last = m_map.traceBranchEnd(first, last, level);
-                if (getRmgSquaredDistance(last, first) >= 25) {
+                int dx = last.m_x - first.m_x;
+                int dy = last.m_y - first.m_y;
+                if (dx * dx + dy * dy >= 25) {
                     pending.push_back(last);
                     pending.push_back(first);
                 }
