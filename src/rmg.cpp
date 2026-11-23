@@ -8809,9 +8809,20 @@ int type_random_map_generator::getZoneGuardValue(const TRmgZone* zone, int value
 // selection recover their value lifetimes. Y-before-X distance locals and
 // bounds-before-ranking initialization restore the arithmetic and zero store.
 // Preserve the ordered distance, obstacle-fill count and score filters.
-// Residual: only the position-copy/buildOutline receiver and first map
-// receiver are scheduled differently. Position lifetimes, coordinate helpers, footprint arithmetic,
-// branch forms and allocator controls leave those two groups unresolved.
+// Mac 0x2492ec..0x249308 copies the zone's level position into a temporary
+// and keeps only its level for the scan cursor: the getLevelPosition()
+// level, which also reproduces the editor's retained self-copy of the
+// cursor level before buildOutline and makes the game copy exact.
+// The trigger reads go through TPoint's x()/y(); with the extra helper
+// expansion that caller mass keeps the editor's third clear() a call.
+// Residual (editor): only the zero register (retail ebx, here ecx) and the
+// ranking-initializer stores in the prologue are scheduled differently.
+// Moving zoneIndex or the ranking locals around the anchor block selects
+// ebx there (up to 96.78) but costs the exact game copy 1-2%.
+// Mac's outline loop (0x249438..0x249518) translates through
+// operator+(TRmgMapPosition, TRmgPoint) and looks the cell up by position;
+// that expansion costs the editor 104 inline budget, so its third clear()
+// expands where retail keeps the call (93.10). Byte-flat in the game.
 // The three _Destroy calls fold to the retail artifact-vector ret-8 body.
 VA(0x00545580, 0x401)
 MAC_ADDRESS(0x249214, 0x46c)
@@ -8830,11 +8841,12 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
     TRmgMapPosition targetAnchor;
     if (startingMine) {
         targetAnchor = zone->m_primaryTownEntrance;
-        targetAnchor += TRmgPoint(prototype->getTriggerLoc().m_x, prototype->getTriggerLoc().m_y);
+        targetAnchor += TRmgPoint(prototype->getTriggerLoc().x(), prototype->getTriggerLoc().y());
     }
     bounds.m_minimumY += prototype->getHeight() - 1;
     bounds.m_minimumX += prototype->getWidth() - 1;
-    TRmgMapPosition position = zone->m_levelPosition;
+    TRmgMapPosition position;
+    position.m_z = zone->getLevelPosition().m_z;
     properties->buildOutline();
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
