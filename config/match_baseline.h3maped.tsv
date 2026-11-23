@@ -5484,7 +5484,7 @@ objecttype	??1?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@st
 objecttype	??1?$numpunct@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x372e9	-
 objecttype	??1TAllTerrainSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@UAE@XZ	100.0000	100.0000	100.0000	0x9027e	-
 objecttype	??1TReadFailure@TRawIStream@@UAE@XZ	100.0000	100.0000	100.0000	0x23eb	-
-objecttype	??1sentry@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@XZ	99.6154	99.6154	99.6154	0x2caf5	-
+objecttype	??1sentry@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x2caf5	-
 objecttype	??5?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV01@AAH@Z	100.0000	100.0000	100.0000	0x2bc12	-
 objecttype	??5@YAAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x907c9	-
 objecttype	??5@YAAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bitset@$08@1@@Z	100.0000	100.0000	100.0000	0x91136	-

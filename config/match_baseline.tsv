@@ -89,7 +89,7 @@ advmgr	?deactivateCurrHero@advManager@@QAEX_N@Z	100.0000	100.0000	100.0000	0x175
 advmgr	?deactivateCurrTown@advManager@@QAEX_N@Z	100.0000	100.0000	100.0000	0x17570	tokens1:2510141d2b66
 advmgr	?demobilizeCurrHero@advManager@@QAEX_N0@Z	100.0000	100.0000	100.0000	0x17680	tokens1:5beab72b6e39
 advmgr	?disableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	tokens1:1796d2423457
-advmgr	?doAdvCommand@advManager@@QAEPAVNewmapCell@@AAUtype_point@@@Z	97.8682	97.8682	97.8682	0x7b80	tokens1:5fa7d6e1da44
+advmgr	?doAdvCommand@advManager@@QAEPAVNewmapCell@@AAUtype_point@@@Z	97.9812	97.9812	97.9812	0x7b80	tokens1:b23b53b54a6b
 advmgr	?doAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	tokens1:b5da8b6a746f
 advmgr	?doSystemOptions@advManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1ac00	tokens1:1a1cd635c912
 advmgr	?drawAdvObj@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x10c00	tokens1:2deb11ec98ef
