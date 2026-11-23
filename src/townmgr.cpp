@@ -7794,7 +7794,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
 // hero army - each band gated on the guild count. The two layout
 // tables and every coordinate below are read straight out of the
 // retail image; the guild-count -> category-count ladder is the
-// 9/8/6/4/2 chain with the ==2 arm's sbb ternary.
+// 9/8/6/4/2 else-if chain whose last arm VC6 lowers to sbb.
 
 // DC records value/index, msg and the best-hero/creature workspace at
 // procedure scope; retain those lifetimes across the category/player passes.
@@ -7810,8 +7810,22 @@ void townManager::setupWell(TCastleWindow* wellWin)
 // The x coordinate is derived before drawing the group (Mac 0x1e1ecc),
 // rather than maintained as the source loop bound. This complete model gives
 // 95.02932%; reassociating x into flagX + 66*rank + 0x103 gives 94.27137%.
-// Residual: category ladder scratch register, vector overload/ICF identities,
-// and later control-flow/lifetime choices; keep retained text getters.
+// DC 9289..9298 write the ladder's last arm as `else if (== 2) 4; else 2`,
+// not a ternary; VC6 still emits retail's sbb (95.66 -> 95.75%). DC 9376..
+// 9382 and 9588 walk one player index (no separate `who` copy) and bump it
+// as the body's last statement; DC 9389/9427/9500/9520 gate each guild band
+// at body level (depth 3/4 scopes) and jump straight to that increment, so
+// the bands are `goto nextPlayer` early-outs rather than nested ifs
+// (nested 96.69%, `continue` with the bump in the for-increment 98.32%,
+// goto 98.91%). The best hero resets inside the first gate (DC B80). DC 9414/
+// 9415 and retail load the portrait byte before operator new: a portrait
+// local, not a hero pointer (96.30%). DC 9398/9530/9550 fold the id loads
+// into the getHero/getTown calls (byte-flat). Retail broadcasts the crest as
+// WIDGET_SET_IMAGE (11), as DC 9387 does.
+// Residual (98.91%): the last push_back's insert keeps one _Construct call
+// retail expands; the inline replay puts the root at cb 3324 against
+// retail's 3357..3444. Passing g_text directly as DC 9387 does is flat.
+// Keep retained text getters.
 // E:\gamedcs\townmgr.cpp:9206
 VA(0x005dda10, 0x145F)
 DC_ADDRESS(0x180204, 0xeaa)
@@ -7853,9 +7867,10 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
         numCategories = 8;
     else if (thievesGuilds == TTownScreenWindow::GUILD_COUNT_3)
         numCategories = 6;
+    else if (thievesGuilds == TTownScreenWindow::GUILD_COUNT_2)
+        numCategories = 4;
     else
-        numCategories =
-            (thievesGuilds == TTownScreenWindow::GUILD_COUNT_2) ? 4 : 2;
+        numCategories = 2;
 
     int numDisabled = 0;
     int k;
@@ -7915,143 +7930,139 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
     int bestValue;
     int playerIndex = 0;
     for (int column = 0; column < NUM_PLAYERS; column++) {
-        int who = playerIndex;
-        while (who < NUM_PLAYERS && g_game->m_playerDisabled[who])
-            who++;
-        if (who == TTownScreenWindow::GUILD_PLAYER_COLUMNS)
+        while (playerIndex < NUM_PLAYERS && g_game->m_playerDisabled[playerIndex])
+            playerIndex++;
+        if (playerIndex == TTownScreenWindow::GUILD_PLAYER_COLUMNS)
             break;
-        playerIndex = who;
 
-        m_owners[column] = who;
-        strcpy(g_text, g_playerFlagSprites[who]);
+        m_owners[column] = playerIndex;
+        strcpy(g_text, g_playerFlagSprites[playerIndex]);
         msg.m_extraText = g_text;
-        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
+        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE,
                          column + 0x384, msg.m_extra);
 
+        if (thievesGuilds < 1)
+            goto nextPlayer;
         bestHero = 0;
-        if (thievesGuilds >= 1) {
-            bestStrength = 0;
-            for (k = 0; k < g_game->m_players[who].m_numHeroes; k++) {
-                int id = g_game->m_players[who].m_heroes[k];
-                hero* h = g_game->getHero(id);
-                long strength = aiApproximateStrength(h);
-                if (strength > bestStrength) {
-                    bestStrength = strength;
-                    bestHero = h;
-                }
+        bestStrength = 0;
+        for (k = 0; k < g_game->m_players[playerIndex].m_numHeroes; k++) {
+            hero* h = g_game->getHero(g_game->m_players[playerIndex].m_heroes[k]);
+            long strength = aiApproximateStrength(h);
+            if (strength > bestStrength) {
+                bestStrength = strength;
+                bestHero = h;
             }
-            if (bestHero) {
-                g_heroWidgetMap[column] = bestHero->m_id;
-                // DC 9413/9414 re-fetch the hero by the recorded id before
-                // reading its portrait; retail expands that getHero here.
-                hero* portraitHero = g_game->getHero(g_heroWidgetMap[column]);
-                m_widgets.push_back(new bitmapBorder(
-                    66 * column + 0x104, 0x168, 0x30, 0x20,
-                    column + HERO_P0,
-                    akHeroTraits[portraitHero->m_portrait].m_small_portrait_name,
-                    0x800));
-                addWidget(m_widgets.back(), -1);
-            }
-            if (thievesGuilds >= 2) {
-                if (bestHero) {
-                    m_widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x18c, 0x35, 0x2c,
-                        g_generalText->GetText(GENERAL_TEXT_PRIMARY_SKILL_ABBREVIATIONS),
-                        DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
-                        font::PRIMARY, -1, 0, 0, 8));
-                    addWidget(m_widgets.back(), -1);
+        }
+        if (bestHero) {
+            g_heroWidgetMap[column] = bestHero->m_id;
+            // DC 9413/9414 re-fetch the hero by the recorded id before
+            // reading its portrait; retail expands that getHero here.
+            int portrait = g_game->getHero(g_heroWidgetMap[column])->m_portrait;
+            m_widgets.push_back(new bitmapBorder(
+                66 * column + 0x104, 0x168, 0x30, 0x20,
+                column + HERO_P0,
+                akHeroTraits[portrait].m_small_portrait_name,
+                0x800));
+            addWidget(m_widgets.back(), -1);
+        }
+        if (thievesGuilds < 2)
+            goto nextPlayer;
+        if (bestHero) {
+            m_widgets.push_back(new textWidget(
+                66 * column + 0x102, 0x18c, 0x35, 0x2c,
+                g_generalText->GetText(GENERAL_TEXT_PRIMARY_SKILL_ABBREVIATIONS),
+                DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
+                font::PRIMARY, -1, 0, 0, 8));
+            addWidget(m_widgets.back(), -1);
 
-                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->getPrimarySkill(0));
-                    m_widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x18c, 0x35, 0x14, g_text,
-                        DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
-                        font::PRIMARY, column + RANK_A0, 2, 0, 8));
-                    addWidget(m_widgets.back(), -1);
+            sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    bestHero->getPrimarySkill(0));
+            m_widgets.push_back(new textWidget(
+                66 * column + 0x102, 0x18c, 0x35, 0x14, g_text,
+                DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
+                font::PRIMARY, column + RANK_A0, 2, 0, 8));
+            addWidget(m_widgets.back(), -1);
 
-                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->getPrimarySkill(1));
-                    m_widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x197, 0x35, 0x14, g_text,
-                        DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
-                        font::PRIMARY, column + RANK_B0, 2, 0, 8));
-                    addWidget(m_widgets.back(), -1);
+            sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    bestHero->getPrimarySkill(1));
+            m_widgets.push_back(new textWidget(
+                66 * column + 0x102, 0x197, 0x35, 0x14, g_text,
+                DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
+                font::PRIMARY, column + RANK_B0, 2, 0, 8));
+            addWidget(m_widgets.back(), -1);
 
-                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->getPrimarySkill(2));
-                    m_widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x1a2, 0x35, 0x14, g_text,
-                        DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
-                        font::PRIMARY, column + RANK_C0, 2, 0, 8));
-                    addWidget(m_widgets.back(), -1);
+            sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    bestHero->getPrimarySkill(2));
+            m_widgets.push_back(new textWidget(
+                66 * column + 0x102, 0x1a2, 0x35, 0x14, g_text,
+                DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
+                font::PRIMARY, column + RANK_C0, 2, 0, 8));
+            addWidget(m_widgets.back(), -1);
 
-                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->getPrimarySkill(3));
-                    m_widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x1ad, 0x35, 0x14, g_text,
-                        DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
-                        font::PRIMARY, column + 30, 2, 0, 8));
-                    addWidget(m_widgets.back(), -1);
-                }
-                if (thievesGuilds >= 3) {
-                    strcpy(g_text,
-                           g_personality[g_game->m_players[who].m_personality]);
-                    m_widgets.push_back(new textWidget(
-                        66 * column + 0xfb, 0x1c4, 0x42, 0x14, g_text,
-                        DATA_COMPGEN(0x0065f2f8, combatChatSmallFont,
-                                     "smalfont.fnt"),
-                        font::PRIMARY, -1, 1, 0, 8));
-                    addWidget(m_widgets.back(), -1);
-                    if (thievesGuilds >= 4) {
-                        bestCreature = -1;
-                        bestValue = 0;
-                        for (k = 0; k < g_game->m_players[who].m_numTowns; k++) {
-                            int id = g_game->m_players[who].m_townIds[k];
-                            town* t = g_game->getTown(id);
-                            for (slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
-                                if (t->getArmy().m_armies[slot] != -1
-                                    && t->getArmy().m_numTroops[slot] > 0
-                                    && akCreatureTypeTraits[t->getArmy().m_armies[slot]]
-                                               .AI_value
-                                           > bestValue) {
-                                    bestCreature = t->getArmy().m_armies[slot];
-                                    bestValue = akCreatureTypeTraits[
-                                        t->getArmy().m_armies[slot]].AI_value;
-                                    g_creatureArmies[column] = t->getArmy();
-                                    g_creatureWidgetMap1[column] = slot;
-                                }
-                            }
-                        }
-                        for (k = 0; k < g_game->m_players[who].m_numHeroes; k++) {
-                            int id = g_game->m_players[who].m_heroes[k];
-                            hero* h = g_game->getHero(id);
-                            for (slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
-                                if (h->m_army.m_armies[slot] != -1
-                                    && h->m_army.m_numTroops[slot] > 0
-                                    && akCreatureTypeTraits[h->m_army.m_armies[slot]]
-                                               .AI_value
-                                           > bestValue) {
-                                    bestCreature = h->m_army.m_armies[slot];
-                                    bestValue = akCreatureTypeTraits[
-                                        h->m_army.m_armies[slot]].AI_value;
-                                    g_creatureArmies[column] = h->m_army;
-                                    g_creatureWidgetMap1[column] = slot;
-                                }
-                            }
-                        }
-                        if (bestCreature != -1) {
-                            m_widgets.push_back(new iconWidget(
-                                66 * column + 0xff, 0x1de, 0x3a, 0x40,
-                                column + CREATURE_P0,
-                                DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
-                                             "twcrport.def"),
-                                bestCreature + 2, 2, 0, 0, 0x11));
-                            addWidget(m_widgets.back(), -1);
-                        }
-                    }
+            sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    bestHero->getPrimarySkill(3));
+            m_widgets.push_back(new textWidget(
+                66 * column + 0x102, 0x1ad, 0x35, 0x14, g_text,
+                DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
+                font::PRIMARY, column + 30, 2, 0, 8));
+            addWidget(m_widgets.back(), -1);
+        }
+        if (thievesGuilds < 3)
+            goto nextPlayer;
+        strcpy(g_text,
+               g_personality[g_game->m_players[playerIndex].m_personality]);
+        m_widgets.push_back(new textWidget(
+            66 * column + 0xfb, 0x1c4, 0x42, 0x14, g_text,
+            DATA_COMPGEN(0x0065f2f8, combatChatSmallFont,
+                         "smalfont.fnt"),
+            font::PRIMARY, -1, 1, 0, 8));
+        addWidget(m_widgets.back(), -1);
+        if (thievesGuilds < 4)
+            goto nextPlayer;
+        bestCreature = -1;
+        bestValue = 0;
+        for (k = 0; k < g_game->m_players[playerIndex].m_numTowns; k++) {
+            town* t = g_game->getTown(g_game->m_players[playerIndex].m_townIds[k]);
+            for (slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
+                if (t->getArmy().m_armies[slot] != -1
+                    && t->getArmy().m_numTroops[slot] > 0
+                    && akCreatureTypeTraits[t->getArmy().m_armies[slot]]
+                               .AI_value
+                           > bestValue) {
+                    bestCreature = t->getArmy().m_armies[slot];
+                    bestValue = akCreatureTypeTraits[
+                        t->getArmy().m_armies[slot]].AI_value;
+                    g_creatureArmies[column] = t->getArmy();
+                    g_creatureWidgetMap1[column] = slot;
                 }
             }
         }
+        for (k = 0; k < g_game->m_players[playerIndex].m_numHeroes; k++) {
+            hero* h = g_game->getHero(g_game->m_players[playerIndex].m_heroes[k]);
+            for (slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
+                if (h->m_army.m_armies[slot] != -1
+                    && h->m_army.m_numTroops[slot] > 0
+                    && akCreatureTypeTraits[h->m_army.m_armies[slot]]
+                               .AI_value
+                           > bestValue) {
+                    bestCreature = h->m_army.m_armies[slot];
+                    bestValue = akCreatureTypeTraits[
+                        h->m_army.m_armies[slot]].AI_value;
+                    g_creatureArmies[column] = h->m_army;
+                    g_creatureWidgetMap1[column] = slot;
+                }
+            }
+        }
+        if (bestCreature != -1) {
+            m_widgets.push_back(new iconWidget(
+                66 * column + 0xff, 0x1de, 0x3a, 0x40,
+                column + CREATURE_P0,
+                DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
+                             "twcrport.def"),
+                bestCreature + 2, 2, 0, 0, 0x11));
+            addWidget(m_widgets.back(), -1);
+        }
+    nextPlayer:
         playerIndex++;
     }
 
