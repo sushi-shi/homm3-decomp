@@ -1308,6 +1308,26 @@ namespace ResourceManager {
 bool GetSoundFile(const char* localName, std::auto_ptr<char>& data, int* size);
 }
 
+// The sound archive state is this object's: the game's handles sit in .data
+// just before its LOD-name literals (0x682e88), the header pointers in .bss
+// just before GreenBits (0x69d848..0x69d850) and the counts between BlueBits
+// and SaturatedGraphicsEasterEgg (0x69e5a4..0x69e5ac). Both editors, which
+// link no smackmgr.obj, keep the same neighbours in their Libraries copy.
+// Dreamcast proves the first two file/header pairs and their types in
+// DeleteSoundHeaders (dc 0x14acc8); Complete's loader at 0x5984a0 adds the
+// campaign archive. smackmgr's teardown proves the sentinel states: file
+// handles live in .data as INVALID_HANDLE_VALUE, header arrays in .bss as
+// null pointers.
+DATA(0x00682e80) HANDLE g_soundFile = INVALID_HANDLE_VALUE;
+DATA(0x0069d848) SoundHeaderStruct* g_soundHeader;
+DATA(0x00682e7c) HANDLE g_soundFileCd = INVALID_HANDLE_VALUE;
+DATA(0x0069d850) SoundHeaderStruct* g_soundHeaderCd;
+DATA(0x00682e84) HANDLE g_soundFileCampaign = INVALID_HANDLE_VALUE;
+DATA(0x0069d84c) SoundHeaderStruct* g_soundHeaderCampaign;
+DATA(0x0069e5a8) int g_soundCount;
+DATA(0x0069e5a4) int g_soundCountCd;
+DATA(0x0069e5ac) int g_soundCountCampaign;
+
 // Retail CRT 0x5592b0 binds campaign, installed, then CD sound archives.
 DATA(0x0069e500)
 TSoundHeaderDescriptor g_soundHeaderDescriptors[3] = {

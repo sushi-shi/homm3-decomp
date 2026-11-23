@@ -175,7 +175,8 @@ extern int g_videoCount3;
 // Spelt `void*` and not `HANDLE`: this header pulls in no windows.h of its
 // own and several of its sixteen consumers include it first. HANDLE is a
 // typedef of void* either side of winnt.h's STRICT switch, so the definitions
-// in src/smackmgr.cpp keep their HANDLE spelling and the types agree.
+// in src/smackmgr.cpp and src/resourcemanager.cpp keep their HANDLE
+// spelling and the types agree.
 extern void* g_videoFile1;
 extern void* g_videoFile2;
 extern void* g_videoFile3;

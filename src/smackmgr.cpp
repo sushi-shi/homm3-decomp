@@ -230,22 +230,6 @@ DATA(0x0069fe2c) VideoHeaderStruct* g_videoHeader3;
 DATA(0x0069fe54) static int g_insideNextFrame;       // DC insideNextFrame: reentry latch
 DATA(0x0069fe5c) bool SmackManager::g_playingSmacker;   // SmackDoFrame is allowed
 
-// Dreamcast proves the first two file/header pairs and their types in
-// DeleteSoundHeaders (dc 0x14acc8). Complete's retail loader at 0x5984a0
-// adds a third archive built from the active campaign name. The retail
-// teardown below independently proves all six addresses and the sentinel
-// states: file handles live in .data as INVALID_HANDLE_VALUE; header arrays
-// live in .bss as null pointers.
-DATA(0x00682e80) HANDLE g_soundFile = INVALID_HANDLE_VALUE;
-DATA(0x0069d848) SoundHeaderStruct* g_soundHeader;
-DATA(0x00682e7c) HANDLE g_soundFileCd = INVALID_HANDLE_VALUE;
-DATA(0x0069d850) SoundHeaderStruct* g_soundHeaderCd;
-DATA(0x00682e84) HANDLE g_soundFileCampaign = INVALID_HANDLE_VALUE;
-DATA(0x0069d84c) SoundHeaderStruct* g_soundHeaderCampaign;
-DATA(0x0069e5a8) int g_soundCount;
-DATA(0x0069e5a4) int g_soundCountCd;
-DATA(0x0069e5ac) int g_soundCountCampaign;
-
 // Separate Smacker and Bink service tails, with canonical serviceSounds
 // calls. The WinCE counterpart is a four-byte stub.
 VA(0x005971b0, 0x3B)
