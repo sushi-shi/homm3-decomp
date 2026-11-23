@@ -8052,7 +8052,7 @@ rva	size	category	owner	verdict	reason
 0x12ea54	8	eh-funclet	0xf59f6	exact	library contribution
 0x12ea68	8	eh-funclet	0xf5a84	exact	library contribution
 0x12ea7c	8	eh-funclet	0xf5bd1	exact	library contribution
-0x12ea90	8	eh-funclet	0xf5c6d	unclaimed	parent not claimed by a source unit
+0x12ea90	8	eh-funclet	0xf5c6d	exact	library contribution
 0x12eaa4	11	eh-funclet	0xf5cfb	exact	library contribution
 0x12eabc	8	eh-funclet	0xf5ee7	exact	library contribution
 0x12eac4	10	eh-funclet	0xf5ee7	exact	library contribution

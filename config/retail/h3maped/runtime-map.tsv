@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3maped.exe sha256=4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37 size=2134016
-# date: 2026-11-03
+# date: 2026-11-23
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	name	library	member
 0x16fd	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z	LIBCPMT	ios.obj
@@ -838,6 +838,10 @@ rva	name	library	member
 0xf5b9e	?_CleanUp@std@@YAXXZ	LIBCPMT	xlock.obj
 0xf5bbc	??1_Lockit@std@@QAE@XZ	LIBCPMT	xlock.obj
 0xf5bd1	?clear@ios_base@std@@QAEXH_N@Z	LIBCPMT	ios.obj
+0xf5c6d	??1failure@ios_base@std@@UAE@XZ	LIBCPMT	ios.obj
+0xf5caa	?_Doraise@failure@ios_base@std@@MBEXXZ	LIBCPMT	ios.obj
+0xf5cc7	??_Gfailure@ios_base@std@@UAEPAXI@Z	LIBCPMT	ios.obj
+0xf5ce3	??0failure@ios_base@std@@QAE@ABV012@@Z	LIBCPMT	ios.obj
 0xf5cfb	??1ios_base@std@@UAE@XZ	LIBCPMT	ios.obj
 0xf5d4b	?_Callfns@ios_base@std@@AAEXW4event@12@@Z	LIBCPMT	ios.obj
 0xf5d6d	?_Addstd@ios_base@std@@IAEXXZ	LIBCPMT	ios.obj
