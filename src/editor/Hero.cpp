@@ -288,8 +288,13 @@ namespace {
 // bitset subscript proxies (Loki's bitset idiom): retail stages each edition
 // flag in its own bool argument home before the out-of-line set, and keeps
 // the first skill-pair and insertion-result constructors out of line.
+// Binding the destination row before the source row gives retail's register
+// pairing (the loop counter shares the source row's register).
 // Residual: the class roster's set::insert stays out of line (budget 22
-// against cb 64); a default bitset<3> expands it but keeps its result pair.
+// against cb 64). A default bitset<3> expands it (budget 113) but keeps its
+// result pair, which needs 146; the window that also keeps the skill pairs
+// out of line is +33..+70 budget over the default form. Indexing
+// aHeroTraitsImp directly reaches it but recomputes the row (74.49%).
 VA(0x0044a8b5, 0x3b0)
 void initializeTraitsTable()
 {
@@ -301,8 +306,8 @@ void initializeTraitsTable()
     if (!pBiographies.get())
         throw TRuntimeError();
     for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
-        const THeroTraits& heroTraits = akHeroTraits[heroID];
         THero::TTraits& traits = aHeroTraitsImp[heroID];
+        const THeroTraits& heroTraits = akHeroTraits[heroID];
         traits.m_class = heroTraits.m_class;
         traits.m_prototype.setName(heroTraits.m_name);
         traits.m_prototype.setBiography(pBiographies->GetText(heroID));
