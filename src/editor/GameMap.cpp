@@ -118,10 +118,11 @@ private:
     std::vector<TCappedObjectTypeInfo> _m_aInfo;
 };
 
-// Built on first use (h3maped 0x4226d8: guard 0x5aa6b3, object 0x5aa6c0).
+// Built on first use (h3maped 0x4226d8).
 inline const TCappedObjectTypeInfoMap& getCappedObjectTypeInfoMap()
 {
-    static const TCappedObjectTypeInfoMap s_map;
+    DATA_COMPGEN_GUARD(0x005aa6b3, cappedObjectTypeInfoMapGuard, s_map)
+    DATA(0x005aa6c0) static const TCappedObjectTypeInfoMap s_map;
     return s_map;
 }
 
