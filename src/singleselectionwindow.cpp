@@ -1021,10 +1021,11 @@ DATA(0x0069fc18) static const char* g_lossConditionDesc[4];
 // while constructing CScenarioInfoDlg.
 DATA(0x0069fb14) static TTextResource* g_turnDurationTextResource;
 DATA(0x0069fb44) const char* g_turnDurationText[11];
-// Player colour letters for the per-slot "adopb2%c.def" buttons. Retail keeps
-// these eight bytes without a terminator in .rdata at 0x641ae0 and indexes
-// them from the constructor; the pooled "rbygopts" literal at 0x6831a8 is a
-// separate object used by the panel loaders.
+// Player colour letters for the per-slot "adopb2%c.def" buttons and the
+// constructor's panel/flag loaders. Retail keeps these eight bytes without a
+// terminator in .rdata at 0x641ae0 and indexes them from the constructor; the
+// pooled "rbygopts" literal at 0x6831a8 is a separate object read by
+// scenarioinfo.obj.
 DATA(0x00641ae0) static const char g_playerColorLetters[NUM_PLAYERS] = {
     'r', 'b', 'y', 'g', 'o', 'p', 't', 's'
 };
@@ -1939,6 +1940,14 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 // This TU-state change also swaps stack homes in the two CEnterNameEdit
 // callbacks (99.8868% / 99.8710%, MAX 100); their canonical helper operations
 // and calls remain unchanged. Do not reshape them solely to steer allocation.
+// Exact (from 96.43%): the chat block follows, not nests in, the options
+// block. Retail's options test jumps to the chat test on the save-mode exit
+// and past it only on the threaded load/non-network exit; nesting sent both
+// exits past the chat and split `this` into other registers throughout.
+// The panel/flag loaders index g_playerColorLetters (retail relocs to
+// 0x641ae0), not the pooled "rbygopts" literal. The DC local spellings
+// w/tempText/t were byte-flat; DC-ordered function-scope declarations
+// (96.07%) and an outer `it` declaration (flat) were rejected.
 VA(0x00579960, 0x2d63)
 DC_ADDRESS(0x1309f0, 0x4d6c)
 MAC_ADDRESS(0x170b90, 0x4a20)  // anchor-callee CAdvPopup base ctor + embedded header/player/net-handler construction; tail proven by the retail preload/setup call run at +0x2a56..+0x2d45;
@@ -2121,17 +2130,17 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     {
         for (i = 0; i < 8; ++i) {
-            widget* flag = new iconWidget(
+            widget* w = new iconWidget(
                 460 + i * 15, 405, 15, 20, 112 + i, "itgflags.def",
                 0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
-            flag->hide();
-            m_widgets.push_back(flag);
+            w->hide();
+            m_widgets.push_back(w);
 
-            flag = new iconWidget(
+            w = new iconWidget(
                 640 + i * 15, 405, 15, 20, 120 + i, "itgflags.def",
                 0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
-            flag->hide();
-            m_widgets.push_back(flag);
+            w->hide();
+            m_widgets.push_back(w);
         }
     }
 
@@ -2139,12 +2148,12 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         m_widgets.push_back(new CHotspotWidget(456, 402, 310, 25, 387));
 
     for (i = 0; i < g_scenarioListVisibleRows; ++i) {
-        textWidget* row = new textWidget(
+        textWidget* tempText = new textWidget(
             57, 122 + i * 25, 314, 25, 0,
             "smalfont.fnt", font::WHITE, 142 + i,
             font::CENTER_JUSTIFIED, 0, 8);
-        row->hide();
-        m_widgets.push_back(row);
+        tempText->hide();
+        m_widgets.push_back(tempText);
     }
 
     if (m_saveMode) {
@@ -2293,47 +2302,47 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             58, 534, 334, 20, g_generalText->GetText(GENERAL_TEXT_PLAYER_TURN_DURATION_HEADER),
             "smalfont.fnt", headerFont, 340,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    }
 
-        if (g_remoteOn && !m_saveMode) {
-            m_chatWidget = new CChatWidget(
-                416, 131, 315, 128, 0,
-                "smalfont.fnt", font::CHAT, 179,
-                font::BOTTOM_JUSTIFIED, 0, 8);
-            m_chatSlider = new CChatSlider(
-                733, 133, 16, 126, 336, 0, sliderChatWindow,
-                slider::BLUE, 0);
-            m_chatSlider->setResolution(0);
-            m_chatSlider->setState(0);
-            g_chatMan.updateWidget(m_chatWidget, 0, 5);
-            g_chatMan.setPosition(-1);
+    if (g_remoteOn && !m_saveMode) {
+        m_chatWidget = new CChatWidget(
+            416, 131, 315, 128, 0,
+            "smalfont.fnt", font::CHAT, 179,
+            font::BOTTOM_JUSTIFIED, 0, 8);
+        m_chatSlider = new CChatSlider(
+            733, 133, 16, 126, 336, 0, sliderChatWindow,
+            slider::BLUE, 0);
+        m_chatSlider->setResolution(0);
+        m_chatSlider->setState(0);
+        g_chatMan.updateWidget(m_chatWidget, 0, 5);
+        g_chatMan.setPosition(-1);
 
-            CSingleSelectionChatEdit* edit =
-                new CSingleSelectionChatEdit(
-                    415, 259, 334, 16, 127, "",
-                    "smalfont.fnt", font::WHITE, font::LEFT_JUSTIFIED,
-                    "ircentry.pcx", 0, 180, 0x100, 0, 7, 5);
-            m_chatEdit = edit;
-            bitmapBorder* chatBack = new bitmapBorder(
-                412, 282, 340, 114, 181, "CHATPLUG.pcx", 0x800);
-            m_nameList1 = new textWidget(
-                419, 287, 156, 103, 0,
-                "smalfont.fnt", font::PRIMARY, 182,
-                font::LEFT_JUSTIFIED, 0, 8);
-            m_nameList2 = new textWidget(
-                584, 287, 156, 103, 0,
-                "smalfont.fnt", font::PRIMARY, 182,
-                font::LEFT_JUSTIFIED, 0, 8);
+        CSingleSelectionChatEdit* edit =
+            new CSingleSelectionChatEdit(
+                415, 259, 334, 16, 127, "",
+                "smalfont.fnt", font::WHITE, font::LEFT_JUSTIFIED,
+                "ircentry.pcx", 0, 180, 0x100, 0, 7, 5);
+        m_chatEdit = edit;
+        bitmapBorder* chatBack = new bitmapBorder(
+            412, 282, 340, 114, 181, "CHATPLUG.pcx", 0x800);
+        m_nameList1 = new textWidget(
+            419, 287, 156, 103, 0,
+            "smalfont.fnt", font::PRIMARY, 182,
+            font::LEFT_JUSTIFIED, 0, 8);
+        m_nameList2 = new textWidget(
+            584, 287, 156, 103, 0,
+            "smalfont.fnt", font::PRIMARY, 182,
+            font::LEFT_JUSTIFIED, 0, 8);
 
-            m_widgets.push_back(chatBack);
-            m_widgets.push_back(new bitmapBorder(
-                730, 133, 19, 126, 389, "selslide.pcx", 0x800));
-            m_widgets.push_back(m_chatSlider);
-            m_widgets.push_back(m_chatWidget);
-            m_widgets.push_back(m_chatEdit);
-            m_widgets.push_back(m_nameList1);
-            m_widgets.push_back(m_nameList2);
-            m_chatEdit->setFocus(1);
-        }
+        m_widgets.push_back(chatBack);
+        m_widgets.push_back(new bitmapBorder(
+            730, 133, 19, 126, 389, "selslide.pcx", 0x800));
+        m_widgets.push_back(m_chatSlider);
+        m_widgets.push_back(m_chatWidget);
+        m_widgets.push_back(m_chatEdit);
+        m_widgets.push_back(m_nameList1);
+        m_widgets.push_back(m_nameList2);
+        m_chatEdit->setFocus(1);
     }
 
     if ((!m_loadMode && !m_saveMode) || (m_loadMode && isMultiPlayer())) {
@@ -2374,17 +2383,17 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     // DC2445..2490: resource/key selection and both navigation buttons.
     {
-        const char* beginButtonName = "scnrbeg.def";
+        const char* t = "scnrbeg.def";
         int key = 48;
         if (m_loadMode) {
-            beginButtonName = "scnrlod.def";
+            t = "scnrlod.def";
             key = 38;
         } else if (m_saveMode) {
-            beginButtonName = "scnrsav.def";
+            t = "scnrsav.def";
             key = 31;
         }
         button* b = new button(
-            414, 535, 166, 40, 186, beginButtonName,
+            414, 535, 166, 40, 186, t,
             0, 1, 0, key, 2);
         if (m_loadMode)
             b->setHotkey(28);
@@ -2425,11 +2434,10 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_heroPix[163] = ResourceManager::GetBitmap816("hpsrand.pcx");
     m_resource = ResourceManager::GetSprite("ScnrStar.def");
 
-    const char* colorChars = "rbygopts";
     for (i = 0; i < NUM_PLAYERS; ++i) {
-        sprintf(tempName, "adop%cpnl.pcx", colorChars[i]);
+        sprintf(tempName, "adop%cpnl.pcx", g_playerColorLetters[i]);
         m_panels[i] = ResourceManager::GetBitmap816(tempName);
-        sprintf(tempName, "adopflg%c.pcx", colorChars[i]);
+        sprintf(tempName, "adopflg%c.pcx", g_playerColorLetters[i]);
         m_flags[i] = ResourceManager::GetBitmap816(tempName);
     }
     m_randomTownBmp = ResourceManager::GetBitmap816("hpsrand0.pcx");
