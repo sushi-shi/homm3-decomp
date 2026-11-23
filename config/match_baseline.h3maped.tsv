@@ -5748,7 +5748,7 @@ resourcemanager	__h3cg$resourcemanager$static_ctor$g_resourceArchiveContexts	100
 resourcemanager	__h3cg$resourcemanager$static_ctor$g_resourceCache	100.0000	100.0000	100.0000	0xdafe0	-
 resourcemanager	__h3cg$resourcemanager$static_ctor$g_resourceLodSlots	100.0000	100.0000	100.0000	0xdacc0	-
 resourcemanager	__h3cg$resourcemanager$static_ctor$g_resourcePath	100.0000	100.0000	100.0000	0xdadb0	-
-resourcemanager	__h3cg$resourcemanager$static_ctor$g_soundHeaderDescriptors	97.6316	97.6316	97.6316	0xdae40	-
+resourcemanager	__h3cg$resourcemanager$static_ctor$g_soundHeaderDescriptors	100.0000	100.0000	100.0000	0xdae40	-
 rmg	??0?$vector@HV?$allocator@H@std@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x78f3	-
 rmg	??0?$vector@PAUTRmgTemplateZone@@V?$allocator@PAUTRmgTemplateZone@@@std@@@std@@QAE@ABV?$allocator@PAUTRmgTemplateZone@@@1@@Z	100.0000	100.0000	100.0000	0xae177	-
 rmg	??0TRandomMapRequest@@QAE@HHH@Z	100.0000	100.0000	100.0000	0xadf88	-
@@ -5955,7 +5955,7 @@ rmg	?hasConnectedOutline@type_random_map@@QAEEABV?$vector@UTRmgPoint@@V?$allocat
 rmg	?hasPlayerSlots@TRmgTemplate@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x9ba1b	-
 rmg	?initializeDistances@TRmgZone@@QAEXH@Z	100.0000	100.0000	100.0000	0x9b61b	tokens1:a3043373c099
 rmg	?initializeObjectGenerators@type_random_map_generator@@QAEXXZ	88.3248	90.2515	90.2515	0x9f95a	-
-rmg	?initializeZones@type_random_map_generator@@QAEXPAUTRmgTemplate@@@Z	99.7253	99.7253	99.7253	0xa218c	-
+rmg	?initializeZones@type_random_map_generator@@QAEXPAUTRmgTemplate@@@Z	100.0000	100.0000	100.0000	0xa218c	-
 rmg	?insert@?$list@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@QAE?AViterator@12@V312@ABUTRmgPoint@@@Z	100.0000	100.0000	100.0000	0xae5a8	-
 rmg	?insert@?$vector@EV?$allocator@E@std@@@std@@QAEXPAEIABE@Z	100.0000	100.0000	100.0000	0x8d27c	-
 rmg	?insert@?$vector@FV?$allocator@F@std@@@std@@QAEXPAFIABF@Z	100.0000	100.0000	100.0000	0xae308	-
@@ -6015,7 +6015,7 @@ rmg	?push_back@?$vector@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@QAEXABU
 rmg	?push_back@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QAEXABUTRmgZoneConnection@@@Z	100.0000	100.0000	100.0000	0xae166	-
 rmg	?readObjectPlacementRules@t_abstract_random_generator@@QAEXXZ	99.8568	99.8568	99.8568	0x9dc9e	-
 rmg	?readRmgTemplateConnections@@YAXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHH@Z	100.0000	100.0000	100.0000	0x9f7c4	-
-rmg	?readRmgTemplateZones@@YAXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	99.9754	99.9754	99.9754	0x9f2f5	-
+rmg	?readRmgTemplateZones@@YAXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	100.0000	100.0000	100.0000	0x9f2f5	-
 rmg	?recenterZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0xa2ffa	tokens1:15eca5c05d97
 rmg	?releaseReservation@type_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9c264	-
 rmg	?releaseReservation@type_object@@UAEXXZ	100.0000	100.0000	100.0000	0xed06	-
@@ -6045,7 +6045,7 @@ rmg	?setRiver@TRmgMapItem@@QAEXHHEE@Z	100.0000	100.0000	100.0000	0x9b170	tokens1
 rmg	?setRoad@TRmgMapItem@@QAEXHHEE@Z	100.0000	100.0000	100.0000	0x9ae79	tokens1:b84bac966572
 rmg	?setTerrain@TRmgMapItem@@QAEXHHEE@Z	100.0000	100.0000	100.0000	0x9acf6	-
 rmg	?setTile@type_random_map@@UAEXABV?$TPoint@I@@ABUTRmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0x9acc5	-
-rmg	?setTile@type_river_map@@UAEXABV?$TPoint@I@@ABUTRmgTerrainTile@@@Z	99.7840	99.7840	99.7840	0x9afc4	-
+rmg	?setTile@type_river_map@@UAEXABV?$TPoint@I@@ABUTRmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0x9afc4	-
 rmg	?setTile@type_road_map@@UAEXABV?$TPoint@I@@ABUTRmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0x9ae47	-
 rmg	?setTotal@type_progress_bar@@UAEXH@Z	100.0000	100.0000	100.0000	0x99e5b	-
 rmg	?setZonePath@TRmgMapItem@@QAEXHHH@Z	100.0000	100.0000	100.0000	0xa59e2	tokens1:2e57fd23903a
