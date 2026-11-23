@@ -1791,7 +1791,7 @@ findpath	?pushCombatPoint@searchArray@@AAEXHHHHH@Z	100.0000	100.0000	100.0000	0x
 findpath	?pushPoint@searchArray@@AAEXABUpathCell@@AAU2@HHHJUtype_point@@H@Z	100.0000	100.0000	100.0000	0xb1a70	tokens1:b627cf6ec84d
 findpath	?seedCombatPosition@searchArray@@QAEXPBVarmy@@JJ_NJ@Z	100.0000	100.0000	100.0000	0xb2da0	tokens1:60ba8e00a88c
 findpath	?setMoat@searchArray@@AAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0xb3290	tokens1:59fcdc22ef59
-findpath	?testPossibleDirections@searchArray@@AAEXPBVhero@@AAUpathCell@@JJ_NUtype_point@@W4TSkillMastery@@W4type_search_type@@W4TTerrainType@@@Z	99.2022	99.2022	99.2022	0xb2300	tokens1:76586bd21985
+findpath	?testPossibleDirections@searchArray@@AAEXPBVhero@@AAUpathCell@@JJ_NUtype_point@@W4TSkillMastery@@W4type_search_type@@W4TTerrainType@@@Z	99.2906	99.2906	99.2906	0xb2300	tokens1:7454bcee1ae5
 fly	?fly@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4a40	tokens1:0fcbb3afa058
 fly	?flyTo@army@@QAEHH_N@Z	100.0000	100.0000	100.0000	0xb49c0	tokens1:571760db481f
 fly	?teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10	tokens1:88d5d62860bb
