@@ -5899,9 +5899,14 @@ VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
 // multiplications reproduce retail scheduling.
 // A single boolean TraceZoneBoundary argument preserves its ECX-valued
 // true/false arms; separate literal calls use push-immediate instead.
-// One shared locate-query value restores both expanded point-vector member
-// destructors while retaining their _Destroy calls and the short-vector
-// destructor. Separate query constructors keep the second member out of line.
+// Mac 0x23f990..0x23f9b8, 0x23ff80..0x23ffa4 and 0x24003c..0x240060 pass a
+// fresh getLevelPosition() copy straight to addSite/locate (the TRmgPoint
+// base), with no constructed or assigned query point; the editor's direct
+// pushes of that copy follow. The trace loop holds the zone pointer as the
+// fill loop does (Mac reuses r27 in both): its one fewer vector index lets
+// the game expand the added slot's point-vector destructor as retail does
+// (predict-inline --solve fit). Both images are exact; the earlier shared
+// query point and position copies only reproduced the game's budget.
 // Bound temporaries live inside their guards, matching retail's x87 stores.
 // Retail reuses one counter home across the initial, radial and final loops;
 // shadowing it in the radial loop adds a stack home. Reusing it
@@ -5909,26 +5914,16 @@ VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
 // assign each radial center to its own value before scaling. Copy-initialized
 // centers leave two vector destructors out of line; assignment
 // preserves all 1613 retail bytes, including the original cleanup sequence.
-// Editor probe: passing the copied level position itself (its TRmgPoint
-// base) to the first addSite and both locate calls, with no query point,
-// gives the editor's direct pushes (96.13 -> 99.98) and matches Mac
-// 0x23ff9c/0x240058 loading locate's XY from the position copy, but drops
-// the game to 97.29: root cb 1443 -> 1399 leaves the added slot's point
-// vector destructor out of line (the replay needs about 1450). Not adopted
-// while the game's extra tuples are unexplained.
 VA(0x0053E050, 0x64D)
 MAC_ADDRESS(0x23f924, 0x798) // anchor-callee 0x549af9; thiscall, ret 8
 VA_AT(h3maped, 0x004a3a03, 0x524)
 void type_random_map_generator::buildZoneBoundaries(
     TRmgTemplate* mapTemplate, int level)
 {
-    TRmgPoint query;
     TRmgVoronoi diagram;
     for (int zone = 0; zone < m_zones.size(); ++zone) {
-        if (m_zones[zone]->getLevelPosition().m_z == level) {
-            TRmgMapPosition position = m_zones[zone]->getLevelPosition();
-            diagram.addSite(TRmgPoint(position.m_x, position.m_y), m_zones[zone]);
-        }
+        if (m_zones[zone]->getLevelPosition().m_z == level)
+            diagram.addSite(m_zones[zone]->getLevelPosition(), m_zones[zone]);
     }
     int originalZones = m_zones.size();
     if (level == 1 || m_waterContent != RMG_WATER_NONE) {
@@ -6027,23 +6022,17 @@ void type_random_map_generator::buildZoneBoundaries(
     }
     diagram.buildVertices();
     for (zone = 0; zone < m_zones.size(); ++zone) {
-        if (m_zones[zone]->getLevelPosition().m_z == level) {
-            TRmgMapPosition position = m_zones[zone]->getLevelPosition();
-            query.m_y = position.m_y;
-            query.m_x = position.m_x;
-            TRmgHalfEdge* first = diagram.locate(query);
+        TRmgZone* current = m_zones[zone];
+        if (current->getLevelPosition().m_z == level) {
+            TRmgHalfEdge* first = diagram.locate(current->getLevelPosition());
             traceZoneBoundary(first,
                 zone < originalZones && (m_waterContent != RMG_WATER_ISLANDS || level == 1));
         }
     }
     for (zone = 0; zone < m_zones.size(); ++zone) {
         TRmgZone* current = m_zones[zone];
-        if (current->getLevelPosition().m_z == level) {
-            TRmgMapPosition position = current->getLevelPosition();
-            query.m_y = position.m_y;
-            query.m_x = position.m_x;
-            fillZoneArea(current, diagram.locate(query));
-        }
+        if (current->getLevelPosition().m_z == level)
+            fillZoneArea(current, diagram.locate(current->getLevelPosition()));
     }
     joinExtraZones(originalZones, &diagram);
 }
@@ -6520,6 +6509,11 @@ void type_random_map_generator::markZoneBoundaryObstacles()
 // Keep the shared terrain enum domain instead of collapsing it to int.
 // The enum count-insert body matches retail's folded 0x54d120, including
 // both allocation relocations; vector<int>'s separate admitted body is 0x404200.
+// The editor's jbe after the per-level position count proves an unsigned
+// `> 0` test (the game's /O2 folds it to je either way). Editor residual:
+// retail keeps the row in edi from the second clip rectangle into the third
+// where ours caches the second rectangle's maximum X; one shared row for all
+// three or for the last two rectangles is lower or unchanged.
 VA(0x0053FCB0, 0x5EC)
 MAC_ADDRESS(0x241e9c, 0x770)
 void type_random_map_generator::repairWaterZoneBorders()
@@ -6619,7 +6613,7 @@ void type_random_map_generator::repairWaterZoneBorders()
             if (m_progress)
                 m_progress->advance(20);
         }
-        if (positions.size()) {
+        if (positions.size() > 0) {
             TTerrainType lastTerrain = terrains[0];
             type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
                 m_map.m_mapWidth, m_map.m_mapHeight);
