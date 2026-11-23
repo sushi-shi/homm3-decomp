@@ -3382,7 +3382,7 @@ rmg	?fill@std@@YIXPAUTRmgObjectPlacementRule@@0ABU2@@Z	100.0000	100.0000	100.000
 rmg	?fillIslandInterior@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x13cf50	tokens1:cf4433bea737
 rmg	?fillTreasureGroup@type_random_map_generator@@QAEHPAUTRmgZone@@PAUTRmgTreasureGroup@@EH@Z	100.0000	100.0000	100.0000	0x146520	tokens1:ab4da9bdbf69
 rmg	?fillZoneArea@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgHalfEdge@@@Z	98.0758	98.0758	98.0758	0x13d380	tokens1:8120c01e7a30
-rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@H@Z	99.7061	99.7061	99.7061	0x13b2f0	tokens1:0bafdebc4338
+rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x13b2f0	tokens1:b3a1cffddb2c
 rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTemplateZone@@H@Z	100.0000	100.0000	100.0000	0x1330a0	tokens1:86dde7afbac7
 rmg	?floodConnectionCosts@type_random_map@@QAEXUTRmgMapPosition@@E@Z	96.9918	96.9918	96.9918	0x131460	tokens1:7d98302f449e
 rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x141780	tokens1:4c502e5aa532
