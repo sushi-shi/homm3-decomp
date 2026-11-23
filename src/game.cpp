@@ -4143,9 +4143,10 @@ static void randomizePyramid(NewmapCell* cell)
             possibleSpells.push_back(i);
     }
 
-    ESpellId spell = ESpellId(
-        possibleSpells[random(0, possibleSpells.size() - 1)]);
-    cell->setPyramid(true, spell);
+    // Mac 0xd6af8 and retail randomizeEvents both store the drawn spell
+    // back into i's address-taken home before passing it to setPyramid.
+    i = possibleSpells[random(0, possibleSpells.size() - 1)];
+    cell->setPyramid(true, ESpellId(i));
     cell->clearVisitedBits();
 }
 
@@ -4222,7 +4223,7 @@ static void randomizeWitchHut(NewmapCell* cell)
         int choice = random(1, count);
         for (skill = eSecSkillPathfinding; skill < kNumSecSkills;
              skill = TSecondarySkill(skill + 1)) {
-            if (possibleSkills[skill] && --choice < 1)
+            if (possibleSkills[skill] && --choice <= 0)
                 break;
         }
         cell->setWitchSkill(skill);
@@ -4464,6 +4465,18 @@ void game::matchUndergroundGates()
 // Mac's 93-call stream and DC's direct initializeCreatureBank,
 // getRandomArtifactId and push_back calls rule out an extracted bank or
 // black-market helper; the missing source fact is not yet identified.
+// 2026-11-23: DC 5190 advances numDeadGuy once after both setSkeleton arms
+// (retail duplicates that increment into each arm); DC 5283/5284 read the
+// garrison index from the cell without id; DC 5309 stores getMineId through
+// a fresh cell lookup; randomizePyramid stores its draw back into i as Mac
+// 0xd6af8 does; the witch-hut scan ends at --choice <= 0 (Mac addic./ble).
+// Together 90.8205 -> 93.69%. Neutral DC shapes kept: obelisk 5410/5411
+// as two statements and SHIPWRECK_SURVIVOR's draw in i (DC sp+0x68).
+// Declaring x/y/z adjacently changes nothing. Residual: retail caches z in
+// edx across the loop nest (pushing it directly in both generator messages)
+// and x/y take swapped frame slots; the caller still has more inline budget
+// than retail (predict-inline cb 2884, no single-cb window), so setWagon and
+// the witch-hut bitset ctor/operator[] still expand here.
 VA(0x004c0cc0, 0x1668)
 DC_ADDRESS(0x0ac910, 0x1278)
 MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order
@@ -4600,11 +4613,16 @@ void game::randomizeEvents()
 
                 case DEAD_GUY:
                     {
-                        if (random(0, 99) < 20)
-                            tempCell->setSkeleton(numDeadGuy++, true,
+                        // DC 5179..5187 sets either record; 5190 then
+                        // advances the counter once after both arms.
+                        if (random(0, 99) < 20) {
+                            tempCell->setSkeleton(numDeadGuy, true,
                                                   getRandomArtifactId(6));
-                        else
-                            tempCell->setSkeleton(numDeadGuy++, false, -1);
+                        }
+                        else {
+                            tempCell->setSkeleton(numDeadGuy, false, -1);
+                        }
+                        ++numDeadGuy;
                     }
                     break;
 
@@ -4685,12 +4703,13 @@ void game::randomizeEvents()
 
                 case GARRISON:
                     {
-                        id = tempCell->m_extraInfo;
-                        garrison* g = getGarrison(id);
+                        // DC 5283/5284 read the garrison index from the
+                        // cell for each call, without the id local.
+                        garrison* g = getGarrison(tempCell->m_extraInfo);
                         // DC game.cpp:5284 calls the ordinary helper. Its
                         // expansion retains CMCClaimGarrison's constructor
                         // without a pin; the standalone helper stays exact.
-                        claimGarrison(id, g->m_playerOwner);
+                        claimGarrison(tempCell->m_extraInfo, g->m_playerOwner);
                     }
                     break;
 
@@ -4709,8 +4728,9 @@ void game::randomizeEvents()
                     break;
 
                 case LIGHTHOUSE:
-                    id = getMineId(x, y, z);
-                    tempCell->m_extraInfo = id;
+                    // DC 5309 stores getMineId through a fresh cell lookup
+                    // without the id local; retail recomputes that address.
+                    m_worldMap.cell(x, y, z)->m_extraInfo = getMineId(x, y, z);
                     break;
 
                 case LITH_ONEWAY_EXIT:
@@ -4786,8 +4806,11 @@ void game::randomizeEvents()
                     break;
 
                 case OBELISK:
-                    if (g_game->m_numObelisks < 48)
-                        tempCell->m_extraInfo = g_game->m_numObelisks++;
+                    // DC 5410 stores the obelisk index; 5411 advances it.
+                    if (g_game->m_numObelisks < 48) {
+                        tempCell->m_extraInfo = g_game->m_numObelisks;
+                        g_game->m_numObelisks++;
+                    }
                     break;
 
                 case POWER_SCHOOL:
@@ -4829,12 +4852,13 @@ void game::randomizeEvents()
                     break;
 
                 case SHIPWRECK_SURVIVOR:
-                    id = random(0, 99);
-                    if (id < 55)
+                    // DC 5473 keeps the draw in i (sp+0x68), not id.
+                    i = random(0, 99);
+                    if (i < 55)
                         tempCell->m_extraInfo = getRandomArtifactId(2);
-                    else if (id < 75)
+                    else if (i < 75)
                         tempCell->m_extraInfo = getRandomArtifactId(4);
-                    else if (id < 95)
+                    else if (i < 95)
                         tempCell->m_extraInfo = getRandomArtifactId(8);
                     else
                         tempCell->m_extraInfo = getRandomArtifactId(16);
