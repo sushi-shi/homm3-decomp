@@ -635,7 +635,10 @@ DATA(0x0065f67c) const char* g_boatFrothIconNames[3] = { "abm01_.def", "abm02_.d
 // Direct appends, shared DC counters and a reused filename buffer were flat
 // before that loop recovery. With it, sharing a resource pointer scores
 // 99.9475 per iteration / 99.9366 per cache batch, so direct appends remain.
-// The register model cannot classify this slot residual. The two insert-call
+// The register model cannot classify this slot residual: retail shares one
+// slot between both cache arms' push_back temporaries, while this compile
+// gives the bitmap arm its own. Declaring i/j at the cache loop, unbraced
+// arms and explicit resource* casts are all byte-flat. The two insert-call
 // name differences are resource*/widget* pointer-vector ICF aliases.
 // The adventure screen setup. Retail's grouping is preserved: the route
 // array and the map window are allocated lazily with MemError guards,
@@ -682,22 +685,25 @@ int advManager::open(int newPriority)
     if (g_game->getNumMapLevels() < 2)
         m_advWindow->widgetSetStatus(4, 8);
 
-    // DC names the shared counters i/j. The cache itself is retail-only:
-    // comparing i with the array's unsigned element count preserves retail's
-    // jb loop edge without inventing a separate unsigned source local.
+    // DC names the shared counters i/j. The cache itself is retail-only;
+    // Mac counts it in its own register with unsigned compares (cmplwi on
+    // both the 0x13 tick test and the 0x26 bound), so it has its own
+    // unsigned counter (byte-neutral here).
     m_cachedGraphics.reserve(38);
-    for (i = 0; i < sizeof(g_advCachedGraphicNames) / sizeof(g_advCachedGraphicNames[0]); i++) {
+    for (unsigned int cacheIndex = 0;
+         cacheIndex < sizeof(g_advCachedGraphicNames) / sizeof(g_advCachedGraphicNames[0]);
+         cacheIndex++) {
         char reversed[16];
-        strcpy(reversed, g_advCachedGraphicNames[i]);
+        strcpy(reversed, g_advCachedGraphicNames[cacheIndex]);
         strrev(reversed);
         if (strnicmp(reversed,
                       DATA_COMPGEN(0x00660328, defExtensionReversed, "fed"),
                       3) == 0) {
-            m_cachedGraphics.push_back(ResourceManager::GetSprite(g_advCachedGraphicNames[i]));
+            m_cachedGraphics.push_back(ResourceManager::GetSprite(g_advCachedGraphicNames[cacheIndex]));
         } else {
-            m_cachedGraphics.push_back(ResourceManager::GetBitmap816(g_advCachedGraphicNames[i]));
+            m_cachedGraphics.push_back(ResourceManager::GetBitmap816(g_advCachedGraphicNames[cacheIndex]));
         }
-        if (i == CACHED_GRAPHIC_TICK)
+        if (cacheIndex == CACHED_GRAPHIC_TICK)
             incProgressBar(1);
     }
     incProgressBar(1);
@@ -988,17 +994,18 @@ type_point advManager::get_mouse_map_point() const
 // raises Complete from 71.9114% to 90.45%; the source-fact audit is clean
 // apart from the two intentionally shadowed localPlayer records.
 //
-// The residual is an inliner frontier. Candidate and retail agree through
-// the route loop (the first 83 CFG blocks); Complete then expands
-// CheckDimHero but retains its nested CheckDimNextHeroBut call, while this
-// compile expands both. The shipyard tail has the same reciprocal shape:
-// retail expands GetCell and retains zCell, then retains updateScreen;
-// this compile expands one level deeper. predict-inline reports 84 retained
-// calls against retail's 80 and the frame remains 0x84 against 0x80. The
-// explicit outer current-hero guard regresses 90.45 -> 87.11, and spelling
-// both Complete-only CheckDimHero tail calls through this regresses to
-// 77.17. No inline pragma is retained; recover the remaining natural
-// lifetime or compiler state before revisiting the nested calls.
+// DC 1302 opens a braced `get_path_steps() > 0` block (depth 3 -> 5) that
+// runs to the scope close before 1393's break, so the route walk's
+// bBreak/bNoMove/bFoughtBattle/i live inside it rather than after an early
+// break. That restores retail's 0x80 frame and the getCell argument's
+// shared temporary slot (97.83 -> 97.87). DC 1282 tests both path targets
+// in one condition, 1286..1292 sit in their own block, 1437/1443 pass
+// temporaries to SetEnvironmentOrigin, and 1431 guards the hero view with
+// one braced condition (all byte-neutral). Residual: the first getLocation
+// construction's y/z bitfield inserts fold into one mask here (retail keeps
+// the out-of-line xor/`and dh` form), getTarget's xor operand order, and
+// the shipyard pair's scheduling. DC 1411's braced town-view guard
+// regresses to 96.26: VC6 then keeps NewfullMap::cell out of line.
 // DC original public ?DoAdvCommand@advManager@@QAAPAVNewmapCell@@AAUtype_point@@@Z
 // proves a type_point reference. Retail immediately accesses the supplied
 // point address; all thirteen adventure callers forward a valid point.
@@ -1029,18 +1036,18 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
     case ADV_COMMAND_WALK_ROUTE: {
         if (!currHero)
             break;
-        if (currHero->m_pathTargetX == -1)
-            break;
-        if (currHero->m_pathTargetY == -1)
+        if (currHero->m_pathTargetX == -1 || currHero->m_pathTargetY == -1)
             break;
 
-        // DC 1286 nests getLocation and GetCell in the terrain sample lookup.
-        sample* sampleToPlay =
-            cursorSamples[getCell(currHero->getLocation())->m_groundSet];
-        if (currHero->isFlying(0))
-            sampleToPlay = cursorSamples[10];
-        sampleToPlay->memSample.memLooping = 0;
-        g_walkSample = g_soundManager->memorySample(sampleToPlay);
+        {
+            // DC 1286 nests getLocation and GetCell in the terrain sample lookup.
+            sample* sampleToPlay =
+                cursorSamples[getCell(currHero->getLocation())->m_groundSet];
+            if (currHero->isFlying(0))
+                sampleToPlay = cursorSamples[10];
+            sampleToPlay->memSample.memLooping = 0;
+            g_walkSample = g_soundManager->memorySample(sampleToPlay);
+        }
 
         seedTo(currHero->getTarget());
 
@@ -1053,85 +1060,84 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
         currHero->m_isSleeping = 0;
         m_advWindow->setSleepImage(0);
 
-        if (static_cast<int>(g_searchArray->getPathSteps()) <= 0)
-            break;
+        if (static_cast<int>(g_searchArray->getPathSteps()) > 0) {
+            savedShowRoute = m_showRoute;
+            mobilizeCurrHero(1, 0, 0);
+            if (g_config.m_showRoute || savedShowRoute) {
+                showRoute(1, 0, 1);
+            } else if (m_showRoute && m_advCommand != ADV_COMMAND_WALK_ROUTE) {
+                hideRoute(1, 0, 1);
+            }
 
-        savedShowRoute = m_showRoute;
-        mobilizeCurrHero(1, 0, 0);
-        if (g_config.m_showRoute || savedShowRoute) {
-            showRoute(1, 0, 1);
-        } else if (m_showRoute && m_advCommand != ADV_COMMAND_WALK_ROUTE) {
-            hideRoute(1, 0, 1);
-        }
+            g_mouseManager->hidePointer();
+            g_inputManager->flush();
 
-        g_mouseManager->hidePointer();
-        g_inputManager->flush();
+            // Before normalization: bBreak.
+            unsigned char interrupted = 0;
+            // Before normalization: bNoMove.
+            int noMove;
+            // Before normalization: bFoughtBattle.
+            int foughtBattle;
+            int i = g_searchArray->getPathSteps() - 1;
+            if (i >= 0) {
+                while (1) {
+                    {
+                        eventCell = moveHero(g_searchArray->getStep(i),
+                                             i == 0, triggerPoint, &noMove, 0,
+                                             &foughtBattle, 0);
+                        m_advWindow->updateHeroLocator(-1, 1, 1);
+                        if (eventCell)
+                            break;
+                        if (noMove || foughtBattle || g_heroMoveTriggeredEvent)
+                            break;
 
-        // Before normalization: bBreak.
-        unsigned char interrupted = 0;
-        // Before normalization: bNoMove.
-        int noMove;
-        // Before normalization: bFoughtBattle.
-        int foughtBattle;
-        int i = g_searchArray->getPathSteps() - 1;
-        if (i >= 0) {
-            while (1) {
-                {
-                    eventCell = moveHero(g_searchArray->getStep(i),
-                                         i == 0, triggerPoint, &noMove, 0,
-                                         &foughtBattle, 0);
-                    m_advWindow->updateHeroLocator(-1, 1, 1);
-                    if (eventCell)
-                        break;
-                    if (noMove || foughtBattle || g_heroMoveTriggeredEvent)
-                        break;
-
-                    if (!currHero->isFlying(1) && !currHero->canWalkOnWater(1)) {
-                        process1WindowsMessage();
-                        msg = g_inputManager->getEvent();
-                        while (msg.m_id) {
-                            if (msg.m_id == MESSAGE_KEY_DOWN
-                                || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
-                                || msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN
-                                || msg.m_id == MESSAGE_WIDGET) {
-                                interrupted = 1;
-                                stopCursor(1);
-                                break;
-                            }
+                        if (!currHero->isFlying(1) && !currHero->canWalkOnWater(1)) {
                             process1WindowsMessage();
                             msg = g_inputManager->getEvent();
+                            while (msg.m_id) {
+                                if (msg.m_id == MESSAGE_KEY_DOWN
+                                    || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
+                                    || msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN
+                                    || msg.m_id == MESSAGE_WIDGET) {
+                                    interrupted = 1;
+                                    stopCursor(1);
+                                    break;
+                                }
+                                process1WindowsMessage();
+                                msg = g_inputManager->getEvent();
+                            }
+                            if (interrupted)
+                                break;
                         }
-                        if (interrupted)
-                            break;
                     }
+                    if (--i < 0)
+                        break;
                 }
-                if (--i < 0)
-                    break;
             }
-        }
-        reseed(0, 0);
-        if ((i <= 0 && currHero->m_x == currHero->m_pathTargetX
-             && currHero->m_y == currHero->m_pathTargetY)
-            || (interrupted && !g_config.m_showRoute) || eventCell) {
-            hideRoute(0, 1, 1);
-        } else if (m_advCommand == ADV_COMMAND_WALK_ROUTE || g_config.m_showRoute) {
-            showRoute(0, 1, 1);
-        }
-
-        stopCursor(1);
-
-        if (eventCell) {
-            doEvent(eventCell, triggerPoint);
-            triggerPoint.m_x = -1;
-            eventCell = 0;
             reseed(0, 0);
+            if ((i <= 0 && currHero->m_x == currHero->m_pathTargetX
+                 && currHero->m_y == currHero->m_pathTargetY)
+                || (interrupted && !g_config.m_showRoute) || eventCell) {
+                hideRoute(0, 1, 1);
+            } else if (m_advCommand == ADV_COMMAND_WALK_ROUTE || g_config.m_showRoute) {
+                showRoute(0, 1, 1);
+            }
+
+            stopCursor(1);
+
+            if (eventCell) {
+                doEvent(eventCell, triggerPoint);
+                triggerPoint.m_x = -1;
+                eventCell = 0;
+                reseed(0, 0);
+            }
+
+            forceNewHover();
+            g_mouseManager->showPointer(1);
+            g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
+
+            checkDimHero();
         }
-
-        forceNewHover();
-        g_mouseManager->showPointer(1);
-        g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
-
-        checkDimHero();
         break;
     }
 
@@ -1165,30 +1171,24 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
     case ADV_COMMAND_VIEW_HERO: {
         // Before normalization: localPlayer.
         playerData* viewingPlayer = g_game->getLocalPlayer();
-        if (!viewingPlayer)
-            break;
-        if (viewingPlayer->m_currHeroId == -1)
-            break;
-        // Before normalization: currHero.
-        hero* currentHero = g_game->getHero(viewingPlayer->m_currHeroId);
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-        if (g_lowMemory) {
-            type_point offMap(-1, -1, 0);
-            setEnvironmentOrigin(offMap, 1);
+        if (viewingPlayer && viewingPlayer->m_currHeroId != -1) {
+            // Before normalization: currHero.
+            hero* currentHero = g_game->getHero(viewingPlayer->m_currHeroId);
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            if (g_lowMemory)
+                setEnvironmentOrigin(type_point(-1, -1, 0), 1);
+            trimLoopingSounds(0);
+            heroView(viewingPlayer->m_currHeroId, 0, 0, 0);
+            if (g_lowMemory)
+                setEnvironmentOrigin(getMapCenter(), 1);
+            if (g_remoteOn && g_dPlay) {
+                // Before normalization: pNetMsgHandler.
+                CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
+                if (handler)
+                    handler->setInPopup(0);
+            }
+            redrawAdvScreen(1, 0);
         }
-        trimLoopingSounds(0);
-        heroView(viewingPlayer->m_currHeroId, 0, 0, 0);
-        if (g_lowMemory) {
-            type_point centre = getMapCenter();
-            setEnvironmentOrigin(centre, 1);
-        }
-        if (g_remoteOn && g_dPlay) {
-            // Before normalization: pNetMsgHandler.
-            CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
-            if (handler)
-                handler->setInPopup(0);
-        }
-        redrawAdvScreen(1, 0);
         break;
     }
 
@@ -4521,6 +4521,12 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
 // project helper, so both operations stay in this body (byte-flat).
 // Earlier baseX/baseY swaps and both disposable declaration-forest
 // placements did not improve the former cached-receiver implementation.
+// DC scope depths (6004 -> 6006 opens two scopes, 6010 -> 6012 three, one
+// 15-scope close at 6118) nest the layer, draw-cell and puzzle tests as
+// ifs rather than continues; the puzzle draw and its break (6063/6064) sit
+// inside the case list, each draw is one statement (no frame local), and
+// 6093 re-points SprPtr at monAttackSprites before the 6102 draw. This
+// lets the flag arm share the loop tail: 98.62 -> 100.
 VA(0x00410c00, 0x98E)
 DC_ADDRESS(0x012334, 0xc98)
 MAC_ADDRESS(0x011598, 0xa08)  // anchor-callee
@@ -4569,115 +4575,95 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
             for (int numObj = 0; numObj < thisCell->m_objects.size();
                  ++numObj) {
                 NewmapCell::TObjectCell* objCell = &thisCell->m_objects[numObj];
-                if (objCell->m_layer != row)
-                    continue;
+                if (objCell->m_layer == row) {
+                    CObjectType* objType = &m_fullMap->m_objectTypes[
+                        m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
+                    CSprite* sprite = m_fullMap->m_sprites[
+                        m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
+                    if (objType->m_drawCells[CObjectType::getBitPos(
+                            objCell->m_cellX, objCell->m_cellY)]
+                        && !objType->m_suppressDraw) {
+                        if (g_drawingPuzzle) {
+                            switch (objType->m_objectType) {
+                            case TERRAIN_BRUSH:
+                            case TERRAIN_BUSH:
+                            case TERRAIN_CACTUS:
+                            case TERRAIN_CANYON:
+                            case TERRAIN_CRATER:
+                            case TERRAIN_DEAD_VEGETATION:
+                            case TERRAIN_FLOWER:
+                            case TERRAIN_FROZEN_LAKE:
+                            case TERRAIN_HEDGE:
+                            case TERRAIN_HILL:
+                            case TERRAIN_KELP:
+                            case TERRAIN_LAKE:
+                            case TERRAIN_LAVA_FLOW:
+                            case TERRAIN_LAVA_LAKE:
+                            case TERRAIN_MUSHROOM:
+                            case TERRAIN_LOG:
+                            case TERRAIN_MANDRAKE:
+                            case TERRAIN_MOSS:
+                            case TERRAIN_MOUND:
+                            case TERRAIN_MOUNTAIN:
+                            case TERRAIN_OAK_TREE:
+                            case TERRAIN_OUTCROPPING:
+                            case TERRAIN_PINE_TREE:
+                            case TERRAIN_PLANT:
+                            case TERRAIN_ROCK:
+                            case TERRAIN_SAND_DUNE:
+                            case TERRAIN_SAND_PIT:
+                            case TERRAIN_SHRUB:
+                            case TERRAIN_SKULL:
+                            case TERRAIN_STALAGMITE:
+                            case TERRAIN_STUMP:
+                            case TERRAIN_TAR_PIT:
+                            case TERRAIN_TREE:
+                            case TERRAIN_VINE:
+                            case TERRAIN_VOLCANIC_VENT:
+                            case TERRAIN_VOLCANO:
+                            case TERRAIN_WILLOW_TREE:
+                            case TERRAIN_YUCCA_TREE:
+                            case TERRAIN_REEF:
+                                sprite->DrawAdvObj(
+                                    (m_animCtr + m_fullMap->m_objects[objCell->m_objectIndex].m_animationOffset)
+                                        % sprite->GetNumFrames(0),
+                                    tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                                    tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
+                                    tilew, tileh, g_windowManager->m_screenBitmap,
+                                    baseX, baseY + 8, false);
+                                break;
+                            }
+                        } else if (hasFlag(objType->m_objectType)) {
+                            // DC line 6067 and Mac's call to 0+0x103cc retain
+                            // hasFlag here; VC6 expands it without changing bytes.
+                            CObject* obj = &m_fullMap->m_objects[objCell->m_objectIndex];
+                            int triggerX;
+                            int triggerY;
+                            obj->findTrigger(triggerX, triggerY);
+                            NewmapCell* triggerCell =
+                                getCell(type_point(triggerX, triggerY, z));
+                            int owner = getFlaggedObjectOwner(triggerCell);
 
-                CObjectType* objType = &m_fullMap->m_objectTypes[
-                    m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
-                CSprite* sprite = m_fullMap->m_sprites[
-                    m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
-                if (!objType->m_drawCells[CObjectType::getBitPos(
-                        objCell->m_cellX, objCell->m_cellY)]
-                    || objType->m_suppressDraw)
-                    continue;
-
-                if (g_drawingPuzzle) {
-                    switch (objType->m_objectType) {
-                    case TERRAIN_BRUSH:
-                    case TERRAIN_BUSH:
-                    case TERRAIN_CACTUS:
-                    case TERRAIN_CANYON:
-                    case TERRAIN_CRATER:
-                    case TERRAIN_DEAD_VEGETATION:
-                    case TERRAIN_FLOWER:
-                    case TERRAIN_FROZEN_LAKE:
-                    case TERRAIN_HEDGE:
-                    case TERRAIN_HILL:
-                    case TERRAIN_KELP:
-                    case TERRAIN_LAKE:
-                    case TERRAIN_LAVA_FLOW:
-                    case TERRAIN_LAVA_LAKE:
-                    case TERRAIN_MUSHROOM:
-                    case TERRAIN_LOG:
-                    case TERRAIN_MANDRAKE:
-                    case TERRAIN_MOSS:
-                    case TERRAIN_MOUND:
-                    case TERRAIN_MOUNTAIN:
-                    case TERRAIN_OAK_TREE:
-                    case TERRAIN_OUTCROPPING:
-                    case TERRAIN_PINE_TREE:
-                    case TERRAIN_PLANT:
-                    case TERRAIN_ROCK:
-                    case TERRAIN_SAND_DUNE:
-                    case TERRAIN_SAND_PIT:
-                    case TERRAIN_SHRUB:
-                    case TERRAIN_SKULL:
-                    case TERRAIN_STALAGMITE:
-                    case TERRAIN_STUMP:
-                    case TERRAIN_TAR_PIT:
-                    case TERRAIN_TREE:
-                    case TERRAIN_VINE:
-                    case TERRAIN_VOLCANIC_VENT:
-                    case TERRAIN_VOLCANO:
-                    case TERRAIN_WILLOW_TREE:
-                    case TERRAIN_YUCCA_TREE:
-                    case TERRAIN_REEF:
-                        break;
-                    default:
-                        continue;
-                    }
-
-                    int frame = (m_animCtr
-                                 + m_fullMap->m_objects[objCell->m_objectIndex]
-                                       .m_animationOffset)
-                                % sprite->GetNumFrames(0);
-                    sprite->DrawAdvObj(
-                        frame,
-                        tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
-                        tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
-                        tilew, tileh, g_windowManager->m_screenBitmap,
-                        baseX, baseY + 8, false);
-                } else {
-                    // DC line 6067 and Mac's call to 0+0x103cc retain
-                    // hasFlag here; VC6 expands it without changing bytes.
-                    if (hasFlag(objType->m_objectType)) {
-                        CObject* obj = &m_fullMap->m_objects[objCell->m_objectIndex];
-                        int triggerX;
-                        int triggerY;
-                        obj->findTrigger(triggerX, triggerY);
-                        NewmapCell* triggerCell =
-                            getCell(type_point(triggerX, triggerY, z));
-                        int owner = getFlaggedObjectOwner(triggerCell);
-
-                        int frame = (m_animCtr
-                                     + m_fullMap->m_objects[objCell->m_objectIndex]
-                                           .m_animationOffset)
-                                    % sprite->GetNumFrames(0);
-                        sprite->DrawAdvObjWithFlag(
-                            frame,
-                            tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
-                            tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
-                            tilew, tileh, g_windowManager->m_screenBitmap,
-                            baseX, baseY + 8,
-                            g_systemPalette->Palette[64 + owner], false);
-                    } else {
-                        if (objCell->m_objectIndex == monAttackObjIndex) {
-
-                            monAttackSprites->DrawAdvObj(
+                            sprite->DrawAdvObjWithFlag(
+                                (m_animCtr + m_fullMap->m_objects[objCell->m_objectIndex].m_animationOffset)
+                                    % sprite->GetNumFrames(0),
+                                tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                                tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
+                                tilew, tileh, g_windowManager->m_screenBitmap,
+                                baseX, baseY + 8,
+                                g_systemPalette->Palette[64 + owner], false);
+                        } else if (objCell->m_objectIndex == monAttackObjIndex) {
+                            sprite = monAttackSprites;
+                            sprite->DrawAdvObj(
                                 monAttackSpriteIndex * 2 + monAttackFlip,
                                 tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
                                 tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                                 tilew, tileh, g_windowManager->m_screenBitmap,
                                 baseX, baseY + 8, false);
                         } else {
-
-                            int frame = (m_animCtr
-                                         + m_fullMap
-                                               ->m_objects[objCell->m_objectIndex]
-                                               .m_animationOffset)
-                                        % sprite->GetNumFrames(0);
                             sprite->DrawAdvObj(
-                                frame,
+                                (m_animCtr + m_fullMap->m_objects[objCell->m_objectIndex].m_animationOffset)
+                                    % sprite->GetNumFrames(0),
                                 tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
                                 tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                                 tilew, tileh, g_windowManager->m_screenBitmap,
