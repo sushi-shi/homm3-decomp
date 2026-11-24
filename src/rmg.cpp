@@ -8953,7 +8953,9 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     std::vector<TRmgObjectPropertiesRef*> candidates;
     int terrain = zone->m_terrain;
     TRmgObjectPropertiesRef* properties;
-    TObjectType* prototype;
+    // Const pointer selects the const isRecommendedTerrain overload, which
+    // pushes the terrain argument before the mask address as retail does.
+    const TObjectType* prototype;
     for (unsigned i = 0; i < m_objectPrototypes[MINE].size(); ++i) {
         properties = m_objectPrototypes[MINE][i];
         prototype = properties->m_prototype;
