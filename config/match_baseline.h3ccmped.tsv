@@ -830,14 +830,14 @@ EditStartingBonusDlg	?create@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp
 EditStartingBonusDlg	?create@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x20570	-
 EditStartingBonusDlg	?create@TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x200f0	-
 EditStartingBonusDlg	?create@TStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x1f5a0	-
-EditStartingBonusDlg	?getBonus@TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.7333	99.7333	100.0000	0x1f320	tokens1:2c4a76077b28
+EditStartingBonusDlg	?getBonus@TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1f320	tokens1:879df279b6d5
 EditStartingBonusDlg	?getBonus@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1efd0	tokens1:4acdf62ad387
-EditStartingBonusDlg	?getBonus@TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1ea80	tokens1:56ba1f01edd1
-EditStartingBonusDlg	?getBonus@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	98.4375	98.4375	98.4375	0x1fbf0	tokens1:a40b8e73c07d
+EditStartingBonusDlg	?getBonus@TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1ea80	tokens1:7d746d77d068
+EditStartingBonusDlg	?getBonus@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1fbf0	tokens1:35c98c1f53ba
 EditStartingBonusDlg	?getBonus@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x206e0	tokens1:a55bda43174a
-EditStartingBonusDlg	?getBonus@TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.3600	99.3600	99.3600	0x20260	tokens1:1b6dd20cf38e
-EditStartingBonusDlg	?getBonus@TStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.7333	99.7333	100.0000	0x1e5e0	tokens1:1daffb76499f
-EditStartingBonusDlg	?getBonus@TStartingBonusSpellScrollDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.7333	99.7333	100.0000	0x1f6b0	tokens1:001bcb962d9f
+EditStartingBonusDlg	?getBonus@TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x20260	tokens1:313037e9b3ac
+EditStartingBonusDlg	?getBonus@TStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1e5e0	tokens1:9aaccbb5ce89
+EditStartingBonusDlg	?getBonus@TStartingBonusSpellScrollDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1f6b0	tokens1:c75025a0e8d4
 EditStartingBonusDlg	?isAvailable@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE_NXZ	100.0000	100.0000	100.0000	0x1efa0	tokens1:f2cc4fa32fd3
 EditStartingBonusDlg	?isCreatureBefore@@YA_NW4TCreatureType@@0@Z	100.0000	100.0000	100.0000	0x1e850	tokens1:570760432b62
 EditStartingBonusDlg	?onBValidChange@TEditStartingBonusDlg@@EAEXPAVTStartingBonusTypeDlg@@_N@Z	100.0000	100.0000	100.0000	0x21960	tokens1:8f3fb33e46ca
@@ -907,14 +907,14 @@ GameMapHeader	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x24
 GameMapHeader	__h3cg$GameMapHeader$vector_capacity$int	0.0000	100.0000	100.0000	0x23e40	-
 GameResource	?InitializeGameResourceTypeTraitsTable@@YAXXZ	100.0000	100.0000	100.0000	0x24e60	-
 GameResource	__h3cg$GameResource$static_dtor$pNames	100.0000	100.0000	100.0000	0x25030	-
-MFCFileBuf	??0TMFCFileBuf@@QAE@PAVCFile@@@Z	74.5733	74.5733	74.5733	0x28ae0	-
+MFCFileBuf	??0TMFCFileBuf@@QAE@PAVCFile@@@Z	100.0000	100.0000	100.0000	0x28ae0	-
 MFCFileBuf	??1TMFCFileBuf@@UAE@XZ	100.0000	100.0000	100.0000	0x28c10	-
 MFCFileBuf	??_GTMFCFileBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x28bf0	-
-MFCFileBuf	?overflow@TMFCFileBuf@@MAEHH@Z	100.0000	100.0000	100.0000	0x28fb0	-
-MFCFileBuf	?seekoff@TMFCFileBuf@@MAE?AV?$fpos@H@std@@JW4seekdir@ios_base@3@H@Z	100.0000	100.0000	100.0000	0x28cd0	-
+MFCFileBuf	?overflow@TMFCFileBuf@@MAEHH@Z	99.9398	100.0000	100.0000	0x28fb0	-
+MFCFileBuf	?seekoff@TMFCFileBuf@@MAE?AV?$fpos@H@std@@JW4seekdir@ios_base@3@H@Z	99.9550	100.0000	100.0000	0x28cd0	-
 MFCFileBuf	?seekpos@TMFCFileBuf@@MAE?AV?$fpos@H@std@@V23@H@Z	100.0000	100.0000	100.0000	0x28e20	-
-MFCFileBuf	?sync@TMFCFileBuf@@MAEHXZ	100.0000	100.0000	100.0000	0x28e60	-
-MFCFileBuf	?underflow@TMFCFileBuf@@MAEHXZ	100.0000	100.0000	100.0000	0x28f10	-
+MFCFileBuf	?sync@TMFCFileBuf@@MAEHXZ	99.9206	100.0000	100.0000	0x28e60	-
+MFCFileBuf	?underflow@TMFCFileBuf@@MAEHXZ	99.9194	100.0000	100.0000	0x28f10	-
 MainFrame	??0TCommandTexts@@QAE@XZ	100.0000	100.0000	100.0000	0x26c00	tokens1:5141df498064
 MainFrame	??0TError@?$TGDIObjectSelector@VCFont@@@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x27a60	-
 MainFrame	??0TMainFrame@@IAE@XZ	100.0000	100.0000	100.0000	0x27030	tokens1:6a7a217938d3
