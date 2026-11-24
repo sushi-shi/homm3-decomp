@@ -1761,7 +1761,7 @@ GameMap	?_placeNewObject@_TImpl@TGameMap@@QAEI_NPAVTHeroPlaceholder@@ABV?$TPoint
 GameMap	?_placeNewObject@_TImpl@TGameMap@@QAEI_NPAVTHolyGrail@@ABV?$TPoint@I@@PAV?$TExtent@II@@@Z	100.0000	100.0000	100.0000	0x27444	tokens1:89c5aa2b7558
 GameMap	?_placeNewObject@_TImpl@TGameMap@@QAEI_NPAVTNonRandomHero@@ABV?$TPoint@I@@PAV?$TExtent@II@@@Z	100.0000	100.0000	100.0000	0x27156	tokens1:9aef206f5e2f
 GameMap	?_placeNewObject@_TImpl@TGameMap@@QAEI_NPAVTPrison@@ABV?$TPoint@I@@PAV?$TExtent@II@@@Z	100.0000	100.0000	100.0000	0x27207	tokens1:24dc65b0faba
-GameMap	?_placeNewObject@_TImpl@TGameMap@@QAEI_NPAVTQuestLocation@@ABV?$TPoint@I@@PAV?$TExtent@II@@@Z	92.8472	92.8472	92.8472	0x2754b	tokens1:948b06f69221
+GameMap	?_placeNewObject@_TImpl@TGameMap@@QAEI_NPAVTQuestLocation@@ABV?$TPoint@I@@PAV?$TExtent@II@@@Z	99.1667	99.1667	99.1667	0x2754b	tokens1:1b92fa6cd08f
 GameMap	?_placeNewObject@_TImpl@TGameMap@@QAEI_NPAVTTown@@ABV?$TPoint@I@@PAV?$TExtent@II@@@Z	77.0156	77.0156	77.0156	0x272a9	tokens1:26f3ce883729
 GameMap	?_placeObject@TLayer@TGameMap@@AAEIV?$auto_ptr@VTGameObject@@@std@@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x2b793	tokens1:efc2251a5709
 GameMap	?_placeObject@TLayer@TGameMap@@AAEIV?$auto_ptr@VTGameObject@@@std@@II@Z	100.0000	100.0000	100.0000	0x1fdbe	-
