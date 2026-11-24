@@ -516,9 +516,9 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 // Original DC public ?Update@recruitUnit@@QAAX_NJ@Z proves bool new_monster;
 // the dossier's unsigned byte is the lowered primitive 0x20, not source type.
 // Windows Update matches all 55 CFG blocks and 29 calls. The remaining
-// products at +0x390/+0x41c load numberToBuy before each per-troop cost,
-// whereas retail loads the cost first. Reversing either source multiplication
-// or splitting it into assignment and multiplication is byte-flat under VC6.
+// products at +0x390/+0x41c needed each per-troop cost's address expression
+// created before numberToBuy's. Reversing the multiplication is byte-flat;
+// operand references after updateCost restore the retail cost-first imul.
 // Mac code0+0x14f85c loads numberToBuy before goldPerTroop too; this does
 // not decide VC6's load order. Reviewed retail ABI aliases for gpCurrentPlayer
 // and gSystemPalette make the named relocations agree but do not change the
@@ -541,6 +541,9 @@ void recruitUnit::update(bool newMonster, long slot)
         slot = m_selectedPosition;
 
     updateCost();
+    int& resourceCost = m_resourcesPerTroop;
+    long& goldCost = m_goldPerTroop;
+    int& quantity = m_numberToBuy;
 
     sprintf(g_text, "%s %s",
         (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
@@ -611,7 +614,7 @@ void recruitUnit::update(bool newMonster, long slot)
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
-    m_totalGold = m_numberToBuy * m_goldPerTroop;
+    m_totalGold = goldCost * quantity;
     sprintf(g_text, "%d", m_totalGold);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -628,7 +631,7 @@ void recruitUnit::update(bool newMonster, long slot)
 
     if (m_altResource == -1)
         m_resourcesPerTroop = 0;
-    m_totalResources = m_numberToBuy * m_resourcesPerTroop;
+    m_totalResources = resourceCost * quantity;
     sprintf(g_text, "%d", m_totalResources);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;

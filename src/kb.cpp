@@ -4312,20 +4312,12 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // raised 93.8074% to 99.9719%; the two-state family emitted two objects
 // and reproduced both. Retail's pre-loop ECX += inRow is VC6 strength
 // reduction of the per-element cursor, not evidence for a bulk source step.
-// Residual (99.9762%): raw objdiff retains nine row-array address differences
-// and two exchanged x/width load operands at +0x435/+0x43b. All 87 CFG block
-// sizes/flows and all branch destinations agree. The jump table agrees too.
-// A four-state array-declaration/triple-addition-order follow-up emitted one
-// reproduced object at 99.9719%. An 18-state actual-element/center-icon
-// lifetime and chained-zero family emitted eight reproduced objects. The
-// chained zero assignment preserves DC5219/5220's icon-then-label stores
-// and improves to 99.9762% by fixing the height-sum operands at +0x2a0/+0x2a4.
-// Element references/pointers fall to 99.7143/99.7186%; center-icon bindings
-// do not help. All 45 exact kb siblings stayed exact.
-// Reversing the commutative triple-row spriteX/spriteWidth operands was byte-flat
-// at 99.9762%; retain the DC5407 spriteX-first load order.
-// Paired control: separate icon/label zero statements leave Mac unchanged
-// at79.6296% and lower VC6 to99.9719%; the existing chain is retained.
+// DC5219/5220 records two separate zero stores, icon then label. Writing
+// them as separate statements here gives label_height the high frame slot
+// and icon_height the low slot; the icon-first height sums then reproduce
+// every retail block, including the row-array loads at +0x2a0/+0x2a4.
+// The rightmost triple-row icon starts at spriteWidth + spriteX + 40; this
+// operand order is what reproduces the retail load sequence.
 // Grouping numIcons before i while initializing it after the zero loop is
 // byte-flat in both compilers; the existing declaration lifetime stays.
 VA(0x004f5d80, 0x51C)
@@ -4335,15 +4327,15 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
 {
     long widestIcon = 0;
     long spacing = 0;
-    int labelHeight[g_dialogIconMaxRows];
-    int iconHeight[g_dialogIconMaxRows];
+    int icon_height[g_dialogIconMaxRows];
+    int label_height[g_dialogIconMaxRows];
     int iconRows;
     int i;
     int iconsPerLine;
 
-    // DC 5219/5220 stores icon then label; chaining preserves that order.
     for (i = 0; i < g_dialogIconMaxRows; ++i) {
-        labelHeight[i] = iconHeight[i] = 0;
+        icon_height[i] = 0;
+        label_height[i] = 0;
     }
 
     int numIcons = 0;
@@ -4360,9 +4352,9 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
             widestIcon = max(dialogInfo.m_icons[i].m_textWidth, widestIcon);
             spacing = max(spacing, dialogInfo.m_icons[i].m_textWidth
                                       - dialogInfo.m_icons[i].m_spriteWidth);
-            iconHeight[row] = max(iconHeight[row],
+            icon_height[row] = max(icon_height[row],
                                         dialogInfo.m_icons[i].m_spriteHeight);
-            labelHeight[row] = max(labelHeight[row],
+            label_height[row] = max(label_height[row],
                                       dialogInfo.m_icons[i].m_textHeight);
         }
     }
@@ -4427,8 +4419,8 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
     boxHeight += dialogInfo.m_textWidgetHeight;
     if (numIcons > 0) {
         boxHeight += 20;
-        for (i = 0; i < iconRows; i++)
-            boxHeight += labelHeight[i] + iconHeight[i];
+        for (int j = 0; j < iconRows; j++)
+            boxHeight += icon_height[j] + label_height[j];
         boxHeight += 20 * (iconRows - 1);
     }
     if (dialogInfo.m_mbType != NORMAL_DIALOG_POPUP)
@@ -4443,11 +4435,11 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
     if (numIcons == 0)
         return;
 
-    int iconY = dialogInfo.m_height - labelHeight[0] - 30;
+    int iconY = dialogInfo.m_height - label_height[0] - 30;
     if (dialogInfo.m_mbType != NORMAL_DIALOG_POPUP)
         iconY -= 50;
     if (iconRows == g_dialogIconMaxRows)
-        iconY -= labelHeight[1] + iconHeight[1] + 20;
+        iconY -= icon_height[1] + label_height[1] + 20;
     int firstInRow = 0;
     for (i = 0; i < iconRows; i++) {
         int rowsLeft = iconRows - i;
@@ -4473,8 +4465,8 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
                 dialogInfo.m_icons[firstInRow + 1].m_spriteX
                 - dialogInfo.m_icons[firstInRow].m_spriteWidth - 40;
             dialogInfo.m_icons[firstInRow + 2].m_spriteX =
-                dialogInfo.m_icons[firstInRow + 1].m_spriteX
-                + dialogInfo.m_icons[firstInRow + 1].m_spriteWidth + 40;
+                dialogInfo.m_icons[firstInRow + 1].m_spriteWidth
+                + dialogInfo.m_icons[firstInRow + 1].m_spriteX + 40;
             break;
         case g_dialogIconRowQuad:
             dialogInfo.m_icons[firstInRow + 1].m_spriteX =
@@ -4501,7 +4493,7 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
             // DC5430 advances the current icon before the inner backedge.
             ++firstInRow;
         }
-        iconY += labelHeight[1] + iconHeight[1] + 20;
+        iconY += icon_height[1] + label_height[1] + 20;
     }
 }
 
