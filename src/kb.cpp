@@ -1695,16 +1695,14 @@ static int doSinglePlayerWindow()
         singleSelectionWindow.doModal(0);
     }
 
-    // Retail still subtracts the cancel result before the switch and keeps
-    // the empty CANCEL arm as sub/je; the normalized result is rewritten in
-    // that arm so C1 retains the case, and the final answer stays the raw
-    // dialog-return predicate.
-    int dialogResult =
-        g_windowManager->m_dialogReturn - DIALOG_RETURN_CANCEL;
+    // The empty CANCEL arm is kept as a goto to the shared return (100%).
+    // The former dead dialogResult subtraction/assignment pushed the front-end
+    // size estimate past the 175 save gate, so oldmain's two lobby sites
+    // could not expand this helper; the goto form stays under it (oldmain
+    // 80.81% -> 88.67% CUR).
     switch (g_windowManager->m_dialogReturn) {
     case DIALOG_RETURN_CANCEL:
-        dialogResult = 0;
-        break;
+        goto done;
 
     case DIALOG_RETURN_OK: {
         game* currentGame = g_game;
@@ -1716,6 +1714,7 @@ static int doSinglePlayerWindow()
     }
     }
 
+done:
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
