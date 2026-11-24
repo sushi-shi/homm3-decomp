@@ -189,20 +189,10 @@ BOOL TScenarioPropsProloguePageBase::OnInitDialog()
     return TRUE;
 }
 
-// The first value comparison retains string::compare in retail; the last
-// expands it. Standard rel_ops and member inequality wrappers did not recover
-// that distinction. Equality through the existing movie/music/text getters
-// recovers the first music comparison's ECX/EDX homes, but still expands both
-// string comparisons. Member and friend equality emitted the same caller;
-// keep the existing member interface and canonical getter chain.
-// The inline trace replays retail's call (and changes nothing else) only
-// with two more top-level candidate sites after the first equality and
-// before the auto_ptr's destruction (`predict-inline --add 4:2` or 19:2):
-// they divide the d1 budget so the d4 compare(pos, n, s, count) site gets
-// 104 < 133. Sites after the destructor instead refuse its string _Tidy.
-// No such source site is evidenced yet.
-// The new prologue compares on the left (85.57 -> 85.84); swapping the
-// modified-flag comparison operands or null tests moved nothing further.
+// Both value comparisons go through TScenarioPrologue's inequality; the
+// extra inline level leaves the first site's string compare(pos, n, s,
+// count) out of line, as retail calls it, while the second expands it. The
+// retained call takes the scenario's prologue as `this`.
 VA(0x0042cd00, 0x24f)
 void TScenarioPropsProloguePageBase::OnOK()
 {
@@ -211,7 +201,7 @@ void TScenarioPropsProloguePageBase::OnOK()
         std::auto_ptr<TScenarioPrologue> pPrologue;
         _getPrologue(pPrologue);
         if (pPrologue.get() != NULL) {
-            if (getPrologue(_m_newScenario) == NULL || !(*pPrologue == *getPrologue(_m_newScenario)))
+            if (getPrologue(_m_newScenario) == NULL || *getPrologue(_m_newScenario) != *pPrologue)
                 setPrologue(_m_newScenario, pPrologue);
         } else if (getPrologue(_m_newScenario) != NULL) {
             removePrologue(_m_newScenario);
@@ -220,7 +210,7 @@ void TScenarioPropsProloguePageBase::OnOK()
     _m_bModified = _m_bModified
                    || (getPrologue(_m_oldScenario) != NULL) != (getPrologue(_m_newScenario) != NULL)
                    || getPrologue(_m_newScenario) != NULL
-                          && !(*getPrologue(_m_oldScenario) == *getPrologue(_m_newScenario));
+                          && *getPrologue(_m_oldScenario) != *getPrologue(_m_newScenario);
 }
 
 VA(0x0042cf50, 0xae)
@@ -341,6 +331,5 @@ void TScenarioPropsEpiloguePage::removePrologue(TScenario& scenario) const
 }
 
 // OnOK's first prologue comparison (0x42cdb4) is the only retail caller of
-// this retained compare(pos, n, s, count). The current OnOK expands it, so
-// no COFF symbol pairs the claim until that call is recovered.
+// this retained compare(pos, n, s, count).
 VA_COMPGEN(0x0042d8a0, 0x69, BASIC_STRING_COMPARE_SUBSTR, char)
