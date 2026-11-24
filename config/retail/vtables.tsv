@@ -551,11 +551,14 @@ rva	function_count	class
 0x242468	15	TSystemOptionsWindow
 # TTerrainTypeTraits::~TTerrainTypeTraits stores this vptr (0x5b3850).
 # All six slots are _purecall, including the pure virtual destructor.
-0x242c80	6	TTerrainTypeTraits
-# ??_7 site paired in order: 0x5b3780 ??0TNormalTerrainTypeTraits@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z
-0x242c98	6	TNormalTerrainTypeTraits
-# ??_7 site paired in order: 0x5b3a20 ??0TRockTraits@@QAE@XZ
-0x242cb0	6	TRockTraits
+# The map editor's RTTI (h3maped .?AVTTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@)
+# puts the three terrain traits in an anonymous namespace of TerrainPlacement.cpp. The game's own scope number is not
+# in its image, so the rows spell the scope by its checkout-independent identity (msvc_names.anonymous_namespaces).
+0x242c80	6	TTerrainTypeTraits@?A0xb9605a9b4587779f
+# ??_7 site paired in order: 0x5b3780 ??0TNormalTerrainTypeTraits@?A0xb9605a9b4587779f@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z
+0x242c98	6	TNormalTerrainTypeTraits@?A0xb9605a9b4587779f
+# ??_7 site paired in order: 0x5b3a20 ??0TRockTraits@?A0xb9605a9b4587779f@@QAE@XZ
+0x242cb0	6	TRockTraits@?A0xb9605a9b4587779f
 # ??_7 site paired in order: 0x5b9fb0 ??0type_text_scroller@@QAE@PBDHHHH0W4TColor@font@@W4EGraphics@slider@@@Z
 0x242cc8	17	type_text_slider
 # ??_7 site paired in order: 0x5b9fb0 ??0type_text_scroller@@QAE@PBDHHHH0W4TColor@font@@W4EGraphics@slider@@@Z; 0x5ba3b0 ??1type_text_scroller@@UAE@XZ

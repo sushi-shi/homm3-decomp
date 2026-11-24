@@ -35,6 +35,94 @@ enum ERmgNeighbourStep {
 };
 
 
+// The terrain-type traits of the map editor's TerrainPlacement.cpp. The map
+// editor's RTTI names the three classes TTerrainTypeTraits,
+// TNormalTerrainTypeTraits and TRockTraits in that file's anonymous namespace
+// (.?AVTRockTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp
+// 1837512156@@, vtables 0x543764/0x543780/0x54379c), so they are private to
+// this unit; the game image keeps no RTTI for them. Loki h3maped exports
+// their constructors and the five virtuals below under these spellings
+// (isTileSpecial, getTileGroundShape, pickFullTile, pickTransitionTile,
+// hasSpecialTiles). Base vtable 0x642c80 fixes the six slots.
+namespace {
+
+class TTerrainTypeTraits {
+public:
+    b8 m_blendsWithOtherTerrain; // +0x04
+    // isInvalid and repairTerrainPoint
+    // consult this byte before joining separated neighbour regions.
+    b8 m_allowsSeparatedNeighbours; // +0x05
+    char m_tailPadding[2];
+
+    TTerrainTypeTraits(b8 blendsWithOtherTerrain = 0,
+        b8 allowsSeparatedNeighbours = 0)
+        : m_blendsWithOtherTerrain(blendsWithOtherTerrain),
+          m_allowsSeparatedNeighbours(allowsSeparatedNeighbours) {}
+    // Retail's base vtable at 0x642c80 has six _purecall slots. The pure
+    // destructor still has its ordinary out-of-line body at 0x5b3850.
+    virtual ~TTerrainTypeTraits() = 0;
+    virtual b8 hasSpecialTiles() = 0;
+    virtual b8 isTileSpecial(s32 frame) = 0;
+    virtual s32 getTileGroundShape(s32 frame) = 0;
+    virtual s32 pickFullTile(s32 strength, s32 oldFrame) = 0;
+    virtual s32 pickTransitionTile(
+        s32 transition,
+        TRmgTerrainFlip requestedFlip,
+        TRmgTerrainFlip& selectedFlip,
+        s32 oldFrame) = 0;
+};
+
+// Constructor 0x5b3780 retains the entry-array pointer at +0x10 and builds
+// 58 first/count ranges at +0x14. This data-backed traits class supplies
+// vtable 0x642c98.
+class TNormalTerrainTypeTraits : public TTerrainTypeTraits {
+public:
+    s32 m_specialFrameChance;                  // +0x08: percentage at strength 8
+    u32 m_entryCount;                  // +0x0c
+    const TRmgTerrainPatternEntry* m_entries;   // +0x10
+    TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2];        // +0x14
+
+    TNormalTerrainTypeTraits(b8 blendsWithOtherTerrain,
+        b8 allowsSeparatedNeighbours, s32 specialFrameChance,
+        u32 entryCount, const TRmgTerrainPatternEntry* entries);
+
+    // Implicit destruction shares the base's retained cleanup at 0x5b3850;
+    // both concrete rule vtables use the deleting wrapper at 0x5b3a50.
+    virtual b8 hasSpecialTiles();
+    virtual b8 isTileSpecial(s32 frame);
+    virtual s32 getTileGroundShape(s32 frame);
+    virtual s32 pickFullTile(s32 strength, s32 oldFrame);
+    virtual s32 pickTransitionTile(
+        s32 transition,
+        TRmgTerrainFlip requestedFlip,
+        TRmgTerrainFlip& selectedFlip,
+        s32 oldFrame);
+};
+
+// Vtable 0x642cb0 is the stateless, table-backed rock traits, whose remaining
+// slots read the fixed transition table at 0x6424a8.
+class TRockTraits : public TTerrainTypeTraits {
+public:
+    TRockTraits();
+    virtual b8 hasSpecialTiles();
+    virtual b8 isTileSpecial(s32 frame);
+    virtual s32 getTileGroundShape(s32 frame);
+    virtual s32 pickFullTile(s32 strength, s32 oldFrame);
+    virtual s32 pickTransitionTile(
+        s32 transition,
+        TRmgTerrainFlip requestedFlip,
+        TRmgTerrainFlip& selectedFlip,
+        s32 oldFrame);
+};
+
+} // namespace
+
+// Retail 0x642bd8 is a pointer table in the read-only .rdata section.
+extern TTerrainTypeTraits* const g_rmgTerrainRules[];
+
+SIZE(TTerrainTypeTraits, 0x08);
+
+
 // Vtable 0x642cb0 slot 2 shares the false/ret-4 body at 0x5543f0.
 MAC_ADDRESS(0x259d44, 0x8)
 b8 TRockTraits::isTileSpecial(s32) { return 0; }

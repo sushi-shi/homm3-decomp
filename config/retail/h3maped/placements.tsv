@@ -2298,21 +2298,21 @@ rva	size	kind	name	unit	linkage	evidence
 0x000b9541	0x17	func	__h3cg$spelldefs$static_dtor$spellDescriptions	spelldefs	external	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x22c
 0x000b9558	0x14	func	__h3cg$spelldefs$static_dtor$abbreviatedSpellNames	spelldefs	external	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xa9
 0x000b956c	0x14	func	__h3cg$spelldefs$static_dtor$spellNames	spelldefs	external	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x41
-0x000ba868	0x8f	func	??0TNormalTerrainTypeTraits@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z	rmg_terrain	external	masked body (143 bytes, 2 relocations) unique at a census start
-0x000ba8f7	0xa	func	?hasSpecialTiles@TNormalTerrainTypeTraits@@UAEEXZ	rmg_terrain	external	vtable ??_7TNormalTerrainTypeTraits@@6B@ stored by ??0TNormalTerrainTypeTraits@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z slot 1
-0x000ba901	0x1c	func	??_GTNormalTerrainTypeTraits@@UAEPAXI@Z	rmg_terrain	external	vtable ??_7TNormalTerrainTypeTraits@@6B@ stored by ??0TNormalTerrainTypeTraits@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z slot 0; ICF-folded with 1 identical bodies
-0x000ba91d	0xe	func	?isTileSpecial@TNormalTerrainTypeTraits@@UAEEH@Z	rmg_terrain	external	masked body (14 bytes, 0 relocations) unique at a census start
-0x000ba92b	0xd	func	?getTileGroundShape@TNormalTerrainTypeTraits@@UAEHH@Z	rmg_terrain	external	masked body (13 bytes, 0 relocations) unique at a census start
-0x000ba938	0x51	func	?pickFullTile@TNormalTerrainTypeTraits@@UAEHHH@Z	rmg_terrain	external	masked body (81 bytes, 2 relocations) unique at a census start
-0x000ba989	0x3f	func	?pickTransitionTile@TNormalTerrainTypeTraits@@UAEHHUTRmgTerrainFlip@@AAU2@H@Z	rmg_terrain	external	masked body (63 bytes, 1 relocations) unique at a census start
+0x000ba868	0x8f	func	??0TNormalTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z	rmg_terrain	external	masked body (143 bytes, 2 relocations) unique at a census start
+0x000ba8f7	0xa	func	?hasSpecialTiles@TNormalTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAEEXZ	rmg_terrain	external	vtable of TNormalTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156 (RTTI) slot 1
+0x000ba901	0x1c	func	??_GTNormalTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAEPAXI@Z	rmg_terrain	external	vtable of TNormalTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156 (RTTI) slot 0; ICF-folded with 1 identical bodies
+0x000ba91d	0xe	func	?isTileSpecial@TNormalTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAEEH@Z	rmg_terrain	external	masked body (14 bytes, 0 relocations) unique at a census start
+0x000ba92b	0xd	func	?getTileGroundShape@TNormalTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAEHH@Z	rmg_terrain	external	masked body (13 bytes, 0 relocations) unique at a census start
+0x000ba938	0x51	func	?pickFullTile@TNormalTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAEHHH@Z	rmg_terrain	external	masked body (81 bytes, 2 relocations) unique at a census start
+0x000ba989	0x3f	func	?pickTransitionTile@TNormalTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAEHHUTRmgTerrainFlip@@AAU3@H@Z	rmg_terrain	external	masked body (63 bytes, 1 relocations) unique at a census start
 0x000ba9c8	0x94	func	??0TRmgTerrainPatternTable@@QAE@XZ	rmg_terrain	external	masked body (148 bytes, 5 relocations) unique at a census start
-0x000baa66	0x11	func	??0TRockTraits@@QAE@XZ	rmg_terrain	external	masked body (17 bytes, 1 relocations) unique at a census start
-0x000baa77	0x3	func	?hasSpecialTiles@TRockTraits@@UAEEXZ	rmg_terrain	external	vtable ??_7TRockTraits@@6B@ stored by ??0TRockTraits@@QAE@XZ slot 1
-0x000baa7a	0x7	func	??1TNormalTerrainTypeTraits@@UAE@XZ	rmg_terrain	external	referenced by ??_GTNormalTerrainTypeTraits@@UAEPAXI@Z at +0x4; ICF-folded with 1 identical bodies
-0x000baa81	0x5	func	?isTileSpecial@TRockTraits@@UAEEH@Z	rmg_terrain	external	vtable ??_7TRockTraits@@6B@ stored by ??0TRockTraits@@QAE@XZ slot 2
-0x000baa86	0xe	func	?getTileGroundShape@TRockTraits@@UAEHH@Z	rmg_terrain	external	vtable ??_7TRockTraits@@6B@ stored by ??0TRockTraits@@QAE@XZ slot 3
-0x000baa94	0x2b	func	?pickFullTile@TRockTraits@@UAEHHH@Z	rmg_terrain	external	masked body (43 bytes, 4 relocations) unique at a census start
-0x000baabf	0x66	func	?pickTransitionTile@TRockTraits@@UAEHHUTRmgTerrainFlip@@AAU2@H@Z	rmg_terrain	external	masked body (102 bytes, 5 relocations) unique at a census start
+0x000baa66	0x11	func	??0TRockTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@QAE@XZ	rmg_terrain	external	masked body (17 bytes, 1 relocations) unique at a census start
+0x000baa77	0x3	func	?hasSpecialTiles@TRockTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAEEXZ	rmg_terrain	external	vtable of TRockTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156 (RTTI) slot 1
+0x000baa7a	0x7	func	??1TNormalTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAE@XZ	rmg_terrain	external	referenced by 0x000ba901 at +0x4; ICF-folded with 1 identical bodies
+0x000baa81	0x5	func	?isTileSpecial@TRockTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAEEH@Z	rmg_terrain	external	vtable of TRockTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156 (RTTI) slot 2
+0x000baa86	0xe	func	?getTileGroundShape@TRockTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAEHH@Z	rmg_terrain	external	vtable of TRockTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156 (RTTI) slot 3
+0x000baa94	0x2b	func	?pickFullTile@TRockTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAEHHH@Z	rmg_terrain	external	masked body (43 bytes, 4 relocations) unique at a census start
+0x000baabf	0x66	func	?pickTransitionTile@TRockTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@UAEHHUTRmgTerrainFlip@@AAU3@H@Z	rmg_terrain	external	masked body (102 bytes, 5 relocations) unique at a census start
 0x000bab36	0x18	func	__h3cg$rmg_terrain$static_ctor$g_rmgDirtRule	rmg_terrain	external	masked body (24 bytes, 3 relocations) unique at a census start
 0x000bab69	0x18	func	__h3cg$rmg_terrain$static_ctor$g_rmgSandRule	rmg_terrain	external	masked body (24 bytes, 3 relocations) unique at a census start
 0x000bab9c	0x18	func	__h3cg$rmg_terrain$static_ctor$g_rmgGrassRule	rmg_terrain	external	masked body (24 bytes, 3 relocations) unique at a census start
@@ -2846,7 +2846,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00143380	0x170	data	_g_rmgDirtPatternEntries	rmg_terrain	internal	referenced by __h3cg$rmg_terrain$static_ctor$g_rmgDirtRule at +0x1
 0x001434f0	0xc0	data	_g_rmgSandPatternEntries	rmg_terrain	internal	referenced by __h3cg$rmg_terrain$static_ctor$g_rmgSandRule at +0x1
 0x001435b0	0x108	data	_g_rmgWaterPatternEntries	rmg_terrain	internal	referenced by __h3cg$rmg_terrain$static_ctor$g_rmgWaterRule at +0x1
-0x001436b8	0x28	data	?g_rmgTerrainRules@@3QBQAVTTerrainTypeTraits@@B	rmg_terrain	external	referenced by ?repaintMap@TRmgTerrainPainter@@SAXPAVTAbstractMap@TTerrainPlacementOp@@I@Z at +0x53
+0x001436b8	0x28	data	?g_rmgTerrainRules@@3QBQAVTTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156@@B	rmg_terrain	external	referenced by ?repaintMap@TRmgTerrainPainter@@SAXPAVTAbstractMap@TTerrainPlacementOp@@I@Z at +0x53
 0x001436e0	0x80	data	_g_rmgReflectedNeighbours	rmg_terrain	internal	referenced by ?selectTerrainTransition@@YAHPBHPAUTRmgTerrainFlip@@@Z at +0x73
 0x00144090	0x8	data	??_8TTown@@7BTPlayableObject@@@	Town	external	referenced by ??0TTown@@QAE@ABV0@@Z at +0x2e
 0x00144098	0x8	data	??_8TTown@@7BTLinkableObject@@@	Town	external	referenced by ??0TTown@@QAE@ABV0@@Z at +0x25
@@ -4098,15 +4098,15 @@ rva	size	kind	name	unit	linkage	evidence
 0x001a396c	0x8	data	_?flips@?1??selectTerrainTransition@@YAHPBHPAUTRmgTerrainFlip@@@Z@4PAU2@A	rmg_terrain	internal	referenced by ?selectTerrainTransition@@YAHPBHPAUTRmgTerrainFlip@@@Z at +0x21
 0x001a3984	0x1	data	_?$S27@?1??hasMatchingDiagonalNeighbour@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@ABUTRmgTerrainFlip@@@Z@4EA	rmg_terrain	internal	referenced by ?hasMatchingDiagonalNeighbour@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@ABUTRmgTerrainFlip@@@Z at +0x11
 0x001a3988	0x1e8	data	_g_rmgGrassRule	rmg_terrain	internal	referenced by __h3cg$rmg_terrain$static_ctor$g_rmgGrassRule at +0xe
-0x001a3b70	0x1e8	data	_g_rmgSnowRule	rmg_terrain	internal	referenced by ?g_rmgTerrainRules@@3QBQAVTTerrainTypeTraits@@B at +0xc
+0x001a3b70	0x1e8	data	_g_rmgSnowRule	rmg_terrain	internal	referenced by 0x001436b8 at +0xc
 0x001a3d58	0x1e8	data	_g_rmgSandRule	rmg_terrain	internal	referenced by __h3cg$rmg_terrain$static_ctor$g_rmgSandRule at +0xe
-0x001a3f40	0x1e4	data	_g_rmgSwampRule	rmg_terrain	internal	referenced by ?g_rmgTerrainRules@@3QBQAVTTerrainTypeTraits@@B at +0x10
-0x001a4128	0x8	data	_g_rmgRockRule	rmg_terrain	internal	referenced by ?g_rmgTerrainRules@@3QBQAVTTerrainTypeTraits@@B at +0x24
+0x001a3f40	0x1e4	data	_g_rmgSwampRule	rmg_terrain	internal	referenced by 0x001436b8 at +0x10
+0x001a4128	0x8	data	_g_rmgRockRule	rmg_terrain	internal	referenced by 0x001436b8 at +0x24
 0x001a4130	0x1e8	data	_g_rmgDirtRule	rmg_terrain	internal	referenced by __h3cg$rmg_terrain$static_ctor$g_rmgDirtRule at +0xe
-0x001a4318	0x3a0	data	?g_rmgTerrainPatternRanges@@3UTRmgTerrainPatternTable@@A	rmg_terrain	external	referenced by ?pickFullTile@TRockTraits@@UAEHHH@Z at +0x1c
-0x001a46b8	0x1e8	data	_g_rmgRoughRule	rmg_terrain	internal	referenced by ?g_rmgTerrainRules@@3QBQAVTTerrainTypeTraits@@B at +0x14
+0x001a4318	0x3a0	data	?g_rmgTerrainPatternRanges@@3UTRmgTerrainPatternTable@@A	rmg_terrain	external	referenced by 0x000baa94 at +0x1c
+0x001a46b8	0x1e8	data	_g_rmgRoughRule	rmg_terrain	internal	referenced by 0x001436b8 at +0x14
 0x001a48a0	0x1e8	data	_g_rmgWaterRule	rmg_terrain	internal	referenced by __h3cg$rmg_terrain$static_ctor$g_rmgWaterRule at +0xd
-0x001a4a88	0x1e4	data	_g_rmgLavaRule	rmg_terrain	internal	referenced by ?g_rmgTerrainRules@@3QBQAVTTerrainTypeTraits@@B at +0x1c
+0x001a4a88	0x1e4	data	_g_rmgLavaRule	rmg_terrain	internal	referenced by 0x001436b8 at +0x1c
 0x001a4c70	0x1e8	data	_g_rmgSubterraneanRule	rmg_terrain	internal	referenced by __h3cg$rmg_terrain$static_ctor$g_rmgSubterraneanRule at +0xe
 0x001a4e58	0x20	data	_?secondDiagonalOffsets@?1??hasDifferentOuterAxisNeighbour@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@ABUTRmgTerrainFlip@@@Z@4PAV?$TPoint@H@@A	rmg_terrain	internal	referenced by ?hasDifferentOuterAxisNeighbour@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@ABUTRmgTerrainFlip@@@Z at +0x24
 0x001a4e88	0x4	data	?_Nil@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@1PAU_Node@12@A	rmg_terrain	external	referenced by ?insert@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@_N@2@ABV?$TPoint@I@@@Z at +0x21
