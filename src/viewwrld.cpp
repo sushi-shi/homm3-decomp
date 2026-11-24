@@ -546,7 +546,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     continue;
 
                 if (!objType->m_drawCells[
-                        CObjectType::getBitPos(objCell->m_cellX,
+                        CObjectType::_getBitPos(objCell->m_cellX,
                                                 objCell->m_cellY)]
                     || objType->m_suppressDraw)
                     continue;
@@ -789,7 +789,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
             continue;
 
         if (!objType->m_shadowCells[
-                CObjectType::getBitPos(objCell->m_cellX, objCell->m_cellY)]
+                CObjectType::_getBitPos(objCell->m_cellX, objCell->m_cellY)]
             || objType->m_suppressDraw)
             continue;
 

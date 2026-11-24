@@ -733,13 +733,15 @@ public:
     CObjectType() {}
 
     // Dreamcast retains an out-of-line copy; Complete inlines this header
-    // helper at the view-world draw-cell test.
+    // helper at the view-world draw-cell test. DC's _getBitPos (spelling
+    // proven) and Mac 0x127c38 (subfic 6-y, slwi 3, subf x, addi -1) both
+    // compute the reversed-row form, TObjectType::_getBitPos's formula.
     // E:\gamedcs\MapCell.h:565
     DC_ADDRESS(0x01f958, 0x1a)
     MAC_ADDRESS(0x127c38, 0x14)
-    static unsigned getBitPos(unsigned x, unsigned y)
+    static unsigned _getBitPos(unsigned x, unsigned y)
     {
-        return OBJECT_MASK_CELLS - 1 - y * OBJECT_MASK_WIDTH - x;
+        return (OBJECT_MASK_HEIGHT - y) * OBJECT_MASK_WIDTH - x - 1;
     }
     // The table loader converts an existing record; no nullable source is
     // used. Const-reference ownership is inferred; DC lacks this overload.

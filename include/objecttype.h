@@ -124,7 +124,7 @@ public:
     // Mac CObjectType conversion 0x128c7c..0x128d24 expands these four
     // coordinate-to-mask queries before assigning the destination cells.
     // The names and member boundaries are inferred; _getBitPos is the
-    // shared 8-by-6 coordinate mapping (CObjectType::getBitPos's formula,
+    // shared 8-by-6 coordinate mapping (CObjectType::_getBitPos's formula,
     // Loki's TObjectType spelling), so the map editor's MFC objects can use
     // these records without mapcell.h's CObject. Mac placement 0x22e090..0x22e17c
     // expands the same trigger/passability queries; both Windows TUs need

@@ -4512,7 +4512,7 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
 
 // E:\gamedcs\advmgr.cpp:5941
 // DC 6010 and Mac 0x11770..0x117bc use the signed TObjectCell nibble
-// members in getBitPos; each draw arm reads them again. DC 5957/5958
+// members in _getBitPos; each draw arm reads them again. DC 5957/5958
 // and 5965/5966 preserve the clipping updates. DC has no cell/map receiver
 // aliases; Mac reloads m_fullMap at 0x118a0/0x11928. DC 6006/6007 index
 // the initial object lookups separately; Obj is assigned inside the flag
@@ -4583,7 +4583,7 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                         m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
                     CSprite* sprite = m_fullMap->m_sprites[
                         m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
-                    if (objType->m_drawCells[CObjectType::getBitPos(
+                    if (objType->m_drawCells[CObjectType::_getBitPos(
                             objCell->m_cellX, objCell->m_cellY)]
                         && !objType->m_suppressDraw) {
                         if (g_drawingPuzzle) {
@@ -4812,7 +4812,7 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
         CSprite* sprite = m_fullMap->m_sprites[
             m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
 
-        if (!objType->m_shadowCells[CObjectType::getBitPos(
+        if (!objType->m_shadowCells[CObjectType::_getBitPos(
                 objCell->m_cellX, objCell->m_cellY)] || objType->m_suppressDraw)
             continue;
 

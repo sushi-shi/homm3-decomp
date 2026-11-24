@@ -1240,7 +1240,7 @@ void CObject::findTrigger(int& resultX, int& resultY) const
                 continue;
 
             if (objType->m_triggerCells[
-                    CObjectType::getBitPos(horiz, vert)]) {
+                    CObjectType::_getBitPos(horiz, vert)]) {
                 resultX = m_x - horiz;
                 resultY = m_y - vert;
                 return;
@@ -4187,13 +4187,13 @@ void NewfullMap::generateHeightMap(const CObject* object,
         int depth = 1;
         for (int row = 0; row < m_objectTypes[typeIndex].m_height; ++row) {
             if (row > 0) {
-                if (!m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row)]
-                    && m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row - 1)])
+                if (!m_objectTypes[typeIndex].m_passableCells[CObjectType::_getBitPos(col, row)]
+                    && m_objectTypes[typeIndex].m_passableCells[CObjectType::_getBitPos(col, row - 1)])
                     depth = 1;
             }
             if (col > 0) {
-                if (m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row)]
-                    && !m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col - 1, row)])
+                if (m_objectTypes[typeIndex].m_passableCells[CObjectType::_getBitPos(col, row)]
+                    && !m_objectTypes[typeIndex].m_passableCells[CObjectType::_getBitPos(col - 1, row)])
                     depth = heightMap[col - 1][row];
             }
             heightMap[col][row] = static_cast<signed char>(depth);
@@ -4322,7 +4322,7 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         int row = it->m_cellY;
         int col = it->m_cellX;
         if (objectType->m_triggerCells.test(
-                CObjectType::getBitPos(col, row))) {
+                CObjectType::_getBitPos(col, row))) {
             thisCell->m_objectTypeIndex = it->m_objectIndex;
             thisCell->m_typeValue = objectType->m_objectType;
             thisCell->m_isTrigger = 1;
@@ -4341,7 +4341,7 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
             int row = it->m_cellY;
             int col = it->m_cellX;
             if (!objectType->m_passableCells.test(
-                    CObjectType::getBitPos(col, row))) {
+                    CObjectType::_getBitPos(col, row))) {
                 thisCell->m_objectTypeIndex = it->m_objectIndex;
                 thisCell->m_typeValue = objectType->m_objectType;
                 thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
@@ -4361,7 +4361,7 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         int row = it->m_cellY;
         int col = it->m_cellX;
         if (!objectType->m_passableCells.test(
-                CObjectType::getBitPos(col, row))) {
+                CObjectType::_getBitPos(col, row))) {
             thisCell->m_objectTypeIndex = it->m_objectIndex;
             thisCell->m_typeValue = objectType->m_objectType;
             thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
@@ -4464,7 +4464,7 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
 
             if (objectClass == EVENT) {
                 if (objectType->m_triggerCells.test(
-                        CObjectType::getBitPos(col, row))) {
+                        CObjectType::_getBitPos(col, row))) {
                     cell->m_isBlocked = 0;
                     cell->m_isTrigger = 0;
                     cell->m_typeValue = EVENT;
@@ -4577,7 +4577,7 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // terrainMask stay with the editor template.
 // Complete-only conversion constructor: retail 0x506080 constructs the
 // string and five masks, then copies the editor template's runtime fields.
-// Controls: equivalent reversed-grid getBitPos arithmetic and signed/long
+// Controls: equivalent reversed-grid _getBitPos arithmetic and signed/long
 // position locals produced no constructor gain across nine source states.
 // DC CObjectType fieldlist 0x309c (class 0x309b) declares only the generated
 // default/copy constructors (attributes 0x103), with no editor-template overload.
@@ -4606,7 +4606,7 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // direct .test(terrain) on the mask (65.93%) do not). The destination
 // position is a signed local: retail strength-reduces it apart from the
 // unsigned query positions (edi versus esi), which an unsigned pos shared
-// with them through CSE (85.24% -> 100%). Failed probe: a getBitPos call in
+// with them through CSE (85.24% -> 100%). Failed probe: a _getBitPos call in
 // each destination subscript instead of the local (62.81%).
 // Const-reference input is inferred from the sole caller converting an
 // existing table record, with no writes or nullable-source path.
@@ -4620,7 +4620,7 @@ CObjectType::CObjectType(const TObjectType& source)
 
     for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
-            int pos = getBitPos(x, y);
+            int pos = _getBitPos(x, y);
             m_drawCells[pos] = source.getBCellPlaced(x, y);
             m_passableCells[pos] = source.getBCellPassable(x, y);
             m_shadowCells[pos] = source.getBCellShadow(x, y);
