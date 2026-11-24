@@ -587,10 +587,14 @@ DC_ADDRESS(0x12fe84, 0x2c)
 MAC_ADDRESS(0x16e3ac, 0x34)
 // Original HasNonRandomHero is DC S_LPROC32. Complete internal linkage
 // follows its same-TU ownership; retail does not independently distinguish it.
+// DC 383..386 names the mp and slotAtt locals; retail processRightSelect's
+// expansion indexes g_game afresh for each of these helpers.
 static inline unsigned char hasNonRandomHero(int gamePos)
 {
-    return g_game->m_mapHeader.m_playerSlotAttributes[gamePos].m_nonRandomHeroId
-        != -1;
+    NewSMapHeader* mp = &g_game->m_mapHeader;
+    CMapHeaderData::TPlayerSlotAttributes* slotAtt =
+        &mp->m_playerSlotAttributes[gamePos];
+    return slotAtt->m_nonRandomHeroId != -1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:390
@@ -599,9 +603,10 @@ MAC_ADDRESS(0x16e3e0, 0x40)
 // Original HasRandomHero is DC S_LPROC32, with the same ownership inference.
 static inline unsigned char hasRandomHero(int gamePos)
 {
-    CMapHeaderData::TPlayerSlotAttributes& slot =
-        g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
-    return slot.m_hasRandomHero || slot.m_generateHero;
+    NewSMapHeader* mp = &g_game->m_mapHeader;
+    CMapHeaderData::TPlayerSlotAttributes* slotAtt =
+        &mp->m_playerSlotAttributes[gamePos];
+    return slotAtt->m_hasRandomHero || slotAtt->m_generateHero;
 }
 
 // Mac retains these row serializers; both CGameHeaderInfoMsg wrappers inline
@@ -3722,9 +3727,10 @@ void TSingleSelectionWindow::hideRandomMapOptions()
 // (3236), gamePos to the town arm (3316), and the hero-player and bonus paths
 // spell `id - first` at each use. DC 3414..3417 tests sprite == -1 after the
 // bonus switch, which retail's threaded constant-sprite arms confirm.
-// Together 88.89 -> 92.65%. Unnaming the DC-proven nbr/gamePos locals scores
-// 93.46/higher but contradicts those positive records; the rest is the
-// id/position callee-saved role swap (retail keeps id in EDI).
+// DC 3391/3396/3402/3408 store each bonus arm's sprite before its texts,
+// including the artifact arm's explicit 9 (retail `mov edx,9` there); with
+// the helpers' DC mp/slotAtt locals (retail re-indexes g_game per helper)
+// and DC's TTownType townType this is byte-exact (95.02 -> 100%).
 VA(0x005822d0, 0x868)
 DC_ADDRESS(0x1371fc, 0xb2c)
 MAC_ADDRESS(0x17a05c, 0x844)  // anchor-vtable TSingleSelectionWindow vtbl 0x241cac slot11 (ProcessRightSelect override; cf sibling THeroScreenWindow slot11 ProcessRightSelect@CHeroWindowEx)
@@ -3810,7 +3816,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
     case SSW_TOWN_DETAIL_FIRST + 6:
     case SSW_TOWN_DETAIL_LAST: {
         int gamePos = id - SSW_TOWN_DETAIL_FIRST;
-        int townType;
+        TTownType townType;
         if (m_loadMode)
             townType = g_game->m_setup.m_alignment[gamePos];
         else {
@@ -3825,8 +3831,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
             dlg.doModal(0);
         } else {
             CTownDlg dlg(!m_saveMode && !m_loadMode);
-            dlg.createWin(m_townPix, townType * 2 + 2,
-                          static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            dlg.createWin(m_townPix, townType * 2 + 2, townType);
             dlg.doModal(0);
         }
         displayChat();
@@ -3867,26 +3872,27 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
 
         switch (bonus) {
         case NEW_MAP_BONUS_ARTIFACT:
+            sprite = 9;
             header = (*g_generalText)[GENERAL_TEXT_ARTIFACT_BONUS];
             desc = (*g_generalText)[GENERAL_TEXT_STARTING_ARTIFACT_DESCRIPTION];
             break;
         case NEW_MAP_BONUS_GOLD:
-            header = (*g_generalText)[GENERAL_TEXT_GOLD_BONUS];
             sprite = 8;
+            header = (*g_generalText)[GENERAL_TEXT_GOLD_BONUS];
             bonusEx = (*g_generalText)[GENERAL_TEXT_STARTING_GOLD_RANGE];
             desc = (*g_generalText)[GENERAL_TEXT_STARTING_GOLD_DESCRIPTION];
             break;
         case NEW_MAP_BONUS_RESOURCE:
-            header = (*g_generalText)[GENERAL_TEXT_RESOURCE_BONUS];
             sprite = townType;
             if (sprite == TOWN_CONFLUX)
                 sprite = TOWN_INFERNO;
+            header = (*g_generalText)[GENERAL_TEXT_RESOURCE_BONUS];
             bonusEx = getResourceBonusCaption(townType);
             desc = getResourceBonusDescription(townType);
             break;
         case NEW_MAP_BONUS_RANDOM:
-            header = (*g_generalText)[GENERAL_TEXT_RANDOM_BONUS];
             sprite = 10;
+            header = (*g_generalText)[GENERAL_TEXT_RANDOM_BONUS];
             desc = (*g_generalText)[GENERAL_TEXT_STARTING_RANDOM_BONUS_DESCRIPTION];
             break;
         }
@@ -7871,12 +7877,13 @@ DC_ADDRESS(0x1431bc, 0x58)
 MAC_ADDRESS(0x1845e4, 0x6c)
 unsigned char TSingleSelectionWindow::hasMultipleTowns(int gamePos)
 {
-    CMapHeaderData::TPlayerSlotAttributes* slot =
-        &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
-    if (slot->m_hasRandomAlignment)
+    NewSMapHeader* mp = &g_game->m_mapHeader;
+    CMapHeaderData::TPlayerSlotAttributes* slotAtt =
+        &mp->m_playerSlotAttributes[gamePos];
+    if (slotAtt->m_hasRandomAlignment)
         return 0;
     long alignmentCount = getAlignmentCount(
-        static_cast<unsigned short>(slot->m_legalAlignments));
+        static_cast<unsigned short>(slotAtt->m_legalAlignments));
     if (alignmentCount > 1)
         return 1;
     return 0;
