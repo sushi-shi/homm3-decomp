@@ -702,8 +702,8 @@ public:
     unsigned char hasArtifact(int whichArtifact) const;
     unsigned char hasSecondarySkill(int whichSkill);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
-    // Native hero initialization and campaign carry-over both expand these
-    // counted byte clears. Share their body here; original name is unknown.
+    // Complete-only custom-spell setup and campaign carry-over share these
+    // clears (name provisional); DC hero::initialize fills them directly.
     void clearSpells()
     {
         std::fill_n(m_inSpellbook, sizeof(m_inSpellbook),
