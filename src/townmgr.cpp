@@ -1837,9 +1837,10 @@ void TTownScreenWindow::bonusRightClick(long id)
         widget* w = m_growthBonusIcon[id];
         // DC 0x16b0b2 calls widget::get_rclick_text; retail Main expands
         // the same right-click/rollover fallback at both bonus arms.
+        int x = w->m_x + w->m_width;
+        int y = w->m_y;
         const char* popupText = w->getRclickText();
-        normalDialog(popupText, 4, w->m_x + w->m_width, w->m_y, 0x15, creature,
-                     -1, 0, -1, 0, -1, 0);
+        normalDialog(popupText, 4, x, y, 0x15, creature, -1, 0, -1, 0, -1, 0);
     }
 }
 
@@ -4747,7 +4748,10 @@ int townManager::main(message& msg)
     }
 
     {
-        int delta = GameTime::elapsedSince(g_timers[0]);
+        // Retail reads Get() before g_timers[0] (elapsedSince(g_timers[0])
+        // loads the timer first), so the two halves are spelled out.
+        unsigned long now = GameTime::get();
+        int delta = GameTime::elapsed(now, g_timers[0]);
         if (delta >= 0) {
             // DC townmgr.cpp:5920 calls max; retail 0x5d33c2 selects
             // the larger interval, keeping panorama updates 150 ms apart.
@@ -4761,10 +4765,11 @@ int townManager::main(message& msg)
         switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT: {
-            int code = msg.m_codeY;
-            if (code >= 0 && code <= DWELLING_6_UPG_ID)
-                code = static_cast<TTownScreenWindow*>(m_townWindow)
-                           ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1;
+            int code = (msg.m_codeY >= 0 && msg.m_codeY <= DWELLING_6_UPG_ID)
+                ? static_cast<TTownScreenWindow*>(m_townWindow)
+                      ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1
+                : msg.m_codeY;
+            g_outlinedTownObjectId = -1;
             switch (code) {
             case DWELLING_0_ID:
             case DWELLING_1_ID:
@@ -4877,6 +4882,7 @@ int townManager::main(message& msg)
                     castleWin->doModal(0);
                     if (m_netMsgHandler)
                         m_netMsgHandler->setResourceDisplay(m_resourceDisplay);
+                    g_castleOpen = 0;
                     if (castleWin->m_castleBank)
                         delete castleWin->m_castleBank;
                     delete castleWin;
@@ -5040,18 +5046,24 @@ int townManager::main(message& msg)
             case SPECIAL_BUILDING_ID:
                 if (rclick)
                     goto building_popup;
-                else if (m_townToView->m_type == TOWN_TOWER
-                         || m_townToView->m_type == TOWN_DUNGEON
-                         || m_townToView->m_type == TOWN_CONFLUX) {
-                    doArtifactMerchants();
-                    m_resourceDisplay->update(1, 1);
-                    resetStrips();
-                } else {
-                    strcpy(text,
-                           getBuildingInfo(m_townToView, SPECIAL_BUILDING_ID,
-                                           1, 1));
-                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
-                                 SPECIAL_BUILDING_ID, -1, 0, -1, 0, -1, 0);
+                else {
+                    switch (m_townToView->m_type) {
+                    case TOWN_TOWER:
+                    case TOWN_DUNGEON:
+                    case TOWN_CONFLUX:
+                        doArtifactMerchants();
+                        m_resourceDisplay->update(1, 1);
+                        resetStrips();
+                        break;
+                    default:
+                        strcpy(text,
+                               getBuildingInfo(m_townToView, SPECIAL_BUILDING_ID,
+                                               1, 1));
+                        normalDialog(text, 1, -1, -1,
+                                     m_townToView->m_type + 0x16,
+                                     SPECIAL_BUILDING_ID, -1, 0, -1, 0, -1, 0);
+                        break;
+                    }
                 }
                 break;
             case HOLY_GRAIL_ID:
@@ -5115,26 +5127,6 @@ building_popup:
                     normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 break;
-            case TResourceDisplay::RESOURCE_TEXT_0_ID:
-            case TResourceDisplay::RESOURCE_TEXT_1_ID:
-            case TResourceDisplay::RESOURCE_TEXT_2_ID:
-            case TResourceDisplay::RESOURCE_TEXT_3_ID:
-            case TResourceDisplay::RESOURCE_TEXT_4_ID:
-            case TResourceDisplay::RESOURCE_TEXT_5_ID:
-            case TResourceDisplay::RESOURCE_TEXT_6_ID:
-            case TResourceDisplay::RESOURCE_TEXT_7_ID:
-                strcpy(text,
-                       g_adventureWindowHelp[
-                           g_resourceHelpIndices[
-                               code
-                               - TResourceDisplay::RESOURCE_TEXT_0_ID]].m_rclick);
-                if (rclick)
-                    normalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
-                                 -1, 0);
-                else
-                    normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
-                                 -1, 0);
-                break;
             case TResourceDisplay::RESOURCE_BORDER_0_ID:
             case TResourceDisplay::RESOURCE_BORDER_1_ID:
             case TResourceDisplay::RESOURCE_BORDER_2_ID:
@@ -5148,6 +5140,26 @@ building_popup:
                                code
                                - TResourceDisplay::
                                      RESOURCE_BORDER_0_ID]].m_rclick);
+                if (rclick)
+                    normalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
+                                 -1, 0);
+                else
+                    normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                                 -1, 0);
+                break;
+            case TResourceDisplay::RESOURCE_TEXT_0_ID:
+            case TResourceDisplay::RESOURCE_TEXT_1_ID:
+            case TResourceDisplay::RESOURCE_TEXT_2_ID:
+            case TResourceDisplay::RESOURCE_TEXT_3_ID:
+            case TResourceDisplay::RESOURCE_TEXT_4_ID:
+            case TResourceDisplay::RESOURCE_TEXT_5_ID:
+            case TResourceDisplay::RESOURCE_TEXT_6_ID:
+            case TResourceDisplay::RESOURCE_TEXT_7_ID:
+                strcpy(text,
+                       g_adventureWindowHelp[
+                           g_resourceHelpIndices[
+                               code
+                               - TResourceDisplay::RESOURCE_TEXT_0_ID]].m_rclick);
                 if (rclick)
                     normalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
@@ -5288,6 +5300,9 @@ building_popup:
                 } else {
                     doCommand(m_command, 0, 0);
                     setCommandAndText(msg);
+                    // Retail 0x5d4c1x emits the return-1 epilogue directly
+                    // after this call (exitFlag is still 0 on this path).
+                    return 1;
                 }
                 break;
             }
