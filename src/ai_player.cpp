@@ -3123,6 +3123,12 @@ static void unblockLith(hero* currentHero,
 // expands the final getCell as retail does (82.66%). Residual: unblockLith's
 // nested budget is 42; the loop's getMapExtra(point) (48) needs 48 while
 // getTown (45) must still be refused - not satisfiable under one shared budget.
+// 82.67 -> 71.98% (73.02% with the type_point bases): the Dreamcast static
+// linkage of netValueOfLocation (cc4341034) makes its later body a root
+// candidate (cb 501, refused), one more remaining site in every root
+// division. markStrategicMap's nested budget falls from 92 to 86, so its
+// getMapExtra(point) (48, after size's 42) is refused, while the main
+// loop's second operator== (84) now fits where retail calls it.
 VA(0x0042e0b0, 0xb6e)
 DC_ADDRESS(0x033cf8, 0x46a)
 MAC_ADDRESS(0x0332f8, 0x71c)  // anchor-caller move_hero + order bracket
@@ -3958,6 +3964,12 @@ static inline void checkGatePurchase(type_point point)
 // two; we cross-jump both arms into the can-stop return's tail instead.
 // That is the merged-return class (both predecessors are jumps) and the
 // duplicate cannot be spelled, because the block IS a destructor.
+// 98.83%: DC line 4234 is one town-portal statement subtracting the expert
+// 200/300 ternary (retail's sbb select); both CFGs now have 81 blocks.
+// Residual: the totalCost/standEnd and min/max temporary slot pairs swap,
+// plus the inlined puzzle-guess comparison's register order. Byte-flat:
+// an unconverted m_cost argument to min and a function-scope standEnd;
+// totalCost = 0 before standEnd is 98.72%.
 VA(0x0042fee0, 0x6b8)
 DC_ADDRESS(0x034b08, 0x4b0)
 MAC_ADDRESS(0x0346d4, 0x938)  // anchor-caller move_hero + order bracket
@@ -4027,11 +4039,11 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
                                      0, 1, 0);
             currentHero->useSpell(
                 currentHero->getManaCost(SPELL_TOWN_PORTAL));
-            if (currentHero->getSpellLevel(SPELL_TOWN_PORTAL)
-                == eMasteryExpert)
-                currentHero->m_movePoints -= 200;
-            else
-                currentHero->m_movePoints -= 300;
+            currentHero->m_movePoints -=
+                currentHero->getSpellLevel(SPELL_TOWN_PORTAL)
+                        == eMasteryExpert
+                    ? 200
+                    : 300;
             if (currentHero->m_movePoints < 0)
                 currentHero->m_movePoints = 0;
             return;
@@ -4370,6 +4382,11 @@ static bool considerHiring(long playerId, hero* candidate)
 // DC's local-procedure record proves static ownership and searchArray&;
 // the sole Complete caller supplies its live search-array object. Keep the
 // reference boundary; only findAllDestinations still requires its address.
+// With the type_point-base HeroDestination (98.19%), the first loop's inline
+// getCell(destination, 0) slices through an extra temporary that reshapes
+// the hero loop's point store; a base-reference cast restores 99.95% but is
+// codegen-only. DC line 4422 constructs the other hero's type_point
+// directly (no get_location call, unlike AI_choose_destination); byte-flat.
 VA(0x00431bd0, 0x64b)
 DC_ADDRESS(0x034fb8, 0x446)
 MAC_ADDRESS(0x035070, 0x770)  // anchor-callee (consider_hiring 0x432bce + AI_arrange_army 0x431d9d)
@@ -4440,7 +4457,7 @@ static long valueOfHiring(town* currentTown, hero* candidate,
         hero* other = g_game->getHero(player->m_heroes[heroIndex]);
         if (other->m_z == candidate->m_z) {
             pathCell* cell = currentSearchArray.getCell(
-                other->getLocation(), 0);
+                type_point(other->m_x, other->m_y, other->m_z), 0);
 
             if (cell->m_visited) {
                 ++heroesTouched;
