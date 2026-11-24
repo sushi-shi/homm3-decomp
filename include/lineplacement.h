@@ -138,7 +138,10 @@ SIZE(TRmgGridRectangle, 0x10);
 void recalcLineShape(TMapLineFilter* painter, const TTilePoint& point);
 void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rectangle);
 
-class TRiverOp : public TMapLineFilter {
+// RTTI (h3maped): TMapLineFilter is not a public base (attributes 9);
+// protected, as the placement and erase operations hand themselves to
+// their walker and eraser as the line filter.
+class TRiverOp : protected TMapLineFilter {
 public:
     // The map a river operation paints (h3maped RTTI
     // `TAbstractMap@TRiverOp`, vtable 0x53952c).
@@ -270,7 +273,10 @@ public:
 // Its base and derived vtables at 0x6411f0/0x64120c differ from the river
 // hierarchy's 0x641174/0x641190 tables, while retaining the same line-painting
 // interface shape. Original Complete-only class spellings are unavailable.
-class TRoadOp : public TMapLineFilter {
+// RTTI (h3maped): TMapLineFilter is not a public base (attributes 9);
+// protected, as the placement and erase operations hand themselves to
+// their walker and eraser as the line filter.
+class TRoadOp : protected TMapLineFilter {
 public:
     // The map a road operation paints (h3maped RTTI
     // `TAbstractMap@TRoadOp`, vtable 0x53956c).
