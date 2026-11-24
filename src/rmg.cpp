@@ -7808,7 +7808,10 @@ void type_random_map_generator::createMonolithConnection(
     if (!placeObjectInZone(object, source)) {
         delete object;
     } else {
-        (!exitProperties ? m_monolithsTwoWay : m_monolithsOneWay).push_back(object);
+        if (!exitProperties)
+            m_monolithsTwoWay.push_back(object);
+        else
+            m_monolithsOneWay.push_back(object);
         TRmgPoint entrance;
         entrance.m_x = object->m_position.m_x;
         entrance.m_y = object->m_position.m_y;
