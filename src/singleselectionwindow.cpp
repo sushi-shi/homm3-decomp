@@ -113,15 +113,17 @@ public:
 // Their semantic class names remain provisional. The five retained written
 // operator() definitions below own their VA annotations directly; they are
 // not compiler-generated functions. The size predicate expands in retail's
-// sort machinery. Constructor stores put isNet before direction, matching
-// SortMaps at 0x5850b4/0x5850b7 and 0x58510a/0x58510d.
+// sort machinery. The constructor assigns direction first, in member order;
+// VC6 schedules the isNet store ahead of it at SortMaps 0x5850b4/0x5850b7
+// and 0x58510a/0x58510d. Assigning isNet first leaves both direction loads
+// late and moves SortMaps' shared zero from ESI to EDX (92.73%).
 struct TSortMapsByName {
     unsigned char m_direction;  // +0
     unsigned char m_isNet;      // +1
     TSortMapsByName(unsigned char dir, unsigned char net)
     {
-        m_isNet = net;
         m_direction = dir;
+        m_isNet = net;
     }
     bool operator()(const GameSelectionHeadersStruct& a,
                     const GameSelectionHeadersStruct& b) const;
@@ -4811,12 +4813,14 @@ inline void TSingleSelectionWindow::onSortMaps(int how)
 // E:\gamedcs\singleselectionwindow.cpp:4646
 // DC 4678 names IsHost; restoring that call together with push_back
 // removes the append pin and raises 91.6682% to 92.68%. push_back alone
-// gives 90.68%: it over-expands clear's _Destroy. The remaining sort/clear
-// schedule keeps zero in EDX instead of retail's ESI. Moving DC's int x
-// declaration to entry, using direct predicate arguments, and swapping the
-// two reset stores do not fix that binding; chaining the resets is 92.67%.
-// why-reg's creation-order probe is flat. DC uses qsort and an index array;
-// Complete's vector/functor details therefore require retail evidence.
+// gives 90.68%: it over-expands clear's _Destroy. The name/version
+// predicate constructor's member-order assignments then put the shared zero
+// in retail's ESI and make this byte-exact (92.73 -> 100%). Resetting the
+// indices before getSourceHeaders (90.24%), erase(begin, end) for clear
+// (86.21%) and one hoisted isNet flag (73.14%) are worse; a vector
+// reference, mem-initializers and unbraced cases are byte-identical.
+// DC uses qsort and an index array; Complete's vector/functor details
+// therefore require retail evidence.
 // DC's message junk belongs to the older Update(message&) interface;
 // Complete calls the no-argument Update, so no unused message is invented.
 // Mac 0x17cea0 instead sorts a temporary pointer array with the adjacent-swap
