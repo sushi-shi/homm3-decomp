@@ -4730,8 +4730,8 @@ int townManager::main(message& msg)
     }
 
     int rclick = (msg.m_qualifier & 0x200) != 0;
-    int build = g_pendingTownBuild;
-    if (build != -1) {
+    if (g_pendingTownBuild != -1) {
+        int build = g_pendingTownBuild;
         g_pendingTownBuild = -1;
         if (build == TTownScreenWindow::TOWN_CHEAT_BUILD_ALL) {
             for (build = 0; build < MAX_BUILDING_TYPE; build++) {
