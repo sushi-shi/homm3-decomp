@@ -12,7 +12,8 @@
 // /O2 inline trace gives the base constructor 934/4 of the 1000 budget, which
 // leaves _Init 109 against its cb 103; a fifth inline call site anywhere in
 // this body (diagnostic `(void)eback();`) rejects it and matches retail
-// exactly, so the original body likely held one more inline call.
+// exactly. That site is the private TUncopyable base both editors' RTTI
+// lists (include/editor/MFCFileBuf.h); with it the constructor matches.
 VA(0x00486b96, 0xbb)
 TMFCFileBuf::TMFCFileBuf(CFile* pFile) : _m_pFile(pFile), _m_pBuf(NULL)
 {

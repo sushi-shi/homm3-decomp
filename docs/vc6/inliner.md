@@ -3202,8 +3202,9 @@ an inline accessor or helper is the natural carrier and costs no code:
 - TScenarioPropsGeneralPage::OnOK (0x42b7c0) needs two after the region
   string construction: the page's scenario helpers, 84.95 -> 88.67.
 
-Still open with the same shape: TMFCFileBuf's constructor (one site), the
-starting-hero _insertChoice (three between the throw and the bitset reset),
-the prologue page's OnOK (two after the first prologue comparison) and the
-map header reader's string reads. TScenarioCrossover's constructor, read and
+Since resolved: TMFCFileBuf's constructor (its RTTI-listed private
+TUncopyable base supplies the site), the starting-hero _insertChoice (the
+hero mask's bracket-assign proxy) and the prologue page's OnOK (a
+TScenarioPrologue operator!=). Still open with the same shape: the map
+header reader's string reads. TScenarioCrossover's constructor, read and
 write have no free-site solution: they need cost changes instead.
