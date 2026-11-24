@@ -2075,7 +2075,7 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
             m_playDoh[target->group] = 1;
         return;
     }
-    long step = g_searchArray->getStepCell(1)->m_point.m_x;
+    long step = g_searchArray->getStepCell(1)->m_x;
     const pathCell* cell = g_searchArray->getHex(target->m_gridIndex);
     if (cell->m_cost > currentArmy->getSpeed()) {
         currentArmy->groupToAttack = -1;

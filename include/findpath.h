@@ -38,10 +38,11 @@ enum type_search_type {
 // lastCanStop to bits 10 and 11, direction to 12..15, and flightCost to 26..31.
 // Path reconstruction uses lastCanStop to select the flying or ground predecessor.
 // The trigger flag lets AI movement process an event at the starting tile.
+// The cell's own map point is its public type_point base (DC LF_BCLASS at
+// +0), not a member.
 #pragma pack(push, 1)
-struct pathCell {
+struct pathCell : public type_point {
 public:
-    type_point m_point;
     unsigned int m_visited : 1;
     unsigned int m_isTrigger : 1;
     unsigned int m_inBoat : 1;
@@ -68,7 +69,7 @@ public:
     unsigned short m_moveLeft;
 
     // CodeView dc 0xa115c explicitly marks the default constructor generated
-    // (compgenx). Its type_point members already make construction nontrivial;
+    // (compgenx). Its type_point base and members already make construction nontrivial;
     // searchArray::Init's array preamble does not prove a user-written body.
 };
 #pragma pack(pop)

@@ -236,19 +236,19 @@ void aiConsolidateArmy(armyGroup& currentArmy);
 // buy_creatures (0x42bbae), split_armies (0x42dd47/5b) and 0x431d9d.
 void aiArrangeArmy(armyGroup& currentArmy);
 
-// DC classes.csv: 16 B - point, value(+4), move_cost(+8), is_nearby(+12),
-// is_critical(+13). net_value_of_location (0x42f980) adjusts move_cost and
-// sets is_critical; find_all_destinations vectors these records.
-struct HeroDestination {
+// DC fieldlist: 16 B - a public type_point base (LF_BCLASS at +0), then
+// value(+4), move_cost(+8), is_nearby(+12), is_critical(+13).
+// net_value_of_location (0x42f980) adjusts move_cost and sets is_critical;
+// find_all_destinations vectors these records.
+struct HeroDestination : public type_point {
 public:
-    type_point m_point;
     long m_value;
     long m_moveCost;
     unsigned char m_isNearby;
     unsigned char m_isCritical;
 
     // CodeView dc 0x380f0 marks this default constructor compiler-generated
-    // (compgenx). The type_point member supplies its implicit construction.
+    // (compgenx). The type_point base supplies its implicit construction.
 };
 
 int aiChooseDestination(hero* currentHero, long maxDistance,

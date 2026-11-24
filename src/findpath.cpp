@@ -278,13 +278,13 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
     long cost = oldCell.m_cost + moveCost;
     long adjustedCost = point.m_adjustedCost - point.m_cost + cost;
 
-    if (!point.m_point.isValid())
+    if (!point.isValid())
         return;
-    if (point.m_point.m_x < m_validRectangle.left || point.m_point.m_x >= m_validRectangle.right
-            || point.m_point.m_y < m_validRectangle.top || point.m_point.m_y >= m_validRectangle.bottom)
+    if (point.m_x < m_validRectangle.left || point.m_x >= m_validRectangle.right
+            || point.m_y < m_validRectangle.top || point.m_y >= m_validRectangle.bottom)
         return;
 
-    point.m_lastPoint = oldCell.m_point;
+    point.m_lastPoint = oldCell;
     point.m_lastCanStop = oldCell.m_canStop;
     if (point.m_dimensionDoor) {
         if (point.m_canStop && isTrigger)
@@ -293,8 +293,8 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
             point.m_lastPoint = oldCell.m_lastPoint;
             point.m_lastCanStop = 1;
         }
-        long deltaX = point.m_point.m_x - point.m_lastPoint.m_x;
-        long deltaY = point.m_point.m_y - point.m_lastPoint.m_y;
+        long deltaX = point.m_x - point.m_lastPoint.m_x;
+        long deltaY = point.m_y - point.m_lastPoint.m_y;
         if (abs(deltaX) > 9)
             return;
         if (abs(deltaY) > 8)
@@ -308,7 +308,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 
     long danger = 0;
     if (m_dangerZones != 0) {
-        danger = getDangerCell(m_dangerZones, point.m_point);
+        danger = getDangerCell(m_dangerZones, point);
         if (cost > m_thisTurnsMovement) {
             danger = min(oldCell.m_dangerValue, danger);
             // The "unreachable" sentinel the danger map carries; every
@@ -319,7 +319,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
         }
     }
 
-    pathCell* cell = getCell(point.m_point, !point.m_canStop);
+    pathCell* cell = getCell(point, !point.m_canStop);
 
     unsigned char cheaper = 0;
     long key = barrierValue;
@@ -350,7 +350,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
         point.m_magicForbidden = 0;
         if (m_canCastTeleport || m_canSummonBoat || m_canCastFlight
                 || m_canCastWaterWalk) {
-            NewmapCell* mapCell = g_game->getCell(point.m_point);
+            NewmapCell* mapCell = g_game->getCell(point);
             TAdventureObjectType special = mapCell->getSpecialTerrain();
             if (special == CURSED_GROUND || special == GARRISON)
                 point.m_magicForbidden = 1;
@@ -540,7 +540,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
                                          type_search_type searchType,
                                          TTerrainType nativeTerrain)
 {
-    const NewmapCell* const srcCell = g_advManager->getCell(source.m_point);
+    const NewmapCell* const srcCell = g_advManager->getCell(source);
     TTerrainType sourceTerrain = H3_ENUM_DECODE(TTerrainType, srcCell->m_groundSet);
     unsigned char hasNomad =
         currentHero->m_army.getCreatureTotal(CREATURE_NOMAD) > 0;
@@ -549,16 +549,16 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
 
     for (long direction = 0; direction < MAP_DIRECTION_COUNT; direction++) {
         dest = source;
-        dest.m_point.m_x = source.m_point.m_x + g_normalDirTable[direction].m_x;
-        dest.m_point.m_y = source.m_point.m_y + g_normalDirTable[direction].m_y;
-        if (!dest.m_point.isValid())
+        dest.m_x = source.m_x + g_normalDirTable[direction].m_x;
+        dest.m_y = source.m_y + g_normalDirTable[direction].m_y;
+        if (!dest.isValid())
             continue;
         if (adjacentMonster) {
-            if (dest.m_point != monsterLocation)
+            if (dest != monsterLocation)
                 continue;
         }
 
-        NewmapCell* destCell = g_advManager->getCell(dest.m_point);
+        NewmapCell* destCell = g_advManager->getCell(dest);
         const int terrain = destCell->m_groundSet;
         unsigned char teleportRequired = 0;
         unsigned char flyingRequired = 0;
@@ -610,10 +610,10 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
             flyingRequired = 1;
         }
 
-        if (!(getMapExtra(dest.m_point) & g_curPlayerBit)
+        if (!(getMapExtra(dest) & g_curPlayerBit)
                 && searchType != const_AI_enemy_search) {
             if (g_currentPlayer->isHuman()
-                    || (!(getMapExtra(source.m_point) & g_curPlayerBit)
+                    || (!(getMapExtra(source) & g_curPlayerBit)
                         && g_currentPlayer->m_numTowns > 0)) {
                 dest.m_canStop = 0;
                 flyingRequired = 1;
@@ -652,8 +652,8 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
                     // eax,[ebp-0x2e]` on across_y), where reading
                     // `source.point.x` again gives a 16-bit `mov bx,ax /
                     // shl bx,6` off the member's own word container.
-                    type_point corner1 = source.m_point;
-                    type_point corner2 = source.m_point;
+                    type_point corner1 = source;
+                    type_point corner2 = source;
                     corner1.m_x = corner1.m_x + g_normalDirTable[direction].m_x;
                     corner2.m_y = corner2.m_y + g_normalDirTable[direction].m_y;
                     if (g_game->getCell(corner1)->m_groundSet
@@ -782,7 +782,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
                 boatCell.m_adjustedCost += 500;
                 if (!(m_canSummonBoat && !source.m_magicForbidden))
                     boatCell.m_barrierValue +=
-                        aiGetShipCost(currentHero, boatCell.m_point);
+                        aiGetShipCost(currentHero, boatCell);
                 if (m_payTransitionCosts) {
                     if (source.m_moveLeft < boatCost)
                         boatCost = source.m_moveLeft + m_landMovement;
@@ -959,7 +959,7 @@ void searchArray::markTeleport(const army* currentArmy, long currentGroup)
 
     for (long hex = 0; hex < COMBAT_GRID_CELLS; ++hex) {
         pathCell* cell = getHex(hex);
-        cell->m_point.m_x = static_cast<short>(hex);
+        cell->m_x = static_cast<short>(hex);
         if (!g_combatManager->inInvisibleColumn(hex)
                 && currentArmy->canFit(hex, 0, 0)
                 && g_combatManager->isValidTeleport(currentArmy, hex)) {
@@ -1208,16 +1208,16 @@ bool searchArray::findCombatPath(const army* currentArmy,
 
         if (combatManager::validHex(destination)
                 && pc.m_flightCost == 0) {
-            long distance = combatManager::getDistance(pc.m_point.m_x, destination);
+            long distance = combatManager::getDistance(pc.m_x, destination);
             if (distance < bestDistance) {
-                bestHex = pc.m_point.m_x;
+                bestHex = pc.m_x;
                 bestDistance = distance;
                 if (distance == 0)
                     break;
             }
         }
 
-        long hex = pc.m_point.m_x;
+        long hex = pc.m_x;
         long adjacent;
         long direction;
         for (direction = 0; direction < COMBAT_DIRECTION_COUNT; direction++) {
@@ -1230,7 +1230,7 @@ bool searchArray::findCombatPath(const army* currentArmy,
             if (!currentArmy->is(creatureDoubleWide)) {
                 moat = isMoat(adjacent);
             } else {
-                long front = pc.m_point.m_x + currentArmy->offsetToFront(-1);
+                long front = pc.m_x + currentArmy->offsetToFront(-1);
                 long tail = adjacent + currentArmy->offsetToFront(-1);
                 if (isMoat(adjacent) && adjacent != front)
                     moat = 1;
@@ -1246,14 +1246,14 @@ bool searchArray::findCombatPath(const army* currentArmy,
                     || (siegePressure && moat)) {
                 long enemyCost = pc.m_cost;
                 unsigned char blocked = 0;
-                if (isMoat(pc.m_point.m_x))
+                if (isMoat(pc.m_x))
                     enemyCost += baseSpeed;
                 if (limit <= baseSpeed) {
-                    if (isMoat(pc.m_point.m_x))
+                    if (isMoat(pc.m_x))
                         blocked = 1;
                     if (currentArmy->is(creatureDoubleWide)
                             && isMoat(static_cast<short>(
-                                    pc.m_point.m_x
+                                    pc.m_x
                                     + (currentArmy->offsetToFront(-1)))))
                         blocked = 1;
                 }
@@ -1265,9 +1265,9 @@ bool searchArray::findCombatPath(const army* currentArmy,
                                     + currentArmy->offsetToFront(-1),
                                     enemyCost, currentGroup, destination))) {
                         pathCell* reached = getHex(adjacent);
-                        reached->m_point.m_x = static_cast<short>(adjacent);
+                        reached->m_x = static_cast<short>(adjacent);
                         reached->m_direction = direction;
-                        reached->m_lastPoint = pc.m_point;
+                        reached->m_lastPoint = pc;
                         m_result.push_back(reached);
                         break;
                     }
@@ -1325,9 +1325,9 @@ void searchArray::pushCombatPoint(int index, int direction, int cost, int flight
     }
 
     pathCell currentPathCell;
-    currentPathCell.m_point.m_x = index;
+    currentPathCell.m_x = index;
     currentPathCell.m_visited = 1;
-    currentPathCell.m_point.m_y = 0;
+    currentPathCell.m_y = 0;
     currentPathCell.m_direction = direction;
     currentPathCell.m_cost = cost;
     currentPathCell.m_flightCost = flightCost;

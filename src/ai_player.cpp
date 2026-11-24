@@ -2843,7 +2843,7 @@ static void markDangerZones(const hero* ourHero, hero* enemyHero,
         for (long visitedIndex =
                  g_searchArray->getVisitedCount();
              visitedIndex--;) {
-            const type_point& point = g_searchArray->getVisitedCell(visitedIndex)->m_point;
+            const type_point& point = *g_searchArray->getVisitedCell(visitedIndex);
             if (value >= -500000000) {
                 getDangerCell(dangerZones, point) += value;
             } else {
@@ -2904,25 +2904,25 @@ static void checkHolyGrail(
     if (player->m_puzzleGuess.m_x < 0)
         return;
     HeroDestination point;
-    point.m_point.m_x = player->m_puzzleGuess.m_x;
-    point.m_point.m_y = player->m_puzzleGuess.m_y;
-    point.m_point.m_z = player->m_puzzleGuess.m_z;
+    point.m_x = player->m_puzzleGuess.m_x;
+    point.m_y = player->m_puzzleGuess.m_y;
+    point.m_z = player->m_puzzleGuess.m_z;
     point.m_isCritical = 0;
-    pathCell* guessCell = currentSearchArray->getCell(point.m_point, 0);
+    pathCell* guessCell = currentSearchArray->getCell(point, 0);
     if (!guessCell->m_visited)
         return;
-    NewmapCell* mapCell = g_game->getCell(point.m_point);
+    NewmapCell* mapCell = g_game->getCell(point);
     if (mapCell->m_type == HERO && mapCell->m_isTrigger
         && mapCell->m_extraInfo
             != static_cast<unsigned long>(currentHero->m_id))
         return;
-    if (!currentHero->isInPatrolRadius(point.m_point))
+    if (!currentHero->isInPatrolRadius(point))
         return;
     point.m_moveCost = guessCell->m_cost;
     if (point.m_moveCost > friendlyDistances[
-            (point.m_point.m_z * g_mapHeight + point.m_point.m_y)
+            (point.m_z * g_mapHeight + point.m_y)
                 * g_mapWidth
-            + point.m_point.m_x])
+            + point.m_x])
         return;
     if (g_game->m_mapHeader.m_victoryCondition.m_type
         == VICTORY_CONDITION_BUILD_GRAIL) {
@@ -2958,12 +2958,12 @@ static void markStrategicMap(
 
     for (short i = 0; i < destinations.size(); ++i) {
         point = destinations[i];
-        NewmapCell* cell = g_advManager->getCell(point.m_point);
+        NewmapCell* cell = g_advManager->getCell(point);
         int type = cell->m_type;
-        if (!(getMapExtra(point.m_point)
+        if (!(getMapExtra(point)
               & g_curPlayerBit)) {
-            strategicMap[point.m_point.m_z * levelSize
-                          + point.m_point.m_y * g_mapWidth + point.m_point.m_x]
+            strategicMap[point.m_z * levelSize
+                          + point.m_y * g_mapWidth + point.m_x]
                 += point.m_value;
             continue;
         }
@@ -2972,14 +2972,14 @@ static void markStrategicMap(
         if (akAdvObjectTypeTraits[type].m_blocksLanding)
             cell->m_isTrigger = 0;
 
-        rect.left = max(0L, static_cast<long>(point.m_point.m_x) - 5);
-        rect.top = max(0L, static_cast<long>(point.m_point.m_y) - 5);
-        rect.right = min(static_cast<long>(point.m_point.m_x) + 6, g_mapWidth);
-        rect.bottom = min(static_cast<long>(point.m_point.m_y) + 6, g_mapHeight);
+        rect.left = max(0L, static_cast<long>(point.m_x) - 5);
+        rect.top = max(0L, static_cast<long>(point.m_y) - 5);
+        rect.right = min(static_cast<long>(point.m_x) + 6, g_mapWidth);
+        rect.bottom = min(static_cast<long>(point.m_y) + 6, g_mapHeight);
         currentSearchArray.setRectangle(rect);
         g_advManager->m_advWindow->animateBottomView(0);
         currentSearchArray.seedPosition(
-            currentHero, point.m_point, type_point(-1, -1, -1), 500,
+            currentHero, point, type_point(-1, -1, -1), 500,
             cell->m_groundSet == eTerrainWater, const_AI_treasure_search,
             59999, 0);
 
@@ -2988,13 +2988,13 @@ static void markStrategicMap(
             nearbyCost = 0;
         } else {
             cell->m_isTrigger = wasTrigger;
-            topX = max(0L, static_cast<long>(point.m_point.m_x) - 1);
-            topY = max(0L, static_cast<long>(point.m_point.m_y) - 1);
-            short stopX = min(static_cast<long>(point.m_point.m_x) + 2,
+            topX = max(0L, static_cast<long>(point.m_x) - 1);
+            topY = max(0L, static_cast<long>(point.m_y) - 1);
+            short stopX = min(static_cast<long>(point.m_x) + 2,
                                g_mapWidth);
-            short stopY = min(static_cast<long>(point.m_point.m_y) + 2,
+            short stopY = min(static_cast<long>(point.m_y) + 2,
                                g_mapHeight);
-            pt.m_z = point.m_point.m_z;
+            pt.m_z = point.m_z;
             nearbyCost = 0;
             for (pt.m_x = topX; pt.m_x < stopX; ++pt.m_x) {
                 for (pt.m_y = topY; pt.m_y < stopY; ++pt.m_y) {
@@ -3014,8 +3014,8 @@ static void markStrategicMap(
                 value = point.m_value * 300
                     / (visited->m_cost - nearbyCost + 300);
             }
-            strategicMap[visited->m_point.m_z * levelSize
-                          + visited->m_point.m_y * g_mapWidth + visited->m_point.m_x]
+            strategicMap[visited->m_z * levelSize
+                          + visited->m_y * g_mapWidth + visited->m_x]
                 += value;
         }
     }
@@ -3072,12 +3072,12 @@ static void unblockLith(hero* currentHero,
             g_searchArray->getCell(point, false);
         if (!currentPathCell->m_visited)
             continue;
-        if (destination.m_point.m_x >= 0 && closest <= currentPathCell->m_cost)
+        if (destination.m_x >= 0 && closest <= currentPathCell->m_cost)
             continue;
         if (g_searchArray->getDangerValue(point) < 0)
             continue;
         closest = currentPathCell->m_cost;
-        destination.m_point = point;
+        static_cast<type_point&>(destination) = point;
         destination.m_isCritical = 0;
         bestDistance = 0;
     }
@@ -3161,7 +3161,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
         noTowns = 1;
     bestPoint.m_isCritical = 0;
 
-    if (bestPoint.m_point.m_x < 0) {
+    if (bestPoint.m_x < 0) {
         bestPoint.m_isNearby = 0;
         if (rawValue < 0) {
             bestPoint.m_value = 0;
@@ -3175,7 +3175,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
         rawValue = bestRawValue;
         if (bestDistance > 100)
             rawValue = rawValue * 100 / bestDistance;
-        pathCell* bestCell = g_searchArray->getCell(bestPoint.m_point,
+        pathCell* bestCell = g_searchArray->getCell(bestPoint,
                                                       false);
         bestPoint.m_isNearby =
             bestCell->m_lastPoint == start
@@ -3192,7 +3192,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
         if (bestPoint.m_value > 0 && point.m_value == 0)
             continue;
 
-        pathCell* currentPathCell = g_searchArray->getCell(point.m_point, false);
+        pathCell* currentPathCell = g_searchArray->getCell(point, false);
         unsigned char isNearby = 0;
         if (currentPathCell->m_lastPoint == start
             && g_game->getCell(currentPathCell->m_lastPoint)->m_isTrigger) {
@@ -3248,9 +3248,9 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
         bestDistance -= currentHero->m_movePoints;
     else
         bestDistance = 0;
-    currentHero->m_pathTargetX = bestPoint.m_point.m_x;
-    currentHero->m_pathTargetY = bestPoint.m_point.m_y;
-    currentHero->m_pathTargetZ = bestPoint.m_point.m_z;
+    currentHero->m_pathTargetX = bestPoint.m_x;
+    currentHero->m_pathTargetY = bestPoint.m_y;
+    currentHero->m_pathTargetZ = bestPoint.m_z;
     currentHero->m_targetIsCritical = bestPoint.m_isCritical;
     currentHero->m_targetDistance = static_cast<short>(bestDistance);
     delete[] strategicMap;
@@ -3352,12 +3352,12 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
         pathCell* cell = currentSearchArray->getVisitedCell(j);
         if (!allowSpells && cell->m_cost < cell->m_adjustedCost)
             continue;
-        NewmapCell* mapCell = g_advManager->getCell(cell->m_point);
+        NewmapCell* mapCell = g_advManager->getCell(*cell);
         if (!mapCell->m_isTrigger
-            && ((getMapExtra(cell->m_point) & g_curPlayerBit)
+            && ((getMapExtra(*cell) & g_curPlayerBit)
                 || g_currentPlayer->m_numTowns == 0))
             continue;
-        if (!currentHero->isInPatrolRadius(cell->m_point))
+        if (!currentHero->isInPatrolRadius(*cell))
             continue;
         g_advManager->m_advWindow->animateBottomView(0);
         checkDoMain(0, 0);
@@ -3374,22 +3374,22 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
             point.m_isCritical = 1;
         }
 
-        point.m_point.m_x = cell->m_point.m_x;
-        point.m_point.m_y = cell->m_point.m_y;
-        point.m_point.m_z = cell->m_point.m_z;
+        point.m_x = cell->m_x;
+        point.m_y = cell->m_y;
+        point.m_z = cell->m_z;
         point.m_moveCost = cell->m_cost;
-        if (point.m_point == currentHero->getLocation())
+        if (point == currentHero->getLocation())
             continue;
 
         if (g_oneUseEvents[mapCell->m_type]
             && point.m_moveCost > friendlyDistances[
-                point.m_point.m_z * levelSize + point.m_point.m_y * g_mapWidth
-                + point.m_point.m_x])
+                point.m_z * levelSize + point.m_y * g_mapWidth
+                + point.m_x])
             continue;
         point.m_moveCost = cell->m_adjustedCost;
         if (hiringHero)
             point.m_moveCost = 10000;
-        if (!(getMapExtra(point.m_point) & g_curPlayerBit)
+        if (!(getMapExtra(point) & g_curPlayerBit)
             && g_currentPlayer->m_numTowns > 0) {
             if (exploreMode) {
                 point.m_value = 100000;
@@ -3397,7 +3397,7 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
                 point.m_value = 100;
             }
         } else {
-            point.m_value = aiValueOfEvent(currentHero, point.m_point,
+            point.m_value = aiValueOfEvent(currentHero, point,
                                             point.m_moveCost);
             if (point.m_value <= 0
                 && (point.m_value != 0 || currentValue >= 0))
@@ -3532,10 +3532,10 @@ static long markDestinations(hero* currentHero, long maxDistance,
         for (int j = static_cast<int>(friendlySearch.getVisitedCount());
              j-- != 0;) {
             pathCell* visited = friendlySearch.getVisitedCell(j);
-            if (friendly->isInPatrolRadius(visited->m_point)) {
+            if (friendly->isInPatrolRadius(*visited)) {
                 unsigned short* distance = &friendlyDistances[
-                    visited->m_point.m_z * levelSize
-                    + visited->m_point.m_y * g_mapWidth + visited->m_point.m_x];
+                    visited->m_z * levelSize
+                    + visited->m_y * g_mapWidth + visited->m_x];
                 unsigned short cost = visited->m_cost + extraCost;
                 if (cost < *distance)
                     *distance = cost;
@@ -3564,7 +3564,7 @@ static int netValueOfLocation(hero* currentHero, HeroDestination& destination,
                           long* strategicMap, pathCell* currentPathCell,
                           searchArray* currentSearchArray)
 {
-    type_point point = destination.m_point;
+    type_point point = destination;
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
     if (cell->m_isTrigger && akAdvObjectTypeTraits[type].m_blocksLanding
@@ -3585,7 +3585,7 @@ static int netValueOfLocation(hero* currentHero, HeroDestination& destination,
 
     type_point monsterPos;
     if (!akAdvObjectTypeTraits[type].m_blocksLanding) {
-        point = destination.m_point;
+        point = destination;
         if (g_advManager->findAdjacentMonster(point, monsterPos, point)) {
             if (currentPathCell->m_monster != monsterPos
                 && value >= -500000000)
@@ -3594,9 +3594,9 @@ static int netValueOfLocation(hero* currentHero, HeroDestination& destination,
         }
     }
 
-    if (destination.m_point.m_x == currentHero->m_pathTargetX
-        && destination.m_point.m_y == currentHero->m_pathTargetY
-        && destination.m_point.m_z == currentHero->m_pathTargetZ) {
+    if (destination.m_x == currentHero->m_pathTargetX
+        && destination.m_y == currentHero->m_pathTargetY
+        && destination.m_z == currentHero->m_pathTargetZ) {
         if (value < 0)
             value = static_cast<float>(value) / 1.5f;
         else
@@ -3664,7 +3664,7 @@ bool attemptStep(hero* currentHero, pathCell& currentPathCell,
     int direction = currentPathCell.m_direction;
     considerHidingMouse(currentHero, direction);
 
-    triggerPoint = currentPathCell.m_point;
+    triggerPoint = currentPathCell;
     NewmapCell* cell = g_game->getCell(triggerPoint);
 
     if (currentPathCell.m_inBoat && !(currentHero->m_flags & 0x40000)) {
@@ -3741,12 +3741,12 @@ static void buildPath(hero* currentHero, searchArray* currentSearchArray,
     while (i-- > 0) {
         const pathCell* currentPathCell = g_searchArray->getStepCell(i);
         if (currentPathCell->m_flying
-            && (abs(currentPathCell->m_point.m_x - currentPathCell->m_lastPoint.m_x) > 1
-                || abs(currentPathCell->m_point.m_y - currentPathCell->m_lastPoint.m_y) > 1
-                || currentPathCell->m_point.m_z != currentPathCell->m_lastPoint.m_z)) {
-            destination.m_point.m_x = currentPathCell->m_lastPoint.m_x;
-            destination.m_point.m_y = currentPathCell->m_lastPoint.m_y;
-            destination.m_point.m_z = currentPathCell->m_lastPoint.m_z;
+            && (abs(currentPathCell->m_x - currentPathCell->m_lastPoint.m_x) > 1
+                || abs(currentPathCell->m_y - currentPathCell->m_lastPoint.m_y) > 1
+                || currentPathCell->m_z != currentPathCell->m_lastPoint.m_z)) {
+            destination.m_x = currentPathCell->m_lastPoint.m_x;
+            destination.m_y = currentPathCell->m_lastPoint.m_y;
+            destination.m_z = currentPathCell->m_lastPoint.m_z;
             currentHero->m_pathTargetX = currentPathCell->m_lastPoint.m_x;
             currentHero->m_pathTargetY = currentPathCell->m_lastPoint.m_y;
             currentHero->m_pathTargetZ = currentPathCell->m_lastPoint.m_z;
@@ -3874,11 +3874,11 @@ static unsigned char attemptTeleport(hero* current_hero,
                 will_teleport = 1;
             if (!path[i].m_canStop)
                 continue;
-            if (abs(path[i].m_point.m_x - start_point.m_x) > 9
-                || abs(path[i].m_point.m_y - start_point.m_y) > 8
-                || path[i].m_point.m_z != start_point.m_z)
+            if (abs(path[i].m_x - start_point.m_x) > 9
+                || abs(path[i].m_y - start_point.m_y) > 8
+                || path[i].m_z != start_point.m_z)
                 continue;
-            if (g_game->getCell(path[i].m_point)->m_isTrigger)
+            if (g_game->getCell(path[i])->m_isTrigger)
                 continue;
             if (path[i].m_inBoat != in_boat)
                 continue;
@@ -3907,15 +3907,15 @@ static unsigned char attemptTeleport(hero* current_hero,
                 pathIndex = destination_index;
                 break;
             }
-            if (path[pathIndex].m_point.m_z == start_point.m_z
+            if (path[pathIndex].m_z == start_point.m_z
                 && path[pathIndex].m_inBoat == in_boat) {
-                start_point = path[pathIndex].m_point;
+                start_point = path[pathIndex];
                 break;
             }
         }
     } while (pathIndex < destination_index);
 
-    type_point destination = path[destination_index].m_point;
+    type_point destination = path[destination_index];
     g_advManager->teleportTo(current_hero, destination, 0, 0, 1, 0);
     current_hero->useSpell(mana_cost);
     ++current_hero->m_dWalkSpellsCast;
@@ -4015,15 +4015,15 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
         if (path[step].m_castleGate) {
             type_point gatePoint = currentHero->getLocation();
             checkGatePurchase(gatePoint);
-            checkGatePurchase(path[step].m_point);
+            checkGatePurchase(path[step]);
             currentHero->m_movePoints = max(currentHero->m_movePoints - 100, 0);
-            g_advManager->teleportTo(currentHero, path[step].m_point, 0,
+            g_advManager->teleportTo(currentHero, path[step], 0,
                                      0, 1, 0);
             return;
         }
 
         if (path[step].m_townPortal && step == 0) {
-            g_advManager->teleportTo(currentHero, path[step].m_point, 0,
+            g_advManager->teleportTo(currentHero, path[step], 0,
                                      0, 1, 0);
             currentHero->useSpell(
                 currentHero->getManaCost(SPELL_TOWN_PORTAL));
@@ -4074,10 +4074,10 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
         if (path[step].m_canStop
             && currentHero->m_movePoints >= 100
             && !bestPoint.m_isCritical) {
-            destination = bestPoint.m_point;
+            destination = bestPoint;
             aiChooseDestination(currentHero, maxDistance, bestPoint,
                                   bestRawValue, 0, exploreMode);
-            if (destination != bestPoint.m_point) {
+            if (destination != bestPoint) {
                 buildPath(currentHero, g_searchArray, path, bestPoint);
                 totalCost = 0;
                 firstStep = 1;
@@ -4411,8 +4411,8 @@ static long valueOfHiring(town* currentTown, hero* candidate,
     unsigned int i;
     for (i = 0; i < destinations.size(); ++i) {
         destination = destinations[i];
-        pathCell* cell = currentSearchArray.getCell(destination.m_point, 0);
-        NewmapCell* mapCell = g_advManager->getCell(destination.m_point);
+        pathCell* cell = currentSearchArray.getCell(destination, 0);
+        NewmapCell* mapCell = g_advManager->getCell(destination);
         if (mapCell->m_type == HERO && mapCell->m_isTrigger
             && g_game->getHero(mapCell->m_extraInfo)->m_owner == playerId) {
             cell->m_barrierValue = destination.m_value;

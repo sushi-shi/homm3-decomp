@@ -654,7 +654,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     long maximumDistance = 32000;
     if (currentHero->m_pathTargetX < 0)
         currentHero->m_targetIsCritical = 0;
-    destination.m_point.m_x = -1;
+    destination.m_x = -1;
     destination.m_isNearby = 0;
     rawValue = 0;
 
@@ -680,7 +680,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     for (int attempt = 0; attempt < 5; ++attempt) {
         rv = aiChooseDestination(currentHero, maxDistance, destination,
                                    rawValue, 1, exploreMode);
-        if (!((destination.m_point.m_x < 0
+        if (!((destination.m_x < 0
                || (rv < 0 && !destination.m_isCritical))
               && g_searchArray->limitWasReached()
               && maxDistance < maximumDistance))
@@ -691,14 +691,14 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     if (currentHero->m_maxMovePoints == currentHero->m_movePoints)
         incrementHourGlass();
 
-    if (destination.m_point.m_x < 0) {
+    if (destination.m_x < 0) {
         currentHero->m_pathTargetX = -1;
         currentHero->m_pathTargetY = -1;
         currentHero->m_isSleeping = 1;
         return;
     }
 
-    originalDestination = destination.m_point;
+    originalDestination = destination;
     unsigned char destinationWasUnvisited =
         !(getMapExtra(originalDestination)
           & g_curPlayerBit);

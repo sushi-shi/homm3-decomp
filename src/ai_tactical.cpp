@@ -432,7 +432,7 @@ long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
     if (speed == 0)
         return 0 < cell->m_cost ? 100 : 1;
     long turns = (cell->m_cost + speed - 1) / speed;
-    if (search_array->isMoat(cell->m_point.m_x))
+    if (search_array->isMoat(cell->m_x))
         turns++;
     if (turns < 1)
         turns = 1;
