@@ -5832,6 +5832,12 @@ VA_COMPGEN_AT(h3maped, 0x004ae1eb, 0x12, VECTOR_SIZE, Short)
 // border policy, then unguarded. Native height-before-width bounds
 // initialization and two-exit ring traversal are recovered; const bounds are
 // byte-flat.
+// Retail tests the clipped point against literal 0 minimums (test/jl) and the
+// stored maximums, and the static templateZoneOf accessor at every template
+// access plus getX()/getY() in that test raise the cb (85.4 -> 89.3). Lower:
+// bounds.contains, const/aggregate bounds, a shared findEdgeToZone helper,
+// do-while edge walk, halfEdge accessors, local template pointers, a copied
+// reverse connection.
 // Residual: the remaining game call difference is inside the fourth
 // connection insertion, and both frames remain four bytes short. Preserve
 // the canonical helpers.
@@ -5866,16 +5872,16 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             if (!found)
                 continue;
             TRmgPoint clipped = clipRmgBoundaryPoint(edge->m_vertex, edge->m_previous->m_vertex, bounds);
-            if (bounds.contains(clipped)) {
+            if (clipped.getX() >= 0 && clipped.getX() < bounds.m_maximumX && clipped.getY() >= 0 && clipped.getY() < bounds.m_maximumY) {
                 TRmgZoneConnection connection;
-                connection.m_destination = destination->m_templateZone;
+                connection.m_destination = templateZoneOf(destination);
                 connection.m_connected = 1;
                 connection.m_value = 0;
                 connection.m_placeBorderObjects = 0;
                 connection.m_unguarded = 1;
-                zone->m_templateZone->m_connections.push_back(connection);
-                connection.m_destination = zone->m_templateZone;
-                destination->m_templateZone->m_connections.push_back(connection);
+                templateZoneOf(zone)->m_connections.push_back(connection);
+                connection.m_destination = templateZoneOf(zone);
+                templateZoneOf(destination)->m_connections.push_back(connection);
             }
         }
     }
@@ -5913,14 +5919,14 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             if (column < originalZones)
                 continue;
             TRmgZoneConnection connection;
-            connection.m_destination = destination->m_templateZone;
+            connection.m_destination = templateZoneOf(destination);
             connection.m_connected = 0;
             connection.m_value = 0;
             connection.m_placeBorderObjects = 0;
             connection.m_unguarded = 1;
-            zone->m_templateZone->m_connections.push_back(connection);
-            connection.m_destination = zone->m_templateZone;
-            destination->m_templateZone->m_connections.push_back(connection);
+            templateZoneOf(zone)->m_connections.push_back(connection);
+            connection.m_destination = templateZoneOf(zone);
+            templateZoneOf(destination)->m_connections.push_back(connection);
             propagateZoneDistances(destination);
         }
     }
