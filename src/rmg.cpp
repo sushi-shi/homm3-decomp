@@ -11350,16 +11350,24 @@ static const int g_rmgQuestArtifactClass = 2;
 // Mac 0x2507c4..0x2507dc retains addObject and all three outline operations.
 // On failure, 0x250824 delegates removal and treasure replacement to the
 // same helper used by the key-tent fallback.
+// Mac 0x25067c saves the chosen artifact before reusing the scan index for
+// prototypes; 0x2506f8..0x250730 preserves the getPosition/lookup copies.
+// Keep that artifact lifetime and the explicit position snapshot: VC6 then
+// reproduces the selection blocks and success-path map cleanup expansion.
+// Residual: the fallback expands getMapItem where retail retains its call,
+// with receiver/register differences beginning at the property replacement.
+// Constructed points, forwarded getValue, a reused availability counter,
+// a position-to-zone wrapper and a named linear map index did not close it.
 VA(0x0054B490, 0x42E)
 MAC_ADDRESS(0x250588, 0x360) // anchor-caller + artifact/group/generator fields; retail-only
 unsigned char type_random_map_generator::placeSeerHutForArtifact(t_quest_artifact* object)
 {
     type_seer_hut* seerHut = object->m_seerHut;
     int available = 0;
-    int artifact;
-    for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
-        if (!akArtifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
-            && (akArtifactTraits[artifact].m_class & g_rmgQuestArtifactClass)) {
+    int index;
+    for (index = 0; index < ARTIFACT_COUNT; ++index) {
+        if (!akArtifactTraits[index].m_disabled && !m_usedQuestArtifacts[index]
+            && (akArtifactTraits[index].m_class & g_rmgQuestArtifactClass)) {
             ++available;
         }
     }
@@ -11368,31 +11376,31 @@ unsigned char type_random_map_generator::placeSeerHutForArtifact(t_quest_artifac
     if (!available)
         return 0;
     int selected = rand() % available;
-    for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
-        if (!akArtifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
-            && (akArtifactTraits[artifact].m_class & g_rmgQuestArtifactClass)) {
+    for (index = 0; index < ARTIFACT_COUNT; ++index) {
+        if (!akArtifactTraits[index].m_disabled && !m_usedQuestArtifacts[index]
+            && (akArtifactTraits[index].m_class & g_rmgQuestArtifactClass)) {
             if (selected-- <= 0)
                 break;
         }
     }
+    int artifact = index;
     seerHut->m_artifact = artifact;
-    unsigned int prototypeIndex;
-    for (prototypeIndex = 0; prototypeIndex < m_objectPrototypes[ARTIFACT].size(); ++prototypeIndex) {
-        if (m_objectPrototypes[ARTIFACT][prototypeIndex]->m_prototype->getExtra() == artifact)
+    for (index = 0; index < m_objectPrototypes[ARTIFACT].size(); ++index) {
+        if (m_objectPrototypes[ARTIFACT][index]->m_prototype->getExtra() == artifact)
             break;
     }
-    TRmgObjectPropertiesRef* properties = m_objectPrototypes[ARTIFACT][prototypeIndex];
+    TRmgObjectPropertiesRef* properties = m_objectPrototypes[ARTIFACT][index];
     --object->m_properties->m_refCount;
     object->m_properties = properties;
     ++object->m_properties->m_refCount;
-    TRmgZone* origin = m_zones[getMapItem(object->m_position)->m_zoneState.m_zone];
+    TRmgMapPosition artifactPosition = object->getPosition();
+    TRmgZone* origin = m_zones[getMapItem(artifactPosition)->m_zoneState.m_zone];
     TRmgTreasureGroup group;
     TObjectType* prototype = seerHut->m_properties->m_prototype;
     TRmgPoint position;
     position.m_x = (group.m_map.getWidth() + static_cast<unsigned>(prototype->getWidth())) / 2;
     position.m_y = (group.m_map.getHeight() + static_cast<unsigned>(prototype->getHeight())) / 2;
-    type_object* questObject = seerHut;
-    group.addObject(questObject, position);
+    group.addObject(seerHut, position);
     group.updateBounds();
     group.traceOutline();
     group.markPlacementOutline();
