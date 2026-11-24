@@ -509,10 +509,12 @@ BOOL TIdentifiedHeroPropsGeneralPage::OnInitDialog()
     return TRUE;
 }
 
-// Residual: retail retains a member pointer through the portrait
-// adjustment; a named reference to _m_portrait reproduces it but is only an
-// alias. Changing _adjustPortrait's reference formal to a pointer is
-// byte-flat.
+// Retail calls the old hero's getHeroID before the new one's; spelling that
+// test old-first reproduces it (98.13 -> 98.19). Residual: retail retains a member pointer
+// through the portrait adjustment; a named reference to _m_portrait
+// reproduces it but is only an alias (removed in aa3149d81). Changing
+// _adjustPortrait's reference formal to a pointer, or dropping its inline
+// keyword, is byte-flat.
 VA(0x00451315, 0x247)
 void TIdentifiedHeroPropsGeneralPage::OnOK()
 {
@@ -534,7 +536,7 @@ void TIdentifiedHeroPropsGeneralPage::OnOK()
     }
     _m_pNewHero->setSex(_m_gender - 1);
     _m_bModified = THeroPropsGeneralPage::wasModified() || _m_bModified
-                   || _m_pNewHero->getHeroID() != _m_pOldHero->getHeroID()
+                   || _m_pOldHero->getHeroID() != _m_pNewHero->getHeroID()
                    || _m_pOldHero->getBCustomName() != _m_pNewHero->getBCustomName()
                    || _m_pNewHero->getName() != _m_pOldHero->getName()
                    || _m_pOldHero->getBCustomPortrait() != _m_pNewHero->getBCustomPortrait()

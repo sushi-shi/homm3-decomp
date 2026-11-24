@@ -99,7 +99,12 @@ void TEditArtifactDlg::_setArtifacts()
 // nested operator[] passes its own veto 11/12 with test expanded; retail
 // keeps operator[] const (0x405a77) out of line, which would leave the outer
 // count under the limit. Dropping the helper's asserts or its named mask
-// reference leaves the 17/12 veto unchanged.
+// reference leaves the 17/12 veto unchanged. The trace gives test cb 58
+// against budget (1000 - 51) / 14 root sites; at 17+ root sites test stays
+// a call and the helper expands as in retail (probes splitting the count
+// increment from its test, 71-75%), so retail's body presents three more
+// inline sites than this one. Temporary end iterators (+1) and indexing the
+// traits twice (+1) do not reach it alone (85.21 / 78.62%).
 VA(0x0040d9ae, 0x11b)
 bool TEditArtifactDlg::_isAllowed(TArtifact artifact, TArtifactSlot slot) const
 {
