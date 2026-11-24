@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <algorithm>
+#include <limits>
 #include <map>
 #include <memory>
 #include <vector>
@@ -3242,7 +3243,15 @@ void TGameMap::_TImpl::_onPlayableAdded(const TPlayableObject* pPlayable, bool b
 // or a ~93-tuple lighter caller), the first team loop's counter/offset
 // update order and one base+index operand order. Failed probes: the
 // pConstProperties alias with scoped counters alone, a static_cast const
-// handle, a break-index test instead of bTeamInUse, swapped declarations.
+// handle, a break-index test instead of bTeamInUse, swapped declarations,
+// Loki's reuse of the first loop's counter in the closing-up loop (97.11:
+// that loop then takes the first loop's update order), a prefix increment
+// or nested ifs in the first loop (unchanged), a non-const team-info
+// accessor (86.76). The C2 trace gives the teamInfo get() a 2080/39 = 53
+// budget share against cb 49: four more free sites after it would leave it
+// a call. Retail's 0x42df99 is TRefCountingPtr<_TProperties>::get(); with
+// no masked-exact caller the placements leave it unnamed, which costs the
+// four call rows of the get() retail calls.
 VA(0x00427b17, 0x3d1)
 void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
 {
@@ -3768,25 +3777,31 @@ bool TGameMap::_TImpl::_isRandomTownLink(unsigned int linkID) const
     return false;
 }
 
-// Retail retains TLayer::getPObject here; VC6 currently expands that wrapper.
-// Naming the object or trigger point leaves it unchanged; compound subtraction
-// lowers the match. The C2 trace expands every site and the /O1 size veto
-// keeps only the nested _TImpl::getPObject call; layer.getPObject(id)-> and a
-// getPLayer pointer are flat, the _TImpl::getObjectLoc helper scores 58%.
+// Loki h3maped's _write (the map writer's object location) with the
+// Windows TMapLoc as its output: Loki's object local and asserts, and its
+// three numeric_limits max() calls for no object (parenthesized against
+// the MFC max macro). Those three inline calls follow the object lookup,
+// so its share of the budget leaves _TObjectLink::getPObject a call and
+// the /O1 size veto keeps TLayer::getPObject out of line, as retail does.
+// Failed probes: -1 literals with or without the object local and asserts
+// (95.88), per-coordinate subtraction through a trigger reference (84.73)
+// or repeated getObjectLoc calls (33.78).
 VA(0x0042921c, 0x70)
 void TGameMap::_TImpl::_getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const
 {
+    assert(!objRef.getBSecondLayer() || _m_bTwoLayer);
     if (objRef.getObjectID() != TLayer::s_kInvalidObjID) {
         const TLayer& layer = getLayer(objRef.getBSecondLayer());
-        TTilePoint loc = layer.getObjectLoc(objRef.getObjectID())
-                         - layer.getObject(objRef.getObjectID()).getTriggerLoc();
+        const TGameObject& obj = layer.getObject(objRef.getObjectID());
+        assert(obj.hasTrigger());
+        TTilePoint loc = layer.getObjectLoc(objRef.getObjectID()) - obj.getTriggerLoc();
         pLoc->m_x = loc.x();
         pLoc->m_y = loc.y();
         pLoc->m_layer = objRef.getBSecondLayer() ? 1 : 0;
     } else {
-        pLoc->m_x = -1;
-        pLoc->m_y = -1;
-        pLoc->m_layer = -1;
+        pLoc->m_x = (std::numeric_limits<unsigned int>::max)();
+        pLoc->m_y = (std::numeric_limits<unsigned int>::max)();
+        pLoc->m_layer = (std::numeric_limits<unsigned int>::max)();
     }
 }
 
