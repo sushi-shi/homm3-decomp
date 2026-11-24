@@ -7103,7 +7103,7 @@ void type_random_map_generator::placeGuard(int value, TRmgMapPosition position)
         || position.m_y < 0 || position.m_y >= m_map.m_mapHeight)
         return;
 #endif
-    TRmgMapItem* item = m_map.getMapItem(position);
+    TRmgMapItem* item = getMapItem(position);
 #if defined(HOMM3_RMG_HOTFIX)
     if (item->m_zoneState.m_zone == RMG_NO_ZONE)
         return;
@@ -7767,10 +7767,15 @@ unsigned char type_random_map_generator::placeMonolithBorderGuard(
 // succeeds and then tests it separately (je over the clear, no else jump);
 // game bytes are unchanged by that spelling. Its second two-way push_back
 // stays a call there, so end insertion in that registry is not used.
-// Residual: VC6 retains two translated-position constructors and calls the
-// scalar map accessor inside placeGuard where retail retains its
-// map-position overload; a size call and the second registry insertion
-// boundary also differ, with a 0x30 frame versus retail's 0x1c. Copying the
+// placeGuard looks its cell up through the generator's by-value getMapItem
+// forwarder (nested one level deeper), which keeps the map-position call
+// out of line and expands the object-count test as retail does (89.3 ->
+// 95.1; also lifts the ground, gate and mine callers).
+// Residual: retail leaves the single-element vector insert out of line for
+// the first registry push and the two-way branch of the second, while
+// ours expands it; connection/exitProperties swap ebx/edi. Tried without
+// gain: insert(end()) spelling, pointer-selected registry, ternary guard
+// value, exitProperties declared later, TRmgPoint temporaries inline. Copying the
 // guard coordinate then incrementing y, or compound +=, does not help.
 // Mac 0x245cf4..0x245dcc expands two registry push_backs in the first
 // placement (an if/else on the exit prototype), while the editor keeps one
