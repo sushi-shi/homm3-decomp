@@ -230,11 +230,13 @@ TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
 // town, the Conflux dwellings, hero classes and monsters); Shadow of Death
 // the types from 222, the combination artifacts from 129 and the new
 // monoliths. Retail has no setcc: each case returns only its newer edition
-// and breaks to one shared ROE return, and the artifact case owns the shared
-// AB tail, which VC6 gives the last AB-returning case. The other cases' order
-// does not change the object. Still open: retail keeps the AB return at the
-// top guard and the SoD one in the monolith case; nested guards, a block
-// around the switch and one grouped monolith case all lose ground.
+// and breaks to one shared ROE return. Case order decides which copy of each
+// shared return survives: with the one-way monolith case closing the switch
+// VC6 keeps retail's SoD return in the monolith case and the AB one at the
+// top guard (elsewhere it keeps the SoD return at the top guard, and some
+// other orders also move the AB tail). Nested guards, else-if
+// guards, break-first monolith cases, one grouped monolith case and a named
+// result (inlined away) all lose ground.
 VA(0x0041ec1f, 0x79)
 EGameVersion getRequiredVersion(const TObjectType& objType)
 {
@@ -250,11 +252,6 @@ EGameVersion getRequiredVersion(const TObjectType& objType)
     case HERO:
         if (objType.getExtra() >= 16)
             return GAME_VERSION_AB;
-        break;
-    case LITH_ONEWAY_ENTRANCE:
-    case LITH_ONEWAY_EXIT:
-        if (objType.getExtra() >= 3)
-            return GAME_VERSION_SOD;
         break;
     case LITH_TWOWAY:
         if (objType.getExtra() >= 3)
@@ -273,6 +270,11 @@ EGameVersion getRequiredVersion(const TObjectType& objType)
             return GAME_VERSION_SOD;
         if (objType.getExtra() >= 127)
             return GAME_VERSION_AB;
+        break;
+    case LITH_ONEWAY_ENTRANCE:
+    case LITH_ONEWAY_EXIT:
+        if (objType.getExtra() >= 3)
+            return GAME_VERSION_SOD;
         break;
     }
     return GAME_VERSION_ROE;
@@ -5553,7 +5555,10 @@ inline void TGameMapHeader::_writeLossCondition(const TLossConditionData& data, 
 // scores lower. Complete each custom-hero record before its map insertion
 // (the twin's inline temporary scores lower). Residual: retail keeps the
 // identity loop's vector base across extraction and applies the index
-// afterward.
+// afterward (h3ccmped's retail loop does the same with registers to spare).
+// Reference, pointer, iterator and field-reference spellings, int or long
+// counts and resize's default argument all compile alike; without the
+// reference the base is loaded after the read.
 VA(0x0043b0ff, 0x5c4)
 inline TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
 {
