@@ -26,6 +26,7 @@
 #include "resourcemanager.h"
 #include "resourceptr.h"
 #include "town_type.h"
+#include "Uncopyable.h"
 #include "editor/BlackBox.h"
 #include "editor/Colors.h"
 #include "editor/DIBSection.h"
@@ -47,8 +48,10 @@
 namespace {
 
 // The check mark drawn over a customized object's trigger corner: a
-// bitmap resource, the small one at the smallest zoom, and its size.
-class TCheckMarkBmp : public CBitmap {
+// bitmap resource, the small one at the smallest zoom, and its size. The
+// RTTI hierarchy for TCheckMarkBmp lists CBitmap and a private
+// (attributes 9) TUncopyable at +0x8.
+class TCheckMarkBmp : public CBitmap, private TUncopyable {
 public:
     TCheckMarkBmp(bool bSmall);
 
