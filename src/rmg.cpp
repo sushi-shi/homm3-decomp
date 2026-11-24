@@ -11358,6 +11358,11 @@ unsigned char type_random_map_generator::placeQuestGroup(
 // that same treasure-class bit at 0x54b4db/0x54b536. No separate data body.
 static const int g_rmgQuestArtifactClass = 2;
 
+// Inline-budget note: retail keeps one type_random_map::getMapItem call inside
+// the expanded replaceObjectWithTreasure fallback. That nested site (depth 3)
+// is rejected only while the caller's front-end size stays near cb 623, so the
+// folded temporaries here (value, artifactPosition, position, selected) are
+// load-bearing. The tail ~type_random_map expansions then lose budget.
 // t_quest_artifact::completePlacement calls this member with its wrapper.
 // The pending hut, prototype reference counts, artifact traits at 0x660b68,
 // and generator masks fix ownership and selection semantics. Failure
@@ -11394,13 +11399,12 @@ unsigned char type_random_map_generator::placeSeerHutForArtifact(t_quest_artifac
     int selected = rand() % available;
     for (index = 0; index < ARTIFACT_COUNT; ++index) {
         if (!akArtifactTraits[index].m_disabled && !m_usedQuestArtifacts[index]
-            && (akArtifactTraits[index].m_class & g_rmgQuestArtifactClass)) {
-            if (selected-- <= 0)
-                break;
-        }
+            && (akArtifactTraits[index].m_class & g_rmgQuestArtifactClass)
+            && selected-- <= 0)
+            break;
     }
-    int artifact = index;
-    seerHut->m_artifact = artifact;
+    int artifact;
+    seerHut->m_artifact = artifact = index;
     for (index = 0; index < m_objectPrototypes[ARTIFACT].size(); ++index) {
         if (m_objectPrototypes[ARTIFACT][index]->m_prototype->getExtra() == artifact)
             break;
@@ -11408,21 +11412,18 @@ unsigned char type_random_map_generator::placeSeerHutForArtifact(t_quest_artifac
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[ARTIFACT][index];
     --object->m_properties->m_refCount;
     object->m_properties = properties;
-    ++object->m_properties->m_refCount;
-    TRmgMapPosition artifactPosition = object->getPosition();
-    TRmgZone* origin = m_zones[getMapItem(artifactPosition)->m_zoneState.m_zone];
+    ++properties->m_refCount;
+    TRmgZone* origin = m_zones[getMapItem(object->getPosition())->m_zoneState.m_zone];
     TRmgTreasureGroup group;
     TObjectType* prototype = seerHut->m_properties->m_prototype;
-    TRmgPoint position;
-    position.m_x = (group.m_map.getWidth() + static_cast<unsigned>(prototype->getWidth())) / 2;
-    position.m_y = (group.m_map.getHeight() + static_cast<unsigned>(prototype->getHeight())) / 2;
-    group.addObject(seerHut, position);
+    group.addObject(seerHut,
+        TRmgPoint((group.m_map.getWidth() + prototype->getWidth()) / 2u,
+            (group.m_map.getHeight() + prototype->getHeight()) / 2u));
     group.updateBounds();
     group.traceOutline();
     group.markPlacementOutline();
     if (!placeQuestGroup(&group, origin)) {
-        int value = object->m_definition->getValue(origin, this);
-        replaceObjectWithTreasure(object, value);
+        replaceObjectWithTreasure(object, object->m_definition->getValue(origin, this));
         return 0;
     }
     m_usedQuestArtifacts[artifact] = 1;
