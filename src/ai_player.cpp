@@ -5667,8 +5667,9 @@ void aiInitialize()
 // nested units its combat base needs and leaves the undead-cloak arm at 49,
 // as retail. An int id is 95.23 (inline decision swaps to the cloak arm);
 // the TArtifact id plus a vector reference is 97.03 (first block regresses).
-// Residual: retail labels the ICF-folded std::copy and vector::insert
-// targets by their fold mates.
+// 99.97 -> 100: the last residual was only retail's labels for the
+// ICF-folded std::copy and vector::insert targets; refreshed delink fold
+// proofs (`delink --unit ai_player`) name them at this function's sites.
 VA(0x00434100, 0x490)
 DC_ADDRESS(0x035f08, 0x2be)
 MAC_ADDRESS(0x036748, 0x4b4)  // tail target/fresh frame + DC helper
