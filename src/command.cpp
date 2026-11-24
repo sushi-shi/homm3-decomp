@@ -619,9 +619,8 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
     if (yDifference == 0)
         slope = 100.0f;
     else {
-        float horizontal = static_cast<float>(xDifference);
-        float vertical = static_cast<float>(yDifference);
-        slope = horizontal / vertical;
+        volatile float horizontal = static_cast<float>(xDifference);
+        slope = horizontal / yDifference;
     }
 
     if (direction == COMBAT_ATTACK_ANGLE_0

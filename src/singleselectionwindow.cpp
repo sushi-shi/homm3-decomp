@@ -5225,6 +5225,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
     int humanTeamCount = m_randomMapOptions.m_humanTeamCount;
     int computerPlayerCount = m_randomMapOptions.m_computerPlayerCount;
     int computerTeamCount = m_randomMapOptions.m_computerTeamCount;
+    int result;
 
     if (humanPlayerCount == -1) {
         int seated = 0;
@@ -5278,7 +5279,6 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
     g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
     startMouseThread();
 
-    int result;
     {
         TRandomMapRequest request(m_randomMapOptions.m_mapSize, m_randomMapOptions.m_mapSize,
                                   m_randomMapOptions.m_mapLevels);
@@ -5293,12 +5293,14 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
         request.m_mapVersion = static_cast<ERmgMapVersion>(mapVersion);
 
         for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+            TTownType& townChoice = request.m_townChoices[i];
             CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
             if (!player)
                 player = m_players.getCompPlayerInPos(i);
             if (player->isHuman())
                 request.m_isHumanSeat[i] = 1;
-            request.m_townChoices[i] = static_cast<TTownType>(player->m_townIndex);
+            int townIndex = player->m_townIndex;
+            townChoice = static_cast<TTownType>(townIndex);
         }
 
         std::string path(DATA_COMPGEN(0x006837d4, randomMapsPrefix,

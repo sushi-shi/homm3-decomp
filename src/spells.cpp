@@ -3047,6 +3047,9 @@ DC_ADDRESS(0x1542b4, 0x3ca)
 MAC_ADDRESS(0x195d20, 0x348)  // order-map+arity
 void combatManager::resetBoltAngle(SBolt* bolt)
 {
+    float wobble = 0;
+    float angle;
+
     if (bolt->m_done)
         return;
 
@@ -3056,7 +3059,8 @@ void combatManager::resetBoltAngle(SBolt* bolt)
     if (remaining > bolt->m_totalLength) {
         bolt->m_progress = 0;
     } else {
-        bolt->m_progress = static_cast<float>(bolt->m_totalLength - remaining)
+        float progress;
+        bolt->m_progress = (progress = static_cast<float>(bolt->m_totalLength - remaining))
             / static_cast<float>(bolt->m_totalLength);
     }
 
@@ -3081,12 +3085,12 @@ void combatManager::resetBoltAngle(SBolt* bolt)
 
     long toX = bolt->m_destX - bolt->m_pixelX;
     long toY = bolt->m_destY - bolt->m_pixelY;
-    float angle = static_cast<float>(atan2(static_cast<double>(toX),
-                                           static_cast<double>(toY)));
+    angle = static_cast<float>(atan2(static_cast<double>(toX),
+                                     static_cast<double>(toY)));
     bolt->m_angle = angle;
-    float distortAvg = static_cast<float>((bolt->m_angleDistortMin
-                                           + bolt->m_angleDistortMax) / 200);
-    float wobble = (2.5 - bolt->m_progress) / 2.0 * distortAvg;
+    wobble = static_cast<float>((bolt->m_angleDistortMin
+                                 + bolt->m_angleDistortMax) / 200);
+    wobble = (2.5 - bolt->m_progress) / 2.0 * wobble;
     bolt->m_distortedAngle = angle + wobble;
 
     if (bolt->m_angleDistortMin == 0 && bolt->m_angleDistortMax == 0)
