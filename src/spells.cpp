@@ -2359,12 +2359,14 @@ army* combatManager::findSpellTarget(ESpellId spell, long side, long hex,
 // probes (four source states, one reproduced object) are byte-identical.
 // The force-field wall shape is selected with the less-than mastery test
 // (`mastery < eMasteryAdvanced ? [0] : [1]`), which fixes the branch
-// polarity (97.70 -> 97.97). The FIRE_WALL count `2 + (mastery > eMasteryBasic)`
-// puts the count in EBX and spills m_currentSide like retail (97.97 -> 99.74);
-// `>= eMasteryAdvanced` in any spelling, `c ? 3 : 2`, a pre-declared index,
-// inline bounds, while/do/for-init loops, a side local, count-down and double
-// cell indexing all keep the reversed allocation. Residual: retail's setge
-// where this emits setg.
+// polarity (97.70 -> 97.97). Exact (100%): DC records each wall arm's own
+// `return 1` inside its block (lines 2718 and 2751, scope depth 3), and with
+// those returns the FIRE_WALL count takes the DC/Mac branch form
+// `mastery < eMasteryAdvanced ? 2 : 3` (both compare against 2) and gets
+// retail's setge plus the EBX count / spilled m_currentSide allocation.
+// Without the arm returns that ternary kept the reversed allocation and
+// `2 + (mastery > eMasteryBasic)` reached only 99.74 (setg for setge).
+// DC rereads shape->m_extraHexCount as the FORCE_FIELD bound (byte-neutral).
 VA(0x005a39c0, 0x2B4)
 DC_ADDRESS(0x152edc, 0x228)
 MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity
@@ -2402,7 +2404,7 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
         }
         return 0;
     } else if (spellId == SPELL_FIRE_WALL) {
-        long wallCells = 2 + (mastery > eMasteryBasic);
+        long wallCells = mastery < eMasteryAdvanced ? 2 : 3;
         for (long i = 0; i < wallCells; i++) {
             long hex = getSpellWallHex(targetIndex, i, m_currentSide);
             const hexcell* cell = &m_cells[hex];
@@ -2410,12 +2412,12 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
                 || (cell->m_attributes & hexcell::obstacleMask) || cell->hasArmy())
                 return 0;
         }
+        return 1;
     } else if (spellId == SPELL_FORCE_FIELD) {
         const TObstacleInfo* shape = mastery < eMasteryAdvanced
             ? &s_wallObstacleInfo[0] : &s_wallObstacleInfo[1];
         const unsigned char baseRowIsOdd = rowIsOdd(gridY(targetIndex));
-        long wallCells = shape->m_extraHexCount;
-        for (long i = 0; i < wallCells; i++) {
+        for (long i = 0; i < shape->m_extraHexCount; i++) {
             long hex = targetIndex + shape->m_extraHexOffsets[i];
             if (baseRowIsOdd && !rowIsOdd(gridY(hex)))
                 hex--;
@@ -2424,6 +2426,7 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
                 || (cell->m_attributes & hexcell::obstacleMask) || cell->hasArmy())
                 return 0;
         }
+        return 1;
     }
     return 1;
 }
