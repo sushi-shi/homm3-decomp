@@ -4597,10 +4597,17 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // test<10> (52 < 58) and expands set<10> (155), the reverse of retail
 // (44.72%). Not adopted.
 // Canonical const cell queries now own each source mask lookup and its
-// coordinate mapping. Metadata queries and the const source contract recover
-// the retail test/set call decisions for all five masks (85.2364%). Control
-// flow agrees; remaining differences are register homes and spills. Template
-// mask and metadata storage is private; existing setters own their updates.
+// coordinate mapping. Template mask and metadata storage is private;
+// existing setters own their updates. The terrain copy reads Loki's const
+// getRecommendedTerrainMask() through its subscript: that one more inline
+// site divides the passable test's nested budget below its cost, so draw and
+// passable call test while shadow and trigger expand it, as retail does
+// (77.93% -> 85.24%; the project-named isRecommendedTerrain query and a
+// direct .test(terrain) on the mask (65.93%) do not). The destination
+// position is a signed local: retail strength-reduces it apart from the
+// unsigned query positions (edi versus esi), which an unsigned pos shared
+// with them through CSE (85.24% -> 100%). Failed probe: a getBitPos call in
+// each destination subscript instead of the local (62.81%).
 // Const-reference input is inferred from the sole caller converting an
 // existing table record, with no writes or nullable-source path.
 VA(0x00506080, 0x1D4)
@@ -4613,7 +4620,7 @@ CObjectType::CObjectType(const TObjectType& source)
 
     for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
-            unsigned pos = getBitPos(x, y);
+            int pos = getBitPos(x, y);
             m_drawCells[pos] = source.getBCellPlaced(x, y);
             m_passableCells[pos] = source.getBCellPassable(x, y);
             m_shadowCells[pos] = source.getBCellShadow(x, y);
@@ -4622,9 +4629,9 @@ CObjectType::CObjectType(const TObjectType& source)
     }
 
     // Mac 0x128d4c..0x128d6c tests and sets each terrain bit. The const
-    // source selects the read-only terrain query, without a mutable proxy.
+    // source's const mask subscript reads it without a mutable proxy.
     for (int terrain = 0; terrain < kNumTerrainTypes; terrain++)
-        m_recommendedTerrainMask[terrain] = source.isRecommendedTerrain(terrain);
+        m_recommendedTerrainMask[terrain] = source.getRecommendedTerrainMask()[terrain];
 
     m_objectType = source.getType();
     m_extra = source.getExtra();
