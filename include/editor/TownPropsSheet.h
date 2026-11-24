@@ -19,7 +19,8 @@ class TTownPropsBuildingsPage;
 class TTownPropsSpellsPage;
 class TTownPropsTimedEventsPage;
 
-class TTownPropsSheet : public CPropertySheet, public TTownPropsGeneralPageParentSheet {
+// RTTI: the interface base is private (attributes 9).
+class TTownPropsSheet : public CPropertySheet, private TTownPropsGeneralPageParentSheet {
 public:
     TTownPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
     virtual ~TTownPropsSheet();

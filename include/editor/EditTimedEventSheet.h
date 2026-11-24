@@ -15,7 +15,8 @@
 #include "editor/Player.h"
 #include "editor/TimedEvent.h"
 
-class TEditTimedEventSheet : public CPropertySheet, public TEditTimedEventGeneralPageParentSheet {
+// RTTI: the interface base is private (attributes 9).
+class TEditTimedEventSheet : public CPropertySheet, private TEditTimedEventGeneralPageParentSheet {
 public:
     TEditTimedEventSheet(CWnd* pParentWnd, const TPlayerMask& playersPresent, EGameVersion mapVersion,
                          const TTimedEvent& event);
