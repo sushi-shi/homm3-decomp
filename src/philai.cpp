@@ -1697,6 +1697,7 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
 
     long armyValue = 1000;
     long rangedValue = 500;
+    long scaled;
     if (complexChoice) {
         for (int group = 0; group < armyGroup::ARMY_GROUP_SLOT_COUNT;
              group++) {
@@ -1716,6 +1717,12 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     case eSecSkillPathfinding:
         return static_cast<long>(
             armyValue * g_aiPathfindingMapFactor[level] / 4.0);
+    case eSecSkillArchery: {
+        DATA(0x00640380)
+        static const int constArcheryValue[3] = {16, 7, 11};
+        scaled = rangedValue * constArcheryValue[level];
+        break;
+    }
     case eSecSkillLogistics:
         return armyValue / 10;
     case eSecSkillScouting:
@@ -1802,17 +1809,13 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     case eSecSkillOffense:
         return armyValue * 7 / 100;
     case eSecSkillDefense:
-        return armyValue * 7 / 100;
+        scaled = armyValue * 7;
+        break;
     case eSecSkillIntelligence:
         if (complexChoice)
             return ourHero->getValueOfKnowledge()
                 * ourHero->getPrimarySkill(3) / 4;
         return ourHero->getPrimarySkill(3) * 10;
-    case eSecSkillArchery: {
-        DATA(0x00640380)
-        static const int constArcheryValue[3] = {16, 7, 11};
-        return rangedValue * constArcheryValue[level] / 100;
-    }
     case eSecSkillSorcery:
         if (complexChoice)
             return ourHero->getValueOfPower()
@@ -1829,6 +1832,7 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     default:
         return 0;
     }
+    return scaled / 100;
 }
 
 VA(0x00524dd0, 0xF3)
