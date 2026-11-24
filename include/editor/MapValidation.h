@@ -29,7 +29,8 @@ class TGameMap;
 class TSeersHut;
 class TTown;
 
-class TMapValidationFunc : private TVictoryCondition::TVisitor, public TLossCondition::TVisitor {
+// RTTI: both visitor bases private (attributes 9), the loss visitor at +0x4.
+class TMapValidationFunc : private TVictoryCondition::TVisitor, private TLossCondition::TVisitor {
 public:
     TMapValidationFunc(const TGameMap& gameMap);
 

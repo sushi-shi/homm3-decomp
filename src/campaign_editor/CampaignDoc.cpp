@@ -53,7 +53,7 @@ public:
         : TStrGzInflateBufBase(pData, size), TGzInflateBuf(&m_strBuf) {}
 };
 
-class TScenarioStartingBonusWriter : public TScenarioStartingBonus::TVisitor {
+class TScenarioStartingBonusWriter : private TScenarioStartingBonus::TVisitor {
 public:
     void write(const TScenarioStartingBonus& bonus, TRawOStream& oStream, int version);
 
@@ -71,7 +71,7 @@ private:
     int m_version;
 };
 
-class TScenarioStartingOptionsWriter : public TScenarioStartingOptions::TVisitor {
+class TScenarioStartingOptionsWriter : private TScenarioStartingOptions::TVisitor {
 public:
     void write(const TScenarioStartingOptions* pOptions, TRawOStream& oStream, int version);
 

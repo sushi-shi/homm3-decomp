@@ -32,7 +32,7 @@ namespace {
 enum { kMaxChoices = 3 };
 
 // A bonus's line in the bonus list: what it gives and to which hero.
-class TGetScenarioStartingBonusNameFunc : public TScenarioStartingBonus::TVisitor {
+class TGetScenarioStartingBonusNameFunc : private TScenarioStartingBonus::TVisitor {
 public:
     TGetScenarioStartingBonusNameFunc(const TScenario& scenario, int player);
 

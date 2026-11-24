@@ -9,14 +9,20 @@
 #include "va.h"
 #include "editor/VictoryCondition.h"
 
+// The RTTI marks every visitor's TVisitor base private (attributes 9), so
+// each tester runs its own accept in test().
 namespace {
 
 template<class T>
-class TVictoryConditionRHSEquivalencyTester : public TVictoryCondition::TVisitor {
+class TVictoryConditionRHSEquivalencyTester : private TVictoryCondition::TVisitor {
 public:
     TVictoryConditionRHSEquivalencyTester(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
 
-    bool getBEquivalent() const { return _m_bEquivalent; }
+    bool test(const TVictoryCondition& rhs)
+    {
+        rhs.accept(this);
+        return _m_bEquivalent;
+    }
 
     virtual void visit(const T& rhs) { _m_bEquivalent = _m_lhs == rhs; }
 
@@ -25,7 +31,7 @@ private:
     bool _m_bEquivalent;
 };
 
-class TVictoryConditionEquivalencyTester : public TVictoryCondition::TVisitor {
+class TVictoryConditionEquivalencyTester : private TVictoryCondition::TVisitor {
 public:
     TVictoryConditionEquivalencyTester() : _m_bEquivalent(false) {}
 
@@ -41,8 +47,7 @@ private:
     void _test(const T& lhs)
     {
         TVictoryConditionRHSEquivalencyTester<T> tester(lhs);
-        _m_pRhs->accept(&tester);
-        _m_bEquivalent = tester.getBEquivalent();
+        _m_bEquivalent = tester.test(*_m_pRhs);
     }
 
 public:
@@ -64,11 +69,15 @@ private:
 };
 
 template<class T>
-class TLossConditionRHSEquivalencyTester : public TLossCondition::TVisitor {
+class TLossConditionRHSEquivalencyTester : private TLossCondition::TVisitor {
 public:
     TLossConditionRHSEquivalencyTester(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
 
-    bool getBEquivalent() const { return _m_bEquivalent; }
+    bool test(const TLossCondition& rhs)
+    {
+        rhs.accept(this);
+        return _m_bEquivalent;
+    }
 
     virtual void visit(const T& rhs) { _m_bEquivalent = _m_lhs == rhs; }
 
@@ -77,7 +86,7 @@ private:
     bool _m_bEquivalent;
 };
 
-class TLossConditionEquivalencyTester : public TLossCondition::TVisitor {
+class TLossConditionEquivalencyTester : private TLossCondition::TVisitor {
 public:
     TLossConditionEquivalencyTester() : _m_bEquivalent(false) {}
 
@@ -93,8 +102,7 @@ private:
     void _test(const T& lhs)
     {
         TLossConditionRHSEquivalencyTester<T> tester(lhs);
-        _m_pRhs->accept(&tester);
-        _m_bEquivalent = tester.getBEquivalent();
+        _m_bEquivalent = tester.test(*_m_pRhs);
     }
 
 public:

@@ -7,14 +7,20 @@
 #include "va.h"
 #include "editor/Quest.h"
 
+// The RTTI marks every visitor's TVisitor base private (attributes 9), so
+// each tester runs its own accept in test().
 namespace {
 
 template<class T>
-class TQuestRHSEquivalencyTester : public TQuest::TVisitor {
+class TQuestRHSEquivalencyTester : private TQuest::TVisitor {
 public:
     TQuestRHSEquivalencyTester(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
 
-    bool getBEquivalent() const { return _m_bEquivalent; }
+    bool test(const TQuest& rhs)
+    {
+        rhs.accept(*this);
+        return _m_bEquivalent;
+    }
 
     virtual void visit(const T& rhs) { _m_bEquivalent = _m_lhs == rhs; }
 
@@ -23,19 +29,22 @@ private:
     bool _m_bEquivalent;
 };
 
-class TQuestEquivalencyTester : public TQuest::TVisitor {
+class TQuestEquivalencyTester : private TQuest::TVisitor {
 public:
     TQuestEquivalencyTester(const TQuest& rhs) : _m_rhs(rhs), _m_bEquivalent(false) {}
 
-    bool getBEquivalent() const { return _m_bEquivalent; }
+    bool test(const TQuest& lhs)
+    {
+        lhs.accept(*this);
+        return _m_bEquivalent;
+    }
 
 private:
     template<class T>
     void _test(const T& lhs)
     {
         TQuestRHSEquivalencyTester<T> tester(lhs);
-        _m_rhs.accept(tester);
-        _m_bEquivalent = tester.getBEquivalent();
+        _m_bEquivalent = tester.test(_m_rhs);
     }
 
 public:
@@ -54,7 +63,7 @@ private:
     bool _m_bEquivalent;
 };
 
-class TQuestCloner : public TQuest::TVisitor {
+class TQuestCloner : private TQuest::TVisitor {
 public:
     std::auto_ptr<TQuest> clone(const TQuest& quest)
     {
@@ -90,8 +99,7 @@ VA(0x00494f47, 0x28)
 bool TQuest::equivalent(const TQuest& lhs, const TQuest& rhs)
 {
     TQuestEquivalencyTester tester(rhs);
-    lhs.accept(tester);
-    return tester.getBEquivalent();
+    return tester.test(lhs);
 }
 
 VA(0x00494fdb, 0x54)

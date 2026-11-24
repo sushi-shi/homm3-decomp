@@ -730,7 +730,7 @@ inline TCreateObjFailureTooManyTownsOnMap::TCreateObjFailureTooManyTownsOnMap()
 
 // Fills a map's victory-condition record from a condition (h3maped RTTI
 // _TGetVictoryConditionDataFunc@_TImpl@TGameMap, twelve slots).
-class TGameMap::_TImpl::_TGetVictoryConditionDataFunc : public TVictoryCondition::TVisitor {
+class TGameMap::_TImpl::_TGetVictoryConditionDataFunc : private TVictoryCondition::TVisitor {
 public:
     explicit _TGetVictoryConditionDataFunc(const _TImpl& map) : _m_map(map), _m_pData(NULL) {}
 
@@ -770,7 +770,7 @@ private:
 };
 
 // ...and its loss-condition record (four slots).
-class TGameMap::_TImpl::_TGetLossConditionDataFunc : public TLossCondition::TVisitor {
+class TGameMap::_TImpl::_TGetLossConditionDataFunc : private TLossCondition::TVisitor {
 public:
     explicit _TGetLossConditionDataFunc(const _TImpl& map) : _m_map(map), _m_pData(NULL) {}
 
@@ -896,7 +896,7 @@ void TGameMap::_TImpl::_TGetLossConditionDataFunc::visit(const TLCTimeExpires& l
 
 // Whether a condition still names objects of the right kinds; a missing
 // condition is valid. The two validaters' isValid bodies fold (0x41ef90).
-class TGameMap::_TImpl::_TVictoryConditionValidater : public TVictoryCondition::TVisitor {
+class TGameMap::_TImpl::_TVictoryConditionValidater : private TVictoryCondition::TVisitor {
 public:
     _TVictoryConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
 
@@ -921,7 +921,7 @@ private:
     bool _m_bValid;
 };
 
-class TGameMap::_TImpl::_TLossConditionValidater : public TLossCondition::TVisitor {
+class TGameMap::_TImpl::_TLossConditionValidater : private TLossCondition::TVisitor {
 public:
     _TLossConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
 

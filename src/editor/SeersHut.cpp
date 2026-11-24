@@ -16,6 +16,8 @@
 // The reserved bytes after a hut's reward (Loki's kNumSeersHutReserved).
 const unsigned int kNumSeersHutReserved = 2;
 
+// The RTTI marks every visitor's TVisitor base private (attributes 9), so
+// each tester runs its own accept in test().
 namespace {
 
 enum TRewardType {
@@ -33,7 +35,7 @@ enum TRewardType {
     kNumRewardTypes = 11
 };
 
-class TRewardWriter : public TSeersHut::TReward::TVisitor {
+class TRewardWriter : private TSeersHut::TReward::TVisitor {
 public:
     TRewardWriter(TRawOStream* pOStream, int version) : _m_pOStream(pOStream), _m_version(version) {}
 
@@ -97,11 +99,15 @@ TSeersHut::TReward* (TRewardReader::* const TRewardReader::_s_apfnRead[kNumRewar
 };
 
 template<class T>
-class TRewardRHSEquivalencyTester : public TSeersHut::TReward::TVisitor {
+class TRewardRHSEquivalencyTester : private TSeersHut::TReward::TVisitor {
 public:
     TRewardRHSEquivalencyTester(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
 
-    bool getBEquivalent() const { return _m_bEquivalent; }
+    bool test(const TSeersHut::TReward& rhs)
+    {
+        rhs.accept(this);
+        return _m_bEquivalent;
+    }
 
     virtual void visit(const T& rhs) { _m_bEquivalent = _m_lhs == rhs; }
 
@@ -110,19 +116,22 @@ private:
     bool _m_bEquivalent;
 };
 
-class TRewardEquivalencyTester : public TSeersHut::TReward::TVisitor {
+class TRewardEquivalencyTester : private TSeersHut::TReward::TVisitor {
 public:
     TRewardEquivalencyTester(const TSeersHut::TReward& rhs) : _m_rhs(rhs), _m_bEquivalent(false) {}
 
-    bool getBEquivalent() const { return _m_bEquivalent; }
+    bool test(const TSeersHut::TReward& lhs)
+    {
+        lhs.accept(this);
+        return _m_bEquivalent;
+    }
 
 private:
     template<class T>
     void _test(const T& lhs)
     {
         TRewardRHSEquivalencyTester<T> tester(lhs);
-        _m_rhs.accept(&tester);
-        _m_bEquivalent = tester.getBEquivalent();
+        _m_bEquivalent = tester.test(_m_rhs);
     }
 
 public:
@@ -142,7 +151,7 @@ private:
     bool _m_bEquivalent;
 };
 
-class TRewardCloner : public TSeersHut::TReward::TVisitor {
+class TRewardCloner : private TSeersHut::TReward::TVisitor {
 public:
     std::auto_ptr<TSeersHut::TReward> clone(const TSeersHut::TReward& reward)
     {
@@ -363,8 +372,7 @@ VA(0x004b6703, 0x27)
 bool TSeersHut::TReward::equivalent(const TReward& lhs, const TReward& rhs)
 {
     TRewardEquivalencyTester tester(rhs);
-    lhs.accept(&tester);
-    return tester.getBEquivalent();
+    return tester.test(lhs);
 }
 
 VA(0x004b67a2, 0x4f)

@@ -19,7 +19,7 @@ enum { kSeersHutTextColumn = 1 };
 namespace {
 
 // One line of the description: what the reward gives.
-class TGetRewardDescFunc : public TSeersHut::TReward::TVisitor {
+class TGetRewardDescFunc : private TSeersHut::TReward::TVisitor {
 public:
     CString operator()(const TSeersHut::TReward* pReward);
 

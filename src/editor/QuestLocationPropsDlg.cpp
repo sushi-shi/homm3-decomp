@@ -55,7 +55,7 @@ enum { kFirstQuestTextRow = 2, kNumQuestTextRows = 5 };
 namespace {
 
 // One line of the description: what the quest asks for.
-class TGetQuestDescFunc : public TQuest::TVisitor {
+class TGetQuestDescFunc : private TQuest::TVisitor {
 public:
     TGetQuestDescFunc(const TGameMap* pMap) : _m_pMap(pMap) {}
 
@@ -77,7 +77,7 @@ private:
 };
 
 // A message of the quest as the game words it when not customized.
-class TGetDefaultQuestMessageFunc : public TQuest::TVisitor {
+class TGetDefaultQuestMessageFunc : private TQuest::TVisitor {
 public:
     TGetDefaultQuestMessageFunc() : _m_pMap(NULL) {}
 
