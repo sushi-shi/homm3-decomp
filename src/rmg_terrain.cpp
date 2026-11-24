@@ -1298,6 +1298,12 @@ void TRmgTerrainPainter::buildNeighbourKinds(
 //   ? e o
 //   e C ?
 //   o ? ?
+// h3maped residual (97%): only the table stores differ; retail copies the
+// guard's 1 into ECX/EDX, VC6 stores EBX directly. Reading flip before
+// getTerrain (pair or index first) gives retail's stores but swaps the
+// terrain and zero-temporary parameter homes; Mac reads flip after it.
+// Const, flat or unbraced tables, +1 spellings, by-value or assigning
+// TPoint constructors, index spellings and return forms change nothing.
 VA(0x005b6ba0, 0x24c)
 MAC_ADDRESS(0x258f18, 0x360)
 VA_AT(h3maped, 0x004bcb91, 0x1b1)

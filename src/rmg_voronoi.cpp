@@ -283,10 +283,12 @@ unsigned char TRmgHalfEdge::isPointOnSegment(TRmgPoint point) const
 }
 
 // Mac 0x25cb80 retains four orientation calls, then combines the signed
-// products as first - second + third - point. The map editor expands those
-// calls; this order recovers its 0x18 frame and shared return. Paired
-// differences and staged sums emit the same bytes. Game addSite stays exact.
-// Editor residual: input loads and common-product register lifetimes.
+// products as first - second + third - point; it squares the four sites
+// together after the calls. The map editor expands the calls; the squared
+// lengths as their own locals after the areas give its input loads and
+// difference homes (exact). Squares embedded in the determinant kept the
+// 0x18 frame but loaded first.x/first.y into other registers. The game's
+// addSite expansion is identical either way.
 MAC_ADDRESS(0x25cb80, 0x1c4)
 VA_AT(h3maped, 0x004ccc7a, 0xef)
 static b8 isRmgPointInsideCircle(TRmgPoint first, TRmgPoint second,
@@ -296,10 +298,14 @@ static b8 isRmgPointInsideCircle(TRmgPoint first, TRmgPoint second,
     s32 secondArea = getRmgPointOrientation(first, third, point);
     s32 thirdArea = getRmgPointOrientation(first, second, point);
     s32 pointArea = getRmgPointOrientation(first, second, third);
-    s64 determinant = static_cast<s64>(first.m_x * first.m_x + first.m_y * first.m_y) * firstArea
-        - static_cast<s64>(second.m_x * second.m_x + second.m_y * second.m_y) * secondArea
-        + static_cast<s64>(third.m_x * third.m_x + third.m_y * third.m_y) * thirdArea
-        - static_cast<s64>(point.m_x * point.m_x + point.m_y * point.m_y) * pointArea;
+    s32 firstSquare = first.m_x * first.m_x + first.m_y * first.m_y;
+    s32 secondSquare = second.m_x * second.m_x + second.m_y * second.m_y;
+    s32 thirdSquare = third.m_x * third.m_x + third.m_y * third.m_y;
+    s32 pointSquare = point.m_x * point.m_x + point.m_y * point.m_y;
+    s64 determinant = static_cast<s64>(firstSquare) * firstArea
+        - static_cast<s64>(secondSquare) * secondArea
+        + static_cast<s64>(thirdSquare) * thirdArea
+        - static_cast<s64>(pointSquare) * pointArea;
     return determinant > 0;
 }
 
