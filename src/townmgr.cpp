@@ -4554,23 +4554,25 @@ void townManager::doUniversity()
 // strips have their current slot parked at -2, both live strips redraw
 // with nothing divided out, and the four selection members go back to
 // their idle values before the status widget is dimmed.
-// Wall (2026-10-07): retail keeps this body out of line in main, which needs
-// C1XX cost >= 176 (save cliff); this form costs 167 and is expanded there.
-// A diagnostic auto_inline(off) shows the retained call alone takes main
-// 89.90 -> 93.06%. No evidenced statement form supplies the missing cost.
+// Retail keeps this body out of line in main, which needs a C1XX callee cost
+// above 175. Nested ifs (the strip test) and the named visiting-hero local
+// raise the estimate above that save limit, so main keeps the call.
 VA(0x005d2f90, 0x132)
 DC_ADDRESS(0x174d1c, 0x84)
 MAC_ADDRESS(0x1cfd64, 0xd4)
 void townManager::doSkeletonTransformer()
 {
     armyGroup* transformGroup;
-    if (m_townToView->m_visitingHeroId >= 0)
-        transformGroup = &g_game->getHero(m_townToView->m_visitingHeroId)->m_army;
-    else
+    if (m_townToView->m_visitingHeroId >= 0) {
+        hero* visitor = g_game->getHero(m_townToView->m_visitingHeroId);
+        transformGroup = &visitor->m_army;
+    } else
         transformGroup = &m_townToView->getArmy();
 
-    if (m_srcStrip && m_srcStrip == m_garrisonStrip) {
-        transformGroup = &m_townToView->getArmy();
+    if (m_srcStrip) {
+        if (m_srcStrip == m_garrisonStrip) {
+            transformGroup = &m_townToView->getArmy();
+        }
     }
 
     {
@@ -4698,13 +4700,8 @@ void townManager::drawTown(int update, int incFrame, bool drawHotspots)
         g_windowManager->updateScreen(0, 0, 800, 374);
 }
 
-// Retail 0x5d3bd0 retains doSkeletonTransformer; current VC6 expands it
-// and adds its dialog lifetime to this frame. A separate build-loop index
-// and bool spellings of the click/slot flags do not restore that boundary.
-// Traced (2026-10-05): it is a depth-1 site (budget 8377, cb 165), so only
-// a callee IL cost above C1's 175 save limit can keep it out of line. DC's
-// braced second if (scopes at 0x174d60) adds just 2 (cb 167); no other
-// evidenced spelling of its byte-exact body was found.
+// Retail 0x5d3bd0 retains doSkeletonTransformer (depth-1 site, budget 8377;
+// the helper's callee cost must exceed C1's 175 save limit, see its comment).
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)
 DC_ADDRESS(0x175160, 0x14d2)
