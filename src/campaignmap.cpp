@@ -10,12 +10,17 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
+// Dreamcast mangles the region tables and the campaign table in this file's
+// anonymous namespace without `static`
+// (`?aGood1RegionTraits@?%E:\gamedcs\campaignmap.cpp64671830@@3PAU...@@A`).
+namespace {
+
 // Region offsets and the eight player-color images for each state are
 // the pinned retail initializers. The 0x6c-byte rows, aligned to eight bytes, run
 // from 0x660eb8 to the campaign table at 0x663538. Names use the asset codes.
 DATA(0x00660eb8)
 // Dreamcast original: aGood1RegionTraits.
-static TCampaignMapTraits::TRegionTraits g_good1RegionTraits[3] = {
+TCampaignMapTraits::TRegionTraits g_good1RegionTraits[3] = {
     { 0, 58, 314,
       { "G1A_enR.pcx", "G1A_enB.pcx", "G1A_enN.pcx", "G1A_enG.pcx", "G1A_enO.pcx", "G1A_enV.pcx", "G1A_enT.pcx", "G1A_enP.pcx" },
       { "G1A_seR.pcx", "G1A_seB.pcx", "G1A_seN.pcx", "G1A_seG.pcx", "G1A_seO.pcx", "G1A_seV.pcx", "G1A_seT.pcx", "G1A_seP.pcx" },
@@ -35,7 +40,7 @@ static TCampaignMapTraits::TRegionTraits g_good1RegionTraits[3] = {
 
 DATA(0x00661000)
 // Dreamcast original: aGood2RegionTraits.
-static TCampaignMapTraits::TRegionTraits g_good2RegionTraits[4] = {
+TCampaignMapTraits::TRegionTraits g_good2RegionTraits[4] = {
     { 0, 57, 90,
       { "G2A_enR.pcx", "G2A_enB.pcx", "G2A_enN.pcx", "G2A_enG.pcx", "G2A_enO.pcx", "G2A_enV.pcx", "G2A_enT.pcx", "G2A_enP.pcx" },
       { "G2A_seR.pcx", "G2A_seB.pcx", "G2A_seN.pcx", "G2A_seG.pcx", "G2A_seO.pcx", "G2A_seV.pcx", "G2A_seT.pcx", "G2A_seP.pcx" },
@@ -60,7 +65,7 @@ static TCampaignMapTraits::TRegionTraits g_good2RegionTraits[4] = {
 
 DATA(0x006611b0)
 // Dreamcast original: aGood3RegionTraits.
-static TCampaignMapTraits::TRegionTraits g_good3RegionTraits[3] = {
+TCampaignMapTraits::TRegionTraits g_good3RegionTraits[3] = {
     { 0, 290, 376,
       { "G3A_enR.pcx", "G3A_enB.pcx", "G3A_enN.pcx", "G3A_enG.pcx", "G3A_enO.pcx", "G3A_enV.pcx", "G3A_enT.pcx", "G3A_enP.pcx" },
       { "G3A_seR.pcx", "G3A_seB.pcx", "G3A_seN.pcx", "G3A_seG.pcx", "G3A_seO.pcx", "G3A_seV.pcx", "G3A_seT.pcx", "G3A_seP.pcx" },
@@ -80,7 +85,7 @@ static TCampaignMapTraits::TRegionTraits g_good3RegionTraits[3] = {
 
 DATA(0x006612f8)
 // Dreamcast original: aEvil1RegionTraits.
-static TCampaignMapTraits::TRegionTraits g_evil1RegionTraits[7] = {
+TCampaignMapTraits::TRegionTraits g_evil1RegionTraits[7] = {
     { 0, 271, 332,
       { "E1A_enR.pcx", "E1A_enB.pcx", "E1A_enN.pcx", "E1A_enG.pcx", "E1A_enO.pcx", "E1A_enV.pcx", "E1A_enT.pcx", "E1A_enP.pcx" },
       { "E1A_seR.pcx", "E1A_seB.pcx", "E1A_seN.pcx", "E1A_seG.pcx", "E1A_seO.pcx", "E1A_seV.pcx", "E1A_seT.pcx", "E1A_seP.pcx" },
@@ -120,7 +125,7 @@ static TCampaignMapTraits::TRegionTraits g_evil1RegionTraits[7] = {
 
 DATA(0x006615f0)
 // Dreamcast original: aEvil2RegionTraits.
-static TCampaignMapTraits::TRegionTraits g_evil2RegionTraits[4] = {
+TCampaignMapTraits::TRegionTraits g_evil2RegionTraits[4] = {
     { 0, 132, 202,
       { "E2A_enR.pcx", "E2A_enB.pcx", "E2A_enN.pcx", "E2A_enG.pcx", "E2A_enO.pcx", "E2A_enV.pcx", "E2A_enT.pcx", "E2A_enP.pcx" },
       { "E2A_seR.pcx", "E2A_seB.pcx", "E2A_seN.pcx", "E2A_seG.pcx", "E2A_seO.pcx", "E2A_seV.pcx", "E2A_seT.pcx", "E2A_seP.pcx" },
@@ -145,7 +150,7 @@ static TCampaignMapTraits::TRegionTraits g_evil2RegionTraits[4] = {
 
 DATA(0x006617a0)
 // Dreamcast original: aNeutral1RegionTraits.
-static TCampaignMapTraits::TRegionTraits g_neutral1RegionTraits[3] = {
+TCampaignMapTraits::TRegionTraits g_neutral1RegionTraits[3] = {
     { 0, 43, 94,
       { "N1A_enR.pcx", "N1A_enB.pcx", "N1A_enN.pcx", "N1A_enG.pcx", "N1A_enO.pcx", "N1A_enV.pcx", "N1A_enT.pcx", "N1A_enP.pcx" },
       { "N1A_seR.pcx", "N1A_seB.pcx", "N1A_seN.pcx", "N1A_seG.pcx", "N1A_seO.pcx", "N1A_seV.pcx", "N1A_seT.pcx", "N1A_seP.pcx" },
@@ -165,7 +170,7 @@ static TCampaignMapTraits::TRegionTraits g_neutral1RegionTraits[3] = {
 
 DATA(0x006618e8)
 // Dreamcast original: aSecret1RegionTraits.
-static TCampaignMapTraits::TRegionTraits g_secret1RegionTraits[3] = {
+TCampaignMapTraits::TRegionTraits g_secret1RegionTraits[3] = {
     { 0, 264, 199,
       { "S1A_enR.pcx", "S1A_enB.pcx", "S1A_enN.pcx", "S1A_enG.pcx", "S1A_enO.pcx", "S1A_enV.pcx", "S1A_enT.pcx", "S1A_enP.pcx" },
       { "S1A_seR.pcx", "S1A_seB.pcx", "S1A_seN.pcx", "S1A_seG.pcx", "S1A_seO.pcx", "S1A_seV.pcx", "S1A_seT.pcx", "S1A_seP.pcx" },
@@ -184,7 +189,7 @@ static TCampaignMapTraits::TRegionTraits g_secret1RegionTraits[3] = {
 };
 
 DATA(0x00661a30)
-static TCampaignMapTraits::TRegionTraits g_brRegionTraits[4] = {
+TCampaignMapTraits::TRegionTraits g_brRegionTraits[4] = {
     { 0, 19, 233,
       { "BrA_enRe.pcx", "BrA_enBl.pcx", "BrA_enBr.pcx", "BrA_enGr.pcx", "BrA_enOr.pcx", "BrA_enVi.pcx", "BrA_enTe.pcx", "BrA_enPi.pcx" },
       { "BrA_seRe.pcx", "BrA_seBl.pcx", "BrA_seBr.pcx", "BrA_seGr.pcx", "BrA_seOr.pcx", "BrA_seVi.pcx", "BrA_seTe.pcx", "BrA_sePi.pcx" },
@@ -208,7 +213,7 @@ static TCampaignMapTraits::TRegionTraits g_brRegionTraits[4] = {
 };
 
 DATA(0x00661be0)
-static TCampaignMapTraits::TRegionTraits g_isRegionTraits[4] = {
+TCampaignMapTraits::TRegionTraits g_isRegionTraits[4] = {
     { 0, 295, 399,
       { "IsA_enRe.pcx", "IsA_enBl.pcx", "IsA_enBr.pcx", "IsA_enGr.pcx", "IsA_enOr.pcx", "IsA_enVi.pcx", "IsA_enTe.pcx", "IsA_enPi.pcx" },
       { "IsA_seRe.pcx", "IsA_seBl.pcx", "IsA_seBr.pcx", "IsA_seGr.pcx", "IsA_seOr.pcx", "IsA_seVi.pcx", "IsA_seTe.pcx", "IsA_sePi.pcx" },
@@ -232,7 +237,7 @@ static TCampaignMapTraits::TRegionTraits g_isRegionTraits[4] = {
 };
 
 DATA(0x00661d90)
-static TCampaignMapTraits::TRegionTraits g_krRegionTraits[4] = {
+TCampaignMapTraits::TRegionTraits g_krRegionTraits[4] = {
     { 0, 149, 323,
       { "KrA_enRe.pcx", "KrA_enBl.pcx", "KrA_enBr.pcx", "KrA_enGr.pcx", "KrA_enOr.pcx", "KrA_enVi.pcx", "KrA_enTe.pcx", "KrA_enPi.pcx" },
       { "KrA_seRe.pcx", "KrA_seBl.pcx", "KrA_seBr.pcx", "KrA_seGr.pcx", "KrA_seOr.pcx", "KrA_seVi.pcx", "KrA_seTe.pcx", "KrA_sePi.pcx" },
@@ -256,7 +261,7 @@ static TCampaignMapTraits::TRegionTraits g_krRegionTraits[4] = {
 };
 
 DATA(0x00661f40)
-static TCampaignMapTraits::TRegionTraits g_niRegionTraits[4] = {
+TCampaignMapTraits::TRegionTraits g_niRegionTraits[4] = {
     { 0, 119, 111,
       { "NiA_enRe.pcx", "NiA_enBl.pcx", "NiA_enBr.pcx", "NiA_enGr.pcx", "NiA_enOr.pcx", "NiA_enVi.pcx", "NiA_enTe.pcx", "NiA_enPi.pcx" },
       { "NiA_seRe.pcx", "NiA_seBl.pcx", "NiA_seBr.pcx", "NiA_seGr.pcx", "NiA_seOr.pcx", "NiA_seVi.pcx", "NiA_seTe.pcx", "NiA_sePi.pcx" },
@@ -280,7 +285,7 @@ static TCampaignMapTraits::TRegionTraits g_niRegionTraits[4] = {
 };
 
 DATA(0x006620f0)
-static TCampaignMapTraits::TRegionTraits g_taRegionTraits[3] = {
+TCampaignMapTraits::TRegionTraits g_taRegionTraits[3] = {
     { 0, 229, 233,
       { "TaA_enRe.pcx", "TaA_enBl.pcx", "TaA_enBr.pcx", "TaA_enGr.pcx", "TaA_enOr.pcx", "TaA_enVi.pcx", "TaA_enTe.pcx", "TaA_enPi.pcx" },
       { "TaA_seRe.pcx", "TaA_seBl.pcx", "TaA_seBr.pcx", "TaA_seGr.pcx", "TaA_seOr.pcx", "TaA_seVi.pcx", "TaA_seTe.pcx", "TaA_sePi.pcx" },
@@ -299,7 +304,7 @@ static TCampaignMapTraits::TRegionTraits g_taRegionTraits[3] = {
 };
 
 DATA(0x00662238)
-static TCampaignMapTraits::TRegionTraits g_arRegionTraits[8] = {
+TCampaignMapTraits::TRegionTraits g_arRegionTraits[8] = {
     { 0, 136, 238,
       { "ArA_enRe.pcx", "ArA_enBl.pcx", "ArA_enBr.pcx", "ArA_enGr.pcx", "ArA_enOr.pcx", "ArA_enVi.pcx", "ArA_enTe.pcx", "ArA_enPi.pcx" },
       { "ArA_seRe.pcx", "ArA_seBl.pcx", "ArA_seBr.pcx", "ArA_seGr.pcx", "ArA_seOr.pcx", "ArA_seVi.pcx", "ArA_seTe.pcx", "ArA_sePi.pcx" },
@@ -343,7 +348,7 @@ static TCampaignMapTraits::TRegionTraits g_arRegionTraits[8] = {
 };
 
 DATA(0x00662598)
-static TCampaignMapTraits::TRegionTraits g_hsRegionTraits[4] = {
+TCampaignMapTraits::TRegionTraits g_hsRegionTraits[4] = {
     { 0, 141, 326,
       { "HSA_enRe.pcx", "HSA_enBl.pcx", "HSA_enBr.pcx", "HSA_enGr.pcx", "HSA_enOr.pcx", "HSA_enVi.pcx", "HSA_enTe.pcx", "HSA_enPi.pcx" },
       { "HSA_seRe.pcx", "HSA_seBl.pcx", "HSA_seBr.pcx", "HSA_seGr.pcx", "HSA_seOr.pcx", "HSA_seVi.pcx", "HSA_seTe.pcx", "HSA_sePi.pcx" },
@@ -367,7 +372,7 @@ static TCampaignMapTraits::TRegionTraits g_hsRegionTraits[4] = {
 };
 
 DATA(0x00662748)
-static TCampaignMapTraits::TRegionTraits g_bbRegionTraits[5] = {
+TCampaignMapTraits::TRegionTraits g_bbRegionTraits[5] = {
     { 0, 168, 342,
       { "BBA_enRe.pcx", "BBA_enBl.pcx", "BBA_enBr.pcx", "BBA_enGr.pcx", "BBA_enOr.pcx", "BBA_enVi.pcx", "BBA_enTe.pcx", "BBA_enPi.pcx" },
       { "BBA_seRe.pcx", "BBA_seBl.pcx", "BBA_seBr.pcx", "BBA_seGr.pcx", "BBA_seOr.pcx", "BBA_seVi.pcx", "BBA_seTe.pcx", "BBA_sePi.pcx" },
@@ -396,7 +401,7 @@ static TCampaignMapTraits::TRegionTraits g_bbRegionTraits[5] = {
 };
 
 DATA(0x00662968)
-static TCampaignMapTraits::TRegionTraits g_nbRegionTraits[4] = {
+TCampaignMapTraits::TRegionTraits g_nbRegionTraits[4] = {
     { 0, 7, 292,
       { "NBA_enRe.pcx", "NBA_enBl.pcx", "NBA_enBr.pcx", "NBA_enGr.pcx", "NBA_enOr.pcx", "NBA_enVi.pcx", "NBA_enTe.pcx", "NBA_enPi.pcx" },
       { "NBA_seRe.pcx", "NBA_seBl.pcx", "NBA_seBr.pcx", "NBA_seGr.pcx", "NBA_seOr.pcx", "NBA_seVi.pcx", "NBA_seTe.pcx", "NBA_sePi.pcx" },
@@ -420,7 +425,7 @@ static TCampaignMapTraits::TRegionTraits g_nbRegionTraits[4] = {
 };
 
 DATA(0x00662b18)
-static TCampaignMapTraits::TRegionTraits g_elRegionTraits[4] = {
+TCampaignMapTraits::TRegionTraits g_elRegionTraits[4] = {
     { 0, 12, 73,
       { "ELA_enRe.pcx", "ELA_enBl.pcx", "ELA_enBr.pcx", "ELA_enGr.pcx", "ELA_enOr.pcx", "ELA_enVi.pcx", "ELA_enTe.pcx", "ELA_enPi.pcx" },
       { "ELA_seRe.pcx", "ELA_seBl.pcx", "ELA_seBr.pcx", "ELA_seGr.pcx", "ELA_seOr.pcx", "ELA_seVi.pcx", "ELA_seTe.pcx", "ELA_sePi.pcx" },
@@ -444,7 +449,7 @@ static TCampaignMapTraits::TRegionTraits g_elRegionTraits[4] = {
 };
 
 DATA(0x00662cc8)
-static TCampaignMapTraits::TRegionTraits g_rnRegionTraits[4] = {
+TCampaignMapTraits::TRegionTraits g_rnRegionTraits[4] = {
     { 0, 85, 319,
       { "RNA_enRe.pcx", "RNA_enBl.pcx", "RNA_enBr.pcx", "RNA_enGr.pcx", "RNA_enOr.pcx", "RNA_enVi.pcx", "RNA_enTe.pcx", "RNA_enPi.pcx" },
       { "RNA_seRe.pcx", "RNA_seBl.pcx", "RNA_seBr.pcx", "RNA_seGr.pcx", "RNA_seOr.pcx", "RNA_seVi.pcx", "RNA_seTe.pcx", "RNA_sePi.pcx" },
@@ -468,7 +473,7 @@ static TCampaignMapTraits::TRegionTraits g_rnRegionTraits[4] = {
 };
 
 DATA(0x00662e78)
-static TCampaignMapTraits::TRegionTraits g_uaRegionTraits[12] = {
+TCampaignMapTraits::TRegionTraits g_uaRegionTraits[12] = {
     { 0, 158, 409,
       { "UAA_enRe.pcx", "UAA_enBl.pcx", "UAA_enBr.pcx", "UAA_enGr.pcx", "UAA_enOr.pcx", "UAA_enVi.pcx", "UAA_enTe.pcx", "UAA_enPi.pcx" },
       { "UAA_seRe.pcx", "UAA_seBl.pcx", "UAA_seBr.pcx", "UAA_seGr.pcx", "UAA_seOr.pcx", "UAA_seVi.pcx", "UAA_seTe.pcx", "UAA_sePi.pcx" },
@@ -532,7 +537,7 @@ static TCampaignMapTraits::TRegionTraits g_uaRegionTraits[12] = {
 };
 
 DATA(0x00663388)
-static TCampaignMapTraits::TRegionTraits g_spRegionTraits[4] = {
+TCampaignMapTraits::TRegionTraits g_spRegionTraits[4] = {
     { 0, 8, 295,
       { "SPA_enRe.pcx", "SPA_enBl.pcx", "SPA_enBr.pcx", "SPA_enGr.pcx", "SPA_enOr.pcx", "SPA_enVi.pcx", "SPA_enTe.pcx", "SPA_enPi.pcx" },
       { "SPA_seRe.pcx", "SPA_seBl.pcx", "SPA_seBr.pcx", "SPA_seGr.pcx", "SPA_seOr.pcx", "SPA_seVi.pcx", "SPA_seTe.pcx", "SPA_sePi.pcx" },
@@ -556,6 +561,7 @@ static TCampaignMapTraits::TRegionTraits g_spRegionTraits[4] = {
 };
 
 DATA(0x00663538)
+// Dreamcast original: aCampaignMapTraitsImp.
 TCampaignMapTraits g_campaignMapTraitsImp[21] = {
     { 0, 0, 0, 0 },
     { 0, "G1_bg.pcx", 3, g_good1RegionTraits },
@@ -579,6 +585,8 @@ TCampaignMapTraits g_campaignMapTraitsImp[21] = {
     { 0, "UA_bg.pcx", 12, g_uaRegionTraits },
     { 0, "SP_bg.pcx", 4, g_spRegionTraits }
 };
+
+} // namespace
 
 DATA(0x00663688)
 const TCampaignMapTraits (&g_campaignMapTraits)[21] = g_campaignMapTraitsImp;
