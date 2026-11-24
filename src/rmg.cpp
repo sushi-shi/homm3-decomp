@@ -11067,8 +11067,8 @@ void writeRmgObjectPrototype(TAbstractFile*, TObjectType*);
 // no raw vector layout is used.
 // The native oracle also appends prototypes during serialization and rejects
 // cached loop sizes, so those per-iteration size queries must remain live.
-// Explicit bucket cursors with indexed, countdown or end-pointer bounds
-// do not recover the receiver bias; no vector-layout access is introduced.
+// Explicit bucket cursors with indexed, countdown or end-pointer bounds do
+// not recover the receiver bias; no vector-layout access is introduced.
 // writeValue<int> for the three counts (Mac 0x24fd40/0x24fe5c byte-swap
 // them as typed scalar writes) and a signed bucket index are flat too.
 VA(0x0054ABF0, 0x235)
@@ -11091,9 +11091,8 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
     int prototypeCount = 2;
     for (int type = 0; type < ADVENTURE_OBJECT_TRAIT_COUNT; ++type)
         for (unsigned int index = 0; index < m_objectPrototypes[type].size(); ++index) {
-            TRmgObjectPropertiesRef* properties = m_objectPrototypes[type][index];
-            if (static_cast<int>(properties->m_refCount) > 0)
-                properties->m_prototypeIndex = prototypeCount++;
+            if (static_cast<int>(m_objectPrototypes[type][index]->m_refCount) > 0)
+                m_objectPrototypes[type][index]->m_prototypeIndex = prototypeCount++;
         }
     {
         int count = prototypeCount;
@@ -11103,9 +11102,8 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
     writeRmgObjectPrototype(outfile, m_objectPrototypes[124][0]->m_prototype);
     for (int objectType = 0; objectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectType)
         for (unsigned int prototype = 0; prototype < m_objectPrototypes[objectType].size(); ++prototype) {
-            TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][prototype];
-            if (static_cast<int>(properties->m_refCount) > 0)
-                writeRmgObjectPrototype(outfile, properties->m_prototype);
+            if (static_cast<int>(m_objectPrototypes[objectType][prototype]->m_refCount) > 0)
+                writeRmgObjectPrototype(outfile, m_objectPrototypes[objectType][prototype]->m_prototype);
         }
     {
         int count = m_objects.size();

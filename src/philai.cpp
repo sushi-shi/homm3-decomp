@@ -1944,12 +1944,12 @@ static long valueOfWarFactory(const hero* currentHero,
         type_artifact(engine), currentHero, false, true);
     TCreatureType creature = siegeArtifactToCreature(engine);
     const int* costs = akCreatureTypeTraits[creature].cost;
-    const double* resourceValues = g_currentPlayer->m_ai.m_resourceValue;
     long resourceCost = 0;
-    for (int resource = 0; resource < NUM_RESOURCES; ++resource, ++costs) {
-        if (g_currentPlayer->m_resources[resource] < *costs)
+    for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
+        if (g_currentPlayer->m_resources[resource] < costs[resource])
             return 0;
-        resourceCost += *costs * resourceValues[resource];
+        resourceCost += costs[resource]
+            * g_currentPlayer->m_ai.m_resourceValue[resource];
     }
 
     if (moveCost <= 500)

@@ -328,10 +328,10 @@ VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0
 // DC 0x12e976/0x12e97a and Mac 0x16c9dc derive the caption position from
 // the icon position. Keeping a second running text coordinate reproduced
 // the flow but gave the wrong stack homes. The direct expression fixes
-// those homes and the helper fixes the town-row byte offset. Residual:
-// VC6 retains one vector<widget*>::size call in the final expanded Add,
-// where retail reuses the computed size. Prefix/postfix loop increments,
-// separate loop counters and per-iteration caption locals do not close it.
+// those homes and the helper fixes the town-row byte offset. The two row
+// bands advance named icon/caption y coordinates (159/193 then 235/267);
+// the constants fold to immediates while their IL keeps the nested size()
+// of the final expanded Add inline, as retail does.
 VA(0x00575e60, 0x670)
 DC_ADDRESS(0x12e708, 0x3be)
 MAC_ADDRESS(0x16c63c, 0x52c)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args)
@@ -353,29 +353,33 @@ bool CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 
     int centerX = m_width / 2;
     int iconX = centerX - 68;
+    int iconY = 159;
+    int textY = 193;
     int slot;
     for (slot = 0; slot < 3; ++slot) {
         TCreatureType creature = GetBaseCreature(townType, slot);
         iconWidget* portrait = new iconWidget(
-            iconX, 159, 32, 32, slot, "cprsmall.def",
+            iconX, iconY, 32, 32, slot, "cprsmall.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
         add(portrait);
         portrait->setIconFrame(creature + 2);
-        add(new textWidget(iconX - 10, 193, 52, 32,
+        add(new textWidget(iconX - 10, textY, 52, 32,
             akCreatureTypeTraits[creature].m_name, "tiny.fnt",
             font::PRIMARY, -1, 1, 0, 8));
         iconX += 52;
     }
 
     iconX = centerX - 88;
+    iconY = 235;
+    textY = 267;
     for (slot = 3; slot < TOWN_DWELLING_COUNT; ++slot) {
         TCreatureType creature = GetBaseCreature(townType, slot);
         iconWidget* portrait = new iconWidget(
-            iconX, 235, 32, 32, slot, "cprsmall.def",
+            iconX, iconY, 32, 32, slot, "cprsmall.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
         add(portrait);
         portrait->setIconFrame(creature + 2);
-        add(new textWidget(iconX - 10, 267, 52, 32,
+        add(new textWidget(iconX - 10, textY, 52, 32,
             akCreatureTypeTraits[creature].m_name, "tiny.fnt",
             font::PRIMARY, -1, 1, 0, 8));
         iconX += 52;
