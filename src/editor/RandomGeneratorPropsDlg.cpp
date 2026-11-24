@@ -439,7 +439,7 @@ const TAbstractRandomlyAlignedGenerator* TRandomGeneratorAlignmentDlg::_getOldGe
 VA(0x004b0907, 0x39)
 TAbstractRandomlyAlignedGenerator* TRandomGeneratorAlignmentDlg::_getNewGenerator()
 {
-    return dynamic_cast<TAbstractRandomlyAlignedGenerator*>(_m_pNewMap->getLayer(_m_bSecondLayer).getPObject(_m_objectID));
+    return dynamic_cast<TAbstractRandomlyAlignedGenerator*>(_m_pNewMap->getPLayer(_m_bSecondLayer)->getPObject(_m_objectID));
 }
 
 VA(0x004b0940, 0x69)
@@ -580,7 +580,7 @@ TRandomGeneratorPropsDlg::TRandomGeneratorPropsDlg(CWnd* pParent, TGameMap* pMap
     _m_pOldGenerator = dynamic_cast<const TRandomGenerator*>(
         pOldMap->getLayer(bSecondLayer).getPObject(objID));
     TRandomGenerator* pNewGenerator = dynamic_cast<TRandomGenerator*>(
-        _m_pNewMap->getLayer(bSecondLayer).getPObject(objID));
+        _m_pNewMap->getPLayer(bSecondLayer)->getPObject(objID));
     _m_pDialogs = std::auto_ptr<_TDialogs>(new _TDialogs);
     if (!_m_pDialogs.get())
         throw TAllocationFailure();
@@ -701,7 +701,7 @@ TRandomlyAlignedGeneratorPropsDlg::TRandomlyAlignedGeneratorPropsDlg(CWnd* pPare
     _m_pOldGenerator = dynamic_cast<const TRandomlyAlignedGenerator*>(
         pOldMap->getLayer(bSecondLayer).getPObject(objID));
     TRandomlyAlignedGenerator* pNewGenerator = dynamic_cast<TRandomlyAlignedGenerator*>(
-        _m_pNewMap->getLayer(bSecondLayer).getPObject(objID));
+        _m_pNewMap->getPLayer(bSecondLayer)->getPObject(objID));
     _m_pDialogs = std::auto_ptr<_TDialogs>(new _TDialogs);
     if (!_m_pDialogs.get())
         throw TAllocationFailure();

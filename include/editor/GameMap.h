@@ -377,6 +377,7 @@ public:
 
     void importText(std::istream* pIStream);
     TLayer* getPLayer(unsigned int num);
+    TLayer* getPLayer(bool bSecondLayer) { return getPLayer(bSecondLayer ? 1U : 0U); }
     void setName(const std::string& newName);
     void setDesc(const std::string& newDesc);
     void setDifficulty(TDifficulty newDifficulty);
@@ -446,6 +447,7 @@ public:
     bool canCreate(const TObjectType& objType, TPlayer player) const;
     std::set<THeroID> getAvailableHeroesInClass(THeroClass heroClass) const;
     const TLayer* getPLayer(unsigned int num) const;
+    const TLayer* getPLayer(bool bSecondLayer) const { return getPLayer(bSecondLayer ? 1U : 0U); }
     const std::string& getName() const;
     const std::string& getDesc() const;
     TDifficulty getDifficulty() const;
@@ -473,7 +475,6 @@ public:
     TPlayerInfo::TTownTypes getDefaultTownTypes(TPlayer player) const;
     const TLayer& getLayer(unsigned int num) const;
     const TLayer& getLayer(bool bSecondLayer) const;
-    TLayer& getLayer(bool bSecondLayer);
 
 private:
     friend class TLayer;
@@ -576,6 +577,9 @@ public:
                                                     int version) const = 0;
 };
 
+// Loki's layer accessors: getPLayer for each layer number or bool, const
+// and not, and only a const getLayer; its writers take getPLayer(bool)
+// (TMapDoc::onObjectPropertiesChanged, TMapView::onEditGrabObject).
 inline const TGameMap::TLayer& TGameMap::getLayer(unsigned int num) const
 {
     return *getPLayer(num);
@@ -583,12 +587,7 @@ inline const TGameMap::TLayer& TGameMap::getLayer(unsigned int num) const
 
 inline const TGameMap::TLayer& TGameMap::getLayer(bool bSecondLayer) const
 {
-    return *getPLayer(bSecondLayer ? 1U : 0U);
-}
-
-inline TGameMap::TLayer& TGameMap::getLayer(bool bSecondLayer)
-{
-    return *getPLayer(bSecondLayer ? 1U : 0U);
+    return *getPLayer(bSecondLayer);
 }
 
 // One level of the map: its cells and the objects placed on them. The

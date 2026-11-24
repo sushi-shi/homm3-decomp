@@ -62,8 +62,8 @@ VA(0x00453c05, 0x76)
 void THeroPropsSheet::_setNewMap(TGameMap* pNewMap)
 {
     _m_pNewMap = pNewMap;
-    TGameMap::TLayer& layer = pNewMap->getLayer(_m_bSecondLayer);
-    TGameObject* pObject = layer.getPObject(_m_objectID);
+    TGameMap::TLayer* pLayer = pNewMap->getPLayer(_m_bSecondLayer);
+    TGameObject* pObject = pLayer->getPObject(_m_objectID);
     _m_pNewHero = dynamic_cast<THero*>(pObject);
     if (_m_pNewHero == NULL)
         _m_pNewHero = dynamic_cast<TTown*>(pObject)->getPVisitingHero();
@@ -217,8 +217,8 @@ TNonRandomHeroPropsSheet::TNonRandomHeroPropsSheet(CWnd* pParentWnd, TGameMap* p
     _m_pOldHero = dynamic_cast<const TNonRandomHero*>(pOldObject);
     if (_m_pOldHero == NULL)
         _m_pOldHero = dynamic_cast<const TTown*>(pOldObject)->getPVisitingHero();
-    TGameMap::TLayer& newLayer = _m_pNewMap->getLayer(_m_bSecondLayer);
-    TGameObject* pNewObject = newLayer.getPObject(_m_objectID);
+    TGameMap::TLayer* pNewLayer = _m_pNewMap->getPLayer(_m_bSecondLayer);
+    TGameObject* pNewObject = pNewLayer->getPObject(_m_objectID);
     _m_pNewHero = dynamic_cast<TNonRandomHero*>(pNewObject);
     if (_m_pNewHero == NULL)
         _m_pNewHero = dynamic_cast<TTown*>(pNewObject)->getPVisitingHero();
@@ -289,8 +289,8 @@ TPrisonPropsSheet::TPrisonPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSec
     const TGameMap& oldMap = *_m_pMap;
     const TGameMap::TLayer& oldLayer = oldMap.getLayer(_m_bSecondLayer);
     _m_pOldPrison = dynamic_cast<const TPrison*>(oldLayer.getPObject(_m_objectID));
-    TGameMap::TLayer& newLayer = _m_pNewMap->getLayer(_m_bSecondLayer);
-    _m_pNewPrison = dynamic_cast<TPrison*>(newLayer.getPObject(_m_objectID));
+    TGameMap::TLayer* pNewLayer = _m_pNewMap->getPLayer(_m_bSecondLayer);
+    _m_pNewPrison = dynamic_cast<TPrison*>(pNewLayer->getPObject(_m_objectID));
     _setNewMap(_m_pNewMap.get());
     _m_pGeneralPage = std::auto_ptr<TPrisonPropsGeneralPage>(
         new TPrisonPropsGeneralPage(this, *_m_pMap, *_m_pNewMap, _m_bSecondLayer, objID));

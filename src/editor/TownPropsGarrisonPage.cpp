@@ -48,8 +48,8 @@ const TTown* TTownPropsGarrisonPage::_getOldTown() const
 VA(0x004c4d89, 0x42)
 TTown* TTownPropsGarrisonPage::_getNewTown()
 {
-    TGameMap::TLayer& layer = _m_newMap.getLayer(_m_bSecondLayer);
-    return dynamic_cast<TTown*>(layer.getPObject(_m_objectID));
+    TGameMap::TLayer* pLayer = _m_newMap.getPLayer(_m_bSecondLayer);
+    return dynamic_cast<TTown*>(pLayer->getPObject(_m_objectID));
 }
 
 VA(0x004c4dcb, 0x31)

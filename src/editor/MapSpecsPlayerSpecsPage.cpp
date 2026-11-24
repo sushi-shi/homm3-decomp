@@ -110,10 +110,8 @@ TMapSpecsPlayerSpecsPage::~TMapSpecsPlayerSpecsPage()
 
 // Loki reads the map through its const _m_map member at each lookup, and so
 // does retail; this page reads its edited map the same way, without casts or
-// a bound alias. Residual: the three layer lookups reach the non-const
-// getLayer(bool) (non-const getPLayer) where retail calls the const one;
-// Loki's TGameMap has no non-const getLayer and its writers take
-// getPLayer(bool) instead.
+// a bound alias. TGameMap has only Loki's const getLayer, so the three
+// lookups reach the const getPLayer as retail does.
 VA(0x004732df, 0x4f5)
 void TMapSpecsPlayerSpecsPage::_setPlayerInfo()
 {

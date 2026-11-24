@@ -653,8 +653,8 @@ VA(0x00480bef, 0xbb)
 void TMapView::onEditEditObject(TMapEditingWnd* pWnd, unsigned int objID)
 {
     TGameMap map(*getPDocument()->getPMap());
-    TGameMap::TLayer& layer = map.getLayer(_m_bViewUnderground);
-    TGUIGameObject* pObject = dynamic_cast<TGUIGameObject*>(layer.getPObject(objID));
+    TGameMap::TLayer* pLayer = map.getPLayer(_m_bViewUnderground);
+    TGUIGameObject* pObject = dynamic_cast<TGUIGameObject*>(pLayer->getPObject(objID));
     if (pObject->edit(this, &map, _m_bViewUnderground, objID)) {
         getPDocument()->backupMap();
         *getPDocument()->getPMap() = map;
@@ -669,14 +669,17 @@ void TMapView::onEditDeleteObject(TMapEditingWnd* pWnd, unsigned int objID)
     getPDocument()->removeObject(_m_bViewUnderground, objID);
 }
 
+// Loki takes the layer through getPLayer(bool); retail calls the non-const
+// getPLayer and the const getPObject, so the layer is held const here, as
+// is this editor's floating object.
 VA(0x00480cc9, 0x8e)
 void TMapView::onEditGrabObject(TMapEditingWnd* pWnd, unsigned int objID)
 {
     getPDocument()->backupMap();
-    const TGameMap::TLayer& layer = getPDocument()->getPMap()->getLayer(_m_bViewUnderground);
-    const TGameObject* pObject = layer.getPObject(objID);
+    const TGameMap::TLayer* pLayer = getPDocument()->getPMap()->getPLayer(_m_bViewUnderground);
+    const TGameObject* pObject = pLayer->getPObject(objID);
     _m_pFloatingObj = dynamic_cast<const TGUIGameObject*>(pObject);
-    TTilePoint loc = layer.getObjectLoc(objID);
+    TTilePoint loc = pLayer->getObjectLoc(objID);
     _m_floatingObjX = loc.x();
     _m_floatingObjY = loc.y();
     getPDocument()->floatObject(_m_bViewUnderground, objID);

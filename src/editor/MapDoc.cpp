@@ -127,8 +127,8 @@ void TRepaintMapOp::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 void TRepaintMapOp::setFrame(const TTilePoint& loc, int frame)
 {
     TGameMap* pMap = _m_pMap;
-    TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
-    layer.getPCell(loc.x(), loc.y())->setTileNum(frame);
+    TGameMap::TLayer* pLayer = pMap->getPLayer(_m_bSecondLayer);
+    pLayer->getPCell(loc.x(), loc.y())->setTileNum(frame);
 }
 
 // The river and road maps' identical bodies fold onto this one (/OPT:ICF).
@@ -241,8 +241,8 @@ bool TRiverMap::getUpdateExtent(TTileExtent* pExtent) const
 VA(0x0045dc23, 0x86)
 void TRiverMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 {
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    TGameMap::TLayer::TCell* pCell = layer.getPCell(loc.x(), loc.y());
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    TGameMap::TLayer::TCell* pCell = pLayer->getPCell(loc.x(), loc.y());
     pCell->setRiverType(tile.m_terrain);
     pCell->setRiverTileNum(tile.m_frame);
     pCell->setBRiverHFlipped(tile.m_flipX);
@@ -253,8 +253,8 @@ void TRiverMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 VA(0x0045dca9, 0x4b)
 void TRiverMap::setLineType(const TTilePoint& loc, int type)
 {
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    layer.getPCell(loc.x(), loc.y())->setRiverType(type);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    pLayer->getPCell(loc.x(), loc.y())->setRiverType(type);
     _touch(loc);
 }
 
@@ -330,8 +330,8 @@ void TRoadMap::reset()
 VA(0x0045ddd8, 0x86)
 void TRoadMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 {
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    TGameMap::TLayer::TCell* pCell = layer.getPCell(loc.x(), loc.y());
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    TGameMap::TLayer::TCell* pCell = pLayer->getPCell(loc.x(), loc.y());
     pCell->setRoadType(tile.m_terrain);
     pCell->setRoadTileNum(tile.m_frame);
     pCell->setBRoadHFlipped(tile.m_flipX);
@@ -342,8 +342,8 @@ void TRoadMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 VA(0x0045de5e, 0x4d)
 void TRoadMap::setLineType(const TTilePoint& loc, int type)
 {
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    layer.getPCell(loc.x(), loc.y())->setRoadType(type);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    pLayer->getPCell(loc.x(), loc.y())->setRoadType(type);
     _touch(loc);
 }
 
@@ -616,8 +616,8 @@ VA(0x0045e542, 0xa1)
 void TMapDoc::_TTerrainPlacementOp::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 {
     _touch(loc);
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    TGameMap::TLayer::TCell* pCell = layer.getPCell(loc.x(), loc.y());
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    TGameMap::TLayer::TCell* pCell = pLayer->getPCell(loc.x(), loc.y());
     TTerrainType oldType = pCell->getTerrainType();
     pCell->setTerrainType(TTerrainType(tile.m_terrain));
     pCell->setTileNum(tile.m_frame);
@@ -644,8 +644,8 @@ VA(0x0045e616, 0x4a)
 void TMapDoc::_TTerrainPlacementOp::setFrame(const TTilePoint& loc, int frame)
 {
     _touch(loc);
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    layer.getPCell(loc.x(), loc.y())->setTileNum(frame);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    pLayer->getPCell(loc.x(), loc.y())->setTileNum(frame);
 }
 
 VA(0x0045e660, 0x26)
@@ -1248,8 +1248,8 @@ void TMapDoc::onObjectPropertiesChanged(bool bSecondLayer, unsigned int objID)
 {
     assert(_m_pMap != NULL);
     assert(!bSecondLayer || _m_pMap->isTwoLayer());
-    TGameMap::TLayer& layer = _m_pMap->getLayer(bSecondLayer);
-    TTileExtent extent = layer.getObjectExtent(objID);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(bSecondLayer);
+    TTileExtent extent = pLayer->getObjectExtent(objID);
     _sendUpdate(bSecondLayer, extent.left(), extent.top(), extent.width(), extent.height());
 }
 
@@ -1385,11 +1385,11 @@ void TMapDoc::erase(unsigned int left, unsigned int top, unsigned int width, uns
     assert(_m_pRoadEraseOp != NULL);
     (*_m_pRiverEraseOp)(left, top, width, height);
     (*_m_pRoadEraseOp)(left, top, width, height);
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bEraseUnderground);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bEraseUnderground);
     for (unsigned int y = top; y < top + height; y++) {
         for (unsigned int x = left; x < left + width; x++) {
-            while (layer.getNumObjectIDsAtCell(x, y) > 0)
-                removeObject(_m_bEraseUnderground, layer.getObjectIDAtCell(x, y, 0));
+            while (pLayer->getNumObjectIDsAtCell(x, y) > 0)
+                removeObject(_m_bEraseUnderground, pLayer->getObjectIDAtCell(x, y, 0));
         }
     }
 }

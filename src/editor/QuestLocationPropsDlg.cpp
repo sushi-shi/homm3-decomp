@@ -511,7 +511,7 @@ VA(0x00498825, 0x42)
 void TQuestLocationPropsDlg::_setNewMap(TGameMap* pNewMap)
 {
     _m_pNewMap = pNewMap;
-    _m_pNewLocation = dynamic_cast<TQuestLocation*>(pNewMap->getLayer(_m_bSecondLayer).getPObject(_m_objID));
+    _m_pNewLocation = dynamic_cast<TQuestLocation*>(pNewMap->getPLayer(_m_bSecondLayer)->getPObject(_m_objID));
 }
 
 VA(0x00498867, 0x237)

@@ -130,7 +130,7 @@ TSeersHutPropsDlg::TSeersHutPropsDlg(CWnd* pParent, TGameMap* pMap, bool bSecond
     if (!_m_pNewMap.get())
         throw TAllocationFailure();
     _setNewMap(_m_pNewMap.get());
-    _m_pNewHut = dynamic_cast<TSeersHut*>(_m_pNewMap->getLayer(_m_bSecondLayer).getPObject(_m_objID));
+    _m_pNewHut = dynamic_cast<TSeersHut*>(_m_pNewMap->getPLayer(_m_bSecondLayer)->getPObject(_m_objID));
 }
 
 VA_COMPGEN(0x004b7902, 0x1c, SCALAR_DELETING_DTOR, TSeersHutPropsDlg)
