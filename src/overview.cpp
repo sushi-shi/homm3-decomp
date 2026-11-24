@@ -108,9 +108,15 @@ static void updateBackpack(int slot);
 //   backpack curIcon++ follows the clear-status test (DC 1035).
 // - The cleanup loops index the arrays directly; a `slot` local swaps
 //   commutative operand order in most later index computations.
+// - The closing page switch rereads g_overviewTop[0] + row rather than
+//   heroNumber: DC 1139 and Mac 0x135b50 both reload the top, as retail
+//   does (96.93 -> 97.05; the summoning arm loses its -1 CSE).
 // Residual: register assignment in the dwelling loop and summoning arm,
 // row * 3 pre-scaled to a byte offset in the hero tail's button stores,
-// and the artifact message reusing the curIcon stride constant 4.
+// and the artifact message reusing the curIcon stride constant 4. A
+// named `row * 3` local for the tail's text buttons scores 98.13 but has
+// no native support (DC/Mac index row * 3 + k directly), so it is not
+// adopted; an explicit `+ 0` first index folds and is byte-flat.
 // Byte-flat: the dwelling test as `if (!has) continue;`; any declaration
 // order of the counters/row/item. Worse: lookup as an upgraded if/else
 // (96.77 -> 96.38).
@@ -763,7 +769,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 memError();
             g_overWin->addWidget(g_textButtonDynamic[row * 3 + 2], -1);
 
-            switch (g_overviewHeroArtifactPage[heroNumber]) {
+            switch (g_overviewHeroArtifactPage[g_overviewTop[0] + row]) {
             case OVERVIEW_HERO_EQUIPPED_PAGE_1:
                 g_overWin->broadcastMessage(
                     MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,

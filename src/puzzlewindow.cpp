@@ -579,6 +579,11 @@ static long checkMatch(long player, long firstX, long firstY,
 // Whole-board references, long census counters and uncast RECT bounds retain
 // Windows 95.80%; residual is the ebx/edi assignment of the first scan loop.
 // Mac reference selectors remain a non-exact source lead.
+// Byte-flat for that ebx/edi swap: int scan counters, bool found, long
+// firstX/firstY, declaration moves, a separate inner x in checkMatch, DC's
+// point-first checkMatch prologue, and named tile references. Worse: extents
+// or ties/best initialised earlier/later, found or firstY assigned first,
+// and an unnamed `1 << player` (90.55).
 VA(0x0052cf10, 0x5B4)
 DC_ADDRESS(0x115be8, 0x37c)
 MAC_ADDRESS(0x148488, 0x574)  // anchor-caller AI_attempt_puzzle_guess +0x39d
