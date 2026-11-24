@@ -219,7 +219,10 @@ static int updateSpellTargetFromMouse()
 }
 
 // Retail calls getMagicMirrorChance before random in the reflection test;
-// VC6 calls random first for both operand orders (re-tested 2026-11-23).
+// VC6 calls random first for both operand orders, fused or nested (re-tested
+// 2026-11-24). Only a separate `int mirrorChance = ...;` statement before
+// the roll reaches retail's order (95.60), but Mac 0x18facc/0x18fad8 calls
+// random first, which that statement order contradicts; not adopted.
 // Residual (95.07%): that order, and the Frost Ring/Force Field and Remove
 // Obstacle/Clone shared tails, where retail keeps the earlier copy.
 // DC 201..212 and 217..228 records explicit dialog/action if/else scope
@@ -653,10 +656,11 @@ void combatManager::animateMagicArrow(int x, int y, army* target)
 // DC 850/926 passes `obstacles.size() - 1` straight to PlaceObstacle (no
 // slot local); retail's in-place `dec edx` agrees. Fire Wall's counter and
 // the red-colouring side loop are signed (DC cmp/gt, retail jl/jle).
-// Residual (97.43%): castX/castY stack-home swap, and the cross-jumped
-// shared tails (Force Field/Fire Wall showSpellMessage, Death Ripple/
-// Destroy Undead drawFrame+checkRebirth, two drawFrame/spellEffect tails)
-// where retail keeps the earlier copy and this compile keeps the later one.
+// Residual (97.64%): castX/castY stack-home swap (declaration order and a
+// combined declarator are byte-flat), and the cross-jumped shared tails
+// (Force Field/Fire Wall showSpellMessage, Death Ripple/Destroy Undead
+// drawFrame+checkRebirth, two drawFrame/spellEffect tails) where retail
+// keeps the earlier copy and this compile keeps the later one.
 VA(0x0059fe30, 0x2A4F)
 DC_ADDRESS(0x14f7dc, 0x2366)
 MAC_ADDRESS(0x190540, 0x29f4)  // retail largest-unadmitted row
@@ -1491,8 +1495,10 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
 
     // Dreamcast spells.cpp:1632..1660 preserves the obstacle lookup,
     // secondary-effect split, drawing-limit capture and the two fizzle
-    // helper boundaries. Retail fixes field_14 as both the cell's obstacle
-    // index and the obstacle's optional replacement effect.
+    // helper boundaries; 1649/1652 call the SLimitData overloads with
+    // m_extent, whose expansion matches retail's load order (97.43 ->
+    // 97.64). Retail fixes field_14 as both the cell's obstacle index and
+    // the obstacle's optional replacement effect.
     case SPELL_REMOVE_OBSTACLE: {
         int obstacleIndex = m_cells[targetIndex].m_obstacleIndex;
         int replacementEffect = getObstacle(obstacleIndex).m_dispelEffect;
@@ -1503,17 +1509,10 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             drawObstacle(m_cells[targetIndex]);
             m_computeExtentOnly = 0;
             m_saveBiggestExtent = 0;
-            g_windowManager->saveFizzleSourceX(
-                m_extent.m_minX, m_extent.m_minY,
-                m_extent.width(),
-                m_extent.height());
+            g_windowManager->saveFizzleSourceX(m_extent);
             removeObstacle(obstacleIndex);
             drawFrame(0, 0, 0, 0, 1, 0);
-            g_windowManager->fizzleForwardX(
-                m_extent.m_minX, m_extent.m_minY,
-                m_extent.width(),
-                m_extent.height(),
-                replacementEffect);
+            g_windowManager->fizzleForwardX(m_extent, replacementEffect);
         } else {
             removeObstacle(obstacleIndex);
             spellEffect(replacementEffect, targetIndex, 100, 0);
