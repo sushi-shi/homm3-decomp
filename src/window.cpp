@@ -400,18 +400,12 @@ void heroWindow::moveWindow(int deltaX, int deltaY)
 // DC 825 calls GetWidth/GetHeight and the bitmap-pointer Draw overload;
 // 836 calls the bitmap-pointer Grab overload. The null-background arm stores
 // X then Y at 814/815, and the drawing arm is an else scope ending at 852.
-// These canonical calls and scopes are restored. The 32-state family emits
-// 14 distinct objects; ten retained candidates reproduce, with every window
-// score unchanged. CenterWindow retains a whole-body EBX/EDI role swap at
-// 92.8767%: retail keeps centerX in EBX, this compile in EDI. The resulting
-// height spill also rotates the four saved local homes.
-// Earlier local-order/default/clamp/store variants (792 source candidates)
-// did not close that swap. RTM and SP3 emit the same bytes, so compiler age
-// is not the explanation. Do not invent a fifth local or remove the proven
-// saved height to steer allocation; helper/scope restoration is not closure.
-// Thirty-two conditional-compound/declaration-shape controls also emit one
-// reproduced object: braces around the default, clamp and damage-bound pairs,
-// crossed with separate saved-local declarations, leave 92.8767% unchanged.
+// DC 798/799 copy the defaulted centerX/centerY into fresh registers before
+// the 803..809 clamps, so the clamps and stores work on newX/newY (as
+// moveWindow names its targets). Retail's lone `mov edi, eax` copy of the
+// defaulted Y is that second local; restoring the pair closes the former
+// whole-body EBX/EDI role swap (92.88 -> 100). Clamping the parameters in
+// place, with any default/clamp/store order or brace shape, stays at 92.88.
 VA(0x005ff240, 0x162)
 DC_ADDRESS(0x19797c, 0x152)
 MAC_ADDRESS(0x20b870, 0x1b0)  // anchor-global
@@ -425,22 +419,24 @@ void heroWindow::centerWindow(int centerX, int centerY)
         centerX = (WINDOW_SCREEN_WIDTH - m_width) / 2;
     if (centerY == -1)
         centerY = (WINDOW_SCREEN_HEIGHT - m_height) / 2;
-    if (centerX < 0)
-        centerX = 0;
-    if (centerY < 0)
-        centerY = 0;
-    if (m_width + centerX > WINDOW_SCREEN_WIDTH)
-        centerX = WINDOW_SCREEN_WIDTH - m_width;
-    if (m_height + centerY > WINDOW_SCREEN_HEIGHT)
-        centerY = WINDOW_SCREEN_HEIGHT - m_height;
+    int newX = centerX;
+    int newY = centerY;
+    if (newX < 0)
+        newX = 0;
+    if (newY < 0)
+        newY = 0;
+    if (m_width + newX > WINDOW_SCREEN_WIDTH)
+        newX = WINDOW_SCREEN_WIDTH - m_width;
+    if (m_height + newY > WINDOW_SCREEN_HEIGHT)
+        newY = WINDOW_SCREEN_HEIGHT - m_height;
     if (!m_background) {
-        m_x = centerX;
-        m_y = centerY;
+        m_x = newX;
+        m_y = newY;
     } else {
         m_background->Draw(0, 0, m_background->GetWidth(), m_background->GetHeight(),
                            g_windowManager->m_screenBitmap, m_x, m_y, false);
-        m_x = centerX;
-        m_y = centerY;
+        m_x = newX;
+        m_y = newY;
         m_background->Grab(g_windowManager->m_screenBitmap, m_x, m_y);
         drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         startW += abs(m_x - startX);

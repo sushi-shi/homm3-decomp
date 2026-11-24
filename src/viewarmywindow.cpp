@@ -155,16 +155,20 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
 
     int side = thisArmy->getOwningSide();
     hero* thisHero = thisArmy->getOwner();
-    unsigned char groupAlignments = g_combatManager->m_hasAngelicAlliance[side];
-    armyGroup* group = g_combatManager->m_armyGroups[side];
-    hero* enemyHero = g_combatManager->m_heroes[1 - side];
-    armyGroup* enemies = g_combatManager->m_armyGroups[1 - side];
     const town* ourTown = 0;
+    hero* enemyHero = g_combatManager->m_heroes[1 - side];
+    armyGroup* group = g_combatManager->m_armyGroups[side];
+    armyGroup* enemies = g_combatManager->m_armyGroups[1 - side];
+    unsigned char groupAlignments = g_combatManager->m_hasAngelicAlliance[side];
     if (side == 1)
         ourTown = g_combatManager->m_defendingTown;
-    // Local declaration order (side, owner, alignment byte, group, enemy
-    // hero, enemy group, town) was measured: it lifts 97.20 -> 97.48; the
-    // other orders tried (about 20) scored 96.2-97.46.
+    // DC 81..86 fix side, owner, enemy hero, group, enemy group, alignment
+    // byte; DC's town null-init row is 87. Declaring ourTown with the owner
+    // gives retail's whole frame: town/alignment take the dead thisArmy/x0
+    // homes and group shares the attack max temp's bin (97.48 -> 97.65).
+    // The full DC order scores 97.20, alignment-first 97.48 (over 200 orders
+    // measured). Residual: retail reloads side into EAX (1-side in ECX)
+    // where this compile swaps the two in that block.
     // DC lines 98/107 append the returned strings, and retail retains the
     // append calls. Complete reloads ArmyType for each added creature arg.
     m_moraleHelp += group->getMoraleDescription(
