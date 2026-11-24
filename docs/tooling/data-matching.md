@@ -18,6 +18,7 @@ homm3 verify data-coverage --tsv
 homm3 verify library-data-refs
 homm3 verify library-code
 homm3 verify generated-code        # per-function library/compiler-generated verdicts
+homm3 verify rtti --images game,h3maped,h3ccmped --eh   # class hierarchies and catchable types
 ```
 
 The normal build refreshes the complete byte report and its README summary.
@@ -491,6 +492,23 @@ candidate `.xdata$x` record reached through the function's associative
 `.text$x` stub. Self references must name the same offset; unwind actions must
 name the census funclets of that parent in order. Records of functions whose
 bodies still differ are reported non-comparable, not mismatching.
+
+`homm3 verify rtti` (`homm3/verify/rtti.py`) compares every retail Class
+Hierarchy Descriptor reached from a Complete Object Locator with the `??_R3`
+descriptor of our existing `objdiff/base` objects, read through `??_R2`,
+`??_R1` and `??_R0` by relocation: class attributes, then each base's name,
+preorder position, contained-base count, mdisp/pdisp/vdisp and attributes
+(a public base where retail derives privately differs in the BCD
+attributes). `--eh` also compares each retail ThrowInfo's CatchableTypeArray
+with our `__CTA` records of the same thrown type. Our anonymous scopes take
+the unit's `anon-ns-paths.tsv` spelling, then both sides compare by source
+file name. Findings are `hierarchy`, `scope` (the class agrees only once
+anonymous namespaces are removed), `inconsistent` (our objects disagree) and
+`catchable`; a scope matched without a reviewed row is a note. Classes on one
+side only are counted (library classes, discarded header COMDATs; `--all`
+lists them). The report is informational; `--gate` returns nonzero for any
+finding. Nothing is compiled: rebuild a stale unit with `build --fast`
+first (an object predating a source's anonymous namespace reports `scope`).
 
 Raw initializer comparisons also resolve a pointer through identical code
 folding (the object's own definition of the named symbol reproduces retail at
