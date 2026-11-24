@@ -289,7 +289,12 @@ DATA(0x004c6f40) TScenarioStartingBonusWriter bonusWriter;
 // Residual: VC6 gives this conditional a short result (movsx ax, then
 // movsx edi); retail widens each branch's read to int directly. Switching
 // on the read itself, an inline amount read, an unsigned skill index, a
-// typed creature local and a !get() test do not recover it.
+// typed creature local and a !get() test do not recover it. The inline trace
+// puts this form at cb 1025 (budget 38 at the resource arm's ~auto_ptr);
+// the if/else pair costs 1036 (60), and retail's refusals of that ~auto_ptr
+// and the return copy need cb <= 1028. An unsigned loop index (-3), no
+// final break and a typed creature local (-2 together) reach only 1031;
+// a size() loop bound, a named stack and a reversed test do not help.
 VA(0x004115a0, 0x540)
 auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int version)
 {
