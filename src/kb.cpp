@@ -3580,9 +3580,14 @@ short game::getBaseMapScore() const
 VA(0x004f3eb0, 0xA7)
 DC_ADDRESS(0x0e4300, 0x2e)
 MAC_ADDRESS(0x115bbc, 0x78)
+// DC kb.cpp:4096 records the base-score call as its own statement and
+// 4097 the float scaling, so the short base score is a named local. VC6
+// keeps this body unchanged; showCongrats' inline copy now reproduces
+// retail's register choice (97.52 -> 100; an int local stays 97.52).
 short game::getMapScore() const
 {
-    return static_cast<short>(static_cast<float>(getBaseMapScore())
+    short baseScore = getBaseMapScore();
+    return static_cast<short>(static_cast<float>(baseScore)
                               * g_mapScoreDifficultyFactor[m_setup.m_difficulty]);
 }
 
@@ -3597,13 +3602,9 @@ std::string getCampaignName();
 // or the cheat row when gpGame's cheat latch is up.  Then the closing
 // movie and "Win Scenario" run under CongratsWait, and the result is
 // banked before the screen fades.
-// Moving temp[30] ahead of landName is byte-flat in both retail comparisons:
-// Windows remains 97.51938%, Mac 19.2647% with all 23 calls aligned.
-// Moving temp[30] to the DC line gap before GetMonType is likewise byte-flat
-// in both compilers; it does not change CodeWarrior's buffer stack slot.
 // DC 4123/4124 records campaign score assignment then the separate base-score
-// copy (Mac 0x115d28/0x115d2c). Restoring that statement boundary is Windows
-// byte-flat at 97.5194%; the scenario calendar/float register residual remains.
+// copy (Mac 0x115d28/0x115d2c). The scenario arm's register residual was
+// getMapScore's single-expression body; its DC two-statement form matches.
 VA(0x004f3f60, 0x357)
 DC_ADDRESS(0x0e4330, 0x1be)
 MAC_ADDRESS(0x115c34, 0x2a8)  // anchor-callee (CongratsWait/AddScoreToHighScore) + "Win Scenario"

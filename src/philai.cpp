@@ -2617,6 +2617,11 @@ void aiSetHeroBonuses(hero* ourHero)
 // implicitly promoting artifactCount is also Windows byte-flat; Mac falls
 // from 88.70% to 85.82%, so that probe was restored. Implicit numerator or
 // denominator conversions and C-style double casts are also byte-flat.
+// Also flat: a type_artifact temporary argument, int totals, swapped total/
+// count declarations, one shared C-style loop index. Worse: incrementing
+// the count after the call (91.59) or after the constructor (95.74), and
+// hoisting the totals above the hero loop (81.06). This is the open x87
+// rounding-temporary order of docs/vc6/regalloc.md.
 VA(0x00527960, 0x140)
 DC_ADDRESS(0x110018, 0x15a)
 MAC_ADDRESS(0x141bf8, 0x1a0)  // anchor-callee
