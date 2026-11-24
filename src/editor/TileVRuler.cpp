@@ -13,10 +13,10 @@
 #include "editor/MemoryDC.h"
 #include "editor/TileVRuler.h"
 
-// Residual: the retail font-selector slots overlap the creation rectangle;
-// our frame remains eight bytes larger. Naming that rectangle did not help;
-// a bare block around the selector and metrics fixes the frame but scores
-// 99.63% (see the horizontal ruler).
+// The font is measured in the stock-font test's success branch: retail's
+// selector shares the creation rectangle's slot (0x70 frame). Unlike the
+// horizontal ruler, retail stores the direct sum here; the horizontal
+// ruler's named, leading-first textHeight form scores 99.65%.
 VA(0x004bf61b, 0x17d)
 TTileVRuler::TTileVRuler(CWnd* pParent, unsigned int range, TZoom zoom)
     : _m_startTile(0),
@@ -32,12 +32,13 @@ TTileVRuler::TTileVRuler(CWnd* pParent, unsigned int range, TZoom zoom)
     if (!Create(className, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, CRect(0, 0, 0, 0), pParent, 0))
         throw TRuntimeError();
     CClientDC dc(this);
-    if (!_m_font.CreateStockObject(DEFAULT_GUI_FONT) && !_m_font.CreateStockObject(SYSTEM_FONT))
+    if (_m_font.CreateStockObject(DEFAULT_GUI_FONT) || _m_font.CreateStockObject(SYSTEM_FONT)) {
+        TGDIObjectSelector<CFont> fontSelector(&dc, &_m_font);
+        TEXTMETRIC tm;
+        dc.GetTextMetrics(&tm);
+        _m_width = tm.tmHeight + tm.tmExternalLeading;
+    } else
         throw TRuntimeError();
-    TGDIObjectSelector<CFont> fontSelector(&dc, &_m_font);
-    TEXTMETRIC tm;
-    dc.GetTextMetrics(&tm);
-    _m_width = tm.tmHeight + tm.tmExternalLeading;
 }
 
 VA_COMPGEN(0x004bf7a2, 0x1c, SCALAR_DELETING_DTOR, TTileVRuler)
