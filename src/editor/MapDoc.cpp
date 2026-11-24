@@ -95,7 +95,8 @@ DATA(0x0059fe68) TTheObjectFactory theObjectFactory;
 // The terrain of a map layer as the terrain operations' map, for the
 // repaint: it is pointed at a layer for each repaint and changes only the
 // tiles' frames.
-class TRepaintMapOp : public TTerrainPlacementOp::TAbstractMap {
+// RTTI: the abstract map is a private base (attributes 9).
+class TRepaintMapOp : private TTerrainPlacementOp::TAbstractMap {
 public:
     void operator()(TGameMap* pMap, bool bSecondLayer, unsigned int specialTileFrequency)
     {
@@ -539,7 +540,8 @@ VA_COMPGEN(0x0045e320, 0x6, RUNTIME_CLASS_GETTER, TMapDocInvalidFileVersion)
 
 // The terrain placement operation on one map layer: the operation paints
 // through the document's map and reports the changed cells in an update.
-class TMapDoc::_TTerrainPlacementOp : public TTerrainPlacementOp::TAbstractMap {
+// RTTI: the abstract map is a private base (attributes 9).
+class TMapDoc::_TTerrainPlacementOp : private TTerrainPlacementOp::TAbstractMap {
 public:
     _TTerrainPlacementOp(TMapDoc* pDoc, bool bSecondLayer, TTerrainType terrainType,
                          unsigned int specialTileFrequency);
@@ -686,7 +688,8 @@ int TMapDoc::_TTerrainPlacementOp::getFrame(const TTilePoint& loc)
 
 // A river placement operation on one map layer, drawing from a starting
 // cell to each next one.
-class TMapDoc::_TRiverPlacementOp : public TRiverMap {
+// RTTI: TRiverMap is a private base (attributes 9).
+class TMapDoc::_TRiverPlacementOp : private TRiverMap {
 public:
     _TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int riverType, const TTilePoint& start);
 
@@ -727,7 +730,8 @@ void TMapDoc::_TRiverPlacementOp::operator()(const TTilePoint& loc)
 }
 
 // A river erase operation on one map layer.
-class TMapDoc::_TRiverEraseOp : public TRiverMap {
+// RTTI: TRiverMap is a private base (attributes 9).
+class TMapDoc::_TRiverEraseOp : private TRiverMap {
 public:
     _TRiverEraseOp(TMapDoc* pDoc, bool bSecondLayer);
 
@@ -762,7 +766,8 @@ void TMapDoc::_TRiverEraseOp::operator()(unsigned int left, unsigned int top, un
 }
 
 // A road placement operation on one map layer.
-class TMapDoc::_TRoadPlacementOp : public TRoadMap {
+// RTTI: TRoadMap is a private base (attributes 9).
+class TMapDoc::_TRoadPlacementOp : private TRoadMap {
 public:
     _TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int roadType, const TTilePoint& start);
 
@@ -803,7 +808,8 @@ void TMapDoc::_TRoadPlacementOp::operator()(const TTilePoint& loc)
 }
 
 // A road erase operation on one map layer.
-class TMapDoc::_TRoadEraseOp : public TRoadMap {
+// RTTI: TRoadMap is a private base (attributes 9).
+class TMapDoc::_TRoadEraseOp : private TRoadMap {
 public:
     _TRoadEraseOp(TMapDoc* pDoc, bool bSecondLayer);
 
