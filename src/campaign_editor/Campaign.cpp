@@ -93,8 +93,9 @@ public:
     auto_ptr<TScenarioStartingOptions> m_pStartingOptions;
 };
 
-// The RTTI marks every visitor's TVisitor base private (attributes 9), so
-// each tester runs its own accept in test().
+// The RTTI marks every visitor's TVisitor base private (attributes 9); the
+// testers befriend the class that hands them to accept, as the
+// editor's quest and condition testers do.
 namespace {
 
 class TScenarioStartingBonusEquivalencyTester : private TScenarioStartingBonus::TVisitor {
@@ -119,17 +120,15 @@ private:
 
 template<class T>
 class TScenarioStartingBonusRHSEquivalencyTester : private TScenarioStartingBonus::TVisitor {
+    friend class TScenarioStartingBonusEquivalencyTester;
+
 public:
     explicit TScenarioStartingBonusRHSEquivalencyTester(const T& lhs)
         : m_pLhs(&lhs), m_bEquivalent(false) {}
 
-    bool test(const TScenarioStartingBonus& rhs)
-    {
-        rhs.accept(*this);
-        return m_bEquivalent;
-    }
-
     virtual void visit(const T& rhs) { m_bEquivalent = *m_pLhs == rhs; }
+
+    bool isEquivalent() const { return m_bEquivalent; }
 
 private:
     const T* m_pLhs;
@@ -177,17 +176,15 @@ private:
 
 template<class T>
 class TScenarioStartingOptionsRHSEquivalencyTester : private TScenarioStartingOptions::TVisitor {
+    friend class TScenarioStartingOptionsEquivalencyTester;
+
 public:
     explicit TScenarioStartingOptionsRHSEquivalencyTester(const T& lhs)
         : m_pLhs(&lhs), m_bEquivalent(false) {}
 
-    bool test(const TScenarioStartingOptions& rhs)
-    {
-        rhs.accept(*this);
-        return m_bEquivalent;
-    }
-
     virtual void visit(const T& rhs) { m_bEquivalent = *m_pLhs == rhs; }
+
+    bool isEquivalent() const { return m_bEquivalent; }
 
 private:
     const T* m_pLhs;
@@ -271,56 +268,64 @@ VA(0x00405080, 0x36)
 void TScenarioStartingBonusEquivalencyTester::visit(const TScenarioBonusSpell& lhs)
 {
     TScenarioStartingBonusRHSEquivalencyTester<TScenarioBonusSpell> rhsTester(lhs);
-    m_bEquivalent = rhsTester.test(*m_pRhs);
+    m_pRhs->accept(rhsTester);
+    m_bEquivalent = rhsTester.isEquivalent();
 }
 
 VA(0x004050c0, 0x36)
 void TScenarioStartingBonusEquivalencyTester::visit(const TScenarioBonusCreature& lhs)
 {
     TScenarioStartingBonusRHSEquivalencyTester<TScenarioBonusCreature> rhsTester(lhs);
-    m_bEquivalent = rhsTester.test(*m_pRhs);
+    m_pRhs->accept(rhsTester);
+    m_bEquivalent = rhsTester.isEquivalent();
 }
 
 VA(0x00405100, 0x36)
 void TScenarioStartingBonusEquivalencyTester::visit(const TScenarioBonusBuilding& lhs)
 {
     TScenarioStartingBonusRHSEquivalencyTester<TScenarioBonusBuilding> rhsTester(lhs);
-    m_bEquivalent = rhsTester.test(*m_pRhs);
+    m_pRhs->accept(rhsTester);
+    m_bEquivalent = rhsTester.isEquivalent();
 }
 
 VA(0x00405140, 0x36)
 void TScenarioStartingBonusEquivalencyTester::visit(const TScenarioBonusArtifact& lhs)
 {
     TScenarioStartingBonusRHSEquivalencyTester<TScenarioBonusArtifact> rhsTester(lhs);
-    m_bEquivalent = rhsTester.test(*m_pRhs);
+    m_pRhs->accept(rhsTester);
+    m_bEquivalent = rhsTester.isEquivalent();
 }
 
 VA(0x00405180, 0x36)
 void TScenarioStartingBonusEquivalencyTester::visit(const TScenarioBonusSpellScroll& lhs)
 {
     TScenarioStartingBonusRHSEquivalencyTester<TScenarioBonusSpellScroll> rhsTester(lhs);
-    m_bEquivalent = rhsTester.test(*m_pRhs);
+    m_pRhs->accept(rhsTester);
+    m_bEquivalent = rhsTester.isEquivalent();
 }
 
 VA(0x004051c0, 0x36)
 void TScenarioStartingBonusEquivalencyTester::visit(const TScenarioBonusPrimarySkill& lhs)
 {
     TScenarioStartingBonusRHSEquivalencyTester<TScenarioBonusPrimarySkill> rhsTester(lhs);
-    m_bEquivalent = rhsTester.test(*m_pRhs);
+    m_pRhs->accept(rhsTester);
+    m_bEquivalent = rhsTester.isEquivalent();
 }
 
 VA(0x00405200, 0x36)
 void TScenarioStartingBonusEquivalencyTester::visit(const TScenarioBonusSecondarySkill& lhs)
 {
     TScenarioStartingBonusRHSEquivalencyTester<TScenarioBonusSecondarySkill> rhsTester(lhs);
-    m_bEquivalent = rhsTester.test(*m_pRhs);
+    m_pRhs->accept(rhsTester);
+    m_bEquivalent = rhsTester.isEquivalent();
 }
 
 VA(0x00405240, 0x36)
 void TScenarioStartingBonusEquivalencyTester::visit(const TScenarioBonusResource& lhs)
 {
     TScenarioStartingBonusRHSEquivalencyTester<TScenarioBonusResource> rhsTester(lhs);
-    m_bEquivalent = rhsTester.test(*m_pRhs);
+    m_pRhs->accept(rhsTester);
+    m_bEquivalent = rhsTester.isEquivalent();
 }
 
 VA(0x00405280, 0x7e)
@@ -426,21 +431,24 @@ VA(0x00405540, 0x36)
 void TScenarioStartingOptionsEquivalencyTester::visit(const TScenarioOptionsBonus& lhs)
 {
     TScenarioStartingOptionsRHSEquivalencyTester<TScenarioOptionsBonus> rhsTester(lhs);
-    m_bEquivalent = rhsTester.test(*m_pRhs);
+    m_pRhs->accept(rhsTester);
+    m_bEquivalent = rhsTester.isEquivalent();
 }
 
 VA(0x00405580, 0x36)
 void TScenarioStartingOptionsEquivalencyTester::visit(const TScenarioOptionsCrossoverScenario& lhs)
 {
     TScenarioStartingOptionsRHSEquivalencyTester<TScenarioOptionsCrossoverScenario> rhsTester(lhs);
-    m_bEquivalent = rhsTester.test(*m_pRhs);
+    m_pRhs->accept(rhsTester);
+    m_bEquivalent = rhsTester.isEquivalent();
 }
 
 VA(0x004055c0, 0x36)
 void TScenarioStartingOptionsEquivalencyTester::visit(const TScenarioOptionsStartingHero& lhs)
 {
     TScenarioStartingOptionsRHSEquivalencyTester<TScenarioOptionsStartingHero> rhsTester(lhs);
-    m_bEquivalent = rhsTester.test(*m_pRhs);
+    m_pRhs->accept(rhsTester);
+    m_bEquivalent = rhsTester.isEquivalent();
 }
 
 VA(0x00405600, 0x7e)

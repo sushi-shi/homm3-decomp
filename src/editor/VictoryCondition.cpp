@@ -9,20 +9,19 @@
 #include "va.h"
 #include "editor/VictoryCondition.h"
 
-// The RTTI marks every visitor's TVisitor base private (attributes 9), so
-// each tester runs its own accept in test().
+// The RTTI marks every visitor's TVisitor base private (attributes 9); the
+// testers befriend the class that hands them to accept, keeping Loki's
+// dispatcher shape.
 namespace {
 
 template<class T>
 class TVictoryConditionRHSEquivalencyTester : private TVictoryCondition::TVisitor {
+    friend class TVictoryConditionEquivalencyTester;
+
 public:
     TVictoryConditionRHSEquivalencyTester(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
 
-    bool test(const TVictoryCondition& rhs)
-    {
-        rhs.accept(this);
-        return _m_bEquivalent;
-    }
+    bool getBEquivalent() const { return _m_bEquivalent; }
 
     virtual void visit(const T& rhs) { _m_bEquivalent = _m_lhs == rhs; }
 
@@ -47,7 +46,8 @@ private:
     void _test(const T& lhs)
     {
         TVictoryConditionRHSEquivalencyTester<T> tester(lhs);
-        _m_bEquivalent = tester.test(*_m_pRhs);
+        _m_pRhs->accept(&tester);
+        _m_bEquivalent = tester.getBEquivalent();
     }
 
 public:
@@ -70,14 +70,12 @@ private:
 
 template<class T>
 class TLossConditionRHSEquivalencyTester : private TLossCondition::TVisitor {
+    friend class TLossConditionEquivalencyTester;
+
 public:
     TLossConditionRHSEquivalencyTester(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
 
-    bool test(const TLossCondition& rhs)
-    {
-        rhs.accept(this);
-        return _m_bEquivalent;
-    }
+    bool getBEquivalent() const { return _m_bEquivalent; }
 
     virtual void visit(const T& rhs) { _m_bEquivalent = _m_lhs == rhs; }
 
@@ -102,7 +100,8 @@ private:
     void _test(const T& lhs)
     {
         TLossConditionRHSEquivalencyTester<T> tester(lhs);
-        _m_bEquivalent = tester.test(*_m_pRhs);
+        _m_pRhs->accept(&tester);
+        _m_bEquivalent = tester.getBEquivalent();
     }
 
 public:

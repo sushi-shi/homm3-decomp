@@ -16,8 +16,9 @@
 // The reserved bytes after a hut's reward (Loki's kNumSeersHutReserved).
 const unsigned int kNumSeersHutReserved = 2;
 
-// The RTTI marks every visitor's TVisitor base private (attributes 9), so
-// each tester runs its own accept in test().
+// The RTTI marks every visitor's TVisitor base private (attributes 9); the
+// testers befriend the class that hands them to accept, keeping Loki's
+// dispatcher shape.
 namespace {
 
 enum TRewardType {
@@ -100,14 +101,12 @@ TSeersHut::TReward* (TRewardReader::* const TRewardReader::_s_apfnRead[kNumRewar
 
 template<class T>
 class TRewardRHSEquivalencyTester : private TSeersHut::TReward::TVisitor {
+    friend class TRewardEquivalencyTester;
+
 public:
     TRewardRHSEquivalencyTester(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
 
-    bool test(const TSeersHut::TReward& rhs)
-    {
-        rhs.accept(this);
-        return _m_bEquivalent;
-    }
+    bool getBEquivalent() const { return _m_bEquivalent; }
 
     virtual void visit(const T& rhs) { _m_bEquivalent = _m_lhs == rhs; }
 
@@ -117,21 +116,20 @@ private:
 };
 
 class TRewardEquivalencyTester : private TSeersHut::TReward::TVisitor {
+    friend class TSeersHut::TReward;
+
 public:
     TRewardEquivalencyTester(const TSeersHut::TReward& rhs) : _m_rhs(rhs), _m_bEquivalent(false) {}
 
-    bool test(const TSeersHut::TReward& lhs)
-    {
-        lhs.accept(this);
-        return _m_bEquivalent;
-    }
+    bool getBEquivalent() const { return _m_bEquivalent; }
 
 private:
     template<class T>
     void _test(const T& lhs)
     {
         TRewardRHSEquivalencyTester<T> tester(lhs);
-        _m_bEquivalent = tester.test(_m_rhs);
+        _m_rhs.accept(&tester);
+        _m_bEquivalent = tester.getBEquivalent();
     }
 
 public:
@@ -372,7 +370,8 @@ VA(0x004b6703, 0x27)
 bool TSeersHut::TReward::equivalent(const TReward& lhs, const TReward& rhs)
 {
     TRewardEquivalencyTester tester(rhs);
-    return tester.test(lhs);
+    lhs.accept(&tester);
+    return tester.getBEquivalent();
 }
 
 VA(0x004b67a2, 0x4f)
