@@ -536,7 +536,7 @@ public:
     // DC Town.h:305-306 returns generatorBonus[dwelling].
     // set_bonus_display calls this header helper; inlined.
     DC_ADDRESS(0x181404, 0x12)
-    long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
+    const long& getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
     // Original ?get_gold_income@town@@QBAF_N@Z proves bool includeSilo.
     short getGoldIncome(bool includeSilo) const;
     // Original ?get_horde@town@@QBA?AW4type_building_id@@J@Z proves enum return.

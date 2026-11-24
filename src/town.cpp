@@ -1308,12 +1308,9 @@ long town::getLegionBonus(long dwelling) const
 // The assembled getter's const qualifier is inferred from this const caller;
 // both retained bonus helpers remain exact with that connected interface.
 //
-// Residual (97.89%): all 28 blocks and three retained calls agree. Retail
-// loads only the low word of the generator bonus, and its operand schedule
-// follows. Direct m_generatorBonus indexing or a const long& getter
-// reproduce that load, but DC's town.h getter (dc:0x181404) returns long by
-// value; casts, a named bonus, the short dwelling argument and getter
-// parameter types stay at the residual.
+// Retail loads only the low word of the generator bonus; the getter returns a
+// const long& (retail-proven x86 spelling; DC's by-value long is the older
+// build), which reproduces that load while keeping the canonical helper call.
 VA(0x005bfb60, 0x266)
 DC_ADDRESS(0x167748, 0xfe)
 MAC_ADDRESS(0x1b5414, 0x1fc)
