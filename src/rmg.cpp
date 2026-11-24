@@ -7654,10 +7654,9 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 // virtual call; keep both the real coordinate copy and the placement helper.
 // A named unsigned random index restores the selected coordinate's duplicate
 // homes and the final success block. All six calls agree.
-// Residual: the independent minimum-X/maximum-Y loads at +0x10c/+0x10f are
-// reversed. Loop forms, snapshot/declaration lifetimes, public vector
-// insertion, allocator ownership, named cell/predicate values or maximum-X,
-// nested conditions and continue guards do not resolve it.
+// The scan position consumes only the level coordinate of getLevelPosition;
+// its x/y fields come from the loop bounds. That level-only read restores the
+// independent minimum-X/maximum-Y reload order at +0x10c/+0x10f.
 // Mac's 0x22dfd8 vector initializer is a two-instruction zero store, not a
 // missing game helper. Its canPlaceObject call is already in this source.
 // Mac 0x245670..0x24568c snapshots the bounds, and 0x2456c0..0x2456d4
@@ -7675,7 +7674,7 @@ unsigned char type_random_map_generator::placeObjectInZone(type_object* object, 
     bounds.m_minimumY += prototype->getHeight() - 1;
     bounds.m_minimumX += prototype->getWidth() - 1;
     TRmgMapPosition position;
-    position = zone->getLevelPosition();
+    position.m_z = zone->getLevelPosition().m_z;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             if (getMapItem(position)->m_zoneState.m_zone == zoneIndex
