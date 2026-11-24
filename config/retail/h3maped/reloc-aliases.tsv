@@ -1,2 +1,4 @@
-# REVIEWED rows for the h3maped image; none admitted yet.
+# REVIEWED rows for the h3maped image.
 function_rva	target_rva	site_rva	owner	addend	occurrences
+0x000a54a7	0x001a2698	0x000a572f	?g_rmgDirections@?A0x8197b2fbbced3331@@3PAUTRmgPoint@@A	0x40	1
+0x000abd5f	0x001a2698	0x000ac064	?g_rmgDirections@?A0x8197b2fbbced3331@@3PAUTRmgPoint@@A	0x40	1
