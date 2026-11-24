@@ -495,7 +495,10 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 // [ebp+8] / add ecx,0x91` above both stores and takes DL. Byte-flat there:
 // bool, const, `?1:0`, declaring it after `dest`, a function-scope
 // direction, and a hero inline predicate; an `if` assignment regresses to
-// 99.0431%. Earlier probes at the 99.2000% plateau: swapping the
+// 99.0431%. Also byte-flat (2026-11-24): const_cast on the hero, an inline
+// army-reference wrapper or hero accessor (both still coalesce the load into
+// ECX), `0 <`, static_cast/const terrain, int direction, dest first; `>= 1`
+// regresses to 99.1635%. Earlier probes at the 99.2000% plateau: swapping the
 // srcGround/predicate order (98.4199%); bool, an explicit army pointer, a
 // one-site inline predicate helper, and `register` on either competing value
 // (all byte-flat); and 1/2/4/6 complete local type definitions (byte-flat
