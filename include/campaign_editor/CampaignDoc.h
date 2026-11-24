@@ -69,8 +69,15 @@ private:
     std::auto_ptr<TCampaign> _m_pCampaign;
     int _m_version;
     bool _m_bNewCampaign;
-    int _m_newVersion;
-    int _m_newType;
+    // What File New asked for: the campaign version and type the next new
+    // document gets. OnNewDocument resets it by assigning a temporary.
+    struct TNewCampaignOptions {
+        TNewCampaignOptions(int version, int type) : m_version(version), m_type(type) {}
+
+        int m_version;
+        int m_type;
+    };
+    TNewCampaignOptions _m_newOptions;
 };
 
 #endif  /* HOMM3_CAMPAIGN_EDITOR_CAMPAIGNDOC_H */

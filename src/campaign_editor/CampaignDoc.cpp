@@ -416,7 +416,11 @@ DATA(0x004c6f30) TScenarioStartingOptionsWriter optionsWriter;
 // arguments (96.9%, contradicted by retail's early player widening and
 // order-dependent) or `case eOptionsNone: return pOptions;` (96.8%,
 // contradicted by retail's compare and single return) hit the budget.
-// `if (type)` and countdown loops do not.
+// `if (type)` and countdown loops do not. The inline trace puts this form's
+// budget at the hero operator= at 238; retail's refusals of operator=,
+// ~vector, the TAllocationFailure constructor and the return copy need
+// 56..101 there. push_back(TChoice(hero, player)) with both locals named
+// lands at 143..198 (87.6%: the temporary's ~auto_ptr goes out of line).
 VA(0x00411ee0, 0x518)
 auto_ptr<TScenarioStartingOptions> readStartingOptions(TRawIStream& iStream, int version)
 {
@@ -769,7 +773,7 @@ END_MESSAGE_MAP()
 
 VA(0x004140a0, 0x2b)
 TCampaignDoc::TCampaignDoc()
-    : _m_bNewCampaign(false), _m_newVersion(eCampaignVersionShadowOfDeath), _m_newType(kDefaultNewCampaignType)
+    : _m_bNewCampaign(false), _m_newOptions(eCampaignVersionShadowOfDeath, kDefaultNewCampaignType)
 {
 }
 
@@ -783,15 +787,14 @@ BOOL TCampaignDoc::OnNewDocument()
 {
     if (!CDocument::OnNewDocument())
         return FALSE;
-    _m_pCampaign = auto_ptr<TCampaign>(new TCampaign(_m_newType));
+    _m_pCampaign = auto_ptr<TCampaign>(new TCampaign(_m_newOptions.m_type));
     if (_m_pCampaign.get() == NULL)
         throw TAllocationFailure();
-    // Retail snapshots the requested version, resets the defaults, then stores it.
-    // A const snapshot and bool return spelling emit the same remaining tail.
-    int version = _m_newVersion;
-    _m_newVersion = eCampaignVersionShadowOfDeath;
-    _m_newType = kDefaultNewCampaignType;
-    _m_version = version;
+    // Retail builds the reset options in registers before storing them (the
+    // version store sinks below): a temporary options value assigned whole, not
+    // two member stores (95.9%) or a snapshot local before them (98.2%).
+    _m_version = _m_newOptions.m_version;
+    _m_newOptions = TNewCampaignOptions(eCampaignVersionShadowOfDeath, kDefaultNewCampaignType);
     return TRUE;
 }
 
@@ -908,7 +911,9 @@ BOOL TCampaignDoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 // Retail formats the file version before the supported version. The remaining
 // difference is argument registers: named version/format values and exception
-// references do not close it.
+// references do not close it. Inline getters (TMapDoc's getVersion/
+// getExpectedVersion shape) load the format first as retail does, but move
+// the later message-box registers (96.1%), a constant-address handle effect.
 VA(0x00414b00, 0xda)
 void TCampaignDoc::ReportSaveLoadException(LPCTSTR lpszPathName, CException* e, BOOL bSaving, UINT nIDPDefault)
 {
@@ -990,8 +995,7 @@ BOOL TCampaignDoc::SaveModified()
         TNewCampaignDlg dlg(AfxGetMainWnd(), eCampaignVersionShadowOfDeath, kDefaultNewCampaignType);
         if (dlg.DoModal() != IDOK)
             return FALSE;
-        _m_newVersion = dlg.getVersion();
-        _m_newType = dlg.getType();
+        _m_newOptions = TNewCampaignOptions(dlg.getVersion(), dlg.getType());
     }
     return TRUE;
 }
