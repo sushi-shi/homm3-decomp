@@ -3341,8 +3341,9 @@ int TMageGuildWindow::windowHandler(message& msg)
             if (id >= 40 && id < 66)
                 slot = id - 40;
             if (slot != -1) {
+                int level = 0;
                 town* thisTown = g_townManager->m_townToView;
-                int level = slot / 6;
+                level = slot / 6;
                 int column = slot % 6;
                 if (thisTown->m_type == TOWN_CONFLUX
                     && thisTown->hasBuilding(HOLY_GRAIL_ID, true)) {
