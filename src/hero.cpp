@@ -4692,82 +4692,99 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
         remaining = 19;
     }
 
-    for (; remaining != 0; slot++, remaining--) {
-        if (getArtifact(TArtifactSlot(slot)).m_artifactId != ARTIFACT_NONE)
-            continue;
-        if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
-            continue;
+    bool found = false;
+    if (remaining != 0) {
+        do {
+            bool skipSlot = false;
+            if (getArtifact(TArtifactSlot(slot)).m_artifactId != ARTIFACT_NONE)
+                skipSlot = true;
+            else if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
+                skipSlot = true;
+            else {
+                int slotClass = akArtifactSlotTraits[slot].m_type;
+                unsigned int worn = m_artifactSlotCounts[slotClass];
+                if (worn > 0) {
+                    std::bitset<kNumArtifactSlots + 1> classSlots = g_artifactSlotMasks[slotClass];
+                    size_t capacity = classSlots.count();
+                    if (worn >= capacity)
+                        skipSlot = true;
+                    else {
+                        int occupied = 0;
+                        for (int i = 0; i < kNumArtifactSlots + 1; i++) {
+                            if (classSlots[i] &&
+                                getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
+                                occupied++;
+                        }
+                        if (worn >= capacity - occupied)
+                            skipSlot = true;
+                    }
+                }
 
-        int slotClass = akArtifactSlotTraits[slot].m_type;
-        unsigned int worn = m_artifactSlotCounts[slotClass];
-        if (worn > 0) {
-            std::bitset<kNumArtifactSlots + 1> classSlots = g_artifactSlotMasks[slotClass];
-            size_t capacity = classSlots.count();
-            if (worn >= capacity)
-                continue;
-            int occupied = 0;
-            for (int i = 0; i < kNumArtifactSlots + 1; i++) {
-                if (classSlots[i] &&
-                    getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
-                    occupied++;
+                if (!skipSlot) {
+                    int combination = akArtifactTraits[artifact].m_comboType;
+                    if (combination != -1) {
+                        int counts[15];
+                        const unsigned char* src = m_artifactSlotCounts;
+                        int* dst = counts;
+                        for (; src != m_artifactSlotCounts + 15; ++dst, ++src)
+                            *dst = *src;
+
+                        const std::bitset<ARTIFACT_COUNT>& components =
+                            g_combinationArtifacts[combination].m_components;
+                        bool keptSlot = false;
+                        bool slotFits = true;
+                        int component = 0;
+                        do {
+                            if (!components.test(component))
+                                continue;
+                            int componentClass =
+                                akArtifactTraits[component].m_allowableSlotMask;
+                            if (componentClass
+                                    == akArtifactTraits[artifact].m_allowableSlotMask
+                                && !keptSlot) {
+                                keptSlot = true;
+                                continue;
+                            }
+                            int componentCount = counts[componentClass];
+                            std::bitset<kNumArtifactSlots + 1> classSlots =
+                                g_artifactSlotMasks[componentClass];
+                            size_t capacity = classSlots.count();
+                            if (componentCount >= capacity) {
+                                slotFits = false;
+                                break;
+                            }
+                            {
+                                int occupied =
+                                    (akArtifactTraits[artifact].m_allowableSlotMask
+                                     == componentClass) ? 1 : 0;
+                                for (int i = 0; i < kNumArtifactSlots + 1; i++) {
+                                    if (classSlots[i] &&
+                                        getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
+                                        occupied++;
+                                }
+                                if (componentCount >= capacity - occupied) {
+                                    slotFits = false;
+                                    break;
+                                }
+                            }
+                            counts[componentClass]++;
+                        } while (++component < ARTIFACT_COUNT);
+                        if (!slotFits)
+                            skipSlot = true;
+                    }
+                }
             }
-            if (worn >= capacity - occupied)
-                continue;
-        }
-
-        int combination = akArtifactTraits[artifact].m_comboType;
-        if (combination != -1) {
-            int counts[15];
-            const unsigned char* src = m_artifactSlotCounts;
-            int* dst = counts;
-            for (; src != m_artifactSlotCounts + 15; ++dst, ++src)
-                *dst = *src;
-
-            const std::bitset<ARTIFACT_COUNT>& components =
-                g_combinationArtifacts[combination].m_components;
-            bool keptSlot = false;
-            bool slotFits = true;
-            int component = 0;
-            do {
-                if (!components.test(component))
-                    continue;
-                int componentClass =
-                    akArtifactTraits[component].m_allowableSlotMask;
-                if (componentClass
-                        == akArtifactTraits[artifact].m_allowableSlotMask
-                    && !keptSlot) {
-                    keptSlot = true;
-                    continue;
-                }
-                int componentCount = counts[componentClass];
-                std::bitset<kNumArtifactSlots + 1> classSlots =
-                    g_artifactSlotMasks[componentClass];
-                size_t capacity = classSlots.count();
-                if (componentCount >= capacity) {
-                    slotFits = false;
-                    break;
-                }
-                {
-                    int occupied =
-                        (akArtifactTraits[artifact].m_allowableSlotMask
-                         == componentClass) ? 1 : 0;
-                    for (int i = 0; i < kNumArtifactSlots + 1; i++) {
-                        if (classSlots[i] &&
-                            getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
-                            occupied++;
-                    }
-                    if (componentCount >= capacity - occupied) {
-                        slotFits = false;
-                        break;
-                    }
-                }
-                counts[componentClass]++;
-            } while (++component < ARTIFACT_COUNT);
-            if (!slotFits)
-                continue;
-        }
-        return 1;
+            if (!skipSlot) {
+                found = true;
+                break;
+            }
+            ++slot;
+            if (--remaining == 0)
+                break;
+        } while (1);
     }
+    if (found)
+        return 1;
     return 0;
 }
 

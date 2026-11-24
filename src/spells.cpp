@@ -4943,9 +4943,6 @@ void combatManager::showSpellMessage(int isMonsterSpell, SpellID spellId,
         case SPELL_SLOW:
             artifact = ARTIFACT_ARMOR_OF_THE_DAMNED;
             break;
-        default:
-            artifact = spellId;
-            break;
         }
         message = formatString(g_generalText->GetText(GENERAL_TEXT_HERO_CASTS_SPELL_FORMAT),
                                 akArtifactTraits[artifact].m_name, spellName);

@@ -640,9 +640,9 @@ void game::calculateProduction()
             crystalDragonIncome[currentTown.m_owner] = 1;
 
         if (currentTown.m_type == TOWN_RAMPART && m_day == 1) {
-            if (currentTown.hasBuilding(EXTRA_1_ID, true))
+            if ((currentTown.getBuildingMask() & g_bitNumber[EXTRA_1_ID]) != 0)
                 production[GOLD] += currentPlayer.m_resources[GOLD] / 10;
-            if (currentTown.hasBuilding(SPECIAL_BUILDING_ID, true)
+            if ((currentTown.getBuildingMask() & g_bitNumber[SPECIAL_BUILDING_ID]) != 0
                 && currentTown.m_pondAmount > 0)
                 production[currentTown.m_pondResource] += currentTown.m_pondAmount;
         }
@@ -2110,6 +2110,8 @@ HeroId game::getStartingHeroId(TTownType alignment, int playerPos, int mapPositi
 // video state, alignment and the two Conflux counts in this order. A named
 // version snapshot and a separately nested version guard are VC6-flat;
 // why-reg v2 also leaves the six scratch-register rows unchanged.
+// DC B11 names the hero's class in the function-scope THeroClass local
+// before incrementing counts[hero_class] (game.cpp:2300-2301).
 // Original public returns THeroID and takes bool prefer_alignment (_N).
 // Complete adds player lookup and preferredClass but keeps those domains.
 VA(0x004bb5e0, 0x282)
@@ -2143,7 +2145,8 @@ HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
         if (m_heroAvailability[heroId] == -1
             && (playerPos == -1 || m_heroPoolMap[heroId][playerPos])) {
             totalCount++;
-            counts[m_heroes[heroId].m_heroClass]++;
+            heroClass = m_heroes[heroId].m_heroClass;
+            counts[heroClass]++;
         }
     }
 
