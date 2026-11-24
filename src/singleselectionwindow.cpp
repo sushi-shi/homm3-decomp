@@ -6603,18 +6603,23 @@ bool TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
 // expands as retail does (90.52%). Assigning the selection row directly,
 // like the transfer and header rows, instead of through a `sel` reference
 // gives 91.19%; getHeaderDirectory's guarded returns raise it to 96.68%,
-// where the call sequence agrees with retail. Residual: this compile saves
-// ebx in the prologue where retail does not (register allocation).
-// Controls: empty() for the size test is flat; one shared `return 1` after
-// both arms drops to 86.73%.
+// where the call sequence agrees with retail. Retail's early exits share a
+// final epilogue that never saw EBX, while both access arms restore it on
+// their own way out: one `||` guard (Mac 0x180c48..0x180c64 tests both
+// before one `return 1`) plus a single trailing `return 1` after the arms
+// (Mac joins both arms at 0x18125c before its one result) gives that
+// shrink-wrapped save (99.97%). Residual: one commuted
+// `lea edx, [eax + edi]` in the third byte-copy loop of the m_headersA row
+// assignment. Controls: two guarded returns with the shared tail duplicate
+// the epilogue inline (92.17%); the `||` guard with returns in each arm,
+// a positive wrapping guard with or without arm returns, empty(), `true`
+// returns and hoisting the message cast keep EBX in the prologue (96.6x%).
 VA(0x00589710, 0x40F)
 DC_ADDRESS(0x140664, 0xa)
 MAC_ADDRESS(0x180c24, 0x668)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg
 bool TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 {
-    if (m_headersA.size() == 0)
-        return 1;
-    if (!m_receivingMaps)
+    if (m_headersA.size() == 0 || !m_receivingMaps)
         return 1;
     CMapFileNameMsg* mapFileNameMsg = static_cast<CMapFileNameMsg*>(netMsg);
 #if defined(HOMM3_TARGET_MAC)
@@ -6649,15 +6654,14 @@ bool TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
             CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
             transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
         }
-        return 1;
     } else {
 #if !defined(HOMM3_TARGET_MAC)
         chdir("..");
 #endif
         CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
         transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
-        return 1;
     }
+    return 1;
 }
 
 // Inlined in HandleNetMsg.
