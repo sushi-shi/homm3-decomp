@@ -5872,16 +5872,24 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             if (!found)
                 continue;
             TRmgPoint clipped = clipRmgBoundaryPoint(edge->m_vertex, edge->m_previous->m_vertex, bounds);
-            if (clipped.getX() >= 0 && clipped.getX() < bounds.m_maximumX && clipped.getY() >= 0 && clipped.getY() < bounds.m_maximumY) {
+            if (clipped.getX() >= 0) {
+             if (clipped.getX() < bounds.m_maximumX) {
+              if (clipped.getY() >= 0) {
+               if (clipped.getY() < bounds.m_maximumY) {
                 TRmgZoneConnection connection;
-                connection.m_destination = templateZoneOf(destination);
+                TRmgTemplateZone* destinationSlot = templateZoneOf(destination);
+                connection.m_destination = destinationSlot;
                 connection.m_connected = 1;
                 connection.m_value = 0;
                 connection.m_placeBorderObjects = 0;
                 connection.m_unguarded = 1;
                 templateZoneOf(zone)->m_connections.push_back(connection);
-                connection.m_destination = templateZoneOf(zone);
-                templateZoneOf(destination)->m_connections.push_back(connection);
+                TRmgTemplateZone* zoneSlot = templateZoneOf(zone);
+                connection.m_destination = zoneSlot;
+                destinationSlot->m_connections.push_back(connection);
+               }
+              }
+             }
             }
         }
     }
@@ -5912,9 +5920,10 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
                 continue;
             int column = 0;
             for (; column < originalZones; ++column) {
-                if (column != other
-                    && destination->getZoneDistance(column) > zone->getZoneDistance(column) + 1)
-                    break;
+                if (column != other) {
+                    if (destination->getZoneDistance(column) > zone->getZoneDistance(column) + 1)
+                        break;
+                }
             }
             if (column < originalZones)
                 continue;
@@ -5925,7 +5934,8 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             connection.m_placeBorderObjects = 0;
             connection.m_unguarded = 1;
             templateZoneOf(zone)->m_connections.push_back(connection);
-            connection.m_destination = templateZoneOf(zone);
+            TRmgTemplateZone* zoneSlot = templateZoneOf(zone);
+            connection.m_destination = zoneSlot;
             templateZoneOf(destination)->m_connections.push_back(connection);
             propagateZoneDistances(destination);
         }
