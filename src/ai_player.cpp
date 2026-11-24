@@ -1856,9 +1856,10 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     type_building_id bestBuilding;
     __int64 buildMask = currentTown->getBuildableMask();
     short morale = currentHero->getMorale(0, 0, 1);
+    __int64* maskPtr = &buildMask;
     for (int building = DWELLING_0_ID;
          building <= DWELLING_6_ID; building++) {
-        if (buildMask & g_bitNumber[building]) {
+        if (*maskPtr & g_bitNumber[building]) {
             creature = g_dwellingType[currentTown->m_type][building - DWELLING_0_ID];
             traits = &akCreatureTypeTraits[creature];
             int* cost = currentTown->getBuildCostArray(

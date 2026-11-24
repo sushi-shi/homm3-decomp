@@ -7372,9 +7372,9 @@ unsigned char type_random_map_generator::createShipyardConnection(
 {
     TRmgTemplateZone* sourceSlot = source->m_templateZone;
     int sourceZone = sourceSlot->m_zoneIndex;
-    TRmgTemplateZone* destinationSlot = connection->m_destination;
-    TRmgZone* destination = m_zones[destinationSlot->m_zoneIndex];
-    int destinationZone = destination->m_templateZone->m_zoneIndex;
+    TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
+    TRmgTemplateZone* destinationSlot = destination->m_templateZone;
+    int destinationZone = destinationSlot->m_zoneIndex;
     if (source->getLevelPosition().m_z != destination->getLevelPosition().m_z)
         return 0;
 
@@ -8119,25 +8119,24 @@ VA(0x00543C70, 0x1A2)
 MAC_ADDRESS(0x246d50, 0x30c) // anchor-callee 0x544226; Complete-only, hidden result, ret 0x18
 TRmgPoint type_random_map::traceBranchEnd(TRmgPoint from, TRmgPoint toward, int level)
 {
-    int dx = toward.m_x - from.m_x;
-    int dy = toward.m_y - from.m_y;
+    TRmgVector delta = toward - from;
     int major;
     int minor;
     TRmgVector axial;
     TRmgVector diagonal;
-    if (abs(dx) > abs(dy)) {
-        major = abs(dx);
-        minor = abs(dy);
-        axial.m_x = dx > 0 ? 1 : -1;
+    if (abs(delta.m_x) > abs(delta.m_y)) {
+        major = abs(delta.m_x);
+        minor = abs(delta.m_y);
+        axial.m_x = delta.m_x > 0 ? 1 : -1;
         axial.m_y = 0;
         diagonal.m_x = axial.m_x;
-        diagonal.m_y = dy > 0 ? 1 : -1;
+        diagonal.m_y = delta.m_y > 0 ? 1 : -1;
     } else {
-        major = abs(dy);
-        minor = abs(dx);
-        axial = TRmgVector(0, dy > 0 ? 1 : -1);
+        major = abs(delta.m_y);
+        minor = abs(delta.m_x);
+        axial = TRmgVector(0, delta.m_y > 0 ? 1 : -1);
         diagonal = axial;
-        diagonal.m_x = dx > 0 ? 1 : -1;
+        diagonal.m_x = delta.m_x > 0 ? 1 : -1;
     }
     int error = major / 2;
     int steps = 0;
