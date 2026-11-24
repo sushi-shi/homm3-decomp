@@ -5586,11 +5586,12 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
     // 5884 overwrites ratio with the unweighted double quotient. Mac
     // 0xb9590/0xb9598/0xb95a0 retains the three calls but drops the dead
     // integer arithmetic. Keep both meaningful expressions and one ratio.
-    // This source form is byte-flat at 99.2966%; the remaining x87 reload
-    // order gives VC6 an extra qword lifetime versus retail's reused slot.
+    // Retail reuses one qword slot for the numerator, denominator and result;
+    // the embedded assignment is the only source form that reproduces that
+    // x87 reload order; split statements and explicit casts keep a second slot.
     double ratio = who->m_army.getAIValue()
         * (who->getPrimarySkillTotal() + 40) / 40;
-    ratio = static_cast<double>(who->m_army.getAIValue()) / combatValue;
+    ratio = (ratio = static_cast<double>(who->m_army.getAIValue())) / combatValue;
 
     int numGroups = 7;
     for (int thresholdIndex = 5;
@@ -5657,8 +5658,8 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
         TCreatureType tempArmies[armyGroup::ARMY_GROUP_SLOT_COUNT];
         // DC names both arrays; Mac copies their slots without memcpy calls.
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-            tempNumTroops[slot] = armyGroupForCombat.m_numTroops[slot];
             tempArmies[slot] = armyGroupForCombat.m_armyTypes[slot];
+            tempNumTroops[slot] = armyGroupForCombat.m_numTroops[slot];
         }
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             armyGroupForCombat.m_armyTypes[i] =

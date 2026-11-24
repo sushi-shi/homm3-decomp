@@ -6505,7 +6505,7 @@ int TTavernWindow::windowHandler(message& msg)
 
                     g_tavernHero = g_game->getHero(recruitId);
                     const hero* currentHero = g_tavernHero;
-                    int artifacts = currentHero->getNumberInBackpack(0)
+                    int artifacts = g_tavernHero->getNumberInBackpack(0)
                                   + currentHero->getEquippedArtifacts(0);
                     sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT],
                             g_tavernHero->m_name, g_tavernHero->m_level,

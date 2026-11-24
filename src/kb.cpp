@@ -1701,23 +1701,25 @@ static int doSinglePlayerWindow()
         singleSelectionWindow.doModal(0);
     }
 
-    // DC and Windows normalize the adjacent cancel/okay results. The Mac
-    // explicit-case switch raises its score to 66.5323% but lowers Windows
-    // to 94.9296%; a normalized switch scores 98.5915% Windows and 42.4603%
-    // Mac. An unused post-decrement of dialogResult is byte-flat on both;
-    // a consumed pre-decrement adds a VC6 test after dec (98.5915% Windows)
-    // and scores 89.8305% Mac, even when nested in a separate scope.
-    // Capturing the window manager before the modal call scores 58.8983% Mac.
-    // Keep this six-block Windows form. Mac loads g_game once for the
-    // map-header call's three arguments, then reloads it after the call.
+    // Retail still subtracts the cancel result before the switch and keeps
+    // the empty CANCEL arm as sub/je; the normalized result is rewritten in
+    // that arm so C1 retains the case, and the final answer stays the raw
+    // dialog-return predicate.
     int dialogResult =
         g_windowManager->m_dialogReturn - DIALOG_RETURN_CANCEL;
-    if (dialogResult && dialogResult == 1) {
+    switch (g_windowManager->m_dialogReturn) {
+    case DIALOG_RETURN_CANCEL:
+        dialogResult = 0;
+        break;
+
+    case DIALOG_RETURN_OK: {
         game* currentGame = g_game;
         if (!currentGame->m_mapHeader.get(currentGame->m_setup.m_path,
                                         currentGame->m_setup.m_filename, 0)
             && g_game->m_mapHeader.m_minNumHumanPlayers <= g_numHumanPlayers)
             strcpy(g_mapName, g_game->m_setup.m_filename);
+        break;
+    }
     }
 
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
