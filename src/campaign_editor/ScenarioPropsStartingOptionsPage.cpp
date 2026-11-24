@@ -292,16 +292,23 @@ void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusSpellScroll& b
                    _getHeroName(bonus));
 }
 
-// Residual: retail loads each quantity once and passes that value to the
-// formatter, with its own scan rotation and second-loop induction.
+// Retail's first scan tests at the top and jumps back unconditionally: a
+// break out of while (true); VC6 rotates for/while-condition scans and
+// for (;;) (76.5%). Residual: retail loads each quantity once and passes
+// that value to the formatter (a named quantity, removed as unevidenced),
+// and walks the second loop with separate pointer and offset inductions.
+// Reading bonus.getSkills() at each use: 78.2%.
 VA(0x0042e6d0, 0x127)
 void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusPrimarySkill& bonus)
 {
     const TArray<unsigned int, kNumPrimarySkills>& quantities = bonus.getSkills();
     CString skills;
-    unsigned int skill;
-    for (skill = 0; quantities[skill] <= 0; skill++)
-        ;
+    unsigned int skill = 0;
+    while (true) {
+        if (quantities[skill] > 0)
+            break;
+        ++skill;
+    }
     skills = TFormattedString("+%d %s", quantities[skill], akHeroPrimarySkillTraits[skill].m_name);
     for (skill++; skill < kNumPrimarySkills; skill++) {
         if (quantities[skill] > 0)
