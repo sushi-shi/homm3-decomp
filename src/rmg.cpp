@@ -3111,10 +3111,10 @@ void TRmgTreasureGroup::addObject(type_object* object, TRmgPoint point)
 // Retain the surface-point lookups whose copied arguments are visible at
 // 0x233228, 0x233490 and 0x2335cc, and the shared point additions.
 // These lifetimes recover the 0x3c game frame and all 73 branch-flow blocks.
-// Residual: the expanded addition's Y-result register (editor) and the
-// selected guard copy/scheduling (game). A named direction offset, or default
-// construction then assignment of the selected guard point, lowers the game;
-// keep the canonical operator+.
+// Residual: the expanded addition's Y-result register is compiler state; a
+// named direction offset lowers the game, so keep the canonical operator+.
+// The selected guard point uses the two-coordinate constructor: retail loads
+// y before x and keeps the outline element address alive.
 // The game's final direction comparison names the adjacent shipyard table
 // at the same physical address as g_rmgDirections+0x40; retain direction<8.
 // Open the next cell outward too; diagonals fan out to three cells.
@@ -3174,7 +3174,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         return 0;
     unsigned int outlineCount = m_outline.size();
     index = rand() % outlineCount;
-    TRmgPoint guardPosition = m_outline[index];
+    TRmgPoint guardPosition(m_outline[index].m_x, m_outline[index].m_y);
     addObject(guard, guardPosition);
     triggerCell = prototype->getTriggerLoc();
     guardPosition.m_x -= triggerCell.x();

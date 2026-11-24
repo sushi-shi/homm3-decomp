@@ -6274,21 +6274,17 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     char boolBuffer;
     int x;
 
-    count = infile->read(&m_version, sizeof(m_version));
-    if (count < sizeof(m_version))
+    if (infile->read(&m_version, sizeof(m_version)) < sizeof(m_version))
         return -1;
 
-    count = infile->read(&boolBuffer, sizeof(boolBuffer));
-    if (count < sizeof(boolBuffer))
+    if (infile->read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
         return -1;
     m_isPlayable = boolBuffer != 0;
 
-    count = infile->read(&m_size, sizeof(m_size));
-    if (count < sizeof(m_size))
+    if (infile->read(&m_size, sizeof(m_size)) < sizeof(m_size))
         return -1;
 
-    count = infile->read(&boolBuffer, sizeof(boolBuffer));
-    if (count < sizeof(boolBuffer))
+    if (infile->read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
@@ -6299,8 +6295,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (count < 0)
         return -1;
 
-    count = infile->read(&enumBuffer, sizeof(enumBuffer));
-    if (count < sizeof(enumBuffer))
+    if (infile->read(&enumBuffer, sizeof(enumBuffer)) < sizeof(enumBuffer))
         return -1;
     m_difficulty = enumBuffer;
 
@@ -6313,18 +6308,15 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     m_numPlayers = m_minNumHumanPlayers = m_maxNumHumanPlayers = 0;
 
     for (i = 0; i < NUM_PLAYERS; ++i) {
-        count = infile->read(&boolBuffer, sizeof(boolBuffer));
-        if (count < sizeof(boolBuffer))
+        if (infile->read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
             return -1;
         m_playerSlotAttributes[i].m_canBeHuman = boolBuffer != 0;
 
-        count = infile->read(&boolBuffer, sizeof(boolBuffer));
-        if (count < sizeof(boolBuffer))
+        if (infile->read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
             return -1;
         m_playerSlotAttributes[i].m_canBeComputer = boolBuffer != 0;
 
-        count = infile->read(&enumBuffer, sizeof(enumBuffer));
-        if (count < sizeof(enumBuffer))
+        if (infile->read(&enumBuffer, sizeof(enumBuffer)) < sizeof(enumBuffer))
             return -1;
         m_playerSlotAttributes[i].m_aiStrategy = enumBuffer;
 
@@ -6338,33 +6330,32 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             ++m_numPlayers;
 
         if (saveVersion < g_saveVersionWideAlignments) {
-            m_playerSlotAttributes[i].m_legalAlignments = readValue<unsigned char>(infile);
+            m_playerSlotAttributes[i].m_legalAlignments =
+                readValue<unsigned char>(infile);
         } else {
             m_playerSlotAttributes[i].m_legalAlignments =
                 readLittleEndianValue<unsigned short>(infile);
         }
 
-        count = infile->read(&boolBuffer, sizeof(boolBuffer));
-        if (count < sizeof(boolBuffer))
+        if (infile->read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
             return -1;
         m_playerSlotAttributes[i].m_hasRandomAlignment = boolBuffer != 0;
 
-        count = infile->read(&boolBuffer, sizeof(boolBuffer));
-        if (count < sizeof(boolBuffer))
+        if (infile->read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
             return -1;
         m_playerSlotAttributes[i].m_generateHero = boolBuffer != 0;
 
         if (m_playerSlotAttributes[i].m_generateHero) {
-            count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
-            if (count < sizeof(ucharBuffer))
+            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
+                < sizeof(ucharBuffer))
                 return -1;
             m_playerSlotAttributes[i].m_castleLoc.m_x = ucharBuffer;
-            count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
-            if (count < sizeof(ucharBuffer))
+            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
+                < sizeof(ucharBuffer))
                 return -1;
             m_playerSlotAttributes[i].m_castleLoc.m_y = ucharBuffer;
-            count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
-            if (count < sizeof(ucharBuffer))
+            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
+                < sizeof(ucharBuffer))
                 return -1;
             m_playerSlotAttributes[i].m_castleLoc.m_z = ucharBuffer;
         }
@@ -6376,9 +6367,11 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             m_playerSlotAttributes[i].m_nonRandomHeroCustomPortrait =
                 static_cast<HeroId>(loadHeroId(infile, saveVersion));
             game::loadString(infile, strTemp);
-            strcpy(m_playerSlotAttributes[i].m_nonRandomHeroCustomName, strTemp.c_str());
+            strcpy(m_playerSlotAttributes[i].m_nonRandomHeroCustomName,
+                   strTemp.c_str());
         } else {
-            m_playerSlotAttributes[i].m_nonRandomHeroCustomPortrait = heroIdNone;
+            m_playerSlotAttributes[i].m_nonRandomHeroCustomPortrait =
+                heroIdNone;
             m_playerSlotAttributes[i].m_nonRandomHeroCustomName[0] = 0;
         }
     }
@@ -6386,8 +6379,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (!m_minNumHumanPlayers)
         m_minNumHumanPlayers = 1;
 
-    count = infile->read(&x, sizeof(unsigned char));
-    if (count < sizeof(unsigned char))
+    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
     m_victoryCondition.m_type = x;
     m_victoryCondition.m_gameWon = 0;
@@ -6395,8 +6387,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         loadVictoryCondition(x, infile, saveVersion);
 
-    count = infile->read(&x, sizeof(unsigned char));
-    if (count < sizeof(unsigned char))
+    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
     m_lossCondition.m_type = x;
     m_lossCondition.m_gameLost = 0;
@@ -6404,13 +6395,12 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         loadLossCondition(x, infile, saveVersion);
 
-    count = infile->read(&x, sizeof(unsigned char));
-    if (count < sizeof(unsigned char))
+    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
     m_numTeams = x;
     if (m_numTeams) {
-        count = infile->read(m_teamInfo, sizeof(m_teamInfo));
-        if (count < sizeof(m_teamInfo))
+        if (infile->read(m_teamInfo, sizeof(m_teamInfo))
+            < sizeof(m_teamInfo))
             return -1;
     } else {
         for (i = 0; i < NUM_PLAYERS; ++i)
