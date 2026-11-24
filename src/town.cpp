@@ -997,20 +997,31 @@ void town::destroyExtraCapitol()
 // per-TU.
 void checkEndGame(int forceWin);
 
+struct BuildBuildingMaskAccess : town
+{
+    static void updateFullBuildingMaskSnapshot(town* t)
+    {
+        BuildBuildingMaskAccess* access =
+            static_cast<BuildBuildingMaskAccess*>(t);
+        // Retail's inlined updateFullBuildingMask clears the full mask and
+        // then ORs in the population mask; that keeps the populationMask
+        // high word in ebx across the expansion. A plain 64-bit copy leaves
+        // the low word there instead (twelve differing instruction rows).
+        access->m_fullBuildingMask = 0;
+        access->m_fullBuildingMask |= access->m_populationMask;
+        for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
+            if (access->hasBuilding(i, false)) {
+                access->m_fullBuildingMask |=
+                    town::s_includedBuildings[access->m_type][i];
+            }
+        }
+    }
+};
+
 // E:\gamedcs\town.cpp:1340
 VA(0x005bede0, 0x427)
 DC_ADDRESS(0x166fc8, 0x202)
 MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global
-// All 72 blocks and 18 retained calls agree; the 99.5794% residual is twelve
-// instruction rows in updateFullBuildingMask's expanded low/high-word loads.
-// Eight bool/byte snapshot and initialized/assigned result forms emit one
-// identical object. The register model agrees at every first definition;
-// retain the canonical helper while investigating its later allocation.
-// Reversing both hasBuilding membership operands is also byte-identical
-// in town and its retained ai_player body. So are the DC 1352 single
-// difficulty/ally condition below, braced if bodies in
-// updateFullBuildingMask, and unbraced hasBuilding: retail keeps the
-// populationMask high word in ebx across the inlined loop, ours the low.
 type_building_id town::buildBuilding(int buildingId,
                                      bool setBuiltFlag,
                                      bool applySpecialEffect)
@@ -1018,9 +1029,6 @@ type_building_id town::buildBuilding(int buildingId,
     type_building_id built;
     unsigned char hadFort = isCastle();
     unsigned char hadCapitol = isCapitol();
-    // Original ?BuildBuilding@town@@QAA?AW4type_building_id@@H_N0@Z
-    // proves int buildingId and both bool flags; the dossier lowers _N to
-    // unsigned char. create_building retains its separate enum domain.
     built = createBuilding(type_building_id(buildingId));
 
     if (setBuiltFlag && buildingId != DOCK_WITH_BOAT_ID) {
@@ -1032,7 +1040,7 @@ type_building_id town::buildBuilding(int buildingId,
         }
     }
 
-    updateFullBuildingMask();
+    BuildBuildingMaskAccess::updateFullBuildingMaskSnapshot(this);
 
     if (buildingId <= MAGE_GUILD5_ID) {
         m_mageLevel = buildingId + 1;
@@ -1058,15 +1066,12 @@ type_building_id town::buildBuilding(int buildingId,
         if (buildingId == HOLY_GRAIL_ID) {
             g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0, m_owner,
                                   g_mapWidth, 0);
-            // DC town.cpp:1390 calls the game helper; both retail loops inline it.
             if (g_game->getNumMapLevels() > 1)
                 g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 1,
                                       m_owner, g_mapWidth, 0);
         }
     }
 
-    // DC 1398..1406 fetch each hero on its own line inside a braced body;
-    // Mac 0x1b4734.. likewise computes the hero before the receiver (exact).
     if (m_garrisonHeroId != -1 && applySpecialEffect) {
         hero* garrisonHero = g_game->getHero(m_garrisonHeroId);
         applySpecialBuildingEffect(garrisonHero);
