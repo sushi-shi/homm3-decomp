@@ -1139,6 +1139,16 @@ static void addReward(std::string& text, const std::string& alternate,
 // bytes larger (0xc0): its loop-body formatString temporaries and later
 // reward records take their own slots. A bool skillGiven is flat; declaring
 // the artifact with the other locals gives 95.02%.
+// The spell arm's rewards.size() > 0 keeps retail's sar/je (!= 0 folds to a
+// test mask), and MAKELONG(type, amount) packs the RES_MONSTER qualifier that
+// the dialog decodes with HIWORD/LOWORD: 95.65 -> 97.79%. Primary, morale and
+// luck apply their bonus before setting rewardGiven, as DC 881/882, 964/965
+// and 986/987 do (byte-flat). The residual is the sixth addReward's nested
+// showRewards (retail expands it) and the post-spell erase (retail calls it);
+// a root roughly 50 cb heavier flips the former. Flat probes: function-wide
+// for (int i ...), split skill/level declarations, operator[] text access,
+// DC's mana reload and per-arm amount, direct skill fields; a cached skill
+// level gives 95.22%.
 VA(0x0049fa90, 0x106B)
 DC_ADDRESS(0x09138c, 0x870)
 MAC_ADDRESS(0x0aac80, 0xab0)  // dc-bracket forced, ret 0x18=p7 + format_string reward text
@@ -1171,8 +1181,8 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                           EGameResource(RES_PRIMARY_SKILL_ATTACK + i),
                            blackBox->m_primarySkillBonus[i]);
             }
-            rewardGiven = 1;
             currentHero->adjustPrimarySkill(i, blackBox->m_primarySkillBonus[i]);
+            rewardGiven = 1;
         }
     }
 
@@ -1232,8 +1242,8 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                            blackBox->m_moraleBonus);
             }
         }
-        rewardGiven = 1;
         currentHero->m_moraleBonus += blackBox->m_moraleBonus;
+        rewardGiven = 1;
     }
 
     if (blackBox->m_luckBonus != 0) {
@@ -1250,8 +1260,8 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                            blackBox->m_luckBonus);
             }
         }
-        rewardGiven = 1;
         currentHero->m_luckBonus += blackBox->m_luckBonus;
+        rewardGiven = 1;
     }
     showRewards(msg, rewards, 1);
 
@@ -1304,7 +1314,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                     // directly. A named copy adds a CodeWarrior copy ctor
                     // and destructor absent from native; preserve this
                     // lifetime despite Windows 96.35 -> 95.28%.
-                    if (rewards.size() != 0) {
+                    if (rewards.size() > 0) {
                         msg = formatString(
                             g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELLS_FORMAT),
                             currentHero->m_name);
@@ -1345,7 +1355,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                     g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_CREATURES_JOIN_FORMAT),
                     getArmyName(type, 2), currentHero->m_name);
             addReward(msg, alternate, rewards, RES_MONSTER,
-                       ((amount & 0xffff) << 16) | (type & 0xffff));
+                       MAKELONG(type, amount));
         }
         if (currentHero->m_army.add(type, amount, -1)) {
             newCreatures.dismiss(i);
@@ -6040,6 +6050,8 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // (97.82 -> 97.85%); DC's gbInCombat-before-saves order and loser-first
 // combatFinished arms give 97.88%. Braced bodies push the fourth heroLoses
 // site over its budget (93.38%).
+// MAKELONG packs the necromancy dialog's count/type qualifier (97.88 ->
+// 97.90%).
 // Retail also expands one of the three string _Tidy calls this body keeps
 // inside the town/hero copy-and-delete chains; the nearest, under the town
 // delete, gets 134 against 152 (about three fewer later depth-1 candidates).
@@ -6243,10 +6255,8 @@ combatFinished:
         }
         normalDialog(
             g_text, 1, -1, -1, 0x15,
-            (static_cast<unsigned short>(g_combatManager->m_raisedCreatureCount)
-             << 16)
-                | static_cast<unsigned short>(
-                      g_combatManager->m_raisedCreatureType),
+            MAKELONG(g_combatManager->m_raisedCreatureType,
+                     g_combatManager->m_raisedCreatureCount),
             -1, 0, -1, 15000, -1, 0);
         g_game->m_mapHeader.m_victoryCondition.checkForTotalCreatures();
         clearMemSample(sample);
