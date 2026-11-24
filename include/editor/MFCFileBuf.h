@@ -4,15 +4,20 @@
 // area, and the seeks resynchronise the file with what the buffers hold.
 // CFile failures are caught and reported as the stream's EOF. Layout from
 // the constructor: the file at +0x38 (after Dinkumware's basic_streambuf),
-// the buffer at +0x3c.
+// the buffer at +0x3c. Both editors' RTTI hierarchy for .?AVTMFCFileBuf@@
+// lists basic_streambuf<char> and a private (attributes 9) TUncopyable at
+// +0x38; that empty base's inline constructor is the campaign editor's
+// fifth constructor inline site, which leaves basic_streambuf's _Init called.
 #ifndef HOMM3_EDITOR_MFCFILEBUF_H
 #define HOMM3_EDITOR_MFCFILEBUF_H
 
 #include <streambuf>
 
+#include "Uncopyable.h"
+
 class CFile;
 
-class TMFCFileBuf : public std::streambuf {
+class TMFCFileBuf : public std::streambuf, private TUncopyable {
 public:
     explicit TMFCFileBuf(CFile* pFile);
     virtual ~TMFCFileBuf();
