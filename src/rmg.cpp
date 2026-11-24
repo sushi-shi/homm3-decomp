@@ -7814,6 +7814,7 @@ void type_random_map_generator::createMonolithConnection(
     else
         guardValue = getRmgGuardValue(connection->m_value, m_monsterStrength);
 
+    TRmgPoint entrance;
     type_object* object = new type_object(properties);
     if (!placeObjectInZone(object, source)) {
         delete object;
@@ -7822,7 +7823,6 @@ void type_random_map_generator::createMonolithConnection(
             m_monolithsTwoWay.push_back(object);
         else
             m_monolithsOneWay.push_back(object);
-        TRmgPoint entrance;
         entrance.m_x = object->m_position.m_x;
         entrance.m_y = object->m_position.m_y;
         source->m_entrances.push_back(entrance);
@@ -7840,7 +7840,6 @@ void type_random_map_generator::createMonolithConnection(
             m_monolithsTwoWay.push_back(object);
         else
             m_monolithsOneWay.push_back(object);
-        TRmgPoint entrance;
         entrance.m_x = object->m_position.m_x;
         entrance.m_y = object->m_position.m_y;
         destination->m_entrances.push_back(entrance);
@@ -7856,7 +7855,6 @@ void type_random_map_generator::createMonolithConnection(
             delete object;
         } else {
             m_monolithsOneWay.push_back(object);
-            TRmgPoint entrance;
             entrance.m_x = object->m_position.m_x;
             entrance.m_y = object->m_position.m_y;
             source->m_entrances.push_back(entrance);
@@ -7866,7 +7864,6 @@ void type_random_map_generator::createMonolithConnection(
             delete object;
         } else {
             m_monolithsOneWay.push_back(object);
-            TRmgPoint entrance;
             entrance.m_x = object->m_position.m_x;
             entrance.m_y = object->m_position.m_y;
             destination->m_entrances.push_back(entrance);
