@@ -914,25 +914,25 @@ BOOL TCampaignDoc::OnOpenDocument(LPCTSTR lpszPathName)
     return TRUE;
 }
 
-// Retail formats the file version before the supported version. The remaining
-// difference is argument registers: named version/format values and exception
-// references do not close it. Inline getters (TMapDoc's getVersion/
-// getExpectedVersion shape) load the format first as retail does, but move
-// the later message-box registers (96.1%), a constant-address handle effect.
+// TMapDoc::ReportSaveLoadException's shape: the failure's inline version
+// getters and one message box after both prompts (VC6 duplicates it into
+// each arm). Direct field reads load the format second (97.7%); getters
+// with a message box per arm move the later registers (96.1%).
 VA(0x00414b00, 0xda)
 void TCampaignDoc::ReportSaveLoadException(LPCTSTR lpszPathName, CException* e, BOOL bSaving, UINT nIDPDefault)
 {
     CString prompt;
     if (e->IsKindOf(RUNTIME_CLASS(TCampaignDocInvalidFileVersion))) {
         TCampaignDocInvalidFileVersion* pVersionFailure = static_cast<TCampaignDocInvalidFileVersion*>(e);
-        prompt.Format(kInvalidCampaignVersionFmtStr, pVersionFailure->m_fileVersion, pVersionFailure->m_currentVersion);
-        AfxMessageBox(prompt, MB_ICONEXCLAMATION);
+        prompt.Format(kInvalidCampaignVersionFmtStr, pVersionFailure->getFileVersion(),
+                      pVersionFailure->getCurrentVersion());
     } else if (e->IsKindOf(RUNTIME_CLASS(TCampaignDocLoadFailure))) {
         prompt = kInvalidCampaignFileStr;
-        AfxMessageBox(prompt, MB_ICONEXCLAMATION);
     } else {
         CDocument::ReportSaveLoadException(lpszPathName, e, bSaving, nIDPDefault);
+        return;
     }
+    AfxMessageBox(prompt, MB_ICONEXCLAMATION);
 }
 
 VA(0x00414be0, 0x1b0)
