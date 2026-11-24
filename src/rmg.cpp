@@ -11259,20 +11259,21 @@ VA_AT(h3maped, 0x004ad6a8, 0x14f)
 void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
 {
     std::vector<TRmgZone*> pending;
-    for (unsigned int index = 0; index < m_zones.size(); ++index)
+    unsigned int index;
+    for (index = 0; index < m_zones.size(); ++index)
         m_zones[index]->setQuestPlacementScore(20000);
     origin->setQuestPlacementScore(0);
     pending.push_back(origin);
     while (pending.size() > 0) {
         TRmgZone* current = pending.back();
         pending.pop_back();
-        TRmgTemplateZone* slot = current->m_templateZone;
+        TRmgTemplateZone* slot = templateZoneOf(current);
         int distance = current->getQuestPlacementScore() + 1;
-        for (unsigned int connection = 0; connection < slot->m_connections.size(); ++connection) {
-            TRmgZone* next = m_zones[slot->m_connections[connection].m_destination->m_zoneIndex];
+        for (index = 0; index < connectionCount(slot); ++index) {
+            TRmgZone* next = generatedZone(this, connectionAt(slot, index).m_destination->m_zoneIndex);
             if (next->getQuestPlacementScore() > distance) {
                 next->setQuestPlacementScore(distance);
-                int last = pending.size();
+                int last = queuedCount(pending);
                 int first = 0;
                 int middle;
                 while (1) {
