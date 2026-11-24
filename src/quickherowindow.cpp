@@ -44,19 +44,9 @@ DATA(0x00682378) static int g_armyPos[armyGroup::ARMY_GROUP_SLOT_COUNT][2] = {
 // retained stream insertions at 0x52f1db/0x52f1ff/0x52f205/0x52f295
 // establish the different Windows implementation.
 
-// Residual (99.17%): all calls and CFG edges agree. The primary-stat loop
-// retains an extra counter instead of using the coordinate pointer for its
-// comparisons; temporary stack homes also differ. getGameVersion keeps the
-// mana string's _Tidy call. The expert owner belongs inside the scan (Mac
-// 0x14b010): this restores retail's owner-load placement and register roles,
-// raising 98.18% to 99.17%. Three owner-lifetime states reproduced three
-// objects; direct owner-field reads fall to 95.85%.
-// A paired POINT cursor keeps the extra counter (98.82%). Returning the
-// getPrimarySkill predicate directly is byte-flat across this TU, town and
-// customcampaign. Earlier explicit 0/1 arms improved this caller but lost the
-// exact campaign crossover initializer (100% -> 96.15%); keep the shared
-// spelling. Named primary values and split morale/luck limit assignments
-// were also score-flat. The init helper and both destructors are exact.
+// The expert owner belongs inside the scan (Mac 0x14b010). The primary-stat
+// loop's floor test rides the coordinate cursor through
+// hero::getPrimarySkill's branch-form floor.
 VA(0x0052ead0, 0x8C8)
 DC_ADDRESS(0x1170bc, 0x6f8)
 MAC_ADDRESS(0x14a820, 0xc04)  // heroqvbk.pcx + vtable/allocation block

@@ -976,6 +976,10 @@ public:
         return getObscuredTown();
     }
 
+    // The floor is an if/return pair (DC hero.h:677 opens it). VC6 emits
+    // the same setge for the ternary, but only the branch form lets an
+    // inlined loop caller (TBottomViewHero, TQuickHeroWindow) replace the
+    // `skill >= 2` test with its own induction cursor.
     VA(0x005bde40, 0x31)  // exact body + sole caller above
     DC_ADDRESS(0x02c668, 0x28)
     int getPrimarySkill(int skill) const
@@ -984,7 +988,9 @@ public:
             return 99;
         if (m_stats[skill] > 0)
             return m_stats[skill];
-        return skill >= 2 ? 1 : 0;
+        if (skill >= 2)
+            return 1;
+        return 0;
     }
 
     DC_ADDRESS(0x01fd0c, 0x24)

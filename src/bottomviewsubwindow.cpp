@@ -356,8 +356,9 @@ static int g_heroArmyCoords[armyGroup::ARMY_GROUP_SLOT_COUNT][2] = {
 //     one is the interesting one: a skill at or below zero displays as
 //     `i >= 2`, i.e. attack and defense floor at 0 while spell power and
 //     knowledge floor at 1. Retail strength-reduces that comparison onto
-//     the coordinate cursor (`cmp esi, &gHeroStatCoords[2]` / `setge`),
-//     which is why the table and the arm are one loop;
+//     the coordinate cursor (`cmp esi, &gHeroStatCoords[2]` / `setge`);
+//     that needs both the separate id counter and hero::getPrimarySkill's
+//     branch-form floor (either alone leaves `i` live);
 //   * mana is a SHORT (`movsx eax, word [hero+0x18]`), morale and luck
 //     are icon frames at GetMorale/GetLuck + 3, and both accessors take
 //     the DC-attested three arguments;
@@ -367,52 +368,22 @@ static int g_heroArmyCoords[armyGroup::ARMY_GROUP_SLOT_COUNT][2] = {
 //     armyGroup::GetNumArmies. Windows retail expands only this count
 //     (mov ecx,7 / dec ecx); Mac 0x60448..0x604c8 retains no call either.
 
-// THE WIDGET IDS ARE LITERALS HERE, NOT AN INCREMENTING LOCAL - the
-// opposite of TBottomViewNewTurn. 0x7d8/0x7d9/0x7da are pushed as
-// immediates and they are OUT OF CODE ORDER (mana 0x7da is built before
-// morale 0x7d8), which no single incrementing local can produce; 0x7d7
-// is never used at all. Only the army loop numbers its widgets from a
-// running local, and there the `id++` sits inside each `new`'s non-null
-// arm in the usual way.
-
-// Residual (96.52%): the stats loop keeps `i` alive. Retail expresses
-// every use of it through an induction variable - the widget id off the
-// stats cursor (`0x7d3 - &stats[0]` plus the cursor), and BOTH the
-// `i >= 2` arm and the loop exit off the coordinate cursor
-// (`cmp esi, &gHeroStatCoords[2]` / `setge`, `cmp esi,
-// &gHeroStatCoords[4]` / `jl`) - so no `i` is ever materialized. Our CL
-// reduces the id the same way but reconstructs `i` as a second bias off
-// the stats cursor for the other two. The `i >= 2` compare is SIGNED
-// (`setge`), which rules out the obvious pointer-walk spelling: a real
-// pointer comparison would be unsigned. A second, smaller residual is
-// shared with TBottomViewTown - see the note there on game::GetHero /
-// GetTown arm order.
+// The mana, morale and luck widget ids are literals, out of code order
+// (mana 0x7da before morale 0x7d8); 0x7d7 is never used. The stat row
+// and the army block each number their widgets from a running `id`
+// local: DC line 241 loads 0x7d3 into its own register before the
+// line-245 loop and line 252 increments it after the push, and Mac keeps
+// the same counter beside `i` (li r24,0x7d3 ... addi r24,r24,1). DC line
+// 290 reloads the same register with 0x7db for the army loop.
 
 // THE TWO STRING TEMPORARIES GET SEPARATE SLOTS. The >= 10000 arm and
 // the plain arm each build their own format_string temporary at its own
 // frame offset (-0x40 and -0x50) and tear it down inside the arm, so
 // they are two statements in two arms, not one hoisted call.
 
-// THE ACTING HERO COMES FROM game::GetCurrHero (96.52 -> 97.77,
-// 2026-08-14). dc line 229 calls it by name; see the note on
-// TBottomViewTown below for why that accessor is not GetHero applied to
-// gpCurrentPlayer->currHeroId.
-// 2026-09-05, easy lane 3 - first divergence localised. The stat sweep's
-// `>= 2` test is an INDUCTION-VARIABLE selection: retail keeps the
-// gHeroStatCoords row pointer live and tests it directly
-// (`cmp esi, offset gHeroStatCoords+0x10 / setge al`), while this compile
-// keeps the hero stat-block pointer and rebuilds the index as
-// `(K - slot) + ptr` compared against 2, which costs the extra `mov eax,esi`
-// copy at the bitset shift (retail clobbers its index register because the
-// index is dead), a spilled difference in `[ebp-0x10]`, and the
-// one-instruction loop header the preheader `jmp`s past. Two lockstep IVs,
-// and VC6 picks the survivor itself; not a guard or return shape.
-// The direct DC count restores 95.88 -> 97.76; the earlier getNumArmies
-// call kept the helper's retained Windows body out of this expansion.
-// The earlier in-class trace also left the quantity string's default
-// constructor -> _Tidy(false) call (cost 152, child budget 141); those figures
-// describe that prior context rather than the ordinary-body model.
-// earlier differences include GetCurrHero arm order and skill-loop IV choice.
+// THE ACTING HERO COMES FROM game::GetCurrHero; dc line 229 calls it by
+// name. See the note on TBottomViewTown below for why that accessor is
+// not GetHero applied to gpCurrentPlayer->currHeroId.
 VA(0x00451ab0, 0x68A)
 DC_ADDRESS(0x0558a8, 0x54c)
 MAC_ADDRESS(0x05fdd4, 0x9b4)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero
@@ -431,12 +402,13 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     m_widgets.push_back(new textWidget(66, 2, 107, 17, who->m_name,
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
+    int id = 0x7d3;
     for (int i = 0; i < kNumPrimarySkills; i++) {
-        int value = who->getPrimarySkill(i);
-        sprintf(g_text, "%d", value);
+        sprintf(g_text, "%d", who->getPrimarySkill(i));
         m_widgets.push_back(new textWidget(g_heroStatCoords[i][0],
             g_heroStatCoords[i][1], 23, 16, g_text, "smalfont.fnt",
-            font::WHITE, 0x7d3 + i, 1, 0, 8));
+            font::WHITE, id, 1, 0, 8));
+        id++;
     }
 
     sprintf(g_text, "%d", who->m_mana);
@@ -455,7 +427,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     }
 
     if (numStacks > 0) {
-        int id = 0x7db;
+        id = 0x7db;
         for (int j = 0; j < armyGroup::ARMY_GROUP_SLOT_COUNT; j++) {
             TCreatureType type = who->m_army.m_armyTypes[j];
             if (type != CREATURE_NONE) {
