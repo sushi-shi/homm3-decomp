@@ -1268,15 +1268,15 @@ MAC_ADDRESS(0x1370fc, 0xd90)  // exhaustive body/caller identity
 // Original DC public ProcessIconSelect@@QAAHH_N@Z proves bool rightMouse.
 int game::processIconSelect(int codeY, bool rightMouse)
 {
-    int slot;
+    int iSlot;
     int selectedIndex;
 
     if (codeY >= 200 && codeY <= 999) {
-        slot = (codeY - 200) / 200;
-        selectedIndex = g_overviewTop[g_overviewType] + slot;
-        if (selectedIndex > g_overviewItemCounts[g_overviewType])
+        iSlot = (codeY - 200) / 200;
+        if (g_overviewTop[g_overviewType] + iSlot > g_overviewItemCounts[g_overviewType])
             return 0;
         codeY = (codeY - 200) % 200;
+        selectedIndex = g_overviewTop[g_overviewType] + iSlot;
 
         if (g_overviewType == 0) {
             // Complete preserves the combined hero index separately from
@@ -1324,14 +1324,16 @@ int game::processIconSelect(int codeY, bool rightMouse)
             case OVERVIEW_HERO_ARMY_FIRST_ID + 3:
             case OVERVIEW_HERO_ARMY_FIRST_ID + 4:
             case OVERVIEW_HERO_ARMY_FIRST_ID + 5:
-            case OVERVIEW_HERO_ARMY_FIRST_ID + 6:
-                g_game->viewArmy(currHero->m_army, codeY - 105, currHero, 0,
+            case OVERVIEW_HERO_ARMY_FIRST_ID + 6: {
+                int armySlot = codeY - 105;
+                g_game->viewArmy(currHero->m_army, armySlot, currHero, 0,
                                  119, 20,
                                  currHero->m_army.getNumArmies() > 1,
                                  rightMouse);
                 if (!rightMouse)
                     setupDynamicStuff(1, 1);
                 break;
+            }
 
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID:
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 1:
@@ -1342,14 +1344,14 @@ int game::processIconSelect(int codeY, bool rightMouse)
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 6:
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 7: {
                 int skill = currHero->getNthSS(codeY - 158);
+                int frame = skill * 3
+                    + currHero->getSecondarySkill(TSecondarySkill(skill)) + 2;
                 normalDialog(
                     akSSkillTraits[skill].m_levelNames[
                         currHero->getSecondarySkill(TSecondarySkill(skill)) - 1],
                     rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
-                    -1, -1, 20,
-                    skill * 3
-                        + currHero->getSecondarySkill(TSecondarySkill(skill)) + 2,
+                    -1, -1, 20, frame,
                     -1, 0, -1, 0, -1, 0);
                 break;
             }
@@ -1362,15 +1364,14 @@ int game::processIconSelect(int codeY, bool rightMouse)
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 5:
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 6:
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 7:
-            case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8:
-                showArtifact(
-                    currHero,
-                    currHero->getArtifact(TArtifactSlot(
-                        (codeY - 119
-                         + 9 * g_overviewHeroArtifactPage[selectedIndex])
-                        % 18)),
-                    rightMouse);
+            case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8: {
+                int pagedSlot = codeY - 119 + 9 * g_overviewHeroArtifactPage[selectedIndex];
+                int artifactSlot = pagedSlot % 18;
+                showArtifact(currHero,
+                             currHero->getArtifact(TArtifactSlot(artifactSlot)),
+                             rightMouse);
                 break;
+            }
 
             case OVERVIEW_HERO_BACKPACK_FIRST_ID:
             case OVERVIEW_HERO_BACKPACK_FIRST_ID + 1:
@@ -1455,14 +1456,14 @@ int game::processIconSelect(int codeY, bool rightMouse)
 
         if (g_overviewType == 1) {
             town* currTown = getTown(g_game->getLocalPlayer()->m_townIds[
-                g_overviewTop[g_overviewType] + slot]);
+                g_overviewTop[g_overviewType] + iSlot]);
 
             switch (codeY) {
             case OVERVIEW_TOWN_EXIT_ID:
                 g_overviewReturnAction = 2;
                 g_overviewReturnActionExtra =
                     g_game->getLocalPlayer()->m_townIds[
-                        g_overviewTop[g_overviewType] + slot];
+                        g_overviewTop[g_overviewType] + iSlot];
                 return 1;
 
             case OVERVIEW_TOWN_VISITING_HERO_LEFT_ID:
@@ -1581,12 +1582,13 @@ int game::processIconSelect(int codeY, bool rightMouse)
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 10:
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 11:
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 12:
-            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 13:
+            case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 13: {
+                int dwelling = codeY - 19;
                 if (rightMouse) {
-                    quickViewRecruit(currTown, codeY - 19);
+                    quickViewRecruit(currTown, dwelling);
                 } else {
                     recruitUnit* recruit =
-                        new recruitUnit(currTown, codeY - 19, 0);
+                        new recruitUnit(currTown, dwelling, 0);
                     if (!recruit)
                         memError();
                     g_executive->doDialog(recruit);
@@ -1595,6 +1597,7 @@ int game::processIconSelect(int codeY, bool rightMouse)
                     setupDynamicStuff(1, 1);
                 }
                 break;
+            }
 
             case OVERVIEW_TOWN_SUMMONING_PORTAL_ICON_ID:
             case OVERVIEW_TOWN_SUMMONING_PORTAL_TEXT_ID:
@@ -1673,11 +1676,12 @@ int game::processIconSelect(int codeY, bool rightMouse)
     // Native early town-army slot ownership raises 94.70% to 94.81%;
     // retain the direct dismissal predicate. A bool carrier introduces a
     // byte stack home and a different join (93.17%), unlike retail EAX 0/1.
-    // Residual: the 118-block CFG and 56 branches agree; the first delta is
-    // register allocation in the initial
-    // overview-row calculation. Declaration-order sweeps were flat or worse.
-    // Mutating iSlot scored higher only by adding a retail-absent block and
-    // four NormalDialog calls; a scoped pointer-bit union scored 94.22%.
+    // The hero-army slot, paged artifact slot, skill frame and recruit dwelling
+    // locals each settle one arm's C2 global-register choice: without them
+    // codeY takes EDI and displaces the hero id, the recruit argument crosses
+    // operator new, the skill level loses ECX, and the hero dispatch reloads
+    // codeY into EAX instead of ECX. Mutating iSlot instead adds a
+    // retail-absent block and four NormalDialog calls.
     return 0;
 }
 
