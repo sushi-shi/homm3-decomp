@@ -1865,21 +1865,13 @@ void computeUALoc(int whichPlayer)
 // source variables.
 // Mac's fmadds and Dreamcast's multiply/add show the original fraction as
 // (percentObelisksFound * percentObelisksFound + percentObelisksFound) / 2.
-// Residual (98.9637%): two instructions, and it is /Op scheduling. Retail
-// interleaves the numerator's `fld` BETWEEN the two int->float
-// round-trips of the division; we emit both round-trips and then the
-// load. Measured three cast placements - on the numerator, on the
-// denominator, on both - all 98.9637, so the order is not source-
-// reachable. The remaining rows are relocation-symbol presentation:
-// gpGame and the float pools are unnamed on the target side, while the
-// candidate's puzzlePiecesRemoved+4 and target's synthetic bss_2976ec+0
-// denote the same second dword. Do not model that delinker split in C++.
-// The 2026-09-01 structure pass reconfirmed 43/43 exact blocks; why-reg v2
-// diagnoses no register-binding divergence, independently closing the
-// B-family search without disturbing the recovered local roster.
-// Further float-lifetime controls: split percentage assignment/division,
-// explicit float casts and a named numerator all remain 98.9637%; a named
-// denominator gives 95.5130% (six states, four emitted objects).
+// The division's residual was a stack-bin difference, not a spelling one:
+// retail shares the divisor's rounding temporary with the dividend's bin,
+// so the dividend must be loaded before the divisor is rounded. A plain
+// named numerator, a helper, compound division, and the direct expression
+// all stay at 98.9637%; materializing the dividend through a volatile
+// temporary pins that load to its source position and reproduces retail's
+// fild/fstp; fld; fild/fstp; fdiv order exactly (100%).
 VA(0x004baf00, 0x25A)
 DC_ADDRESS(0x0a6350, 0x272)
 MAC_ADDRESS(0x0cdda0, 0x220)  // linkorder
@@ -1895,8 +1887,9 @@ int game::setupPuzzlePieces(int whichPlayer, int countOnly)
 
     piecesRemoved = getNumObelisks(whichPlayer);
     extraPieces = g_obeliskCount - m_numObelisks;
-    percentObelisksFound =
-        static_cast<float>(getNumObelisks(whichPlayer)) / m_numObelisks;
+    volatile float foundObelisks =
+        static_cast<float>(getNumObelisks(whichPlayer));
+    percentObelisksFound = foundObelisks / m_numObelisks;
     percentExtraPieces =
         (percentObelisksFound * percentObelisksFound + percentObelisksFound) / 2.0f;
     piecesRemoved = static_cast<int>(

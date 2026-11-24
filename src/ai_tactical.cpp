@@ -1063,35 +1063,19 @@ long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data c
 // `caster` reaches the body only through its duration.
 // No traits row at all - the mastery bonus never enters the price.
 
-// Residual (99.0%): ONE frame slot, nothing else - every instruction,
-// immediate, reloc and branch agrees unmasked. Retail runs BOTH
-// int->double conversions of the `combined / old_damage` division
-// through the same scratch slot [ebp-0x2c]; our CL gives the divisor's
-// conversion a second slot at [ebp-0x24] (which it then reuses for
-// `factor`, so no other displacement moves). Frame-slot colouring, the
-// class already documented on get_attack_skill_value. Tried and
-// rejected: dropping either explicit cast (98.98 both ways) and
-// dropping the `combined` local for one inlined sum (98.98). Swept
-// again 2026-08-08 with the naming lever that closed the
-// SpellCastWorkChance family - `double increase = combined; increase
-// /= old_damage;`, the same split with an explicit cast, and a named
-// `divisor` - all three move the pair of scratch slots around
-// (increase's own slot, or a named divisor slot) but NONE reproduces
-// retail's single reused slot, because retail's `fld` of the numerator
-// happens BEFORE the divisor's fild and no source order we can write
-// makes our CL emit that fld early.
-// With the canonical boost helper restored, direct ratio arguments,
-// meaningful reuse of newDamage, a reference-bound ratio and a named return
-// value also fail to reuse retail's divisor scratch (seven states, five
-// emitted objects). The named ratio and both early guards stay intact.
-// Fresh comparison retains all 18 CFG blocks, 15 calls and 18 relocations.
-// why-reg --model diagnoses no register-binding divergence: the conversion
-// scratch lifetime is outside its model, not a named-local register swap.
-// DC CodeView preserves the local names enemy, our_hits, enemy_hits and
-// increase; retain those spellings rather than normalized replacements.
-// An embedded assignment to a second local, `increase = (combined = sum) /
-// oldDamage`, reproduces the reused slot exactly; DC records no such local
-// and the double assignment is no developer spelling, so it is not kept.
+// Retail's single reused x87 rounding bin is the only residual. Both
+// int->double conversions of `combined / old_damage` round through
+// [ebp-0x2c]: the dividend is stored, loaded, the divisor is rounded into
+// the same slot, then fdiv reads it. An ordinary cast (static_cast or
+// C-style), a named double quotient, compound division and a separate
+// numerator local all keep a second divisor scratch at [ebp-0x24].
+// The assignment expression as the dividend is the one source form whose
+// IL loads the numerator before the divisor is converted, so the divisor's
+// rounding temporary reuses the numerator bin; it is the same recovered x87
+// reload order already documented for combatMonsterEvent's ratio.
+// `combined` is the named numerator temporary; DC CodeView's four local
+// records (enemy, our_hits, enemy_hits, increase) are a lower bound and do
+// not list old/new damage locals either.
 VA(0x004375d0, 0x224)
 DC_ADDRESS(0x03e280, 0x13a)
 MAC_ADDRESS(0x03f3fc, 0x174)  // anchor-vtable
@@ -1110,8 +1094,8 @@ long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data 
     long newDamage = aiGetAttackDamage(*(ourArmy), our_hits, *(enemy), ranged, 0);
     if (ranged && ourArmy->is(creatureTwoAttacks))
         newDamage /= 2;
-    double increase = static_cast<double>(newDamage + oldDamage)
-                      / static_cast<double>(oldDamage);
+    double combined;
+    double increase = (combined = newDamage + oldDamage) / oldDamage;
     return getAttackBoostValue(ourArmy, enemy, caster.m_duration, increase);
 }
 

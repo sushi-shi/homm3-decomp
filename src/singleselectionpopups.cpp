@@ -436,14 +436,15 @@ bool CTeamAlignmentDlg::createWin()
 
         int rowWidth = countNumPlayers(team) * 18 - 3;
         xStart = (m_width - rowWidth) / 2;
+        int xOffset = 0;
         for (int player = 0; player < NUM_PLAYERS; ++player) {
             if (m_teamMasks[team] & (1 << player)) {
                 iconWidget* flag = new iconWidget(
-                    xStart, y + 20, 15, 20, -1, "itgflags.def",
+                    xStart + xOffset * 18, y + 20, 15, 20, -1, "itgflags.def",
                     0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
                 flag->sendMessage(widget::WIDGET_SET_ICON_FRAME, player);
                 add(flag);
-                xStart += 18;
+                ++xOffset;
             }
         }
     }

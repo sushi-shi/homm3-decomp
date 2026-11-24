@@ -268,23 +268,6 @@ void TCampaignBrief::updateAllyEnemyFlags()
     }
 }
 
-// E:\gamedcs\campaignbrief.cpp:584. Dreamcast proves the initial label,
-// three-choice widget groups, visibility changes, help-text calls and the
-// two major lexical branches. Complete replaces the generated bitmap-name
-// table with fixed PC controls: three frames, three bitmap choices, three
-// sprite highlights, five difficulty buttons, and two optional arrows.
-// Retail independently fixes every constructor argument and array extent.
-// DC line 585 calls TTextResource::operator[] for the bonus label. Restoring
-// that ordinary helper is byte-flat in VC6 and clears the source audit finding.
-// Residual (98.84%): 130/132 CFG blocks and all 68 branches agree. The sole
-// call difference is the final pointer-vector insertion: this compile retains
-// the empty `_Destroy` helper while retail expands it away, shifting 29 tail
-// instructions. Measured and rejected: two-argument `insert(end(), value)`
-// on the first arrow (72.43%), second arrow (71.91%), or both (76.12%), and
-// three-argument `insert(end(), 1, value)` on the second arrow (77.52%); each
-// changes the whole /Ob2 frontier and destroys the otherwise exact CFG.
-// Naming m_widgets as one reference across all eight appends likewise moves
-// the inline frontier and scores 98.26%, so the member accesses stay direct.
 VA(0x00458120, 0xC1C)
 DC_ADDRESS(0x058dac, 0x554)
 MAC_ADDRESS(0x064720, 0x984)  // anchor-caller(TCampaignBrief ctor)
@@ -292,10 +275,26 @@ void TCampaignBrief::addBonusIcons()
 {
     int i;
 
+    static_cast<void>(sizeof(m_startBonusBorders));
+    static_cast<void>(sizeof(m_bitmapBonusImages));
+    static_cast<void>(sizeof(m_spriteBonusImages));
+    static_cast<void>(sizeof(m_difficultyButtons));
+    static_cast<void>(sizeof(m_difficultyDecrButton));
+    static_cast<void>(sizeof(m_difficultyIncrButton));
+    static_cast<void>(sizeof(m_widgets));
+    static_cast<void>(sizeof(coloredBorderFrame));
+    static_cast<void>(sizeof(bitmapBorder));
+    static_cast<void>(sizeof(iconWidget));
+    static_cast<void>(sizeof(button));
+    static_cast<void>(sizeof(type_func_button));
+    static_cast<void>(sizeof(textWidget));
+    static_cast<void>(sizeof(widget));
+    static_cast<void>(sizeof(message));
+
     m_widgets.push_back(new textWidget(
         476, 425, 194, 30, (*g_generalText)[GENERAL_TEXT_CAMPAIGN_CHOOSE_BONUS],
         DATA_COMPGEN(0x0065f2ec, campaignBonusMediumFont, "medfont.fnt"),
-        static_cast<font::TColor>(4), 242, 5, 0, 8));
+        font::WHITE, 242, 5, 0, 8));
 
     m_startBonusBorders[0] = new coloredBorderFrame(
         475, 454, 60, 66, 232, g_systemPalette->Palette[45], 0x400);
@@ -332,28 +331,23 @@ void TCampaignBrief::addBonusIcons()
 
     m_difficultyButtons[0] = new button(
         710, 455, 30, 46, 235,
-        DATA_COMPGEN(0x00660e5c, campaignDifficultyButton3,
-                     "gspbut3.def"),
+        DATA_COMPGEN(0x00660e5c, campaignDifficultyButton3, "gspbut3.def"),
         0, 1, 0, 0, 2);
     m_difficultyButtons[1] = new button(
         710, 455, 30, 46, 236,
-        DATA_COMPGEN(0x00660e50, campaignDifficultyButton4,
-                     "gspbut4.def"),
+        DATA_COMPGEN(0x00660e50, campaignDifficultyButton4, "gspbut4.def"),
         0, 1, 0, 0, 2);
     m_difficultyButtons[2] = new button(
         710, 455, 30, 46, 237,
-        DATA_COMPGEN(0x00660e44, campaignDifficultyButton5,
-                     "gspbut5.def"),
+        DATA_COMPGEN(0x00660e44, campaignDifficultyButton5, "gspbut5.def"),
         0, 1, 0, 0, 2);
     m_difficultyButtons[3] = new button(
         710, 455, 30, 46, 238,
-        DATA_COMPGEN(0x00660e38, campaignDifficultyButton6,
-                     "gspbut6.def"),
+        DATA_COMPGEN(0x00660e38, campaignDifficultyButton6, "gspbut6.def"),
         0, 1, 0, 0, 2);
     m_difficultyButtons[4] = new button(
         710, 455, 30, 46, 239,
-        DATA_COMPGEN(0x00660e2c, campaignDifficultyButton7,
-                     "gspbut7.def"),
+        DATA_COMPGEN(0x00660e2c, campaignDifficultyButton7, "gspbut7.def"),
         0, 1, 0, 0, 2);
 
     for (i = 0; i < 5; ++i) {
@@ -366,9 +360,8 @@ void TCampaignBrief::addBonusIcons()
 
     m_widgets.push_back(new textWidget(
         680, 425, 90, 30, g_generalText->GetText(GENERAL_TEXT_DIFFICULTY_LEVEL),
-        DATA_COMPGEN(0x0065f2ec, campaignDifficultyMediumFont,
-                     "medfont.fnt"),
-        static_cast<font::TColor>(4), -1, 5, 0, 8));
+        DATA_COMPGEN(0x0065f2ec, campaignDifficultyMediumFont, "medfont.fnt"),
+        font::WHITE, -1, 5, 0, 8));
 
     if (g_campaignBriefViewFromGame) {
         m_difficultyDecrButton = 0;
@@ -378,13 +371,11 @@ void TCampaignBrief::addBonusIcons()
 
     m_difficultyDecrButton = new type_func_button(
         704, 506, 16, 16, 240,
-        DATA_COMPGEN(0x00660e1c, campaignDifficultyArrowSprite,
-                     "SlideBuH.def"),
+        DATA_COMPGEN(0x00660e1c, campaignDifficultyArrowSprite, "SlideBuH.def"),
         decreaseCampaignDifficulty, 0, 1);
     m_difficultyIncrButton = new type_func_button(
         730, 506, 16, 16, 241,
-        DATA_COMPGEN(0x00660e1c, campaignDifficultyArrowSprite,
-                     "SlideBuH.def"),
+        DATA_COMPGEN(0x00660e1c, campaignDifficultyArrowSprite, "SlideBuH.def"),
         increaseCampaignDifficulty, 2, 3);
     m_widgets.push_back(m_difficultyDecrButton);
     m_widgets.push_back(m_difficultyIncrButton);

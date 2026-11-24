@@ -2014,18 +2014,18 @@ void TOverviewWindow::doRollover(int codeY)
     if (codeY >= 200 && codeY <= 999) {
         // Keep the quotient and page top separate, as retained in Mac.
         // Initializing the page top first recovers the Windows slot lifetime.
-        int slot;
+        int iSlot;
         int top;
-        top = g_overviewTop[g_overviewType];
-        slot = (codeY - 200) / 200;
-        if (top + slot
+        iSlot = (codeY - 200) / 200;
+        if (g_overviewTop[g_overviewType] + iSlot
                 > g_overviewItemCounts[g_overviewType])
             return;
+        top = g_overviewTop[g_overviewType] + iSlot;
         codeY = (codeY - 200) % 200;
 
         if (g_overviewType == 0) {
             hero* currHero = g_game->getHero(
-                g_overviewHeroIds[top + slot]);
+                g_overviewHeroIds[top]);
 
             switch (codeY) {
             case OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
@@ -2141,7 +2141,7 @@ void TOverviewWindow::doRollover(int codeY)
                 currHero->getArtifact(TArtifactSlot(
                     (codeY - OVERVIEW_HERO_ARTIFACT_FIRST_ID
                      + 9 * g_overviewHeroArtifactPage[
-                         top + slot]) % 18))
+                         top]) % 18))
                     .getRolloverText(g_text);
                 break;
 
@@ -2155,14 +2155,14 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_BACKPACK_FIRST_ID + 7: {
                 int lastBackpackIndex =
                     getLastBackpackIndex(
-                        top + slot) + 1;
+                        top) + 1;
                 if (!lastBackpackIndex) {
                     strcpy(g_text, "");
                     break;
                 }
                 currHero->getBackpack(
                     (g_overviewBackpackStart[
-                         top + slot] + codeY
+                         top] + codeY
                      - OVERVIEW_HERO_BACKPACK_FIRST_ID)
                     % lastBackpackIndex).getRolloverText(g_text);
                 break;
@@ -2175,7 +2175,7 @@ void TOverviewWindow::doRollover(int codeY)
         } else {
             town* currTown = g_game->getTown(
                 g_game->getLocalPlayer()->m_townIds[
-                    top + slot]);
+                    g_overviewTop[g_overviewType] + iSlot]);
             strcpy(g_text, "");
 
             switch (codeY) {

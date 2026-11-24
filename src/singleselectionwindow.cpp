@@ -8616,18 +8616,18 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
 
     if (m_loadMode) {
         int gameVersion = m_currentHeader->m_saved.m_gameVersion;
-        int required = gameVersion == GAME_VERSION_SOD
-                       ? 2 : gameVersion == GAME_VERSION_AB;
-        if (!g_gameContextFeatures[m_commonGameVersion][required])
+        if (!g_gameContextFeatures[m_commonGameVersion][
+                gameVersion == GAME_VERSION_SOD ? 2 :
+                gameVersion == GAME_VERSION_AB])
             turnOffAdvancedOptions();
         return;
     }
 
     if (!m_randomMapSelected) {
         int mapVersion = g_game->m_mapHeader.m_version;
-        int required = mapVersion > MAP_FORMAT_ARMAGEDDONS_BLADE
-                       ? 2 : mapVersion > MAP_FORMAT_RESTORATION_OF_ERATHIA;
-        if (!g_gameContextFeatures[m_commonGameVersion][required])
+        if (!g_gameContextFeatures[m_commonGameVersion][
+                mapVersion > MAP_FORMAT_ARMAGEDDONS_BLADE ? 2 :
+                mapVersion > MAP_FORMAT_RESTORATION_OF_ERATHIA])
             turnOffAdvancedOptions();
     }
     if (!m_inAdvancedOptions)

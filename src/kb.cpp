@@ -448,39 +448,33 @@ int earlySetup()
     if (!loadSoundHeaders())
         shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
             "Unable to initialize resources - possible disk problem."));
-    if (g_cdDriveNumber &&
-        g_cdDriveNumber != CD_DRIVE_NUMBER_NO_CD_REQUIRED) {
+    if (!g_cdDriveNumber) {
         int i;
 
-        bool found = 0;
         i = 0;
         while (1) {
-            if (i >= g_videoCount3)
+            if (i >= g_videoCount3) {
+                i = 0;
+                while (1) {
+                    if (i >= g_videoCount3) {
+                        g_cdDriveNumber = 5;
+                        break;
+                    }
+                    if (!strcmpi(g_videoHeader3[i].m_name,
+                                  DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
+                                      "h3abab1.smk"))) {
+                        g_cdDriveNumber = 6;
+                        break;
+                    }
+                    i++;
+                }
                 break;
+            }
             if (!strcmpi(g_videoHeader3[i].m_name,
                           DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
-                              "h3x2_rne1.smk"))) {
-                found = 1;
+                              "h3x2_rne1.smk")))
                 break;
-            }
             i++;
-        }
-        if (!found) {
-            i = 0;
-            while (1) {
-                if (i >= g_videoCount3)
-                    break;
-                if (!strcmpi(g_videoHeader3[i].m_name,
-                              DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
-                                  "h3abab1.smk"))) {
-                    g_cdDriveNumber = 6;
-                    found = 1;
-                    break;
-                }
-                i++;
-            }
-            if (!found)
-                g_cdDriveNumber = 5;
         }
     }
 
