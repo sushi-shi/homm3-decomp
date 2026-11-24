@@ -4670,10 +4670,13 @@ void TSingleSelectionWindow::doModal(bool fade)
 // multiplayer arm ends in an else-less tail, so retail's loop-exit epilogue
 // copies appear (72 -> 54 differing rows). The first host arm reads the
 // alignment through one `(random ? local : selected).m_setup` ternary (94.44 ->
-// 96.75). Residual: `this` lands in ECX not EBX there, and retail stores
-// playerPos after the header address is formed. Flat: guard order, `!= 0`,
-// nested isHost/size ifs, unconditional inner isMultiPlayer, function-scope
-// player; worse: per-arm stores, getThisPlayer reshapes, player-first guard.
+// 96.75). 2026-11-24: DC 4547/4575/4592 and Mac 0x17cb6c..0x17cd14 keep each
+// single-player rung's seat body inside its loop, returning from there (no
+// post-loop `x < 8` test; 98.38), and Mac forms the selected header before
+// the playerPos store, as retail does: naming that header pointer first
+// reaches 100%. Flat: guard order, `!= 0`, nested isHost/size ifs,
+// unconditional inner isMultiPlayer, function-scope player; worse: per-arm
+// stores, getThisPlayer reshapes, player-first guard.
 VA(0x00584C40, 0x40D)
 DC_ADDRESS(0x13b22c, 0x4d8)
 MAC_ADDRESS(0x17c9b0, 0x384)  // anchor-callee OnNewPlayerMsg 0x589fa0 + SetCurrentMap call it no-arg; head calls UpdateGameVars 0x583580; body is DC SetHumanSlot's seat walk verbatim, size 0.84x
@@ -4729,55 +4732,50 @@ void TSingleSelectionWindow::setHumanSlot()
         int x;
         for (x = 0; x < CNetPlayerHandler::MAX_PLAYERS; ++x) {
             if (mp->m_playerSlotAttributes[x].m_canBeHuman
-                    && !mp->m_playerSlotAttributes[x].m_canBeComputer)
-                break;
-        }
-        if (x < CNetPlayerHandler::MAX_PLAYERS) {
-            if (!isMultiPlayer()) {
-                for (int q = x; q < CNetPlayerHandler::MAX_PLAYERS; ++q) {
-                    mp->m_playerSlotAttributes[q].m_canBeHuman = 0;
-                    mp->m_playerSlotAttributes[q].m_canBeComputer = 1;
+                    && !mp->m_playerSlotAttributes[x].m_canBeComputer) {
+                if (!isMultiPlayer()) {
+                    for (int q = x; q < CNetPlayerHandler::MAX_PLAYERS; ++q) {
+                        mp->m_playerSlotAttributes[q].m_canBeHuman = 0;
+                        mp->m_playerSlotAttributes[q].m_canBeComputer = 1;
+                    }
                 }
-            }
-            if (isHost() && m_selectionHeaders.size() > 0) {
-                CNetPlayerHandlerPlayer* player;
-                player = getThisPlayer();
-                if (player) {
-                    player->m_playerPos = x;
-                    player->m_townIndex = (m_randomMapSelected
-                        ? m_localHeader
-                        : m_selectionHeaders[m_currentMap]).m_setup.m_alignment[x];
+                if (isHost() && m_selectionHeaders.size() > 0) {
+                    CNetPlayerHandlerPlayer* player;
+                    player = getThisPlayer();
+                    if (player) {
+                        GameSelectionHeadersStruct* header = m_randomMapSelected
+                            ? &m_localHeader
+                            : &m_selectionHeaders[m_currentMap];
+                        player->m_playerPos = x;
+                        player->m_townIndex = header->m_setup.m_alignment[x];
+                    }
                 }
+                return;
             }
-            return;
         }
         for (x = 0; x < CNetPlayerHandler::MAX_PLAYERS; ++x) {
-            if (mp->m_playerSlotAttributes[x].m_canBeHuman)
-                break;
-        }
-        if (x < CNetPlayerHandler::MAX_PLAYERS) {
-            if (isHost()) {
-                CNetPlayerHandlerPlayer* player;
-                player = getThisPlayer();
-                if (player)
-                    player->m_playerPos = x;
+            if (mp->m_playerSlotAttributes[x].m_canBeHuman) {
+                if (isHost()) {
+                    CNetPlayerHandlerPlayer* player;
+                    player = getThisPlayer();
+                    if (player)
+                        player->m_playerPos = x;
+                }
+                return;
             }
-            return;
         }
         for (x = 0; x < CNetPlayerHandler::MAX_PLAYERS; ++x) {
             if (mp->m_playerSlotAttributes[x].m_canBeHuman
-                    || mp->m_playerSlotAttributes[x].m_canBeComputer)
-                break;
-        }
-        if (x < CNetPlayerHandler::MAX_PLAYERS) {
-            mp->m_playerSlotAttributes[x].m_canBeComputer = 0;
-            if (isHost()) {
-                CNetPlayerHandlerPlayer* player;
-                player = getThisPlayer();
-                if (player)
-                    player->m_playerPos = x;
+                    || mp->m_playerSlotAttributes[x].m_canBeComputer) {
+                mp->m_playerSlotAttributes[x].m_canBeComputer = 0;
+                if (isHost()) {
+                    CNetPlayerHandlerPlayer* player;
+                    player = getThisPlayer();
+                    if (player)
+                        player->m_playerPos = x;
+                }
+                return;
             }
-            return;
         }
         player = getThisPlayer();
         if (player)
