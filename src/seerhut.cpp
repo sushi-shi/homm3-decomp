@@ -463,7 +463,16 @@ void type_skill_quest::showSkillRequirementsDialog(
 // Keep the table lookup in the format argument: native +0x1b4..+0x1c4
 // format-register order is now exact, with every named helper retained.
 // Mac is 96.79% (592 bytes on both sides), with string homes uniformly four
-// bytes low; Windows is 74.91%. Extended c_str pointer lifetimes add spills.
+// bytes low. Extended c_str pointer lifetimes add spills.
+// The default template comes through questText(QUEST_TEXT_PROGRESS), the
+// column accessor the creature proposal uses; Mac folds that switch to the
+// same direct group load (0x16781c..0x167860). Its charged cost restores
+// retail's three retained string _Tidy calls (74.89 -> 88.96%). Residual:
+// both expanded helper copies call the vector allocator constructor out of
+// line in retail; the budget replay needs two more free root sites after the
+// final destructor, with no source known. Probes: empty() guard 88.69%;
+// hoisted resource, array-reference skills and text.append() are flat;
+// insert(end(), resource) gives 94.95% but Mac retains push_back.
 VA(0x0056dad0, 0x28C)
 MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProgressDialog(hero* currentHero)
@@ -484,7 +493,7 @@ void type_skill_quest::doProgressDialog(hero* currentHero)
     } else {
         std::string requirement = skillRequirementText(missing);
         std::string text = formatString(
-            questTexts().m_text1.c_str(), requirement.c_str());
+            questText(QUEST_TEXT_PROGRESS).c_str(), requirement.c_str());
         text += getTimeLimitText();
         showSkillRequirementsDialog(text.c_str(), missing);
     }
