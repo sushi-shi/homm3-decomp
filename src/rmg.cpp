@@ -4790,15 +4790,20 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 // The opposite-level probe stores the center's x/y and the new level
 // straight into the zone, as Mac 0x23c0f0..0x23c104 and the editor
 // (0x4a18f7..0x4a1913) do, with no candidate temporary or setter copy.
+// Retail stores x and y before it computes the new level (0x53af56..
+// 0x53af61), so the level is formed after those two stores.
 // The temporary reference spelling is provisional
 // source ownership, not recovered DC text. Three post-predicate getter reads
 // preserve accepted-position snapshots even if a predicate changes the zone.
 // Construction/update/lifetime forms with canonical getSize/max calls
 // expanded vector helpers too far before that ownership recovery. Retain
 // real helpers and ordinary calls.
-// Residual: the editor differs only in the unclaimed direction-table data
-// labels; the game schedules the middle stores differently and calls one
-// push_back's size() where retail expands it.
+// Residual (game): the last loop's expanded insert calls the ternary's
+// second size() where retail expands it. The inline trace gives this caller
+// cb 517 (budget 1034); retail's decision needs cb 559..600, so the second
+// size() gets 42 instead of 84. A max() radius, plain int Y temporaries,
+// loop-scoped constructed candidates and TRmgZone::getSize() reads (cb 512)
+// are all lower; getNumberLevels() is flat.
 VA(0x0053AE80, 0x36A)
 MAC_ADDRESS(0x23bfbc, 0x28c) // anchor-callee 0x53bab9/0x53bb23; thiscall, ret 0xc
 VA_AT(h3maped, 0x004a17f5, 0x172)
@@ -4821,9 +4826,9 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
     }
     if (m_map.m_numberLevels == 1)
         return;
-    int level = 1 - position.m_z;
     zone->m_levelPosition.m_x = position.m_x;
     zone->m_levelPosition.m_y = position.m_y;
+    int level = 1 - position.m_z;
     zone->m_levelPosition.m_z = level;
     if (canPlaceZone(zone))
         candidates.push_back(zone->getLevelPosition());
