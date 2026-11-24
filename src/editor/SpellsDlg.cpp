@@ -4,6 +4,7 @@
 
 #include "exceptions.h"
 #include "va.h"
+#include "editor/Hero.h"
 #include "editor/MapEditorText.h"
 #include "editor/SpellsDlg.h"
 
@@ -59,13 +60,15 @@ BEGIN_MESSAGE_MAP(TSpellsDlg, CDialog)
     ON_CLBN_CHKCHANGE(IDC_SPELLS_LIST, OnCheckChangeSpellsList)
 END_MESSAGE_MAP()
 
-// Residual: retail builds the empty spell set in a named local's frame slot
-// before assigning it; the temporary here is scheduled differently.
+// The cleared set is a hero spell set (THeroPrototype::TSpells), as on the
+// hero spells page: retail copies it from the temporary's frame slot, as the
+// inline TSpells constructor leaves it, not from the bitset constructor's
+// returned this.
 VA(0x004ba48a, 0xc3)
 BOOL TSpellsDlg::OnInitDialog()
 {
     GetDlgItem(IDC_SPELLS_STATIC)->SetWindowText(SSpellsDlgText::kSpellsStaticStr);
-    _m_spells = std::bitset<kNumSpells>();
+    _m_spells = THeroPrototype::TSpells();
     CDialog::OnInitDialog();
     CRect rect;
     _m_spellsList.GetClientRect(&rect);
