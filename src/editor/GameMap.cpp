@@ -3027,6 +3027,9 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TPrison* 
 // /O1 candidate limit of 128. Spellings under the limit change the helper's
 // own exact body: a map reference local (cb 123, 80.79%), a single
 // `while (find != end)` test (51.68%) or `end != find` (cb 87, 73.06%).
+// Same-code spellings stay over it: `!(it == end)` (cb 132), a for loop
+// (135), direct-initialized iterator (140), iterator declared before a for
+// loop (141).
 VA(0x004272a9, 0x16e)
 TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TTown* pTown, const TTilePoint& loc,
                                                    TTileExtent* pUpdatedExtent)
@@ -3083,12 +3086,13 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TAbstract
                            pUpdatedExtent);
 }
 
-// A defeat quest keeps its target only if the map still has it.
-// Calls, branches and the monster-arm quest reload agree with retail. The
-// remaining 92.85% residual exchanges the quest-location and zero registers
-// (EBX/EDI) and schedules the first receiver load differently. Conditional
-// cast declarations, a truth guard and an initial quest value reproduce no
-// gain; native supplies no additional helper or temporary-lifetime boundary.
+// A defeat quest keeps its target only if the map still has it, as a hero
+// or a monster. The typed target, null unless the link resolves, gives
+// retail's quest-location EBX and zero EDI (99.17%). The remaining residual
+// is the merged final test: retail `test eax, eax`, ours `cmp eax, edi`.
+// Tested: `pTarget == NULL || dynamic_cast(..) == NULL`, split ifs, a bool
+// of that test, a hoisted target or quest local, an early return (92.85% or
+// lower); a ternary typed target (96.25%); one arm alone (90.76%).
 VA(0x0042754b, 0xb5)
 TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TQuestLocation* pQuestLocation,
                                                    const TTilePoint& loc, TTileExtent* pUpdatedExtent)
@@ -3097,14 +3101,20 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TQuestLoc
         const TQuestDefeatHero* pDefeatHero = dynamic_cast<const TQuestDefeatHero*>(pQuestLocation->getPQuest());
         if (pDefeatHero != NULL) {
             const TLinkableObject* pTarget = _findLinkableObject(pDefeatHero->getHeroLinkID());
-            if (pTarget == NULL || dynamic_cast<const THero*>(pTarget) == NULL)
+            const THero* pHero = NULL;
+            if (pTarget != NULL)
+                pHero = dynamic_cast<const THero*>(pTarget);
+            if (pHero == NULL)
                 pQuestLocation->clearQuest();
         } else {
             const TQuestDefeatMonster* pDefeatMonster =
                 dynamic_cast<const TQuestDefeatMonster*>(pQuestLocation->getPQuest());
             if (pDefeatMonster != NULL) {
                 const TLinkableObject* pTarget = _findLinkableObject(pDefeatMonster->getMonsterLinkID());
-                if (pTarget == NULL || dynamic_cast<const TMonster*>(pTarget) == NULL)
+                const TMonster* pMonster = NULL;
+                if (pTarget != NULL)
+                    pMonster = dynamic_cast<const TMonster*>(pTarget);
+                if (pMonster == NULL)
                     pQuestLocation->clearQuest();
             }
         }
