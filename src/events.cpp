@@ -531,11 +531,14 @@ void type_university_window::~type_university_window()
 // the identity is byte-proven - 0x49e0e0 stores the ResourceManager
 // return for "advevent.txt" (0x677710) into 0x696a18 and every one of
 // the 194 references to that cell is inside events.obj's link bracket.
-DATA(0x00696a18) static TTextResource* g_adventureEventText;
-DATA(0x00696a1c) static TTextResource* g_randomSignTextResource;
-DATA(0x00696a2c) static const char* g_artifactEventText[ARTIFACT_COUNT];
-DATA(0x00696c70) static TTextResource* g_artifactEventTextResource;
-DATA(0x00696c74) static const char* g_randomSignText[25];
+// Dreamcast publishes all five as external globals of events.obj:
+// AdventureEventText, RandomSignText, gArtifactEvent, ArtifactEventText and
+// cRandomSignText (`?cRandomSignText@@3PAPBDA`).
+DATA(0x00696a18) TTextResource* g_adventureEventText;
+DATA(0x00696a1c) TTextResource* g_randomSignTextResource;
+DATA(0x00696a2c) const char* g_artifactEventText[ARTIFACT_COUNT];
+DATA(0x00696c70) TTextResource* g_artifactEventTextResource;
+DATA(0x00696c74) const char* g_randomSignText[25];
 
 VA(0x0049e0e0, 0x15)
 DC_ADDRESS(0x09028c, 0x24)
