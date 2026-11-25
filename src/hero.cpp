@@ -1153,6 +1153,10 @@ const char* hero::getClassName()
 
 // The custom name when its flag is set; otherwise the shared name table
 // entry, but only while the live name still equals the akHeroTraits default.
+// Mac 0xf4b70/0xf4ba4 rematerializes `addi r3,r31,0x23` for the return, so
+// strcmp and the return read m_name directly with no name/default locals;
+// this body stays exact and WindowHandler's expansion then keeps retail's
+// separate strcmp cursor copy (97.85 -> 98.32%).
 VA(0x004d8fb0, 0xA0)
 MAC_ADDRESS(0x0f4af8, 0xc8)
 const char* hero::getBiography()
@@ -1165,11 +1169,9 @@ const char* hero::getBiography()
         g_currentHero->m_portrait == CUSTOM_NAME_CAMPAIGN_PORTRAIT)
         return g_heroBio[156];
 
-    const char* heroName = m_name;
-    const char* defaultName = akHeroTraits[m_id].m_name;
-    if (strcmp(heroName, defaultName) == 0)
+    if (strcmp(m_name, akHeroTraits[m_id].m_name) == 0)
         return g_heroBio[m_id];
-    return heroName;
+    return m_name;
 }
 
 VA(0x004d9050, 0x20)
@@ -3315,11 +3317,16 @@ int THeroScreenWindow::exitDialog(message& msg)
 // together with the skill popup reading msg.m_codeY directly, as
 // updateHeroScreenStatusBar does, instead of an unevidenced `code` copy, it
 // scores 97.85%. DC 3930 tests the mastery range positively and then
-// breaks. Residual: the inlined backpack rotations, disassembly,
-// backpack removal and getBiography strcmp keep the inline `this`/name copy
-// in a second register where we coalesce it with the load. Byte-flat: int
-// slot, exitFlag after the base call, and a nested `nth < m_skillCount`
-// block; inlining comboType into its test costs 97.75%.
+// breaks. getBiography's direct m_name reads (Mac) give 98.32%. Residual:
+// the inlined backpack rotations, disassembly and backpack removal keep the
+// inline `this` copy in a second register where we coalesce it with the
+// g_currentHero load; viewStat's arg5/arg6 scheduling; the getBiography
+// g_game load register. Byte-flat: int slot, exitFlag after the base call,
+// a nested `nth < m_skillCount` block, DC-shaped rotate bodies (if-block,
+// `temp`, loop on `last`), viewStat without its statValue local, a positive
+// DC 3661 guard around viewStat, and `!strcmp`; inlining comboType into its
+// test costs 97.75%, and indexing disassembly's components per iteration
+// drops that body to 78.62%.
 VA(0x004dd2d0, 0x143E)
 DC_ADDRESS(0x0cf54c, 0xc38)
 MAC_ADDRESS(0x0f96b0, 0xf40)  // anchor-bracket + absent-callees
