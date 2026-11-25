@@ -36,7 +36,7 @@
 // each of its five arms on one of them. advManager::ViewWorld's Dreamcast
 // body keeps view_mines / view_heroes / view_towns as locals (S_REGREL32
 // rows at dc 0x195b48); Complete's level callbacks below read them from
-// viewwrld.obj's own .bss, which is what made them file statics. The
+// viewwrld.obj's own .bss, with the external linkage proven below. The
 // Dreamcast ALSO publishes all five as globals - iVWMines, iVWResources,
 // iVWArtifacts, iVWTowns, iVWHeroes, every one of them `bool` - and their
 // RELATIVE order survives the port intact: iVWResources sits immediately
@@ -46,10 +46,10 @@
 // this file had no reader for until now.
 DATA(0x0068c6bc) int g_viewWorldScale = 11;
 DATA(0x006aab68)
-static bool g_viewMines;
+bool g_viewMines;
 DATA(0x006aab78) bool g_vwTerrains;
 DATA(0x006aab79)
-static bool g_viewResources;
+bool g_viewResources;
 // The half-extents init derives from the two viewable dimensions and the
 // three view-world readers below consume. Only viewwrld.obj references
 // either address (four dir32 sites each: init writes both, and
@@ -62,19 +62,19 @@ DATA(0x006aab80)
 static int g_viewHalfWidth;
 DATA(0x006aab84) int g_scaleLine[32];
 DATA(0x006aac08)
-static bool g_viewArtifacts;
+bool g_viewArtifacts;
 // Original DC name: eVWLevel. Unreferenced by retail and Dreamcast code; the
 // Dreamcast public sits between iVWArtifacts and iVWTowns at the same offsets
 // as these two retail flags.
 DATA(0x006aac10) TSkillMastery g_vwLevel;
 DATA(0x006aac14)
-static bool g_viewTowns;
+bool g_viewTowns;
 DATA(0x006aac18) int g_vwCenterOffsetW;
 DATA(0x006aac1c) int g_vwCenterOffsetH;
 DATA(0x006aac20) CSprite* g_csVwIcons;
 DATA(0x006aac28) Bitmap16Bit* g_memoryBuffer;
 DATA(0x006aac30)
-static bool g_viewHeroes;
+bool g_viewHeroes;
 
 // E:\gamedcs\viewwrld.cpp:100
 // The magic-number float-to-int conversion: the Dreamcast row is `static`,
