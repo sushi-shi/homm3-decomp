@@ -1337,7 +1337,7 @@ customcampaign	?insert@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@
 customcampaign	?insert@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAEXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8c270	-
 customcampaign	?insert@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEPAVhero@@PAV3@ABV3@@Z	100.0000	100.0000	100.0000	0x8ce50	-
 customcampaign	?insert@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEXPAVhero@@IABV3@@Z	100.0000	100.0000	100.0000	0x8d060	-
-customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	94.3816	94.3816	94.3816	0x88880	tokens1:266d0e2e8fa8
+customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	88.8048	88.8048	94.3816	0x88880	tokens1:5406d771303a
 customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	99.0218	99.0218	99.0228	0x8a310	tokens1:6178bdc04318
 customcampaign	?loadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	tokens1:308273d46565
 customcampaign	?loadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	tokens1:31457f8c8102
@@ -1661,7 +1661,7 @@ events	?combatMonsterEvent@advManager@@QAEHPAVhero@@W4TCreatureType@@PAHPAVNewma
 events	?creatureBankEvent@advManager@@AAEHPAVhero@@PAVNewmapCell@@PADUtype_point@@E@Z	100.0000	100.0000	100.0000	0xabdc0	tokens1:31ae7ee7c158
 events	?dispatchEvent@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.9970	100.0000	100.0000	0xa84f0	tokens1:1baf4185da03
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	tokens1:cf82ee4e903c
-events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12H_N4@Z	97.8953	97.8953	99.1139	0xad470	tokens1:7fc12714a99f
+events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12H_N4@Z	98.2712	98.2712	99.1139	0xad470	tokens1:4501a7956d7f
 events	?doCustomArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0x9f070	tokens1:db423f48515e
 events	?doCustomResource@advManager@@AAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	tokens1:f98c216d9d05
 events	?doCustomSpellScroll@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa5a80	tokens1:39d7d582cb18
@@ -2455,7 +2455,7 @@ kb	?memError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	tokens1:1ba3cc8bae3d
 kb	?normalDialog@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6570	tokens1:3256171b57ce
 kb	?normalDialogHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf08d0	tokens1:290ebd6d5d36
 kb	?normalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	tokens1:ae15beacb170
-kb	?oldmain@@YIHXZ	88.6708	88.6708	88.6708	0xee3e0	tokens1:40c300a1cb50
+kb	?oldmain@@YIHXZ	88.5957	88.6708	88.6708	0xee3e0	tokens1:40c300a1cb50
 kb	?pickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	tokens1:e6bf0ad066ce
 kb	?playFramedVideo@@YIXHPBD@Z	100.0000	100.0000	100.0000	0xee1b0	tokens1:9fc70bf01c6c
 kb	?playerDead@@YIXH@Z	100.0000	100.0000	100.0000	0xf11a0	tokens1:c5674b5eecba
@@ -2613,7 +2613,7 @@ mapcell	?readMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HH@Z	100.0000	100.0000	1
 mapcell	?readMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x104470	tokens1:d4b8b55be8cc
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020	tokens1:706e9138dbe0
 mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x1013b0	tokens1:5fecb1ca69df
-mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	99.5203	99.5203	99.5203	0x102e00	tokens1:e9b06ac0550e
+mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x102e00	tokens1:e9b06ac0550e
 mapcell	?readObjectType@NewfullMap@@QAEHPAVTAbstractFile@@AAVCObjectType@@@Z	100.0000	100.0000	100.0000	0x103780	tokens1:4222a86cbf2e
 mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff4d0	tokens1:716431395207
 mapcell	?readScholarData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x100b30	tokens1:171d280b0548
@@ -2860,7 +2860,7 @@ overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?doFlaggableButtons@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e7f0	tokens1:3e20dc6a7377
 overview	?doRollover@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x120e30	tokens1:2fb7166f5322
 overview	?getLastBackpackIndex@@YIJJ@Z	100.0000	100.0000	100.0000	0x1225d0	tokens1:31b14a488974
-overview	?overview@game@@QAEXXZ	100.0000	100.0000	100.0000	0x11e8d0	tokens1:10ccc272fd61
+overview	?overview@game@@QAEXXZ	99.9759	100.0000	100.0000	0x11e8d0	tokens1:10ccc272fd61
 overview	?overviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x11fa20	tokens1:ff5957e0c8e9
 overview	?processIconSelect@game@@QAEHH_N@Z	100.0000	100.0000	100.0000	0x11ee50	tokens1:414f5c2abe0c
 overview	?setupDynamicStuff@game@@QAEXHH@Z	97.0554	97.0554	97.0554	0x11bd50	tokens1:acd31765f2b1
@@ -2910,7 +2910,7 @@ philai	?aiChooseMagicSkill@@YI?AW4TPrimarySkill@@PAVhero@@@Z	100.0000	100.0000	1
 philai	?aiChooseResourceOrExperience@@YIEPBVhero@@W4EGameResource@@HH@Z	100.0000	100.0000	100.0000	0x127fe0	tokens1:29066812688b
 philai	?aiChooseSecondarySkill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0	tokens1:ab0fb3ba329f
 philai	?aiEnterGarrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000	0x124370	tokens1:35953fb62cf4
-philai	?aiEnterTown@@YIXPAVhero@@PAVtown@@@Z	99.9739	100.0000	100.0000	0x1253d0	tokens1:46b741d4bc9b
+philai	?aiEnterTown@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x1253d0	tokens1:46b741d4bc9b
 philai	?aiExamineMap@@YAXXZ	100.0000	100.0000	100.0000	0x12b9c0	tokens1:3cd352b320df
 philai	?aiFriendlyHeroMeeting@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x125dc0	tokens1:83b2cb2d7aeb
 philai	?aiGetSpellValue@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640	tokens1:b79792ca90ca
@@ -2965,7 +2965,7 @@ philai	?valueOfLearning@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x1298d0	tok
 philai	?valueOfMagicSchool@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129f90	tokens1:5f3970451a85
 philai	?valueOfMine@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a010	tokens1:3e8816944ee8
 philai	?valueOfMonsters@@YIJPBVhero@@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12a140	tokens1:408ff137d671
-philai	?valueOfMoveSource@@YIHPBVhero@@JFAAJ@Z	100.0000	100.0000	100.0000	0x12a1e0	tokens1:ba67496d18fc
+philai	?valueOfMoveSource@@YIHPBVhero@@JFAAJ@Z	100.0000	100.0000	100.0000	0x12a1e0	tokens1:2a680a6fa666
 philai	?valueOfObelisk@@YIHPAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x12a2b0	tokens1:80999aa32ef2
 philai	?valueOfPowerSchool@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a380	tokens1:569b9785e239
 philai	?valueOfPrison@@YIHPAVNewmapCell@@PAVplayerData@@@Z	100.0000	100.0000	100.0000	0x12a3a0	tokens1:0023475ec42c
@@ -3672,7 +3672,7 @@ sacrifice_window	?allCreatures@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000
 sacrifice_window	?allCreatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1669f0	tokens1:c817c9db8773
 sacrifice_window	?artifactClick@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0	tokens1:61e93f66af66
 sacrifice_window	?backpackClick@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1636c0	tokens1:695c7c75a428
-sacrifice_window	?convertWithCommas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	tokens1:0bb4a7234f40
+sacrifice_window	?convertWithCommas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	tokens1:ba2de78a545f
 sacrifice_window	?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x160380	tokens1:3fb591ab89ef
 sacrifice_window	?createCreatureIcons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70	tokens1:8908d3cf447c
 sacrifice_window	?createCreatureIcons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760	tokens1:18a815c94942
@@ -3708,7 +3708,7 @@ sacrifice_window	?setVisible@widget@@QAEX_N@Z	100.0000	100.0000	100.0000	0x1629b
 sacrifice_window	?update@type_skeleton_window@@AAEXJJ@Z	100.0000	100.0000	100.0000	0x166030	tokens1:7d645be59ef3
 sacrifice_window	?updateAllSlots@type_sacrifice_window@@AAEXXZ	100.0000	100.0000	100.0000	0x1629e0	tokens1:8704b23c0f78
 sacrifice_window	?updateArtifactOffering@type_sacrifice_window@@AAEXJ@Z	100.0000	100.0000	100.0000	0x163a40	tokens1:a9332619e7fa
-sacrifice_window	?updateArtifactWidget@@YIXPAViconWidget@@Utype_artifact@@@Z	100.0000	100.0000	100.0000	0x1639e0	tokens1:02585e0fcb80
+sacrifice_window	?updateArtifactWidget@@YIXPAViconWidget@@Utype_artifact@@@Z	100.0000	100.0000	100.0000	0x1639e0	tokens1:bfd58920fcb8
 sacrifice_window	?updateCreatureOffering@type_sacrifice_window@@AAEXAAUtype_creature_offering@@@Z	100.0000	100.0000	100.0000	0x162da0	tokens1:c723fee77dfc
 sacrifice_window	?updateExperience@type_sacrifice_window@@AAEXXZ	100.0000	100.0000	100.0000	0x162500	tokens1:64f676d010a1
 sacrifice_window	?updateOffering@@YIXPAViconWidget@@PAVtextWidget@@ABUtype_artifact_offering@@@Z	100.0000	100.0000	100.0000	0x162c70	tokens1:b6b072e8fb6d
@@ -4268,7 +4268,7 @@ spells	?loadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	100.0000	100.0000	100.
 spells	?markAreaEffect@combatManager@@QAEXHJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4920	tokens1:ef4fc4dfc454
 spells	?markAreaEffect@combatManager@@QAEXJJEAAV?$vector@JV?$allocator@J@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4170	tokens1:dd503c588ea9
 spells	?markAreaEffect@combatManager@@QAEXJJEAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a46f0	tokens1:95fa0c0fc2b2
-spells	?markAreaHighlights@@YIXHW4TSkillMastery@@J@Z	100.0000	100.0000	100.0000	0x19f8a0	tokens1:2952c25dce5b
+spells	?markAreaHighlights@@YIXHW4TSkillMastery@@J@Z	100.0000	100.0000	100.0000	0x19f8a0	tokens1:6a6042bd5d40
 spells	?markBerserkAreaEffect@combatManager@@QAEXJJAAV?$vector@JV?$allocator@J@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4430	tokens1:3a4ed65d36ed
 spells	?markBerserkAreaEffect@combatManager@@QAEXJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4810	tokens1:aa4ba265ae22
 spells	?mirrorImage@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a6c70	tokens1:f9d4b7a75c01

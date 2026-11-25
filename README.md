@@ -13,19 +13,19 @@ executables.
 
 <!-- match-score:start -->
 
-**Windows `HEROES3.EXE`: 99.49% matched (MAX)** — 4,665 / 4,785 functions exact (97.5%), weighted by size over 1,999,585 bytes of code.
+**Windows `HEROES3.EXE`: 99.49% matched (MAX)** — 4,666 / 4,785 functions exact (97.5%), weighted by size over 1,999,585 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,651 |   99.45% | last measured score                            |
-| MAX   |           4,665 |   99.49% | best result for each function's current source |
-| HIST  |           4,672 |   99.57% | all-time peak across source revisions          |
+| CUR   |           4,652 |   99.45% | last measured score                            |
+| MAX   |           4,666 |   99.49% | best result for each function's current source |
+| HIST  |           4,673 |   99.57% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   123 | 3911 / 3997 (97.8%) |    99.51% |
+| `game`       |   123 | 3912 / 3997 (97.9%) |    99.50% |
 | `rmg`        |     6 |   337 / 370 (91.1%) |    98.91% |
 | `network`    |     4 |   279 / 280 (99.6%) |   100.00% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |   100.00% |
@@ -57,7 +57,7 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           6,024 |   99.53% | last measured score                            |
+| CUR   |           6,025 |   99.53% | last measured score                            |
 | MAX   |           6,073 |   99.62% | best result for each function's current source |
 | HIST  |           6,083 |   99.71% | all-time peak across source revisions          |
 
