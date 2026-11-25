@@ -551,7 +551,7 @@ public:
     type_creature_bank& getCreatureBank() const;
     void clearVisitedBits();
     short getCustomIndex() const;
-    short getItemId() const;
+    int getItemId() const;
     bool playerKnowsCell(short player) const;
     void setCellVisited(short player);
     bool gardenIsFull() const;
@@ -1406,7 +1406,7 @@ DC_ADDRESS(0x09c7c8, 0xc)
 inline short ExtraInfoUnion::getCustomIndex() const { return m_monsterInfo.m_index; }
 
 DC_ADDRESS(0x01fa80, 0x12)
-inline short ExtraInfoUnion::getItemId() const { return m_skeletonInfo.m_id; }
+inline int ExtraInfoUnion::getItemId() const { return m_skeletonInfo.m_id; }
 
 DC_ADDRESS(0x09c7d4, 0x32)
 inline void ExtraInfoUnion::setLeanTo(short id, short amount, int resource)

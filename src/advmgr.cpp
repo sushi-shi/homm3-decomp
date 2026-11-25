@@ -2526,7 +2526,10 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     thisPlayer = g_game->getLocalPlayerGamePos();
     player = g_game->getLocalPlayer();
     playerBit = 1 << thisPlayer;
-    currHero = g_game->getHero(player->m_currHeroId);
+    if (player->m_currHeroId != -1)
+        currHero = &g_game->m_heroes[player->m_currHeroId];
+    else
+        currHero = 0;
 
     type_cell_adjuster adjuster;
     NewmapCell* cell = adjuster.getTriggerCell(testCell, rx, ry);
