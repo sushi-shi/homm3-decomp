@@ -2257,6 +2257,12 @@ static void applyCampaignMapHeader(
             mapHeader.m_playerSlotAttributes[slotIndex].m_defaultPlaceholders);
 }
 
+// Region count of the campaign's map traits row. Name inferred.
+static int getCampaignRegionCount(int regionMap)
+{
+    return g_campaignMapTraits[regionMap].m_numRegions;
+}
+
 VA(0x00488880, 0x5D6)
 MAC_ADDRESS(0x096df0, 0x5ac)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::load()
@@ -2323,7 +2329,7 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
             m_campaignMusic = 0x25;
         else
             m_campaignMusic = readValue<signed char>(file);
-        numScenarios = g_campaignMapTraits[m_regionMap].m_numRegions;
+        numScenarios = getCampaignRegionCount(m_regionMap);
         for (int newValue = 0; newValue < numScenarios; ++newValue)
             readScenario(file, numScenarios);
     }
@@ -2334,7 +2340,7 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
     // loadMapHeader before applying its header; do not re-fetch the vector slot.
     for (int scenario2 = 0; scenario2 < numScenarios; ++scenario2) {
         ScenarioStruct* scenario = m_scenarios[scenario2];
-        scenario->m_offset = mapOffset;
+        scenario->setOffset(mapOffset);
         if (scenario->hasMap()) {
             mapOffset += scenario->getMapDataSize();
             scenario->loadMapHeader(m_stream, &mapHeader, scenario2);

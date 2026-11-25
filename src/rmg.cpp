@@ -9242,7 +9242,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
                 bestValuePerCell = valuePerCell;
             }
         }
-        totalWeight += definition->m_density;
+        totalWeight += definition->getDensity();
         candidates.push_back(definition);
         properties.push_back(candidate);
     }
@@ -9251,7 +9251,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     int selected = rand() % totalWeight;
     unsigned int selectedIndex;
     for (selectedIndex = 0; selectedIndex < candidates.size(); ++selectedIndex) {
-        selected -= candidates[selectedIndex]->m_density;
+        selected -= candidates[selectedIndex]->getDensity();
         if (selected < 0)
             break;
     }
