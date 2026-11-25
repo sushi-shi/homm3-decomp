@@ -1621,7 +1621,7 @@ DC_ADDRESS(0x1962fc, 0x1e0)
 MAC_ADDRESS(0x209c38, 0x2a8)
 void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
 {
-    widget* radar = g_advManager->m_advWindow->m_radarWidget;
+    const widget* radar = g_advManager->m_advWindow->m_radarWidget;
     int rx = radar->m_x;
     int ry = radar->m_y;
     int rw = radar->m_width;

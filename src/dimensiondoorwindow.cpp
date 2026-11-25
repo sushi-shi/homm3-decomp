@@ -21,7 +21,7 @@ TDimensionDoorWindow::TDimensionDoorWindow()
 {
     m_widgets.reserve(2);
 
-    widget* mapWidget = g_advManager->m_advWindow->m_mapWidget;
+    const widget* mapWidget = g_advManager->m_advWindow->m_mapWidget;
     m_widgets.push_back(new border(mapWidget->m_x, mapWidget->m_y,
         mapWidget->m_width, mapWidget->m_height, 0, 1));
 
@@ -165,7 +165,7 @@ TSkuttleBoatWindow::TSkuttleBoatWindow()
 {
     m_widgets.reserve(2);
 
-    widget* mapWidget = g_advManager->m_advWindow->m_mapWidget;
+    const widget* mapWidget = g_advManager->m_advWindow->m_mapWidget;
     m_widgets.push_back(new border(mapWidget->m_x, mapWidget->m_y,
         mapWidget->m_width, mapWidget->m_height, 0, 1));
 
