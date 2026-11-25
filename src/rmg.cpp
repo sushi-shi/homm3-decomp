@@ -11495,13 +11495,15 @@ unsigned char type_random_map_generator::placeSeerHutForArtifact(t_quest_artifac
 // inference from four repeated retail scans, is not adopted). Mac
 // 0x250910..0x250944 and 0x250a3c..0x250a7c test the loop bound at the
 // bottom and leave on a match: for loops with break, not while (a && b).
-// Residual: retail retains the outline's two-coordinate lookup and failure
-// reset; VC6 expands both. Both map-destructor calls agree, as do the
-// constructor/fill/addGuard/outline/placeQuestGroup calls. Failure vector
-// cleanup still expands past retail's two retained empty _Destroy calls.
-// A narrower guard lifetime is byte-neutral; an explicit copied position
-// with the scalar accessor, origin/outline/result lifetimes, receivers,
-// counters and result branches do not resolve it.
+// The origin cell is a separate item binding read through the object's
+// position getter (Mac 0x250958..0x250998 copies the returned position
+// into both nested by-value lookups): the map editor is exact and the game
+// loads the cell array before the zone list, as retail does. A folded
+// m_zones[getMapItem(...)] lookup or a zone-index local leaves those loads
+// reversed; reading the properties before the origin reorders the frame.
+// Residual (game): retail keeps the object in EDI and the colour in EBX,
+// the reverse of this build. The outline vector's destructor call is the
+// ICF-folded ~vector<widget*> label in retail.
 VA(0x0054B8C0, 0x385)
 MAC_ADDRESS(0x2508e8, 0x334) // anchor-callee 0x5338e0; retail-only
 unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValue)
@@ -11514,7 +11516,8 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
     }
     if (index == m_objectPrototypes[BORDER_GUARD].size())
         return 0;
-    TRmgZone* origin = m_zones[getMapItem(object->m_position)->m_zoneState.m_zone];
+    TRmgMapItem* item = getMapItem(object->getPosition());
+    TRmgZone* origin = m_zones[item->m_zoneState.m_zone];
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[BORDER_GUARD][index];
     TRmgTreasureGroup group;
     type_object* guard = new type_object(properties);
