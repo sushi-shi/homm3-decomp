@@ -223,8 +223,10 @@ static int updateSpellTargetFromMouse()
 // 2026-11-24). Only a separate `int mirrorChance = ...;` statement before
 // the roll reaches retail's order (95.60), but Mac 0x18facc/0x18fad8 calls
 // random first, which that statement order contradicts; not adopted.
-// Residual (95.07%): that order, and the Frost Ring/Force Field and Remove
-// Obstacle/Clone shared tails, where retail keeps the earlier copy.
+// Residual (99.46%): that order only. The closing `default: break;` (DC
+// 498..505 unrecorded before 506) flips VC6's cross-jump so the Frost
+// Ring/Force Field and Remove Obstacle/Clone shared tails keep the earlier
+// copy as retail does (95.07 -> 99.46).
 // DC 201..212 and 217..228 records explicit dialog/action if/else scope
 // pairs for Land Mine and Earthquake. Complete Mac 0x18f8dc..0x18f9a4 keeps
 // both action alternatives. Restoring those scopes is VC6 byte-flat at 90.79%.
@@ -472,6 +474,11 @@ void combatManager::initiateSpell(ESpellId spellToCast, int creatureSpell)
         }
         break;
     }
+
+    // An empty default (DC 498..505 unrecorded) keeps the earlier copy of
+    // each cross-jumped tail, as retail does.
+    default:
+        break;
     }
 
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
@@ -656,11 +663,16 @@ void combatManager::animateMagicArrow(int x, int y, army* target)
 // DC 850/926 passes `obstacles.size() - 1` straight to PlaceObstacle (no
 // slot local); retail's in-place `dec edx` agrees. Fire Wall's counter and
 // the red-colouring side loop are signed (DC cmp/gt, retail jl/jle).
-// Residual (97.64%): castX/castY stack-home swap (declaration order and a
-// combined declarator are byte-flat), and the cross-jumped shared tails
-// (Force Field/Fire Wall showSpellMessage, Death Ripple/Destroy Undead
-// drawFrame+checkRebirth, two drawFrame/spellEffect tails) where retail
-// keeps the earlier copy and this compile keeps the later one.
+// Residual (99.84%): the Stone/Bloodlust `attributes &= ~...` tails, where
+// this compile cross-jumps the store and so cannot fold retail's `and
+// [mem],imm`, and two commuted base+index operands (markCreatureEffect's
+// store, string erase's memmove). The closing `default: break;` (DC
+// 1704..1710 unrecorded) makes every shared switch tail keep the earlier
+// copy as retail does; moving it to the top of the switch is byte-flat,
+// and reordering the Force Field/Fire Wall arms only moves the layout.
+// Per-arm castY (DC 726/727, 731/732) fixes the castX/castY stack homes.
+// Fire Wall's frame still differs: retail keeps a copy of targetIndex for
+// SpellEffect, but DC lists no such local, so no alias is added for it.
 VA(0x0059fe30, 0x2A4F)
 DC_ADDRESS(0x14f7dc, 0x2366)
 MAC_ADDRESS(0x190540, 0x29f4)  // retail largest-unadmitted row
@@ -746,15 +758,20 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // Complete extends that exact arm for artifact casts; retail +0x2db
     // tests the already-nonzero value against SPELL_CASTER_ARTIFACT.
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
-        if (m_currentSide == 0)
+        // DC 726/727 and 731/732 assign castY inside each side's arm;
+        // retail cross-jumps the two copies.
+        if (m_currentSide == 0) {
             castX = g_combatHeroSprites[akHeroClassTraits[castingHero->m_heroClass].m_townType][
                 akHeroTraits[castingHero->m_id].m_sex].m_castX - 43;
-        else
+            castY = g_combatHeroSprites[akHeroClassTraits[castingHero->m_heroClass].m_townType][
+                akHeroTraits[castingHero->m_id].m_sex].m_castY - 19;
+        } else {
             castX = cmbtHero[1]->GetWidth()
                 - g_combatHeroSprites[akHeroClassTraits[castingHero->m_heroClass].m_townType][
                 akHeroTraits[castingHero->m_id].m_sex].m_castX + 693;
-        castY = g_combatHeroSprites[akHeroClassTraits[castingHero->m_heroClass].m_townType][
+            castY = g_combatHeroSprites[akHeroClassTraits[castingHero->m_heroClass].m_townType][
                 akHeroTraits[castingHero->m_id].m_sex].m_castY - 19;
+        }
 
         cmbtHeroFrameType[m_currentSide] = 4;
         for (int frame = 0;
@@ -1592,6 +1609,11 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         }
         break;
     }
+
+    // DC 1704..1710 leave room for this empty default; it keeps the
+    // earlier copy of each cross-jumped arm tail, as retail does.
+    default:
+        break;
         }
     } else {
         // Dreamcast spells.cpp:1713 and the separately emitted helper at
