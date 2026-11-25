@@ -2043,7 +2043,7 @@ game	?loadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	tokens1:cf58
 game	?loadGarrisonPool@game@@AAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	tokens1:a52b5bafb230
 game	?loadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	tokens1:bf5f7ffde2a2
 game	?loadLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc3d90	tokens1:a6eb4106adfa
-game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	95.2363	95.2363	95.2363	0xc2450	tokens1:8ce687c9c31a
+game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	99.9859	99.9859	99.9859	0xc2450	tokens1:b8ad9d6987bd
 game	?loadMinePool@game@@AAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb9340	tokens1:482dcfd473ff
 game	?loadObjectVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2870	tokens1:0c896143b823
 game	?loadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	tokens1:924659d84747
@@ -2135,7 +2135,7 @@ game	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfef0	-
 game	?test@?$bitset@$0BM@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd17d0	-
 game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
-game	?transmitSaveGame@game@@QAEHHH_N0@Z	99.9778	100.0000	100.0000	0xcafd0	tokens1:f9f97a8930e9
+game	?transmitSaveGame@game@@QAEHHH_N0@Z	100.0000	100.0000	100.0000	0xcafd0	tokens1:f9f97a8930e9
 game	?turnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	tokens1:09ac63bef778
 game	?turnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	tokens1:b9f191ddf209
 game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	tokens1:9bea0f215987

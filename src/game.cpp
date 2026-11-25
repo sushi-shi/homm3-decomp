@@ -4482,6 +4482,12 @@ void game::matchUndergroundGates()
 // m_creatureBankInfo.m_visitedBits (byte-flat). Failed probes: the DC form
 // without a lith pool pointer (93.50%), m_monsterInfo.m_qty for the 0xfff
 // test (93.20%).
+// 2026-11-25 replay: `predict-inline --tu game --root randomizeEvents --cb N`
+// gives exactly retail's call set (setWagon(resource, amount), witch-hut
+// bitset<28> ctor, operator[] x2 and reference::operator=) only for root cb
+// 2734..2753 against this source's 2907, so retail's body is about 160
+// tuples lighter; DC's call roster (6 cell, 5 type_point, 4 mine [] calls)
+// agrees with this source and does not locate the difference.
 VA(0x004c0cc0, 0x1668)
 DC_ADDRESS(0x0ac910, 0x1278)
 MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order
@@ -5012,6 +5018,17 @@ VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 // Lead (2026-10-09): the replay wants caller cb +52..+55. Bracing the eight
 // guarded statements gives 93.59%, but DC 5642/5650/5654/5672 record single
 // (unbraced) scopes, so those braces are not retained.
+// 2026-11-25: Mac 0xd8338..0xd85a0 fills the tavern pool and the late
+// artifact rows with indexed loops (the second continues from the selected
+// 127/129 start), and 0xd8be8 clears m_ssDisabled with a store loop; VC6
+// idiom-converts those loops to the same rep stosd retail shows (lea edi
+// first). Mac 0xd8b08 compares the skill index with cmpwi and retail latches
+// it with jl, so it is int. Retail tests the artifact byte directly in the
+// transform's logical_or, so the functor takes unsigned char. Together these
+// restore retail's caller cost (test<28> expands, two _Destroy stay calls):
+// 95.24 -> 99.99%. Residual: the combo-trait compare addresses
+// [eax + esi + 0x14] where this CL emits [esi + eax + 0x14]; inlining the
+// local, `-1 !=`, a traits reference, const and bitset::set did not help.
 VA(0x004c2450, 0x88E)
 DC_ADDRESS(0x0adb88, 0x3b0)
 MAC_ADDRESS(0x0d82cc, 0xbcc)  // sole NewMap caller + full stream/callee sequence
@@ -5025,8 +5042,9 @@ bool game::loadMap(TAbstractFile* mapFile)
     setMapSize(m_mapHeader.m_size, m_mapHeader.m_size);
 
     if (m_gameVersion < 1) {
-        memset(m_heroAvailability + 128, hero::HERO_AVAILABILITY_TAVERN_POOL,
-               HERO_COUNT - 128);
+        for (int heroId = 128; heroId < HERO_COUNT; ++heroId) {
+            m_heroAvailability[heroId] = hero::HERO_AVAILABILITY_TAVERN_POOL;
+        }
     }
 
     int artifact;
@@ -5040,8 +5058,9 @@ bool game::loadMap(TAbstractFile* mapFile)
         } else {
             artifact = 129;
         }
-        memset(m_artifactDisabled + artifact, 1,
-               sizeof(m_artifactDisabled) - artifact);
+        for (; artifact < ARTIFACT_COUNT; ++artifact) {
+            m_artifactDisabled[artifact] = 1;
+        }
     }
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
@@ -5063,7 +5082,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 
         std::transform(m_artifactDisabled, m_artifactDisabled + ARTIFACT_COUNT,
                        bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 0),
-                       m_artifactDisabled, std::logical_or<bool>());
+                       m_artifactDisabled, std::logical_or<unsigned char>());
     }
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
@@ -5086,7 +5105,7 @@ bool game::loadMap(TAbstractFile* mapFile)
         }
 
         std::bitset<kNumSecSkills> serializedSkills = readPackedBits<kNumSecSkills>(mapFile);
-        for (size_t skill = 0; skill < kNumSecSkills; ++skill) {
+        for (int skill = 0; skill < kNumSecSkills; ++skill) {
             m_ssDisabled[skill] = serializedSkills[skill];
         }
     } else {
@@ -5094,7 +5113,9 @@ bool game::loadMap(TAbstractFile* mapFile)
             m_spellDisabledInfo[spell] =
                 (akSpellTraits[spell].m_flags & 0x2000) != 0;
         }
-        memset(m_ssDisabled, 0, sizeof(m_ssDisabled));
+        for (int skill = 0; skill < kNumSecSkills; ++skill) {
+            m_ssDisabled[skill] = 0;
+        }
     }
 
     std::copy(m_spellDisabledInfo,
