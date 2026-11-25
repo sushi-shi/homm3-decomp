@@ -939,11 +939,11 @@ TScenarioCrossover::TScenarioCrossover()
     setBRetained(eRetainSpells, true);
 }
 
-// Loki's readBitset shift/AND lowers that helper's VC6 cost from 89 to 87.
-// Five expansions before the 129-to-144 copy raise its child share 41->43:
-// proxy assignment then expands and set<144> remains called, as at 0x40817e.
-// This restores that boundary, not the whole caller; other inlining and
-// instruction differences remain (the unchanged caller's prior MAX holds).
+// readBitset's mask test is retail's (each expansion tests the byte against
+// 1 << (i % 8) and setne's the proxy's bool). Residual: retail retains the
+// 129-to-144 copy's set<144> call (0x40817e) where VC6 expands it here; the
+// shift/AND spelling (inline cost 87, not 89) kept that call but contradicts
+// retail's expansions and costs this body and the map header reader more.
 VA(0x00407ee0, 0x36b)
 void TScenarioCrossover::read(TRawIStream& stream, int version)
 {
@@ -1004,7 +1004,7 @@ VA_COMPGEN(0x0040fa00, 0x34, BITSET_TEST, bitset145)
 
 // The retained 129-to-144 copy in read() expands proxy assignment and calls
 // set(index, bool). Its 144 bound and _Xran edge at 0x403170 identify this
-// specialization; Loki's right-shift readBitset expression recovers emission.
+// specialization; this build expands that call (see read() above).
 VA_COMPGEN(0x0040f940, 0x60, BITSET_SET, bitset144)
 
 VA(0x00408440, 0x1c)
