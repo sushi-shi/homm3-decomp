@@ -57,16 +57,16 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           6,012 |   99.53% | last measured score                            |
+| CUR   |           6,027 |   99.54% | last measured score                            |
 | MAX   |           6,075 |   99.62% | best result for each function's current source |
-| HIST  |           6,085 |   99.71% | all-time peak across source revisions          |
+| HIST  |           6,086 |   99.71% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   164 | 5508 / 5548 (99.3%) |    99.80% |
-| `rmg`        |     6 |   436 / 478 (91.2%) |    98.37% |
+| `game`       |   164 | 5507 / 5547 (99.3%) |    99.80% |
+| `rmg`        |     6 |   437 / 479 (91.2%) |    98.37% |
 | `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`      |     3 |     49 / 53 (92.5%) |    99.99% |
 | `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |
@@ -80,7 +80,7 @@ Library and compiler-generated code (outside the scores; each function verified 
 | `init/cleanup thunks` |     3,706 |    1,039 |   82,062 | compiler-generated, verified             | source-emitted CRT bodies, bytes and named relocations                                                |
 | `import thunks`       |        13 |       13 |       78 | linker-generated, verified               | `FF 25` through a named IAT slot (and the pinned import library where one exists)                     |
 
-**Data:** 2,758 / 16,671 referenced data objects claimed (placements and the image's own `DATA()` claims).
+**Data:** 2,755 / 16,671 referenced data objects claimed (placements and the image's own `DATA()` claims).
 
 <!-- h3maped-match-score:end -->
 
@@ -90,7 +90,7 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           1,567 |   99.10% | last measured score                            |
+| CUR   |           1,573 |   99.11% | last measured score                            |
 | MAX   |           1,579 |   99.46% | best result for each function's current source |
 | HIST  |           1,588 |   99.56% | all-time peak across source revisions          |
 
