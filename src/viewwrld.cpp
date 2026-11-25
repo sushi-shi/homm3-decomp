@@ -504,7 +504,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
-    playerBit &= getMapExtra(srcX, srcY, z);
+    playerBit = (playerBit & getMapExtra(srcX, srcY, z)) != 0;
 
     int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW,
         baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
