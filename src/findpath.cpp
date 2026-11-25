@@ -53,8 +53,8 @@ searchArray::searchArray()
     m_seaMovement = 0;
     m_canSummonBoat = 0;
     m_canCastTeleport = 0;
-    m_waterWalkLevel = -1;
-    m_flightLevel = -1;
+    m_waterWalkLevel = eMasteryInvalid;
+    m_flightLevel = eMasteryInvalid;
     m_limitReached = 0;
 }
 

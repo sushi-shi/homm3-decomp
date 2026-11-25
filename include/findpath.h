@@ -95,17 +95,17 @@ private:
     void boardBoat(const hero* currentHero, pathCell& cell);
     unsigned char validMoveAdjacent(const army* currentArmy, int hex);
     unsigned char validMoveAdjacent(const army* currentArmy, const army& enemy);
-    int m_maxQueueCount;
+    unsigned int m_maxQueueCount;
     unsigned char m_payTransitionCosts;
-    int m_thisTurnsMovement;
-    int m_landMovement;
-    int m_seaMovement;
+    long m_thisTurnsMovement;
+    long m_landMovement;
+    long m_seaMovement;
     unsigned char m_canSummonBoat;
     unsigned char m_canCastTeleport;
     unsigned char m_canCastFlight;
     unsigned char m_canCastWaterWalk;
-    int m_waterWalkLevel;
-    int m_flightLevel;
+    TSkillMastery m_waterWalkLevel;
+    TSkillMastery m_flightLevel;
     unsigned char m_limitReached;
     pathCell* m_cellData;
 
