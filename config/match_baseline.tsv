@@ -2863,7 +2863,7 @@ overview	?getLastBackpackIndex@@YIJJ@Z	100.0000	100.0000	100.0000	0x1225d0	token
 overview	?overview@game@@QAEXXZ	99.9759	100.0000	100.0000	0x11e8d0	tokens1:10ccc272fd61
 overview	?overviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x11fa20	tokens1:ff5957e0c8e9
 overview	?processIconSelect@game@@QAEHH_N@Z	100.0000	100.0000	100.0000	0x11ee50	tokens1:414f5c2abe0c
-overview	?setupDynamicStuff@game@@QAEXHH@Z	97.0554	97.0554	97.0554	0x11bd50	tokens1:acd31765f2b1
+overview	?setupDynamicStuff@game@@QAEXHH@Z	97.4191	97.4191	97.4191	0x11bd50	tokens1:4ea831606d39
 overview	?setupNewOverviewType@game@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x11e330	tokens1:f3f0eaf2240f
 overview	?updateBackpack@@YIXH@Z	100.0000	100.0000	100.0000	0x122470	tokens1:c6090f0fa240
 overview	?updateFlaggableIcon@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e670	tokens1:202b825929ea

@@ -116,15 +116,26 @@ static void updateBackpack(int slot);
 // - The closing page switch rereads g_overviewTop[0] + row rather than
 //   heroNumber: DC 1139 and Mac 0x135b50 both reload the top, as retail
 //   does (96.93 -> 97.05; the summoning arm loses its -1 CSE).
+// - The hero tail's buttons and text buttons index row * 3 + a per-row
+//   counter, like curIcon/curText. Mac zeroes two more row-start slots
+//   (0x180, 0x17c) and loads them only for the first hsbtns3 button and
+//   first OvButn3 text button; later indices are the propagated 1 and 2
+//   (Mac 0x135738, 0x135a2c, 0x135afc), as for curIcon after its first
+//   ++. DC likewise materializes the counter as 1 at the second widget
+//   (r13 at line 1048, r12 at 1104) and bumps it at 1120. VC6 then keeps
+//   row * 3 unscaled as retail does (97.06 -> 97.42).
+// - The town locals follow DC's CodeView order (lookup, offsetToMon,
+//   occupyingHero, currTown, creature); byte-flat.
 // Residual: register assignment in the dwelling loop and summoning arm,
-// row * 3 pre-scaled to a byte offset in the hero tail's button stores,
-// and the artifact message reusing the curIcon stride constant 4. A
-// named `row * 3` local for the tail's text buttons scores 98.13 but has
-// no native support (DC/Mac index row * 3 + k directly), so it is not
-// adopted; an explicit `+ 0` first index folds and is byte-flat.
-// Byte-flat: the dwelling test as `if (!has) continue;`; any declaration
-// order of the counters/row/item. Worse: lookup as an upgraded if/else
-// (96.77 -> 96.38).
+// the hero army-loop setup, and the artifact message reusing the curIcon
+// stride constant 4, which rotates the tail's scratch registers. Moving
+// the equipped loop's curIcon++ after the clear message removes that
+// reuse (98.28) but contradicts DC 1076/1078 and Mac 0x135870, so it is
+// not adopted. Byte-flat: the dwelling test as `if (!has) continue;`; any
+// declaration order of the counters/row/item or hero-branch locals;
+// creature declared in the dwelling loop; an unsigned m_extra constant.
+// Worse: lookup as an upgraded if/else (96.77 -> 96.38). `lookup +=
+// TOWN_DWELLING_COUNT` is +0.01 but Mac 0x134420 adds 7 to item.
 // E:\gamedcs\overview.cpp:220
 // DC records `iOffsetToSS` at sp+0x54 in the hero-row scope. Its
 // pixel offset is recovered below as item * 36 + 433 (DC 0x1061f2).
@@ -150,6 +161,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
     int curBitmap;
     int curText;
     int curIcon;
+    int curButton;
+    int curTextButton;
     int row;
     int item;
     int monsterX[armyGroup::ARMY_GROUP_SLOT_COUNT] = { 0, 36, 72, 108, 18, 54, 90 };
@@ -208,6 +221,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
         curIcon = 0;
         curBitmap = 0;
         curText = 0;
+        curButton = 0;
+        curTextButton = 0;
         int rowWidgetId = row * 200 + 200;
 
         if (g_overviewTop[g_overviewType] + row
@@ -217,7 +232,6 @@ void game::setupDynamicStuff(int update, int forceUpdate)
         if (g_overviewType == 1) {
             int lookup;
             int offsetToMon;
-            TCreatureType creature;
             hero* occupyingHero;
             // Retail reaches GetLocalPlayer through the global (0x51bf82
             // loads gpGame into ecx) while the GetTown expansion beside it
@@ -225,6 +239,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             // receiver in the source.
             town* currTown = getTown(g_game->getLocalPlayer()->m_townIds[
                 g_overviewTop[g_overviewType] + row]);
+            TCreatureType creature;
 
             g_iconWidgetDynamic[row * 70 + curIcon] = new iconWidget(
                 22, row * 116 + 24, 701, 113, rowWidgetId + 2,
@@ -707,21 +722,23 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     curIcon++;
                 }
 
-                g_buttonDynamic[row * 3] = new button(
+                g_buttonDynamic[row * 3 + curButton] = new button(
                     291, row * 116 + 90, 22, 46,
                     rowWidgetId + 194, "hsbtns3.def",
                     0, 1, 0, 0, 2);
-                if (!g_buttonDynamic[row * 3])
+                if (!g_buttonDynamic[row * 3 + curButton])
                     memError();
-                g_overWin->addWidget(g_buttonDynamic[row * 3], -1);
+                g_overWin->addWidget(g_buttonDynamic[row * 3 + curButton], -1);
+                curButton++;
 
-                g_buttonDynamic[row * 3 + 1] = new button(
+                g_buttonDynamic[row * 3 + curButton] = new button(
                     697, row * 116 + 90, 22, 46,
                     rowWidgetId + 195, "hsbtns5.def",
                     0, 1, 0, 0, 2);
-                if (!g_buttonDynamic[row * 3 + 1])
+                if (!g_buttonDynamic[row * 3 + curButton])
                     memError();
-                g_overWin->addWidget(g_buttonDynamic[row * 3 + 1], -1);
+                g_overWin->addWidget(g_buttonDynamic[row * 3 + curButton], -1);
+                curButton++;
             } else {
                 for (item = 0; item < kNumArtifactSlots / 2; item++) {
                     artifact = currHero->getArtifact(TArtifactSlot(
@@ -747,32 +764,35 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                         msg.m_extra = widget::WIDGET_DRAWN;
                         g_overWin->broadcastMessage(msg);
                     }
-                                    }
+                }
             }
 
-            g_textButtonDynamic[row * 3] = new textButton(
+            g_textButtonDynamic[row * 3 + curTextButton] = new textButton(
                 386, row * 116 + 70, 108, 16,
                 rowWidgetId + 128, "OvButn3.def", (*g_generalText)[GENERAL_TEXT_EQUIPPED],
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
-            if (!g_textButtonDynamic[row * 3])
+            if (!g_textButtonDynamic[row * 3 + curTextButton])
                 memError();
-            g_overWin->addWidget(g_textButtonDynamic[row * 3], -1);
+            g_overWin->addWidget(g_textButtonDynamic[row * 3 + curTextButton], -1);
+            curTextButton++;
 
-            g_textButtonDynamic[row * 3 + 1] = new textButton(
+            g_textButtonDynamic[row * 3 + curTextButton] = new textButton(
                 498, row * 116 + 70, 108, 16,
                 rowWidgetId + 129, "OvButn3.def", (*g_generalText)[GENERAL_TEXT_MISCELLANEOUS],
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
-            if (!g_textButtonDynamic[row * 3 + 1])
+            if (!g_textButtonDynamic[row * 3 + curTextButton])
                 memError();
-            g_overWin->addWidget(g_textButtonDynamic[row * 3 + 1], -1);
+            g_overWin->addWidget(g_textButtonDynamic[row * 3 + curTextButton], -1);
+            curTextButton++;
 
-            g_textButtonDynamic[row * 3 + 2] = new textButton(
+            g_textButtonDynamic[row * 3 + curTextButton] = new textButton(
                 610, row * 116 + 70, 108, 16,
                 rowWidgetId + 138, "OvButn3.def", (*g_generalText)[GENERAL_TEXT_BACKPACK],
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
-            if (!g_textButtonDynamic[row * 3 + 2])
+            if (!g_textButtonDynamic[row * 3 + curTextButton])
                 memError();
-            g_overWin->addWidget(g_textButtonDynamic[row * 3 + 2], -1);
+            g_overWin->addWidget(g_textButtonDynamic[row * 3 + curTextButton], -1);
+            curTextButton++;
 
             switch (g_overviewHeroArtifactPage[g_overviewTop[0] + row]) {
             case OVERVIEW_HERO_EQUIPPED_PAGE_1:
