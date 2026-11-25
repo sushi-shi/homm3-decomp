@@ -1120,6 +1120,10 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
     // Current residual: 89/89 CFG blocks, same 35 calls (folded native vector
     // aliases differ), but VC6 uses eight extra frame bytes and different loop
     // register homes. Keep true vector size(), not synthetic cardinality helpers.
+    // Retail keeps markets/canBuildMarket in EDI/BL and spills player; ours
+    // spills the first two. Flat: bool flag, int/unsigned markets, the
+    // currentTown declaration outside the loop, flag-first declarations, an
+    // `else if (flag && canBuild)` arm. Player-first falls to 84.54%.
     long markets = 0;
     unsigned char canBuildMarket = 0;
     playerData* player = &g_game->m_players[m_team];
@@ -1363,10 +1367,12 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
         switch (currentTown->m_type) {
         case TOWN_RAMPART:
             if (building == EXTRA_1_ID) {
-                if (g_game->m_day == g_aiDayOfWeekSunday)
-                    return static_cast<long>(
-                        player->m_resources[GOLD]
-                        * player->m_ai.m_resourceValue[GOLD] / 10.0);
+                // DC line 1227 and Mac 0x2dc04 keep this early return 0.
+                if (g_game->m_day != g_aiDayOfWeekSunday)
+                    return 0;
+                return static_cast<long>(
+                    player->m_resources[GOLD]
+                    * player->m_ai.m_resourceValue[GOLD] / 10.0);
             } else if (building == SPECIAL_BUILDING_ID) {
                 return 2 * player->m_ai.m_averageResourceValue;
             }
@@ -1413,37 +1419,34 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
 // rescans from zero. Returns the chain, or 0 when a link is not legal
 // here. Single call site - no retail body.
 
-// `k` STARTS AT `building`, NOT AT 0, and retail proves it twice inside
-// purchase_building: `k = 0` makes `k < MAX_BUILDING_TYPE` provably true,
-// so VC6 drops the while's top test (54 branches against retail's 55) AND
-// strength-reduces `building` away entirely, giving a 0x690 frame against
-// retail's 0x694. With `k = building` the guard is retail's
-// `cmp <&bitNumber[building]>, <end> / jge` and `building` keeps its own
-// slot at [ebp-0x34]. The two spellings are equivalent - `requirements`
-// starts as bitNumber[building] alone, so a scan from 0 can only hit at
-// `building` - and this one is what the bytes say. 96.20 -> 97.32.
+// DC CodeView names the working set `prerequisites` and the returned
+// chain `requirements`, and records no separate scan index: DC r6 and Mac r4
+// keep the `building` parameter itself as the scan, reset at line 1300 and
+// stepped at 1303. Scanning the parameter instead of a `k = building` copy
+// lets VC6 keep the chain's low word in ECX through get_full_cost as retail
+// does (purchase_building 94.13 -> 97.93). The scan must start at `building`:
+// a scan reset to 0 before the loop drops the while's top test.
 DC_ADDRESS(0x030048, 0x106)
 MAC_ADDRESS(0x02dd5c, 0x10c)
 static __int64 getRequirements(const town* currentTown,
                                 type_building_id building)
 {
-    __int64 requirements = g_bitNumber[building];
-    __int64 seen = 0;
-    int k = building;
-    while (k < MAX_BUILDING_TYPE) {
-        if (requirements & g_bitNumber[k]) {
-            if (!currentTown->isLegalBuilding(H3_ENUM_DECODE(type_building_id, k)))
+    __int64 prerequisites = g_bitNumber[building];
+    __int64 requirements = 0;
+    while (building < MAX_BUILDING_TYPE) {
+        if (prerequisites & g_bitNumber[building]) {
+            if (!currentTown->isLegalBuilding(H3_ENUM_DECODE(type_building_id, building)))
                 return 0;
-            seen |= g_bitNumber[k];
-            requirements |= g_hierarchyMask[currentTown->m_type][k];
-            requirements &= ~currentTown->getBuildingMask();
-            requirements &= ~seen;
-            k = 0;
+            requirements |= g_bitNumber[building];
+            prerequisites |= g_hierarchyMask[currentTown->m_type][building];
+            prerequisites &= ~currentTown->getBuildingMask();
+            prerequisites &= ~requirements;
+            building = H3_ENUM_DECODE(type_building_id, 0);
         } else {
-            ++k;
+            building = H3_ENUM_DECODE(type_building_id, building + 1);
         }
     }
-    return seen;
+    return requirements;
 }
 
 // E:\gamedcs\ai_player.cpp:1313
@@ -1487,12 +1490,14 @@ static void markValues(long* fullValue, long totalValue,
 // towns is bought after a trade pass, gated by CanBuy for the
 // hall/marketplace band and by reserved funds everywhere else.
 
-// Residual (97.42%): VC6 hoists a second `gpGame` load above the faction
-// switch, where retail reloads it inside the RAMPART arm and again inside
-// the NECROPOLIS hero scan; that stolen register is also why our scan
+// Residual (97.93%): VC6 CSEs the value_of_building `gpGame` load into the
+// faction switch, where retail reloads it inside the RAMPART arm and again
+// inside the NECROPOLIS hero scan; that stolen register is also why our scan
 // counter spills to the frame where retail keeps it in EDX, and why the
-// three growth arms' scratch registers are rotated by one against
-// retail's. Branches, rets and the frame are all exact.
+// growth arms' scratch registers are rotated by one against retail's.
+// Branches, rets, calls and the frame are all exact. Flat probes: a
+// playerData reference, a named hero local, an int Necropolis value, and a
+// single-expression prerequisites update.
 // DC lines 1710/1776 call game::TownAlreadyBuiltOn and line 1721 calls
 // town::HasBuilding. Mac purchaseBuilding at 0:0x2ed58 expands both town
 // vector built flags and the active-building mask in those positions.
