@@ -2260,6 +2260,7 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
 
     clearScenarios();
 
+    int numScenarios = 0;
     std::filebuf* fileBuf = new std::filebuf;
     char currentDirectory[200];
     getcwd(currentDirectory, sizeof(currentDirectory));
@@ -2283,24 +2284,10 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
         m_stream = fileBuf;
     }
 
-    int numScenarios;
     {
         TGzInflateBuf inflateBuf(m_stream);
         TStreamBufFile streamFile(&inflateBuf);
-        // Retail reads through the abstract interface, not through the
-        // concrete local: every read is an indirect `call [vptr+4]` on
-        // TStreamBufFile's slot 1. Spelling `streamFile.Read(...)` instead
-        // lets VC6 resolve the call statically and expand the one-line body,
-        // which turns all six reads into direct sgetn calls on the inflater.
         TAbstractFile* file = &streamFile;
-        // Mac 0x96fa4 decodes the version with lwbrx, then reads an
-        // unsigned region byte and separate signed difficulty/music bytes.
-        // Probe (2026-09-29): the older Windows spelling (one int buffer for
-        // version and masked region, one char buffer for difficulty/music)
-        // under a platform fork measured 82.28% against 83.40%; VC6 still
-        // expands CMapHeaderData's constructor inside mapHeader's, which
-        // retail calls (retail FuncInfo has 19 states; the two extra
-        // vector/player-array states here are that ctor's members).
         int version = readLittleEndianValue<int>(file);
         m_campaignVersion = version;
         if (m_campaignVersion < 4) {
@@ -2328,8 +2315,6 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
     m_scenarios.size();
     int mapOffset = m_stream->pubseekoff(0, std::ios::cur, std::ios::in);
     NewSMapHeader mapHeader;
-    // Windows' -0x20 local and Mac 0x972e8 retain the selected record across
-    // loadMapHeader before applying its header; do not re-fetch the vector slot.
     for (int scenario2 = 0; scenario2 < numScenarios; ++scenario2) {
         ScenarioStruct* scenario = m_scenarios[scenario2];
         scenario->m_offset = mapOffset;

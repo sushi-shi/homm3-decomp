@@ -10368,6 +10368,10 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
 {
     resetMovementCosts();
 
+    TRmgMapPosition position(-1, -1, -1);
+    TRmgMapPosition nextPosition;
+    int direction;
+
     TRmgMapItem* mapItem;
 
     std::vector<TRmgMapPosition> openPositions;
@@ -10376,7 +10380,7 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
+    mapItem->setMovementCost(0, position);
 
     unsigned char sourceIsSnow;
     int riverType;
@@ -10392,17 +10396,13 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
+    mapItem->setMovementCost(0, position);
 
     ++source.m_x;
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
-
-    TRmgMapPosition position;
-    TRmgMapPosition nextPosition;
-    int direction;
+    mapItem->setMovementCost(0, position);
 
     while (openPositions.size() > 0) {
         position = openPositions.back();
@@ -10458,8 +10458,8 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
         return;
 #endif
 
-    position = nextPosition;
     mapItem->m_tileData.m_riverOutletTarget = 1;
+    position = nextPosition;
 
     type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
         m_map.getWidth(), m_map.getHeight());
@@ -10511,9 +10511,9 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
         addObject(riverDelta, nextPosition + riverDeltaOffsets[direction]);
 
         nextPosition = TRmgMapPosition(
-            position.getX() + g_rmgDirections[direction * 2].m_x,
-            position.getY() + g_rmgDirections[direction * 2].m_y,
-            position.m_z);
+            nextPosition.m_x + g_rmgDirections[direction * 2].m_x,
+            nextPosition.m_y + g_rmgDirections[direction * 2].m_y,
+            nextPosition.m_z);
         riverPainter.m_walker.drawTo(TTilePoint(nextPosition.getX(), nextPosition.getY()));
         mapItem = m_map.getMapItem(nextPosition);
         mapItem->m_tileData.m_riverOutletTarget = 1;
