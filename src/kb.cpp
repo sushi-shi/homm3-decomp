@@ -3155,8 +3155,8 @@ static void initVars()
     strcpy(g_game->m_setup.m_filename,
            DATA_COMPGEN(0x0067f5c8, defaultScenarioName, "test.h3m"));
     g_game->m_setup.m_fileInitialized = 0;
-    memset(g_timers, 0, sizeof(g_timers));
     g_inSetup = 0;
+    memset(g_timers, 0, sizeof(g_timers));
     if (g_cheatMenus) {
         g_dfltMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x6f));
         g_gameMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x71));

@@ -1465,7 +1465,7 @@ class type_road_map : public TRoadOp::TAbstractMap {
 public:
     type_random_map* m_map;
 
-    type_road_map(type_random_map* map) : m_map(map) {}
+    type_road_map(type_random_map* map) { m_map = map; }
     virtual void setTile(const TTilePoint& point, const TRmgTerrainTile& tile);
     virtual void setLineType(const TTilePoint& point, int value);
     virtual TTilePoint getSize();
