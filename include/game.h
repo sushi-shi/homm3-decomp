@@ -155,7 +155,8 @@ public:
     // DC + 4, in order and without exception, which is what identifies
     // this record. The two fields the Dreamcast build has no counterpart
     // for are the dword at +0x08 and the flag at +0x1a.
-    signed char m_owner;  // +0x00
+    // Dreamcast HeroExtra::Owner is plain char.
+    char m_owner;  // +0x00
     int m_id;  // +0x04
     int m_objRef;  // +0x08 - copied to hero::field_01e
     unsigned char m_hasCustomName;  // +0x0c
@@ -596,10 +597,11 @@ SIZE(TownExtra, 0x88);
 // SaveMinePool serializes the first three bytes, passes +0x04 to
 // armyGroup::save, then serializes +0x3c..+0x3e. The remaining alignment
 // bytes stay opaque.
+// Dreamcast types genClass, genType, playerOwner and town_id as signed char.
 class generator {
 public:
-    char m_genClass;  // +0x00
-    char m_genType;  // +0x01
+    signed char m_genClass;  // +0x00
+    signed char m_genType;  // +0x01
     char m_paddingBeforeCreatureTypes[2];
     TCreatureType m_type[4];  // +0x04  (DC 0x1CF0, 16 B)
     // +0x14. Four SHORTS, not two ints: the constructor's fused loop
@@ -612,8 +614,8 @@ public:
     unsigned char m_mapZ;  // +0x56
 
 protected:
-    char m_playerOwner;  // +0x57
-    char m_townId;  // +0x58
+    signed char m_playerOwner;  // +0x57
+    signed char m_townId;  // +0x58
 
 public:
     char m_paddingAfterTownId[3];
@@ -647,9 +649,10 @@ public:
         MINE_TYPE_LIGHTHOUSE = 100
     };
     // +0x00/+0x01, both retail-proven: MineTypesOwned sign-extends
-    // each and compares it against an int parameter.
-    char m_playerOwner;
-    char m_type;
+    // each and compares it against an int parameter. Dreamcast records
+    // both as signed char.
+    signed char m_playerOwner;
+    signed char m_type;
     // Retail abandoned-mine loading sets it; NewMap installs the guards
     // for these mines and the overview counts them separately.
     unsigned char m_isAbandoned;
@@ -686,9 +689,11 @@ public:
     signed char m_difficulty;
     char m_filename[251];
     char m_path[100];
-    unsigned char m_canFlipFromToComputer[NUM_PLAYERS];
+    // Dreamcast canFlipFromToComputer and bThisFileInitialized are signed
+    // char; newgame stores -1 into an unflippable slot.
+    signed char m_canFlipFromToComputer[NUM_PLAYERS];
     signed char m_curSelectedPlayer;
-    unsigned char m_fileInitialized;
+    signed char m_fileInitialized;
     signed char m_initializationNumHumans;
     signed char m_turnDuration;
     int m_startingHero[NUM_PLAYERS];
@@ -792,7 +797,8 @@ enum type_action_type {
 // the three trailing map bytes at +0x3c..+0x3e.
 class garrison {
 public:
-    char m_playerOwner;
+    // Dreamcast playerOwner: signed char.
+    signed char m_playerOwner;
     // Dreamcast and retail place the one-byte owner at +0 and army
     // at +4. The intervening three bytes align the armyGroup.
     char m_paddingBeforeArmy[3];
