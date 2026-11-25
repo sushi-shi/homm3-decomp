@@ -3789,7 +3789,6 @@ int t_abstract_random_generator::scoreObjectPlacement(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position)
 {
     TObjectType* prototype = properties->m_prototype;
-    std::bitset<kNumTerrainTypes>& terrainMask = prototype->_m_terrainMask;
     std::vector<type_object*> affected;
     unsigned char terrainSeen[10];
     unsigned int marks[10][8];
@@ -3803,9 +3802,7 @@ int t_abstract_random_generator::scoreObjectPlacement(
     TRmgObjectPlacementRule* rule;
     int nearColumn;
     int nearRow;
-    int firstRow;
     int lastRow;
-    int firstColumn;
     int lastColumn;
     memset(terrainSeen, 0, sizeof(terrainSeen));
     memset(marks, 0, sizeof(marks));
@@ -3822,11 +3819,10 @@ int t_abstract_random_generator::scoreObjectPlacement(
                 continue;
             unsigned int& markCell = marks[column + 1][row + 1];
             markCell |= RMG_PLACEMENT_OVERLAP;
-            if (prototype->getBCellPassable(column, row))
-                continue;
+            if (!prototype->getBCellPassable(column, row)) {
                 markCell |= RMG_PLACEMENT_BLOCKED;
                 item = getMapItem(cell);
-                if (!terrainMask[item->getLandType()])
+                if (!prototype->isAllowedTerrain(item->getLandType()))
                     return RMG_PLACEMENT_INVALID;
                 if (item->hasPathClearance())
                     return RMG_PLACEMENT_INVALID;
@@ -3835,15 +3831,15 @@ int t_abstract_random_generator::scoreObjectPlacement(
                 // before marking the surrounding area; retain that store.
                 terrainSeen[item->getLandType()] = 1;
                 markCell = RMG_PLACEMENT_ADJACENT;
-                firstRow = position.getY() - min(cell.getY() + 1, m_map.getHeight()) + 1;
                 lastRow = position.getY() - max(cell.getY() - 2, 0) + 1;
-                firstColumn = position.getX() - min(cell.getX() + 1, m_map.getWidth()) + 1;
                 lastColumn = position.getX() - max(cell.getX() - 2, 0) + 1;
-                for (nearColumn = firstColumn; nearColumn < lastColumn;
-                     ++nearColumn) {
-                    for (nearRow = firstRow; nearRow < lastRow; ++nearRow)
+                for (nearColumn = position.getX() - min(cell.getX() + 1, m_map.getWidth()) + 1;
+                     nearColumn < lastColumn; ++nearColumn) {
+                    for (nearRow = position.getY() - min(cell.getY() + 1, m_map.getHeight()) + 1;
+                         nearRow < lastRow; ++nearRow)
                         marks[nearColumn][nearRow] |= RMG_PLACEMENT_ADJACENT;
                 }
+            }
         }
     }
 
@@ -3852,8 +3848,9 @@ int t_abstract_random_generator::scoreObjectPlacement(
     unsigned char hasPositiveTerrain = 0;
     for (int terrain = 0; terrain < 10; ++terrain) {
         if (terrainSeen[terrain]) {
-            score += rule->m_terrainScores[terrain];
-            if (rule->m_terrainScores[terrain] > 0)
+            int terrainScore = rule->m_terrainScores[terrain];
+            score += terrainScore;
+            if (terrainScore > 0)
                 hasPositiveTerrain = 1;
         }
     }

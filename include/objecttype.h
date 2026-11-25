@@ -158,6 +158,12 @@ public:
     {
         return _m_recommendedTerrainMask.test(terrain);
     }
+    // Project name: allowed-terrain query used by the random-map footprint
+    // scorer (0x536bc0), through the non-const subscript.
+    bool isAllowedTerrain(int terrain)
+    {
+        return _m_terrainMask[terrain];
+    }
     int getHeight() const { return _m_height; }
     // Mac conversion 0x128d7c..0x128d94 reads this metadata after the
     // masks. These read-only counterparts of the existing fluent setters
