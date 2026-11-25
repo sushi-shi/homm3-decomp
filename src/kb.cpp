@@ -2415,20 +2415,21 @@ void sendPlayerLost()
 // 256-byte sNames local, switch/source order, helper boundaries and all ten
 // RoE-era message families. Retail corroborates those facts and adds the two
 // Complete-only victory kinds plus three campaign-specific artifact texts.
-// Residual (97.3784%): the Complete campaign artifact cases each write
-// their own string, followed by the ordinary victory announcement/dialog
-// tail. This removes five control-flow labels and improves 94.9521%.
-// DC supplies the base artifact/ordinary-victory scopes and common tail;
-// PC retail adds the 714/764/738 campaign texts. The old merged-block
-// representative diagnosis did not exhaust structured source forms.
+// The Complete campaign artifact cases each write their own string,
+// followed by the ordinary victory announcement/dialog tail. This removes
+// five control-flow labels and improves 94.9521%. DC supplies the base
+// artifact/ordinary-victory scopes and common tail; PC retail adds the
+// 714/764/738 campaign texts. The closing empty default (100%) is what
+// lets VC6 keep the shared TransmitRemoteData/NormalDialog tail in the
+// artifact arm, as retail does; without it every identical tail jumps into
+// the flag-mines arm's copy (97.4619%). The out-of-range dispatch reaches
+// the switch exit on DC and Mac either way. The NONE case stays first and
+// explicit: moving it last, or dropping it with no default, is byte-flat.
 // A campaign text ID selector scores 95.1482%; a pointer plus explicit
 // found flag stays at 94.9521%. Do not test the text pointer itself as a
 // success flag: that would change behavior if a text lookup returns null.
 // An explicit first-campaign send/dialog followed by switch break adds a
 // second CNetMsg construction and falls to 94.8657% (59 versus 57 calls).
-// The remaining call-stream displacement is the shared TransmitRemoteData/
-// NormalDialog pair, still emitted twice on both sides. The apparent extra
-// self-call difference is the switch table's shifted +0x1318/+0x1314 addend.
 // DC retains a text lookup in the older victory arms. Keep Complete's getText
 // helper; this spelling is Windows byte-flat here.
 // DC 3165/3167 separately admits a won defeat-hero condition and its team;
@@ -2856,6 +2857,8 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
             normalDialog(g_text, 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
         }
+        break;
+    default:
         break;
     }
 
