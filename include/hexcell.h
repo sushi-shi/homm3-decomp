@@ -16,7 +16,7 @@ public:
     // DC TAttributes: IS_OBSTACLE_ORIGIN, IS_BLOCKED, IS_QUICKSAND,
     // IS_LANDMINE, IS_FIREWALL, IS_STONEWALL, IS_OBSTACLIZED and
     // IS_MAGIC_OBSTACLE. Retail spell placement and
-    // removal use these same bits; keep the integer field's existing ABI.
+    // removal use these same bits on the unsigned int field DC records.
     enum TAttributes {
         obstacleOrigin = 0x01,
         blocked = 0x02,
@@ -43,7 +43,7 @@ public:
     // and starts attributes at +16, matching retail. No eighth semantic
     // short exists: these two bytes align the integer.
     short m_paddingBeforeAttributes;
-    int m_attributes;
+    unsigned int m_attributes;
     int m_obstacleIndex;
     // Signed: get_army (0x4e7170) movsx-loads the pair and treats a
     // negative side as empty; the dead arrays hold 14 slots each and
