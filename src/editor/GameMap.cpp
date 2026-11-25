@@ -2372,9 +2372,9 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     writeContainer(stream, *_m_pProperties->m_paRumor);
     if (_m_version >= GAME_VERSION_SOD)
         _writeHeroSettings(&stream, _m_version);
-    long numObjs = 0;
     unsigned int numLayers = _m_bTwoLayer ? 2 : 1;
     unsigned int layerNum;
+    long numObjs = 0;
     for (layerNum = 0; layerNum < numLayers; layerNum++) {
         writeCellData(stream, _m_aLayer[layerNum]);
         for (TLayer::TObjectIDIter iter = _m_aLayer[layerNum].objectIDBegin(); iter != _m_aLayer[layerNum].objectIDEnd();
@@ -2390,7 +2390,7 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     VA_COMPGEN(0x0042489a, 0xa, STATIC_DTOR, kObjTypeTable)
     DATA(0x0059e380) static const TObjectTypeTable kObjTypeTable("objtmplt.txt");
     for (vector<TObjectType>::const_iterator pObjType = kObjTypeTable.m_objectTypes.begin();
-         pObjType != kObjTypeTable.m_objectTypes.end(); ++pObjType)
+         pObjType != kObjTypeTable.m_objectTypes.end(); pObjType++)
         objTypes.add(*pObjType);
     vector<long> aObjTypeID(numObjs);
     long objNum = 0;
@@ -2963,8 +2963,7 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TBasicHer
         const TRefCountingPtr<_TPlayerBookkeeping>& pConstPlayerBookkeeping =
             _m_apPlayerBookkeeping[pHero->getOwner()];
         unsigned int numHeroes = pConstPlayerBookkeeping->m_numHeroes;
-        const TRefCountingPtr<_TProperties>& pConstProperties = _m_pProperties;
-        if ((*pConstProperties->m_paPlayer)[pHero->getOwner()].getBGenerateHero())
+        if (getPlayers()[pHero->getOwner()].getBGenerateHero())
             numHeroes++;
         if (numHeroes >= s_kMaxHeroesPerPlayer)
             throw TPlaceObjFailureTooManyHeroesForPlayer();
@@ -3045,8 +3044,7 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TTown* pT
         const TRefCountingPtr<_TPlayerBookkeeping>& pConstPlayerBookkeeping =
             _m_apPlayerBookkeeping[pTown->getOwner()];
         unsigned int numHeroes = pConstPlayerBookkeeping->m_numHeroes;
-        const TRefCountingPtr<_TProperties>& pConstProperties = _m_pProperties;
-        if ((*pConstProperties->m_paPlayer)[pTown->getOwner()].getBGenerateHero())
+        if (getPlayers()[pTown->getOwner()].getBGenerateHero())
             numHeroes++;
         if (numHeroes >= s_kMaxHeroesPerPlayer)
             throw TPlaceObjFailureTooManyHeroesForPlayer();
