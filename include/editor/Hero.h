@@ -339,7 +339,7 @@ public:
 
     // Whether the hero carries the artifact, worn or in the backpack (only
     // a hero with custom artifacts carries any).
-    bool hasArtifact(TArtifact artifact) const;
+    bool getBHasArtifact(TArtifact whichArtifact) const;
 
 protected:
     void read(TRawIStream* pIStream, int version);

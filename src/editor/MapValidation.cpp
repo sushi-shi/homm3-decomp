@@ -364,7 +364,7 @@ bool TMapValidationFunc::_isArtifactOnMap(TArtifact whichArtifact, const TSeersH
                         pHero = pTown->getPVisitingHero();
                 }
                 if (pHero != NULL) {
-                    if (pHero->hasArtifact(whichArtifact))
+                    if (pHero->getBHasArtifact(whichArtifact))
                         return true;
                 } else if (const TMonster* pMonster = dynamic_cast<const TMonster*>(pObject)) {
                     if (pMonster->getArtifact() == whichArtifact)
@@ -507,7 +507,7 @@ void TMapValidationFunc::visit(const TVCAquireArtifact& vc)
                 }
                 if (pHero != NULL && pHero->getOwner() != ePlayerNone
                     && (vc.getBAppliesToComputer() || _playerMayBeHuman(pHero->getOwner()))
-                    && pHero->hasArtifact(vc.getArtifact())) {
+                    && pHero->getBHasArtifact(vc.getArtifact())) {
                     TTilePoint loc = layer.getObjectLoc(*iter) - layer.getObject(*iter).getTriggerLoc();
                     CString heroStr;
                     const TIdentifiedHero* pIdentifiedHero = dynamic_cast<const TIdentifiedHero*>(pHero);
