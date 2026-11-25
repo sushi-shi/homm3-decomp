@@ -9742,8 +9742,8 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
     position.m_z = zone->getLevelPosition().m_z;
     bounds.m_maximumX -= groupBounds.m_maximumX - 1;
     bounds.m_maximumY -= groupBounds.m_maximumY - 1;
-    bounds.m_minimumX -= groupBounds.m_minimumX;
     bounds.m_minimumY -= groupBounds.m_minimumY;
+    bounds.m_minimumX -= groupBounds.m_minimumX;
     TRmgPoint center;
     center.m_x = (groupBounds.m_maximumX + groupBounds.m_minimumX) / 2;
     center.m_y = (groupBounds.m_maximumY + groupBounds.m_minimumY) / 2;
@@ -10511,8 +10511,8 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
         addObject(riverDelta, nextPosition + riverDeltaOffsets[direction]);
 
         nextPosition = TRmgMapPosition(
-            position.m_x + g_rmgDirections[direction * 2].m_x,
-            position.m_y + g_rmgDirections[direction * 2].m_y,
+            position.getX() + g_rmgDirections[direction * 2].m_x,
+            position.getY() + g_rmgDirections[direction * 2].m_y,
             position.m_z);
         riverPainter.m_walker.drawTo(TTilePoint(nextPosition.getX(), nextPosition.getY()));
         mapItem = m_map.getMapItem(nextPosition);
