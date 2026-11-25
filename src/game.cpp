@@ -4002,13 +4002,15 @@ static void randomizeScholar(NewmapCell* cell)
 }
 
 // E:\gamedcs\game.cpp:4524
+// DC 4538 frees the artifact through artifact_info->price (and #-16); Mac
+// 0xd65b4 stores zero into the same four-bit field.
 DC_ADDRESS(0x0ab9d4, 0x2c8)
 MAC_ADDRESS(0x0d6580, 0x50)
 static void randomizeArtifact(NewmapCell* cell)
 {
     if (!cell->isCustomized()) {
         random(0, 99);
-        cell->m_extraInfo &= 0xfffffff0;
+        cell->m_artifactInfo.m_price = const_free_artifact;
     }
 }
 
@@ -4472,7 +4474,14 @@ void game::matchUndergroundGates()
 // edx across the loop nest (pushing it directly in both generator messages)
 // and x/y take swapped frame slots; the caller still has more inline budget
 // than retail (predict-inline cb 2884, no single-cb window), so setWagon and
-// the witch-hut bitset ctor/operator[] still expand here.
+// the witch-hut bitset ctor/operator[] still expand here. The wagon needs a
+// nested budget under 87 (now (1142-112)/11 = 93) and the witch hut one in
+// 42..82 (now 278): about 300 more spent before the wagon fixes both.
+// DC 5121/5204/5217/5230/5243 clear the bank visit bits without the
+// clear_visited_bits call DC makes at 5271/5559/5583, so the bank arms write
+// m_creatureBankInfo.m_visitedBits (byte-flat). Failed probes: the DC form
+// without a lith pool pointer (93.50%), m_monsterInfo.m_qty for the 0xfff
+// test (93.20%).
 VA(0x004c0cc0, 0x1668)
 DC_ADDRESS(0x0ac910, 0x1278)
 MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order
@@ -4566,7 +4575,7 @@ void game::randomizeEvents()
 
                 case CREATURE_BANK:
                     {
-                        tempCell->clearVisitedBits();
+                        tempCell->m_creatureBankInfo.m_visitedBits = 0;
                         tempCell->m_creatureBankInfo.m_index =
                             m_creatureBanks.size();
                         tempCell->m_creatureBankInfo.m_empty = 0;
@@ -4628,7 +4637,7 @@ void game::randomizeEvents()
 
                 case DERELICT_SHIP:
                     {
-                        tempCell->clearVisitedBits();
+                        tempCell->m_creatureBankInfo.m_visitedBits = 0;
                         tempCell->m_creatureBankInfo.m_index =
                             m_creatureBanks.size();
                         tempCell->m_creatureBankInfo.m_empty = 0;
@@ -4641,7 +4650,7 @@ void game::randomizeEvents()
 
                 case SEPULCHER:
                     {
-                        tempCell->clearVisitedBits();
+                        tempCell->m_creatureBankInfo.m_visitedBits = 0;
                         tempCell->m_creatureBankInfo.m_index =
                             m_creatureBanks.size();
                         tempCell->m_creatureBankInfo.m_empty = 0;
@@ -4654,7 +4663,7 @@ void game::randomizeEvents()
 
                 case SHIPWRECK:
                     {
-                        tempCell->clearVisitedBits();
+                        tempCell->m_creatureBankInfo.m_visitedBits = 0;
                         tempCell->m_creatureBankInfo.m_index =
                             m_creatureBanks.size();
                         tempCell->m_creatureBankInfo.m_empty = 0;
@@ -4667,7 +4676,7 @@ void game::randomizeEvents()
 
                 case DRAGON_CITY:
                     {
-                        tempCell->clearVisitedBits();
+                        tempCell->m_creatureBankInfo.m_visitedBits = 0;
                         tempCell->m_creatureBankInfo.m_index =
                             m_creatureBanks.size();
                         tempCell->m_creatureBankInfo.m_empty = 0;
@@ -5767,7 +5776,11 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
 // free inline calls after resize matches exactly, so retail's root has more
 // late candidate sites or about 54 fewer cb. Flat: if-block in place of the
 // return, direct-init name, const bitset reference, char flag reads; a named
-// loop name local loses (95.56% before the identity local).
+// loop name local loses (95.56% before the identity local). predict-inline
+// --solve fits only budget edits (2 more free sites after resize, root cb
+// -54..-126, or every readValue site charged); a single-exit readHeroId body
+// gives 96.06%. The feature index is GAME_VERSION_AB, as the Loki editor's
+// g_gameContextFeatures[g_videoGameState].test(GAME_VERSION_AB) spells it.
 VA(0x004c3ef0, 0x498)
 MAC_ADDRESS(0x0da6b4, 0x478)  // sole NewSMapHeader::Read caller + slot stride/layout
 void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
@@ -5788,7 +5801,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     m_hasRandomAlignment = readValue<signed char>(infile) != 0;
     if (m_hasRandomAlignment)
         m_legalAlignments |= 0x100;
-    if (!g_gameContextFeatures[g_videoGameState][1])
+    if (!g_gameContextFeatures[g_videoGameState][GAME_VERSION_AB])
         m_legalAlignments &= 0xfeff;
 
     m_hasMainTown = readValue<signed char>(infile) != 0;
