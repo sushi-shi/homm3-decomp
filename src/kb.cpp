@@ -2855,7 +2855,9 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
         break;
     }
 
-    return gameWon || gameLost;
+    if (gameWon || gameLost)
+        return true;
+    return false;
 }
 
 // DC kb.cpp:3419..3436 names this ordinary function and its nested

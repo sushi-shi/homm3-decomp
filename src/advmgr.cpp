@@ -5501,7 +5501,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
         break;
     }
 
-    int playerBit = g_mapVisibilityBit;
+    unsigned char playerBit = g_mapVisibilityBit;
     for (int y = ulY; y <= brY; y++) {
         curRadar = radarRowStart + xOffset;
         // DC's row pointer is unsigned short*, advanced by the byte pitch
