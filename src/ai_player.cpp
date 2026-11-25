@@ -446,12 +446,18 @@ float type_AI_player::getAttackBonus(short player)
 // its type/amount at sp+0x6c/0x74; Mac uses the same C0/C8 homes before the
 // later whole-record copy. This recovers retail's word growth addition and
 // the top-three loop's three-dword copy, including its amount-word reload.
-// Residual (95.8698%): retail expands std::_Unguarded_insert within sort;
-// VC6 retains it here (79 vs 81 blocks). Other masked instruction differences
-// are the adjacent vector begin/end reload order. Independent population
-// locals or one collapsed value double lose native stores; using the record
-// type as the initialization/valuation counter does not improve the match.
-// Direct final-loop reads are supported by DC; an accessor call lost score.
+// The initialization and valuation loops count in that record's type field:
+// DC keeps both counters in creature.m_type (@(40,r14) = sp+0x6c) and Mac in
+// its 0xc0 home. The final running sum is an explicit assignment, as in
+// getResourceValue. Together they let VC6 expand sort's _Unguarded_insert as
+// retail does (the += sum and independent counters keep it out of line).
+// Residual (99.6719%): one 64-bit bit-mask test loads its halves in another
+// order and four spill slots (this, town counter, town, building) rotate.
+// Shared town/resource counters (99.24) or one currentTown (99.16) are lower;
+// declaration order, for-scoped counters, operand order, a long cast sum and
+// the efficiency declaration's placement are byte-neutral.
+// Independent population locals or one collapsed value double lose native
+// stores. Direct final-loop reads are supported by DC; an accessor lost score.
 VA(0x00428740, 0x68E)
 DC_ADDRESS(0x02e188, 0x64e)
 MAC_ADDRESS(0x02b43c, 0x704)  // linkorder
@@ -493,10 +499,10 @@ void type_AI_player::calculateDemand()
     }
 
     std::vector<type_creature_value> creatures(kNumCreatureTypes);
-    int creatureIndex;
-    for (creatureIndex = 0; creatureIndex < kNumCreatureTypes; creatureIndex++) {
-        creatures[creatureIndex].m_type = H3_ENUM_DECODE(TCreatureType, creatureIndex);
-        creatures[creatureIndex].m_amount = 0;
+    for (creature.m_type = TCreatureType(0); creature.m_type < kNumCreatureTypes;
+         creature.m_type = TCreatureType(creature.m_type + 1)) {
+        creatures[creature.m_type].m_type = creature.m_type;
+        creatures[creature.m_type].m_amount = 0;
     }
 
     int dwellingTownIndex;
@@ -516,10 +522,10 @@ void type_AI_player::calculateDemand()
         }
     }
 
-    int valueCreature;
-    for (valueCreature = 0; valueCreature < kNumCreatureTypes; valueCreature++)
-        creatures[valueCreature].m_value = creatures[valueCreature].m_amount
-            * akCreatureTypeTraits[valueCreature].AI_value;
+    for (creature.m_type = TCreatureType(0); creature.m_type < kNumCreatureTypes;
+         creature.m_type = TCreatureType(creature.m_type + 1))
+        creatures[creature.m_type].m_value = creatures[creature.m_type].m_amount
+            * akCreatureTypeTraits[creature.m_type].AI_value;
 
     std::sort(creatures.begin(), creatures.end(),
               std::greater<type_creature_value>());
@@ -578,7 +584,7 @@ void type_AI_player::calculateDemand()
     int resourceTotal = 0;
     int averageResource;
     for (averageResource = 0; averageResource < 6; averageResource++)
-        resourceTotal += m_resourceValue[averageResource];
+        resourceTotal = resourceTotal + m_resourceValue[averageResource];
     player->m_ai.m_averageResourceValue = resourceTotal / 5;
 }
 
