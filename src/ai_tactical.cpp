@@ -26,10 +26,10 @@ static double valueOfLuckAndMorale(long value, long change,
 static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex,
                               long troopCount, const army* enemy,
                               long enemyHex,
-                              const type_AI_combat_parameters* estimate);
+                              const type_AI_combat_parameters& estimate);
 static long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex,
                            long troopCount, const army* enemy, long enemyHex,
-                           const type_AI_combat_parameters* estimate);
+                           const type_AI_combat_parameters& estimate);
 
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
@@ -358,9 +358,9 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
 VA(0x004360c0, 0xBC)
 DC_ADDRESS(0x03ceb8, 0x98)
 MAC_ADDRESS(0x03d9ac, 0xe4)
-type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attack_army, const army* enemy_army, const long* enemy_attack_array, searchArray* search_data, const type_AI_combat_parameters* data)
+type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attack_army, const army* enemy_army, const long* enemy_attack_array, searchArray* search_data, const type_AI_combat_parameters& data)
+    : estimate(data)
 {
-    estimate = data;
     attacker = attack_army;
     speed = attack_army->getSpeed();
     enemy = enemy_army;
@@ -369,8 +369,8 @@ type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attack_army, 
     enemy_attacks = enemy_attack_array;
     search_array = search_data;
     best_hex = -1;
-    long enemyHits = enemy_army->getTotalHitPoints(data->m_simulated);
-    long ourHits = attack_army->getTotalHitPoints(data->m_simulated);
+    long enemyHits = enemy_army->getTotalHitPoints(data.m_simulated);
+    long ourHits = attack_army->getTotalHitPoints(data.m_simulated);
     enemyHits -= aiGetAttackDamage(*attack_army, ourHits, *enemy_army, 0, 0);
     if (enemyHits < 0)
         enemyHits = 0;
@@ -387,7 +387,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
     double combatValue;
     long value = 0;
     if (!g_game->m_setup.m_difficulty
-        && !g_combatManager->IsHuman[estimate->getGroup()])
+        && !g_combatManager->IsHuman[estimate.getGroup()])
         return 0;
     for (long direction = 0; direction < COMBAT_DIRECTION_COUNT; direction++) {
         long index = g_combatManager->m_adjacentCells[hex][direction];
@@ -405,14 +405,14 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
         checked |= 1 << neighbor->index;
         if (!neighbor->canShoot(attacker))
             continue;
-        long hits = neighbor->getTotalHitPoints(estimate->m_simulated);
+        long hits = neighbor->getTotalHitPoints(estimate.m_simulated);
         if (hits == 0)
             continue;
         combatValue = neighbor->getUnitCombatValue(
-                           estimate->m_lowestAttack, estimate->m_lowestDefense, 1,
+                           estimate.m_lowestAttack, estimate.m_lowestDefense, 1,
                            attacker);
         combatValue -= neighbor->getUnitCombatValue(
-                           estimate->m_lowestAttack, estimate->m_lowestDefense, 0, 0);
+                           estimate.m_lowestAttack, estimate.m_lowestDefense, 0, 0);
         long share = static_cast<long>(combatValue * static_cast<double>(hits)
                                        / static_cast<double>(neighbor->m_monInfo.hitPoints));
         if (share < 1)
@@ -479,7 +479,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
         checked = 0;
         long value = getHexAttackValue(hex, checked);
         if (g_game->m_setup.m_difficulty > 0
-                || g_combatManager->IsHuman[estimate->getGroup()]) {
+                || g_combatManager->IsHuman[estimate.getGroup()]) {
             if (attacker->is(creatureMultiHeaded))
                 value += getMultiHeadBonus(g_combatManager->m_currentSide,
                                               attacker, hex, our_strength,
@@ -521,7 +521,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
                 if ((attacker->m_creatureType == CREATURE_CAVALIER
                             || attacker->m_creatureType == CREATURE_CHAMPION)
                         && (g_game->m_setup.m_difficulty > 0
-                            || g_combatManager->IsHuman[estimate->getGroup()])) {
+                            || g_combatManager->IsHuman[estimate.getGroup()])) {
                     if (difference <= 0)
                         continue;
                 } else {
@@ -543,7 +543,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
 VA(0x00436620, 0x13A)
 DC_ADDRESS(0x03c608, 0xfe)
 MAC_ADDRESS(0x03ccf4, 0x184)
-static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
+static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters& estimate)
 {
     long alreadyChecked = 1 << enemy->index;
     long validDirections = ourArmy->getMultiHeadDirections(ourHex, enemy, enemyHex);
@@ -562,11 +562,11 @@ static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, l
         if (alreadyChecked & (1 << target->index))
             continue;
         long damage = ourArmy->getAverageDamage(*target, 0, troopCount, 1, 0);
-        if (estimate->m_simulated)
+        if (estimate.m_simulated)
             damage = min(static_cast<int>(damage),
                            static_cast<int>(target->getTotalHitPoints(1)));
-        value += target->getLossCombatValue(estimate->m_lowestAttack,
-                                               estimate->m_lowestDefense, 0, damage, 0);
+        value += target->getLossCombatValue(estimate.m_lowestAttack,
+                                               estimate.m_lowestDefense, 0, damage, 0);
         alreadyChecked |= 1 << target->index;
     }
     return value;
@@ -576,7 +576,7 @@ static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, l
 VA(0x00436760, 0xDF)
 DC_ADDRESS(0x03c708, 0x108)
 MAC_ADDRESS(0x03ce78, 0x160)
-static long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
+static long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters& estimate)
 {
     long direction = ourArmy->getAttackDirection(ourHex, enemy, enemyHex);
     long breathHex = ourArmy->getAdjacentHex(ourHex, direction);
@@ -587,12 +587,12 @@ static long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long
     if (target == 0 || target == enemy)
         return 0;
     long damage = ourArmy->getAverageDamage(*target, 0, troopCount, 1, 0);
-    if (estimate->m_simulated)
+    if (estimate.m_simulated)
         damage = min(static_cast<int>(damage),
                        static_cast<int>(target->getTotalHitPoints(1)));
-    long value = target->getLossCombatValue(estimate->m_lowestAttack,
-                                               estimate->m_lowestDefense, 0, damage,
-                                               estimate->m_killsOnly);
+    long value = target->getLossCombatValue(estimate.m_lowestAttack,
+                                               estimate.m_lowestDefense, 0, damage,
+                                               estimate.m_killsOnly);
     if (target->getOwningSide() == ourGroup)
         return -value;
     return value;

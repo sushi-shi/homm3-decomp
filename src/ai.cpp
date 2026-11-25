@@ -1767,7 +1767,7 @@ bool combatManager::chooseMeleeTarget(const army* currentArmy, bool teleport, lo
         }
 
         type_AI_attack_hex_chooser chooser(currentArmy, enemy, enemyAttacks,
-                                           g_searchArray, &estimate);
+                                           g_searchArray, estimate);
         if (!chooser.findAttackHex())
             continue;
         if (!currentArmy->cannotAttack()) {
