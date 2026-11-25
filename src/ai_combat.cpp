@@ -172,7 +172,7 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
     m_currentHero = const_cast<hero*>(newHero);
     m_currentArmy = const_cast<armyGroup*>(newArmy);
     checkWallArcheryPenalty(enemyTown);
-    m_enemyHero = const_cast<hero*>(enemyHero);
+    m_enemyHero = enemyHero;
 
     if (newHero == 0)
         m_mana = 0;
