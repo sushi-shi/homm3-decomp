@@ -4753,7 +4753,7 @@ void army::considerAttack(const army* enemy, long value, long attackDistance)
         if (turns == current && value <= AI_target_value)
             return;
     }
-    AI_target = const_cast<army*>(enemy);
+    AI_target = enemy;
     AI_target_value = value;
     AI_target_distance = attackDistance;
 }
