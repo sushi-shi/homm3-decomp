@@ -3569,10 +3569,10 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
 {
     const SMonFrameInfo& monFrameInfo = g_monFrameInfo[armyType];
     if (!facing)
-        *startX = x - monFrameInfo.m_missileOffset[2];
+        *startX = x - monFrameInfo.m_missileOffset[1][0];
     else
-        *startX = x + monFrameInfo.m_missileOffset[2];
-    *startY = y + monFrameInfo.m_missileOffset[3];
+        *startX = x + monFrameInfo.m_missileOffset[1][0];
+    *startY = y + monFrameInfo.m_missileOffset[1][1];
 
     int deltaX = destX - *startX;
     int deltaY = destY - *startY;
@@ -3611,10 +3611,10 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
     }
 
     if (!facing)
-        *startX = x - monFrameInfo.m_missileOffset[2 * offset];
+        *startX = x - monFrameInfo.m_missileOffset[offset][0];
     else
-        *startX = x + monFrameInfo.m_missileOffset[2 * offset];
-    *startY = y + monFrameInfo.m_missileOffset[2 * offset + 1];
+        *startX = x + monFrameInfo.m_missileOffset[offset][0];
+    *startY = y + monFrameInfo.m_missileOffset[offset][1];
 }
 
 // E:\gamedcs\cmbtmgr.cpp:4669

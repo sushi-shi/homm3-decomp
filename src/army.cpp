@@ -3659,12 +3659,12 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     long startX;
     if (m_facing == 1)
         startX = g_combatManager->m_cells[m_gridIndex].m_refX
-                 + m_monFrameInfo.m_missileOffset[2];
+                 + m_monFrameInfo.m_missileOffset[1][0];
     else
         startX = g_combatManager->m_cells[m_gridIndex].m_refX
-                 - m_monFrameInfo.m_missileOffset[2];
+                 - m_monFrameInfo.m_missileOffset[1][0];
     int startY = g_combatManager->m_cells[m_gridIndex].m_refY
-                 + m_monFrameInfo.m_missileOffset[3];
+                 + m_monFrameInfo.m_missileOffset[1][1];
 
     long dx = destX - startX;
     if (dx < 0)
@@ -3692,12 +3692,12 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     }
     if (m_facing == 1)
         startX = g_combatManager->m_cells[m_gridIndex].m_refX
-                 + m_monFrameInfo.m_missileOffset[2 * pose];
+                 + m_monFrameInfo.m_missileOffset[pose][0];
     else
         startX = g_combatManager->m_cells[m_gridIndex].m_refX
-                 - m_monFrameInfo.m_missileOffset[2 * pose];
+                 - m_monFrameInfo.m_missileOffset[pose][0];
     startY = g_combatManager->m_cells[m_gridIndex].m_refY
-             + m_monFrameInfo.m_missileOffset[2 * pose + 1];
+             + m_monFrameInfo.m_missileOffset[pose][1];
 
     sample* sample2b = ResourceManager::GetSample(
         levelsDestroyed == 0 ? DATA_COMPGEN(0x00660a84, wallMissSampleName,
