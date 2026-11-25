@@ -70,6 +70,19 @@ class TRandomGenerator;
 class TQuestGuard;
 class TWitchHut;
 
+// A cell's river and road kinds, 0 for none. Loki h3maped mangles them as
+// enums (TCell::setRiverType(TRiverType), TMapView::_setRiverType(TRiverType),
+// TMapDoc::startRiverPlacementOp(bool, TRiverType, unsigned int, unsigned
+// int) and the road twins), and TCell's setters assert "newRiverType <
+// kNumRiverTypes" and "newRoadType < kNumRoadTypes".
+enum TRiverType {
+    kNumRiverTypes = 5
+};
+
+enum TRoadType {
+    kNumRoadTypes = 4
+};
+
 typedef unsigned int TMapLayerObjectID;
 
 // The artifacts a map may disable: the properties' mask is five dwords
@@ -724,9 +737,9 @@ public:
 
     void setTerrainType(TTerrainType newTerrainType) { _m_terrainType = newTerrainType; }
     void setTileNum(unsigned int newTileNum) { _m_tileNum = newTileNum; }
-    void setRiverType(unsigned int newRiverType) { _m_riverType = newRiverType; }
+    void setRiverType(TRiverType newRiverType) { _m_riverType = newRiverType; }
     void setRiverTileNum(unsigned int newTileNum) { _m_riverTileNum = newTileNum; }
-    void setRoadType(unsigned int newRoadType) { _m_roadType = newRoadType; }
+    void setRoadType(TRoadType newRoadType) { _m_roadType = newRoadType; }
     void setRoadTileNum(unsigned int newTileNum) { _m_roadTileNum = newTileNum; }
     void setBHFlipped(bool bFlipped) { _m_bHFlipped = bFlipped; }
     void setBVFlipped(bool bFlipped) { _m_bVFlipped = bFlipped; }

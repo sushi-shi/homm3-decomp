@@ -369,6 +369,12 @@ private:
                 _realizeObstacleBrush();
         }
     }
+    // Loki's tool selectors (TMapView::_setTerrainType(TTerrainType),
+    // _setRiverType(TRiverType), _setRoadType(TRoadType)); each command
+    // handler stores its kind through one.
+    void _setTerrainType(TTerrainType terrainType) { _m_terrainType = terrainType; }
+    void _setRiverType(TRiverType riverType) { _m_riverType = riverType; }
+    void _setRoadType(TRoadType roadType) { _m_roadType = roadType; }
     void _setObjectSlot(TObjectSlot slot) { _m_pToolkitWnd->showObjectPalette(_m_objectSlot = slot); }
 
     void _deleteAll();
@@ -409,8 +415,8 @@ private:
     TObjectSlot _m_objectSlot;
     _TBrush _m_brush;
     TTerrainType _m_terrainType;
-    int _m_riverType;
-    int _m_roadType;
+    TRiverType _m_riverType;
+    TRoadType _m_roadType;
     _TBrush _m_eraseBrush;
     _TObstacleBrush _m_obstacleBrush;
     TPlayer _m_currentPlayer;

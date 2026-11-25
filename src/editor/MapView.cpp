@@ -460,8 +460,8 @@ TMapView::TMapView()
       _m_objectSlot(eSlotDirt),
       _m_brush(_eBrush2x2),
       _m_terrainType(eTerrainDirt),
-      _m_riverType(1),
-      _m_roadType(1),
+      _m_riverType(TRiverType(1)),
+      _m_roadType(TRoadType(1)),
       _m_eraseBrush(_eBrush2x2),
       _m_obstacleBrush(_eObstacleBrushBorderedArea2x2),
       _m_currentPlayer(ePlayerNone),
@@ -2094,7 +2094,7 @@ VA(0x00483a80, 0x16)
 void TMapView::OnToolsRiversClear()
 {
     OnToolsRivers();
-    _m_riverType = 1;
+    _setRiverType(TRiverType(1));
 }
 
 VA(0x00483a96, 0x23)
@@ -2107,7 +2107,7 @@ VA(0x00483ab9, 0x16)
 void TMapView::OnToolsRiversIcy()
 {
     OnToolsRivers();
-    _m_riverType = 2;
+    _setRiverType(TRiverType(2));
 }
 
 VA(0x00483acf, 0x26)
@@ -2120,7 +2120,7 @@ VA(0x00483af5, 0x16)
 void TMapView::OnToolsRiversLava()
 {
     OnToolsRivers();
-    _m_riverType = 4;
+    _setRiverType(TRiverType(4));
 }
 
 VA(0x00483b0b, 0x26)
@@ -2133,7 +2133,7 @@ VA(0x00483b31, 0x16)
 void TMapView::OnToolsRiversMuddy()
 {
     OnToolsRivers();
-    _m_riverType = 3;
+    _setRiverType(TRiverType(3));
 }
 
 VA(0x00483b47, 0x26)
@@ -2158,7 +2158,7 @@ VA(0x00483b92, 0x16)
 void TMapView::OnToolsRoadsCobblestone()
 {
     OnToolsRoads();
-    _m_roadType = 3;
+    _setRoadType(TRoadType(3));
 }
 
 VA(0x00483ba8, 0x26)
@@ -2171,7 +2171,7 @@ VA(0x00483bce, 0x16)
 void TMapView::OnToolsRoadsDirt()
 {
     OnToolsRoads();
-    _m_roadType = 1;
+    _setRoadType(TRoadType(1));
 }
 
 VA(0x00483be4, 0x23)
@@ -2184,7 +2184,7 @@ VA(0x00483c07, 0x16)
 void TMapView::OnToolsRoadsGravel()
 {
     OnToolsRoads();
-    _m_roadType = 2;
+    _setRoadType(TRoadType(2));
 }
 
 VA(0x00483c1d, 0x26)
@@ -2261,7 +2261,7 @@ VA(0x00483da6, 0x13)
 void TMapView::OnToolsTerrainDirt()
 {
     OnToolsTerrain();
-    _m_terrainType = eTerrainDirt;
+    _setTerrainType(eTerrainDirt);
 }
 
 VA(0x00483db9, 0x23)
@@ -2274,7 +2274,7 @@ VA(0x00483ddc, 0x16)
 void TMapView::OnToolsTerrainGrass()
 {
     OnToolsTerrain();
-    _m_terrainType = eTerrainGrass;
+    _setTerrainType(eTerrainGrass);
 }
 
 VA(0x00483df2, 0x23)
@@ -2287,7 +2287,7 @@ VA(0x00483e15, 0x16)
 void TMapView::OnToolsTerrainLava()
 {
     OnToolsTerrain();
-    _m_terrainType = eTerrainLava;
+    _setTerrainType(eTerrainLava);
 }
 
 VA(0x00483e2b, 0x23)
@@ -2300,7 +2300,7 @@ VA(0x00483e4e, 0x16)
 void TMapView::OnToolsTerrainRough()
 {
     OnToolsTerrain();
-    _m_terrainType = eTerrainRough;
+    _setTerrainType(eTerrainRough);
 }
 
 VA(0x00483e64, 0x23)
@@ -2313,7 +2313,7 @@ VA(0x00483e87, 0x16)
 void TMapView::OnToolsTerrainSand()
 {
     OnToolsTerrain();
-    _m_terrainType = eTerrainSand;
+    _setTerrainType(eTerrainSand);
 }
 
 VA(0x00483e9d, 0x22)
@@ -2326,7 +2326,7 @@ VA(0x00483ebf, 0x16)
 void TMapView::OnToolsTerrainSnow()
 {
     OnToolsTerrain();
-    _m_terrainType = eTerrainSnow;
+    _setTerrainType(eTerrainSnow);
 }
 
 VA(0x00483ed5, 0x23)
@@ -2339,7 +2339,7 @@ VA(0x00483ef8, 0x16)
 void TMapView::OnToolsTerrainSubterranean()
 {
     OnToolsTerrain();
-    _m_terrainType = eTerrainSubterranean;
+    _setTerrainType(eTerrainSubterranean);
 }
 
 VA(0x00483f0e, 0x23)
@@ -2352,7 +2352,7 @@ VA(0x00483f31, 0x16)
 void TMapView::OnToolsTerrainSwamp()
 {
     OnToolsTerrain();
-    _m_terrainType = eTerrainSwamp;
+    _setTerrainType(eTerrainSwamp);
 }
 
 VA(0x00483f47, 0x23)
@@ -2365,7 +2365,7 @@ VA(0x00483f6a, 0x16)
 void TMapView::OnToolsTerrainWater()
 {
     OnToolsTerrain();
-    _m_terrainType = eTerrainWater;
+    _setTerrainType(eTerrainWater);
 }
 
 VA(0x00483f80, 0x23)
@@ -2378,7 +2378,7 @@ VA(0x00483fa3, 0x16)
 void TMapView::OnToolsTerrainRock()
 {
     OnToolsTerrain();
-    _m_terrainType = eTerrainRock;
+    _setTerrainType(eTerrainRock);
 }
 
 VA(0x00483fb9, 0x23)
@@ -2967,7 +2967,7 @@ VA(0x004850be, 0x13)
 void TMapView::OnToolsRiversErase()
 {
     OnToolsRivers();
-    _m_riverType = 0;
+    _setRiverType(TRiverType(0));
 }
 
 VA(0x004850d1, 0x23)
@@ -2980,7 +2980,7 @@ VA(0x004850f4, 0x13)
 void TMapView::OnToolsRoadsErase()
 {
     OnToolsRoads();
-    _m_roadType = 0;
+    _setRoadType(TRoadType(0));
 }
 
 VA(0x00485107, 0x23)

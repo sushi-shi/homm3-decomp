@@ -244,7 +244,7 @@ void TRiverMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 {
     TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
     TGameMap::TLayer::TCell* pCell = pLayer->getPCell(loc.x(), loc.y());
-    pCell->setRiverType(tile.m_terrain);
+    pCell->setRiverType(TRiverType(tile.m_terrain));
     pCell->setRiverTileNum(tile.m_frame);
     pCell->setBRiverHFlipped(tile.m_flipX);
     pCell->setBRiverVFlipped(tile.m_flipY);
@@ -255,7 +255,7 @@ VA(0x0045dca9, 0x4b)
 void TRiverMap::setLineType(const TTilePoint& loc, int type)
 {
     TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
-    pLayer->getPCell(loc.x(), loc.y())->setRiverType(type);
+    pLayer->getPCell(loc.x(), loc.y())->setRiverType(TRiverType(type));
     _touch(loc);
 }
 
@@ -333,7 +333,7 @@ void TRoadMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 {
     TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
     TGameMap::TLayer::TCell* pCell = pLayer->getPCell(loc.x(), loc.y());
-    pCell->setRoadType(tile.m_terrain);
+    pCell->setRoadType(TRoadType(tile.m_terrain));
     pCell->setRoadTileNum(tile.m_frame);
     pCell->setBRoadHFlipped(tile.m_flipX);
     pCell->setBRoadVFlipped(tile.m_flipY);
@@ -344,7 +344,7 @@ VA(0x0045de5e, 0x4d)
 void TRoadMap::setLineType(const TTilePoint& loc, int type)
 {
     TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
-    pLayer->getPCell(loc.x(), loc.y())->setRoadType(type);
+    pLayer->getPCell(loc.x(), loc.y())->setRoadType(TRoadType(type));
     _touch(loc);
 }
 
@@ -691,7 +691,7 @@ int TMapDoc::_TTerrainPlacementOp::getFrame(const TTilePoint& loc)
 // RTTI: TRiverMap is a private base (attributes 9).
 class TMapDoc::_TRiverPlacementOp : private TRiverMap {
 public:
-    _TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int riverType, const TTilePoint& start);
+    _TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, TRiverType riverType, const TTilePoint& start);
 
     void operator()(const TTilePoint& loc);
 
@@ -701,7 +701,7 @@ private:
 };
 
 VA(0x0045e752, 0xe7)
-TMapDoc::_TRiverPlacementOp::_TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int riverType,
+TMapDoc::_TRiverPlacementOp::_TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, TRiverType riverType,
                                                 const TTilePoint& start)
     : TRiverMap(pDoc->_m_pMap, bSecondLayer),
       _m_pDoc(pDoc),
@@ -769,7 +769,7 @@ void TMapDoc::_TRiverEraseOp::operator()(unsigned int left, unsigned int top, un
 // RTTI: TRoadMap is a private base (attributes 9).
 class TMapDoc::_TRoadPlacementOp : private TRoadMap {
 public:
-    _TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int roadType, const TTilePoint& start);
+    _TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, TRoadType roadType, const TTilePoint& start);
 
     void operator()(const TTilePoint& loc);
 
@@ -779,7 +779,7 @@ private:
 };
 
 VA(0x0045ea2a, 0xe7)
-TMapDoc::_TRoadPlacementOp::_TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int roadType,
+TMapDoc::_TRoadPlacementOp::_TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, TRoadType roadType,
                                               const TTilePoint& start)
     : TRoadMap(pDoc->_m_pMap, bSecondLayer),
       _m_pDoc(pDoc),
@@ -1290,7 +1290,7 @@ void TMapDoc::terrainFill(unsigned int left, unsigned int top, unsigned int widt
 }
 
 VA(0x0045fc93, 0x89)
-void TMapDoc::startRiverPlacementOp(bool bSecondLayer, int riverType, unsigned int x, unsigned int y)
+void TMapDoc::startRiverPlacementOp(bool bSecondLayer, TRiverType riverType, unsigned int x, unsigned int y)
 {
     assert(_m_pMap != NULL);
     assert(_m_pRiverPlacementOp == NULL);
@@ -1319,7 +1319,7 @@ void TMapDoc::placeRiver(unsigned int x, unsigned int y)
 }
 
 VA(0x0045fd5c, 0x89)
-void TMapDoc::startRoadPlacementOp(bool bSecondLayer, int roadType, unsigned int x, unsigned int y)
+void TMapDoc::startRoadPlacementOp(bool bSecondLayer, TRoadType roadType, unsigned int x, unsigned int y)
 {
     assert(_m_pMap != NULL);
     assert(_m_pRoadPlacementOp == NULL);

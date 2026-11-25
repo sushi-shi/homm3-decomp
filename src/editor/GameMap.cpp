@@ -5226,11 +5226,11 @@ void readCell(TRawIStream* pIStream, TGameMap::TLayer::TCell* pCell)
     pCell->setTileNum(tileNum);
     pCell->setBHFlipped(flags & 1);
     pCell->setBVFlipped((flags >> 1) & 1);
-    pCell->setRiverType(riverType);
+    pCell->setRiverType(TRiverType(riverType));
     pCell->setRiverTileNum(riverTileNum);
     pCell->setBRiverHFlipped((flags >> 2) & 1);
     pCell->setBRiverVFlipped((flags >> 3) & 1);
-    pCell->setRoadType(roadType);
+    pCell->setRoadType(TRoadType(roadType));
     pCell->setRoadTileNum(roadTileNum);
     pCell->setBRoadHFlipped((flags >> 4) & 1);
     pCell->setBRoadVFlipped((flags >> 5) & 1);
