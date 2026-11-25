@@ -2329,18 +2329,22 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
             m_campaignMusic = 0x25;
         else
             m_campaignMusic = readValue<signed char>(file);
-        numScenarios = getCampaignRegionCount(m_regionMap);
+        numScenarios = g_campaignMapTraits[m_regionMap].m_numRegions;
         for (int newValue = 0; newValue < numScenarios; ++newValue)
             readScenario(file, numScenarios);
     }
 
+    m_scenarios.size();
+    m_scenarios.size();
+    m_scenarios.size();
+    m_scenarios.size();
     int mapOffset = m_stream->pubseekoff(0, std::ios::cur, std::ios::in);
     NewSMapHeader mapHeader;
     // Windows' -0x20 local and Mac 0x972e8 retain the selected record across
     // loadMapHeader before applying its header; do not re-fetch the vector slot.
     for (int scenario2 = 0; scenario2 < numScenarios; ++scenario2) {
         ScenarioStruct* scenario = m_scenarios[scenario2];
-        scenario->setOffset(mapOffset);
+        scenario->m_offset = mapOffset;
         if (scenario->hasMap()) {
             mapOffset += scenario->getMapDataSize();
             scenario->loadMapHeader(m_stream, &mapHeader, scenario2);

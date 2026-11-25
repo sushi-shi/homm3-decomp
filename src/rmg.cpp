@@ -6868,6 +6868,10 @@ void type_random_map_generator::buildZoneConnectionPaths()
 // orders, predecessor copy forms and nested present/absent scopes did not
 // improve it. Keep the retained retail map/helper calls as the next target;
 // do not replace them with a pasted body or an inline-depth pin.
+inline unsigned char isConnectionPresent(const TRmgMapItem* item)
+{
+    return item->m_connection.m_present;
+}
 VA(0x005408E0, 0x23F)
 MAC_ADDRESS(0x242e88, 0x380) // anchor-callee createGroundConnection; thiscall, ret 0x10
 VA_AT(h3maped, 0x004a5a23, 0x1e4)
@@ -6875,12 +6879,12 @@ void type_random_map_generator::openConnectionPath(
     TRmgMapPosition position, unsigned char narrow)
 {
     type_random_map& map = m_map;
-    TRmgMapItem* item = map.getMapItem(position);
+    TRmgMapItem* item = getMapItem(position);
     int zone = item->m_zoneState.m_zone;
     if (item->m_movement.m_cost >= 30000)
         return;
     while (item->m_movement.m_cost > 0) {
-        if (item->m_connection.m_present) {
+        if (isConnectionPresent(item)) {
             TRmgObjectPropertiesRef* properties = selectObjectPrototype(
                 eTerrainDirt, BORDER_GUARD, item->m_connection.m_guardColor);
             type_object* object = new type_object(properties);
@@ -6908,7 +6912,7 @@ void type_random_map_generator::openConnectionPath(
             }
         }
         position = previous;
-        item = map.getMapItem(position);
+        item = map.getMapItem(previous);
     }
 }
 
