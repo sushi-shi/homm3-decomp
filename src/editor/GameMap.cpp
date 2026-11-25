@@ -361,7 +361,8 @@ public:
     TLayer* getPLayer(unsigned int num) { return &_m_aLayer[num]; }
     TLayer* getPLayer(bool bSecondLayer);
     const TLayer* getPLayer(unsigned int num) const { return &_m_aLayer[num]; }
-    const TLayer& getLayer(bool bSecondLayer) const { return _m_aLayer[bSecondLayer ? 1U : 0U]; }
+    const TLayer* getPLayer(bool bSecondLayer) const { return getPLayer(bSecondLayer ? 1U : 0U); }
+    const TLayer& getLayer(bool bSecondLayer) const { return *getPLayer(bSecondLayer); }
     const TLayer& getLayer(unsigned int num) const { return *getPLayer(num); }
     EGameVersion getVersion() const { return _m_version; }
     unsigned int getWidth() const { return _s_akDimension[_m_size]; }
