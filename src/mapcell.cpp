@@ -3300,9 +3300,11 @@ void NewfullMap::readRandomDwellingFactionData(TAbstractFile* infile,
     char padding[3];
     infile->read(padding, 3);
 
-    dwelling.m_castleId = 0;
+    // Native Mac 0x125b08/0x125b0c stores the faction mask before the zero
+    // castle id; retail readObject schedules the two stores in that order.
     dwelling.m_factionMask = static_cast<unsigned short>(
         1 << m_objectTypes[object->m_typeIndex].m_extra);
+    dwelling.m_castleId = 0;
 
     dwelling.m_minLevel = readValue<char>(infile);
     dwelling.m_maxLevel = readValue<char>(infile);
@@ -3392,9 +3394,8 @@ void NewfullMap::readHeroPlaceholderData(TAbstractFile* infile, CObject* tempObj
 // versus direct two-argument insert at 60.0594%; no sibling score moves.
 // Both guard/data insertion workers still expand where retail calls the
 // two-argument bodies, so this does not close that native-vector frontier.
-// Current residual (59.40%): readSeerData expands with its owned temporary,
-// read and pool insertion. VC6 also expands the temporary TSeerHut constructor
-// that retail retains; other map-reader call/expansion differences remain.
+// Exact (99.52 -> 100) once readRandomDwellingFactionData writes its faction
+// mask before the zero castle id, the order native Mac stores them in.
 VA(0x00502e00, 0x832)
 DC_ADDRESS(0x0f16c8, 0x454)
 MAC_ADDRESS(0x125ebc, 0x3ac)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined
