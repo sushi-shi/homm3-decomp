@@ -10514,8 +10514,10 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
             m_objectPrototypes[TERRAIN_RIVER_DELTA][prototypeIndex]);
         addObject(riverDelta, nextPosition + riverDeltaOffsets[direction]);
 
-        TRmgPoint step = g_rmgDirections[direction * 2];
-        nextPosition = position + step;
+        nextPosition = TRmgMapPosition(
+            position.m_x + g_rmgDirections[direction * 2].m_x,
+            position.m_y + g_rmgDirections[direction * 2].m_y,
+            position.m_z);
         riverPainter.m_walker.drawTo(TTilePoint(nextPosition.getX(), nextPosition.getY()));
         mapItem = m_map.getMapItem(nextPosition);
         mapItem->m_tileData.m_riverOutletTarget = 1;
