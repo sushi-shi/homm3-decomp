@@ -831,7 +831,7 @@ int hero::save(TAbstractFile* outfile)
     writeValue(outfile, static_cast<int>(m_skillCount));
     writeValue(outfile, static_cast<short>(m_mana));
     writeValue(outfile, static_cast<short>(m_level));
-    writeValue(outfile, static_cast<unsigned short>(m_targetDistance));
+    writeValue(outfile, m_targetDistance);
 
     writeValue(outfile, static_cast<unsigned int>(m_trainingGroundsFlags));
     writeValue(outfile, static_cast<unsigned int>(m_defenseTowerFlags));

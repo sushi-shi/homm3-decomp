@@ -662,7 +662,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     if (currentHero->m_pathTargetX >= 0) {
         maxDistance = max(
             currentHero->m_movePoints
-                + static_cast<unsigned short>(currentHero->m_targetDistance)
+                + currentHero->m_targetDistance
                 + 200,
             1000);
     }

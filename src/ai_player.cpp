@@ -3259,7 +3259,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
     currentHero->m_pathTargetY = bestPoint.m_y;
     currentHero->m_pathTargetZ = bestPoint.m_z;
     currentHero->m_targetIsCritical = bestPoint.m_isCritical;
-    currentHero->m_targetDistance = static_cast<short>(bestDistance);
+    currentHero->m_targetDistance = static_cast<unsigned short>(bestDistance);
     delete[] strategicMap;
     return rawValue;
 }

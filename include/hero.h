@@ -439,7 +439,7 @@ public:
     // retail +0x3f under the same -5 repack). hero::CheckLevel writes the
     // new `level` here whenever the level-up offers a magic school.
     short m_lastMagicSchoolLevel;  // +0x3f
-    short m_targetDistance;  // +0x41
+    unsigned short m_targetDistance;  // +0x41, Dreamcast unsigned short
     unsigned char m_targetIsCritical;  // +0x43
     // The patrol triple at +0x44..+0x46 and the compass facing at
     // +0x47, all byte-proven by hero::is_in_patrol_radius (0x4e56e0)
