@@ -22,9 +22,10 @@
 // 0x68c710..0x68c837; the immediately following jktext.txt literal at
 // 0x68c838 bounds the array independently.  SetWinText's +0/+2/+4 loads and
 // 8-byte stride prove the layout, and the values below are the pinned retail
-// initializer rather than an inferred enumeration.
+// initializer rather than an inferred enumeration. Dreamcast original:
+// gWinSetup, an external global of window.obj (`?gWinSetup@@3PAUSWinSetup@@A`).
 DATA(0x0068c710)
-static SWinSetup g_winSetup[37] = {
+SWinSetup g_winSetup[37] = {
     { 0x06, 0x0067, 0 }, { 0x06, 0x0068, 0 },
     { 0x06, 0x0069, 0 }, { 0x06, 0x006a, 0 },
     { 0x06, 0x006b, 0 }, { 0x06, 0x006c, 0 },
