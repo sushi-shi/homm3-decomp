@@ -420,7 +420,8 @@ void TRmgVoronoi::buildVertices()
         TRmgHalfEdge* edge = m_edges[index];
         if (edge->getZone() && !edge->isPositionComputed()) {
             TRmgPoint second = edge->getOppositeSitePosition();
-            TRmgPoint position = computeRmgCircumcenter(edge->getSitePosition(), second,
+            TRmgPoint origin = edge->getSitePosition();
+            TRmgPoint position = computeRmgCircumcenter(origin, second,
                 edge->getNext()->getOppositeSitePosition());
             edge->setPosition(position);
             edge = edge->getNext()->getTwin();

@@ -1034,11 +1034,11 @@ bool CDPlayLobby::TestLobbied()
     if (!buf)
         return 0;
     HRESULT result = m_lpLobby->GetConnectionSettings(0, buf, &size);
+    m_hRes = result;
     if (FAILED(result)) {
         m_hRes = result;
         return false;
     }
-    m_hRes = result;
     return true;
 }
 

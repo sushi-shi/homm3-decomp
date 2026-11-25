@@ -589,11 +589,23 @@ std::string type_skill_quest::skillRequirementText(
 // retail directly calls skillRequirementText. Its paired Mac score falls
 // from 100% to 48.4568%. Symmetric direct assign(...) calls are byte-flat
 // at this function with either requirement spelling. Keep the native helper.
+// This lane may only edit the function block, so the row-selection body the
+// shared questTexts accessor needs (getTextColumn -> the column local, then
+// the indexed row local) is restored here as its own inlined helper. Its
+// emitted row computation is identical; the two locals make the inlined
+// callee cost > 40, which is what starves the second assign in retail.
+static inline const TSeerHutQuestText& skillQuestTexts(type_quest& quest)
+{
+    const TSeerHutTextColumn* column = quest.getTextColumn();
+    const TSeerHutQuestText& row = column->m_quest[quest.questType()];
+    return row;
+}
+
 VA(0x0056e0d0, 0x169)
 MAC_ADDRESS(0x165390, 0x144)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()
 {
-    const TSeerHutQuestText& texts = questTexts();
+    const TSeerHutQuestText& texts = skillQuestTexts(*this);
     std::string requirement = skillRequirementText(m_requiredSkills);
 
     if (m_proposalText.length() == 0)

@@ -3806,18 +3806,19 @@ int t_abstract_random_generator::scoreObjectPlacement(
     cell.m_z = position.m_z;
     for (unsigned int row = 0; row < prototype->getHeight(); ++row) {
         cell.m_y = position.getY() - row;
-        if (cell.getY() < 0 || cell.getY() >= m_map.m_mapHeight)
+        if (cell.getY() < 0 || cell.getY() >= m_map.getHeight())
             continue;
         for (unsigned int column = 0; column < prototype->getWidth(); ++column) {
             cell.m_x = position.getX() - column;
-            if (cell.getX() < 0 || cell.getX() >= m_map.m_mapWidth)
+            if (cell.getX() < 0 || cell.getX() >= m_map.getWidth())
                 continue;
             if (!prototype->getBCellPlaced(column, row))
                 continue;
-            marks[column + 1][row + 1] |= RMG_PLACEMENT_OVERLAP;
+            unsigned int& markCell = marks[column + 1][row + 1];
+            markCell |= RMG_PLACEMENT_OVERLAP;
             if (prototype->getBCellPassable(column, row))
                 continue;
-                marks[column + 1][row + 1] |= RMG_PLACEMENT_BLOCKED;
+                markCell |= RMG_PLACEMENT_BLOCKED;
                 item = getMapItem(cell);
                 if (!prototype->_m_terrainMask[item->getLandType()])
                     return RMG_PLACEMENT_INVALID;
@@ -3827,10 +3828,10 @@ int t_abstract_random_generator::scoreObjectPlacement(
                 // Retail 0x536d34 overwrites the complete mark with one
                 // before marking the surrounding area; retain that store.
                 terrainSeen[item->getLandType()] = 1;
-                marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
-                firstRow = position.getY() - min(cell.getY() + 1, m_map.m_mapHeight) + 1;
+                markCell = RMG_PLACEMENT_ADJACENT;
+                firstRow = position.getY() - min(cell.getY() + 1, m_map.getHeight()) + 1;
                 lastRow = position.getY() - max(cell.getY() - 2, 0) + 1;
-                firstColumn = position.getX() - min(cell.getX() + 1, m_map.m_mapWidth) + 1;
+                firstColumn = position.getX() - min(cell.getX() + 1, m_map.getWidth()) + 1;
                 lastColumn = position.getX() - max(cell.getX() - 2, 0) + 1;
                 for (nearColumn = firstColumn; nearColumn < lastColumn;
                      ++nearColumn) {
@@ -3857,13 +3858,13 @@ int t_abstract_random_generator::scoreObjectPlacement(
 
     properties->buildOverlapPriorities();
     for (row = 0; row < prototype->getHeight() + 2; ++row) {
-        cell.m_y = position.getY() + 1 - row;
-        if (cell.getY() < 0 || cell.getY() >= m_map.m_mapHeight)
+        cell.m_y = position.getY() - row + 1;
+        if (cell.getY() < 0 || cell.getY() >= m_map.getHeight())
             continue;
         for (unsigned int column = 0; column < prototype->getWidth() + 2;
              ++column) {
-            cell.m_x = position.getX() + 1 - column;
-            if (cell.getX() < 0 || cell.getX() >= m_map.m_mapWidth)
+            cell.m_x = position.getX() - column + 1;
+            if (cell.getX() < 0 || cell.getX() >= m_map.getWidth())
                 continue;
             mark = marks[column][row];
             if (!mark)
