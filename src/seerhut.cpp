@@ -434,14 +434,17 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 // Mac Complete retains this common skill-picture dialog at code0:0x164e44
 // (three callers), taking text and four signed skill values after `this`.
 // Windows Complete expands it in slot 5; preserve one ordinary source body.
+// The picture descriptor lives for the whole body, as in the artifact
+// helper: slot 4's retail frame (sub esp, 0x64) keeps the extra four bytes
+// only this function-scope declaration produces (see slot 4's note).
 MAC_ADDRESS(0x164e44, 0xc0)
 void type_skill_quest::showSkillRequirementsDialog(
     const char* text, const signed char* skills)
 {
     std::vector<type_dialog_resource> dialogResources;
+    type_dialog_resource resource;
     for (int i = 0; i < kNumPrimarySkills; ++i) {
         if (skills[i] > 0) {
-            type_dialog_resource resource;
             resource.m_resource = 0x1f + i;
             resource.m_qualifier = 0x10000
                 | static_cast<unsigned short>(skills[i]);
@@ -481,10 +484,20 @@ void type_skill_quest::showSkillRequirementsDialog(
 // same direct group load (0x16781c..0x167860). Its charged cost restores
 // retail's three retained string _Tidy calls (74.89 -> 88.96%). Residual:
 // both expanded helper copies call the vector allocator constructor out of
-// line in retail; the budget replay needs two more free root sites after the
-// final destructor, with no source known. Probes: empty() guard 88.69%;
-// hoisted resource, array-reference skills and text.append() are flat;
-// insert(end(), resource) gives 94.95% but Mac retains push_back.
+// line in retail. The 2026-11-26 trace gives the helper copies 651/12 = 54
+// and 169/3 = 56 against the constructor's cb 51. A budget-only probe of two
+// free root sites after the final destructor reproduces both calls; with the
+// helper's function-scope descriptor it then matches every byte, including
+// retail's 0x64 frame (block-scoped descriptor: 0x60 frame, 99.86%). Without
+// the probe the function-scope descriptor measures 88.95% (block 88.96%).
+// No source for those sites is known. Flat or lower: empty() (88.69%),
+// trailing or early return, named first-arm text, array-reference or pointer
+// skills (skillRequirementText's cb stays 176, above the 175 save limit),
+// text.append(), direct-init locals, a textPointer local, size()/!= 0/bool
+// guards, swapped arms (43.23%), a ternary loop (84.58%), the call in the
+// condition, reversed comparison, aggregate descriptor init and reordered
+// qualifier operands. insert(end(), resource) gives 94.95% but Mac retains
+// push_back.
 VA(0x0056dad0, 0x28C)
 MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProgressDialog(hero* currentHero)

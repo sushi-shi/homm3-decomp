@@ -3764,7 +3764,7 @@ seerhut	?doProgressDialog@type_defeat_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0
 seerhut	?doProgressDialog@type_experience_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16d4b0	tokens1:b80be5273d94
 seerhut	?doProgressDialog@type_monster_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16ec00	tokens1:b82ccff968ff
 seerhut	?doProgressDialog@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171840	tokens1:a5a24713b448
-seerhut	?doProgressDialog@type_skill_quest@@UAEXPAVhero@@@Z	88.9640	88.9640	91.6396	0x16dad0	tokens1:6f8c9259da22
+seerhut	?doProgressDialog@type_skill_quest@@UAEXPAVhero@@@Z	88.9505	88.9640	91.6396	0x16dad0	tokens1:6f8c9259da22
 seerhut	?doProposalDialog@type_artifact_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16fbc0	tokens1:3da22bc08ef0
 seerhut	?doProposalDialog@type_be_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171fc0	tokens1:d61cd53514d7
 seerhut	?doProposalDialog@type_belong_to_player_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x1725b0	tokens1:2dd688068dca
