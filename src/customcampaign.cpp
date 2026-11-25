@@ -2252,9 +2252,10 @@ static int getCampaignRegionCount(int regionMap)
 }
 
 // The region count and record offset go through getCampaignRegionCount and
-// setOffset (score-neutral). The four bare m_scenarios.size() statements
-// have no native support (Mac's vector calls belong to readScenario's
-// push_back); removing them costs 94.38 -> 88.80%.
+// setOffset (score-neutral). An earlier shape carried four bare
+// m_scenarios.size() statements with no native support (Mac's vector calls
+// belong to readScenario's push_back); they only steered the inline budget
+// and were removed (94.38 -> 88.80% expected).
 VA(0x00488880, 0x5D6)
 MAC_ADDRESS(0x096df0, 0x5ac)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::load()
@@ -2313,10 +2314,6 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
             readScenario(file, numScenarios);
     }
 
-    m_scenarios.size();
-    m_scenarios.size();
-    m_scenarios.size();
-    m_scenarios.size();
     int mapOffset = m_stream->pubseekoff(0, std::ios::cur, std::ios::in);
     NewSMapHeader mapHeader;
     for (int scenario2 = 0; scenario2 < numScenarios; ++scenario2) {
