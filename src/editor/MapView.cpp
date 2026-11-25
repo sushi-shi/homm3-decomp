@@ -609,7 +609,7 @@ void TMapView::onToolkitGrabObject(TToolkitWnd* pToolkitWnd, const TObjectType& 
         return;
     }
     _m_pFloatingObj = dynamic_cast<const TGUIGameObject*>(_m_pNewFloatingObj.get());
-    _m_pMapFrameWnd->grabObject(_m_pFloatingObj);
+    _m_pMapFrameWnd->grabObject(*_m_pFloatingObj);
 }
 
 VA(0x00480b1a, 0x32)
@@ -683,7 +683,7 @@ void TMapView::onEditGrabObject(TMapEditingWnd* pWnd, unsigned int objID)
     _m_floatingObjX = loc.x();
     _m_floatingObjY = loc.y();
     getPDocument()->floatObject(_m_bViewUnderground, objID);
-    _m_pMapFrameWnd->grabObject(_m_pFloatingObj);
+    _m_pMapFrameWnd->grabObject(*_m_pFloatingObj);
 }
 
 VA(0x00480d57, 0x9c)
@@ -694,7 +694,7 @@ void TMapView::onEditCopyObject(TMapEditingWnd* pWnd, unsigned int objID)
     if (_m_pNewFloatingObj.get() == NULL)
         throw TAllocationFailure();
     _m_pFloatingObj = dynamic_cast<const TGUIGameObject*>(_m_pNewFloatingObj.get());
-    _m_pMapFrameWnd->grabObject(_m_pFloatingObj);
+    _m_pMapFrameWnd->grabObject(*_m_pFloatingObj);
 }
 
 VA(0x00480df3, 0x1f5)

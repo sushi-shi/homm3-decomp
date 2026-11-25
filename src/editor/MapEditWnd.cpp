@@ -418,11 +418,11 @@ void TMapEditWnd::selectObject(unsigned int objID)
 }
 
 VA(0x00469fbf, 0x1c1)
-void TMapEditWnd::grabObject(const TGUIGameObject* pObj)
+void TMapEditWnd::grabObject(const TGUIGameObject& obj)
 {
     if (_m_toolTipObjID != TGameMap::TLayer::s_kInvalidObjID)
         _clearToolTipObj();
-    _m_pFloatingObj = pObj;
+    _m_pFloatingObj = &obj;
     SetCapture();
     CPoint point;
     GetCursorPos(&point);
@@ -435,7 +435,7 @@ void TMapEditWnd::grabObject(const TGUIGameObject* pObj)
     CRect floatingObjRect = _computeFloatingObjRect(_m_floatingObjPos);
     _setCursor(floatingObjRect.right > viewRect.left && floatingObjRect.bottom > viewRect.top
                        && floatingObjRect.left < viewRect.right && floatingObjRect.top < viewRect.bottom
-                       && !_m_pMap->isValidPlacement(*pObj, _m_bSecondLayer, _m_floatingObjPos.x,
+                       && !_m_pMap->isValidPlacement(obj, _m_bSecondLayer, _m_floatingObjPos.x,
                                                      _m_floatingObjPos.y)
                    ? khNoCursor
                    : hClosedHandCursor);
