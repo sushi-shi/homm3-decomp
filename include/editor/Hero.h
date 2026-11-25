@@ -61,7 +61,8 @@ public:
     // The worn artifact per slot (none: -1) and the backpack, a multiset
     // (0x5c; equality 0x428ac9). From map version 21 an artifact is a
     // short, before it a byte; from version 27 (the edition's Shadow of
-    // Death) the misc slot 5 is stored too.
+    // Death) the misc slot 5 is stored too. As in Loki, the backpack is
+    // read through the const getBackpack and changed through getPBackpack.
     class TArtifactContainer {
     public:
         TArtifactContainer() : _m_aSlot(ARTIFACT_NONE) {}
@@ -75,8 +76,8 @@ public:
 
         TArtifact getSlot(TArtifactSlot slot) const { return _m_aSlot[slot]; }
         void setSlot(TArtifactSlot slot, TArtifact artifact);
+        std::multiset<TArtifact>* getPBackpack() { return &_m_backpack; }
         const std::multiset<TArtifact>& getBackpack() const { return _m_backpack; }
-        std::multiset<TArtifact>& getBackpack() { return _m_backpack; }
 
         friend bool operator==(const TArtifactContainer& lhs, const TArtifactContainer& rhs)
         {
