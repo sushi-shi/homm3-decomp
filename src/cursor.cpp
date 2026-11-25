@@ -419,7 +419,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
     int xInc;
     int origX;
     int curMoveCost;
-    int yInc;
+    int yInc = 0;
     int origY;
     boat* oldBoat;
 
@@ -438,7 +438,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
     yInc = g_normalDirTable[direction].m_y;
 
     triggerPoint.m_x = curr->m_x + xInc;
-    triggerPoint.m_y = curr->m_y + yInc;
+    triggerPoint.m_y = curr->m_y + (short)yInc;
     triggerPoint.m_z = curr->m_z;
 
     g_completeDrawEnabled = getMoveShowIt(curr, direction);
@@ -497,8 +497,8 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         oldBoat->m_y = curr->m_y;
         oldBoat->m_z = curr->m_z;
         oldBoat->obscureCell();
-        oldBoat->m_occupied = 0;
         oldBoat->m_facing = curr->m_facing;
+        oldBoat->m_occupied = 0;
         m_drawCursor = 0;
         becameBoat = 1;
         stopCursor(1);
