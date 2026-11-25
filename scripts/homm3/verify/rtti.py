@@ -24,6 +24,11 @@ where retail derives privately shows up here). With `--eh`, each retail
 ThrowInfo's CatchableTypeArray (the thrown type and its public unambiguous
 bases: properties, displacements, size and whether a copy constructor is
 named) is compared with our `__CTA` records keyed by the thrown type.
+A thrown type no object of ours records is `library` when every .text
+site naming one of its ThrowInfos lies in a statically linked library
+function (the image's runtime-map.tsv or runtime-functions.tsv): counted
+apart from findings, listed with `--all`. Any other is a `retail-throw`
+finding naming its sites.
 
 VC6 spells an anonymous namespace `?%<source path><hash>@`. Our scope is
 first replaced by the image's reviewed retail spelling
@@ -43,6 +48,7 @@ them. The report is informational; `--gate` returns 1 when any finding
 from __future__ import annotations
 
 import argparse
+import bisect
 import json
 import re
 import struct
@@ -227,8 +233,8 @@ def retail_hierarchies(r: Retail) -> tuple[dict[str, Hierarchy], dict[str, str],
     return out, spelled, vftable
 
 
-def retail_catchables(r: Retail, type_info: int | None) -> dict[str, tuple[Catchable, ...]]:
-    """{folded thrown type: its catchable types} from every ThrowInfo."""
+def retail_throws(r: Retail, type_info: int | None) -> list[tuple[int, tuple[Catchable, ...]]]:
+    """[(ThrowInfo address, its catchable types)] of every retail ThrowInfo."""
     text = r.section(".text")
     lo, hi = (r.base + text["va"], r.base + text["va"] + text["vsize"]) if text else (0, 0)
 
@@ -238,7 +244,7 @@ def retail_catchables(r: Retail, type_info: int | None) -> dict[str, tuple[Catch
             return None
         return name
 
-    out = {}
+    out = []
     for s in (r.section(".rdata"), r.section(".data")):
         if s is None:
             continue
@@ -263,8 +269,70 @@ def retail_catchables(r: Retail, type_info: int | None) -> dict[str, tuple[Catch
                 types.append(Catchable(fold(name), f[0], _s32(f[2]), _s32(f[3]),
                                        _s32(f[4]), f[5], bool(f[6])))
             if len(types) == count:
-                out.setdefault(types[0].name, tuple(types))
+                out.append((r.base + s["va"] + off, tuple(types)))
     return out
+
+
+def retail_catchables(r: Retail, type_info: int | None) -> dict[str, tuple[Catchable, ...]]:
+    """{folded thrown type: its catchable types} from every ThrowInfo."""
+    out = {}
+    for _va, types in retail_throws(r, type_info):
+        out.setdefault(types[0].name, types)
+    return out
+
+
+def throw_sites(r: Retail, throws) -> dict[str, list[int]]:
+    """{folded thrown type: the .text addresses naming one of its ThrowInfos}
+    (the `push offset __TI...` operand ahead of `_CxxThrowException`)."""
+    text = r.section(".text")
+    if text is None:
+        return {}
+    code = r.pe.data[text["rptr"]:text["rptr"] + text["rsize"]]
+    start = r.base + text["va"]
+    out = {}
+    for va, types in throws:
+        sites = out.setdefault(types[0].name, [])
+        pattern = struct.pack("<I", va)
+        at = code.find(pattern)
+        while at >= 0:
+            sites.append(start + at)
+            at = code.find(pattern, at + 1)
+    return out
+
+
+def library_extents(retail_dir: Path, base: int) -> list[tuple[int, int]]:
+    """Sorted [(start, end)] addresses of the image's statically linked
+    library functions: each runtime-map.tsv row (sized by the function
+    census) and each runtime-functions.tsv row."""
+    from homm3.core.tsv import read as read_tsv
+    extents = set()
+    sizes = {}
+    census = retail_dir / "functions.tsv"
+    if census.is_file():
+        sizes = {int(row["rva"], 16): int(row["size"]) for row in read_tsv(census)[2]}
+    runtime_map = retail_dir / "runtime-map.tsv"
+    if runtime_map.is_file():
+        for row in read_tsv(runtime_map)[2]:
+            rva = int(row["rva"], 16)
+            if rva in sizes:
+                extents.add((base + rva, base + rva + sizes[rva]))
+    runtime_functions = retail_dir / "runtime-functions.tsv"
+    if runtime_functions.is_file():
+        for row in read_tsv(runtime_functions)[2]:
+            rva = int(row["rva"], 16)
+            extents.add((base + rva, base + rva + int(row["size"])))
+    merged = []
+    for lo, hi in sorted(extents):
+        if merged and lo <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], hi))
+        else:
+            merged.append((lo, hi))
+    return merged
+
+
+def in_extents(va: int, extents: list[tuple[int, int]]) -> bool:
+    i = bisect.bisect_right(extents, (va, float("inf"))) - 1
+    return i >= 0 and extents[i][0] <= va < extents[i][1]
 
 
 # --- our objects ----------------------------------------------------------
@@ -432,8 +500,14 @@ def _strip_hierarchy(h: Hierarchy) -> Hierarchy:
 
 
 def compare(retail: dict, retail_spelled: dict, ours: Ours,
-            retail_ct: dict | None = None) -> dict:
-    """Findings, notes and one-sided classes of one image."""
+            retail_ct: dict | None = None, sites: dict | None = None,
+            library: list | None = None) -> dict:
+    """Findings, notes and one-sided classes of one image.
+
+    A thrown type retail records and no object of ours does is `library`
+    when it has throw sites (`sites`, {thrown type: [address]}) and every
+    one lies inside a statically linked library function (`library`,
+    sorted [(start, end)]); otherwise it is a `retail-throw` finding."""
     findings, notes = [], []
     agree = 0
     matched_ours = set()
@@ -486,11 +560,20 @@ def compare(retail: dict, retail_spelled: dict, ours: Ours,
     result = {"summary": summary, "findings": findings, "notes": notes,
               "retail_only": retail_only, "ours_only": ours_only}
     if retail_ct is not None:
-        ct_agree, ct_retail_only = 0, []
+        ct_agree, ct_retail_only, ct_library = 0, [], []
         for key, r in sorted(retail_ct.items()):
             variants = ours.catchables.get(key)
             if not variants:
+                at = sorted((sites or {}).get(key, []))
+                if at and library and all(in_extents(va, library) for va in at):
+                    ct_library.append(key)
+                    continue
                 ct_retail_only.append(key)
+                findings.append({"kind": "retail-throw", "class": key, "units": [],
+                                 "differences": [
+                                     "retail throws it at " + (", ".join(f"{va:#x}" for va in at)
+                                                               or "no found site")
+                                     + "; no object of ours records it"]})
                 continue
             if r in variants:
                 ct_agree += 1
@@ -503,9 +586,10 @@ def compare(retail: dict, retail_spelled: dict, ours: Ours,
         ct_ours_only = sorted(set(ours.catchables) - set(retail_ct))
         summary.update(eh_retail=len(retail_ct), eh_ours=len(ours.catchables),
                        eh_agree=ct_agree, eh_retail_only=len(ct_retail_only),
-                       eh_ours_only=len(ct_ours_only),
+                       eh_library=len(ct_library), eh_ours_only=len(ct_ours_only),
                        catchable=sum(f["kind"] == "catchable" for f in findings))
         result["eh_retail_only"] = ct_retail_only
+        result["eh_library"] = ct_library
         result["eh_ours_only"] = ct_ours_only
     return result
 
@@ -522,14 +606,22 @@ def image_inputs(image: str) -> tuple[Path, Path, Path]:
             paths.retail_dir(image) / "anon-ns-paths.tsv")
 
 
-def audit(exe: Path, base_dir: Path, table: Path, eh: bool = False) -> dict:
+def audit(exe: Path, base_dir: Path, table: Path, eh: bool = False,
+          retail_dir: Path | None = None) -> dict:
+    """`retail_dir` (the image's config/retail tables) names the library
+    functions whose throws `--eh` reports apart from findings."""
     from homm3.core.pe import Pe
     from homm3.delink.coffx import objects
     r = Retail(Pe(exe))
     retail, spelled, type_info = retail_hierarchies(r)
-    retail_ct = retail_catchables(r, type_info) if eh else None
+    retail_ct = sites = library = None
+    if eh:
+        throws = retail_throws(r, type_info)
+        retail_ct = retail_catchables(r, type_info)
+        sites = throw_sites(r, throws)
+        library = library_extents(retail_dir, r.base) if retail_dir else []
     ours = our_records(objects(base_dir), _canonical(table), eh)
-    return compare(retail, spelled, ours, retail_ct)
+    return compare(retail, spelled, ours, retail_ct, sites, library)
 
 
 def render(image: str, result: dict, show_all: bool = False) -> list[str]:
@@ -541,7 +633,8 @@ def render(image: str, result: dict, show_all: bool = False) -> list[str]:
     if "eh_retail" in s:
         lines.append(f"  eh: retail {s['eh_retail']} thrown types, ours {s['eh_ours']}; "
                      f"{s['eh_agree']} agree, {s['catchable']} differ; "
-                     f"{s['eh_retail_only']} retail-only, {s['eh_ours_only']} ours-only")
+                     f"{s['eh_retail_only']} retail-only, {s['eh_library']} thrown only by "
+                     f"library code, {s['eh_ours_only']} ours-only")
     for f in result["findings"]:
         units = f.get("units") or sorted({u for v in f.get("ours", []) if isinstance(v, dict)
                                           for u in v["units"]})
@@ -559,7 +652,7 @@ def render(image: str, result: dict, show_all: bool = False) -> list[str]:
     if show_all:
         lines += [f"retail-only {_short(k)}" for k in result["retail_only"]]
         lines += [f"ours-only {_short(k)}" for k in result["ours_only"]]
-        lines += [f"eh retail-only {_short(k)}" for k in result.get("eh_retail_only", [])]
+        lines += [f"eh library {_short(k)}" for k in result.get("eh_library", [])]
         lines += [f"eh ours-only {_short(k)}" for k in result.get("eh_ours_only", [])]
     return lines
 
@@ -590,7 +683,8 @@ def main(argv=None) -> int:
             print(f"rtti {key}: no objects at {base_dir}; build the image first",
                   file=sys.stderr)
             return 2
-        results[key] = audit(exe, base_dir, table, args.eh)
+        from homm3.core import paths
+        results[key] = audit(exe, base_dir, table, args.eh, paths.retail_dir(key))
     if args.json:
         json.dump(results, sys.stdout, indent=1)
         print()

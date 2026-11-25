@@ -20,6 +20,11 @@ class _Image:
 
     def __init__(self):
         self.rdata, self.data = bytearray(), bytearray()
+        self.text = bytearray(0x200)
+
+    def push(self, offset, va):
+        """`push offset va` at .text+offset."""
+        self.text[offset:offset + 5] = b"\x68" + struct.pack("<I", va)
 
     def _put(self, buf, rva, payload):
         while len(buf) % 4:
@@ -60,7 +65,7 @@ class _Image:
         struct.pack_into("<H", data, 0x94, 0xE0)
         struct.pack_into("<H", data, 0x98, 0x10B)
         struct.pack_into("<I", data, 0x98 + 28, BASE)
-        raw = [(".text", TEXT, bytes(0x200)), (".rdata", RDATA, bytes(self.rdata)),
+        raw = [(".text", TEXT, bytes(self.text)), (".rdata", RDATA, bytes(self.rdata)),
                (".data", DATA, bytes(self.data))]
         pointer = 0x400
         for i, (name, rva, payload) in enumerate(raw):
@@ -146,6 +151,30 @@ class RetailTest(unittest.TestCase):
                          [".?AVDerived@@", ".?AVBase@@"])
 
 
+    def test_throw_sites_and_library_extents(self):
+        image = _Image()
+        lib, game = image.td(".?AVbad_cast@@"), image.td(".?AVErr@@")
+        lib_ti = image.throw([(0, lib, 0, -1, 0, 12, 0)])
+        game_ti = image.throw([(0, game, 0, -1, 0, 4, 0)])
+        image.push(0x40, lib_ti)
+        image.push(0x80, game_ti)
+        with tempfile.TemporaryDirectory() as directory:
+            r = rtti.Retail(image.pe(directory))
+            sites = rtti.throw_sites(r, rtti.retail_throws(r, TYPE_INFO))
+            tables = Path(directory)
+            (tables / "functions.tsv").write_text("rva\tsize\n0x1030\t32\n0x1070\t32\n")
+            (tables / "runtime-map.tsv").write_text("# generated\nrva\tname\n0x1030\tf\n")
+            (tables / "runtime-functions.tsv").write_text(
+                "rva\tsize\tname\n0x1100\t16\tg\n")
+            library = rtti.library_extents(tables, BASE)
+        self.assertEqual(sites, {".?AVbad_cast@@": [BASE + TEXT + 0x41],
+                                 ".?AVErr@@": [BASE + TEXT + 0x81]})
+        self.assertEqual(library, [(BASE + 0x1030, BASE + 0x1050),
+                                   (BASE + 0x1100, BASE + 0x1110)])
+        self.assertTrue(rtti.in_extents(BASE + TEXT + 0x41, library))
+        self.assertFalse(rtti.in_extents(BASE + TEXT + 0x81, library))
+
+
 class ObjectTest(unittest.TestCase):
     def test_reviewed_scope_and_hierarchy(self):
         ours = ".?AVHidden@?%Z:\\checkout\\src\\foo_bar.cpp987@@"
@@ -228,6 +257,21 @@ class CompareTest(unittest.TestCase):
         [finding] = result["findings"]
         self.assertEqual(finding["kind"], "catchable")
         self.assertEqual(finding["differences"], ["Err: copy retail True, ours False"])
+
+    def test_library_throws_are_not_findings(self):
+        lib = rtti.Catchable(".?AVbad_cast@@", 0, 0, -1, 0, 12, True)
+        err = rtti.Catchable(".?AVErr@@", 0, 0, -1, 0, 4, False)
+        far = rtti.Catchable(".?AVFar@@", 0, 0, -1, 0, 4, False)
+        retail_ct = {k.name: (k,) for k in (lib, err, far)}
+        sites = {lib.name: [0x1004, 0x1008], err.name: [0x1004, 0x2000], far.name: []}
+        result = rtti.compare({}, {}, _ours(), retail_ct, sites, [(0x1000, 0x1010)])
+        self.assertEqual(result["eh_library"], [lib.name])
+        self.assertEqual(result["eh_retail_only"], [err.name, far.name])
+        self.assertEqual([(f["kind"], f["class"]) for f in result["findings"]],
+                         [("retail-throw", err.name), ("retail-throw", far.name)])
+        self.assertIn("0x2000", result["findings"][0]["differences"][0])
+        self.assertEqual((result["summary"]["eh_library"], result["summary"]["eh_retail_only"]),
+                         (1, 2))
 
     def test_scope_spellings(self):
         self.assertEqual(rtti.fold("?%C:\\Dev\\Editor\\Map Editor.cpp284242958@"),

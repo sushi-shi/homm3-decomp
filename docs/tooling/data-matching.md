@@ -500,13 +500,16 @@ descriptor of our existing `objdiff/base` objects, read through `??_R2`,
 preorder position, contained-base count, mdisp/pdisp/vdisp and attributes
 (a public base where retail derives privately differs in the BCD
 attributes). `--eh` also compares each retail ThrowInfo's CatchableTypeArray
-with our `__CTA` records of the same thrown type. Our anonymous scopes take
+with our `__CTA` records of the same thrown type; a retail-only thrown type
+whose every throw site lies in a runtime-map/runtime-functions library function
+(`bad_cast`, MFC's `CFileException*`) is counted as `library`, apart from the
+findings, and any other is a `retail-throw` finding. Our anonymous scopes take
 the unit's `anon-ns-paths.tsv` spelling, then both sides compare by source
 file name. Findings are `hierarchy`, `scope` (the class agrees only once
-anonymous namespaces are removed), `inconsistent` (our objects disagree) and
-`catchable`; a scope matched without a reviewed row is a note. Classes on one
-side only are counted (library classes, discarded header COMDATs; `--all`
-lists them). The report is informational; `--gate` returns nonzero for any
+anonymous namespaces are removed), `inconsistent` (our objects disagree),
+`catchable` and `retail-throw`; a scope matched without a reviewed row is a
+note. Classes on one side only are counted (library classes, discarded header
+COMDATs; `--all` lists them). The report is informational; `--gate` returns nonzero for any
 finding. Nothing is compiled: rebuild a stale unit with `build --fast`
 first (an object predating a source's anonymous namespace reports `scope`).
 
