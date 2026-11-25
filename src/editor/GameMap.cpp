@@ -4669,7 +4669,7 @@ private:
         vector<TRefCountingPtr<_TSegment> > _m_aSegment;
     };
 
-    void _stampObject(TGameObject* pObj, const TTilePoint& loc, unsigned int objID);
+    void _stampObject(const TGameObject* pObj, const TTilePoint& loc, unsigned int objID);
     void _unstampObject(unsigned int objID);
     TTileExtent _computeObjExtent(const TTilePoint& loc, const TPoint<unsigned int>& size) const;
 
@@ -4836,8 +4836,10 @@ void TGameMap::TLayer::_TImpl::_removeObject(unsigned int objID)
     aObjectLink[objID].clearObject();
 }
 
+// Enters an object into its cells' footprint lists (Loki mangles the
+// object as const TGameObject *).
 VA(0x0042ac12, 0x332)
-void TGameMap::TLayer::_TImpl::_stampObject(TGameObject* pObj, const TTilePoint& loc, unsigned int objID)
+void TGameMap::TLayer::_TImpl::_stampObject(const TGameObject* pObj, const TTilePoint& loc, unsigned int objID)
 {
     assert(pObj != NULL);
     const TTileExtent objExtent = _computeObjExtent(loc, TPoint<unsigned int>(pObj->getWidth(), pObj->getHeight()));
@@ -4980,8 +4982,7 @@ void TGameMap::TLayer::_TImpl::_unfloatObject(const TTilePoint& loc)
     aObjectLink[_m_floatingObjID].m_prev = aObjectLink[0].m_prev;
     aObjectLink[aObjectLink[0].m_prev].m_next = _m_floatingObjID;
     aObjectLink[0].m_prev = _m_floatingObjID;
-    _stampObject(const_cast<TGameObject*>(static_cast<const _TObjectLink&>(aObjectLink[_m_floatingObjID]).getPObject()),
-                 loc, _m_floatingObjID);
+    _stampObject(static_cast<const _TObjectLink&>(aObjectLink[_m_floatingObjID]).getPObject(), loc, _m_floatingObjID);
     _m_floatingObjID = s_kInvalidObjID;
 }
 
