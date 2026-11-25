@@ -7658,6 +7658,8 @@ int TCastleWindow::windowHandler(message& msg)
 // stack and prints the six stat columns out of it. The summoning portal
 // is the eighth row, and it is fixed: its codes are exactly the seven-row
 // ones at i == 7 - except the growth column, which the portal has none of.
+// DC 9118/9170 test the built dwelling through town::HasBuilding and
+// 9127/9140 name each row through GetArmyName(type, 2); retail expands both.
 
 VA(0x005dd390, 0x67E)
 DC_ADDRESS(0x17fd08, 0x4fa)
@@ -7694,8 +7696,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         msg.m_codeY = i + 9;
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);
-        if (m_townToView->getBuildingMask()
-            & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
+        if (m_townToView->hasBuilding(DWELLING_0_ID + m_currentDwellingIdOff[i], true)) {
             sprintf(g_text, "%s %d", g_generalText->GetText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
                     m_townToView->m_population[m_currentDwellingIdOff[i]]);
             msg.m_codeY = i + 0x21;
@@ -7703,14 +7704,10 @@ void townManager::setupWell(TCastleWindow* wellWin)
             wellWin->broadcastMessage(msg);
         }
         msg.m_codeY = i + 0x19;
-        TCreatureType rowCreature =
-            g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[i]];
-        const char* creatureName;
-        if (rowCreature >= 0 && rowCreature <= g_creatureTypeLast)
-            creatureName = akCreatureTypeTraits[rowCreature].m_plural_name;
-        else
-            creatureName = "";
-        strcpy(g_text, creatureName);
+        strcpy(g_text,
+               getArmyName(g_dwellingType[m_townToView->m_type]
+                                         [m_currentDwellingIdOff[i]],
+                           2));
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);
     }
@@ -7723,14 +7720,8 @@ void townManager::setupWell(TCastleWindow* wellWin)
         wellWin->broadcastMessage(msg);
 
         msg.m_codeY = 0x20;
-        const char* summonName;
-        if (g_townManager->m_townToView->m_summoningType >= 0
-            && g_townManager->m_townToView->m_summoningType <= g_creatureTypeLast)
-            summonName =
-                akCreatureTypeTraits[g_townManager->m_townToView->m_summoningType].m_plural_name;
-        else
-            summonName = "";
-        strcpy(g_text, summonName);
+        strcpy(g_text,
+               getArmyName(g_townManager->m_townToView->m_summoningType, 2));
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);
     }
@@ -7763,8 +7754,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
                                   i + 0x79, textMessage.m_extra);
-        if (m_townToView->getBuildingMask()
-            & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
+        if (m_townToView->hasBuilding(DWELLING_0_ID + m_currentDwellingIdOff[i], true)) {
             int growth = m_townToView->getGrowthRate(m_currentDwellingIdOff[i]);
             sprintf(g_text, "%d", growth);
             textMessage.m_extraText = g_text;
