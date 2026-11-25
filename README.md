@@ -17,7 +17,7 @@ executables.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,647 |   99.46% | last measured score                            |
+| CUR   |           4,651 |   99.45% | last measured score                            |
 | MAX   |           4,665 |   99.49% | best result for each function's current source |
 | HIST  |           4,672 |   99.57% | all-time peak across source revisions          |
 
@@ -53,20 +53,20 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:start -->
 
-**GOG Complete map editor `h3maped.exe`: 99.61% matched (MAX)** — 6,071 / 6,161 functions exact (98.5%), weighted by size over 821,520 bytes of code.
+**GOG Complete map editor `h3maped.exe`: 99.62% matched (MAX)** — 6,073 / 6,161 functions exact (98.6%), weighted by size over 821,520 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           6,004 |   99.52% | last measured score                            |
-| MAX   |           6,071 |   99.61% | best result for each function's current source |
-| HIST  |           6,081 |   99.70% | all-time peak across source revisions          |
+| CUR   |           6,024 |   99.53% | last measured score                            |
+| MAX   |           6,073 |   99.62% | best result for each function's current source |
+| HIST  |           6,083 |   99.71% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   164 | 5506 / 5548 (99.2%) |    99.80% |
-| `rmg`        |     6 |   434 / 478 (90.8%) |    98.33% |
+| `game`       |   164 | 5507 / 5548 (99.3%) |    99.80% |
+| `rmg`        |     6 |   435 / 478 (91.0%) |    98.36% |
 | `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`      |     3 |     49 / 53 (92.5%) |    99.99% |
 | `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |
