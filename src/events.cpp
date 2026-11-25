@@ -6015,9 +6015,8 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // Pause-guard source tests (header declaration versus CPP-owned in-class or
 // ordinary out-of-class bodies) are flat at 95.6234 and keep its dtor exact.
 // DC netmsg.h:488..494 confirms CHeroLevelUpdateMsg's two memcpy calls, not
-// counted loops. Putting its scalar fields before both copies, whether by
-// assignment or initializer list, gives 94.5662 here; putting numSSs between
-// the copies is flat. DC's scheduled store alone does not settle the spelling.
+// counted loops; Mac's numSSs store ahead of its first BlockMoveData puts
+// both scalar stores before the copies (netmsg.h), as retail schedules them.
 // Quick combat keeps DC 6326..6356's if/else winner and its winner == 0 /
 // winner == 1 selection (loser first, as DC and Mac 0xbafc0 store it); VC6
 // threads the known winner, which puts retail's winner = 1 arm after the
@@ -6041,23 +6040,29 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // site over its budget (93.38%).
 // MAKELONG packs the necromancy dialog's count/type qualifier (97.88 ->
 // 97.90%).
-// Retail also expands one of the three string _Tidy calls this body keeps
-// inside the town/hero copy-and-delete chains; the nearest, under the town
-// delete, gets 134 against 152 (about three fewer later depth-1 candidates).
+// Retail expands the town delete's string _Tidy and keeps both hero
+// deletes' calls; see the draw-arm note below for the budget that does it.
 // The default seed is Random, not SRandom: DC line 6309 and Mac's bl to
 // random (0x130cf4) agree; the pickup sample keeps SRandom (DC 6628).
-// DC 6336..6362 and Mac also keep a draw arm in the quick-combat path
-// (both CheckForHeroDefeatWin calls, then the winner/loser arm). VC6 folds
-// it, but it expands the fourth heroLoses site (97.90 -> 94.33%; with a
-// `? 0 : 1` winner, 91.24%), so it stays out pending the budget model.
+// DC 6336..6362 and Mac 0xbaf6c also keep a draw arm in the quick-combat
+// path (both CheckForHeroDefeatWin calls, then the winner/loser arm), with
+// its own loser/winning_player pair (DC sp+0x5c/0x58, against the
+// aftermath's sp+0x54/0x50). DC 6535 compares both heroes' tactics bytes
+// directly; this DC body keeps every header inline out of line and has no
+// hero.h residue, so no getSecondarySkill call. VC6 folds the draw arm, but
+// its front-end size gives the town delete's nested _Tidy the budget retail
+// spends on it while the fourth heroLoses site still stays a call
+// (98.27 -> 99.62%). Alone, the draw arm expands that fourth site (94.66%).
+// Residual: retail hoists rightPlayer's esi load above the aftermath's
+// winner test (register choice; a single function-level winner is 99.61%).
 VA(0x004ad470, 0x1531)
 DC_ADDRESS(0x09b970, 0x9ec)
 MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique)
 int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, bool finishHeroes, bool alternateLayout)
 {
     int leftPlayer = leftHero ? leftHero->m_owner : -1;
-    int winningPlayer;  // DC winning_player
     hero* loser;
+    int winningPlayer;  // DC winning_player
     CTurnDurationPause turnDurationPause;
 
     unsigned char rightHuman =
@@ -6072,6 +6077,8 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     if (g_goSolo && g_goSoloTest)
         replay = 1;
     if (!rightHuman && !leftHuman && !replay) {
+        hero* loser;
+        int winningPlayer;
         int winner;
         NewmapCell* target = g_game->getCell(point);
         if (aiQuickCombat(leftHero, rightHero, *rightArmyGroup, rightTown,
@@ -6079,16 +6086,24 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             winner = 0;
         else
             winner = 1;
-        if (winner == 0) {
-            loser = rightHero;
-            winningPlayer = leftPlayer;
-        } else if (winner == 1) {
-            loser = leftHero;
-            winningPlayer = rightPlayer;
+        if (winner == -1) {
+            if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
+                    leftPlayer, rightHero)
+                || g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
+                       rightPlayer, leftHero))
+                checkEndGame(0);
+        } else {
+            if (winner == 0) {
+                loser = rightHero;
+                winningPlayer = leftPlayer;
+            } else if (winner == 1) {
+                loser = leftHero;
+                winningPlayer = rightPlayer;
+            }
+            if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
+                    winningPlayer, loser))
+                checkEndGame(0);
         }
-        if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                winningPlayer, loser))
-            checkEndGame(0);
         mobilizeCurrHero(0, 0, 1);
         return winner;
     }
@@ -6175,8 +6190,8 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     if (!leftHuman)
         aiArrangeArmyForCombat(leftHero, rightHero, *rightArmyGroup);
     if (!rightHuman && rightHero
-        && rightHero->getSecondarySkill(eSecSkillBattleTactics)
-               > leftHero->getSecondarySkill(eSecSkillBattleTactics))
+        && rightHero->m_skillLevel[eSecSkillBattleTactics]
+               > leftHero->m_skillLevel[eSecSkillBattleTactics])
         aiArrangeArmyForCombat(rightHero, leftHero, *leftArmyGroup);
     if (g_highMemBuffer > 2900)
         g_adventureGraphicsPreserveMode = 2;
