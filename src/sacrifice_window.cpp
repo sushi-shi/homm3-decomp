@@ -691,8 +691,10 @@ type_sacrifice_window::~type_sacrifice_window()
     deleteWidgets();
 }
 
+// Dreamcast emits convert_with_commas, update_artifact_widget and
+// sacrifice_value as S_LPROC32 file-static helpers of this compiland.
 DC_ADDRESS(0x1258ac, 0xec)
-std::string convertWithCommas(long value)
+static std::string convertWithCommas(long value)
 {
     long digits = 0;
     std::string result;
@@ -727,10 +729,10 @@ void type_sacrifice_window::updateExperience()
 
 VA(0x00562660, 0x1d5)
 MAC_ADDRESS(0x158ea4, 0xf4)
-std::string convertWithCommas(long value);
+static std::string convertWithCommas(long value);
 
 DC_ADDRESS(0x125a4c, 0x5e)
-void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
+static void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
 {
     if (artifact.m_artifactId == ARTIFACT_NONE) {
         slotWidget->setVisible(0);
@@ -847,7 +849,7 @@ static void updateOffering(iconWidget* artifactWidget,
 // Inlined at both callers: the AI value at +0x40 divided by forty.
 DC_ADDRESS(0x125de0, 0x28)
 MAC_ADDRESS(0x1595e0, 0x34)
-long sacrificeValue(TCreatureType creature)
+static long sacrificeValue(TCreatureType creature)
 {
     return akCreatureTypeTraits[creature].AI_value / 40 * 5;
 }
@@ -1108,7 +1110,7 @@ void type_sacrifice_window::backpackClick(
 
 VA(0x005639e0, 0x5b)
 MAC_ADDRESS(0x1590b0, 0xa0)
-void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact);
+static void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact);
 
 VA(0x00563a40, 0x31)
 DC_ADDRESS(0x1265b8, 0x88)

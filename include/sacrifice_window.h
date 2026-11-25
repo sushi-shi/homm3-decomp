@@ -380,6 +380,4 @@ public:
 };
 SIZE(type_transformer_slot, 0x50);
 
-std::string convertWithCommas(long value);
-
 #endif  /* HOMM3_SACRIFICE_WINDOW_H */
