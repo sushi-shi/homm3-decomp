@@ -1019,17 +1019,17 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
     return buf;
 }
 
-// Final test in the sibling lobby wrappers' `m_hRes < 0` form. Residual
-// (88.42%): VC6 folds the last two exits into `setge al`; retail keeps a jge
-// to separate return-0/return-1 epilogues. The former 98.25% shape repeated
-// the m_hRes store in the failure arm only to block that fold (removed).
-// Standalone VC6 probes fold every single-exit spelling (ternary, bool/int/
-// byte results, SUCCEEDED/FAILED polarity, assignment-in-condition, goto,
-// nested and short-circuit guards, dead stores, trailing returns). A second
-// side-effect-free success exit after the failure test (any condition whose
-// arms both `return true`) is merged only after the fold and reproduces all
-// 110 bytes, so the retail source likely had one; DC compiles 1352..1379 out
-// and no native evidence identifies its condition, so none is invented.
+// DirectX SDK lobby-launch sequence (the samples' ConnectUsingLobby): size
+// probe, GlobalAllocPtr's GHND GlobalLock(GlobalAlloc()) buffer, then the
+// settings themselves, whose DPLCONNECTION flags say whether the lobby wants
+// this launch to create or join its session. Each mode returns its own flag;
+// the bool return keeps only "lobbied". Retail keeps those two success exits
+// (jge to separate return-0/return-1 epilogues after the second call, the
+// flag load dead once both collapse to true); every single-exit spelling of
+// the final test folds into `setge al` instead (88.42%: ternary, bool/int/
+// byte results, FAILED/SUCCEEDED, goto, nested guards, trailing returns; a
+// `?:` between the two flags scores 66.58%). The buffer is never freed, as
+// retail shows. Dreamcast (no lobby) compiles 1352..1379 out to `return 1`.
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order
 DC_ADDRESS(0x08b69c, 0x4)
@@ -1039,13 +1039,16 @@ bool CDPlayLobby::TestLobbied()
     m_hRes = m_lpLobby->GetConnectionSettings(0, 0, &size);
     if (m_hRes != DPERR_BUFFERTOOSMALL)
         return 0;
-    void* buf = GlobalLock(GlobalAlloc(0x42, size));
-    if (!buf)
+    DPLCONNECTION* connection =
+        static_cast<DPLCONNECTION*>(GlobalLock(GlobalAlloc(GHND, size)));
+    if (!connection)
         return 0;
-    m_hRes = m_lpLobby->GetConnectionSettings(0, buf, &size);
+    m_hRes = m_lpLobby->GetConnectionSettings(0, connection, &size);
     if (m_hRes < 0)
         return 0;
-    return 1;
+    if (connection->dwFlags & DPLCONNECTION_CREATESESSION)
+        return DPLCONNECTION_CREATESESSION;
+    return DPLCONNECTION_JOINSESSION;
 }
 
 VA(0x00498be0, 0x31)
