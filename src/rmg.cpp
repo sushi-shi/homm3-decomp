@@ -3790,6 +3790,19 @@ int t_abstract_random_generator::scoreObjectPlacement(
     unsigned char terrainSeen[10] = {0};
     unsigned int marks[10][8] = {0};
     TRmgMapPosition cell;
+    type_object* object;
+    int index;
+    unsigned int mark;
+    int priority;
+    TRmgMapItem* item;
+    unsigned char wasTouched;
+    TRmgObjectPlacementRule* rule;
+    int nearColumn;
+    int nearRow;
+    int firstRow;
+    int lastRow;
+    int firstColumn;
+    int lastColumn;
     cell.m_z = position.m_z;
     for (unsigned int row = 0; row < prototype->getHeight(); ++row) {
         cell.m_y = position.getY() - row;
@@ -3802,9 +3815,10 @@ int t_abstract_random_generator::scoreObjectPlacement(
             if (!prototype->getBCellPlaced(column, row))
                 continue;
             marks[column + 1][row + 1] |= RMG_PLACEMENT_OVERLAP;
-            if (!prototype->getBCellPassable(column, row)) {
+            if (prototype->getBCellPassable(column, row))
+                continue;
                 marks[column + 1][row + 1] |= RMG_PLACEMENT_BLOCKED;
-                TRmgMapItem* item = getMapItem(cell);
+                item = getMapItem(cell);
                 if (!prototype->_m_terrainMask[item->getLandType()])
                     return RMG_PLACEMENT_INVALID;
                 if (item->hasPathClearance())
@@ -3812,22 +3826,21 @@ int t_abstract_random_generator::scoreObjectPlacement(
 
                 // Retail 0x536d34 overwrites the complete mark with one
                 // before marking the surrounding area; retain that store.
-                marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
                 terrainSeen[item->getLandType()] = 1;
-                int firstRow = position.getY() - min(cell.getY() + 1, m_map.m_mapHeight) + 1;
-                int lastRow = position.getY() - max(cell.getY() - 2, 0) + 1;
-                int firstColumn = position.getX() - min(cell.getX() + 1, m_map.m_mapWidth) + 1;
-                int lastColumn = position.getX() - max(cell.getX() - 2, 0) + 1;
-                for (int nearColumn = firstColumn; nearColumn < lastColumn;
+                marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
+                firstRow = position.getY() - min(cell.getY() + 1, m_map.m_mapHeight) + 1;
+                lastRow = position.getY() - max(cell.getY() - 2, 0) + 1;
+                firstColumn = position.getX() - min(cell.getX() + 1, m_map.m_mapWidth) + 1;
+                lastColumn = position.getX() - max(cell.getX() - 2, 0) + 1;
+                for (nearColumn = firstColumn; nearColumn < lastColumn;
                      ++nearColumn) {
-                    for (int nearRow = firstRow; nearRow < lastRow; ++nearRow)
+                    for (nearRow = firstRow; nearRow < lastRow; ++nearRow)
                         marks[nearColumn][nearRow] |= RMG_PLACEMENT_ADJACENT;
                 }
-            }
         }
     }
 
-    TRmgObjectPlacementRule* rule = properties->m_placementRule;
+    rule = properties->m_placementRule;
     int score = 0;
     unsigned char hasPositiveTerrain = 0;
     for (int terrain = 0; terrain < 10; ++terrain) {
@@ -3852,19 +3865,18 @@ int t_abstract_random_generator::scoreObjectPlacement(
             cell.m_x = position.getX() + 1 - column;
             if (cell.getX() < 0 || cell.getX() >= m_map.m_mapWidth)
                 continue;
-            unsigned int mark = marks[column][row];
+            mark = marks[column][row];
             if (!mark)
                 continue;
-            TRmgMapItem* item = getMapItem(cell);
+            item = getMapItem(cell);
             if (item->isPassable())
                 continue;
-            int priority;
             if (mark & RMG_PLACEMENT_OVERLAP)
                 priority = properties->m_overlapPriorities[column - 1][row - 1];
-            for (int index = 0; index < static_cast<int>(item->m_objects.size());
+            for (index = 0; index < static_cast<int>(item->m_objects.size());
                  ++index) {
-                type_object* object = item->getObject(index);
-                unsigned char wasTouched = object->isPlacementTouched();
+                object = item->getObject(index);
+                wasTouched = object->isPlacementTouched();
                 if (mark & RMG_PLACEMENT_OVERLAP) {
                     object->m_properties->buildOverlapPriorities();
                     if (object->m_properties->m_overlapPriorities
@@ -3887,8 +3899,8 @@ int t_abstract_random_generator::scoreObjectPlacement(
         }
     }
 
-    for (unsigned int index = 0; index < affected.size(); ++index) {
-        type_object* object = affected[index];
+    for (index = 0; index < affected.size(); ++index) {
+        object = affected[index];
         if (object->m_blockedByCandidate) {
             if (!object->m_properties->m_placementRule)
                 score = RMG_PLACEMENT_INVALID;

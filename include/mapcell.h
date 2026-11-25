@@ -1636,7 +1636,7 @@ inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 // E:\gamedcs\MapCell.h:1176
 VA(0x004c2360, 0x27)
 DC_ADDRESS(0x0bcac8, 0x74)
-inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
+void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
 {
     m_wagonInfo.m_resource = resource;
     m_wagonInfo.m_resourceAmount = amount;

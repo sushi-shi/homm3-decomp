@@ -200,7 +200,8 @@ void type_quest::load(TAbstractFile* file, int version)
     m_textVariant = readValue<unsigned char>(file);
     m_limit = readLittleEndianValue<int>(file);
     m_proposalText = readLengthPrefixedString(file);
-    m_progressText = readLengthPrefixedString(file);
+    const std::string& progressText = readLengthPrefixedString(file);
+    m_progressText = progressText;
     m_completionText = readLengthPrefixedString(file);
 }
 
