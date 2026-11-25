@@ -2734,15 +2734,16 @@ void TGameMap::_TImpl::exportText(ostream* pOStream) const
 // Whether an object fits at (x, y): its trigger cells on the map, its
 // blocking cells on terrain it allows, no trigger under another's blocking
 // cell or blocking cell over another's trigger, and no object both above
-// and below it.
+// and below it. The id lists hold unsigned ids, as Loki's
+// find<unsigned int *, unsigned int> over them shows.
 VA(0x0042650e, 0x3dd)
 bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y)
 {
     DATA_COMPGEN_GUARD(0x0059e370, placementObjIDsGuard, aLowerObjIDs)
     VA_COMPGEN(0x00426931, 0xa, STATIC_DTOR, aLowerObjIDs)
-    DATA(0x0059e2c8) static vector<int> aLowerObjIDs;
+    DATA(0x0059e2c8) static vector<unsigned int> aLowerObjIDs;
     VA_COMPGEN(0x00426927, 0xa, STATIC_DTOR, aHigherObjIDs)
-    DATA(0x0059e288) static vector<int> aHigherObjIDs;
+    DATA(0x0059e288) static vector<unsigned int> aHigherObjIDs;
     aLowerObjIDs.clear();
     aHigherObjIDs.clear();
     unsigned int heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT];
@@ -2813,7 +2814,7 @@ bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject&
             }
         }
     }
-    for (vector<int>::const_iterator pObjID = aLowerObjIDs.begin(); pObjID != aLowerObjIDs.end(); ++pObjID)
+    for (vector<unsigned int>::const_iterator pObjID = aLowerObjIDs.begin(); pObjID != aLowerObjIDs.end(); ++pObjID)
         if (find(aHigherObjIDs.begin(), aHigherObjIDs.end(), *pObjID) != aHigherObjIDs.end())
             return false;
     return obj.getType() != SHIPYARD || _isValidShipyardPlacement(layer, obj, x, y);

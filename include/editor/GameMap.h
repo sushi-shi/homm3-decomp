@@ -596,11 +596,12 @@ inline const TGameMap::TLayer& TGameMap::getLayer(bool bSecondLayer) const
 class TGameMap::TLayer {
 public:
     // One object's footprint record in a cell: the object and the
-    // height of its placed cell there.
+    // height of its placed cell there. Loki mangles the constructor
+    // _TObjectCellInfo(unsigned int, unsigned int).
     struct _TObjectCellInfo {
-        _TObjectCellInfo(int objID, unsigned int height) : m_objID(objID), m_height(height) {}
+        _TObjectCellInfo(unsigned int objID, unsigned int height) : m_objID(objID), m_height(height) {}
 
-        int m_objID;
+        unsigned int m_objID;
         unsigned int m_height;
     };
 
