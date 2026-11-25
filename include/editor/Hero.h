@@ -30,9 +30,151 @@
 #include "editor/RawStream.h"
 #include "editor/RefCountingPtr.h"
 
-// Complete's heroes: the map's hero tables hold one row per THeroID.
-typedef int THeroID;
-enum { kNumHeroes = 156 };
+// Complete's heroes: the map's hero tables hold one row per THeroID. Loki
+// h3maped mangles it as the enum 7THeroID (TGameMap::isHeroOnMap(THeroID),
+// THero::TClassTraits(const TObjectType&, THeroID, TTownType)) and
+// Dreamcast's CodeView enum 0x1d96 supplies the enumerators: eHeroNone and
+// the 128 RoE heroes. Complete appends its later heroes, whose names are not
+// recovered (it also renumbers RoE's two campaign heroes, Loki's
+// eHeroCatherine = 128 and eHeroGeneralKendal = 129), and kNumHeroes counts
+// all 156. No Loki container holds hero ids (its sets hold unsigned proto
+// numbers); retail's hero-id sets, map and vectors take THeroID elements, as
+// a THeroID local or member binds their const element references without a
+// converted temporary (an int element set adds one at each insert: hero
+// identity page OnInitDialog 99.88 -> 89.81, placeholder dialog 100 ->
+// 98.71, the map's placeholder bookkeeping and save likewise).
+enum THeroID {
+    eHeroNone = -1,
+    eHeroGier = 0,
+    eHeroRislav = 1,
+    eHeroDesslock = 2,
+    eHeroCuthbert = 3,
+    eHeroLordHaart = 4,
+    eHeroSorsha = 5,
+    eHeroSirChristian = 6,
+    eHeroTyris = 7,
+    eHeroRion = 8,
+    eHeroAdela = 9,
+    eHeroHester = 10,
+    eHeroGaldwyn = 11,
+    eHeroIngham = 12,
+    eHeroSanya = 13,
+    eHeroLoynis = 14,
+    eHeroEngle = 15,
+    eHeroMephala = 16,
+    eHeroUfretin = 17,
+    eHeroAlagar = 18,
+    eHeroRyland = 19,
+    eHeroThorgrim = 20,
+    eHeroIvor = 21,
+    eHeroClancy = 22,
+    eHeroElleshar = 23,
+    eHeroCoronius = 24,
+    eHeroClova = 25,
+    eHeroKyrre = 26,
+    eHeroGem = 27,
+    eHeroKyriell = 28,
+    eHeroMelodia = 29,
+    eHeroJenova = 30,
+    eHeroAeris = 31,
+    eHeroPiquedram = 32,
+    eHeroThane = 33,
+    eHeroRugard = 34,
+    eHeroNeelam = 35,
+    eHeroTorosar = 36,
+    eHeroFafner = 37,
+    eHeroRissa = 38,
+    eHeroKhem = 39,
+    eHeroAstral = 40,
+    eHeroHalon = 41,
+    eHeroSerena = 42,
+    eHeroDaremyth = 43,
+    eHeroTheodorus = 44,
+    eHeroSolmyr = 45,
+    eHeroCyra = 46,
+    eHeroAine = 47,
+    eHeroFion = 48,
+    eHeroAragorn = 49,
+    eHeroMarius = 50,
+    eHeroIgnatius = 51,
+    eHeroXyron = 52,
+    eHeroCalh = 53,
+    eHeroPyre = 54,
+    eHeroNymus = 55,
+    eHeroAyden = 56,
+    eHeroRashka = 57,
+    eHeroAxsis = 58,
+    eHeroOlema = 59,
+    eHeroCalid = 60,
+    eHeroAsh = 61,
+    eHeroZydar = 62,
+    eHeroXarfax = 63,
+    eHeroStraker = 64,
+    eHeroVokial = 65,
+    eHeroMoandor = 66,
+    eHeroCharna = 67,
+    eHeroSkullreaver = 68,
+    eHeroIsra = 69,
+    eHeroClavius = 70,
+    eHeroGalThran = 71,
+    eHeroSeptienna = 72,
+    eHeroAislinn = 73,
+    eHeroSandro = 74,
+    eHeroNimbus = 75,
+    eHeroThant = 76,
+    eHeroXsi = 77,
+    eHeroViDomina = 78,
+    eHeroNagash = 79,
+    eHeroLorelei = 80,
+    eHeroArlach = 81,
+    eHeroDace = 82,
+    eHeroAjit = 83,
+    eHeroDamacon = 84,
+    eHeroGunnar = 85,
+    eHeroSynca = 86,
+    eHeroShakti = 87,
+    eHeroAlamar = 88,
+    eHeroJaegar = 89,
+    eHeroMalekith = 90,
+    eHeroJeddite = 91,
+    eHeroGeon = 92,
+    eHeroDeemer = 93,
+    eHeroSephinroth = 94,
+    eHeroDarkstorn = 95,
+    eHeroYog = 96,
+    eHeroGurnisson = 97,
+    eHeroJabarkas = 98,
+    eHeroShiva = 99,
+    eHeroGretchin = 100,
+    eHeroKrellion = 101,
+    eHeroCragHack = 102,
+    eHeroTyraxor = 103,
+    eHeroGird = 104,
+    eHeroVey = 105,
+    eHeroDessa = 106,
+    eHeroTerek = 107,
+    eHeroZubin = 108,
+    eHeroGundula = 109,
+    eHeroWystan = 110,
+    eHeroSaurug = 111,
+    eHeroBron = 112,
+    eHeroDrakon = 113,
+    eHeroOris = 114,
+    eHeroTazar = 115,
+    eHeroAlkin = 116,
+    eHeroKorbac = 117,
+    eHeroGerwulf = 118,
+    eHeroBroghild = 119,
+    eHeroMirlanda = 120,
+    eHeroRosic = 121,
+    eHeroVoy = 122,
+    eHeroVerdish = 123,
+    eHeroMerist = 124,
+    eHeroStyg = 125,
+    eHeroAndra = 126,
+    eHeroTiva = 127,
+    kNumHeroes = 156
+};
 
 // A hero's definition: what the map specifications let a map customize
 // per hero. A copy-on-write handle (4 bytes; the map keeps 156 of them and
@@ -189,7 +331,7 @@ public:
 
     virtual THeroID getHeroID() const;
     // Whether it stands for one of the game's heroes.
-    bool hasHeroID() const { return getHeroID() != -1; }
+    bool hasHeroID() const { return getHeroID() != eHeroNone; }
 };
 
 // A placeholder for a hero the campaign carries over: a hero id, or none
@@ -245,7 +387,7 @@ public:
         const TObjectType& m_objType;
         TTownType m_townType;
         const char* m_name;
-        std::set<int> m_heroes;
+        std::set<THeroID> m_heroes;
     };
 
     // One name per row of priskill.txt (PrimarySkillTraits.cpp).

@@ -264,7 +264,7 @@ void TGetQuestDescFunc::visit(const TQuestBringResources& quest)
 VA(0x00497b27, 0x91)
 void TGetQuestDescFunc::visit(const TQuestBeASpecificHero& quest)
 {
-    THeroID heroID = quest.getHeroID();
+    THeroID heroID = THeroID(quest.getHeroID());
     THeroClass heroClass = THero::s_akTraits[heroID].m_class;
     const char* className = THero::s_akClassTraits[heroClass].m_name;
     _m_desc.Format(SSeersHutPropsDlgText::kBeHeroFmtStr,
@@ -455,7 +455,7 @@ VA(0x00498450, 0x45)
 void TGetDefaultQuestMessageFunc::visit(const TQuestBeASpecificHero& quest)
 {
     _m_text.Format(getQuestText(kBeASpecificHeroQuestTexts, _m_message, _m_column),
-                   _m_pMap->getHeroPrototype(quest.getHeroID()).getName().c_str());
+                   _m_pMap->getHeroPrototype(THeroID(quest.getHeroID())).getName().c_str());
 }
 
 VA(0x00498495, 0x35)

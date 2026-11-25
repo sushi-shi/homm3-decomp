@@ -1259,7 +1259,7 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
     _m_pProperties->m_pLossCondition = TRefCountingAutoPtr<TLossCondition>(_reconstructLossCondition(header.m_lcData));
     if (fileVersion >= 18) {
         bitset<kNumHeroes> heroesOnMap = getHeroesOnMap();
-        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        for (int heroID = 0; heroID < kNumHeroes; heroID++) {
             const THeroTraits& traits = akHeroTraits[heroID];
             if (!heroesOnMap[heroID]
                 && (!header.m_availableHeroes[heroID]
@@ -1269,7 +1269,7 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
         }
     } else {
         bitset<kNumHeroes> heroesOnMap = getHeroesOnMap();
-        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        for (int heroID = 0; heroID < kNumHeroes; heroID++) {
             const THeroTraits& traits = akHeroTraits[heroID];
             if (!heroesOnMap[heroID]
                 && (traits.m_special
@@ -1513,7 +1513,7 @@ void TGameMap::_TImpl::setPlaceholderHeroID(bool bSecondLayer, unsigned int objI
 {
     THeroPlaceholder* pPlaceholder = dynamic_cast<THeroPlaceholder*>(getPLayer(bSecondLayer)->getPObject(objID));
     _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[pPlaceholder->getOwner()];
-    if (pPlaceholder->getHeroID() != -1) {
+    if (pPlaceholder->getHeroID() != eHeroNone) {
         THeroID heroID = pPlaceholder->getHeroID();
         playerBookkeeping.m_aNumHeroesOfType[THero::s_akClassTraits[THero::s_akTraits[heroID].m_class].m_townType]--;
         playerBookkeeping.m_paHeroPlaceholderID->erase(heroID);
@@ -1538,7 +1538,7 @@ void TGameMap::_TImpl::clearPlaceholderHeroID(bool bSecondLayer, unsigned int ob
         ->m_aNumHeroesOfType[THero::s_akClassTraits[heroClass].m_townType]--;
     playerBookkeeping.m_paHeroPlaceholderID->erase(heroID);
     _m_pBookkeeping->m_heroesOnMap.set(heroID, false);
-    pPlaceholder->setHeroID(-1);
+    pPlaceholder->setHeroID(eHeroNone);
 }
 
 VA(0x00420b62, 0x6c)
@@ -1706,7 +1706,8 @@ void TGameMap::_TImpl::addSecondLayer()
 }
 
 // One edition at a time. Armageddon's Blade enables the heroes Restoration
-// lacked, moves hero 4 to its new id 144 and disables the heroes it lacks.
+// lacked, moves Lord Haart (eHeroLordHaart, 4) to his new id 144, whose
+// Complete enumerator is not recovered, and disables the heroes it lacks.
 // Cleanup probes: a heroMoved flag with nested breaks flips the layer-loop
 // branch; putting the flag in its condition scores 89.67%. No native evidence
 // establishes that extra flag, so retain the shared search exit.
@@ -1737,8 +1738,8 @@ void TGameMap::_TImpl::setVersion(EGameVersion newVersion)
                     if (pTown != NULL && pTown->getPVisitingHero() != NULL)
                         pHero = dynamic_cast<TIdentifiedHero*>(pTown->getPVisitingHero());
                 }
-                if (pHero != NULL && pHero->getHeroID() == 4) {
-                    setHeroID(layerNum != 0, *iter, 144);
+                if (pHero != NULL && pHero->getHeroID() == eHeroLordHaart) {
+                    setHeroID(layerNum != 0, *iter, THeroID(144));
                     goto heroMoved;
                 }
             }
@@ -1825,7 +1826,7 @@ auto_ptr<TGameObject> TGameMap::_TImpl::createObject(const TObjectType& objType,
             if (numHeroes >= s_kMaxHeroesPerPlayer)
                 throw TCreateObjFailureTooManyHeroesForPlayer();
             THeroID heroID = _pickRandomHero(THeroClass(objType.getExtra()));
-            if (heroID == -1)
+            if (heroID == eHeroNone)
                 throw TCreateObjFailureNoAvailableHeroesInClass();
             auto_ptr<TNonRandomHero> pHero = _s_pObjectFactory->createNonRandomHero(objType, owner, heroID);
             if (pHero.get() == NULL)
@@ -1858,7 +1859,7 @@ auto_ptr<TGameObject> TGameMap::_TImpl::createObject(const TObjectType& objType,
                 throw TCreateObjFailureTooManyHeroesOnMap();
             int heroClass = 0;
             THeroID heroID;
-            while ((heroID = _pickRandomHero(THeroClass(heroClass))) == -1) {
+            while ((heroID = _pickRandomHero(THeroClass(heroClass))) == eHeroNone) {
                 if (++heroClass >= kNumHeroClasses)
                     throw TCreateObjFailureTooManyHeroesOnMap();
             }
@@ -2137,7 +2138,7 @@ bool TGameMap::_TImpl::canCreate(const TObjectType& objType, TPlayer player) con
             if (numHeroes >= s_kMaxHeroesPerPlayer)
                 return false;
             const THero::TClassTraits& classTraits = THero::s_akClassTraits[objType.getExtra()];
-            for (set<int>::const_iterator pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end();
+            for (set<THeroID>::const_iterator pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end();
                  ++pHeroID)
                 if (THero::s_akTraits[*pHeroID].m_gameVersions.test(_m_version)
                     && !_m_pBookkeeping->m_heroesOnMap.test(*pHeroID)
@@ -2167,7 +2168,7 @@ set<THeroID> TGameMap::_TImpl::getAvailableHeroesInClass(THeroClass heroClass) c
 {
     const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
     set<THeroID> result;
-    for (set<int>::const_iterator pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end();
+    for (set<THeroID>::const_iterator pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end();
          ++pHeroID)
         if (THero::s_akTraits[*pHeroID].m_gameVersions.test(_m_version) && !_m_pBookkeeping->m_heroesOnMap.test(*pHeroID)
             && !_m_pProperties->m_disabledHeroes.test(*pHeroID))
@@ -2331,7 +2332,7 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
             header.m_aTeam[player] = teamInfo.getPlayerTeam(TPlayer(player));
     }
     int numHeroes = _m_version != GAME_VERSION_ROE ? kNumHeroes : 128;
-    THeroID heroID;
+    int heroID;
     for (heroID = 0; heroID < numHeroes; heroID++)
         header.m_availableHeroes.set(heroID, !_m_pBookkeeping->m_heroesOnMap[heroID]
                                                 && !_m_pProperties->m_disabledHeroes[heroID]);
@@ -2549,7 +2550,7 @@ void TGameMap::_TImpl::importText(istream* pIStream)
         getline(*pIStream, line);
         if (line != kSectionStart + kHeroesPageCaptionStr + kSectionEnd)
             throw TImportTextFailure();
-        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        for (THeroID heroID = THeroID(0); heroID < kNumHeroes; heroID = THeroID(heroID + 1)) {
             const THeroPrototype& prototype = getHeroPrototype(heroID);
             bool bCustomName = prototype.getName() != THero::s_akTraits[heroID].m_prototype.getName();
             bool bCustomBiography = prototype.getBiography() != THero::s_akTraits[heroID].m_prototype.getBiography();
@@ -2694,7 +2695,7 @@ void TGameMap::_TImpl::exportText(ostream* pOStream) const
     *pOStream << '\n';
     if (getVersion() >= GAME_VERSION_SOD) {
         *pOStream << kSectionStart + kHeroesPageCaptionStr + kSectionEnd << '\n';
-        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        for (THeroID heroID = THeroID(0); heroID < kNumHeroes; heroID = THeroID(heroID + 1)) {
             const THeroPrototype& prototype = getHeroPrototype(heroID);
             bool bCustomName = prototype.getName() != THero::s_akTraits[heroID].m_prototype.getName();
             bool bCustomBiography = prototype.getBiography() != THero::s_akTraits[heroID].m_prototype.getBiography();
@@ -2866,7 +2867,7 @@ bool TGameMap::_TImpl::_isValidShipyardPlacement(const TLayer& layer, const TGam
 VA(0x00426a65, 0x215)
 void TGameMap::_TImpl::_readHeroSettings(TRawIStream* pIStream, int version)
 {
-    for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+    for (int heroID = 0; heroID < kNumHeroes; heroID++) {
         if (!readValue<signed char>(*pIStream))
             continue;
         THeroPrototype& prototype = (*_m_pProperties->m_aHeroPrototype)[heroID];
@@ -2984,8 +2985,8 @@ VA(0x0042710f, 0x47)
 TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, THeroPlaceholder* pPlaceholder,
                                                    const TTilePoint& loc, TTileExtent* pUpdatedExtent)
 {
-    if (pPlaceholder->getHeroID() != -1 && !_isHeroAvailable(pPlaceholder->getHeroID()))
-        pPlaceholder->setHeroID(-1);
+    if (pPlaceholder->getHeroID() != eHeroNone && !_isHeroAvailable(pPlaceholder->getHeroID()))
+        pPlaceholder->setHeroID(eHeroNone);
     return _placeNewObject(bSecondLayer, static_cast<TBasicHero*>(pPlaceholder), loc, pUpdatedExtent);
 }
 
@@ -2996,7 +2997,7 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TNonRando
 {
     if (!_isHeroAvailable(pHero->getHeroID())) {
         THeroID heroID = _pickRandomHero(pHero->getHeroClass());
-        if (heroID == -1)
+        if (heroID == eHeroNone)
             throw TPlaceObjFailureNoAvailableHeroesInClass();
         pHero->setHeroID(heroID);
     }
@@ -3013,10 +3014,10 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TPrison* 
 {
     if (!_isHeroAvailable(pPrison->getHeroID())) {
         THeroID heroID = _pickRandomHero(pPrison->getHeroClass());
-        if (heroID == -1) {
+        if (heroID == eHeroNone) {
             for (int heroClass = 0;;) {
                 heroID = _pickRandomHero(THeroClass(heroClass));
-                if (heroID != -1)
+                if (heroID != eHeroNone)
                     break;
                 if (++heroClass >= kNumHeroClasses)
                     throw TPlaceObjFailureNoAvailableHeroesInClass();
@@ -3058,7 +3059,7 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TTown* pT
         TIdentifiedHero* pIdentifiedHero = dynamic_cast<TIdentifiedHero*>(pVisitingHero);
         if (pIdentifiedHero != NULL && !_isHeroAvailable(pIdentifiedHero->getHeroID())) {
             THeroID heroID = _pickRandomHero(pIdentifiedHero->getHeroClass());
-            if (heroID != -1)
+            if (heroID != eHeroNone)
                 pIdentifiedHero->setHeroID(heroID);
             else
                 pTown->setVisitingHero(NULL);
@@ -3336,7 +3337,7 @@ void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
                 }
             }
         }
-        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        for (THeroID heroID = THeroID(0); heroID < kNumHeroes; heroID = THeroID(heroID + 1)) {
             TPlayerMask availability = getHeroPrototype(heroID).getAvailability();
             unsigned int availableTo = owner;
             if (availability[owner]) {
@@ -3445,7 +3446,7 @@ void TGameMap::_TImpl::_onHeroPlaceholderAdded(const THeroPlaceholder* pPlacehol
                                                unsigned int objID)
 {
     _onBasicHeroAdded(pPlaceholder, bSecondLayer, objID);
-    if (pPlaceholder->getHeroID() != -1) {
+    if (pPlaceholder->getHeroID() != eHeroNone) {
         THeroID heroID = pPlaceholder->getHeroID();
         THeroClass heroClass = THero::s_akTraits[heroID].m_class;
         _m_pBookkeeping->m_heroesOnMap.set(heroID, true);
@@ -3460,7 +3461,7 @@ void TGameMap::_TImpl::_onHeroPlaceholderAdded(const THeroPlaceholder* pPlacehol
 VA(0x0042834e, 0xeb)
 void TGameMap::_TImpl::_onRemovingHeroPlaceholder(const THeroPlaceholder* pPlaceholder)
 {
-    if (pPlaceholder->getHeroID() != -1) {
+    if (pPlaceholder->getHeroID() != eHeroNone) {
         THeroID heroID = pPlaceholder->getHeroID();
         THeroClass heroClass = THero::s_akTraits[heroID].m_class;
         _m_apPlayerBookkeeping[pPlaceholder->getOwner()]
@@ -3584,7 +3585,7 @@ void TGameMap::_TImpl::_onRemovingObject(const TGameObject& obj, TObjectTypesFro
 VA(0x00428892, 0x237)
 void TGameMap::_TImpl::_writeHeroSettings(TRawOStream* pOStream, int version) const
 {
-    for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+    for (int heroID = 0; heroID < kNumHeroes; heroID++) {
         const THeroPrototype& prototype = (*_m_pProperties->m_aHeroPrototype)[heroID];
         const THeroPrototype& gamePrototype = THero::s_akTraits[heroID].m_prototype;
         bool bCustomized = !(prototype == gamePrototype);
@@ -3715,7 +3716,7 @@ THeroID TGameMap::_TImpl::_pickRandomHero(THeroClass heroClass) const
     const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
     vector<THeroID> candidates;
     candidates.reserve(classTraits.m_heroes.size());
-    set<int>::const_iterator pHeroID;
+    set<THeroID>::const_iterator pHeroID;
     for (pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end(); pHeroID++) {
         const THero::TTraits& traits = THero::s_akTraits[*pHeroID];
         if (traits.m_gameVersions[_m_version] && !traits.m_bSpecial
@@ -3732,7 +3733,7 @@ THeroID TGameMap::_TImpl::_pickRandomHero(THeroClass heroClass) const
     }
     THeroID result;
     if (candidates.size() == 0)
-        result = -1;
+        result = eHeroNone;
     else
         result = candidates[rand() % candidates.size()];
     return result;
@@ -5319,7 +5320,7 @@ VA_COMPGEN(0x0042db3f, 0xf0, TREE_INSERT, TCappedObjectTypeInfo)
 VA_COMPGEN(0x00430930, 0x89, TREE_INIT, TCappedObjectTypeInfo)
 
 // The hero-ID sets' insert, which setHeroID and the hero bookkeeping call.
-VA_COMPGEN(0x0042d20d, 0xf0, TREE_INSERT, int_set)
+VA_COMPGEN(0x0042d20d, 0xf0, TREE_INSERT, THeroID_set)
 
 // The maps' and the object-reference set's implicit destructors, each a tail
 // jump to its tree's destructor that only unwind funclets call: the capped
@@ -5677,7 +5678,7 @@ inline TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
         unsigned int numPlaceholderHeroes = readValue<long>(stream);
         m_placeholderHeroIDs.reserve(numPlaceholderHeroes);
         for (unsigned int i = 0; i < numPlaceholderHeroes; i++) {
-            int heroID = readValue<unsigned char>(stream);
+            THeroID heroID = THeroID(readValue<unsigned char>(stream));
             m_placeholderHeroIDs.push_back(heroID);
         }
     }
@@ -5779,7 +5780,7 @@ inline void TGameMapHeader::write(TRawOStream& stream, EGameVersion version) con
     }
     if (version >= GAME_VERSION_AB) {
         stream << static_cast<long>(m_placeholderHeroIDs.size());
-        for (std::vector<int>::const_iterator pHeroID = m_placeholderHeroIDs.begin();
+        for (std::vector<THeroID>::const_iterator pHeroID = m_placeholderHeroIDs.begin();
              pHeroID != m_placeholderHeroIDs.end(); ++pHeroID)
             stream << static_cast<unsigned char>(*pHeroID);
     }

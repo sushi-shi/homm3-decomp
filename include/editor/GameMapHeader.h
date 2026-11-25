@@ -160,7 +160,7 @@ public:
     unsigned int m_numTeams;
     int m_aTeam[kNumPlayers];
     std::bitset<kNumHeroes> m_availableHeroes;
-    std::vector<int> m_placeholderHeroIDs;
+    std::vector<THeroID> m_placeholderHeroIDs;
     std::map<int, TCustomHero> m_customHeroes;
 
 private:

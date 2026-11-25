@@ -299,7 +299,7 @@ CString TMapValidationFunc::_createHeroStr(const TBasicHero& hero, const TTilePo
     } else {
         const THeroPlaceholder* pPlaceholder = dynamic_cast<const THeroPlaceholder*>(&hero);
         if (pPlaceholder != NULL) {
-            bool bHasHero = pPlaceholder->getHeroID() != -1;
+            bool bHasHero = pPlaceholder->getHeroID() != eHeroNone;
             if (bHasHero) {
                 THeroID heroID = pPlaceholder->getHeroID();
                 const THero::TTraits& traits = THero::s_akTraits[heroID];

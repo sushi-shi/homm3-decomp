@@ -239,7 +239,7 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
         unsigned int numPlaceholderHeroes = readValue<unsigned int>(stream);
         m_placeholderHeroIDs.reserve(numPlaceholderHeroes);
         for (unsigned int i = 0; i < numPlaceholderHeroes; i++) {
-            int heroID = readValue<unsigned char>(stream);
+            THeroID heroID = THeroID(readValue<unsigned char>(stream));
             m_placeholderHeroIDs.push_back(heroID);
         }
     }
@@ -265,12 +265,13 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
 
 // reserve checks this four-byte-element capacity: all 19 retail bytes agree,
 // with no relocation operands. The rest of the emitted COMDAT is NOP padding.
-VA_COMPGEN(0x00423e40, 0x13, VECTOR_CAPACITY, int)
+VA_COMPGEN(0x00423e40, 0x13, VECTOR_CAPACITY, THeroID)
 
 // The placeholder-hero push_back retains the single-element insert. Retail
-// returns its int iterator, takes two arguments and calls _Construct<int>.
-VA_COMPGEN(0x00423e60, 0x19c, VECTOR_INSERT_SINGLE, int)
+// returns its THeroID iterator, takes two arguments and calls
+// _Construct<THeroID>.
+VA_COMPGEN(0x00423e60, 0x19c, VECTOR_INSERT_SINGLE, THeroID)
 
-// Its fill branch calls this int construction loop: four-byte stride,
+// Its fill branch calls this THeroID construction loop: four-byte stride,
 // a placement-new null guard and three stack arguments (ret 12).
-VA_COMPGEN(0x00424580, 0x25, VECTOR_UFILL, int)
+VA_COMPGEN(0x00424580, 0x25, VECTOR_UFILL, THeroID)

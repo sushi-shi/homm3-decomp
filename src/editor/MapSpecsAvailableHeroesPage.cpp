@@ -58,7 +58,7 @@ BOOL TMapSpecsAvailableHeroesPage::OnInitDialog()
     _m_heroList.SetColumnWidth(rect.Width() / 4);
     for (int heroClass = 0; heroClass < kNumHeroClasses; heroClass++) {
         const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
-        for (std::set<int>::const_iterator it = classTraits.m_heroes.begin(); it != classTraits.m_heroes.end(); ++it) {
+        for (std::set<THeroID>::const_iterator it = classTraits.m_heroes.begin(); it != classTraits.m_heroes.end(); ++it) {
             const std::bitset<3>& gameVersions = THero::s_akTraits[*it].m_gameVersions;
             if (gameVersions.test(_m_newMap.getVersion())) {
                 int index = _m_heroList.AddString(_m_newMap.getHeroPrototype(*it).getName().c_str());
@@ -83,7 +83,7 @@ void TMapSpecsAvailableHeroesPage::OnOK()
     std::bitset<kNumHeroes> disabledHeroes;
     int count = _m_heroList.GetCount();
     for (int i = 0; i < count; i++) {
-        THeroID heroID = _m_heroList.GetItemData(i);
+        THeroID heroID = THeroID(_m_heroList.GetItemData(i));
         disabledHeroes[heroID] = !_m_heroList.GetCheck(i);
     }
     _m_newMap.setDisabledHeroes(disabledHeroes);
@@ -108,7 +108,7 @@ VA(0x00470975, 0x187)
 void TMapSpecsAvailableHeroesPage::OnPropertiesButton()
 {
     int index = _m_heroList.GetCurSel();
-    THeroID heroID = _m_heroList.GetItemData(index);
+    THeroID heroID = THeroID(_m_heroList.GetItemData(index));
     THeroPrototypePropsSheet sheet(this, _m_newMap, heroID);
     if (sheet.DoModal() && sheet.wasModified()) {
         _m_bModified = true;
@@ -140,7 +140,7 @@ void TMapSpecsAvailableHeroesPage::OnCheckChangeHeroList()
 {
     int index = _m_heroList.GetCurSel();
     if (!_m_heroList.GetCheck(index)) {
-        THeroID heroID = _m_heroList.GetItemData(index);
+        THeroID heroID = THeroID(_m_heroList.GetItemData(index));
         if (_m_newMap.getHeroesOnMap()[heroID])
             _m_heroList.SetCheck(index, 1);
     }

@@ -547,7 +547,7 @@ void TIdentifiedHeroPropsGeneralPage::OnOK()
 VA(0x0045155c, 0x45)
 void TIdentifiedHeroPropsGeneralPage::OnSelChangeIdentityCombo()
 {
-    THeroID heroID = _m_identityCombo.GetItemData(_m_identityCombo.GetCurSel());
+    THeroID heroID = THeroID(_m_identityCombo.GetItemData(_m_identityCombo.GetCurSel()));
     if (heroID != _m_heroID) {
         _m_heroID = heroID;
         _onSetHeroID();

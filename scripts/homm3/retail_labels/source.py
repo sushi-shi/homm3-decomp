@@ -1388,8 +1388,14 @@ def _demangle_key(mangled: str):
     tree_set_primitive = re.match(
         r"^\?\w+@(?:const_iterator@)?\?\$_Tree@([CDEFGHIJK])\1U_Kfn@"
         r"\?\$set@\1", mangled)
+    # `set<enum>`'s members: the element `W4Name@@` repeats as the name
+    # backreference `W4<n>@`, and the enum's own name is the owner.
+    tree_set_enum = re.match(
+        r"^\?\w+@(?:const_iterator@)?\?\$_Tree@W4([A-Za-z_]\w*)@@W4\d@"
+        r"U_Kfn@\?\$set@W4\1@@", mangled)
     tree_owner = ((DEQUE_PRIMITIVE_ELEMENT[tree_set_primitive.group(1)]
                    + "_set") if tree_set_primitive else
+                  (tree_set_enum.group(1) + "_set") if tree_set_enum else
                   tree_value.group(1) if tree_value else
                   tree_named_owner.group(1) if tree_named_owner else
                   (tree_template_owner.group(1) + '_' +
@@ -3759,6 +3765,10 @@ def selftest() -> list[str]:
         "?_Insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@"
         "V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@":
             "int_set@tree_node_insert",
+        "?insert@?$_Tree@W4THeroID@@W41@U_Kfn@?$set@W4THeroID@@"
+        "U?$less@W4THeroID@@@std@@V?$allocator@W4THeroID@@@3@@std@@"
+        "U?$less@W4THeroID@@@4@V?$allocator@W4THeroID@@@4@@std@@QAE":
+            "theroid_set@tree_insert",
         "?insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
             "type_map_hero_info@tree_insert",
         "?_Insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":

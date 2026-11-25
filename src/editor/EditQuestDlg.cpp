@@ -1229,7 +1229,7 @@ END_MESSAGE_MAP()
 VA(0x004107b5, 0xa6)
 void TQuestBeASpecificHeroDlg::setQuest(const TQuestBeASpecificHero& quest)
 {
-    _m_heroID = quest.getHeroID();
+    _m_heroID = THeroID(quest.getHeroID());
     THeroClass heroClass = THero::s_akTraits[_m_heroID].m_class;
     int index;
     for (index = 0; THeroClass(_m_classCombo.GetItemData(index)) != heroClass; index++)
@@ -1271,13 +1271,13 @@ BOOL TQuestBeASpecificHeroDlg::OnInitDialog()
         _m_classCombo.SetItemData(_m_classCombo.AddString(THero::s_akClassTraits[heroClass].m_name), heroClass);
     _m_classCombo.SetCurSel(0);
     const THero::TClassTraits& classTraits = THero::s_akClassTraits[_m_classCombo.GetItemData(0)];
-    for (std::set<int>::const_iterator it = classTraits.m_heroes.begin(); it != classTraits.m_heroes.end(); ++it) {
+    for (std::set<THeroID>::const_iterator it = classTraits.m_heroes.begin(); it != classTraits.m_heroes.end(); ++it) {
         if (THero::s_akTraits[*it].m_gameVersions.test(mapVersion))
             _m_identityCombo.SetItemData(
                 _m_identityCombo.AddString(_m_pMap->getHeroPrototype(*it).getName().c_str()), *it);
     }
     _m_identityCombo.SetCurSel(0);
-    _m_heroID = _m_identityCombo.GetItemData(0);
+    _m_heroID = THeroID(_m_identityCombo.GetItemData(0));
     return TRUE;
 }
 
@@ -1285,7 +1285,7 @@ VA(0x00410ae8, 0x36)
 void TQuestBeASpecificHeroDlg::OnOK()
 {
     CDialog::OnOK();
-    _m_heroID = _m_identityCombo.GetItemData(_m_identityCombo.GetCurSel());
+    _m_heroID = THeroID(_m_identityCombo.GetItemData(_m_identityCombo.GetCurSel()));
 }
 
 VA(0x00410b1e, 0x125)
@@ -1295,7 +1295,7 @@ void TQuestBeASpecificHeroDlg::OnSelChangeClassCombo()
     _m_identityCombo.ResetContent();
     EGameVersion mapVersion = _m_pMap->getVersion();
     const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
-    for (std::set<int>::const_iterator it = classTraits.m_heroes.begin(); it != classTraits.m_heroes.end(); ++it) {
+    for (std::set<THeroID>::const_iterator it = classTraits.m_heroes.begin(); it != classTraits.m_heroes.end(); ++it) {
         if (THero::s_akTraits[*it].m_gameVersions.test(mapVersion))
             _m_identityCombo.SetItemData(
                 _m_identityCombo.AddString(_m_pMap->getHeroPrototype(*it).getName().c_str()), *it);
