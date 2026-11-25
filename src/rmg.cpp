@@ -922,7 +922,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
     seed->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     while (positions.size() > 0) {
         TRmgMapPosition currentPosition = positions.back();
-        int queuedCost = costs.back();
+        int cost = costs.back();
         TRmgMapItem* current = getMapItem(currentPosition);
         positions.pop_back();
         costs.pop_back();
@@ -936,7 +936,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
                 direction = 5;
         }
         while (direction--) {
-            int nextCost = currentCost + 1;
+            cost = currentCost + 1;
             TRmgMapPosition nextPosition = currentPosition + g_rmgDirections[direction];
             if (nextPosition.m_x < 0 || nextPosition.m_x >= getWidth()
                 || nextPosition.m_y < 0 || nextPosition.m_y >= getHeight())
@@ -953,37 +953,37 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
                     continue;
             }
             if (next->m_zoneState.m_zone != zone) {
-                nextCost = currentCost + 10;
+                cost = currentCost + 10;
                 if (currentZone != zone && currentZone != next->m_zoneState.m_zone)
                     continue;
-                if (next->m_movement.m_zonePathCost <= nextCost)
+                if (next->m_movement.m_zonePathCost <= cost)
                     continue;
-                next->setZonePath(nextCost, direction - 4, zone);
+                next->setZonePath(cost, direction - 4, zone);
             } else {
                 if (currentZone != zone)
                     continue;
                 if (next->getLandType() == eTerrainWater)
-                    nextCost = currentCost + 10;
-                if (next->m_movement.m_cost <= nextCost)
+                    cost = currentCost + 10;
+                if (next->m_movement.m_cost <= cost)
                     continue;
                 if (!currentCost && next->hasPathClearance()
                     && (next->getLandType() != eTerrainWater || waterZone))
-                    nextCost = 0;
-                next->setMovementCost(nextCost, currentPosition);
+                    cost = 0;
+                next->setMovementCost(cost, currentPosition);
             }
-            int first = 0;
             int last = positions.size();
+            int first = 0;
             int middle;
             while (1) {
                 middle = (first + last) >> 1;
-                if (first >= last)
+                if (last <= first)
                     break;
-                if (nextCost < costs[middle])
+                if (cost < costs[middle])
                     first = middle + 1;
                 else
                     last = middle;
             }
-            costs.insert(costs.begin() + middle, nextCost);
+            costs.insert(costs.begin() + middle, cost);
             positions.insert(positions.begin() + middle, nextPosition);
         }
     }
@@ -6415,10 +6415,10 @@ void type_random_map_generator::populateWaterZoneIslands(TRmgZone* zone)
 {
     if (zone->m_terrain != eTerrainWater)
         return;
-    TRmgZoneBounds bounds = zone->m_bounds;
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     TRmgMapPosition position;
     position = zone->m_levelPosition;
+    TRmgZoneBounds bounds = zone->m_bounds;
+    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position);
