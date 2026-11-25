@@ -305,14 +305,16 @@ void pollSound()
 
 // kb.obj's own once-only latch: a reloc census over the whole image finds
 // exactly two references to 0x699580 and both are in EarlySetup, so kb.cpp
-// owns it under the same rule as oldmain's private cells below. The cell at
-// 0x6985bc is the same case - InitVars' single zero store is its only
-// reference anywhere.
+// owns it. The cell at 0x6985bc is the same case - InitVars' single zero
+// store is its only reference anywhere. Dreamcast publishes both as external
+// globals: bEarlySetupDone (kb.obj) and gPalette (global.obj,
+// `?gPalette@@3PAVpalette@@A`).
+// Original DC name: bEarlySetupDone.
 DATA(0x00699580)
-static int g_earlySetupDone;
+int g_earlySetupDone;
 // Original DC name: gPalette; InitVars clears it between gGameCommand and the view frame.
 DATA(0x006985bc)
-static palette* g_palette;
+palette* g_palette;
 
 // The startup callees whose own rows are still unclaimed. Every name is the
 // Dreamcast CodeView spelling for the compiland the retail address falls in,
@@ -844,14 +846,15 @@ static Bitmap16Bit* g_gameSelectBack;
 
 // Complete's front-end keeps these process globals beside the multiplayer
 // setup state. Their declarations live with their owning/domain headers; the
-// two cells below are private oldmain state (their only retail references are
-// in this function).
+// two cells below are only referenced by oldmain in retail, but Dreamcast
+// publishes both (`?gbDirectConnect@@3HA`, `?gbGameInitialized@@3HA`), as it
+// does gcWinText and giSetupGameType.
 // Original DC name: gbDirectConnect; DoNewGame / DoLoadGame.
 DATA(0x0069953c)
-static int g_directConnect;
+int g_directConnect;
 // Original DC name: gbGameInitialized; oldmain sets it before entering the adventure loop.
 DATA(0x00699558)
-static int g_gameInitialized;
+int g_gameInitialized;
 // oldmain's own scenario-summary scratch: the only retail reference to
 // this .bss cell is the sprintf that formats general text row 116 with
 // the finished game's turn number. The extent is NOT proven - nothing
@@ -859,12 +862,12 @@ static int g_gameInitialized;
 // neighbour - so the declared width is a placeholder, not a claim.
 // Original DC name: gcWinText; oldmain formats the completed game turn count.
 DATA(0x00699294)
-static char g_winText[300];
+char g_winText[300];
 DATA(0x00699584)
 static int g_runStartEventsOnEntry;
 // Original DC name: giSetupGameType; zero for DoNewGame, one for DoLoadGame.
 DATA(0x006972e8)
-static unsigned char g_setupGameType;
+unsigned char g_setupGameType;
 
 // Dreamcast CodeView marks these menu helpers source-static.  Complete's
 // VC6 build expands DoNewGame and DoLoadGame into oldmain but retains the
@@ -1829,13 +1832,14 @@ static int pickLoadGame()
 }
 
 // Two write-only process cells whose ONLY retail reference in the whole
-// image is the reset run below (verified with a reloc census), so kb.obj
-// owns them under the same rule as oldmain's private cells above. The
-// .data one ships initialized to 1 and is re-armed here.
+// image is the reset run below (verified with a reloc census). Dreamcast
+// publishes them as the external globals giScreenScroll and gbUseWaveout of
+// global.obj (`?giScreenScroll@@3HA`). The .data one ships initialized to 1
+// and is re-armed here.
 DATA(0x006783d8)
-static int g_screenScroll = 1;
+int g_screenScroll = 1;
 DATA(0x00698a38)
-static int g_useWaveout;
+int g_useWaveout;
 
 // E:\gamedcs\kb.cpp:2174
 // EarlySetup's last gate: reset the process-wide session flags, take the
