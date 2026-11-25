@@ -1020,13 +1020,16 @@ inline CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* playerInfo,
 // variable runs the byte offset from 4 and stores through (array - 4), and
 // retail reloads Text._First every iteration because the store could alias
 // it. Array base = store displacement + 4 (the events precedent).
-DATA(0x0069fc28) static TTextResource* g_victoryConditionText;
-DATA(0x0069fb70) static const char* g_victoryConditionDesc[14];
-DATA(0x0069fbf4) static TTextResource* g_lossConditionText;
-DATA(0x0069fc18) static const char* g_lossConditionDesc[4];
+// Dreamcast publishes the four as external globals VCDescriptions,
+// VictoryText, LCDescriptions and LossText, and the duration resource as
+// TurnDurationText (`?TurnDurationText@@3PBVTTextResource@@B`).
+DATA(0x0069fc28) TTextResource* g_victoryConditionText;
+DATA(0x0069fb70) const char* g_victoryConditionDesc[14];
+DATA(0x0069fbf4) TTextResource* g_lossConditionText;
+DATA(0x0069fc18) const char* g_lossConditionDesc[4];
 // External linkage is retail-proven: scenarioinfo.obj reads the same table
 // while constructing CScenarioInfoDlg.
-DATA(0x0069fb14) static TTextResource* g_turnDurationTextResource;
+DATA(0x0069fb14) TTextResource* g_turnDurationTextResource;
 DATA(0x0069fb44) const char* g_turnDurationText[11];
 // Player colour letters for the per-slot "adopb2%c.def" buttons and the
 // constructor's panel/flag loaders. Retail keeps these eight bytes without a
@@ -1067,19 +1070,20 @@ static void sliderFileMenu(int state, heroWindow* parentWindow);
 // Descriptive name from the constructor and the callbacks; original unknown.
 DATA(0x0069fbe8) static TSingleSelectionWindow* g_singleSelectionWindow;
 
-// The notice flag and campaign mode are file-static lobby cells.
+// Dreamcast publishes the notice flag and campaign mode as external globals
+// `?notifyNoSaved@@3_NA` and `?campaignMode@@3_NA`.
 // DC names the one-shot empty-save-list notice flag `notifyNoSaved`.
 // WindowHandler tests and clears it before showing general-text row 686.
 // 0x69fda4: the eight-seat join-order table SetHumanSlot consults in
 // net-new-game mode before the plain unassigned fill.
-DATA(0x0069fda0) static unsigned char g_notifyNoSaved;
+DATA(0x0069fda0) unsigned char g_notifyNoSaved;
 // DC publishes g_wasHuman as an int array (segment 3, offset 0x1704c).
 // game::load also restores this table from SavedGameHeader::m_humanPlayer;
 // its 0x4bcda0+0x1bf copy rules out the former file-static declaration.
 DATA(0x0069fda4) int g_wasHuman[NUM_PLAYERS];
-// DC's `campaignMode` byte survives as a TU-local Complete cell.  The
+// DC's `campaignMode` byte survives as this Complete cell.  The
 // selected campaign row forces the unlimited (10) duration after transfer.
-DATA(0x0069fd90) static bool g_selectionCampaignMode;
+DATA(0x0069fd90) bool g_selectionCampaignMode;
 // Descriptive name: list population, scrolling and slider resolution use
 // this row count (18 normally, 16 in the alternate layout).
 DATA(0x0069fdc8) static int g_scenarioListVisibleRows;
@@ -1098,8 +1102,9 @@ DATA(0x00683440) int g_difficultyRatingPercent[5] = {
 };
 
 // The disk-list pattern table selected by GetFileSpecNbr. The declaration
-// order explains the reverse literal run at 0x683474..0x683494.
-DATA(0x00683458) static const char* g_fileSpec[5] = {
+// order explains the reverse literal run at 0x683474..0x683494. Dreamcast
+// publishes it as the external global fileSpec (`?fileSpec@@3PAPAGA`).
+DATA(0x00683458) const char* g_fileSpec[5] = {
     DATA_COMPGEN(0x00683494, mapFileSpec, "*.h3m"),
     DATA_COMPGEN(0x0068348c, savedGameFileSpec, "*.gm?"),
     DATA_COMPGEN(0x00683484, campaignGameFileSpec, "*.cgm"),
