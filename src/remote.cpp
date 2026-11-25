@@ -177,16 +177,24 @@ bool CDPlayHeroes::SysMsgDestroyPlayerOrGroup(
     return CDPlay::SysMsgDestroyPlayerOrGroup(message, toId);
 }
 
+// DC216 hands a created player's DPID, short name and data block to the
+// empty HandleNewPlayer hook before forwarding to the base dispatcher.
 VA(0x00552b40, 0x14)
 DC_ADDRESS(0x11bb60, 0x3a)
 bool CDPlayHeroes::SysMsgCreatePlayerOrGroup(
     DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId)
 {
+    if (message->dwPlayerType == DPLAY_PLAYER_TYPE_PLAYER)
+        handleNewPlayer(message->dpId, message->dpnName.lpszShortNameA,
+                        message->lpData, message->dwDataSize);
     return CDPlay::SysMsgCreatePlayerOrGroup(message, toId);
 }
 
 // Mac polls its native receive buffer here and calls the same low-level
 // dispatcher and queue helper; Windows uses DirectPlay receive/error state.
+// DC232/243 read the error through CDPlay::GetLastError; spelling either
+// m_hRes read as getLastError() costs VC6's queueMsg deque expansion here
+// (100% -> 43.5%, or 53.7% for the test alone), so the field read stays.
 VA(0x00552b60, 0x24B)
 DC_ADDRESS(0x11bb9c, 0xec)
 MAC_ADDRESS(0x210944, 0xa0)
@@ -336,7 +344,7 @@ CNetMsg* CDPlayHeroes::GetRemoteData(bool removeFromQueue,
         *wasCompressed = 0;
     if (!g_remoteOn)
         return 0;
-    if (!m_msgQueue.size())
+    if (m_msgQueue.empty())
         return 0;
 
     CNetMsg* netMsg = m_msgQueue.front();
@@ -966,11 +974,8 @@ MAC_ADDRESS(0x211f20, 0x78)
 void CChatManager::resumeTimeOuts()
 {
     for (int i = 0; i < 20; i++) {
-        if (m_msgArray[i].m_killTime > 0) {
-            unsigned long pausedAt = m_pauseTime;
-            unsigned long elapsed = GameTime::get() - pausedAt;
-            m_msgArray[i].m_killTime += elapsed;
-        }
+        if (m_msgArray[i].m_killTime > 0)
+            m_msgArray[i].m_killTime += GameTime::elapsedSince(m_pauseTime);
     }
     m_pauseTime = 0;
 }
@@ -1098,7 +1103,7 @@ MAC_ADDRESS(0x2127e4, 0x7c)
 int CChatEdit::onFunctionKey(message msg, int toWho)
 {
     if (m_text.size() > 0)
-        sendChat(m_text.c_str(), toWho);
+        sendChat(getText(), toWho);
     setupDisplayString(
         DATA_COMPGEN(0x00691210, chatEditEmptyText, ""), 0);
     updateScreen();
@@ -1111,7 +1116,7 @@ MAC_ADDRESS(0x212860, 0x7c)
 int CChatEdit::onEnter(message msg)
 {
     if (m_text.size() > 0)
-        sendChat(m_text.c_str(), NET_MESSAGE_RECIPIENT_ALL);
+        sendChat(getText(), NET_MESSAGE_RECIPIENT_ALL);
     setupDisplayString(
         DATA_COMPGEN(0x00691210, chatEditEmptyText, ""), 0);
     updateScreen();
@@ -1633,7 +1638,7 @@ unsigned char initConnection(char* ipAddressOrPhoneNbr,
                              _DPCOMPORTADDRESS* comportInfo)
 {
     if (!createDPlayObject()) {
-        dpsd(0,
+        dpsd(g_dPlay->getLastError(),
              DATA_COMPGEN(0x00682bb8, remoteSourceFile,
                           "C:\\Dev\\Heroes 3 Exp 2\\Game\\Remote.cpp"),
              1867);
@@ -1681,7 +1686,7 @@ unsigned char initConnection(char* ipAddressOrPhoneNbr,
     }
 
     if (!connection) {
-        dpsd(0,
+        dpsd(g_dPlay->getLastError(),
              DATA_COMPGEN(0x00682bb8, remoteSourceFile,
                           "C:\\Dev\\Heroes 3 Exp 2\\Game\\Remote.cpp"),
              1898);
@@ -2682,9 +2687,8 @@ bool CTurnDuration::isExpired()
     if ((!g_currentPlayer || g_currentPlayer->isLocalHuman())
             && isOn()
             && m_pauseTime <= 0) {
-        unsigned long startTime = m_turnStartTime;
-        if (startTime > 0
-                && GameTime::get() - startTime > m_currDuration)
+        if (m_turnStartTime > 0
+                && GameTime::elapsedSince(m_turnStartTime) > m_currDuration)
             return 1;
     }
     return 0;
@@ -2834,11 +2838,9 @@ DC_ADDRESS(0x11f41c, 0x2c)
 MAC_ADDRESS(0x215bc0, 0x68)
 void CTurnDuration::resume()
 {
-    unsigned long pausedAt = m_pauseTime;
-    if (pausedAt != 0 && m_turnStartTime != 0) {
-        unsigned long pausedFor = GameTime::get() - pausedAt;
+    if (m_pauseTime != 0 && m_turnStartTime != 0) {
+        addTime(GameTime::elapsedSince(m_pauseTime));
         m_pauseTime = 0;
-        addTime(pausedFor);
     }
 }
 
