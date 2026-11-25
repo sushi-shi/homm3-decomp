@@ -10755,8 +10755,18 @@ static const int g_rmgArtifactVialOfDragonBlood = 127;
 // its repeated strlen. Mac 0x24eafc and h3maped 0x4acabf clear five arrays
 // in this order; the fourth is never read (Mac r1+0x2e4, editor ebp-0x70),
 // and the game's /O2 drops its intrinsic fill.
-// Residual: the 156-bit hero writer still expands test where retail calls
-// _Xran, and stack homes differ.
+// Mac 0x24f588..0x24f5c8 builds a bitset reference temporary for bits 128
+// and 127, as for the loop's assignments, so both are reference
+// assignments rather than direct set calls; Mac 0x24f694..0x24f6a4 forms
+// the legacy copy's end by adding 129 to a fresh zero-offset iterator,
+// which also restores retail's memory-held end owner in the copy loop.
+// Residual: retail's C2 budget still expands the artifact loop's _Xran and
+// the 28-bit writer's out_of_range constructor; a replay puts retail's
+// caller cb about 50 units above ours (2128), with no supported source
+// mass found. Probes: omitted iterator zero offsets are byte-flat. The
+// empty spell and skill masks are temporaries: h3maped retail homes the
+// 28-bit mask where a named local takes a fresh slot (editor 99.88 ->
+// 99.99%; the game is byte-flat).
 VA(0x00549CB0, 0xE90)
 MAC_ADDRESS(0x24e7d4, 0x11ac)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
@@ -11045,8 +11055,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     }
     // Retail 0x54a78d/0x54a790 sets bit 0 of word 4 and bit 31 of
     // word 3, relative to the bitset base at [ebp-0x64]: IDs 128 and 127.
-    disabledArtifacts.set(128);
-    disabledArtifacts.set(g_rmgArtifactVialOfDragonBlood);
+    disabledArtifacts[128] = true;
+    disabledArtifacts[g_rmgArtifactVialOfDragonBlood] = true;
 
     if (m_mapVersion >= 2) {
         writePackedBits(outfile, disabledArtifacts);
@@ -11054,18 +11064,16 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         std::bitset<129> legacyDisabledArtifacts;
         std::copy(
             bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 0),
-            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 129),
+            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 0) + 129,
             bitset_iterator<129>(legacyDisabledArtifacts, 0));
 
         writePackedBits(outfile, legacyDisabledArtifacts);
     }
 
     if (m_mapVersion >= 2) {
-        std::bitset<70> disabledSpells;
-        writePackedBits(outfile, disabledSpells);
+        writePackedBits(outfile, std::bitset<70>());
 
-        std::bitset<kNumSecSkills> disabledSkills;
-        writePackedBits(outfile, disabledSkills);
+        writePackedBits(outfile, std::bitset<kNumSecSkills>());
 
         for (int hero = 0; hero < RMG_HERO_COUNT; ++hero)
             writeValue<char>(outfile, 0);

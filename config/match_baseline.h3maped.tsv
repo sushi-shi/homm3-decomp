@@ -6073,7 +6073,7 @@ rmg	?write@type_spell_scroll@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.00
 rmg	?write@type_town@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9bc2f	-
 rmg	?write@type_witch_hut@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9c4f4	-
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xad1e3	-
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.3180	93.3180	93.3180	0xac857	-
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	99.9888	99.9888	99.9888	0xac857	-
 rmg	?writePackedBits@@YAHPAVTAbstractFile@@ABV?$bitset@$0BM@@std@@@Z	100.0000	100.0000	100.0000	0xaf037	-
 rmg	?writePackedBits@@YAHPAVTAbstractFile@@ABV?$bitset@$0EG@@std@@@Z	100.0000	100.0000	100.0000	0xaefce	-
 rmg	?writePackedBits@@YAHPAVTAbstractFile@@ABV?$bitset@$0IA@@std@@@Z	100.0000	100.0000	100.0000	0xaee32	-
