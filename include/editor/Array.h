@@ -1,7 +1,7 @@
 // Array.h - a fixed-size array with an STL face (Loki h3maped).
-// Every member is inline; the instantiations are linkonce bodies owned by
-// the first object that uses them (TArray<TCreatureStack, 7> in Army.cpp,
-// TArray<int, 7> in BlackBox.cpp, the TCell grids in GameMap.cpp). The
+// The instantiations are linkonce bodies owned by the first object that
+// uses them (TArray<TCreatureStack, 7> in Army.cpp, TArray<int, 7> in
+// BlackBox.cpp, the TCell grids in GameMap.cpp). The
 // accessors carry empty exception specifications (`__check_eh_spec` in
 // every begin/end/operator[]/size). The comparison is a member template
 // over the other array's element type (`__eq__H1Zi_Ct6TArray2ZiUi7...`).
@@ -37,40 +37,17 @@ public:
     // first, then loop; a POD array's destructor (0x438787) leaves the
     // dead `end()` of its emptied loop. Loki's port assigns into a plain
     // array.
-    TArray() { for (iterator p = begin() + 1; p != end(); ++p) new (p) T; }
-    explicit TArray(const T& value) : _m_first(value)
-    {
-        for (iterator p = begin() + 1; p != end(); ++p)
-            new (p) T(value);
-    }
-    TArray(const TArray& other) : _m_first(other._m_first)
-    {
-        const_iterator pSource = other.begin() + 1;
-        for (iterator p = begin() + 1; p != end(); ++p)
-            new (p) T(*pSource++);
-    }
-    // The POD arrays' destructors run only from unwind funclets.
-    // VA instance: TArray<int, 15>::~TArray
-    VA(0x00406558, 0xa)
-    // VA instance: TArray<unsigned int, 9>::~TArray
-    VA(0x00438787, 0xa)
-    // VA instance: TArray<unsigned int, 8>::~TArray
-    VA(0x0047fee6, 0xa)
-    // VA instance: TArray<unsigned int, 2>::~TArray
-    VA(0x0047fef0, 0xa)
-    // VA instance: TArray<bool, 7>::~TArray
-    VA(0x0047fefa, 0xa)
-    // VA instance: TArray<TSecondarySkillsDlg::_TSlot, 8>::~TArray
-    VA(0x004b5f83, 0xa)
-    // VA instance: TArray<TTown::TBuildingState, 41>::~TArray
-    VA(0x004c3590, 0xa)
-    ~TArray()
-    {
-        for (iterator p = end(); p != begin() + 1; ) {
-            --p;
-            p->~T();
-        }
-    }
+    // The constructors and the destructor are defined after the class.
+    // VC6 compiles such out-of-class template members in a later batch than
+    // the in-class ones, after basic_string::_Tidy: the quest messages'
+    // default constructor (0x49713e) then sees a nothrow element and drops
+    // its EH frame, as retail's does (GameMap's bitset<8>::_Xran likewise
+    // loses its frame). Defined in the class, they are compiled first and
+    // keep frames retail lacks.
+    TArray();
+    explicit TArray(const T& value);
+    TArray(const TArray& other);
+    ~TArray();
 
     TArray& operator=(const TArray& other)
     {
@@ -99,5 +76,51 @@ private:
     // Elements 1..N-1, raw until the constructors build them in place.
     char _m_aRestStorage[(N - 1) * sizeof(T)];
 };
+
+template<class T, unsigned int N>
+TArray<T, N>::TArray()
+{
+    for (iterator p = begin() + 1; p != end(); ++p)
+        new (p) T;
+}
+
+template<class T, unsigned int N>
+TArray<T, N>::TArray(const T& value) : _m_first(value)
+{
+    for (iterator p = begin() + 1; p != end(); ++p)
+        new (p) T(value);
+}
+
+template<class T, unsigned int N>
+TArray<T, N>::TArray(const TArray& other) : _m_first(other._m_first)
+{
+    const_iterator pSource = other.begin() + 1;
+    for (iterator p = begin() + 1; p != end(); ++p)
+        new (p) T(*pSource++);
+}
+
+// The POD arrays' destructors run only from unwind funclets.
+template<class T, unsigned int N>
+// VA instance: TArray<int, 15>::~TArray
+VA(0x00406558, 0xa)
+// VA instance: TArray<unsigned int, 9>::~TArray
+VA(0x00438787, 0xa)
+// VA instance: TArray<unsigned int, 8>::~TArray
+VA(0x0047fee6, 0xa)
+// VA instance: TArray<unsigned int, 2>::~TArray
+VA(0x0047fef0, 0xa)
+// VA instance: TArray<bool, 7>::~TArray
+VA(0x0047fefa, 0xa)
+// VA instance: TArray<TSecondarySkillsDlg::_TSlot, 8>::~TArray
+VA(0x004b5f83, 0xa)
+// VA instance: TArray<TTown::TBuildingState, 41>::~TArray
+VA(0x004c3590, 0xa)
+TArray<T, N>::~TArray()
+{
+    for (iterator p = end(); p != begin() + 1; ) {
+        --p;
+        p->~T();
+    }
+}
 
 #endif  /* HOMM3_EDITOR_ARRAY_H */
