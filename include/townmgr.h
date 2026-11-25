@@ -809,8 +809,9 @@ public:
     townObject* m_townObjects[44];
     int m_townObjectCount;  // +0x10c
     int m_loadedTownType;  // +0x110  ctor -1
-    int m_saveWin;  // +0x114
-    heroWindow* m_townWindow;  // +0x118
+    // Dreamcast saveWin/townWindow: heroWindow* and TTownScreenWindow*.
+    heroWindow* m_saveWin;  // +0x114
+    TTownScreenWindow* m_townWindow;  // +0x118
     // Dreamcast garrisonStrip/heroStrip/currStrip/currIndex/srcStrip/
     // srcIndex/destStrip/destIndex are the consecutive +0x128..+0x144
     // slots; retail retains this sequence at +0x11c..+0x138. newStrips
@@ -891,10 +892,11 @@ public:
     // `new THallWindow(townToView->type)` here and handleMageGuildClick
     // its TMageGuildWindow, each driving the whole modal run - DrawWindow,
     // DoModal, delete - through it; THallWindow's handler broadcasts to it.
-    // Original Dreamcast dialogWindow. Held as the base pointer for the
-    // reason the note on +0x1b0 gives.
-    heroWindow* dialogWindow;  // +0x1bc
-    int m_multiWin;  // +0x1c0
+    // Original Dreamcast dialogWindow, typed CAdvPopup* there; both pages
+    // derive from CAdvPopup, whose definition this header already includes.
+    CAdvPopup* dialogWindow;  // +0x1bc
+    // Dreamcast multiWin: heroWindow*.
+    heroWindow* m_multiWin;  // +0x1c0
     int m_divideStatus;  // +0x1c4  ResetStrips
     char m_recruitSelected[0x4];  // +0x1c8  untouched by the retail bodies
     // Retail 0x5d8480 (dc 0x17b318). Inferno's Castle Gate.

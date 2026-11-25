@@ -968,7 +968,7 @@ void townObject::drawHotspot()
     if (m_objHotspot)
         m_objHotspot->zBufferDraw(
             0, 0, m_w, m_h,
-            static_cast<TTownScreenWindow*>(g_townManager->m_townWindow)->m_zBuffer,
+            g_townManager->m_townWindow->m_zBuffer,
             m_x, m_y, m_objId + 1);
 }
 
@@ -1777,7 +1777,7 @@ void townManager::updateTownInfo()
     msg.m_extraText = g_text;
     m_townWindow->broadcastMessage(msg);
 
-    static_cast<TTownScreenWindow*>(m_townWindow)->setBonusDisplay(m_townToView);
+    m_townWindow->setBonusDisplay(m_townToView);
 }
 
 // Putting a town on the screen. The page's five text/icon widgets are
@@ -1971,7 +1971,7 @@ void townManager::setupTown(bool fade)
         m_garrisonStrip = 0;
     }
 
-    static_cast<TTownScreenWindow*>(m_townWindow)->updateTownLocators();
+    m_townWindow->updateTownLocators();
     g_soundManager->startMP3(g_townMusic[m_townToView->m_type], 0, 1);
     newStrips();
 
@@ -2278,7 +2278,7 @@ void townManager::setCommandAndText(message& msg)
 {
     int code = msg.m_codeY;
     if (code >= 0 && code <= DWELLING_6_UPG_ID
-        && (code = static_cast<TTownScreenWindow*>(m_townWindow)
+        && (code = m_townWindow
                        ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1) >= 0
         && code <= DWELLING_6_UPG_ID) {
         g_outlinedTownObjectId = code;
@@ -2443,7 +2443,7 @@ void townManager::setCommandAndText(message& msg)
     case TTownScreenWindow::TOWN_2_ID: {
         sprintf(m_statusText, g_townCommand[4],
                 g_game->getTownName(g_game->getLocalPlayer()->m_townIds[
-                    static_cast<TTownScreenWindow*>(m_townWindow)->m_topTown
+                    m_townWindow->m_topTown
                     + code - TTownScreenWindow::TOWN_0_ID]));
         break;
     }
@@ -2455,7 +2455,7 @@ void townManager::setCommandAndText(message& msg)
     case TTownScreenWindow::BONUS_5_ID:
     case TTownScreenWindow::BONUS_6_ID:
         strcpy(m_statusText,
-               static_cast<TTownScreenWindow*>(m_townWindow)
+               m_townWindow
                    ->m_growthBonusIcon[code - TTownScreenWindow::BONUS_0_ID]
                    ->getHelpText());
         break;
@@ -2496,7 +2496,7 @@ void townManager::setCommandAndText(message& msg)
     case TTownScreenWindow::BONUS_5_TEXT_ID:
     case TTownScreenWindow::BONUS_6_TEXT_ID:
         strcpy(m_statusText,
-               static_cast<TTownScreenWindow*>(m_townWindow)
+               m_townWindow
                    ->m_growthBonusIcon[code
                                        - TTownScreenWindow::BONUS_0_TEXT_ID]
                    ->getHelpText());
@@ -4414,7 +4414,7 @@ void townManager::doHall()
     redrawTownScreen();
     if (m_objToBuild != -1)
         buildObj(m_objToBuild);
-    static_cast<TTownScreenWindow*>(m_townWindow)->updateTownLocators();
+    m_townWindow->updateTownLocators();
     redrawTownScreen();
 }
 
@@ -4689,7 +4689,7 @@ MAC_ADDRESS(0x1d25c4, 0xb8)
 void townManager::drawTown(int update, int incFrame, bool drawHotspots)
 {
     if (drawHotspots)
-        ZeroMemory(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer,
+        ZeroMemory(m_townWindow->m_zBuffer,
                    WINDOW_SCREEN_WIDTH * WINDOW_SCREEN_HEIGHT * 2);
     m_panorama->draw2();
     pollSound();
@@ -4766,7 +4766,7 @@ int townManager::main(message& msg)
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT: {
             int code = (msg.m_codeY >= 0 && msg.m_codeY <= DWELLING_6_UPG_ID)
-                ? static_cast<TTownScreenWindow*>(m_townWindow)
+                ? m_townWindow
                       ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1
                 : msg.m_codeY;
             g_outlinedTownObjectId = -1;
@@ -5083,7 +5083,7 @@ building_popup:
             case TTownScreenWindow::TOWN_2_ID:
                 if (rclick) {
                     int id = g_currentPlayer->m_townIds[
-                        static_cast<TTownScreenWindow*>(m_townWindow)
+                        m_townWindow
                             ->m_topTown
                         + msg.m_codeY - TTownScreenWindow::TOWN_0_ID];
                     town* t = g_game->getTown(id);
@@ -5094,7 +5094,7 @@ building_popup:
                     quickTown.quickWindowWait();
                 } else {
                     int index =
-                        static_cast<TTownScreenWindow*>(m_townWindow)
+                        m_townWindow
                             ->m_topTown
                         + msg.m_codeY - TTownScreenWindow::TOWN_0_ID;
                     if (g_currentTownIndex != index) {
@@ -5113,7 +5113,7 @@ building_popup:
             case TTownScreenWindow::BONUS_5_ID:
             case TTownScreenWindow::BONUS_6_ID:
                 if (rclick)
-                    static_cast<TTownScreenWindow*>(m_townWindow)->bonusRightClick(
+                    m_townWindow->bonusRightClick(
                         code - TTownScreenWindow::BONUS_0_ID);
                 break;
             case TTownScreenWindow::TOWN_UP_ARROW_ID:
@@ -5221,7 +5221,7 @@ building_popup:
             case TTownScreenWindow::BONUS_5_TEXT_ID:
             case TTownScreenWindow::BONUS_6_TEXT_ID:
                 if (rclick)
-                    static_cast<TTownScreenWindow*>(m_townWindow)->bonusRightClick(
+                    m_townWindow->bonusRightClick(
                         code - TTownScreenWindow::BONUS_0_TEXT_ID);
                 break;
             case TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID:
@@ -5312,14 +5312,14 @@ building_popup:
             switch (msg.m_codeY) {
             case TTownScreenWindow::TOWN_DOWN_ARROW_ID: {
                 TTownScreenWindow* win =
-                    static_cast<TTownScreenWindow*>(m_townWindow);
+                    m_townWindow;
                 win->doTownKnob(0);
                 redrawTownScreen();
                 break;
             }
             case TTownScreenWindow::TOWN_UP_ARROW_ID: {
                 TTownScreenWindow* win =
-                    static_cast<TTownScreenWindow*>(m_townWindow);
+                    m_townWindow;
                 win->doTownKnob(1);
                 redrawTownScreen();
                 break;
@@ -5349,7 +5349,7 @@ building_popup:
         g_windowManager->convertToHover(msg);
         int hover = msg.m_codeY;
         if (hover >= 0 && hover <= DWELLING_6_UPG_ID)
-            hover = static_cast<TTownScreenWindow*>(m_townWindow)
+            hover = m_townWindow
                         ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1;
         if (hover != m_lastHover || msg.m_qualifier != m_lastQualifier) {
             m_lastHover = hover;
@@ -5369,7 +5369,7 @@ building_popup:
             if (g_currentTownIndex
                 < g_game->getLocalPlayer()->m_numTowns - 1) {
                 TTownScreenWindow* win =
-                    static_cast<TTownScreenWindow*>(m_townWindow);
+                    m_townWindow;
                 win->doTownKnob(0);
                 g_currentTownIndex++;
                 int id = player->m_townIds[g_currentTownIndex];
@@ -5380,7 +5380,7 @@ building_popup:
         case KEYCODE_KP_8:
             if (g_currentTownIndex > 0) {
                 TTownScreenWindow* win =
-                    static_cast<TTownScreenWindow*>(m_townWindow);
+                    m_townWindow;
                 win->doTownKnob(1);
                 g_currentTownIndex--;
                 int id = player->m_townIds[g_currentTownIndex];
