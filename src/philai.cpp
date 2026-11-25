@@ -1725,14 +1725,13 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     }
     case eSecSkillLogistics:
         return armyValue / 10;
-    case eSecSkillScouting:
-        return armyValue / 20;
     case eSecSkillDiplomacy:
         return armyValue / 100;
     case eSecSkillNavigation:
         return static_cast<long>(
             g_aiWaterMapFraction * armyValue / 2.0);
     case eSecSkillLeadership:
+    case eSecSkillLuck:
         return armyValue / 50;
     case eSecSkillWisdom:
         if (complexChoice)
@@ -1743,8 +1742,6 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
         if (complexChoice)
             return ourHero->getValueOfKnowledge() / 10;
         return 1;
-    case eSecSkillLuck:
-        return armyValue / 50;
     case eSecSkillSiegeBallistics:
         return armyValue / 8;
     case eSecSkillEagleEye:
@@ -1753,8 +1750,6 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
         if (complexChoice)
             return ourHero->getValueOfPower() / 5;
         return 2;
-    case eSecSkillNecromancy:
-        return armyValue / 20;
     case eSecSkillEstates: {
         DATA(0x0064038c)
         static const int constEstateValue[3] = {725, 725, 1550};
@@ -1804,6 +1799,8 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                    ARTIFACT_BALLISTA))
             return 0;
         return ourHero->getPrimarySkill(0) * 10;
+    case eSecSkillScouting:
+    case eSecSkillNecromancy:
     case eSecSkillLearning:
         return armyValue / 20;
     case eSecSkillOffense:

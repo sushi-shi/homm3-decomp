@@ -3063,23 +3063,6 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
     g_currentPlayer->m_deadGuyFlags |= 1 << cell->getItemId();
 }
 
-// E:\gamedcs\events.cpp:3039.  The shared handler for all three shrine
-// tiers.  Dreamcast names the string local and its helper stream; retail
-// fixes the packed spell as the signed ten-bit lane at bits 13..22.  The
-// three refusal tails are advevent.txt rows 174 (already known), 131 (no
-// spellbook), and 130 (insufficient Wisdom).
-// Residual (89.65%): retail's SetInfoFlag expansion here CALLS the nested
-// game::getTeam. Traced /Ob2 (2026-10-05): caller cb 482 sits on the 1000
-// floor; setInfoFlag (cb 115) reaches depth 1 with budget 956 and 18 root
-// candidates left, so its child pool is 841/18 = 46, exactly getTeam's cb.
-// Retail's call needs one more cost-free root candidate between setInfoFlag
-// and the wisdom arm's +=, or 14 more budget spent before setInfoFlag.
-// Neither the DC nor the Mac call stream shows such a candidate, and the
-// remaining differences are register homing around that call.
-// Probe (2026-10-25): DC GetTeam (dc 0x37fbc) has braced then and else arms
-// (coincident scope pairs). That spelling costs 54 and breaks exact philai
-// moveHero, buyCreatures and checkForArtifactWin. Bracing only the then arm
-// (cost 48) gives this body 95.14%, but checkForArtifactWin needs <= 46.
 VA(0x004a5610, 0x346)
 DC_ADDRESS(0x0957fc, 0x236)
 MAC_ADDRESS(0x0b1f74, 0x3fc)  // DC identity + unique call/CFG stream
@@ -3094,8 +3077,10 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
         result = formatString("%s'%s'.", prompt,
                                akSpellTraits[spell].m_name);
 
-    g_game->setInfoFlag(type, g_netLocalGamePos);
+    game* g = g_game;
+    g->setInfoFlag(type, g_netLocalGamePos);
     cell->setCellVisited(currentHero->m_owner);
+    result.c_str();
 
     if (currentHero->isInSpellbook(spell)) {
         if (!humanPlayer)

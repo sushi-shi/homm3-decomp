@@ -3759,8 +3759,8 @@ void t_abstract_random_generator::readObjectPlacementRules()
 // Further public-API/lifetime controls leave all three tests expanded: a
 // const prototype (selecting const operator[]), the position-value getMapItem
 // overload (byte-flat) and aggregate zero initialization of both scratch
-// arrays. None emits bitset<10>::test. Keep the original accesses and memset
-// calls while resolving the real caller's nested inliner state.
+// arrays. None emits bitset<10>::test. Aggregate zero initialization scores
+// above memset; keep the accesses while resolving the caller's inliner state.
 // Mac 0x2351c8..0x235208 keeps one cell position in memory for both scans
 // (level stored once, row and column rewritten per iteration) and looks it
 // up through the generator's by-value getMapItem (the dead second copy at
@@ -3787,19 +3787,17 @@ int t_abstract_random_generator::scoreObjectPlacement(
 {
     TObjectType* prototype = properties->m_prototype;
     std::vector<type_object*> affected;
-    unsigned char terrainSeen[10];
-    memset(terrainSeen, 0, sizeof(terrainSeen));
-    unsigned int marks[10][8];
-    memset(marks, 0, sizeof(marks));
+    unsigned char terrainSeen[10] = {0};
+    unsigned int marks[10][8] = {0};
     TRmgMapPosition cell;
     cell.m_z = position.m_z;
     for (unsigned int row = 0; row < prototype->getHeight(); ++row) {
-        cell.m_y = position.m_y - row;
-        if (cell.m_y < 0 || cell.m_y >= m_map.m_mapHeight)
+        cell.m_y = position.getY() - row;
+        if (cell.getY() < 0 || cell.getY() >= m_map.m_mapHeight)
             continue;
         for (unsigned int column = 0; column < prototype->getWidth(); ++column) {
-            cell.m_x = position.m_x - column;
-            if (cell.m_x < 0 || cell.m_x >= m_map.m_mapWidth)
+            cell.m_x = position.getX() - column;
+            if (cell.getX() < 0 || cell.getX() >= m_map.m_mapWidth)
                 continue;
             if (!prototype->getBCellPlaced(column, row))
                 continue;
@@ -3816,10 +3814,10 @@ int t_abstract_random_generator::scoreObjectPlacement(
                 // before marking the surrounding area; retain that store.
                 marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
                 terrainSeen[item->getLandType()] = 1;
-                int firstRow = position.m_y - min(cell.m_y + 1, m_map.m_mapHeight) + 1;
-                int lastRow = position.m_y - max(cell.m_y - 2, 0) + 1;
-                int firstColumn = position.m_x - min(cell.m_x + 1, m_map.m_mapWidth) + 1;
-                int lastColumn = position.m_x - max(cell.m_x - 2, 0) + 1;
+                int firstRow = position.getY() - min(cell.getY() + 1, m_map.m_mapHeight) + 1;
+                int lastRow = position.getY() - max(cell.getY() - 2, 0) + 1;
+                int firstColumn = position.getX() - min(cell.getX() + 1, m_map.m_mapWidth) + 1;
+                int lastColumn = position.getX() - max(cell.getX() - 2, 0) + 1;
                 for (int nearColumn = firstColumn; nearColumn < lastColumn;
                      ++nearColumn) {
                     for (int nearRow = firstRow; nearRow < lastRow; ++nearRow)
@@ -3846,13 +3844,13 @@ int t_abstract_random_generator::scoreObjectPlacement(
 
     properties->buildOverlapPriorities();
     for (row = 0; row < prototype->getHeight() + 2; ++row) {
-        cell.m_y = position.m_y + 1 - row;
-        if (cell.m_y < 0 || cell.m_y >= m_map.m_mapHeight)
+        cell.m_y = position.getY() + 1 - row;
+        if (cell.getY() < 0 || cell.getY() >= m_map.m_mapHeight)
             continue;
         for (unsigned int column = 0; column < prototype->getWidth() + 2;
              ++column) {
-            cell.m_x = position.m_x + 1 - column;
-            if (cell.m_x < 0 || cell.m_x >= m_map.m_mapWidth)
+            cell.m_x = position.getX() + 1 - column;
+            if (cell.getX() < 0 || cell.getX() >= m_map.m_mapWidth)
                 continue;
             unsigned int mark = marks[column][row];
             if (!mark)
@@ -3870,7 +3868,7 @@ int t_abstract_random_generator::scoreObjectPlacement(
                 if (mark & RMG_PLACEMENT_OVERLAP) {
                     object->m_properties->buildOverlapPriorities();
                     if (object->m_properties->m_overlapPriorities
-                            [object->m_position.m_x - cell.m_x][object->m_position.m_y - cell.m_y]
+                            [object->m_position.getX() - cell.getX()][object->m_position.getY() - cell.getY()]
                         <= priority)
                         object->m_candidateCovers = 1;
                     else
@@ -5264,11 +5262,11 @@ void type_random_map_generator::drawStraightZoneBoundary(
 // clipping. Retain that complete search phase: the editor is exact, and
 // omitting the inner snapshots/flag would raise the game only by dropping
 // that evidence. Shared/local flags and pre/post-tested loops are flat.
-// Game residual: 90 vs 93 blocks, 37 calls on both sides. The search
-// topology agrees; two vector allocation paths still choose different
-// _Ucopy/_Ufill/_Destroy expansions, followed by local-slot and register
-// differences. Account for cross-type ICF before treating a template name as
-// a new call.
+// Game residual: 93 blocks on both sides; two vector copies still choose
+// _Ufill/_Destroy expansion. The inliner's cumulative budget responds to the
+// coordinate accessors: reading the NPC corners through getX()/getY() (as
+// fillZoneArea reads its position) is what lets both _Ucopy copies expand.
+// Account for cross-type ICF before treating a template name as a new call.
 // Follow the map border clockwise, one corner at a time.
 // North is up:  upperLeft -> upperRight
 //                   ^             v
@@ -5279,13 +5277,13 @@ void type_random_map_generator::traceZoneBoundary(
     TRmgHalfEdge* first, unsigned char irregular)
 {
     TRmgHalfEdge* vertex = first;
-    TRmgZone* zone = vertex->m_zone;
+    TRmgZone* zone = vertex->getZone();
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
-    TRmgMapPosition zonePosition = zone->m_levelPosition;
+    TRmgMapPosition zonePosition = zone->getLevelPosition();
     TRmgZoneBounds bounds;
-    bounds.m_maximumY = m_map.m_mapHeight;
+    bounds.m_maximumY = m_map.getHeight();
     bounds.m_minimumX = bounds.m_minimumY = 0;
-    bounds.m_maximumX = m_map.m_mapWidth;
+    bounds.m_maximumX = m_map.getWidth();
     TRmgHalfEdge* next;
     TRmgPoint originalFrom;
     TRmgPoint originalTo;
@@ -5294,7 +5292,7 @@ void type_random_map_generator::traceZoneBoundary(
 
     bool found = false;
     do {
-        next = vertex->m_next;
+        next = vertex->getNext();
         originalFrom = vertex->m_vertex;
         originalTo = next->m_vertex;
         from = clipRmgBoundaryPoint(originalFrom, originalTo, bounds);
@@ -5323,8 +5321,8 @@ void type_random_map_generator::traceZoneBoundary(
 
     first = vertex;
     do {
-        next = vertex->m_next;
-        TRmgZone* neighbour = next->m_twin->m_zone;
+        next = vertex->getNext();
+        TRmgZone* neighbour = next->getOppositeZone();
         originalFrom = vertex->m_vertex;
         originalTo = next->m_vertex;
         from = clipRmgBoundaryPoint(originalFrom, originalTo, bounds);
@@ -5349,7 +5347,7 @@ void type_random_map_generator::traceZoneBoundary(
             from = to;
             found = false;
             do {
-                next = vertex->m_next;
+                next = vertex->getNext();
                 originalFrom = vertex->m_vertex;
                 originalTo = next->m_vertex;
                 to = clipRmgBoundaryPoint(originalFrom, originalTo, bounds);
@@ -5358,13 +5356,13 @@ void type_random_map_generator::traceZoneBoundary(
                 else
                     vertex = next;
             } while (!found);
-            while (from.m_x != to.m_x && from.m_y != to.m_y) {
+            while (from.getX() != to.getX() && from.getY() != to.getY()) {
                 TRmgPoint corner;
-                if (from.m_x == bounds.m_minimumX && from.m_y != bounds.m_minimumY)
+                if (from.getX() == bounds.m_minimumX && from.getY() != bounds.m_minimumY)
                     corner = TRmgPoint(bounds.m_minimumX, bounds.m_minimumY);
-                else if (from.m_y == bounds.m_minimumY && from.m_x != bounds.m_maximumX - 1)
+                else if (from.getY() == bounds.m_minimumY && from.getX() != bounds.m_maximumX - 1)
                     corner = TRmgPoint(bounds.m_maximumX - 1, bounds.m_minimumY);
-                else if (from.m_x == bounds.m_maximumX - 1 && from.m_y != bounds.m_maximumY - 1)
+                else if (from.getX() == bounds.m_maximumX - 1 && from.getY() != bounds.m_maximumY - 1)
                     corner = TRmgPoint(bounds.m_maximumX - 1, bounds.m_maximumY - 1);
                 else
                     corner = TRmgPoint(bounds.m_minimumX, bounds.m_maximumY - 1);
@@ -5750,15 +5748,42 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
 // vector::insert(it, x) sites expand and leave their insert(it, 1, x) calls
 // in both images, matching Mac's two word fill inserts. Count inserts in the
 // caller instead expand the cost insertion in the game.
-// Residual: both images retain the distance-count vector<short>::size() call
-// at entry. A d1 size site cannot be refused at budget 898; the replay of
-// both images reproduces the call (and nothing else) only with a count
-// accessor around it plus one more top-level candidate site anywhere in the
-// seed/pop/relaxation statements (898 / 22 < 42). No such site is evidenced
-// yet, so the direct size() stays. Native editor 0x4a35ce keeps the pending
-// end in EAX through back() at 0x4a35e5; it does not reload that pointer.
-// Using !pending.empty() adds the standard empty()->size() boundary but
-// does not recover the entry call and lowers this implementation's match.
+// The distance count and the queue/template/connection reads go through
+// ordinary accessors. Their first expanded site divides the caller budget
+// before the nested vector<short>::size() is considered, so that entry size
+// stays a call while the later top-level size sites still inline. Native
+// editor 0x4a35ce keeps the pending end in EAX through back() at 0x4a35e5;
+// it does not reload that pointer.
+static int zoneDistanceCount(const TRmgZone* zone)
+{
+    return zone->m_zoneDistances.size();
+}
+
+static TRmgZone* generatedZone(const type_random_map_generator* self, int index)
+{
+    return self->m_zones[index];
+}
+
+static TRmgTemplateZone* templateZoneOf(const TRmgZone* zone)
+{
+    return zone->m_templateZone;
+}
+
+static TRmgZoneConnection& connectionAt(TRmgTemplateZone* slot, unsigned int index)
+{
+    return slot->m_connections[index];
+}
+
+static unsigned int connectionCount(const TRmgTemplateZone* slot)
+{
+    return slot->m_connections.size();
+}
+
+static int queuedCount(const std::vector<TRmgZone*>& pending)
+{
+    return pending.size();
+}
+
 VA(0x0053D8E0, 0x1EC)
 MAC_ADDRESS(0x23f218, 0x2f0) // anchor-callee 0x53dcd2/0x53e020; Complete-only, ret 4
 VA_AT(h3maped, 0x004a3554, 0x1bc)
@@ -5766,21 +5791,21 @@ void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
 {
     std::vector<TRmgZone*> pending;
     std::vector<int> costs;
-    int distanceCount = zone->m_zoneDistances.size();
+    int distanceCount = zoneDistanceCount(zone);
     for (int column = 0; column < distanceCount; ++column) {
         pending.push_back(zone);
         costs.push_back(0);
         while (pending.size() > 0) {
             TRmgZone* current = pending.back();
             pending.pop_back();
-            TRmgTemplateZone* slot = current->m_templateZone;
+            TRmgTemplateZone* slot = templateZoneOf(current);
             costs.pop_back();
             int distance = current->getZoneDistance(column) + 1;
-            for (unsigned int connection = 0; connection < slot->m_connections.size(); ++connection) {
-                TRmgZone* next = m_zones[slot->m_connections[connection].m_destination->m_zoneIndex];
+            for (unsigned int connection = 0; connection < connectionCount(slot); ++connection) {
+                TRmgZone* next = generatedZone(this, connectionAt(slot, connection).m_destination->m_zoneIndex);
                 if (next->getZoneDistance(column) > distance) {
                     next->setZoneDistance(column, distance);
-                    int last = pending.size();
+                    int last = queuedCount(pending);
                     int first = 0;
                     int middle;
                     while (1) {
@@ -7521,8 +7546,10 @@ MAC_ADDRESS(0x244c08, 0xa1c)
 unsigned char type_random_map_generator::createSubterraneanGate(
     TRmgZone* source, TRmgZoneConnection* connection)
 {
-    int sourceZone = source->m_templateZone->m_zoneIndex;
-    TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
+    TRmgTemplateZone* sourceSlot = source->m_templateZone;
+    TRmgTemplateZone* destinationSlot = connection->m_destination;
+    int sourceZone = sourceSlot->m_zoneIndex;
+    TRmgZone* destination = m_zones[destinationSlot->m_zoneIndex];
     int destinationZone = destination->m_templateZone->m_zoneIndex;
     if (source->getLevelPosition().m_z == destination->getLevelPosition().m_z)
         return 0;
@@ -7548,6 +7575,7 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     TRmgObjectPropertiesRef* gateProperties = m_objectPrototypes[103][gateIndex];
     TObjectType* gatePrototype = gateProperties->m_prototype;
 
+    int score;
     std::vector<TRmgMapPosition> candidates;
     int bestScore = 0;
     TRmgMapPosition position;
@@ -7555,18 +7583,18 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 
     for (position.m_y = sourceBounds.m_minimumY; position.m_y < sourceBounds.m_maximumY; ++position.m_y) {
         for (position.m_x = sourceBounds.m_minimumX; position.m_x < sourceBounds.m_maximumX; ++position.m_x) {
-            TRmgMapItem* sourceItem = m_map.getMapItem(position);
-            if (sourceItem->m_zoneState.m_zone != sourceZone)
+            TRmgMapItem* item = m_map.getMapItem(position);
+            if (item->m_zoneState.m_zone != sourceZone)
                 continue;
-            int score = sourceItem->m_zoneState.m_objectDistance;
 
             TRmgMapPosition otherPosition = position;
+            score = item->m_zoneState.m_objectDistance;
             otherPosition.m_z = destination->getLevelPosition().m_z;
-            TRmgMapItem* destinationItem = m_map.getMapItem(otherPosition);
-            if (destinationItem->m_zoneState.m_zone != destinationZone)
+            item = m_map.getMapItem(otherPosition);
+            if (item->m_zoneState.m_zone != destinationZone)
                 continue;
 
-            score += destinationItem->m_zoneState.m_objectDistance;
+            score += item->m_zoneState.m_objectDistance;
             if (score < bestScore)
                 continue;
             if (!m_map.canPlaceObject(gateProperties, position, source))
@@ -8686,13 +8714,14 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     TObjectType* prototype = properties->m_prototype;
     TTilePoint trigger = prototype->getTriggerLoc();
     TRmgMapPosition position;
+    TRmgMapPosition entrance;
     position.m_z = zone->getLevelPosition().m_z;
     TRmgZoneBounds bounds = zone->m_bounds;
     bounds.m_minimumY += prototype->getHeight();
     bounds.m_minimumX += prototype->getWidth();
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
-            TRmgMapPosition entrance = position;
+            entrance = position;
             entrance.m_x -= trigger.m_x;
             entrance.m_y -= trigger.m_y;
             TRmgMapItem* item = getMapItem(entrance);
@@ -8728,9 +8757,10 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     if (!candidates.size())
         return 0;
     type_town* object = new type_town(properties, player, hasFort, m_nextObjectId++);
-    position = candidates[rand() % candidates.size()];
+    unsigned int selected = rand() % candidates.size();
+    position = candidates[selected];
     addObject(object, position);
-    TRmgMapPosition entrance = position;
+    entrance = position;
     entrance.m_x -= trigger.m_x;
     entrance.m_y -= trigger.m_y;
     m_roadTargets.push_back(entrance);
@@ -10331,7 +10361,6 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
     resetMovementCosts();
 
     TRmgMapItem* mapItem;
-    TRmgMapPosition position(-1, -1, -1);
 
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
@@ -10339,7 +10368,7 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->setMovementCost(0, position);
+    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
 
     unsigned char sourceIsSnow;
     int riverType;
@@ -10355,14 +10384,15 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->setMovementCost(0, position);
+    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
 
     ++source.m_x;
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = m_map.getMapItem(source);
-    mapItem->setMovementCost(0, position);
+    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
 
+    TRmgMapPosition position;
     TRmgMapPosition nextPosition;
     int direction;
 
@@ -10423,11 +10453,11 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
     position = nextPosition;
     mapItem->m_tileData.m_riverOutletTarget = 1;
 
-    type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
+    type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
         m_map.getWidth(), m_map.getHeight());
     type_river_map mapAdapter(&levelMap);
     TRiverPlacementOp riverPainter(
-        &mapAdapter, riverType, TTilePoint(position.getX(), position.getY()));
+        &mapAdapter, riverType, TTilePoint(nextPosition.getX(), nextPosition.getY()));
 
     if (mapItem->m_tileData.m_blockedDirections) {
         for (direction = 0; direction < 4; ++direction) {
@@ -10459,7 +10489,8 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
              ++prototypeIndex) {
             TRmgObjectPropertiesRef* properties =
                 m_objectPrototypes[TERRAIN_RIVER_DELTA][prototypeIndex];
-            if (properties->m_prototype->getRecommendedTerrainMask().test(landType)
+            const TObjectType* prototype = properties->m_prototype;
+            if (prototype->isRecommendedTerrain(landType)
                 && deltaIndex-- == 0)
                 break;
         }
@@ -10469,15 +10500,15 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
 
         type_object* riverDelta = new type_object(
             m_objectPrototypes[TERRAIN_RIVER_DELTA][prototypeIndex]);
-        nextPosition = nextPosition + riverDeltaOffsets[direction];
-        addObject(riverDelta, nextPosition);
+        addObject(riverDelta, nextPosition + riverDeltaOffsets[direction]);
 
-        nextPosition = position + g_rmgDirections[direction * 2];
+        TRmgPoint step = g_rmgDirections[direction * 2];
+        nextPosition = position + step;
         riverPainter.m_walker.drawTo(TTilePoint(nextPosition.getX(), nextPosition.getY()));
         mapItem = m_map.getMapItem(nextPosition);
         mapItem->m_tileData.m_riverOutletTarget = 1;
 
-        riverPainter.m_walker.drawTo(TTilePoint(position.m_x, position.m_y));
+        riverPainter.m_walker.drawTo(TTilePoint(position.getX(), position.getY()));
         mapItem = m_map.getMapItem(position);
     }
 

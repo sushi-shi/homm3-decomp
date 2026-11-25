@@ -5008,25 +5008,29 @@ DC_ADDRESS(0x0adb88, 0x3b0)
 MAC_ADDRESS(0x0d82cc, 0xbcc)  // sole NewMap caller + full stream/callee sequence
 bool game::loadMap(TAbstractFile* mapFile)
 {
-    if (m_mapHeader.read(mapFile, m_campaign.m_currentMap) < 0)
+    if (m_mapHeader.read(mapFile, m_campaign.m_currentMap) < 0) {
         return false;
+    }
 
     applyMapHeaderAvailability();
     setMapSize(m_mapHeader.m_size, m_mapHeader.m_size);
 
-    if (m_gameVersion < 1)
+    if (m_gameVersion < 1) {
         memset(m_heroAvailability + 128, hero::HERO_AVAILABILITY_TAVERN_POOL,
                HERO_COUNT - 128);
+    }
 
     int artifact;
-    for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact)
+    for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
         m_artifactDisabled[artifact] = akArtifactTraits[artifact].m_disabled;
+    }
 
     if (m_gameVersion < 2) {
-        if (m_gameVersion < 1)
+        if (m_gameVersion < 1) {
             artifact = 127;
-        else
+        } else {
             artifact = 129;
+        }
         memset(m_artifactDisabled + artifact, 1,
                sizeof(m_artifactDisabled) - artifact);
     }
@@ -5073,8 +5077,9 @@ bool game::loadMap(TAbstractFile* mapFile)
         }
 
         std::bitset<kNumSecSkills> serializedSkills = readPackedBits<kNumSecSkills>(mapFile);
-        for (int skill = 0; skill < sizeof(m_ssDisabled); ++skill)
+        for (size_t skill = 0; skill < kNumSecSkills; ++skill) {
             m_ssDisabled[skill] = serializedSkills[skill];
+        }
     } else {
         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             m_spellDisabledInfo[spell] =

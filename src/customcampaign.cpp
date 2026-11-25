@@ -2016,26 +2016,18 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
 
     m_regionDesc = readLengthPrefixedString(infile);
 
-    {
-        unsigned char present = readValue<unsigned char>(infile);
-        if (!present) {
-            m_prologue = 0;
-        } else {
-            MapTextStruct* text = new MapTextStruct;
-            m_prologue = text;
-            text->read(infile);
-        }
+    if (!readValue<unsigned char>(infile)) {
+        m_prologue = 0;
+    } else {
+        m_prologue = new MapTextStruct;
+        m_prologue->read(infile);
     }
 
-    {
-        unsigned char present = readValue<unsigned char>(infile);
-        if (!present) {
-            m_epilogue = 0;
-        } else {
-            MapTextStruct* text = new MapTextStruct;
-            m_epilogue = text;
-            text->read(infile);
-        }
+    if (!readValue<unsigned char>(infile)) {
+        m_epilogue = 0;
+    } else {
+        m_epilogue = new MapTextStruct;
+        m_epilogue->read(infile);
     }
 
     {
@@ -2063,19 +2055,15 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     }
 
     unsigned char optionType = readValue<unsigned char>(infile);
-    TCampaignStartOption* record;
     switch (optionType) {
     case CAMPAIGN_START_OPTION_BONUS:
-        record = new TCampaignStartBonusOption;
-        m_options = record;
+        m_options = new TCampaignStartBonusOption;
         break;
     case CAMPAIGN_START_OPTION_CROSSOVER:
-        record = new TCampaignStartCrossoverOption;
-        m_options = record;
+        m_options = new TCampaignStartCrossoverOption;
         break;
     case CAMPAIGN_START_OPTION_HERO:
-        record = new TCampaignStartHeroOption;
-        m_options = record;
+        m_options = new TCampaignStartHeroOption;
         break;
     default:
         m_options = 0;
