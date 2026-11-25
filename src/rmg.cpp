@@ -5851,7 +5851,13 @@ VA_COMPGEN_AT(h3maped, 0x004ae1eb, 0x12, VECTOR_SIZE, Short)
 // The final direct single-element insert restores the retained
 // _Construct<TRmgZoneConnection> body; push_back calls instead inline two
 // count-insert bodies and omit that construction symbol. Reusing one
-// connection per function or outer loop is lower.
+// connection per function or outer loop is lower. Both retail images reread
+// the destination's template slot after the first extra-to-extra insert
+// (game 0x53dc1d, editor 0x4a3859), so no slot pointer outlives it; with the
+// record declared per destination, both images keep its field stores ahead
+// of that reread (game 93.33 -> 93.86, editor 94.96 -> 99.71). Declaring it
+// before the destination is equal; outer-loop scope and dropping the zone
+// slot locals are lower.
 // Mac 0x23f714 and h3maped 0x4a389b call TRmgZone::initializeDistances from
 // a zone loop in this body (Mac reuses the index register), with no
 // generator-level wrapper. The direct loop raises this root's cb, and the
@@ -5870,8 +5876,11 @@ VA_COMPGEN_AT(h3maped, 0x004ae1eb, 0x12, VECTOR_SIZE, Short)
 // do-while edge walk, halfEdge accessors, local template pointers, a copied
 // reverse connection.
 // Residual: the remaining game call difference is inside the fourth
-// connection insertion, and both frames remain four bytes short. Preserve
-// the canonical helpers.
+// connection insertion (its _Destroy and one _Ucopy stay calls; the inline
+// solver fits root cb 1100..1155 against our 995, or a getLevelPosition cb
+// at most 40, whose direct return costs fillIslandInterior and others). The
+// editor frame stays four bytes short of retail's separate index + 1 home.
+// Preserve the canonical helpers.
 VA(0x0053DAD0, 0x57F)
 MAC_ADDRESS(0x23f518, 0x40c) // anchor-callee buildZoneBoundaries; Complete-only, ret 8
 VA_AT(h3maped, 0x004a3710, 0x2f3)
@@ -5887,6 +5896,7 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
         TRmgHalfEdge* first = diagram->locate(zone->getLevelPosition());
         for (int other = index + 1; other < m_zones.size(); ++other) {
             TRmgZone* destination = m_zones[other];
+            TRmgZoneConnection connection;
             if (destination->getLevelPosition().m_z != zone->getLevelPosition().m_z)
                 continue;
             TRmgHalfEdge* edge = first;
@@ -5907,9 +5917,7 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
              if (clipped.getX() < bounds.m_maximumX) {
               if (clipped.getY() >= 0) {
                if (clipped.getY() < bounds.m_maximumY) {
-                TRmgZoneConnection connection;
-                TRmgTemplateZone* destinationSlot = templateZoneOf(destination);
-                connection.m_destination = destinationSlot;
+                connection.m_destination = templateZoneOf(destination);
                 connection.m_connected = 1;
                 connection.m_value = 0;
                 connection.m_placeBorderObjects = 0;
@@ -5917,7 +5925,7 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
                 templateZoneOf(zone)->m_connections.push_back(connection);
                 TRmgTemplateZone* zoneSlot = templateZoneOf(zone);
                 connection.m_destination = zoneSlot;
-                destinationSlot->m_connections.push_back(connection);
+                templateZoneOf(destination)->m_connections.push_back(connection);
                }
               }
              }
