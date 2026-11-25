@@ -3736,7 +3736,7 @@ search	?enterLith@searchArray@@AAEXPBVhero@@ABV?$vector@Utype_point@@V?$allocato
 search	?enterTown@searchArray@@AAEXPBVhero@@JABUpathCell@@JW4type_search_type@@@Z	100.0000	100.0000	100.0000	0x16a850	tokens1:13904315134f
 search	?enter_trigger@searchArray@@AAE_NPBVhero@@AAUpathCell@@JW4type_search_type@@@Z	100.0000	100.0000	100.0000	0x16ab40	tokens1:af580d151612
 search	?erase@?$vector@PAUpathCell@@V?$allocator@PAUpathCell@@@std@@@std@@QAEPAPAUpathCell@@PAPAU3@0@Z	100.0000	100.0000	100.0000	0x16bd30	-
-search	?seedPosition@searchArray@@QAEXPAVhero@@Utype_point@@1HEW4type_search_type@@HE@Z	96.3378	96.3378	96.3378	0x16b440	tokens1:1ede1a1f1c41
+search	?seedPosition@searchArray@@QAEXPAVhero@@Utype_point@@1HEW4type_search_type@@HE@Z	96.3378	96.3378	96.3378	0x16b440	tokens1:ae32457becf0
 seerhut	??0TQuestGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x172b50	tokens1:474ccb7c925d
 seerhut	??0TSeerHut@@QAE@XZ	100.0000	100.0000	100.0000	0x173580	tokens1:0bf08b6045eb
 seerhut	??0type_quest@@QAE@_N@Z	100.0000	100.0000	100.0000	0x16cb80	tokens1:532cc81f8728

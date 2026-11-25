@@ -652,17 +652,17 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
 
     if (!seedContinuation) {
         g_advManager->m_fullySeeded = 0;
-        int flyLevel;
         if (searchType == const_normal_search) {
-            flyLevel = m_waterWalkLevel > eMasteryInvalid
-                        || m_flightLevel > eMasteryInvalid;
+            clear(m_waterWalkLevel > eMasteryInvalid
+                      || m_flightLevel > eMasteryInvalid,
+                  0, g_game->getNumMapLevels());
         } else {
-            flyLevel = m_waterWalkLevel > eMasteryInvalid
-                        || m_flightLevel > eMasteryInvalid
-                        || m_canCastTeleport || m_canCastFlight
-                        || m_canCastWaterWalk;
+            clear(m_waterWalkLevel > eMasteryInvalid
+                      || m_flightLevel > eMasteryInvalid
+                      || m_canCastTeleport || m_canCastFlight
+                      || m_canCastWaterWalk,
+                  0, g_game->getNumMapLevels());
         }
-        clear(flyLevel, 0, g_game->getNumMapLevels());
     }
 
     g_advManager->m_seedingValid = 1;
@@ -733,7 +733,8 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
         }
 
         cell.m_townPortal = 0;
-        cell.m_castleGate = cell.m_startAtTrigger = 0;
+        cell.m_castleGate = 0;
+        cell.m_startAtTrigger = 0;
         long turnMobility = curTempMobility - cell.m_cost;
 
         if (cell.m_isTrigger) {
