@@ -191,11 +191,12 @@ DATA(0x00697788) int g_thisNetGotAdventureControl;
 // The three text resources this compiland keeps alive for the rollover
 // tables below. Every reference to all three in the whole image is one of
 // the four stores in the two readers that follow (config/retail-reloc-
-// evidence.tsv), so they are source-private here under the same rule
-// kb.cpp's oldmain cells use. Names are role inventions.
-DATA(0x00691350) static TTextResource* g_creatureGenerator1Text;
-DATA(0x0069163c) static TTextResource* g_creatureGenerator4Text;
-DATA(0x00691368) static TTextResource* g_extraInfoText;
+// evidence.tsv). Dreamcast publishes them as external globals of advmgr.obj:
+// CreatureGenerator_1_Names, CreatureGenerator_4_Names and ExtraInfoText
+// (`?ExtraInfoText@@3PBVTTextResource@@B`).
+DATA(0x00691350) TTextResource* g_creatureGenerator1Text;
+DATA(0x0069163c) TTextResource* g_creatureGenerator4Text;
+DATA(0x00691368) TTextResource* g_extraInfoText;
 
 // COMDAT pairing: basic_string<char>::_Eos, 20 B against this compiland's
 // single 20-byte COMDAT.
