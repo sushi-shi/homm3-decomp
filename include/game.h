@@ -1057,7 +1057,8 @@ public:
     // Retail retains this two-byte alignment gap at +0x1f456.
     char m_paddingBeforeCampaign[2];
     SCampaign m_campaign;  // +0x1f458
-    unsigned char m_newCampaignStarted;
+    // Dreamcast bNewCampaignStarted: signed char.
+    signed char m_newCampaignStarted;
     // +0x1f4d5. Retyped in place (no declarator added, so the include-set
     // population is unchanged): game::SaveGame (0x4beea0)
     // strcpy's its `filename` argument here through gpGame whenever the
@@ -1086,7 +1087,8 @@ public:
     unsigned short m_day;
     unsigned short m_week;
     unsigned short m_month;
-    char m_uniqueSystemId[0x20];
+    // Dreamcast cUniqueSystemID[8][4]: four bytes per player.
+    char m_uniqueSystemId[NUM_PLAYERS][4];
     TArtifact m_marketArtifacts[7];
     // NH3API global.hpp confirms the PC vector at +0x1f680. Map loading
     // appends each black market and stores its index in the map cell.
@@ -1105,7 +1107,8 @@ public:
     int m_gameVersion;
 
 public:
-    unsigned char m_isCheater;
+    // Dreamcast bIsCheater: signed char.
+    signed char m_isCheater;
     // DC is_tutorial: retail SaveGame (0x418160) passes this byte directly
     // to the native bool determineSuffix parameter, with no normalization.
     bool m_isTutorial;
@@ -1188,7 +1191,8 @@ public:
     char m_paddingBeforeRumours[2];
     std::vector<TRumour> m_rumours;  // +0x4e648
     char m_ssDisabled[kNumSecSkills];
-    char m_armyWindow[4];
+    // Dreamcast armyWindow: heroWindow*.
+    heroWindow* m_armyWindow;
     // Dreamcast original viewFrame is int at +0x32010. InitVars
     // (dc 0xe3a04, kb.cpp:3771) clears it immediately before copying
     // test.h3m into setup. Retail InitVars, expanded in EarlySetup

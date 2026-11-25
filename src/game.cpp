@@ -3402,7 +3402,7 @@ void game::setupOrigData()
     m_ultimateArtifactPresent = 0;
 
     for (i = 0; i < NUM_PLAYERS; ++i)
-        m_uniqueSystemId[i * sizeof(int)] = 0;
+        m_uniqueSystemId[i][0] = 0;
 
     m_numObelisks = 0;
     advManager* manager = g_advManager;
