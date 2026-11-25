@@ -43,6 +43,12 @@
 #include "editor/VictoryCondition.h"
 #include "retailobjecttype.h"
 
+// The reserved bytes after each object record and after the map's header,
+// and the zeros that end the map file (Loki GameMap.cpp).
+const unsigned int kNumObjectReserved = 5;
+const unsigned int kNumMapReserved = 31;
+const unsigned int kNumMapTrailer = 124;
+
 namespace {
 
 // The Shadow of Death artifact before Armageddon's Blade (the shared
@@ -1109,7 +1115,7 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
     assert(pStreamBuf != NULL);
     TRawIStream stream(pStreamBuf);
     TGameMapHeader header(stream, fileVersion);
-    signed char aReserved[31];
+    signed char aReserved[kNumMapReserved];
     stream >> aReserved;
     _m_size = TSize(find(_s_akDimension, _s_akDimension + s_kNumSizes, header.m_dimension) - _s_akDimension);
     assert((int)_m_size >= (int)0 && (int)_m_size < (int)s_kNumSizes);
@@ -1169,7 +1175,7 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
         unsigned char y;
         unsigned char layerNum;
         long typeID;
-        signed char aObjReserved[5];
+        signed char aObjReserved[kNumObjectReserved];
         stream >> x >> y >> layerNum >> typeID >> aObjReserved;
         for (;;) {
             assert(layerNum == 0 || (_m_bTwoLayer && layerNum == 1));
@@ -2353,7 +2359,7 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
         }
     }
     header.write(stream, _m_version);
-    signed char aReserved[31];
+    signed char aReserved[kNumMapReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     stream << aReserved;
     if (_m_version >= GAME_VERSION_SOD) {
@@ -2411,7 +2417,7 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     stream << static_cast<long>(objTypes.numItems());
     for (unsigned int typeID = 0; typeID < objTypes.numItems(); typeID++)
         stream << objTypes.get(typeID);
-    signed char aObjReserved[5];
+    signed char aObjReserved[kNumObjectReserved];
     fill_n(aObjReserved, sizeof(aObjReserved), 0);
     objNum = 0;
     stream << numObjs;
@@ -2438,9 +2444,9 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     stream << static_cast<long>(_m_pProperties->m_paTimedEvent->size());
     for (unsigned int event = 0; event < _m_pProperties->m_paTimedEvent->size(); event++)
         (*_m_pProperties->m_paTimedEvent)[event].write(&stream, _m_version);
-    signed char aMapReserved[124];
-    fill_n(aMapReserved, sizeof(aMapReserved), 0);
-    stream << aMapReserved;
+    signed char aTrailer[kNumMapTrailer];
+    fill_n(aTrailer, sizeof(aTrailer), 0);
+    stream << aTrailer;
 }
 
 namespace {
