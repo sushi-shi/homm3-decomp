@@ -21,7 +21,7 @@
 // keeps 99.63-99.98%.
 VA(0x004be9b4, 0x17b)
 TTileHRuler::TTileHRuler(CWnd* pParent, unsigned int range, TZoom zoom)
-    : _m_startTile(0),
+    : _m_startTileX(0),
       _m_range(range),
       _m_highlight(range),
       _m_zoom(zoom)
@@ -58,8 +58,8 @@ void TTileHRuler::move(const CPoint& pos, unsigned int width)
 
 void TTileHRuler::setStartTile(unsigned int startTile)
 {
-    if (startTile != _m_startTile) {
-        _m_startTile = startTile;
+    if (startTile != _m_startTileX) {
+        _m_startTileX = startTile;
         Invalidate(FALSE);
         UpdateWindow();
     }
@@ -126,7 +126,7 @@ int TTileHRuler::_computeHighlightPos(unsigned int width) const
     assert(_m_highlight < _m_range);
     unsigned int tileWidth = akZoomTraits[_m_zoom].m_tileSize;
     assert(width >= tileWidth);
-    int tilePos = (_m_highlight - _m_startTile) * tileWidth;
+    int tilePos = (_m_highlight - _m_startTileX) * tileWidth;
     return tilePos - (width - tileWidth) / 2;
 }
 
@@ -163,16 +163,16 @@ void TTileHRuler::OnPaint()
     CBrush backgroundBrush(GetSysColor(COLOR_WINDOW));
     TGDIObjectSelector<CBrush> backgroundBrushSelector(&dc, &backgroundBrush);
     dc.PatBlt(clipRect.left, clipRect.top, clipRect.Width(), clipRect.Height(), PATCOPY);
-    unsigned int fromX = _m_startTile + clipRect.left / tileWidth;
+    unsigned int fromX = _m_startTileX + clipRect.left / tileWidth;
     if (fromX < _m_range) {
-        unsigned int toX = _m_startTile + (clipRect.right + tileWidth - 1) / tileWidth;
+        unsigned int toX = _m_startTileX + (clipRect.right + tileWidth - 1) / tileWidth;
         if (toX > _m_range)
             toX = _m_range;
         CPen pen(PS_SOLID, 1, GetSysColor(COLOR_WINDOWTEXT));
         TGDIObjectSelector<CPen> penSelector(&dc, &pen);
         int x;
         for (x = fromX; x < (int)toX; x++) {
-            int lineX = (x - _m_startTile + 1) * tileWidth - 1;
+            int lineX = (x - _m_startTileX + 1) * tileWidth - 1;
             dc.MoveTo(lineX, 0);
             dc.LineTo(lineX, _m_height + 1);
         }
@@ -181,7 +181,7 @@ void TTileHRuler::OnPaint()
         TBkColorSelector bkColorSelector(&dc, GetSysColor(COLOR_WINDOW));
         dc.SelectClipRgn(NULL);
         for (x = fromX; x < (int)toX; x++) {
-            CPoint pos((x - _m_startTile) * tileWidth, 0);
+            CPoint pos((x - _m_startTileX) * tileWidth, 0);
             CRect tileRect(pos, CSize(tileWidth - 1, _m_height));
             dc.IntersectClipRect(&tileRect);
             CString text;

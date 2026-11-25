@@ -19,7 +19,7 @@
 // ruler's named, leading-first textHeight form scores 99.65%.
 VA(0x004bf61b, 0x17d)
 TTileVRuler::TTileVRuler(CWnd* pParent, unsigned int range, TZoom zoom)
-    : _m_startTile(0),
+    : _m_startTileY(0),
       _m_range(range),
       _m_highlight(range),
       _m_zoom(zoom)
@@ -56,8 +56,8 @@ void TTileVRuler::move(const CPoint& pos, unsigned int height)
 VA(0x004bf839, 0x29)
 void TTileVRuler::setStartTile(unsigned int startTile)
 {
-    if (startTile != _m_startTile) {
-        _m_startTile = startTile;
+    if (startTile != _m_startTileY) {
+        _m_startTileY = startTile;
         Invalidate(FALSE);
         UpdateWindow();
     }
@@ -121,7 +121,7 @@ int TTileVRuler::_computeHighlightPos(unsigned int height) const
     assert(_m_highlight < _m_range);
     unsigned int tileHeight = akZoomTraits[_m_zoom].m_tileSize;
     assert(height >= tileHeight);
-    int tilePos = (_m_highlight - _m_startTile) * tileHeight;
+    int tilePos = (_m_highlight - _m_startTileY) * tileHeight;
     return tilePos - (height - tileHeight) / 2;
 }
 
@@ -175,16 +175,16 @@ void TTileVRuler::OnPaint()
     CBrush backgroundBrush(GetSysColor(COLOR_WINDOW));
     TGDIObjectSelector<CBrush> backgroundBrushSelector(&dc, &backgroundBrush);
     dc.PatBlt(clipRect.left, clipRect.top, clipRect.Width(), clipRect.Height(), PATCOPY);
-    unsigned int fromY = _m_startTile + clipRect.top / tileHeight;
+    unsigned int fromY = _m_startTileY + clipRect.top / tileHeight;
     if (fromY < _m_range) {
-        unsigned int toY = _m_startTile + (clipRect.bottom + tileHeight - 1) / tileHeight;
+        unsigned int toY = _m_startTileY + (clipRect.bottom + tileHeight - 1) / tileHeight;
         if (toY > _m_range)
             toY = _m_range;
         CPen pen(PS_SOLID, 1, GetSysColor(COLOR_WINDOWTEXT));
         TGDIObjectSelector<CPen> penSelector(&dc, &pen);
         int y;
         for (y = fromY; y < (int)toY; y++) {
-            int lineY = (y - _m_startTile + 1) * tileHeight - 1;
+            int lineY = (y - _m_startTileY + 1) * tileHeight - 1;
             dc.MoveTo(0, lineY);
             dc.LineTo(_m_width + 1, lineY);
         }
@@ -207,7 +207,7 @@ void TTileVRuler::OnPaint()
             int first = left;
             int bottom = min(textPos.y + textSize.cy, _m_width);
             int right = min(textPos.x + textSize.cx, tileHeight);
-            CPoint destPos(0, (y - _m_startTile + 1) * tileHeight - left);
+            CPoint destPos(0, (y - _m_startTileY + 1) * tileHeight - left);
             if (destPos.y > clipRect.bottom) {
                 first = destPos.y - clipRect.bottom + left;
                 destPos.y = clipRect.bottom;

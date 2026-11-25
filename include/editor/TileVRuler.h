@@ -6,6 +6,8 @@
 // 16-bit DIB section. Layout from the constructor (0x78 bytes, the map
 // frame's new): the width, the first visible tile, the tile count, the
 // highlighted tile and its text, the zoom, the back buffer and the font.
+// Loki's asserts name _m_width, _m_startTileY, _m_range and _m_highlight;
+// its int width and start tile are unsigned here as in the horizontal one.
 #ifndef HOMM3_EDITOR_TILEVRULER_H
 #define HOMM3_EDITOR_TILEVRULER_H
 
@@ -35,7 +37,7 @@ private:
     int _computeHighlightPos(unsigned int height) const;
 
     unsigned int _m_width;
-    unsigned int _m_startTile;
+    unsigned int _m_startTileY;
     unsigned int _m_range;
     unsigned int _m_highlight;
     CString _m_highlightText;
