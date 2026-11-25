@@ -4145,6 +4145,8 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // random arm's second assign and the selected arm's _Eos refused); a
 // candidate before it, or two after it, does not. Caller cb is below the
 // 1000-unit floor here, so braces cannot stand in for it.
+// SavedGameHeader::restorePlayerFlags (the dead/human flag restore shared
+// with applySavedGameHeader) supplies that free candidate: 79.95 -> 85.24.
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
 // Inlined in rebuildRandomMapPlayerSetup, both updateGameVars arms and
@@ -4210,12 +4212,7 @@ void TSingleSelectionWindow::updateGameVars()
     // budget (74.82%).
     if (m_loadMode) {
         // SetText can run widget code; retail resolves this row afterwards.
-        memcpy(g_game->m_playerDisabled,
-               m_selectionHeaders[m_currentMap].m_saved.m_deadPlayer,
-               sizeof(m_selectionHeaders[m_currentMap].m_saved.m_deadPlayer));
-        memcpy(g_wasHuman,
-               m_selectionHeaders[m_currentMap].m_saved.m_humanPlayer,
-               sizeof(m_selectionHeaders[m_currentMap].m_saved.m_humanPlayer));
+        m_selectionHeaders[m_currentMap].m_saved.restorePlayerFlags();
     }
 }
 
