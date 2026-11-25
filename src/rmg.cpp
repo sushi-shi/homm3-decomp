@@ -5704,9 +5704,9 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
             if (position.getY() > 0) {
                 if ((item - m_map.getWidth())->m_zoneState.m_zone == -1) {
                     if (!upperSpan) {
+                        upperSpan = 1;
                         upper = position;
                         --upper.m_y;
-                        upperSpan = 1;
                     }
                 } else if (upperSpan) {
                     upperSpan = 0;
@@ -5716,9 +5716,9 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
             if (position.m_y < m_map.getHeight() - 1) {
                 if ((item + m_map.getWidth())->m_zoneState.m_zone == -1) {
                     if (!lowerSpan) {
+                        lowerSpan = 1;
                         lower = position;
                         ++lower.m_y;
-                        lowerSpan = 1;
                     }
                 } else if (lowerSpan) {
                     lowerSpan = 0;

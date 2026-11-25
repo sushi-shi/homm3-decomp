@@ -22,6 +22,14 @@
 #include "textresource.h"
 #include "winmgr.h"
 
+TSeerHut::TSeerHut()
+{
+    m_quest = 0;
+    m_visitedPlayers = 0;
+    m_nameIndex = 0;
+    m_completedByPlayer = 0;
+}
+
 // CRT 0x56c3d0 binds this reference to the text loader's vector.
 // The five other retail references only read the binding.
 DATA(0x0069fab8) std::vector<std::string>& g_seerHutNameList = g_seerHutNames;

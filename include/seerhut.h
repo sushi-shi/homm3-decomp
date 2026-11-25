@@ -183,13 +183,7 @@ public:
     VA(0x00573580, 0x13)
     DC_ADDRESS(0x0f4b38, 0x2a)
     MAC_ADDRESS(0x169ac4, 0x48)
-    TSeerHut()
-    {
-        m_quest = 0;
-        m_visitedPlayers = 0;
-        m_nameIndex = 0;
-        m_completedByPlayer = 0;
-    }
+    TSeerHut();
     // DC TSeerHut::SetRandomName (seerhut.cpp:139) survives as this static
     // member declaration. Complete defines no body: TSeerHut::read writes
     // its revised name selection in place (see src/seerhut.cpp). Removing
