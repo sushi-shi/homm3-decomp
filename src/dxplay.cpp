@@ -1019,8 +1019,17 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
     return buf;
 }
 
-// Record the final HRESULT on each exit to preserve retail's separate bool
-// return paths. The remaining mismatch is the status store versus POP EDI order.
+// Final test in the sibling lobby wrappers' `m_hRes < 0` form. Residual
+// (88.42%): VC6 folds the last two exits into `setge al`; retail keeps a jge
+// to separate return-0/return-1 epilogues. The former 98.25% shape repeated
+// the m_hRes store in the failure arm only to block that fold (removed).
+// Standalone VC6 probes fold every single-exit spelling (ternary, bool/int/
+// byte results, SUCCEEDED/FAILED polarity, assignment-in-condition, goto,
+// nested and short-circuit guards, dead stores, trailing returns). A second
+// side-effect-free success exit after the failure test (any condition whose
+// arms both `return true`) is merged only after the fold and reproduces all
+// 110 bytes, so the retail source likely had one; DC compiles 1352..1379 out
+// and no native evidence identifies its condition, so none is invented.
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order
 DC_ADDRESS(0x08b69c, 0x4)
@@ -1033,13 +1042,10 @@ bool CDPlayLobby::TestLobbied()
     void* buf = GlobalLock(GlobalAlloc(0x42, size));
     if (!buf)
         return 0;
-    HRESULT result = m_lpLobby->GetConnectionSettings(0, buf, &size);
-    m_hRes = result;
-    if (FAILED(result)) {
-        m_hRes = result;
-        return false;
-    }
-    return true;
+    m_hRes = m_lpLobby->GetConnectionSettings(0, buf, &size);
+    if (m_hRes < 0)
+        return 0;
+    return 1;
 }
 
 VA(0x00498be0, 0x31)
