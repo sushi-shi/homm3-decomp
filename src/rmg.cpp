@@ -10085,19 +10085,23 @@ unsigned char type_random_map_generator::paintRoad(TRmgMapPosition position, int
 // those source calls; retail expands both in createRoads but retains them at
 // createRiverToJoin +0x2f/+0x3d. RMG has no Dreamcast counterpart, so the
 // role name and linkage remain inferred from retail callers.
-// A separate signed row count recovers the levels-before-height products in
-// both road resets. All six unbroken product permutations emit height
-// first; a signed width*levels intermediate also reproduces the exact
-// result. The older unsigned grid-size temporary matched one river prefix,
-// but the scalar model matches the entire road caller and improves both
-// current river callers. Their constructor/cleanup inlining remains open.
+// The dimensions are read through the map accessors into width and height
+// locals before the width * height * levels product (Mac
+// 0x24bb78..0x24bb8c multiplies width by height, then by the level count).
+// The locals give the river callers retail's early dimension loads and
+// spilled height (join 96.80 -> 100, outlet 92.81 -> 93.53) and keep
+// createRoads exact in both images; direct field locals leave the join's
+// reset copy in swapped registers (99.89), and a product read straight
+// from the fields, a level-size or row-count local, or the cell lookup
+// before the position leave the river loads folded into the multiplies.
 MAC_ADDRESS(0x24bb68, 0x78)
 void type_random_map_generator::resetMovementCosts()
 {
     TRmgMapPosition resetPosition(-1, -1, -1);
     TRmgMapItem* mapItem = m_map.getMapItem(0, 0);
-    int rowCount = m_map.m_numberLevels * m_map.m_mapHeight;
-    int mapItemCount = rowCount * m_map.m_mapWidth;
+    int width = m_map.getWidth();
+    int height = m_map.getHeight();
+    int mapItemCount = width * height * m_map.getNumberLevels();
     while (mapItemCount--) {
         mapItem->resetMovement(resetPosition);
         ++mapItem;
@@ -10151,8 +10155,7 @@ void type_random_map_generator::createRoads()
 // river searches branch on it with an unsigned jbe, where empty() emits je
 // (the /O2 game folds both spellings to je). The neighbour bounds and
 // painter points read through the point accessors, as in
-// markRiverCoastTarget; the editor body is exact.
-// Game residual: reset/cleanup expansions and the duplicate exit.
+// markRiverCoastTarget. Both images are exact.
 VA(0x00548500, 0x533)
 MAC_ADDRESS(0x24c8ac, 0x588)
 void type_random_map_generator::createRiverToJoin(TRmgMapPosition source)
