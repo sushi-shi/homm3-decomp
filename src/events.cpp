@@ -2225,7 +2225,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     const int taughtIconCount = max(
         3, 7 - static_cast<int>(spellsLearned.size()));
 
-    if (spellsLearned.size()) {
+    if (spellsLearned.size() > 0) {
         msg += (*g_generalText)[GENERAL_TEXT_LEARNS_FRAGMENT];
         for (int i = 0; i < spellsLearned.size(); i++) {
             if (i < learnedIconCount) {
@@ -2244,8 +2244,8 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
         msg += formatString((*g_generalText)[GENERAL_TEXT_FROM_HERO_FORMAT], secondHero->m_name);
     }
 
-    if (spellsTaught.size()) {
-        if (spellsLearned.size()) {
+    if (spellsTaught.size() > 0) {
+        if (spellsLearned.size() > 0) {
             msg += DATA_COMPGEN(0x00660db4, commaText, ",");
             msg += (*g_generalText)[GENERAL_TEXT_LIST_AND];
         }
