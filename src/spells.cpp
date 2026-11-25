@@ -59,7 +59,7 @@ static int handleCastSpell(message& msg);
 static int handleCastWallSpell(message& msg);
 static int handleCastTeleport(message& msg);
 static int handleGetTeleportDestination(message& msg);
-void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex);
+static void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex);
 static int updateSpellTarget(long hex);
 
 // Retail .data 0x688334/0x688338, both initialised to -1 and each with
@@ -535,7 +535,7 @@ static int updateSpellTarget(long hex)
 // source location below.
 VA(0x0059f8a0, 0x293)
 MAC_ADDRESS(0x18f2b0, 0x288)  // retail caller+CFG role
-void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex);
+static void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex);
 
 VA(0x0059fb40, 0x182)
 DC_ADDRESS(0x14f51c, 0x18e)
@@ -1887,9 +1887,10 @@ static int handleCastSacrifice(message& msg)
 // The army-side collector call is the SpellID overload two screens below;
 // the hex-side one is written out longhand, as the Dreamcast lines
 // 2094..2102 have it. DC 2081/2082 and 2109/2110 prove independent
-// rejection/invalid-hex continue scopes.
+// rejection/invalid-hex continue scopes. Dreamcast emits mark_area_highlights
+// as an S_LPROC32 file-static procedure.
 DC_ADDRESS(0x152240, 0x242)
-void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
+static void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
 {
     std::vector<army*> targets;
     unsigned char changed = 0;
