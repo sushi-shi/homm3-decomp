@@ -4703,6 +4703,11 @@ void townManager::drawTown(int update, int incFrame, bool drawHotspots)
 
 // Retail 0x5d3bd0 retains doSkeletonTransformer (depth-1 site, budget 8377;
 // the helper's callee cost must exceed C1's 175 save limit, see its comment).
+// Locals keep their DC CodeView names (cTemp, thisPlayer, msgReceived,
+// infowin). Residual: the hall- and castle-icon hasBuilding chains swap
+// retail's two 64-bit AND register forms (unchanged by those names, by a
+// function-top `building`; a ternary chain drops to 99.06%), and the
+// resource-border help row resolves as g_spellEffectTraits+0xa4 in retail.
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)
 DC_ADDRESS(0x175160, 0x14d2)
@@ -4710,19 +4715,19 @@ MAC_ADDRESS(0x1d00c0, 0x19e4)  // anchor-caller(the three pure managers Open/Clo
 int townManager::main(message& msg)
 {
     int exitFlag = 0;
-    char text[400];
-    playerData* player = g_game->getLocalPlayer();
-    unsigned char netMsgSeen;
+    char cTemp[400];
+    playerData* thisPlayer = g_game->getLocalPlayer();
+    unsigned char msgReceived;
 
     g_soundManager->serviceSounds();
     if (g_turnDuration.isExpired())
         return exitTownManager(msg);
     if (g_remoteOn) {
-        netMsgSeen = 0;
+        msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
-            handler->checkHandleNet(1, &netMsgSeen);
-            if (netMsgSeen) {
+            handler->checkHandleNet(1, &msgReceived);
+            if (msgReceived) {
                 if (handler->getAbortPopupMsg())
                     return exitTownManager(msg);
             }
@@ -4950,10 +4955,10 @@ int townManager::main(message& msg)
                 if (rclick)
                     goto building_popup;
                 else {
-                    sprintf(text,
+                    sprintf(cTemp,
                             getBuildingInfo(m_townToView, MARKETPLACE_SILO_ID,
                                             1, 1));
-                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(cTemp, 1, -1, -1, m_townToView->m_type + 0x16,
                                  MARKETPLACE_SILO_ID, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -5014,10 +5019,10 @@ int townManager::main(message& msg)
                         redrawTownScreen();
                         break;
                     default:
-                        strcpy(text,
+                        strcpy(cTemp,
                                getBuildingInfo(m_townToView, EXTRA_1_ID,
                                                1, 1));
-                        normalDialog(text, 1, -1, -1,
+                        normalDialog(cTemp, 1, -1, -1,
                                      m_townToView->m_type + 0x16, EXTRA_1_ID,
                                      -1, 0, -1, 0, -1, 0);
                         break;
@@ -5033,10 +5038,10 @@ int townManager::main(message& msg)
                     if (rclick)
                         goto building_popup;
                     else {
-                        strcpy(text,
+                        strcpy(cTemp,
                                getBuildingInfo(m_townToView, EXTRA_2_ID,
                                                1, 1));
-                        normalDialog(text, 1, -1, -1,
+                        normalDialog(cTemp, 1, -1, -1,
                                      m_townToView->m_type + 0x16, EXTRA_2_ID,
                                      -1, 0, -1, 0, -1, 0);
                     }
@@ -5056,10 +5061,10 @@ int townManager::main(message& msg)
                         resetStrips();
                         break;
                     default:
-                        strcpy(text,
+                        strcpy(cTemp,
                                getBuildingInfo(m_townToView, SPECIAL_BUILDING_ID,
                                                1, 1));
-                        normalDialog(text, 1, -1, -1,
+                        normalDialog(cTemp, 1, -1, -1,
                                      m_townToView->m_type + 0x16,
                                      SPECIAL_BUILDING_ID, -1, 0, -1, 0, -1, 0);
                         break;
@@ -5069,12 +5074,12 @@ int townManager::main(message& msg)
             case HOLY_GRAIL_ID:
                 if (rclick) {
 building_popup:
-                    strcpy(text, getBuildingInfo(m_townToView, code, 1, 1));
-                    normalDialog(text, 4, -1, -1, m_townToView->m_type + 0x16,
+                    strcpy(cTemp, getBuildingInfo(m_townToView, code, 1, 1));
+                    normalDialog(cTemp, 4, -1, -1, m_townToView->m_type + 0x16,
                                  code, -1, 0, -1, 0, -1, 0);
                 } else {
-                    strcpy(text, getBuildingInfo(m_townToView, code, 1, 1));
-                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
+                    strcpy(cTemp, getBuildingInfo(m_townToView, code, 1, 1));
+                    normalDialog(cTemp, 1, -1, -1, m_townToView->m_type + 0x16,
                                  code, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -5087,11 +5092,11 @@ building_popup:
                             ->m_topTown
                         + msg.m_codeY - TTownScreenWindow::TOWN_0_ID];
                     town* t = g_game->getTown(id);
-                    TQuickTownWindow quickTown(
+                    TQuickTownWindow infowin(
                         t, TQuickTownWindow::ViewAll);
-                    quickTown.m_x = 0x208;
-                    quickTown.m_y = 0x172;
-                    quickTown.quickWindowWait();
+                    infowin.m_x = 0x208;
+                    infowin.m_y = 0x172;
+                    infowin.quickWindowWait();
                 } else {
                     int index =
                         m_townWindow
@@ -5099,7 +5104,7 @@ building_popup:
                         + msg.m_codeY - TTownScreenWindow::TOWN_0_ID;
                     if (g_currentTownIndex != index) {
                         g_currentTownIndex = index;
-                        int id = player->m_townIds[index];
+                        int id = thisPlayer->m_townIds[index];
                         m_townToView = g_game->getTown(id);
                         changeTown(1);
                     }
@@ -5118,13 +5123,13 @@ building_popup:
                 break;
             case TTownScreenWindow::TOWN_UP_ARROW_ID:
             case TTownScreenWindow::TOWN_DOWN_ARROW_ID:
-                strcpy(text,
+                strcpy(cTemp,
                        g_adventureWindowHelp[code - 0x89].m_rclick);
                 if (rclick)
-                    normalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(cTemp, 4, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 else
-                    normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(cTemp, 1, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 break;
             case TResourceDisplay::RESOURCE_BORDER_0_ID:
@@ -5134,17 +5139,17 @@ building_popup:
             case TResourceDisplay::RESOURCE_BORDER_4_ID:
             case TResourceDisplay::RESOURCE_BORDER_5_ID:
             case TResourceDisplay::RESOURCE_BORDER_6_ID:
-                strcpy(text,
+                strcpy(cTemp,
                        g_adventureWindowHelp[
                            g_resourceHelpIndices[
                                code
                                - TResourceDisplay::
                                      RESOURCE_BORDER_0_ID]].m_rclick);
                 if (rclick)
-                    normalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(cTemp, 4, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 else
-                    normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(cTemp, 1, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 break;
             case TResourceDisplay::RESOURCE_TEXT_0_ID:
@@ -5155,16 +5160,16 @@ building_popup:
             case TResourceDisplay::RESOURCE_TEXT_5_ID:
             case TResourceDisplay::RESOURCE_TEXT_6_ID:
             case TResourceDisplay::RESOURCE_TEXT_7_ID:
-                strcpy(text,
+                strcpy(cTemp,
                        g_adventureWindowHelp[
                            g_resourceHelpIndices[
                                code
                                - TResourceDisplay::RESOURCE_TEXT_0_ID]].m_rclick);
                 if (rclick)
-                    normalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(cTemp, 4, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 else
-                    normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(cTemp, 1, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 break;
             case TTownScreenWindow::HALL_ICON_ID:
@@ -5178,35 +5183,35 @@ building_popup:
                         building = HALL_CITY_ID;
                     else
                         building = HALL_CAPITOL_ID;
-                    strcpy(text,
+                    strcpy(cTemp,
                            getBuildingInfo(m_townToView, building, 1, 1));
-                    normalDialog(text, 4, -1, -1, m_townToView->m_type + 0x16,
+                    normalDialog(cTemp, 4, -1, -1, m_townToView->m_type + 0x16,
                                  building, -1, 0, -1, 0, -1, 0);
                 }
                 break;
             case TTownScreenWindow::CASTLE_ICON_ID:
                 if (rclick) {
                     if (m_townToView->hasBuilding(CASTLE_FORT_ID, false)) {
-                        strcpy(text, getBuildingInfo(m_townToView,
+                        strcpy(cTemp, getBuildingInfo(m_townToView,
                                                      CASTLE_FORT_ID, 1, 1));
-                        normalDialog(text, 4, -1, -1,
+                        normalDialog(cTemp, 4, -1, -1,
                                      m_townToView->m_type + 0x16,
                                      CASTLE_FORT_ID, -1, 0, -1, 0, -1, 0);
                     } else if (m_townToView->hasBuilding(CASTLE_CITADEL_ID,
                                                        false)) {
-                        strcpy(text,
+                        strcpy(cTemp,
                                getBuildingInfo(m_townToView,
                                                CASTLE_CITADEL_ID, 1, 1));
-                        normalDialog(text, 4, -1, -1,
+                        normalDialog(cTemp, 4, -1, -1,
                                      m_townToView->m_type + 0x16,
                                      CASTLE_CITADEL_ID, -1, 0, -1, 0,
                                      -1, 0);
                     } else if (m_townToView->hasBuilding(CASTLE_CASTLE_ID,
                                                        false)) {
-                        strcpy(text,
+                        strcpy(cTemp,
                                getBuildingInfo(m_townToView,
                                                CASTLE_CASTLE_ID, 1, 1));
-                        normalDialog(text, 4, -1, -1,
+                        normalDialog(cTemp, 4, -1, -1,
                                      m_townToView->m_type + 0x16,
                                      CASTLE_CASTLE_ID, -1, 0, -1, 0,
                                      -1, 0);
@@ -5248,22 +5253,22 @@ building_popup:
                         && m_townToView->m_visitingHeroId != -1) {
                         hero* h =
                             g_game->getHero(m_townToView->m_visitingHeroId);
-                        TQuickHeroWindow quickHero(
+                        TQuickHeroWindow infowin(
                             h, TQuickHeroWindow::ViewAll);
-                        quickHero.m_x = 0x140;
-                        quickHero.m_y = 0x172;
-                        quickHero.quickWindowWait();
+                        infowin.m_x = 0x140;
+                        infowin.m_y = 0x172;
+                        infowin.quickWindowWait();
                     } else if (msg.m_codeY
                                    == TTownScreenWindow::
                                           GARRISON_PORTRAIT_SELECTOR_ID
                                && m_townToView->m_garrisonHeroId != -1) {
                         hero* h =
                             g_game->getHero(m_townToView->m_garrisonHeroId);
-                        TQuickHeroWindow quickHero(
+                        TQuickHeroWindow infowin(
                             h, TQuickHeroWindow::ViewAll);
-                        quickHero.m_x = 0x140;
-                        quickHero.m_y = 0x172;
-                        quickHero.quickWindowWait();
+                        infowin.m_x = 0x140;
+                        infowin.m_y = 0x172;
+                        infowin.quickWindowWait();
                     } else {
                         int found = 0;
                         if (msg.m_codeY >= TTownScreenWindow::
@@ -5372,7 +5377,7 @@ building_popup:
                     m_townWindow;
                 win->doTownKnob(0);
                 g_currentTownIndex++;
-                int id = player->m_townIds[g_currentTownIndex];
+                int id = thisPlayer->m_townIds[g_currentTownIndex];
                 m_townToView = g_game->getTown(id);
                 changeTown(1);
             }
@@ -5383,7 +5388,7 @@ building_popup:
                     m_townWindow;
                 win->doTownKnob(1);
                 g_currentTownIndex--;
-                int id = player->m_townIds[g_currentTownIndex];
+                int id = thisPlayer->m_townIds[g_currentTownIndex];
                 m_townToView = g_game->getTown(id);
                 changeTown(1);
             }

@@ -4128,25 +4128,19 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // instead; the final block must resolve its own selection. Repeating every
 // indexed read earlier also discards the description's proved lifetime and
 // is not retained (55.0450% with the old pins; 49.0856% without them).
-// DC 3916/3917 are two memcpy rows with no row of their own for a selected
-// reference; indexing the selection in each copy gives VC6 the extra /Ob2
-// candidate that pushes the second arm's first string assign out of line,
-// as retail does (74.82 -> 79.95). The random-map arm still inlines its
-// second assign where retail calls both: by the budget arithmetic retail has
-// one more depth-1 inline candidate after that arm. A guard written with
-// empty() is byte-flat. Probe (2026-09-29): retail and Mac 0x17b2c8 both
-// index the load-mode row once for the two copies (retail computes the
-// second source before the first store); a block-local reference gives that
-// shape but drops to 74.82%. By the traced budgets retail needs four depth-1
-// candidates from the second applyHeaderToGame on, which that single index
-// makes two short; the missing ones are not yet identified.
-// Replay (2026-10-08): one more free depth-1 candidate anywhere after the
-// second applyHeaderToGame reproduces both remaining retail decisions (the
-// random arm's second assign and the selected arm's _Eos refused); a
-// candidate before it, or two after it, does not. Caller cb is below the
-// 1000-unit floor here, so braces cannot stand in for it.
-// SavedGameHeader::restorePlayerFlags (the dead/human flag restore shared
-// with applySavedGameHeader) supplies that free candidate: 79.95 -> 85.24.
+// Load-mode tail: retail and Mac 0x17b2c8 index the row once for both
+// copies (retail keeps the row in a register across the first copy's stores
+// while it reloads gpGame; Mac holds it in r30 across the memcpy call), so
+// the block resolves one `loaded` row; its two copies are written here, as
+// DC 3916/3917 write them in UpdateGameVars itself (no Game.h inline rows).
+// The old per-copy index (79.95%) contradicts that single evaluation, and a
+// SavedGameHeader::restorePlayerFlags helper (85.24%) had no native support
+// and addressed the m_saved subobject instead of the row; both are retired.
+// Residual: retail refuses both random-arm string assigns and the selected
+// arm's _Eos. By the traced budgets (floor 1000, cb 274) retail has four
+// depth-1 candidates from the second applyHeaderToGame on where this has
+// two; rebuildRandomMapPlayerSetup's retail decisions rule out extra sites
+// inside applyHeaderToGame. The two missing sites are not yet identified.
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
 // Inlined in rebuildRandomMapPlayerSetup, both updateGameVars arms and
@@ -4207,12 +4201,13 @@ void TSingleSelectionWindow::updateGameVars()
     // assignData's base copy as `CMapHeaderData::operator=(*data)` raises this
     // to 82.86% (selected arm exact) but perturbs string COMDATs in TUs that
     // never call assignData (seerhut, adventuremapwindow), so it is rejected.
-    // Retail and Mac evaluate the loaded row once for both copies; one
-    // `loaded` reference spells that CSE but gives the random arm still more
-    // budget (74.82%).
     if (m_loadMode) {
         // SetText can run widget code; retail resolves this row afterwards.
-        m_selectionHeaders[m_currentMap].m_saved.restorePlayerFlags();
+        GameSelectionHeadersStruct& loaded = m_selectionHeaders[m_currentMap];
+        memcpy(g_game->m_playerDisabled, loaded.m_saved.m_deadPlayer,
+               sizeof(loaded.m_saved.m_deadPlayer));
+        memcpy(g_wasHuman, loaded.m_saved.m_humanPlayer,
+               sizeof(loaded.m_saved.m_humanPlayer));
     }
 }
 

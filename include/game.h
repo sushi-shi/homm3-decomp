@@ -764,7 +764,6 @@ public:
     void reset();
     int save(TAbstractFile* outfile);
     int load(TAbstractFile* infile);
-    void restorePlayerFlags() const;
 };
 SIZE(SavedGameHeader, 0x5a4);
 
@@ -1803,12 +1802,6 @@ public:
     // external field operations; these additional names are project names.
     int getGameVersion() const { return m_gameVersion; }
 };
-
-inline void SavedGameHeader::restorePlayerFlags() const
-{
-    memcpy(g_game->m_playerDisabled, m_deadPlayer, sizeof(m_deadPlayer));
-    memcpy(g_wasHuman, m_humanPlayer, sizeof(m_humanPlayer));
-}
 
 // The five .def-name tables game::ConvertObject (0x4c9990) rewrites a
 // converted object's CObjectType::ImageName from. Their sole reader in
