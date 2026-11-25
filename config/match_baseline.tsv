@@ -2498,7 +2498,7 @@ mainmenu	??0TMainMenu@@QAE@XZ	100.0000	100.0000	100.0000	0xfb2a0	tokens1:384a505
 mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660	tokens1:611413673225
 mainmenu	??_GTMainMenu@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xfb630	-
 mainmenu	?doModal@TMainMenu@@QAEXXZ	100.0000	100.0000	100.0000	0xfb6e0	tokens1:fc35791ff738
-mainmenu	?mainMenuHandler@@YIHAAVmessage@@@Z	94.0817	94.0817	94.0845	0xfb710	tokens1:c0f95a83bccf
+mainmenu	?mainMenuHandler@@YIHAAVmessage@@@Z	93.4817	93.4817	94.0845	0xfb710	tokens1:dc63f6780aba
 mapcell	??0CObjectType@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x106080	tokens1:0f960b41ea08
 mapcell	??0NewfullMap@@QAE@XZ	100.0000	100.0000	100.0000	0xfd060	tokens1:574a07e264d6
 mapcell	??0NewmapCell@@QAE@XZ	100.0000	100.0000	100.0000	0xfd650	tokens1:b1e785855074

@@ -131,10 +131,18 @@ void TMainMenu::doModal()
 // or naming either std::string creates the wrong live ranges/stack slots.
 // The hover call also really passes Y then X here - retail loads +0x10 first,
 // pushes it, then loads/pushes +0x14 as findWidget's first stack argument.
-// Mac's specific-edition CD arm precedes its direct generic warning. Swapping
-// the Complete formatted arms to that order does not recover the shared
-// retail result slot: 93.47%, still 68/65 blocks and an extra cleanup call.
-// Mac's platform-specific generic arm therefore does not prove Windows order.
+// The wrong-edition arm (CD drive 5/6) comes first: retail's unwind map gives
+// that arm's temporary EH state 0 and the generic arm's state 1, and Mac's
+// specific-edition arm also precedes its generic warning. Adopting that order
+// moves MAX 94.08 -> 93.48 (states and block layout now agree). Residual:
+// retail builds both formatString temporaries in one slot ([ebp-0x20], 0x14
+// frame) with the string destructor inlined and its _Tidy zeroing stores
+// dead-store eliminated in both arms; VC6 here keeps two slots (0x24 frame),
+// keeps the later temporary's zeroing stores and caches 0 in ESI. Failed
+// probes: named strings (both or either arm) 90.2-92.9%, one named string
+// from a ternary 79.7%, ternary of the two calls 78.4%, switch on the drive
+// 86.5%, drive ternary inlined 91.6%, drive via if/else or declared with
+// fill 93.48%, fill read after drawWindow 89.0%, format local 93.48%.
 VA(0x004fb710, 0x484)
 DC_ADDRESS(0x0ea618, 0x398)
 MAC_ADDRESS(0x11ccd0, 0x574)  // admitted row includes the jump table/padding; decoded body ends at +0x46d
@@ -158,19 +166,19 @@ static int mainMenuHandler(message& msg)
 
         g_mainMenu->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                WINDOW_ALL_WIDGETS_HIGH);
-        if (g_cdDriveNumber != CD_DRIVE_NUMBER_5 &&
-            g_cdDriveNumber != CD_DRIVE_NUMBER_6) {
-            normalDialog(formatString(
-                (*g_generalText)[GENERAL_TEXT_CD_REQUIRED_GENERIC_FORMAT],
-                fill, fill, fill, fill).c_str(),
-                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        } else {
+        if (g_cdDriveNumber == CD_DRIVE_NUMBER_5 ||
+            g_cdDriveNumber == CD_DRIVE_NUMBER_6) {
             const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
                 ? (*g_generalText)[GENERAL_TEXT_RESTORATION_OF_ERATHIA]
                 : (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
             normalDialog(formatString(
                 (*g_generalText)[GENERAL_TEXT_WRONG_CD_EDITION_FORMAT],
                 drive, fill, fill, fill, fill).c_str(),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            normalDialog(formatString(
+                (*g_generalText)[GENERAL_TEXT_CD_REQUIRED_GENERIC_FORMAT],
+                fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         g_cdMessageShown = 1;
