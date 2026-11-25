@@ -153,7 +153,7 @@ advmgr	?processRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.
 advmgr	?processSearch@advManager@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xec90	tokens1:cf3b94ac1885
 advmgr	?processSelect@advManager@@QAEHABVmessage@@AAUtype_point@@AAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x97e0	tokens1:f71de86ecbdf
 advmgr	?processWaitingHover@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0xdeb0	tokens1:6d9ad428098a
-advmgr	?quickInfo@advManager@@QAEXHHH@Z	91.9091	93.1270	96.2393	0x137c0	tokens1:5c558699a876
+advmgr	?quickInfo@advManager@@QAEXHHH@Z	93.1196	93.1196	96.2393	0x137c0	tokens1:02709358de14
 advmgr	?redrawAdvScreen@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17420	tokens1:ff85d5c9c605
 advmgr	?reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80	tokens1:91a3afd58608
 advmgr	?saveGame@@YI_N_N@Z	100.0000	100.0000	100.0000	0x18160	tokens1:680e603a9e5f
