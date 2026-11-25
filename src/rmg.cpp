@@ -6874,7 +6874,8 @@ VA_AT(h3maped, 0x004a5a23, 0x1e4)
 void type_random_map_generator::openConnectionPath(
     TRmgMapPosition position, unsigned char narrow)
 {
-    TRmgMapItem* item = m_map.getMapItem(position);
+    type_random_map& map = m_map;
+    TRmgMapItem* item = map.getMapItem(position);
     int zone = item->m_zoneState.m_zone;
     if (item->m_movement.m_cost >= 30000)
         return;
@@ -6894,20 +6895,20 @@ void type_random_map_generator::openConnectionPath(
             TRmgZoneBounds bounds;
             bounds.m_minimumX = max(position.m_x - 1, 0);
             bounds.m_minimumY = max(position.m_y - 1, 0);
-            bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
-            bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
+            bounds.m_maximumX = min(position.m_x + 2, map.m_mapWidth);
+            bounds.m_maximumY = min(position.m_y + 2, map.m_mapHeight);
             TRmgMapPosition nearby;
             nearby.m_z = position.m_z;
             for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                 for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
-                    TRmgMapItem* cell = m_map.getMapItem(nearby);
+                    TRmgMapItem* cell = map.getMapItem(nearby);
                     if (cell->m_zoneState.m_zone == zone)
                         cell->setObstacleFill(0);
                 }
             }
         }
         position = previous;
-        item = m_map.getMapItem(position);
+        item = map.getMapItem(position);
     }
 }
 
