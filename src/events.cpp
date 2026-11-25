@@ -6044,6 +6044,12 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // Retail also expands one of the three string _Tidy calls this body keeps
 // inside the town/hero copy-and-delete chains; the nearest, under the town
 // delete, gets 134 against 152 (about three fewer later depth-1 candidates).
+// The default seed is Random, not SRandom: DC line 6309 and Mac's bl to
+// random (0x130cf4) agree; the pickup sample keeps SRandom (DC 6628).
+// DC 6336..6362 and Mac also keep a draw arm in the quick-combat path
+// (both CheckForHeroDefeatWin calls, then the winner/loser arm). VC6 folds
+// it, but it expands the fourth heroLoses site (97.90 -> 94.33%; with a
+// `? 0 : 1` winner, 91.24%), so it stays out pending the budget model.
 VA(0x004ad470, 0x1531)
 DC_ADDRESS(0x09b970, 0x9ec)
 MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique)
@@ -6058,7 +6064,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
         rightPlayer >= 0 && g_game->isHuman(rightPlayer);
     unsigned char leftHuman = leftPlayer >= 0 && g_game->isHuman(leftPlayer);
     if (seed == -1)
-        seed = sRandom(1, 1000);
+        seed = random(1, 1000);
     demobilizeCurrHero(0, 1);
     reseed(0, 0);
 
