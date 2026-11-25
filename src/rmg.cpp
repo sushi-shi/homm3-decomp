@@ -6909,10 +6909,13 @@ void type_random_map_generator::buildZoneConnectionPaths()
 // orders, predecessor copy forms and nested present/absent scopes did not
 // improve it. Keep the retained retail map/helper calls as the next target;
 // do not replace them with a pasted body or an inline-depth pin.
-inline unsigned char isConnectionPresent(const TRmgMapItem* item)
-{
-    return item->m_connection.m_present;
-}
+// Mac 0x242eac copies the incoming position once before the first map
+// formula, so that lookup is the map's own getMapItem, not the generator's
+// by-value forwarder (whose Mac callers copy twice). The forwarder plus a
+// one-use isConnectionPresent accessor scored 81.92% game / 87.76% editor,
+// but neither has native support; this form is 80.52% / 87.55%. Dropping
+// the map reference alias: 79.94% / 87.48%; the tail lookup through
+// position instead of previous is flat.
 VA(0x005408E0, 0x23F)
 MAC_ADDRESS(0x242e88, 0x380) // anchor-callee createGroundConnection; thiscall, ret 0x10
 VA_AT(h3maped, 0x004a5a23, 0x1e4)
@@ -6920,12 +6923,12 @@ void type_random_map_generator::openConnectionPath(
     TRmgMapPosition position, unsigned char narrow)
 {
     type_random_map& map = m_map;
-    TRmgMapItem* item = getMapItem(position);
+    TRmgMapItem* item = map.getMapItem(position);
     int zone = item->m_zoneState.m_zone;
     if (item->m_movement.m_cost >= 30000)
         return;
     while (item->m_movement.m_cost > 0) {
-        if (isConnectionPresent(item)) {
+        if (item->m_connection.m_present) {
             TRmgObjectPropertiesRef* properties = selectObjectPrototype(
                 eTerrainDirt, BORDER_GUARD, item->m_connection.m_guardColor);
             type_object* object = new type_object(properties);
