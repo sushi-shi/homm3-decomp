@@ -3742,6 +3742,9 @@ void t_abstract_random_generator::readObjectPlacementRules()
 // at 0x5375ff keeps only positive scores in its weighted candidate pool.
 // This method temporarily marks affected objects and clears all five marks
 // before returning. Names describe retail roles; there is no DC counterpart.
+// memset zeroing of terrainSeen/marks (dword,dword,word + one rep stosd, as
+// retail) and a non-const terrain-mask reference keep the two <48> tests out
+// of line (88.46 -> 90.95); a const mask, .test() or a bool local re-inline them.
 // Residual: retail retains bitset<48>::test at 0x536ca3/0x536cc1 and
 // bitset<10>::test at 0x536d06; these subscript/conversion expansions
 // still inline test and retain _Xran. Direct .test calls also expand the
@@ -3786,9 +3789,10 @@ int t_abstract_random_generator::scoreObjectPlacement(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position)
 {
     TObjectType* prototype = properties->m_prototype;
+    std::bitset<kNumTerrainTypes>& terrainMask = prototype->_m_terrainMask;
     std::vector<type_object*> affected;
-    unsigned char terrainSeen[10] = {0};
-    unsigned int marks[10][8] = {0};
+    unsigned char terrainSeen[10];
+    unsigned int marks[10][8];
     TRmgMapPosition cell;
     type_object* object;
     int index;
@@ -3803,6 +3807,8 @@ int t_abstract_random_generator::scoreObjectPlacement(
     int lastRow;
     int firstColumn;
     int lastColumn;
+    memset(terrainSeen, 0, sizeof(terrainSeen));
+    memset(marks, 0, sizeof(marks));
     cell.m_z = position.m_z;
     for (unsigned int row = 0; row < prototype->getHeight(); ++row) {
         cell.m_y = position.getY() - row;
@@ -3820,7 +3826,7 @@ int t_abstract_random_generator::scoreObjectPlacement(
                 continue;
                 markCell |= RMG_PLACEMENT_BLOCKED;
                 item = getMapItem(cell);
-                if (!prototype->_m_terrainMask[item->getLandType()])
+                if (!terrainMask[item->getLandType()])
                     return RMG_PLACEMENT_INVALID;
                 if (item->hasPathClearance())
                     return RMG_PLACEMENT_INVALID;
