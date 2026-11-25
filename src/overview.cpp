@@ -37,15 +37,20 @@
 
 // The names are Dreamcast-attested; every retail address and extent below is
 // independently fixed by SetupNewOverviewType's indexed accesses.
+// Dreamcast publishes fourteen of them as external globals of overview.obj
+// (`?giOverviewTop@@3PAHA`, `?overWin@@3PAVTOverviewWindow@@A`, ...):
+// giOverviewItems, overviewBank, iLastDynamicTop, textWidgetTitle,
+// iOverviewItems, overWin, the five *Dynamic arrays, giOverviewType,
+// giOverviewTop and iLastDynamicType. The rest stay file-static.
 // Retail UpdateBackpack indexes one byte per local-player hero slot. The
 // eight-byte extent is fixed by playerData::HERO_SLOT_COUNT and by the next
 // overview datum in this packed run.
-DATA(0x0069cbbc) static int g_overviewItemCounts[2];
+DATA(0x0069cbbc) int g_overviewItemCounts[2];
 // Dreamcast names the overview screen's resource strip. Complete proves the
 // intervening pointer cell by both recruit-dialog refresh paths below.
 DATA(0x0069cbc4) static unsigned char g_overviewBackpackStart[playerData::HERO_SLOT_COUNT];
-DATA(0x0069cbcc) static TResourceDisplay* g_overviewBank;
-DATA(0x0069cbd0) static int g_lastDynamicTop;
+DATA(0x0069cbcc) TResourceDisplay* g_overviewBank;
+DATA(0x0069cbd0) int g_lastDynamicTop;
 // One artifact-page byte per local-player hero slot. The original source name
 // is not present in either symbol stream, so this spelling remains provisional.
 DATA(0x0069cbd4) static slider* g_overviewSlider;
@@ -54,19 +59,19 @@ DATA(0x0069cbd4) static slider* g_overviewSlider;
 // proves dword elements. The following four-dword gap is the town roster.
 DATA(0x0069cc10) static unsigned char g_overviewHeroArtifactPage[playerData::HERO_SLOT_COUNT];
 DATA(0x0069cbec) static int g_overviewHeroIds[8];
-DATA(0x0069cc1c) static textWidget* g_textWidgetTitle[3];
+DATA(0x0069cc1c) textWidget* g_textWidgetTitle[3];
 // The retail window is TOverviewWindow, whose derived layout is not needed by
 // this base-interface consumer and is deliberately not fabricated here.
-DATA(0x0069cc34) static int g_overviewItemCount;
-DATA(0x0069cc3c) static heroWindow* g_overWin;
-DATA(0x0069cc40) static textWidget** g_textWidgetDynamic;
-DATA(0x0069cc44) static iconWidget** g_iconWidgetDynamic;
-DATA(0x0069cc48) static bitmapBorder** g_bitmapBorderDynamic;
-DATA(0x0069cc4c) static button** g_buttonDynamic;
-DATA(0x0069cc50) static textButton** g_textButtonDynamic;
-DATA(0x0069cc54) static int g_overviewType;
-DATA(0x0069cc58) static int g_overviewTop[2];
-DATA(0x0069cbe8) static int g_lastDynamicType;
+DATA(0x0069cc34) int g_overviewItemCount;
+DATA(0x0069cc3c) heroWindow* g_overWin;
+DATA(0x0069cc40) textWidget** g_textWidgetDynamic;
+DATA(0x0069cc44) iconWidget** g_iconWidgetDynamic;
+DATA(0x0069cc48) bitmapBorder** g_bitmapBorderDynamic;
+DATA(0x0069cc4c) button** g_buttonDynamic;
+DATA(0x0069cc50) textButton** g_textButtonDynamic;
+DATA(0x0069cc54) int g_overviewType;
+DATA(0x0069cc58) int g_overviewTop[2];
+DATA(0x0069cbe8) int g_lastDynamicType;
 
 // Complete keeps the first visible entry in the constructor-built
 // flaggable-item vector here. Dreamcast has the same top/count/array
