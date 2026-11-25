@@ -3036,7 +3036,7 @@ recruit	?close@recruitUnit@@UAEXXZ	100.0000	100.0000	100.0000	0x1502d0	tokens1:1
 recruit	?getMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0	tokens1:23b65a484627
 recruit	?getUpgradeCost@@YIXW4TCreatureType@@0JPAJ@Z	100.0000	100.0000	100.0000	0x14e750	tokens1:7e2fb43111e4
 recruit	?insert@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXPAPAVwidget@@IABQAV3@@Z	100.0000	100.0000	100.0000	0x14d120	-
-recruit	?main@recruitUnit@@UAEHAAVmessage@@@Z	99.9545	99.9545	99.9545	0x150940	tokens1:a3ce57a07cad
+recruit	?main@recruitUnit@@UAEHAAVmessage@@@Z	99.9732	99.9732	99.9732	0x150940	tokens1:2361f8976b04
 recruit	?open@recruitUnit@@UAEHH@Z	100.0000	100.0000	100.0000	0x14fea0	tokens1:3ba3ea2ef050
 recruit	?quickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750	tokens1:5c61b41c1a9b
 recruit	?quickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780	tokens1:d6850313950d

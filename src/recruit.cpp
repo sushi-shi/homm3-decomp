@@ -766,7 +766,7 @@ int finishRecruitUnit(message& msg)
 // sites leave VC6 with two tails (95.74%), the shared flag 99.89% (the
 // explicit four stores instead of the helper call are byte-identical).
 // The admitted Mac Main pair is currently unavailable: CodeWarrior emits an
-// anonymous 16-byte zero template for DC's const monType[4] array that Mac
+// anonymous 16-byte zero template for DC's const mon_type[4] array that Mac
 // retail never loads; Main also expands setRolloverText in the candidate while
 // Mac retail calls its retained helper.
 VA(0x00550940, 0xA08)
@@ -797,12 +797,12 @@ int recruitUnit::main(message& msg)
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
             max(100, elapsed);
 
-        const TCreatureType monType[4] = {
+        const TCreatureType mon_type[4] = {
             m_monType1, m_monType2, m_monType3, m_monType4
         };
         for (int slot = 0; slot < 4; slot++) {
             if (g_recruitWindow->m_creatureWidgets[slot]) {
-                if (IsSiegeWeapon(monType[slot]))
+                if (IsSiegeWeapon(mon_type[slot]))
                     g_recruitWindow->m_creatureWidgets[slot]
                         ->nextRandomSiegeEngineFrame();
                 else
@@ -814,7 +814,7 @@ int recruitUnit::main(message& msg)
                                     WINDOW_ALL_WIDGETS_HIGH);
     }
 
-    int exitFlag = (static_cast<unsigned int>(msg.m_qualifier) >> 9) & 1;
+    int exitFlag = (msg.m_qualifier & 0x200) != 0;
     switch (msg.m_id) {
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
@@ -845,12 +845,12 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 0);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    TViewArmyWindow view_army_window(
                         m_monType1, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
-                        viewArmyWindow.quickView();
+                        view_army_window.quickView();
                     else
-                        viewArmyWindow.doModal();
+                        view_army_window.doModal();
                 }
                 break;
 
@@ -863,12 +863,12 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 1);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    TViewArmyWindow view_army_window(
                         m_monType2, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
-                        viewArmyWindow.quickView();
+                        view_army_window.quickView();
                     else
-                        viewArmyWindow.doModal();
+                        view_army_window.doModal();
                 }
                 break;
 
@@ -881,12 +881,12 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 2);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    TViewArmyWindow view_army_window(
                         m_monType3, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
-                        viewArmyWindow.quickView();
+                        view_army_window.quickView();
                     else
-                        viewArmyWindow.doModal();
+                        view_army_window.doModal();
                 }
                 break;
 
@@ -899,12 +899,12 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 3);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    TViewArmyWindow view_army_window(
                         m_monType4, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
-                        viewArmyWindow.quickView();
+                        view_army_window.quickView();
                     else
-                        viewArmyWindow.doModal();
+                        view_army_window.doModal();
                 }
                 break;
             }
@@ -942,14 +942,11 @@ int recruitUnit::main(message& msg)
 
                     for (int i = 0; i < m_numberToBuy; i++) {
                         if (m_monsterType == CREATURE_BALLISTA) {
-                            type_artifact artifact(ARTIFACT_BALLISTA);
-                            m_thisHero->giveArtifact(artifact, 1, 1);
+                            m_thisHero->giveArtifact(type_artifact(ARTIFACT_BALLISTA), 1, 1);
                         } else if (m_monsterType == CREATURE_FIRST_AID_TENT) {
-                            type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
-                            m_thisHero->giveArtifact(artifact, 1, 1);
+                            m_thisHero->giveArtifact(type_artifact(ARTIFACT_FIRST_AID_TENT), 1, 1);
                         } else if (m_monsterType == CREATURE_AMMO_CART) {
-                            type_artifact artifact(ARTIFACT_AMMO_CART);
-                            m_thisHero->giveArtifact(artifact, 1, 1);
+                            m_thisHero->giveArtifact(type_artifact(ARTIFACT_AMMO_CART), 1, 1);
                         }
                     }
                 } else if (m_currArmyGroup->canJoin(m_monsterType)) {
