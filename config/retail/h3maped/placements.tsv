@@ -4009,7 +4009,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00199188	0x1	data	_?$S11@?1??InitializeAdvObjectTypeTraitsTable@@YAXXZ@4EA	objnames	internal	referenced by ?InitializeAdvObjectTypeTraitsTable@@YAXXZ at +0x12
 0x00199190	0x120	data	?g_combinationArtifactTable@@3QBUTCombinationArtifact@@B	artifact	external	referenced by __h3cg$artifact$static_ctor$g_combinationArtifactTable at +0x3a
 0x001992b0	0x1200	data	_g_artifactTraitsStorage	artifact	internal	referenced by ?akArtifactTraits@@3AAY0JA@$$CBUTArtifactTraits@@A at +0x0
-0x0019a4b0	0x98	data	_g_artifactSlotTraitsStorage	artifact	internal	referenced by ?akArtifactSlotTraits@@3AAY0BD@$$CBUTArtifactSlotTraits@@A at +0x0
+0x0019a4b0	0x98	data	?g_artifactSlotTraitsStorage@?A0xc69538d0c4037445@@3PAUTArtifactSlotTraits@@A	artifact	external	referenced by ?akArtifactSlotTraits@@3AAY0BD@$$CBUTArtifactSlotTraits@@A at +0x0
 0x0019a548	0x40	data	?g_artifactSlotMasks@@3QBUTArtifactSlotMask@@B	artifact	external	referenced by __h3cg$artifact$static_ctor$g_artifactSlotMasks at +0x17
 0x0019a588	0x8	data	_?artifactSlotStrings@?BH@??InitializeArtifactTraitsTable@@YA_NXZ@4V?$TAutoArrayPtr@D@@A	artifact	internal	referenced by __h3cg$artifact$static_dtor$artifactSlotStrings at +0x2
 0x0019a590	0x8	data	_?artifactStrings@?7??InitializeArtifactTraitsTable@@YA_NXZ@4V?$TAutoArrayPtr@D@@A	artifact	internal	referenced by ?InitializeArtifactTraitsTable@@YA_NXZ at +0xb2 (retail +0xad, by operand order)

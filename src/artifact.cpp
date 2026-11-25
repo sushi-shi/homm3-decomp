@@ -194,8 +194,11 @@ static const int g_spellGivingArtifacts[9] = {
 DATA(0x006939f8)
 static TArtifactTraits g_artifactTraitsStorage[ARTIFACT_COUNT];
 
+// Dreamcast original: aArtifactSlotTraitsImp, mangled in this file's
+// anonymous namespace without `static`
+// (`?aArtifactSlotTraitsImp@?%E:\gamedcs\artifact.cpp2645527351@@3PAUTArtifactSlotTraits@@A`).
 DATA(0x00694bf8)
-static TArtifactSlotTraits g_artifactSlotTraitsStorage[kNumArtifactSlots + 1];
+TArtifactSlotTraits g_artifactSlotTraitsStorage[kNumArtifactSlots + 1];
 
 } // namespace
 
