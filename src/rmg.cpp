@@ -6435,18 +6435,20 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
 
 // Retail-only: repeatedly seed islands in water areas at least 20 distance
 // units from the current coast. Rebuild the candidate list after each island.
-// Preserve the reset, perimeter flood and repeated island loop. A real
-// perimeter cell pointer plus default-then-assigned position restores the
-// reset body's register sequence and the perimeter's row-held zone index;
-// naming the selected cell restores retail's selection/radius blocks.
-// Flattening the cell lookup or that binding, or copy initialization, lowers
-// it. Keep the canonical coordinate/map helpers.
-// Residual: the reset's entry guard has a surplus register move, and the
-// candidate splits the minimum-X reload before the guard / outer advance
-// (blocks B16/B22) where retail's B16 includes it in the outer back-edge
-// target; all eight ordered calls agree. Construction/loop/getter,
-// selection/scan/upper-limit, named scan cells/insert iterators and
-// ADD-negative limit forms do not recover it.
+// Mac 0x24125c..0x2412b4 snapshots the bounds, reads the zone index, then
+// copies the whole level position into a temporary and keeps only its z:
+// placeObjectInZone's level-only getLevelPosition read. The editor's retail
+// movsd/z-copy prologue now agrees. Mac's perimeter scan copies the position
+// twice before the map formula (0x241438..0x241464), the generator lookup;
+// its reset, scan and selection lookups copy once (m_map). Keep the reset and
+// selected-cell pointers: dropping either lowers both images.
+// Residual: both scans' level*height imul operands are swapped; the game
+// interleaves the bounds, index and position copies that retail emits in
+// sequence (MAX 97.16 with the earlier position-first order, 96.61 here),
+// plus an EDX/ECX swap in the perimeter clamps. Construction/loop/getter,
+// selection/scan/upper-limit, named scan cells/insert iterators, ADD-negative
+// limit forms, getBounds, assigned/copy-initialized full positions and
+// position-before-index orders do not recover it.
 VA(0x0053F470, 0x409)
 MAC_ADDRESS(0x24123c, 0x638)
 VA_AT(h3maped, 0x004a4913, 0x37b)
@@ -6454,10 +6456,10 @@ void type_random_map_generator::populateWaterZoneIslands(TRmgZone* zone)
 {
     if (zone->m_terrain != eTerrainWater)
         return;
-    TRmgMapPosition position;
-    position = zone->m_levelPosition;
     TRmgZoneBounds bounds = zone->m_bounds;
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
+    TRmgMapPosition position;
+    position.m_z = zone->getLevelPosition().m_z;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position);
@@ -6471,7 +6473,7 @@ void type_random_map_generator::populateWaterZoneIslands(TRmgZone* zone)
     surrounding.m_maximumY = min(bounds.m_maximumY + 1, m_map.getHeight());
     for (position.m_y = surrounding.m_minimumY; position.m_y < surrounding.m_maximumY; ++position.m_y) {
         for (position.m_x = surrounding.m_minimumX; position.m_x < surrounding.m_maximumX; ++position.m_x) {
-            TRmgMapItem* item = m_map.getMapItem(position);
+            TRmgMapItem* item = getMapItem(position);
             if (item->m_zoneState.m_zone != zoneIndex)
                 floodWaterZoneDistances(position, zoneIndex);
         }
@@ -7421,8 +7423,10 @@ void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 // retail's coordinate value homes) and the shared exit on border success.
 // Capture strength before requested value: either input alone leaves the
 // table calculation's registers wrong.
-// Residual: both images load the destination slot before the zone table,
-// and the editor keeps the guard inputs in pushes.
+// Editor residual: retail pushes both guard inputs straight from memory and
+// loads the map height before copying the scanned position. Passing the
+// fields directly, as the other three callers do, raises the editor
+// 97.80 -> 98.31 but lowers the game 100 -> 97.00.
 VA(0x00541AD0, 0x5B0)
 MAC_ADDRESS(0x2446ac, 0x55c) // anchor-callee connectZones; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::createShipyardConnection(
