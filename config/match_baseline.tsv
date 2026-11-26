@@ -3429,7 +3429,7 @@ rmg	?getValue@type_quest_creature_def@@UAEHPAUTRmgZone@@PAVtype_random_map_gener
 rmg	?getValue@type_quest_experience_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x134c80	tokens1:551f96563bf4
 rmg	?getValue@type_treasure_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x134190	tokens1:d4de05c52898
 rmg	?hasConnectedOutline@type_random_map@@QAEEABV?$vector@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@UTRmgMapPosition@@EPAUTRmgZone@@E@Z	100.0000	100.0000	100.0000	0x131170	tokens1:a5f1d9952ac5
-rmg	?initializeObjectGenerators@type_random_map_generator@@QAEXXZ	99.5124	99.5124	99.5124	0x138b10	tokens1:6a9c9872143c
+rmg	?initializeObjectGenerators@type_random_map_generator@@QAEXXZ	99.5302	99.5302	99.5302	0x138b10	tokens1:055cc9de8c7d
 rmg	?initializeZones@type_random_map_generator@@QAEXPAUTRmgTemplate@@@Z	100.0000	100.0000	100.0000	0x13bcb0	tokens1:0b350f2844e7
 rmg	?insert@?$list@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@QAE?AViterator@12@V312@ABUTRmgPoint@@@Z	100.0000	100.0000	100.0000	0x14d000	-
 rmg	?insert@?$vector@EV?$allocator@E@std@@@std@@QAEXPAEIABE@Z	100.0000	100.0000	100.0000	0x14cdf0	-
