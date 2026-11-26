@@ -3469,7 +3469,7 @@ rmg	?placeQuestGroup@type_random_map_generator@@QAEEPAUTRmgTreasureGroup@@PAUTRm
 rmg	?placeSeerHutForArtifact@type_random_map_generator@@QAEEPAVt_quest_artifact@@@Z	91.9330	91.9330	91.9330	0x14b490	tokens1:e81aa3315a11
 rmg	?placeTreasureGroup@type_random_map_generator@@QAEEPAUTRmgTreasureGroup@@PAUTRmgZone@@H@Z	90.1807	90.1807	90.2731	0x1470d0	tokens1:b0d4ed0be73d
 rmg	?placeZoneTreasures@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x147360	tokens1:5a680d4b63ed
-rmg	?populateWaterZoneIslands@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	97.1631	97.1631	97.1631	0x13f470	tokens1:2b3c8944e0d0
+rmg	?populateWaterZoneIslands@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	96.6123	96.6123	97.1631	0x13f470	tokens1:0fc82f7f38e3
 rmg	?positionZone@type_random_map_generator@@QAEXPAUTRmgZone@@H@Z	100.0000	100.0000	100.0000	0x13b970	tokens1:2fe51a5e56c6
 rmg	?prepareJunctionZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x1446a0	tokens1:8b62141f85f5
 rmg	?prepareZoneConnections@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x144920	tokens1:5345f3b41676
