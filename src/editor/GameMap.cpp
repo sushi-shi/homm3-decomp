@@ -1093,23 +1093,28 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, TSize size, boo
 // cells, the object types and the objects (a town's visiting hero follows
 // it at its location), the timed events, then the players, teams,
 // conditions and the heroes the edition and the map leave available.
-// The object-type, object and timed-event counts come through
-// readValue<long>, the Complete-era read form of the campaign editor's header
-// reader (h3ccmped GameMapHeader.cpp); Loki's long locals (Loki GameMap.cpp
-// 1145-1153) are RoE-era. Both hero-mask loops read the masks through bitset
-// subscripts, Loki's bitset idiom: retail's first loop keeps the proxies'
-// test calls, its second the proxy's bool conversion. The team loop counter
-// is signed (retail jl). The late inline decisions are one budget wall: the
-// replay gives every retail decision at a root cost of 2986..2996, or nearly
-// so with every scalar read 6 tuples lighter, which the free-helper reads
-// supply: the team-info and condition holders' get() splits now follow
-// retail. Residual: retail hoists the edition's availability offset (see
-// the new-map constructor), expands the default TRumor's first string
-// constructor (a _Tidy call) and the header availability subscript's bool
-// conversion (a test call) where VC6 here calls them; calling
-// setVictoryCondition/setLossCondition and proxies for the disabled-hero
-// sets score lower, and heavier or uncalled readCellData bodies give the
-// get() splits only.
+// The object-type and object counts are Loki's long locals read in place
+// (Loki GameMap.cpp 1145-1153): retail tests and counts them in their own
+// stack slots with no copy. The timed-event count comes through
+// readValue<long>, the Complete-era read form of the campaign editor's
+// header reader (h3ccmped GameMapHeader.cpp): retail copies it and counts the
+// copy down, which an in-place local does not give. The condition holders
+// take the reconstructed auto_ptr by implicit conversion (retail addresses
+// the temporary from its slot, not the constructor's return). The hero-mask
+// loops index akHeroTraits at each use (retail steps the record offset and
+// keeps the hero counter in memory, which a traits reference does not give)
+// and read the masks through bitset subscripts, Loki's bitset idiom. The
+// team loop counter is signed (retail jl). Residual: retail hoists the
+// edition's availability offset (see the new-map constructor) and, with a
+// root cost about 80 tuples heavier in the replay, expands the default
+// TRumor's first string constructor (a _Tidy call), the loss holder's
+// _TProperties get() split and the first loop's header availability bool
+// conversion (a test call). Failed probes: Loki's in-place timed-event count
+// (92.98: the count is no longer copied), calling
+// setVictoryCondition/setLossCondition (92.39), team-info writes through the
+// holder instead of a reference (93.24), subscript writes to the disabled
+// heroes (94.33), resize's default TRumor, and the timed-event block without
+// its braces (both unchanged).
 VA(0x0041f350, 0xa6e)
 TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStreamBuf, int fileVersion)
     : _m_pClient(pClient), _m_version(version)
@@ -1166,13 +1171,15 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
     readCellData(stream, &_m_aLayer[0]);
     if (_m_bTwoLayer)
         readCellData(stream, &_m_aLayer[1]);
-    long numObjTypes = readValue<long>(stream);
+    long numObjTypes;
+    stream >> numObjTypes;
     vector<TObjectType> tempObjTypeTable;
     tempObjTypeTable.resize(numObjTypes, TObjectType());
     vector<TObjectType>::iterator iter = tempObjTypeTable.begin();
     while (numObjTypes-- > 0)
         stream >> *iter++;
-    long numObjs = readValue<long>(stream);
+    long numObjs;
+    stream >> numObjs;
     if (numObjs > 0) {
         unsigned char x;
         unsigned char y;
@@ -1257,26 +1264,25 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
         for (int player = 0; player < kNumPlayers; player++)
             teamInfo.setPlayerTeam(TPlayer(player), header.m_aTeam[player]);
     }
-    _m_pProperties->m_pVictoryCondition =
-        TRefCountingAutoPtr<TVictoryCondition>(_reconstructVictoryCondition(header.m_vcData));
-    _m_pProperties->m_pLossCondition = TRefCountingAutoPtr<TLossCondition>(_reconstructLossCondition(header.m_lcData));
+    _m_pProperties->m_pVictoryCondition = _reconstructVictoryCondition(header.m_vcData);
+    _m_pProperties->m_pLossCondition = _reconstructLossCondition(header.m_lcData);
     if (fileVersion >= 18) {
         bitset<kNumHeroes> heroesOnMap = getHeroesOnMap();
         for (int heroID = 0; heroID < kNumHeroes; heroID++) {
-            const THeroTraits& traits = akHeroTraits[heroID];
             if (!heroesOnMap[heroID]
                 && (!header.m_availableHeroes[heroID]
-                    || !(_m_version >= GAME_VERSION_AB ? traits.m_availableInExpansion : traits.m_availableInOriginal)
-                    || (fileVersion < 20 && traits.m_special)))
+                    || !(_m_version >= GAME_VERSION_AB ? akHeroTraits[heroID].m_availableInExpansion
+                                                       : akHeroTraits[heroID].m_availableInOriginal)
+                    || (fileVersion < 20 && akHeroTraits[heroID].m_special)))
                 _m_pProperties->m_disabledHeroes.set(heroID, true);
         }
     } else {
         bitset<kNumHeroes> heroesOnMap = getHeroesOnMap();
         for (int heroID = 0; heroID < kNumHeroes; heroID++) {
-            const THeroTraits& traits = akHeroTraits[heroID];
             if (!heroesOnMap[heroID]
-                && (traits.m_special
-                    || !(_m_version >= GAME_VERSION_AB ? traits.m_availableInExpansion : traits.m_availableInOriginal)))
+                && (akHeroTraits[heroID].m_special
+                    || !(_m_version >= GAME_VERSION_AB ? akHeroTraits[heroID].m_availableInExpansion
+                                                       : akHeroTraits[heroID].m_availableInOriginal)))
                 _m_pProperties->m_disabledHeroes.set(heroID, true);
         }
     }
