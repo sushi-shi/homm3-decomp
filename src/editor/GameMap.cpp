@@ -189,18 +189,21 @@ static const TCappedObjectTypeGroup<5> kCappedGeneratorTypes = {
 
 // Loki builds each info through its constructor (Loki GameMap.cpp 150);
 // Complete adds the type. Retail resets the ordinal before keying the shared
-// infos and discards every insertion result. Residual: retail reads each
-// row's type before its cap and expands the last insertion's result pair;
-// aggregate infos and (void) casts on the discarded insertions recover both,
-// but Loki has neither. The mine info temporary schedule and the tables'
-// end-address names also differ.
+// infos and discards every insertion result. The ordinal is a plain int (no
+// native type; an unsigned counter leaves two result-pair constructors out of
+// line, int one, 85.94% -> 91.55%). Residual: retail reads each row's type
+// before its cap and expands the remaining insertion result pair; aggregate
+// infos and (void) casts recover both, but Loki has neither. The tables'
+// end-address names also differ. No gain: ctor parameter order or body
+// assignments, no row references, loop-step ordinal increments, a for-init
+// counter, an out-of-class ctor, this->insert, inline sizeof bounds.
 VA(0x0041e98d, 0x28d)
 TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
 {
     const unsigned int kNumSingles = sizeof(akCappedObjectTypes) / sizeof(akCappedObjectTypes[0]);
     const unsigned int kNumPairs = sizeof(akCappedObjectTypePairs) / sizeof(akCappedObjectTypePairs[0]);
     _m_aInfo.reserve(kNumSingles + kNumPairs + 2);
-    unsigned int ordinal = 0;
+    int ordinal = 0;
     unsigned int i;
     for (i = 0; i < kNumSingles; i++) {
         const TCappedObjectType& type = akCappedObjectTypes[i];
