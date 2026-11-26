@@ -4576,10 +4576,19 @@ void readRmgTemplateZones(
 // stands (h3maped accepts the same). Mac shows only MSL vector<bool>
 // resize/set there; VC6's std::vector<bool> is the byte vector with the
 // same inline costs (compiled), so no evidenced source change is known.
-// With the Mac-proven one-argument box and seer-hut constructors, both
-// images still expand the base constructor of the last spell box and keep
-// the treasure_def(7) insert as a call; the solver's only fit common to both
-// is ~14..21 more root tuples, which no native evidence locates.
+// Both creature loops assign the count with if/else straight into the loop
+// counter: Mac branches to two separate count loads (unlike the dwelling
+// loop's one-armed overwrite), and the retail loop entries (mov/dec/test)
+// of both images reject the former ternary-plus-copy local, which compared
+// against zero instead. Root cb 8006 -> 8010 then expands the last spell
+// box's base constructor in both images (h3maped 90.25 -> 99.37, game
+// 99.51 -> 99.53). Residual: h3maped expands one seer-area push_back that
+// retail keeps as a call; the game keeps insert(pos, 1, value) at two
+// sites where retail calls insert(pos, value). Measured: reading the seer
+// count into a shadowing local is identical; keeping the creature scope
+// block (cb 8012) gives 99.32 / 99.28; unbracing the key-tent block too
+// gives 88.32 / 99.36; one loop alone gives 88.32 / 96.75; braced if/else
+// arms (cb 8020..8024) give up to 99.87 / 99.05.
 VA(0x00538B10, 0x2241)
 MAC_ADDRESS(0x2375f0, 0x4880)
 void type_random_map_generator::initializeObjectGenerators()
@@ -4587,13 +4596,15 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(2, 0, 100, 20));
     m_objectGenerators.push_back(new type_treasure_def(4, 0, 3000, 50));
 
-    {
-        int creatureCount = m_mapVersion >= 1 ? 145 : 118;
-        for (int creature = creatureCount; creature--;) {
-            if (akCreatureTypeTraits[creature].level >= 0)
-                m_objectGenerators.push_back(
-                    new type_black_box_creature_def(creature));
-        }
+    int creature;
+    if (m_mapVersion >= 1)
+        creature = 145;
+    else
+        creature = 118;
+    for (; creature--;) {
+        if (akCreatureTypeTraits[creature].level >= 0)
+            m_objectGenerators.push_back(
+                new type_black_box_creature_def(creature));
     }
 
     m_objectGenerators.push_back(
@@ -4707,8 +4718,11 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(82, 0, 1500, 500));
 
     for (int seerSubtype = 0; seerSubtype < m_objectPrototypes[83].size(); ++seerSubtype) {
-        int creatureCount = m_mapVersion >= 1 ? 145 : 118;
-        for (int creature = creatureCount; creature--;) {
+        if (m_mapVersion >= 1)
+            creature = 145;
+        else
+            creature = 118;
+        for (; creature--;) {
             if (akCreatureTypeTraits[creature].level >= 0)
                 m_objectGenerators.push_back(
                     new type_quest_creature_def(creature, seerSubtype));
