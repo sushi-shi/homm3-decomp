@@ -200,7 +200,7 @@ ai	?_Sort@std@@YIXPAPAVarmy@@0Ufunc_moves_before@@0@Z	100.0000	100.0000	100.0000
 ai	?_Sort_0@std@@YIXPAPAVarmy@@0Ufunc_moves_before@@0@Z	100.0000	100.0000	100.0000	0x23340	-
 ai	?_Unguarded_insert@std@@YIXPAPAVarmy@@PAV2@Ufunc_moves_before@@@Z	100.0000	100.0000	100.0000	0x237c0	-
 ai	?_Unguarded_partition@std@@YIPAPAVarmy@@PAPAV2@0PAV2@Ufunc_moves_before@@@Z	100.0000	100.0000	100.0000	0x23820	-
-ai	?aiCheckRetreat@combatManager@@QAE_NXZ	95.8496	95.8496	95.8496	0x1e570	tokens1:6a4471bcbb50
+ai	?aiCheckRetreat@combatManager@@QAE_NXZ	98.4887	98.4887	98.4887	0x1e570	tokens1:721ac9badb0c
 ai	?attemptShooterDefense@combatManager@@AAEEPBVarmy@@PAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20760	tokens1:4d246a3a2b7f
 ai	?berserkAttack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000	100.0000	100.0000	0x222c0	tokens1:b6b63a43df58
 ai	?canCastSpells@combatManager@@QBE_NJ_N@Z	100.0000	100.0000	100.0000	0x1f890	tokens1:1e8f6bcfc4a6
