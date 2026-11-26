@@ -403,7 +403,7 @@ public:
     virtual ~TThievesGuildWindow();
     // Retail 0x5dda10, the compiland's second largest body and the
     // constructor's last statement. Declared, not reconstructed.
-    void setupThievesGuild(int thievesGuilds);
+    void setupThievesGuild(int iThievesGuilds);
     // Retail 0x5c9710 (dc 0x16e2f4). The page's rollover line.
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5c9930
