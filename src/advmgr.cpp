@@ -1149,7 +1149,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
     case ADV_COMMAND_VIEW_OBSCURED_TOWN:
         demobilizeCurrHero(0, 1);
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-        newTown = currHero->getOccupiedTown();
+        newTown = currHero->getObscuredTown();  // DC 1398, Mac 0x8920 call it directly
         newTown->view(0);
         eventCell = 0;
         break;
