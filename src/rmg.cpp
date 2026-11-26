@@ -7547,21 +7547,28 @@ unsigned char type_random_map_generator::createShipyardConnection(
 // cell with setObstacleFill(1), then present, then colour: the canonical
 // helpers in native order, though the guard-cell setters lower the game.
 // The editor loads the source zone index before indexing the destination
-// zone. Mac 0x245100..0x245124 subtracts the gate's trigger x and y from
-// the chosen position field by field, as the shipyard connection does.
-// Game residual: bound-temporary/frame allocation and register scheduling,
-// and over-expansion of the two final placeGuard -> getMapItem calls. Keep
-// those ordinary helper boundaries; base-point copy spelling is byte-flat
-// and sharing one destination local across phases does not close it.
+// zone. Mac 0x245100..0x245124 loads the gate's trigger x and y together
+// before subtracting them from the chosen position field by field, as the
+// shipyard connection's trigger copy does; both Windows images also load
+// both fields before either store, so keep the trigger value copy. Mac
+// clears the guard value (li r17,0) before each border column step, as the
+// editor does. The template slots are read in place, without the
+// unevidenced slot locals: those swap the editor's parameter registers
+// (editor 95.97, or 98.40 binding the destination slot first) although
+// the game reaches 98.27 with them.
+// Residual: retail keeps clear()'s erase out of line (a nested budget of
+// 68 or less; ours is 69), the water test materializes the terrain in a
+// register, and the selected candidate's size/base registers swap. Failed
+// probes: getTerrain() or separate if statements for the water test, empty(),
+// direct range erase, a ternary guard value and an unscoped destination
+// bounds copy are flat or lower.
 VA(0x00542080, 0x8AA)
 MAC_ADDRESS(0x244c08, 0xa1c)
 unsigned char type_random_map_generator::createSubterraneanGate(
     TRmgZone* source, TRmgZoneConnection* connection)
 {
-    TRmgTemplateZone* sourceSlot = source->m_templateZone;
-    TRmgTemplateZone* destinationSlot = connection->m_destination;
-    int sourceZone = sourceSlot->m_zoneIndex;
-    TRmgZone* destination = m_zones[destinationSlot->m_zoneIndex];
+    int sourceZone = source->m_templateZone->m_zoneIndex;
+    TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
     int destinationZone = destination->m_templateZone->m_zoneIndex;
     if (source->getLevelPosition().m_z == destination->getLevelPosition().m_z
         || source->m_terrain == eTerrainWater)
@@ -7586,7 +7593,6 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     TRmgObjectPropertiesRef* gateProperties = m_objectPrototypes[103][gateIndex];
     TObjectType* gatePrototype = gateProperties->m_prototype;
 
-    int score;
     std::vector<TRmgMapPosition> candidates;
     int bestScore = 0;
     TRmgMapPosition position;
@@ -7599,7 +7605,7 @@ unsigned char type_random_map_generator::createSubterraneanGate(
                 continue;
 
             TRmgMapPosition otherPosition = position;
-            score = item->m_zoneState.m_objectDistance;
+            int score = item->m_zoneState.m_objectDistance;
             otherPosition.m_z = destination->getLevelPosition().m_z;
             item = m_map.getMapItem(otherPosition);
             if (item->m_zoneState.m_zone != destinationZone)
@@ -7630,8 +7636,9 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     otherPosition.m_z = destination->getLevelPosition().m_z;
     addObject(new type_object(gateProperties), otherPosition);
 
-    position.m_x -= gatePrototype->getTriggerLoc().m_x;
-    position.m_y -= gatePrototype->getTriggerLoc().m_y;
+    TTilePoint trigger = gatePrototype->getTriggerLoc();
+    position.m_x -= trigger.m_x;
+    position.m_y -= trigger.m_y;
     otherPosition = position;
     otherPosition.m_z = destination->getLevelPosition().m_z;
     source->m_entrances.push_back(TRmgPoint(position.m_x, position.m_y));
@@ -7653,8 +7660,8 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     if (connection->m_placeBorderObjects) {
         int color = placeBorderGuard(position, 1, destination);
         if (color >= 0) {
-            --position.m_x;
             guardValue = 0;
+            --position.m_x;
             TRmgMapItem* item = m_map.getMapItem(position);
             if (item->m_objects.size() == 0) {
                 item->setObstacleFill(1);
@@ -7673,8 +7680,8 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 
         color = placeBorderGuard(otherPosition, 1, source);
         if (color >= 0) {
-            --otherPosition.m_x;
             guardValue = 0;
+            --otherPosition.m_x;
             TRmgMapItem* item = m_map.getMapItem(otherPosition);
             if (item->m_objects.size() == 0) {
                 item->setObstacleFill(1);
