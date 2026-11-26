@@ -551,8 +551,10 @@ static long checkMatch(long player, long firstX, long firstY,
                 continue;
             if (!(getMapExtra(point) & playerMask))
                 continue;
-            if (puzzleMap[firstX][firstY] ==
-                type_AI_puzzle_tile(g_game->getCell(point), point))
+            // DC check_match and Mac call operator== on the constructed tile
+            // with the board tile as its argument.
+            if (type_AI_puzzle_tile(g_game->getCell(point), point)
+                == puzzleMap[firstX][firstY])
                 ++matches;
             else
                 return 0;
