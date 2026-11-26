@@ -1410,7 +1410,7 @@ GameMap	??0TTimedEvent@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x17008	-
 GameMap	??0_TBookkeeping@_TImpl@TGameMap@@QAE@ABU012@@Z	100.0000	100.0000	100.0000	0x37707	-
 GameMap	??0_TBookkeeping@_TImpl@TGameMap@@QAE@XZ	100.0000	100.0000	100.0000	0x338c8	tokens1:caa948806702
 GameMap	??0_TImpl@TGameMap@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x3757f	-
-GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	92.1747	92.1747	96.8333	0x1f350	tokens1:435490c1a18f
+GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	94.6724	94.6724	96.8333	0x1f350	tokens1:4daac7e146fe
 GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@W4TSize@1@_N@Z	90.0808	90.0808	100.0000	0x1f21d	tokens1:b0ab2be28387
 GameMap	??0_TImpl@TLayer@TGameMap@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0x2a51c	tokens1:24283eca8797
 GameMap	??0_TImpl@TLayer@TGameMap@@QAE@W4TSize@2@@Z	100.0000	100.0000	100.0000	0x2a545	tokens1:21a57e3f5e5a
