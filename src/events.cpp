@@ -1084,7 +1084,10 @@ void doMonsterJoinDialog(hero* inHero, armyGroup* monsters, int flag);
 
 // DC and Mac
 // place showRewards before addReward and giveBlackBoxReward. Restoring
-// that ordinary body order is byte-flat; selective nested expansion remains open.
+// that ordinary body order is byte-flat. The threshold compares through the
+// implicit unsigned conversion (DC cmp/hs, Mac cmplw); the former explicit
+// static_cast was a stub-era spelling that made this body one cb heavier
+// and kept giveBlackBoxReward's sixth addReward from expanding it.
 VA(0x004a0b00, 0x112)
 DC_ADDRESS(0x0912bc, 0x4a)
 MAC_ADDRESS(0x0aab7c, 0x7c)
@@ -1092,7 +1095,7 @@ static void showRewards(std::string& text,
                   std::vector<type_dialog_resource>& rewards,
                   long threshold)
 {
-    if (rewards.size() >= static_cast<unsigned long>(threshold)) {
+    if (rewards.size() >= threshold) {
         extendedDialog(text.c_str(), rewards, -1, -1, 0);
         text = DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, "");
         rewards.clear();
@@ -1146,12 +1149,18 @@ static void addReward(std::string& text, const std::string& alternate,
 // test mask), and MAKELONG(type, amount) packs the RES_MONSTER qualifier that
 // the dialog decodes with HIWORD/LOWORD: 95.65 -> 97.79%. Primary, morale and
 // luck apply their bonus before setting rewardGiven, as DC 881/882, 964/965
-// and 986/987 do (byte-flat). The residual is the sixth addReward's nested
-// showRewards (retail expands it) and the post-spell erase (retail calls it);
-// a root roughly 50 cb heavier flips the former. Flat probes: function-wide
-// for (int i ...), split skill/level declarations, operator[] text access,
-// DC's mana reload and per-arm amount, direct skill fields; a cached skill
-// level gives 95.22%.
+// and 986/987 do (byte-flat). DC reads skillLevel bytes directly at 889/896
+// and 1041 although hero::get_secondary_skill exists out of line (ai_player)
+// and this body keeps every other header inline (is_in_spellbook, size,
+// c_str, Dismiss) as a call, so the skill tests index m_skillLevel. With
+// showRewards' implicit threshold conversion, retail's sixth addReward now
+// expands its showRewards: 97.79 -> 99.37%. Residual: the post-spell
+// showRewards still expands erase (budget 69 against cost 69); a root cb
+// of 2332..2336 (now 2344) would keep the call. Flat probes: function-wide
+// for (int i ...), split or function-scope skill/level, function-scope
+// amount, operator[] or GetText at every text, DC's mana reload and per-arm
+// amount, bool skillGiven, DC's if (skillGiven) block, true literals; a
+// cached skill level gives 95.22%, !rewards.empty() 97.09%.
 VA(0x0049fa90, 0x106B)
 DC_ADDRESS(0x09138c, 0x870)
 MAC_ADDRESS(0x0aac80, 0xab0)  // dc-bracket forced, ret 0x18=p7 + format_string reward text
@@ -1193,14 +1202,14 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         TSecondarySkill skill = blackBox->m_secondarySkills[i].m_type;
         TSkillMastery level = blackBox->m_secondarySkills[i].m_level;
         unsigned char skillGiven = 0;
-        if (currentHero->getSecondarySkill(skill) == 0
+        if (currentHero->m_skillLevel[skill] == 0
             && currentHero->m_skillCount < kNumSecSkillsPerHero) {
             currentHero->giveSS(skill, level);
             skillGiven = 1;
-        } else if (currentHero->getSecondarySkill(skill) > 0
-                   && currentHero->getSecondarySkill(skill) < level) {
+        } else if (currentHero->m_skillLevel[skill] > 0
+                   && currentHero->m_skillLevel[skill] < level) {
             currentHero->giveSS(skill,
-                level - currentHero->getSecondarySkill(skill));
+                level - currentHero->m_skillLevel[skill]);
             skillGiven = 1;
         }
         if (!skillGiven)
@@ -1310,7 +1319,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         for (i = 0; i < blackBox->m_spells.size(); i++) {
             if (akSpellTraits[blackBox->m_spells[i]].m_level
-                    <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
+                    <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
                 && !currentHero->isInSpellbook(blackBox->m_spells[i])) {
                 if (humanPlayer) {
                     // Mac 0xab3c8..0xab3e8 assigns the returned string
