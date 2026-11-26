@@ -504,7 +504,9 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
-    playerBit = (playerBit & getMapExtra(srcX, srcY, z)) != 0;
+    // Retail, Dreamcast and Mac all keep the raw mask (no 0/1 normalization).
+    // A second mask local reaches 98.62% but has no native support.
+    playerBit &= getMapExtra(srcX, srcY, z);
 
     int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW,
         baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
