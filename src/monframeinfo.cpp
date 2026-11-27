@@ -131,12 +131,12 @@ static void initializeCreatureAnimationTraits(int id,
     traits.m_attackStartCycleTime = static_cast<int>(atof(row[2]) * 500.0);
     traits.m_flightPixelSpan = static_cast<int>(atof(row[3])
         * DATA_COMPGEN(0x00640018, flightPixelScale, 115.0));
-    traits.m_missileOffset[0] = static_cast<short>(atoi(row[4]));
-    traits.m_missileOffset[1] = static_cast<short>(atoi(row[5]));
-    traits.m_missileOffset[2] = static_cast<short>(atoi(row[6]));
-    traits.m_missileOffset[3] = static_cast<short>(atoi(row[7]));
-    traits.m_missileOffset[4] = static_cast<short>(atoi(row[8]));
-    traits.m_missileOffset[5] = static_cast<short>(atoi(row[9]));
+    traits.m_missileOffset[0][0] = static_cast<short>(atoi(row[4]));
+    traits.m_missileOffset[0][1] = static_cast<short>(atoi(row[5]));
+    traits.m_missileOffset[1][0] = static_cast<short>(atoi(row[6]));
+    traits.m_missileOffset[1][1] = static_cast<short>(atoi(row[7]));
+    traits.m_missileOffset[2][0] = static_cast<short>(atoi(row[8]));
+    traits.m_missileOffset[2][1] = static_cast<short>(atoi(row[9]));
     { for (int i = 10; i < 22; ++i)
         traits.m_arrowAngle[i - 10] = static_cast<float>(atof(row[i])); }
     traits.m_extraNumTroopsXOffset = atoi(row[22]);

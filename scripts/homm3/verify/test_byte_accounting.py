@@ -42,6 +42,29 @@ class ByteAccountingTests(unittest.TestCase):
 
 
 
+class LibraryNameTests(unittest.TestCase):
+    """An alias row names its address without owning the folded body."""
+
+    @staticmethod
+    def verdict(kind, verdict, rva, name, member='uncaught.obj'):
+        from homm3.verify.library_code import Contribution, Verdict
+        row = Contribution(rva, 3, 'LIBCPMT.LIB', member, 2, name, '-', kind)
+        return Verdict(row, verdict, symbols=[(rva, name)])
+
+    def test_exact_alias_names_its_folded_address_but_owns_nothing(self):
+        from homm3.verify.byte_accounting import _library_names, library_alias_names
+        uncaught = '?uncaught_exception@std@@YA_NXZ'
+        verdicts = [self.verdict('alias', 'exact', 0x9c54a, uncaught),
+                    self.verdict('code', 'exact', 0x4cac5, '_owned', 'owned.obj')]
+        self.assertEqual(dict(library_alias_names(verdicts)), {0x9c54a: {uncaught}})
+        self.assertEqual(dict(_library_names(verdicts)), {0x4cac5: {'_owned'}})
+
+    def test_unverified_alias_proves_no_name(self):
+        from homm3.verify.byte_accounting import library_alias_names
+        verdicts = [self.verdict('alias', 'mismatch', 0x9c54a, '_folded')]
+        self.assertEqual(dict(library_alias_names(verdicts)), {})
+
+
 class InitializerTests(unittest.TestCase):
     def compare(self, payload, retail, *, relocation=None, target=None, manifest_ordinal='1',
                 name='datum', emitted_names=('datum',)):

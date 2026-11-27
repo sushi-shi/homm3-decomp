@@ -93,24 +93,22 @@ void recruitSliderCallback(int state, heroWindow* parentWindow)
 // variable one-to-four creature cards and a final AddWidget registration
 // pass. The resource columns shift right 24 pixels when no alternate
 // resource exists; retail spells that branchlessly in edi.
-// DC line 193 has no shift local: it overwrites the altResource parameter
-// with the 0/24 selection (Locals: none; r10 reused). Writing that
-// parameter reuse as `altResource != -1 ? 0 : 0x18` reproduces retail's
-// inc/neg/sbb selection in EDI and its interleaved vector load
-// (99.01 -> 99.23 in that source state).
-// Measured on the same parameter reuse: `== -1 ? 0x18 : 0` and the if/else
-// 97.08%, `(altResource + 1) ? 0 : 0x18` and a pre-increment 97.35%. The
-// older separate-local forms (ternary, default-then-if, boolean multiply)
-// all stayed at or below 99.01%.
+// DC line 193 stores the 0/24 selection in r10, where it had copied
+// altResource for the base call; this DC records no locals for any of the
+// constructor's scopes (not even the clear-loop index), so that register
+// reuse does not distinguish a parameter overwrite from a separate local.
+// Retail's dead-parameter homes do: a separate `xShift` keeps altResource's
+// [ebp+0x10] occupied until its last use, so the vector temporaries color
+// into x2/y2's [ebp+0x8]/[ebp+0xc] as retail does (99.93 -> 100). The
+// parameter overwrite rotated every temporary home one slot. Writing the
+// selection as `altResource != -1 ? 0 : 0x18` gives retail's inc/neg/sbb
+// in EDI; `== -1 ? 0x18 : 0`, the if/else and default-then-if forms
+// measured lower.
 // DC lines 207/215/218/224 name the four TTextResource::operator[] calls
-// below; restoring that canonical wrapper is VC6 byte-flat at 99.01016%.
+// below; restoring that canonical wrapper is VC6 byte-flat.
 // DC lines 247/249 implement a four-element clear loop, not four source
-// assignments; Mac 0x14e9c8..0x14e9d4 unrolls it. Recovering that local
-// improves 99.2570% -> 99.9271%, two states/two reproduced objects.
-// All 185 CFG blocks, 161 calls and 203 relocations agree. The remaining
-// immediate differences start with allocation/conversion homes at [ebp+0xc]
-// and [ebp+0x10] versus retail's [ebp+0x8] and [ebp+0xc]. Keep the native
-// loop rather than flattening it to four source stores.
+// assignments; Mac 0x14e9c8..0x14e9d4 unrolls it. Keep the native loop
+// rather than flattening it to four source stores.
 VA(0x0054e850, 0x1295)
 DC_ADDRESS(0x118bb4, 0xc08)
 MAC_ADDRESS(0x14d310, 0x186c)  // unique x86/DC structure + constructor call
@@ -118,7 +116,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
                                recruitUnit* recruitInfo)
     : heroWindow(x2, y2, 0x1e5, 0x18b, 0x12)
 {
-    altResource = (altResource != -1) ? 0 : 0x18;
+    int xShift = (altResource != -1) ? 0 : 0x18;
 
     m_widgets.reserve(49);
     m_widgets.push_back(new bitmapBorder(0, 0, 0x1e5, 0x18b, 0,
@@ -144,14 +142,14 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         font::PRIMARY, 0x1f4,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    m_widgets.push_back(new iconWidget(altResource + 0x4a, 0xf3,
+    m_widgets.push_back(new iconWidget(xShift + 0x4a, 0xf3,
         0x20, 0x20, 0x1f8,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     m_widgets.push_back(new iconWidget(0x7a, 0xf3, 0x20, 0x20, 0x1fc,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new textWidget(altResource + 0x42, 0x117,
+    m_widgets.push_back(new textWidget(xShift + 0x42, 0x117,
         0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -195,14 +193,14 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x20f,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new iconWidget(altResource + 0x14c, 0xf3,
+    m_widgets.push_back(new iconWidget(xShift + 0x14c, 0xf3,
         0x20, 0x20, 0x210,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     m_widgets.push_back(new iconWidget(0x17c, 0xf3, 0x20, 0x20, 0x211,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    m_widgets.push_back(new textWidget(altResource + 0x144, 0x117,
+    m_widgets.push_back(new textWidget(xShift + 0x144, 0x117,
         0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -518,9 +516,9 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 // Original DC public ?Update@recruitUnit@@QAAX_NJ@Z proves bool new_monster;
 // the dossier's unsigned byte is the lowered primitive 0x20, not source type.
 // Windows Update matches all 55 CFG blocks and 29 calls. The remaining
-// products at +0x390/+0x41c load numberToBuy before each per-troop cost,
-// whereas retail loads the cost first. Reversing either source multiplication
-// or splitting it into assignment and multiplication is byte-flat under VC6.
+// products at +0x390/+0x41c needed each per-troop cost's address expression
+// created before numberToBuy's. Reversing the multiplication is byte-flat;
+// operand references after updateCost restore the retail cost-first imul.
 // Mac code0+0x14f85c loads numberToBuy before goldPerTroop too; this does
 // not decide VC6's load order. Reviewed retail ABI aliases for gpCurrentPlayer
 // and gSystemPalette make the named relocations agree but do not change the
@@ -543,6 +541,9 @@ void recruitUnit::update(bool newMonster, long slot)
         slot = m_selectedPosition;
 
     updateCost();
+    int& resourceCost = m_resourcesPerTroop;
+    long& goldCost = m_goldPerTroop;
+    int& quantity = m_numberToBuy;
 
     sprintf(g_text, "%s %s",
         (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
@@ -613,7 +614,7 @@ void recruitUnit::update(bool newMonster, long slot)
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
-    m_totalGold = m_numberToBuy * m_goldPerTroop;
+    m_totalGold = goldCost * quantity;
     sprintf(g_text, "%d", m_totalGold);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -630,7 +631,7 @@ void recruitUnit::update(bool newMonster, long slot)
 
     if (m_altResource == -1)
         m_resourcesPerTroop = 0;
-    m_totalResources = m_numberToBuy * m_resourcesPerTroop;
+    m_totalResources = resourceCost * quantity;
     sprintf(g_text, "%d", m_totalResources);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -765,7 +766,7 @@ int finishRecruitUnit(message& msg)
 // sites leave VC6 with two tails (95.74%), the shared flag 99.89% (the
 // explicit four stores instead of the helper call are byte-identical).
 // The admitted Mac Main pair is currently unavailable: CodeWarrior emits an
-// anonymous 16-byte zero template for DC's const monType[4] array that Mac
+// anonymous 16-byte zero template for DC's const mon_type[4] array that Mac
 // retail never loads; Main also expands setRolloverText in the candidate while
 // Mac retail calls its retained helper.
 VA(0x00550940, 0xA08)
@@ -796,12 +797,12 @@ int recruitUnit::main(message& msg)
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
             max(100, elapsed);
 
-        const TCreatureType monType[4] = {
+        const TCreatureType mon_type[4] = {
             m_monType1, m_monType2, m_monType3, m_monType4
         };
         for (int slot = 0; slot < 4; slot++) {
             if (g_recruitWindow->m_creatureWidgets[slot]) {
-                if (IsSiegeWeapon(monType[slot]))
+                if (IsSiegeWeapon(mon_type[slot]))
                     g_recruitWindow->m_creatureWidgets[slot]
                         ->nextRandomSiegeEngineFrame();
                 else
@@ -813,7 +814,7 @@ int recruitUnit::main(message& msg)
                                     WINDOW_ALL_WIDGETS_HIGH);
     }
 
-    int exitFlag = (static_cast<unsigned int>(msg.m_qualifier) >> 9) & 1;
+    int exitFlag = (msg.m_qualifier & 0x200) != 0;
     switch (msg.m_id) {
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
@@ -844,12 +845,12 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 0);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    TViewArmyWindow view_army_window(
                         m_monType1, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
-                        viewArmyWindow.quickView();
+                        view_army_window.quickView();
                     else
-                        viewArmyWindow.doModal();
+                        view_army_window.doModal();
                 }
                 break;
 
@@ -862,12 +863,12 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 1);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    TViewArmyWindow view_army_window(
                         m_monType2, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
-                        viewArmyWindow.quickView();
+                        view_army_window.quickView();
                     else
-                        viewArmyWindow.doModal();
+                        view_army_window.doModal();
                 }
                 break;
 
@@ -880,12 +881,12 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 2);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    TViewArmyWindow view_army_window(
                         m_monType3, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
-                        viewArmyWindow.quickView();
+                        view_army_window.quickView();
                     else
-                        viewArmyWindow.doModal();
+                        view_army_window.doModal();
                 }
                 break;
 
@@ -898,12 +899,12 @@ int recruitUnit::main(message& msg)
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(1, 3);
                 } else {
-                    TViewArmyWindow viewArmyWindow(
+                    TViewArmyWindow view_army_window(
                         m_monType4, 0x77, 0x20, !exitFlag);
                     if (exitFlag)
-                        viewArmyWindow.quickView();
+                        view_army_window.quickView();
                     else
-                        viewArmyWindow.doModal();
+                        view_army_window.doModal();
                 }
                 break;
             }
@@ -941,14 +942,11 @@ int recruitUnit::main(message& msg)
 
                     for (int i = 0; i < m_numberToBuy; i++) {
                         if (m_monsterType == CREATURE_BALLISTA) {
-                            type_artifact artifact(ARTIFACT_BALLISTA);
-                            m_thisHero->giveArtifact(artifact, 1, 1);
+                            m_thisHero->giveArtifact(type_artifact(ARTIFACT_BALLISTA), 1, 1);
                         } else if (m_monsterType == CREATURE_FIRST_AID_TENT) {
-                            type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
-                            m_thisHero->giveArtifact(artifact, 1, 1);
+                            m_thisHero->giveArtifact(type_artifact(ARTIFACT_FIRST_AID_TENT), 1, 1);
                         } else if (m_monsterType == CREATURE_AMMO_CART) {
-                            type_artifact artifact(ARTIFACT_AMMO_CART);
-                            m_thisHero->giveArtifact(artifact, 1, 1);
+                            m_thisHero->giveArtifact(type_artifact(ARTIFACT_AMMO_CART), 1, 1);
                         }
                     }
                 } else if (m_currArmyGroup->canJoin(m_monsterType)) {

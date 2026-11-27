@@ -150,8 +150,9 @@ BOOL TScenarioPropsCrossoverPage::OnInitDialog()
 }
 
 // Both native equality sites expand all three canonical bitset comparisons.
-// The register model identifies a this/expression processing-order difference,
-// with no source-nameable binding move; retain the existing equality path.
+// The first site compares the page's scenario crossover on the left (89.74%);
+// residual is this/temporary register assignment (ebx/edi). Probes: swapping the
+// second site, if(!modified) form and bool == false form all scored lower.
 VA(0x0042a810, 0x140)
 void TScenarioPropsCrossoverPage::OnOK()
 {
@@ -159,7 +160,7 @@ void TScenarioPropsCrossoverPage::OnOK()
     if (_m_newScenario.getMap() != NULL) {
         TScenarioCrossover crossover;
         _getCrossover(crossover);
-        if (!(crossover == _m_newScenario.getCrossover()))
+        if (!(_m_newScenario.getCrossover() == crossover))
             _m_newScenario.setCrossover(crossover);
     }
     _m_bModified = _m_bModified || !(_m_newScenario.getCrossover() == _m_oldScenario.getCrossover());

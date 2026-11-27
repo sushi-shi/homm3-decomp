@@ -70,6 +70,19 @@ class TRandomGenerator;
 class TQuestGuard;
 class TWitchHut;
 
+// A cell's river and road kinds, 0 for none. Loki h3maped mangles them as
+// enums (TCell::setRiverType(TRiverType), TMapView::_setRiverType(TRiverType),
+// TMapDoc::startRiverPlacementOp(bool, TRiverType, unsigned int, unsigned
+// int) and the road twins), and TCell's setters assert "newRiverType <
+// kNumRiverTypes" and "newRoadType < kNumRoadTypes".
+enum TRiverType {
+    kNumRiverTypes = 5
+};
+
+enum TRoadType {
+    kNumRoadTypes = 4
+};
+
 typedef unsigned int TMapLayerObjectID;
 
 // The artifacts a map may disable: the properties' mask is five dwords
@@ -377,6 +390,7 @@ public:
 
     void importText(std::istream* pIStream);
     TLayer* getPLayer(unsigned int num);
+    TLayer* getPLayer(bool bSecondLayer) { return getPLayer(bSecondLayer ? 1U : 0U); }
     void setName(const std::string& newName);
     void setDesc(const std::string& newDesc);
     void setDifficulty(TDifficulty newDifficulty);
@@ -446,6 +460,7 @@ public:
     bool canCreate(const TObjectType& objType, TPlayer player) const;
     std::set<THeroID> getAvailableHeroesInClass(THeroClass heroClass) const;
     const TLayer* getPLayer(unsigned int num) const;
+    const TLayer* getPLayer(bool bSecondLayer) const { return getPLayer(bSecondLayer ? 1U : 0U); }
     const std::string& getName() const;
     const std::string& getDesc() const;
     TDifficulty getDifficulty() const;
@@ -473,7 +488,6 @@ public:
     TPlayerInfo::TTownTypes getDefaultTownTypes(TPlayer player) const;
     const TLayer& getLayer(unsigned int num) const;
     const TLayer& getLayer(bool bSecondLayer) const;
-    TLayer& getLayer(bool bSecondLayer);
 
 private:
     friend class TLayer;
@@ -576,6 +590,9 @@ public:
                                                     int version) const = 0;
 };
 
+// Loki's layer accessors: getPLayer for each layer number or bool, const
+// and not, and only a const getLayer; its writers take getPLayer(bool)
+// (TMapDoc::onObjectPropertiesChanged, TMapView::onEditGrabObject).
 inline const TGameMap::TLayer& TGameMap::getLayer(unsigned int num) const
 {
     return *getPLayer(num);
@@ -583,12 +600,7 @@ inline const TGameMap::TLayer& TGameMap::getLayer(unsigned int num) const
 
 inline const TGameMap::TLayer& TGameMap::getLayer(bool bSecondLayer) const
 {
-    return *getPLayer(bSecondLayer ? 1U : 0U);
-}
-
-inline TGameMap::TLayer& TGameMap::getLayer(bool bSecondLayer)
-{
-    return *getPLayer(bSecondLayer ? 1U : 0U);
+    return *getPLayer(bSecondLayer);
 }
 
 // One level of the map: its cells and the objects placed on them. The
@@ -597,11 +609,12 @@ inline TGameMap::TLayer& TGameMap::getLayer(bool bSecondLayer)
 class TGameMap::TLayer {
 public:
     // One object's footprint record in a cell: the object and the
-    // height of its placed cell there.
+    // height of its placed cell there. Loki mangles the constructor
+    // _TObjectCellInfo(unsigned int, unsigned int).
     struct _TObjectCellInfo {
-        _TObjectCellInfo(int objID, unsigned int height) : m_objID(objID), m_height(height) {}
+        _TObjectCellInfo(unsigned int objID, unsigned int height) : m_objID(objID), m_height(height) {}
 
-        int m_objID;
+        unsigned int m_objID;
         unsigned int m_height;
     };
 
@@ -724,9 +737,9 @@ public:
 
     void setTerrainType(TTerrainType newTerrainType) { _m_terrainType = newTerrainType; }
     void setTileNum(unsigned int newTileNum) { _m_tileNum = newTileNum; }
-    void setRiverType(unsigned int newRiverType) { _m_riverType = newRiverType; }
+    void setRiverType(TRiverType newRiverType) { _m_riverType = newRiverType; }
     void setRiverTileNum(unsigned int newTileNum) { _m_riverTileNum = newTileNum; }
-    void setRoadType(unsigned int newRoadType) { _m_roadType = newRoadType; }
+    void setRoadType(TRoadType newRoadType) { _m_roadType = newRoadType; }
     void setRoadTileNum(unsigned int newTileNum) { _m_roadTileNum = newTileNum; }
     void setBHFlipped(bool bFlipped) { _m_bHFlipped = bFlipped; }
     void setBVFlipped(bool bFlipped) { _m_bVFlipped = bFlipped; }

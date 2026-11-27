@@ -55,7 +55,7 @@ enum { kFirstQuestTextRow = 2, kNumQuestTextRows = 5 };
 namespace {
 
 // One line of the description: what the quest asks for.
-class TGetQuestDescFunc : public TQuest::TVisitor {
+class TGetQuestDescFunc : private TQuest::TVisitor {
 public:
     TGetQuestDescFunc(const TGameMap* pMap) : _m_pMap(pMap) {}
 
@@ -77,7 +77,7 @@ private:
 };
 
 // A message of the quest as the game words it when not customized.
-class TGetDefaultQuestMessageFunc : public TQuest::TVisitor {
+class TGetDefaultQuestMessageFunc : private TQuest::TVisitor {
 public:
     TGetDefaultQuestMessageFunc() : _m_pMap(NULL) {}
 
@@ -264,7 +264,7 @@ void TGetQuestDescFunc::visit(const TQuestBringResources& quest)
 VA(0x00497b27, 0x91)
 void TGetQuestDescFunc::visit(const TQuestBeASpecificHero& quest)
 {
-    THeroID heroID = quest.getHeroID();
+    THeroID heroID = THeroID(quest.getHeroID());
     THeroClass heroClass = THero::s_akTraits[heroID].m_class;
     const char* className = THero::s_akClassTraits[heroClass].m_name;
     _m_desc.Format(SSeersHutPropsDlgText::kBeHeroFmtStr,
@@ -455,7 +455,7 @@ VA(0x00498450, 0x45)
 void TGetDefaultQuestMessageFunc::visit(const TQuestBeASpecificHero& quest)
 {
     _m_text.Format(getQuestText(kBeASpecificHeroQuestTexts, _m_message, _m_column),
-                   _m_pMap->getHeroPrototype(quest.getHeroID()).getName().c_str());
+                   _m_pMap->getHeroPrototype(THeroID(quest.getHeroID())).getName().c_str());
 }
 
 VA(0x00498495, 0x35)
@@ -511,7 +511,7 @@ VA(0x00498825, 0x42)
 void TQuestLocationPropsDlg::_setNewMap(TGameMap* pNewMap)
 {
     _m_pNewMap = pNewMap;
-    _m_pNewLocation = dynamic_cast<TQuestLocation*>(pNewMap->getLayer(_m_bSecondLayer).getPObject(_m_objID));
+    _m_pNewLocation = dynamic_cast<TQuestLocation*>(pNewMap->getPLayer(_m_bSecondLayer)->getPObject(_m_objID));
 }
 
 VA(0x00498867, 0x237)

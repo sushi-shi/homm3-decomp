@@ -108,27 +108,26 @@ TMapSpecsPlayerSpecsPage::~TMapSpecsPlayerSpecsPage()
 {
 }
 
-// Loki reads the map through its const _m_map member; this page binds the
-// edited map const once. Residual: retail re-reads the map reference
-// from the page at each lookup (as per-call const casts do); the bound
-// reference is spilled to a stack slot.
+// Loki reads the map through its const _m_map member at each lookup, and so
+// does retail; this page reads its edited map the same way, without casts or
+// a bound alias. TGameMap has only Loki's const getLayer, so the three
+// lookups reach the const getPLayer as retail does.
 VA(0x004732df, 0x4f5)
 void TMapSpecsPlayerSpecsPage::_setPlayerInfo()
 {
     assert(_m_curPlayer != ePlayerNone);
     assert(_m_intPlayers[_m_curPlayer].getBPresent());
-    const TGameMap& map = _m_newMap;
     _m_mainTownCombo.ResetContent();
     _m_aTownRef.clear();
-    const set<TMapObjectRef>& townRefs = map.getPlayerTownRefs(_m_curPlayer);
+    const set<TMapObjectRef>& townRefs = _m_newMap.getPlayerTownRefs(_m_curPlayer);
     _m_aTownRef.reserve(townRefs.size());
     copy(townRefs.begin(), townRefs.end(), back_inserter(_m_aTownRef));
-    EGameVersion version = map.getVersion();
+    EGameVersion version = _m_newMap.getVersion();
     for (unsigned int i = 0; i < _m_aTownRef.size(); i++) {
         const TMapObjectRef& ref = _m_aTownRef[i];
-        const TTown* pTown = dynamic_cast<const TTown*>(&map.getLayer(ref.getBSecondLayer()).getObject(ref.getObjectID()));
+        const TTown* pTown = dynamic_cast<const TTown*>(&_m_newMap.getLayer(ref.getBSecondLayer()).getObject(ref.getObjectID()));
         if (pTown->getPVisitingHero() == NULL || version >= GAME_VERSION_AB) {
-            TTilePoint loc = map.getLayer(ref.getBSecondLayer()).getObjectLoc(ref.getObjectID())
+            TTilePoint loc = _m_newMap.getLayer(ref.getBSecondLayer()).getObjectLoc(ref.getObjectID())
                              - pTown->getTriggerLoc();
             CString name;
             name.Format(kObjectAtLocationFmtStr, pTown->getTownTypeTraits().m_pName, loc.x(), loc.y(),
@@ -148,7 +147,7 @@ void TMapSpecsPlayerSpecsPage::_setPlayerInfo()
             ;
         _m_mainTownCombo.SetCurSel(index);
         const TTown* pMainTown = dynamic_cast<const TTown*>(
-            &map.getLayer(mainTownRef.getBSecondLayer()).getObject(mainTownRef.getObjectID()));
+            &_m_newMap.getLayer(mainTownRef.getBSecondLayer()).getObject(mainTownRef.getObjectID()));
         if (_m_abCanGenerateHero[_m_curPlayer] && pMainTown->getPVisitingHero() == NULL) {
             _m_generateHeroCheck.EnableWindow(TRUE);
             _m_generateHeroCheck.SetCheck(_m_players[_m_curPlayer].getBGenerateHero());
@@ -177,7 +176,7 @@ void TMapSpecsPlayerSpecsPage::_setPlayerInfo()
     _m_behaviorCombo.SetCurSel(index);
 
     _m_customTownTypes = _m_players[_m_curPlayer].getTownTypes();
-    _m_defaultTownTypes = map.getDefaultTownTypes(_m_curPlayer);
+    _m_defaultTownTypes = _m_newMap.getDefaultTownTypes(_m_curPlayer);
     _m_customizeCheck.SetCheck(_m_players[_m_curPlayer].getBCustomTownTypes());
     _enableCustomTownTypes(_m_players[_m_curPlayer].getBCustomTownTypes());
     if (version < GAME_VERSION_SOD)

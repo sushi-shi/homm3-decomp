@@ -53,36 +53,6 @@ long aiValueOfEvent(const hero* currentHero, type_point point);
 void aiJoinDecision(hero* currentHero, TCreatureType creature,
                       short amount);
 
-// Source-real appraisal boundaries used by AI_value_of_event. Several are
-// expanded or revision-adapted in Complete, but keeping these declarations
-// makes the recovered Dreamcast dispatch state explicit while their bodies
-// are promoted independently. The appraisals Dreamcast records as (static)
-// procedures are declared only by their philai.cpp bodies.
-long valueOfBlackMarket(const hero* currentHero,
-                           const NewmapCell* cell);
-int valueOfCampfire(playerData* player, NewmapCell* cell);
-int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell);
-long valueOfGarrison(const hero* currentHero, NewmapCell* cell);
-long valueOfIdol(const hero* currentHero, long moveCost);
-int valueOfFlotsam(playerData* player);
-int valueOfGarden(const hero* currentHero, NewmapCell* cell);
-inline int valueOfLeanTo(NewmapCell* cell, playerData* player);
-inline long valueOfHeroEvent(
-    const hero* currentHero, NewmapCell* cell, short x, short y, short z,
-    short moveCost);
-inline long valueOfHillFort(const hero* currentHero,
-                                      long moveCost);
-inline int valueOfLibrary(const hero* currentHero,
-                                 NewmapCell* cell);
-inline int valueOfLighthouse(NewmapCell* cell);
-inline int valueOfMercenaryCamp(const hero* currentHero,
-                                       NewmapCell* cell);
-inline long valueOfMagusHut(long playerId);
-int valueOfMoveSource(const hero* currentHero, long flag, short increase,
-                         long& moveCost);
-int valueOfSkeleton(const hero* currentHero, NewmapCell* cell);
-inline int valueOfShrine(const hero* currentHero, NewmapCell* cell);
-
 void aiEnterTown(hero* currentHero, town* currentTown);
 
 void aiEnterGarrison(hero* currentHero, garrison* ourGarrison);

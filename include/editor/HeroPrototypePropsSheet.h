@@ -21,7 +21,8 @@ class THeroPrototypePropsSecSkillsPage;
 class THeroPrototypePropsArtifactsPage;
 class THeroPrototypePropsSpellsPage;
 
-class THeroPrototypePropsSheet : public CPropertySheet, public THeroPrototypePropsGeneralPage::TParentSheet {
+// RTTI: the interface base is private (attributes 9).
+class THeroPrototypePropsSheet : public CPropertySheet, private THeroPrototypePropsGeneralPage::TParentSheet {
 public:
     THeroPrototypePropsSheet(CWnd* pParentWnd, TGameMap& gameMap, THeroID heroID);
     virtual ~THeroPrototypePropsSheet();

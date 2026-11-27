@@ -43,8 +43,8 @@ VA(0x00470d91, 0x74)
 void TTerrainPlacementMapAdapter::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 {
     TGameMap* pMap = _m_pMap;
-    TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
-    TGameMap::TLayer::TCell* pCell = layer.getPCell(loc.x(), loc.y());
+    TGameMap::TLayer* pLayer = pMap->getPLayer(_m_bSecondLayer);
+    TGameMap::TLayer::TCell* pCell = pLayer->getPCell(loc.x(), loc.y());
     pCell->setTerrainType(TTerrainType(tile.m_terrain));
     pCell->setTileNum(tile.m_frame);
     pCell->setBHFlipped(tile.m_flipX);
@@ -55,8 +55,8 @@ VA(0x00470e05, 0x42)
 void TTerrainPlacementMapAdapter::setFrame(const TTilePoint& loc, int frame)
 {
     TGameMap* pMap = _m_pMap;
-    TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
-    layer.getPCell(loc.x(), loc.y())->setTileNum(frame);
+    TGameMap::TLayer* pLayer = pMap->getPLayer(_m_bSecondLayer);
+    pLayer->getPCell(loc.x(), loc.y())->setTileNum(frame);
 }
 
 TTilePoint& TTerrainPlacementMapAdapter::getSize(TTilePoint& size)

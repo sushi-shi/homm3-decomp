@@ -26,10 +26,14 @@ class TCampaignDocInvalidFileVersion : public TCampaignDocLoadFailure {
 
 public:
     TCampaignDocInvalidFileVersion(int fileVersion, int currentVersion)
-        : m_fileVersion(fileVersion), m_currentVersion(currentVersion) {}
+        : _m_fileVersion(fileVersion), _m_currentVersion(currentVersion) {}
 
-    int m_fileVersion;
-    int m_currentVersion;
+    int getFileVersion() const { return _m_fileVersion; }
+    int getCurrentVersion() const { return _m_currentVersion; }
+
+private:
+    int _m_fileVersion;
+    int _m_currentVersion;
 };
 
 class TCampaignDoc : public CDocument {
@@ -69,8 +73,15 @@ private:
     std::auto_ptr<TCampaign> _m_pCampaign;
     int _m_version;
     bool _m_bNewCampaign;
-    int _m_newVersion;
-    int _m_newType;
+    // What File New asked for: the campaign version and type the next new
+    // document gets. OnNewDocument resets it by assigning a temporary.
+    struct TNewCampaignOptions {
+        TNewCampaignOptions(int version, int type) : m_version(version), m_type(type) {}
+
+        int m_version;
+        int m_type;
+    };
+    TNewCampaignOptions _m_newOptions;
 };
 
 #endif  /* HOMM3_CAMPAIGN_EDITOR_CAMPAIGNDOC_H */

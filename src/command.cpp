@@ -370,19 +370,16 @@ process_action:
 }
 
 // E:\gamedcs\command.cpp:475. Build twelve legal approach records around
-// the target hex. Keep the canonical CanFit, IsMoat, OffsetToFront,
-// NeedToTurn and swap calls. DC562's ?swap@std@@YAXAA_N0@Z public proves
-// bool validity flags despite their lowered CodeView byte records.
-// DC573-578 selects one valid candidate by clearing a flag before DC580's
-// final writes; Mac0x82bac..0x82be0 preserves that same state transition.
-// Recovering these statements from the combined selection condition is
-// Windows-flat at 91.3686%. The rectangle-independent residual is validity
-// materialization, local/register allocation and NeedToTurn's range guard.
-// A <=2/equality spelling of NeedToTurn raises this caller to 92.4744%,
-// but alters the exact walk, attackHex, doAttack(int), and getAttackDirection
-// callers. Retain its native >=3/inequality expression. A controlled 16-state
-// helper/validity family also rejects direct flag initialization and ternary
-// helper bodies; none improves this caller while preserving those callers.
+// the target hex. Keep the canonical CanFit, IsMoat, OffsetToFront and swap
+// calls. DC562's ?swap@std@@YAXAA_N0@Z public proves bool validity flags
+// despite their lowered CodeView byte records. DC517/539 assign each flag
+// from one && expression; DC566..569 choose targetGroup with if/else;
+// DC573-578 clears one flag before DC580's final writes (Mac 0x82bac..0x82be0
+// agrees). The turn test is not army::needToTurn: DC, Mac and retail all
+// inline (m_facing == 0) == (targetIndex <= 2) with no direction < 6 guard,
+// while needToTurn's own DC body keeps the guard and >= 3/inequality form.
+// DC reuses attack_angle's register and retail its slot for the final
+// nearest-direction loop, so that loop indexes by attackAngle (91.37 -> 100).
 VA(0x00474690, 0x36B)
 DC_ADDRESS(0x06b66c, 0x410)
 MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map
@@ -424,11 +421,9 @@ void combatManager::setCombatDirections(int hex)
         firstHex = m_adjacentCells[hex][targetIndex];
         if (!validHex(firstHex))
             continue;
-        firstIsValid = 0;
-        if (m_cells[firstHex].m_validMove
+        firstIsValid = m_cells[firstHex].m_validMove
                 && currentArmy->canFit(firstHex, 0, 0)
-                && !g_searchArray->isMoat(firstHex))
-            firstIsValid = 1;
+                && !g_searchArray->isMoat(firstHex);
         if (firstIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
                     firstHex + currentArmy->offsetToFront(-1)))
@@ -444,11 +439,9 @@ void combatManager::setCombatDirections(int hex)
             continue;
 
         secondHex = firstHex - currentArmy->offsetToFront(-1);
-        secondIsValid = 0;
-        if (m_cells[secondHex].m_validMove
+        secondIsValid = m_cells[secondHex].m_validMove
                 && currentArmy->canFit(secondHex, 0, 0)
-                && !g_searchArray->isMoat(secondHex))
-            secondIsValid = 1;
+                && !g_searchArray->isMoat(secondHex);
         if (secondIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
                     secondHex + currentArmy->offsetToFront(-1)))
@@ -465,12 +458,15 @@ void combatManager::setCombatDirections(int hex)
             continue;
         }
 
-        if (currentArmy->needToTurn(targetIndex)) {
+        if ((currentArmy->m_facing == 0) == (targetIndex <= 2)) {
             std::swap(firstHex, secondHex);
             std::swap(firstIsValid, secondIsValid);
         }
 
-        targetGroup = targetIndex >= 2 && targetIndex <= 3 ? 13 : 14;
+        if (targetIndex >= 2 && targetIndex <= 3)
+            targetGroup = 13;
+        else
+            targetGroup = 14;
         if (firstIsValid && secondIsValid) {
             if (attackAngle == COMBAT_ATTACK_ANGLE_5
                     || attackAngle == COMBAT_ATTACK_ANGLE_6
@@ -488,22 +484,22 @@ void combatManager::setCombatDirections(int hex)
         }
     }
 
-    { for (long i = 0; i < COMBAT_ATTACK_ANGLE_COUNT; i++) {
-            if (m_combatDirections[0][i])
-                continue;
+    for (attackAngle = COMBAT_ATTACK_ANGLE_0;
+         attackAngle < COMBAT_ATTACK_ANGLE_COUNT; attackAngle++) {
+        if (m_combatDirections[0][attackAngle])
+            continue;
 
-            closest = COMBAT_ATTACK_ANGLE_COUNT;
-            for (long j = 0; j < COMBAT_ATTACK_ANGLE_COUNT; j++) {
-                if (i == j)
-                    continue;
-                long distance = abs(i - j);
-                if (distance > 6)
-                    distance = 6 - distance;
-                if (m_combatDirections[0][j] && distance < closest) {
-                    closest = distance;
-                    m_combatDirections[0][i] = m_combatDirections[0][j];
-                    m_combatDirections[1][i] = m_combatDirections[1][j];
-                }
+        closest = COMBAT_ATTACK_ANGLE_COUNT;
+        for (long j = 0; j < COMBAT_ATTACK_ANGLE_COUNT; j++) {
+            if (attackAngle == j)
+                continue;
+            long distance = abs(attackAngle - j);
+            if (distance > 6)
+                distance = 6 - distance;
+            if (m_combatDirections[0][j] && distance < closest) {
+                closest = distance;
+                m_combatDirections[0][attackAngle] = m_combatDirections[0][j];
+                m_combatDirections[1][attackAngle] = m_combatDirections[1][j];
             }
         }
     }
@@ -544,13 +540,14 @@ int combatManager::validAttackHex(int hex)
 
 // E:\gamedcs\command.cpp:907. The DC line table proves this helper boundary
 // and its two-comparison body. Mac retains the ordinary helper; Complete
-// expands its call into ProcessCombatMsg.
+// expands its call into ProcessCombatMsg, where retail tests the adjacent
+// 21..22 pair as a signed range (jl/jg) rather than DC's two equalities.
 DC_ADDRESS(0x06bea4, 0x18)
 MAC_ADDRESS(0x082e98, 0x24)
 int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 {
-    if (inCombatCommand == COMBAT_COMMAND_VIEW_OTHER_HERO
-            || inCombatCommand == COMBAT_COMMAND_VIEW_TOWERS)
+    if (inCombatCommand >= COMBAT_COMMAND_VIEW_OTHER_HERO
+            && inCombatCommand <= COMBAT_COMMAND_VIEW_TOWERS)
         return 5;
     return inCombatCommand;
 }
@@ -622,9 +619,8 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
     if (yDifference == 0)
         slope = 100.0f;
     else {
-        float horizontal = static_cast<float>(xDifference);
-        float vertical = static_cast<float>(yDifference);
-        slope = horizontal / vertical;
+        volatile float horizontal = static_cast<float>(xDifference);
+        slope = horizontal / yDifference;
     }
 
     if (direction == COMBAT_ATTACK_ANGLE_0
@@ -756,24 +752,6 @@ bool combatManager::isComputerAction(const army* currentArmy)
 // command.obj order slot immediately after is_computer_action, both direct
 // calls from Main, the reference-parameter decorated ABI, and the obstacle
 // diagnostic literal in Dreamcast's line-1348 statement group.
-// CENSUS 2026-09-05 (93.0970): the two cross-jumped arms are NAMED, and the
-// whole residual reduces to ONE cause upstream of them.
-// Positional alignment of the two call streams pairs our six `IsHuman` arms
-// against retail's four.  Ours sit after ViewSpells+InitiateSpell (+0x224),
-// after the first NormalDialog (+0x2c0), after the second NormalDialog
-// (+0x48a), after SetupGridForArmy+DrawFrame twice (+0xd0b, +0xe82) and after
-// SetPointer+ViewArmy (+0x10ce).  Retail has the LAST FOUR of those and not
-// the first and third: at the InitiateSpell arm it emits
-// `mov ecx,[ebx+0x132c0] / mov eax,[ebx+4*ecx+0x54a8] / jmp <the first
-// NormalDialog arm's own test>` - a cross-jump into the sibling arm's tail
-// starting at that arm's `test eax,eax`.
-// WHY OURS CANNOT MERGE THERE, and it is not a spelling of the arms: retail
-// tests those zeros with `test eax,eax` while we compare against a ZERO CACHED
-// IN ESI (`cmp dword ptr [ebx+0x132b4], esi`), and we cache 1 in EDI as well
-// (`mov edi,1` at fn+0x1d, against retail's `cmp ecx,1` immediate).  The two
-// arms therefore have tails that are byte-identical to each other but carry an
-// extra live-register dependency, and C2 declines the merge.  Census: our
-// `push esi` 20 / `cmp ..,esi` 39 against retail 12 / 27.
 // The network packet is an unnamed full-expression temporary. DC records
 // only msgTemp as a named local and attributes packet construction and
 // transmission to command.cpp:1176. Both historical compilers accept this
@@ -781,8 +759,7 @@ bool combatManager::isComputerAction(const army* currentArmy)
 // PeekEvent's hidden result at [-0x60,-0x40), msgTemp at [-0x40,-0x20),
 // and the 20-byte placement packet at [-0x20,-0xc). The named packet local
 // control overlays msgTemp with the packet and instead reserves 0x4c.
-// Constant caching and branch threading remain separate residuals; the
-// corrected frame does not establish a missing second use of msgTemp.
+// The corrected frame does not establish a missing second use of msgTemp.
 // Moving the identical g_surrenderCost definition from cmbtmgr.cpp into
 // this TU leaves CodeWarrior's external-IL load unchanged; source ownership
 // alone does not recover the native direct-TOC scalar access.
@@ -793,9 +770,18 @@ bool combatManager::isComputerAction(const army* currentArmy)
 // information-window updates (DC 0x6c652..0x6c676, Mac 0x837c8..0x837e4).
 // With the native getCommand member argument and const-message reference
 // boundary, lane Windows rises 94.6749 -> 94.97%; all 38 available command
-// and combatwindow Mac comparisons hold. The remaining 188/180 blocks and
-// 128/120 branches still begin with cached 0/1 and switch-tail merging;
-// this supported semantic correction does not resolve that compiler state.
+// and combatwindow Mac comparisons hold.
+// Retail's key-down jump table sends scancode 0x48 (keypad 8) to the
+// log-scroll-up arm, not keypad minus.
+// The return/break shape is what C2's constant caching sees (94.97 ->
+// 100%). The right-click branch, the mouse-move and key-down cases, and the
+// spell and retreat buttons return directly; the other widget paths break
+// to the final return. With one shared `return 1` reached from every case,
+// C2 hoists the constant 1 into the entry block and caches it in EDI. With
+// this shape the deselect net-control test no longer keeps 0 in ESI across
+// every button arm: retail loads 0 only in the placement-end arm, and the
+// spell arm's resetMouse tail cross-jumps into the surrender tail at
+// `test eax,eax`. The inlined getPointer range test (jl/jg) is retail's form.
 VA(0x00474d80, 0x114D)
 DC_ADDRESS(0x06c070, 0xb08)
 MAC_ADDRESS(0x0831ac, 0xc64)  // exhaustive command order-map + callers + literal/call graph
@@ -818,7 +804,7 @@ int combatManager::processCombatMsg(message& msg)
                 else
                     m_combatWindow->processRightSelect(msg);
             }
-            break;
+            return MESSAGE_DISPATCH_CONSUME;
         }
 
         switch (msg.m_codeX) {
@@ -867,7 +853,7 @@ int combatManager::processCombatMsg(message& msg)
                     initiateSpell(static_cast<ESpellId>(viewSpells()), 0); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
                     resetMouse();
                 }
-                break;
+                return MESSAGE_DISPATCH_CONSUME;
 
             case TCombatWindow::COMBAT_LEFT_COMMAND_1_ID:
                 normalDialog((*g_generalText)[GENERAL_TEXT_COMBAT_RETREAT_PROMPT],
@@ -876,7 +862,7 @@ int combatManager::processCombatMsg(message& msg)
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
                     m_nextAction = 4;
                 resetMouse();
-                break;
+                return MESSAGE_DISPATCH_CONSUME;
 
             case TCombatWindow::COMBAT_LEFT_COMMAND_0_ID:
                 if (doSurrender()) {
@@ -1050,7 +1036,7 @@ int combatManager::processCombatMsg(message& msg)
             m_lastCommand = m_combatCommand;
             combatMessage(m_combatCommand);
         }
-        break;
+        return MESSAGE_DISPATCH_CONSUME;
     }
 
     case MESSAGE_KEY_DOWN:
@@ -1078,7 +1064,7 @@ int combatManager::processCombatMsg(message& msg)
                           !g_config.m_combatShadeLevel, 1);
             break;
 
-        case KEYCODE_KP_MINUS:
+        case KEYCODE_KP_8:
             m_combatWindow->scrollRollover(-1);
             break;
 
@@ -1118,7 +1104,7 @@ int combatManager::processCombatMsg(message& msg)
             resetMouse();
             break;
         }
-        break;
+        return MESSAGE_DISPATCH_CONSUME;
     }
 
     return MESSAGE_DISPATCH_CONSUME;

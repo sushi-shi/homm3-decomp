@@ -165,7 +165,11 @@ public:
 
 private:
     const TSpellContext m_allowedContext;       // +0x60
-    const hero* m_hero;                         // +0x64
+    // Dreamcast CodeView: `const hero &Hero`, `const armyGroup * const
+    // EnemyGroup`. The pointer's top-level const is not adopted: with it VC6
+    // stops expanding a std::string copy that retail windowHandler 0x59d040
+    // inlines (100 -> 98.91).
+    const hero& m_hero;                         // +0x64
     const armyGroup* m_enemyGroup;              // +0x68
     // The battlefield's magic terrain kind, combatManager::m_magicTerrain,
     // handed to the mana-cost and spell-level queries. Dreamcast's byte here

@@ -637,9 +637,10 @@ public:
     // The DC roster puts RadarWidget/MapWidget at +0x44/+0x48. Retail's
     // heroWindow is eight bytes wider, placing them at +0x4c/+0x50;
     // InMapArea independently proves MapWidget's retail offset and reads
-    // its widget x/y/width/height fields.
-    widget* m_radarWidget;
-    widget* m_mapWidget;
+    // its widget x/y/width/height fields. Dreamcast declares both
+    // `const widget*`; every reader only takes the widget's bounds.
+    const widget* m_radarWidget;
+    const widget* m_mapWidget;
     textWidget* m_chatTextWidget;  // +0x54, CompleteDraw's chat update target
     // Retail heroWindow is 8 bytes wider than the Dreamcast base (0x4c
     // versus 0x44). Applying that independently proven shift to the DC

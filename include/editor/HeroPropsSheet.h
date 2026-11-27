@@ -31,7 +31,8 @@ class THeroPropsPriSkillsPage;
 class THeroPropsSecSkillsPage;
 class THeroPropsSpellsPage;
 
-class THeroPropsSheet : public CPropertySheet, public THeroPropsCreaturesPageParentSheet {
+// RTTI: the interface base is private (attributes 9).
+class THeroPropsSheet : public CPropertySheet, private THeroPropsCreaturesPageParentSheet {
 public:
     THeroPropsSheet(LPCTSTR pszCaption, CWnd* pParentWnd, const TGameMap& oldMap, bool bSecondLayer, unsigned int objID);
     virtual ~THeroPropsSheet();
@@ -92,7 +93,8 @@ private:
     std::auto_ptr<TRandomHeroPropsGeneralPage> _m_pGeneralPage;
 };
 
-class TNonRandomHeroPropsSheet : public THeroPropsSheet, public TIdentifiedHeroPropsGeneralPageParentSheet {
+// RTTI: the interface base is private (attributes 9).
+class TNonRandomHeroPropsSheet : public THeroPropsSheet, private TIdentifiedHeroPropsGeneralPageParentSheet {
 public:
     TNonRandomHeroPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSecondLayer, unsigned int objID, bool bAnyAvailableOwner);
     virtual ~TNonRandomHeroPropsSheet();
@@ -117,7 +119,8 @@ private:
     std::auto_ptr<THeroPropsBiographyPage> _m_pBiographyPage;
 };
 
-class TPrisonPropsSheet : public THeroPropsSheet, public TIdentifiedHeroPropsGeneralPageParentSheet {
+// RTTI: the interface base is private (attributes 9).
+class TPrisonPropsSheet : public THeroPropsSheet, private TIdentifiedHeroPropsGeneralPageParentSheet {
 public:
     TPrisonPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
     virtual ~TPrisonPropsSheet();

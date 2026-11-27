@@ -40,7 +40,7 @@ public:
 
 private:
     void update(unsigned char loadGameMode);
-    int m_rolloverWidget;  // +0x4c retail (+68 DC)
+    widget* m_rolloverWidget;  // +0x4c retail (+68 DC widget* RolloverWidget)
 };
 SIZE(TGameTypeWindow, 0x50);
 

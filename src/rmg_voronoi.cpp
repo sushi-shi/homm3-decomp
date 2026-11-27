@@ -262,17 +262,17 @@ void TRmgHalfEdge::flip()
 // field and keeps dx in a register. The edge's own fields, not its
 // accessors, keep this ordinary member's cost (185 with them) under C1XX's
 // 175 auto-inline save limit, so the game's addSite still expands it.
-// Editor residual: retail computes the edge length before the two endpoint
-// distances (forward-substituted at their tests) and keeps the opposite x in
-// edx; this compile evaluates them in order and spills more. A by-value
-// origin is lower in both images.
+// The edge length is computed first, as retail does (editor 59.01 -> 62.51).
+// Editor residual: retail forward-substitutes the endpoint distances at their
+// tests and keeps the opposite x in edx; this compile spills more. A by-value
+// origin or opposite reference, dy before dx, are lower.
 MAC_ADDRESS(0x25c3ec, 0xf8)
 unsigned char TRmgHalfEdge::isPointOnSegment(TRmgPoint point) const
 {
     TRmgPoint opposite = m_twin->m_sitePosition;
+    s32 edgeDistance = getRmgSquaredDistance(m_sitePosition, opposite);
     s32 firstDistance = getRmgSquaredDistance(point, m_sitePosition);
     s32 secondDistance = getRmgSquaredDistance(point, opposite);
-    s32 edgeDistance = getRmgSquaredDistance(m_sitePosition, opposite);
     if (firstDistance > edgeDistance || secondDistance > edgeDistance)
         return 0;
     const TRmgPoint& origin = m_sitePosition;
@@ -283,10 +283,12 @@ unsigned char TRmgHalfEdge::isPointOnSegment(TRmgPoint point) const
 }
 
 // Mac 0x25cb80 retains four orientation calls, then combines the signed
-// products as first - second + third - point. The map editor expands those
-// calls; this order recovers its 0x18 frame and shared return. Paired
-// differences and staged sums emit the same bytes. Game addSite stays exact.
-// Editor residual: input loads and common-product register lifetimes.
+// products as first - second + third - point; it squares the four sites
+// together after the calls. The map editor expands the calls; the squared
+// lengths as their own locals after the areas give its input loads and
+// difference homes (exact). Squares embedded in the determinant kept the
+// 0x18 frame but loaded first.x/first.y into other registers. The game's
+// addSite expansion is identical either way.
 MAC_ADDRESS(0x25cb80, 0x1c4)
 VA_AT(h3maped, 0x004ccc7a, 0xef)
 static b8 isRmgPointInsideCircle(TRmgPoint first, TRmgPoint second,
@@ -296,10 +298,14 @@ static b8 isRmgPointInsideCircle(TRmgPoint first, TRmgPoint second,
     s32 secondArea = getRmgPointOrientation(first, third, point);
     s32 thirdArea = getRmgPointOrientation(first, second, point);
     s32 pointArea = getRmgPointOrientation(first, second, third);
-    s64 determinant = static_cast<s64>(first.m_x * first.m_x + first.m_y * first.m_y) * firstArea
-        - static_cast<s64>(second.m_x * second.m_x + second.m_y * second.m_y) * secondArea
-        + static_cast<s64>(third.m_x * third.m_x + third.m_y * third.m_y) * thirdArea
-        - static_cast<s64>(point.m_x * point.m_x + point.m_y * point.m_y) * pointArea;
+    s32 firstSquare = first.m_x * first.m_x + first.m_y * first.m_y;
+    s32 secondSquare = second.m_x * second.m_x + second.m_y * second.m_y;
+    s32 thirdSquare = third.m_x * third.m_x + third.m_y * third.m_y;
+    s32 pointSquare = point.m_x * point.m_x + point.m_y * point.m_y;
+    s64 determinant = static_cast<s64>(firstSquare) * firstArea
+        - static_cast<s64>(secondSquare) * secondArea
+        + static_cast<s64>(thirdSquare) * thirdArea
+        - static_cast<s64>(pointSquare) * pointArea;
     return determinant > 0;
 }
 
@@ -414,7 +420,8 @@ void TRmgVoronoi::buildVertices()
         TRmgHalfEdge* edge = m_edges[index];
         if (edge->getZone() && !edge->isPositionComputed()) {
             TRmgPoint second = edge->getOppositeSitePosition();
-            TRmgPoint position = computeRmgCircumcenter(edge->getSitePosition(), second,
+            TRmgPoint origin = edge->getSitePosition();
+            TRmgPoint position = computeRmgCircumcenter(origin, second,
                 edge->getNext()->getOppositeSitePosition());
             edge->setPosition(position);
             edge = edge->getNext()->getTwin();

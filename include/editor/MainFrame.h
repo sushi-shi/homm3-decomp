@@ -14,7 +14,8 @@
 
 #include "editor/MapView.h"
 
-class TMainFrame : public CFrameWnd, public TMapView::TStatusUI {
+// RTTI: the interface base is private (attributes 9).
+class TMainFrame : public CFrameWnd, private TMapView::TStatusUI {
     DECLARE_DYNCREATE(TMainFrame)
 
 protected:

@@ -48,7 +48,8 @@ private:
     bool _m_bValid;
 };
 
-class TEditQuestDlg : public CDialog, public TQuest::TVisitor, public TQuestTypeDlg::TClient {
+// RTTI: the interface bases are private (attributes 9).
+class TEditQuestDlg : public CDialog, private TQuest::TVisitor, private TQuestTypeDlg::TClient {
 public:
     enum { s_kNumQuestTypes = 10 };
 

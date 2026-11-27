@@ -5,7 +5,10 @@
 // default GUI font. Layout from the constructor (0x64 bytes, the map
 // frame's new): the height, the first visible tile, the tile count, the
 // highlighted tile and its text, the zoom, the back buffer and the font.
-// Loki's asserts name _m_height, _m_range and _m_highlight.
+// Loki's asserts name _m_height, _m_startTileX, _m_range and _m_highlight.
+// Loki declares the height and start tile int (setStartTile(int)); the
+// Windows rulers compare and divide them unsigned (int extents drop both
+// OnPaints to 95.95/85.74, an int start tile the vertical one to 98.40).
 #ifndef HOMM3_EDITOR_TILEHRULER_H
 #define HOMM3_EDITOR_TILEHRULER_H
 
@@ -34,7 +37,7 @@ private:
     int _computeHighlightPos(unsigned int width) const;
 
     unsigned int _m_height;
-    unsigned int _m_startTile;
+    unsigned int _m_startTileX;
     unsigned int _m_range;
     unsigned int _m_highlight;
     CString _m_highlightText;

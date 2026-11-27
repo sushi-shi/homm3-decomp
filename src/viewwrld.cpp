@@ -36,7 +36,7 @@
 // each of its five arms on one of them. advManager::ViewWorld's Dreamcast
 // body keeps view_mines / view_heroes / view_towns as locals (S_REGREL32
 // rows at dc 0x195b48); Complete's level callbacks below read them from
-// viewwrld.obj's own .bss, which is what made them file statics. The
+// viewwrld.obj's own .bss, with the external linkage proven below. The
 // Dreamcast ALSO publishes all five as globals - iVWMines, iVWResources,
 // iVWArtifacts, iVWTowns, iVWHeroes, every one of them `bool` - and their
 // RELATIVE order survives the port intact: iVWResources sits immediately
@@ -46,10 +46,10 @@
 // this file had no reader for until now.
 DATA(0x0068c6bc) int g_viewWorldScale = 11;
 DATA(0x006aab68)
-static bool g_viewMines;
+bool g_viewMines;
 DATA(0x006aab78) bool g_vwTerrains;
 DATA(0x006aab79)
-static bool g_viewResources;
+bool g_viewResources;
 // The half-extents init derives from the two viewable dimensions and the
 // three view-world readers below consume. Only viewwrld.obj references
 // either address (four dir32 sites each: init writes both, and
@@ -62,19 +62,19 @@ DATA(0x006aab80)
 static int g_viewHalfWidth;
 DATA(0x006aab84) int g_scaleLine[32];
 DATA(0x006aac08)
-static bool g_viewArtifacts;
+bool g_viewArtifacts;
 // Original DC name: eVWLevel. Unreferenced by retail and Dreamcast code; the
 // Dreamcast public sits between iVWArtifacts and iVWTowns at the same offsets
 // as these two retail flags.
 DATA(0x006aac10) TSkillMastery g_vwLevel;
 DATA(0x006aac14)
-static bool g_viewTowns;
+bool g_viewTowns;
 DATA(0x006aac18) int g_vwCenterOffsetW;
 DATA(0x006aac1c) int g_vwCenterOffsetH;
 DATA(0x006aac20) CSprite* g_csVwIcons;
 DATA(0x006aac28) Bitmap16Bit* g_memoryBuffer;
 DATA(0x006aac30)
-static bool g_viewHeroes;
+bool g_viewHeroes;
 
 // E:\gamedcs\viewwrld.cpp:100
 // The magic-number float-to-int conversion: the Dreamcast row is `static`,
@@ -130,14 +130,14 @@ void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
 {
     int offset = (32.0f - g_viewWorldScaleFloat) / 2.0f;
     int drawX = x - offset;
+    int baseX = x - offset;
     int drawY = y - offset;
+    int baseY = y - offset;
 
     int tilex = 0;
     int tiley = 0;
     int tilew = 32;
     int tileh = 32;
-    int baseX = drawX;
-    int baseY = drawY;
 
     if (baseX < 8) {
         tilex += 8 - baseX;
@@ -504,6 +504,8 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
+    // Retail, Dreamcast and Mac all keep the raw mask (no 0/1 normalization).
+    // A second mask local reaches 98.62% but has no native support.
     playerBit &= getMapExtra(srcX, srcY, z);
 
     int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW,
@@ -546,7 +548,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     continue;
 
                 if (!objType->m_drawCells[
-                        CObjectType::getBitPos(objCell->m_cellX,
+                        CObjectType::_getBitPos(objCell->m_cellX,
                                                 objCell->m_cellY)]
                     || objType->m_suppressDraw)
                     continue;
@@ -746,6 +748,8 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // admits that third expansion and matches the call set (87.86%), and lifts
 // vwDrawShroud to 89.19%, but drops kb::oldmain 88.59 -> 87.95 and five exact
 // winmgr/smackmgr/customcampaign bodies, which retail keeps calling it.
+// Mac 0x205020 clears the scratch buffer through bzero, so the clear is
+// ZeroMemory as in vwDrawShroud (Windows-flat, 87.65%).
 VA(0x005f8be0, 0x636)
 DC_ADDRESS(0x1943ec, 0x462)
 MAC_ADDRESS(0x204ea0, 0x5e4)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer)
@@ -769,8 +773,8 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
         scanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
 
     int drewSomething = 0;
-    memset(g_memoryBuffer->GetMap(0, 0), 0,
-           g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
+    ZeroMemory(g_memoryBuffer->GetMap(0, 0),
+               g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
 
     for (int numObj = 0; numObj < thisCell->m_objects.size(); ++numObj) {
         NewmapCell::TObjectCell* objCell = &thisCell->m_objects[numObj];
@@ -787,7 +791,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
             continue;
 
         if (!objType->m_shadowCells[
-                CObjectType::getBitPos(objCell->m_cellX, objCell->m_cellY)]
+                CObjectType::_getBitPos(objCell->m_cellX, objCell->m_cellY)]
             || objType->m_suppressDraw)
             continue;
 
@@ -947,23 +951,37 @@ DC_ADDRESS(0x194b48, 0x284)
 MAC_ADDRESS(0x205a1c, 0x4dc)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer)
 void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth)
+    if (srcX < 0) {
         return;
-    if (srcY >= g_mapHeight && !g_completeDrawAllCells)
+    }
+    if (srcY < 0) {
         return;
+    }
+    if (srcX >= g_mapWidth) {
+        return;
+    }
+    if (srcY >= g_mapHeight) {
+        if (!g_completeDrawAllCells) {
+            return;
+        }
+    }
 
-    getCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
 
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
 
-    if (!(playerBit & getMapExtra(srcX, srcY, z)) && !g_vwTerrains)
-        return;
+    if (!(playerBit & getMapExtra(srcX, srcY, z))) {
+        if (!g_vwTerrains) {
+            return;
+        }
+    }
+
+    int lookup = 0;
+    bool hflip = false;
 
     int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
     int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
-    int lookup = 0;
-    bool hflip = false;
     unsigned char drawShroud;
 
     if (!g_completeDrawAllCells
@@ -972,7 +990,11 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
         drawShroud = false;
     } else {
         drawShroud = true;
-        lookup = g_completeDrawAllCells ? 0 : getCloudLookup(srcX, srcY, z);
+        if (g_completeDrawAllCells) {
+            lookup = 0;
+        } else {
+            lookup = getCloudLookup(srcX, srcY, z);
+        }
         if (!lookup) {
             ZeroMemory(g_memoryBuffer->GetMap(0, 0),
                    g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
@@ -988,16 +1010,20 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
             lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
         }
         if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
-            && (srcX & 1))
+            && (srcX & 1)) {
             ++lookup;
-        if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
+        }
+        if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1)) {
             lookup = CLOUD_DRAW_FRAME_4;
+        }
     }
 
-    if (g_drawingPuzzle)
+    if (g_drawingPuzzle) {
         return;
-    if (!drawShroud)
+    }
+    if (!drawShroud) {
         return;
+    }
 
     ZeroMemory(g_memoryBuffer->GetMap(0, 0),
            g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
@@ -1597,7 +1623,7 @@ DC_ADDRESS(0x1962fc, 0x1e0)
 MAC_ADDRESS(0x209c38, 0x2a8)
 void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
 {
-    widget* radar = g_advManager->m_advWindow->m_radarWidget;
+    const widget* radar = g_advManager->m_advWindow->m_radarWidget;
     int rx = radar->m_x;
     int ry = radar->m_y;
     int rw = radar->m_width;

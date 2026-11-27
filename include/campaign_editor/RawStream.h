@@ -160,16 +160,18 @@ inline TRawOStream& operator<<(TRawOStream& stream, const std::string& value)
 
 // A bit set as the map format packs it: (N + 7) / 8 bytes, bit 0 of byte 0
 // first.
-// Loki 0x0837b920 retains readBitset<9> with a bitset output pointer;
-// its 0x0837b986 shift/AND and readBitset<48>'s 0x0837b696 use right-shift
-// extraction, followed by the ordinary bitset proxy assignment.
+// Loki 0x0837b920 retains readBitset<9> with a bitset output pointer.
+// Each bit is the mask test the map editor's copy spells (editor/RawStream.h):
+// h3ccmped's expansions (0x4238b4, 0x409d17) build 1 << (i % 8), test the
+// byte with it and setne the proxy's bool. Loki's shift/AND (0x0837b986,
+// 0x0837b696) is g++'s single-bit-test folding of that comparison.
 template <size_t N>
 inline void readBitset(TRawIStream& stream, std::bitset<N>* bits)
 {
     unsigned char bytes[(N + 7) / 8];
     stream >> bytes;
     for (unsigned int i = 0; i < N; i++)
-        (*bits)[i] = (bytes[i / 8] >> (i % 8)) & 1;
+        (*bits)[i] = (bytes[i / 8] & (1 << (i % 8))) != 0;
 }
 
 // Loki 0x0837b580 clears the full buffer before const-subscript packing.

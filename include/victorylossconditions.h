@@ -13,6 +13,11 @@ class town;
 // Original DisplayVCWinLoss and CPlayerWonMsg publics use AAU: source struct.
 struct VictoryConditionStruct {
 public:
+    // Dreamcast records Type, AllowNormalVictory and AppliesToComputer (and
+    // LossConditionStruct::Type) as plain char. Retail keeps signed char:
+    // with plain char NewSMapHeader::save's type copy and -1 tests compile
+    // to different code (95.45 -> 94.57), while signed char reproduces the
+    // retail body.
     signed char m_type;
     signed char m_allowNormalVictory;
     signed char m_appliesToComputer;

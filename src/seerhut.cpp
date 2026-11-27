@@ -22,6 +22,17 @@
 #include "textresource.h"
 #include "winmgr.h"
 
+VA(0x00573580, 0x13)
+DC_ADDRESS(0x0f4b38, 0x2a)
+MAC_ADDRESS(0x169ac4, 0x48)
+TSeerHut::TSeerHut()
+{
+    m_quest = 0;
+    m_visitedPlayers = 0;
+    m_nameIndex = 0;
+    m_completedByPlayer = 0;
+}
+
 // CRT 0x56c3d0 binds this reference to the text loader's vector.
 // The five other retail references only read the binding.
 DATA(0x0069fab8) std::vector<std::string>& g_seerHutNameList = g_seerHutNames;
@@ -192,7 +203,8 @@ void type_quest::load(TAbstractFile* file, int version)
     m_textVariant = readValue<unsigned char>(file);
     m_limit = readLittleEndianValue<int>(file);
     m_proposalText = readLengthPrefixedString(file);
-    m_progressText = readLengthPrefixedString(file);
+    const std::string& progressText = readLengthPrefixedString(file);
+    m_progressText = progressText;
     m_completionText = readLengthPrefixedString(file);
 }
 
@@ -422,14 +434,17 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 // Mac Complete retains this common skill-picture dialog at code0:0x164e44
 // (three callers), taking text and four signed skill values after `this`.
 // Windows Complete expands it in slot 5; preserve one ordinary source body.
+// The picture descriptor lives for the whole body, as in the artifact
+// helper: slot 4's retail frame (sub esp, 0x64) keeps the extra four bytes
+// only this function-scope declaration produces (see slot 4's note).
 MAC_ADDRESS(0x164e44, 0xc0)
 void type_skill_quest::showSkillRequirementsDialog(
     const char* text, const signed char* skills)
 {
     std::vector<type_dialog_resource> dialogResources;
+    type_dialog_resource resource;
     for (int i = 0; i < kNumPrimarySkills; ++i) {
         if (skills[i] > 0) {
-            type_dialog_resource resource;
             resource.m_resource = 0x1f + i;
             resource.m_qualifier = 0x10000
                 | static_cast<unsigned short>(skills[i]);
@@ -463,7 +478,26 @@ void type_skill_quest::showSkillRequirementsDialog(
 // Keep the table lookup in the format argument: native +0x1b4..+0x1c4
 // format-register order is now exact, with every named helper retained.
 // Mac is 96.79% (592 bytes on both sides), with string homes uniformly four
-// bytes low; Windows is 74.91%. Extended c_str pointer lifetimes add spills.
+// bytes low. Extended c_str pointer lifetimes add spills.
+// The default template comes through questText(QUEST_TEXT_PROGRESS), the
+// column accessor the creature proposal uses; Mac folds that switch to the
+// same direct group load (0x16781c..0x167860). Its charged cost restores
+// retail's three retained string _Tidy calls (74.89 -> 88.96%). Residual:
+// both expanded helper copies call the vector allocator constructor out of
+// line in retail. The 2026-11-26 trace gives the helper copies 651/12 = 54
+// and 169/3 = 56 against the constructor's cb 51. A budget-only probe of two
+// free root sites after the final destructor reproduces both calls; with the
+// helper's function-scope descriptor it then matches every byte, including
+// retail's 0x64 frame (block-scoped descriptor: 0x60 frame, 99.86%). Without
+// the probe the function-scope descriptor measures 88.95% (block 88.96%).
+// No source for those sites is known. Flat or lower: empty() (88.69%),
+// trailing or early return, named first-arm text, array-reference or pointer
+// skills (skillRequirementText's cb stays 176, above the 175 save limit),
+// text.append(), direct-init locals, a textPointer local, size()/!= 0/bool
+// guards, swapped arms (43.23%), a ternary loop (84.58%), the call in the
+// condition, reversed comparison, aggregate descriptor init and reordered
+// qualifier operands. insert(end(), resource) gives 94.95% but Mac retains
+// push_back.
 VA(0x0056dad0, 0x28C)
 MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProgressDialog(hero* currentHero)
@@ -484,7 +518,7 @@ void type_skill_quest::doProgressDialog(hero* currentHero)
     } else {
         std::string requirement = skillRequirementText(missing);
         std::string text = formatString(
-            questTexts().m_text1.c_str(), requirement.c_str());
+            questText(QUEST_TEXT_PROGRESS).c_str(), requirement.c_str());
         text += getTimeLimitText();
         showSkillRequirementsDialog(text.c_str(), missing);
     }
@@ -571,11 +605,23 @@ std::string type_skill_quest::skillRequirementText(
 // retail directly calls skillRequirementText. Its paired Mac score falls
 // from 100% to 48.4568%. Symmetric direct assign(...) calls are byte-flat
 // at this function with either requirement spelling. Keep the native helper.
+// This lane may only edit the function block, so the row-selection body the
+// shared questTexts accessor needs (getTextColumn -> the column local, then
+// the indexed row local) is restored here as its own inlined helper. Its
+// emitted row computation is identical; the two locals make the inlined
+// callee cost > 40, which is what starves the second assign in retail.
+static inline const TSeerHutQuestText& skillQuestTexts(type_quest& quest)
+{
+    const TSeerHutTextColumn* column = quest.getTextColumn();
+    const TSeerHutQuestText& row = column->m_quest[quest.questType()];
+    return row;
+}
+
 VA(0x0056e0d0, 0x169)
 MAC_ADDRESS(0x165390, 0x144)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()
 {
-    const TSeerHutQuestText& texts = questTexts();
+    const TSeerHutQuestText& texts = skillQuestTexts(*this);
     std::string requirement = skillRequirementText(m_requiredSkills);
 
     if (m_proposalText.length() == 0)

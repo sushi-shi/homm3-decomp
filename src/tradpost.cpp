@@ -1468,16 +1468,14 @@ void doBlackMarket(hero* inHero, TArtifact* blackArtifacts)
 // the dialog gMarketWindow selects, seeds the shared trade selection, runs the
 // dialog modally, then follows gpWindowManager->dialogReturn from one pane to
 // the next until a window requests the exit command.
-// Residual (94.61%): Dreamcast rows 738/768/793/818/843 prove the five modal
-// calls and rows 739/769/794/819/844 their five direct deletes. Retail's
-// 50-block CFG differs from this build's 48 only because VC6 folds the Give
-// and SellArtifact delete sequences into one tail after choosing the same
-// eax/edx scratch pairing at both sites; the candidate's opposite pairing
-// prevents that optimizer merge. why-reg measured 58 register-visible slots:
-// its model's two best named-condition probes were byte-flat, and the guided
-// declaration/store-order sweep found no improvement (the moved-store
-// controls added 2--80 slots). Keep the separately attested delete statements
-// instead of spelling a synthetic shared-cleanup goto.
+// Dreamcast rows 738/768/793/818/843 prove the five modal calls and rows
+// 739/769/794/819/844 their five direct deletes. Row 845 stores
+// gpWindowManager->dialogReturn at case depth right after the last delete,
+// and every other case's `break` row sits one line after its delete row:
+// each case assigns the next pane itself and the SH compiler cross-jumped
+// the copies. Retail VC6 keeps two such tails (Give/SellArt and the other
+// three), which the per-case assignments reproduce exactly (94.61 -> 100%);
+// a single assignment after the switch merged them into one.
 VA(0x005ea130, 0x49c)
 DC_ADDRESS(0x188708, 0x4cc)
 MAC_ADDRESS(0x1f4f84, 0x5d8)  // anchor-callee (from 6 entry points) + linkorder
@@ -1509,6 +1507,7 @@ static void doMarket()
             g_tradeWindow->update(0);
             g_tradeWindow->doModal(0);
             delete g_tradeWindow;
+            g_marketWindow = g_windowManager->m_dialogReturn;
             break;
 
         case MARKET_WINDOW_GIVE: {
@@ -1535,6 +1534,7 @@ static void doMarket()
             g_giveWindow->update(0);
             g_giveWindow->doModal(0);
             delete g_giveWindow;
+            g_marketWindow = g_windowManager->m_dialogReturn;
             break;
         }
 
@@ -1555,6 +1555,7 @@ static void doMarket()
             g_buyWindow->update(0);
             g_buyWindow->doModal(0);
             delete g_buyWindow;
+            g_marketWindow = g_windowManager->m_dialogReturn;
             break;
 
         case MARKET_WINDOW_SELL_ARTIFACT:
@@ -1574,6 +1575,7 @@ static void doMarket()
             g_sellArtWindow->update(0);
             g_sellArtWindow->doModal(0);
             delete g_sellArtWindow;
+            g_marketWindow = g_windowManager->m_dialogReturn;
             break;
 
         case MARKET_WINDOW_SELL_CREATURE:
@@ -1593,13 +1595,13 @@ static void doMarket()
             g_sellCreatureWindow->update(0);
             g_sellCreatureWindow->doModal(0);
             delete g_sellCreatureWindow;
+            g_marketWindow = g_windowManager->m_dialogReturn;
             break;
 
         default:
             g_marketWindow = MARKET_COMMAND_ID;
-            continue;
+            break;
         }
-        g_marketWindow = g_windowManager->m_dialogReturn;
     }
 }
 
@@ -1787,6 +1789,7 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // Mac 0x1f6148..0x1f6164 and 0x1f6230..0x1f624c assign each resource
 // widget ID before its status mask (99.78% Windows). All 54 named calls agree.
 // Earlier word-order controls were flat; volatile scratch aliases remain unsupported.
+// DC 1174..1177 and 1223..1226 select each m_codeX with if/else (score-neutral).
 // DC line 1208 calls the ordinary private ComputeTradeRatios
 // helper (0x18ad48); lines 1210..1213 choose decimal versus inverse text
 // using its outputs. Restore those function-scope Temp locals and the
@@ -1810,23 +1813,23 @@ void TTradeResourceWindow::update(bool update)
 
     if (g_selectedArtifact != -1 && g_leftResource != -1 &&
         g_selectedArtifact != g_leftResource) {
-        int qtyLeft, qtyRight;
+        int leftQty, rightQty;
         const char* wordLeft;
         const char* wordRight;
         if (g_ratioInverted) {
-            qtyLeft = g_giveQuantity;
-            qtyRight = 1;
+            leftQty = g_giveQuantity;
+            rightQty = 1;
         } else {
-            qtyRight = g_giveQuantity;
-            qtyLeft = 1;
+            rightQty = g_giveQuantity;
+            leftQty = 1;
         }
-        wordRight = qtyRight > 1 ? (*g_generalText)[GENERAL_TEXT_UNITS]
+        wordRight = rightQty > 1 ? (*g_generalText)[GENERAL_TEXT_UNITS]
                                 : (*g_generalText)[GENERAL_TEXT_UNIT];
-        wordLeft = qtyLeft > 1 ? (*g_generalText)[GENERAL_TEXT_UNITS]
+        wordLeft = leftQty > 1 ? (*g_generalText)[GENERAL_TEXT_UNITS]
                               : (*g_generalText)[GENERAL_TEXT_UNIT];
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_RESOURCE_OFFER_FORMAT],
-                qtyLeft, wordLeft, g_resourceNames[g_leftResource],
-                qtyRight, wordRight, g_resourceNames[g_selectedArtifact]);
+                leftQty, wordLeft, g_resourceNames[g_leftResource],
+                rightQty, wordRight, g_resourceNames[g_selectedArtifact]);
     } else {
         if (g_leftDenominated)
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]);
@@ -1956,8 +1959,10 @@ void TTradeResourceWindow::update(bool update)
                 msg.m_codeX = widget::WIDGET_SET_Y;
                 msg.m_extra = g_resourceValueWidgetY[i];
                 broadcastMessage(msg);
-                msg.m_codeX = (g_selectedArtifact == i) ? widget::WIDGET_SET_STATUS
-                                                     : widget::WIDGET_CLEAR_STATUS;
+                if (g_selectedArtifact == i)
+                    msg.m_codeX = widget::WIDGET_SET_STATUS;
+                else
+                    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = MARKET_SELL_WOOD_ID + i;
                 msg.m_extra = widget::WIDGET_DRAWN;
                 broadcastMessage(msg);
@@ -1989,8 +1994,10 @@ void TTradeResourceWindow::update(bool update)
                     sprintf(g_text, "");
                 }
                 broadcastMessage(msg);
-                msg.m_codeX = (g_leftResource == i) ? widget::WIDGET_SET_STATUS
-                                                 : widget::WIDGET_CLEAR_STATUS;
+                if (g_leftResource == i)
+                    msg.m_codeX = widget::WIDGET_SET_STATUS;
+                else
+                    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = MARKET_BUY_WOOD_ID + i;
                 msg.m_extra = widget::WIDGET_DRAWN;
                 broadcastMessage(msg);

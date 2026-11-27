@@ -28,7 +28,8 @@ class TMapSpecsArtifactsPage;
 class TMapSpecsSpellsPage;
 class TMapSpecsSecSkillsPage;
 
-class TMapSpecsSheet : public CPropertySheet, public TMapSpecsPlayerSpecsPage::TParentSheet {
+// RTTI: the interface base is private (attributes 9).
+class TMapSpecsSheet : public CPropertySheet, private TMapSpecsPlayerSpecsPage::TParentSheet {
 public:
     TMapSpecsSheet(CWnd* pParentWnd, TGameMap* pMap, int terrainStrength);
     virtual ~TMapSpecsSheet();

@@ -9,10 +9,15 @@
 #include "va.h"
 #include "editor/VictoryCondition.h"
 
+// The RTTI marks every visitor's TVisitor base private (attributes 9); the
+// testers befriend the class that hands them to accept, keeping Loki's
+// dispatcher shape.
 namespace {
 
 template<class T>
-class TVictoryConditionRHSEquivalencyTester : public TVictoryCondition::TVisitor {
+class TVictoryConditionRHSEquivalencyTester : private TVictoryCondition::TVisitor {
+    friend class TVictoryConditionEquivalencyTester;
+
 public:
     TVictoryConditionRHSEquivalencyTester(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
 
@@ -25,7 +30,7 @@ private:
     bool _m_bEquivalent;
 };
 
-class TVictoryConditionEquivalencyTester : public TVictoryCondition::TVisitor {
+class TVictoryConditionEquivalencyTester : private TVictoryCondition::TVisitor {
 public:
     TVictoryConditionEquivalencyTester() : _m_bEquivalent(false) {}
 
@@ -64,7 +69,9 @@ private:
 };
 
 template<class T>
-class TLossConditionRHSEquivalencyTester : public TLossCondition::TVisitor {
+class TLossConditionRHSEquivalencyTester : private TLossCondition::TVisitor {
+    friend class TLossConditionEquivalencyTester;
+
 public:
     TLossConditionRHSEquivalencyTester(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
 
@@ -77,7 +84,7 @@ private:
     bool _m_bEquivalent;
 };
 
-class TLossConditionEquivalencyTester : public TLossCondition::TVisitor {
+class TLossConditionEquivalencyTester : private TLossCondition::TVisitor {
 public:
     TLossConditionEquivalencyTester() : _m_bEquivalent(false) {}
 

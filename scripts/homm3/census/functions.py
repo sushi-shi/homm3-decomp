@@ -6,6 +6,9 @@ strength, each later seed admitted only outside the bodies already decoded:
   1. the entry point, every FuncInfo unwind/catch funclet, the targets of
      direct calls and tail jumps, and the code after a zero-displacement
      `jmp` (VC6 never emits one inside a body: `$E` initializer thunks);
+     then every `.CRT$XCU` slot, which `_initterm` calls: a start even
+     where the descent of the function before it ran past a call that
+     never returns (`bitset::_Xran`'s throw, then the next initializer);
   2. code pointers in runs of data pointers (vtables, initializer and
      dispatch tables);
   3. code addresses decoded code loads as immediates (callbacks, atexit
@@ -39,6 +42,8 @@ from dataclasses import dataclass, field
 
 import capstone
 from capstone import x86
+
+from homm3.census import eh
 
 PAD = {0x90, 0xCC}
 #: `mov eax, imm32` + `jmp rel32`: the EH registration stub.
@@ -562,11 +567,17 @@ def run(image, log=print, catch_bodies=False, reviewed_starts=None, nonpointer_d
     def drain(check):
         while work:
             start, why = work.pop()
-            strong = why in ("call", "tail", "entry", "jmp0") or why.startswith("funclet")
+            strong = why in ("call", "tail", "entry", "jmp0", "initializer") \
+                or why.startswith("funclet")
             if c.in_text(start):
                 take(start, why, check=check and not strong)
 
     drain(False)
+    index()
+    # the entry's descent reached the CRT's `_initterm` calls: it calls each
+    # `.CRT$XCU` slot, a function start as strong as a call target
+    work.extend((t, "initializer") for t, _slot in eh.initializer_slots(c))
+    drain(True)
     index()
     for t, s in run_targets:
         work.append((t, f"table@0x{s:x}"))

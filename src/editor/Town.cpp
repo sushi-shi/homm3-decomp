@@ -388,7 +388,7 @@ void TTown::write(TRawOStream* pOStream, int version) const
     *pOStream << static_cast<signed char>(_m_bCustomGarrison);
     if (_m_bCustomGarrison)
         getGarrison().write(pOStream, version);
-    *pOStream << static_cast<signed char>(_m_bGroupedFormation);
+    *pOStream << static_cast<signed char>(getBGroupedFormation() ? 1 : 0);
     *pOStream << static_cast<signed char>(_m_bCustomBuildings);
     if (_m_bCustomBuildings) {
         unsigned char aBuilt[(s_kNumBuildings + 7) / 8];

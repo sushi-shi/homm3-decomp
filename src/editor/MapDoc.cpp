@@ -95,7 +95,8 @@ DATA(0x0059fe68) TTheObjectFactory theObjectFactory;
 // The terrain of a map layer as the terrain operations' map, for the
 // repaint: it is pointed at a layer for each repaint and changes only the
 // tiles' frames.
-class TRepaintMapOp : public TTerrainPlacementOp::TAbstractMap {
+// RTTI: the abstract map is a private base (attributes 9).
+class TRepaintMapOp : private TTerrainPlacementOp::TAbstractMap {
 public:
     void operator()(TGameMap* pMap, bool bSecondLayer, unsigned int specialTileFrequency)
     {
@@ -127,8 +128,8 @@ void TRepaintMapOp::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 void TRepaintMapOp::setFrame(const TTilePoint& loc, int frame)
 {
     TGameMap* pMap = _m_pMap;
-    TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
-    layer.getPCell(loc.x(), loc.y())->setTileNum(frame);
+    TGameMap::TLayer* pLayer = pMap->getPLayer(_m_bSecondLayer);
+    pLayer->getPCell(loc.x(), loc.y())->setTileNum(frame);
 }
 
 // The river and road maps' identical bodies fold onto this one (/OPT:ICF).
@@ -241,9 +242,9 @@ bool TRiverMap::getUpdateExtent(TTileExtent* pExtent) const
 VA(0x0045dc23, 0x86)
 void TRiverMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 {
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    TGameMap::TLayer::TCell* pCell = layer.getPCell(loc.x(), loc.y());
-    pCell->setRiverType(tile.m_terrain);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    TGameMap::TLayer::TCell* pCell = pLayer->getPCell(loc.x(), loc.y());
+    pCell->setRiverType(TRiverType(tile.m_terrain));
     pCell->setRiverTileNum(tile.m_frame);
     pCell->setBRiverHFlipped(tile.m_flipX);
     pCell->setBRiverVFlipped(tile.m_flipY);
@@ -253,8 +254,8 @@ void TRiverMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 VA(0x0045dca9, 0x4b)
 void TRiverMap::setLineType(const TTilePoint& loc, int type)
 {
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    layer.getPCell(loc.x(), loc.y())->setRiverType(type);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    pLayer->getPCell(loc.x(), loc.y())->setRiverType(TRiverType(type));
     _touch(loc);
 }
 
@@ -330,9 +331,9 @@ void TRoadMap::reset()
 VA(0x0045ddd8, 0x86)
 void TRoadMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 {
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    TGameMap::TLayer::TCell* pCell = layer.getPCell(loc.x(), loc.y());
-    pCell->setRoadType(tile.m_terrain);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    TGameMap::TLayer::TCell* pCell = pLayer->getPCell(loc.x(), loc.y());
+    pCell->setRoadType(TRoadType(tile.m_terrain));
     pCell->setRoadTileNum(tile.m_frame);
     pCell->setBRoadHFlipped(tile.m_flipX);
     pCell->setBRoadVFlipped(tile.m_flipY);
@@ -342,8 +343,8 @@ void TRoadMap::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 VA(0x0045de5e, 0x4d)
 void TRoadMap::setLineType(const TTilePoint& loc, int type)
 {
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    layer.getPCell(loc.x(), loc.y())->setRoadType(type);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    pLayer->getPCell(loc.x(), loc.y())->setRoadType(TRoadType(type));
     _touch(loc);
 }
 
@@ -539,7 +540,8 @@ VA_COMPGEN(0x0045e320, 0x6, RUNTIME_CLASS_GETTER, TMapDocInvalidFileVersion)
 
 // The terrain placement operation on one map layer: the operation paints
 // through the document's map and reports the changed cells in an update.
-class TMapDoc::_TTerrainPlacementOp : public TTerrainPlacementOp::TAbstractMap {
+// RTTI: the abstract map is a private base (attributes 9).
+class TMapDoc::_TTerrainPlacementOp : private TTerrainPlacementOp::TAbstractMap {
 public:
     _TTerrainPlacementOp(TMapDoc* pDoc, bool bSecondLayer, TTerrainType terrainType,
                          unsigned int specialTileFrequency);
@@ -616,8 +618,8 @@ VA(0x0045e542, 0xa1)
 void TMapDoc::_TTerrainPlacementOp::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
 {
     _touch(loc);
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    TGameMap::TLayer::TCell* pCell = layer.getPCell(loc.x(), loc.y());
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    TGameMap::TLayer::TCell* pCell = pLayer->getPCell(loc.x(), loc.y());
     TTerrainType oldType = pCell->getTerrainType();
     pCell->setTerrainType(TTerrainType(tile.m_terrain));
     pCell->setTileNum(tile.m_frame);
@@ -644,8 +646,8 @@ VA(0x0045e616, 0x4a)
 void TMapDoc::_TTerrainPlacementOp::setFrame(const TTilePoint& loc, int frame)
 {
     _touch(loc);
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
-    layer.getPCell(loc.x(), loc.y())->setTileNum(frame);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bSecondLayer);
+    pLayer->getPCell(loc.x(), loc.y())->setTileNum(frame);
 }
 
 VA(0x0045e660, 0x26)
@@ -686,9 +688,10 @@ int TMapDoc::_TTerrainPlacementOp::getFrame(const TTilePoint& loc)
 
 // A river placement operation on one map layer, drawing from a starting
 // cell to each next one.
-class TMapDoc::_TRiverPlacementOp : public TRiverMap {
+// RTTI: TRiverMap is a private base (attributes 9).
+class TMapDoc::_TRiverPlacementOp : private TRiverMap {
 public:
-    _TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int riverType, const TTilePoint& start);
+    _TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, TRiverType riverType, const TTilePoint& start);
 
     void operator()(const TTilePoint& loc);
 
@@ -698,7 +701,7 @@ private:
 };
 
 VA(0x0045e752, 0xe7)
-TMapDoc::_TRiverPlacementOp::_TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int riverType,
+TMapDoc::_TRiverPlacementOp::_TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer, TRiverType riverType,
                                                 const TTilePoint& start)
     : TRiverMap(pDoc->_m_pMap, bSecondLayer),
       _m_pDoc(pDoc),
@@ -727,7 +730,8 @@ void TMapDoc::_TRiverPlacementOp::operator()(const TTilePoint& loc)
 }
 
 // A river erase operation on one map layer.
-class TMapDoc::_TRiverEraseOp : public TRiverMap {
+// RTTI: TRiverMap is a private base (attributes 9).
+class TMapDoc::_TRiverEraseOp : private TRiverMap {
 public:
     _TRiverEraseOp(TMapDoc* pDoc, bool bSecondLayer);
 
@@ -762,9 +766,10 @@ void TMapDoc::_TRiverEraseOp::operator()(unsigned int left, unsigned int top, un
 }
 
 // A road placement operation on one map layer.
-class TMapDoc::_TRoadPlacementOp : public TRoadMap {
+// RTTI: TRoadMap is a private base (attributes 9).
+class TMapDoc::_TRoadPlacementOp : private TRoadMap {
 public:
-    _TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int roadType, const TTilePoint& start);
+    _TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, TRoadType roadType, const TTilePoint& start);
 
     void operator()(const TTilePoint& loc);
 
@@ -774,7 +779,7 @@ private:
 };
 
 VA(0x0045ea2a, 0xe7)
-TMapDoc::_TRoadPlacementOp::_TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, int roadType,
+TMapDoc::_TRoadPlacementOp::_TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, TRoadType roadType,
                                               const TTilePoint& start)
     : TRoadMap(pDoc->_m_pMap, bSecondLayer),
       _m_pDoc(pDoc),
@@ -803,7 +808,8 @@ void TMapDoc::_TRoadPlacementOp::operator()(const TTilePoint& loc)
 }
 
 // A road erase operation on one map layer.
-class TMapDoc::_TRoadEraseOp : public TRoadMap {
+// RTTI: TRoadMap is a private base (attributes 9).
+class TMapDoc::_TRoadEraseOp : private TRoadMap {
 public:
     _TRoadEraseOp(TMapDoc* pDoc, bool bSecondLayer);
 
@@ -1248,8 +1254,8 @@ void TMapDoc::onObjectPropertiesChanged(bool bSecondLayer, unsigned int objID)
 {
     assert(_m_pMap != NULL);
     assert(!bSecondLayer || _m_pMap->isTwoLayer());
-    TGameMap::TLayer& layer = _m_pMap->getLayer(bSecondLayer);
-    TTileExtent extent = layer.getObjectExtent(objID);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(bSecondLayer);
+    TTileExtent extent = pLayer->getObjectExtent(objID);
     _sendUpdate(bSecondLayer, extent.left(), extent.top(), extent.width(), extent.height());
 }
 
@@ -1284,7 +1290,7 @@ void TMapDoc::terrainFill(unsigned int left, unsigned int top, unsigned int widt
 }
 
 VA(0x0045fc93, 0x89)
-void TMapDoc::startRiverPlacementOp(bool bSecondLayer, int riverType, unsigned int x, unsigned int y)
+void TMapDoc::startRiverPlacementOp(bool bSecondLayer, TRiverType riverType, unsigned int x, unsigned int y)
 {
     assert(_m_pMap != NULL);
     assert(_m_pRiverPlacementOp == NULL);
@@ -1313,7 +1319,7 @@ void TMapDoc::placeRiver(unsigned int x, unsigned int y)
 }
 
 VA(0x0045fd5c, 0x89)
-void TMapDoc::startRoadPlacementOp(bool bSecondLayer, int roadType, unsigned int x, unsigned int y)
+void TMapDoc::startRoadPlacementOp(bool bSecondLayer, TRoadType roadType, unsigned int x, unsigned int y)
 {
     assert(_m_pMap != NULL);
     assert(_m_pRoadPlacementOp == NULL);
@@ -1385,11 +1391,11 @@ void TMapDoc::erase(unsigned int left, unsigned int top, unsigned int width, uns
     assert(_m_pRoadEraseOp != NULL);
     (*_m_pRiverEraseOp)(left, top, width, height);
     (*_m_pRoadEraseOp)(left, top, width, height);
-    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bEraseUnderground);
+    TGameMap::TLayer* pLayer = _m_pMap->getPLayer(_m_bEraseUnderground);
     for (unsigned int y = top; y < top + height; y++) {
         for (unsigned int x = left; x < left + width; x++) {
-            while (layer.getNumObjectIDsAtCell(x, y) > 0)
-                removeObject(_m_bEraseUnderground, layer.getObjectIDAtCell(x, y, 0));
+            while (pLayer->getNumObjectIDsAtCell(x, y) > 0)
+                removeObject(_m_bEraseUnderground, pLayer->getObjectIDAtCell(x, y, 0));
         }
     }
 }

@@ -29,8 +29,8 @@ THeroPlaceholderPropsDlg::THeroPlaceholderPropsDlg(CWnd* pParent, TGameMap* pMap
     _m_pNewMap = std::auto_ptr<TGameMap>(new TGameMap(*_m_pMap));
     if (!_m_pNewMap.get())
         throw TAllocationFailure();
-    TGameMap::TLayer& layer = _m_pNewMap->getLayer(_m_bSecondLayer);
-    _m_pNewPlaceholder = dynamic_cast<THeroPlaceholder*>(layer.getPObject(_m_objectID));
+    TGameMap::TLayer* pLayer = _m_pNewMap->getPLayer(_m_bSecondLayer);
+    _m_pNewPlaceholder = dynamic_cast<THeroPlaceholder*>(pLayer->getPObject(_m_objectID));
 }
 
 VA_COMPGEN(0x0044d4f4, 0x1c, SCALAR_DELETING_DTOR, THeroPlaceholderPropsDlg)

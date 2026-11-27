@@ -932,6 +932,10 @@ rva	size	name	library	member	sections	symbol	verdict
 0xf5b9e	30	?_CleanUp@std@@YAXXZ	LIBCPMT.LIB	xlock.obj	xlock.obj#5	?_CleanUp@std@@YAXXZ	exact
 0xf5bbc	21	??1_Lockit@std@@QAE@XZ	LIBCPMT.LIB	xlock.obj	xlock.obj#7	??1_Lockit@std@@QAE@XZ	exact
 0xf5bd1	156	?clear@ios_base@std@@QAEXH_N@Z	LIBCPMT.LIB	ios.obj	ios.obj#5	?clear@ios_base@std@@QAEXH_N@Z	exact
+0xf5c6d	61	??1failure@ios_base@std@@UAE@XZ	LIBCPMT.LIB	ios.obj	ios.obj#49	??1failure@ios_base@std@@UAE@XZ	exact
+0xf5caa	29	?_Doraise@failure@ios_base@std@@MBEXXZ	LIBCPMT.LIB	ios.obj	ios.obj#52	?_Doraise@failure@ios_base@std@@MBEXXZ	exact
+0xf5cc7	28	??_Gfailure@ios_base@std@@UAEPAXI@Z	LIBCPMT.LIB	ios.obj	ios.obj#53	??_Gfailure@ios_base@std@@UAEPAXI@Z	exact
+0xf5ce3	24	??0failure@ios_base@std@@QAE@ABV012@@Z	LIBCPMT.LIB	ios.obj	ios.obj#55	??0failure@ios_base@std@@QAE@ABV012@@Z	exact
 0xf5cfb	80	??1ios_base@std@@UAE@XZ	LIBCPMT.LIB	ios.obj	ios.obj#70	??1ios_base@std@@UAE@XZ	exact
 0xf5d4b	34	?_Callfns@ios_base@std@@AAEXW4event@12@@Z	LIBCPMT.LIB	ios.obj	ios.obj#81	?_Callfns@ios_base@std@@AAEXW4event@12@@Z	exact
 0xf5d6d	78	?_Addstd@ios_base@std@@IAEXXZ	LIBCPMT.LIB	ios.obj	ios.obj#87	?_Addstd@ios_base@std@@IAEXXZ	exact

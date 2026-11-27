@@ -53,7 +53,7 @@ public:
         : TStrGzInflateBufBase(pData, size), TGzInflateBuf(&m_strBuf) {}
 };
 
-class TScenarioStartingBonusWriter : public TScenarioStartingBonus::TVisitor {
+class TScenarioStartingBonusWriter : private TScenarioStartingBonus::TVisitor {
 public:
     void write(const TScenarioStartingBonus& bonus, TRawOStream& oStream, int version);
 
@@ -71,7 +71,7 @@ private:
     int m_version;
 };
 
-class TScenarioStartingOptionsWriter : public TScenarioStartingOptions::TVisitor {
+class TScenarioStartingOptionsWriter : private TScenarioStartingOptions::TVisitor {
 public:
     void write(const TScenarioStartingOptions* pOptions, TRawOStream& oStream, int version);
 
@@ -283,6 +283,18 @@ DATA(0x004c6f40) TScenarioStartingBonusWriter bonusWriter;
 // Retail keeps per-case ownership transfers separate and retains the final
 // auto_ptr cleanup. Named owning values, in the resource arm or the other
 // arms, do not recover that cleanup sharing; keep the canonical temporaries.
+// The retained cleanup is the inline budget running out at the resource
+// arm's temporary: the artifact arm's single conditional read leaves the
+// caller lean enough, where an if/else assignment pair kept it inline.
+// Residual: VC6 gives this conditional a short result (movsx ax, then
+// movsx edi); retail widens each branch's read to int directly. Switching
+// on the read itself, an inline amount read, an unsigned skill index, a
+// typed creature local and a !get() test do not recover it. The inline trace
+// puts this form at cb 1025 (budget 38 at the resource arm's ~auto_ptr);
+// the if/else pair costs 1036 (60), and retail's refusals of that ~auto_ptr
+// and the return copy need cb <= 1028. An unsigned loop index (-3), no
+// final break and a typed creature local (-2 together) reach only 1031;
+// a size() loop bound, a named stack and a reversed test do not help.
 VA(0x004115a0, 0x540)
 auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int version)
 {
@@ -309,11 +321,7 @@ auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int ver
     }
     case eBonusArtifact: {
         int hero = readValue<short>(iStream);
-        int artifact;
-        if (version >= 3)
-            artifact = readValue<short>(iStream);
-        else
-            artifact = readValue<signed char>(iStream);
+        int artifact = version >= 3 ? readValue<short>(iStream) : readValue<signed char>(iStream);
         pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusArtifact(hero, artifact));
         break;
     }
@@ -405,6 +413,19 @@ DATA(0x004c6f30) TScenarioStartingOptionsWriter optionsWriter;
 
 // Named and temporary TChoice value constructors do not recover retail
 // starting-options assignment/cleanup boundaries; keep the measured form.
+// Retail's hero (default) arm calls auto_ptr::operator= and ~vector out of
+// line: the inline budget is spent there, about 25-50 caller cb below this
+// form. Constructing each choice as TChoice(<second read>, player) with the
+// player local reproduces retail's loops exactly but leaves the budget too
+// high to refuse operator= (87.6%); reading both values in the constructor
+// arguments (96.9%, contradicted by retail's early player widening and
+// order-dependent) or `case eOptionsNone: return pOptions;` (96.8%,
+// contradicted by retail's compare and single return) hit the budget.
+// `if (type)` and countdown loops do not. The inline trace puts this form's
+// budget at the hero operator= at 238; retail's refusals of operator=,
+// ~vector, the TAllocationFailure constructor and the return copy need
+// 56..101 there. push_back(TChoice(hero, player)) with both locals named
+// lands at 143..198 (87.6%: the temporary's ~auto_ptr goes out of line).
 VA(0x00411ee0, 0x518)
 auto_ptr<TScenarioStartingOptions> readStartingOptions(TRawIStream& iStream, int version)
 {
@@ -578,8 +599,9 @@ VA_COMPGEN(0x00412df0, 0x6, RUNTIME_CLASS_GETTER, TCampaignDocInvalidFileVersion
 
 namespace {
 
-// Remaining retail difference: the description length and prologue/epilogue
-// auto_ptr temporaries occupy different stack homes; calls and CFG agree.
+// The name and description go out in one chained expression: written as two
+// statements, the description length shared the name length's stack home and
+// moved the prologue/epilogue auto_ptr temporaries.
 VA(0x00412e00, 0x6f0)
 void saveCampaign(const TCampaign& campaign, int version, CFile* pFile)
 {
@@ -590,8 +612,7 @@ void saveCampaign(const TCampaign& campaign, int version, CFile* pFile)
         TRawOStream oStream(&deflateBuf);
         writeValue<int>(oStream, kFileVersions[version]);
         writeValue<ubyte>(oStream, campaign.getType());
-        oStream << campaign.getName();
-        oStream << campaign.getDescription();
+        oStream << campaign.getName() << campaign.getDescription();
         writeValue<ubyte>(oStream, campaign.getBDifficultyChoice());
         writeValue<ubyte>(oStream, campaign.getMusic());
         for (scenario = 0; scenario < campaign.getMapTraits().m_numRegions; scenario++) {
@@ -757,7 +778,7 @@ END_MESSAGE_MAP()
 
 VA(0x004140a0, 0x2b)
 TCampaignDoc::TCampaignDoc()
-    : _m_bNewCampaign(false), _m_newVersion(eCampaignVersionShadowOfDeath), _m_newType(kDefaultNewCampaignType)
+    : _m_bNewCampaign(false), _m_newOptions(eCampaignVersionShadowOfDeath, kDefaultNewCampaignType)
 {
 }
 
@@ -771,15 +792,14 @@ BOOL TCampaignDoc::OnNewDocument()
 {
     if (!CDocument::OnNewDocument())
         return FALSE;
-    _m_pCampaign = auto_ptr<TCampaign>(new TCampaign(_m_newType));
+    _m_pCampaign = auto_ptr<TCampaign>(new TCampaign(_m_newOptions.m_type));
     if (_m_pCampaign.get() == NULL)
         throw TAllocationFailure();
-    // Retail snapshots the requested version, resets the defaults, then stores it.
-    // A const snapshot and bool return spelling emit the same remaining tail.
-    int version = _m_newVersion;
-    _m_newVersion = eCampaignVersionShadowOfDeath;
-    _m_newType = kDefaultNewCampaignType;
-    _m_version = version;
+    // Retail builds the reset options in registers before storing them (the
+    // version store sinks below): a temporary options value assigned whole, not
+    // two member stores (95.9%) or a snapshot local before them (98.2%).
+    _m_version = _m_newOptions.m_version;
+    _m_newOptions = TNewCampaignOptions(eCampaignVersionShadowOfDeath, kDefaultNewCampaignType);
     return TRUE;
 }
 
@@ -894,23 +914,25 @@ BOOL TCampaignDoc::OnOpenDocument(LPCTSTR lpszPathName)
     return TRUE;
 }
 
-// Retail formats the file version before the supported version. The remaining
-// difference is argument registers: named version/format values and exception
-// references do not close it.
+// TMapDoc::ReportSaveLoadException's shape: the failure's inline version
+// getters and one message box after both prompts (VC6 duplicates it into
+// each arm). Direct field reads load the format second (97.7%); getters
+// with a message box per arm move the later registers (96.1%).
 VA(0x00414b00, 0xda)
 void TCampaignDoc::ReportSaveLoadException(LPCTSTR lpszPathName, CException* e, BOOL bSaving, UINT nIDPDefault)
 {
     CString prompt;
     if (e->IsKindOf(RUNTIME_CLASS(TCampaignDocInvalidFileVersion))) {
         TCampaignDocInvalidFileVersion* pVersionFailure = static_cast<TCampaignDocInvalidFileVersion*>(e);
-        prompt.Format(kInvalidCampaignVersionFmtStr, pVersionFailure->m_fileVersion, pVersionFailure->m_currentVersion);
-        AfxMessageBox(prompt, MB_ICONEXCLAMATION);
+        prompt.Format(kInvalidCampaignVersionFmtStr, pVersionFailure->getFileVersion(),
+                      pVersionFailure->getCurrentVersion());
     } else if (e->IsKindOf(RUNTIME_CLASS(TCampaignDocLoadFailure))) {
         prompt = kInvalidCampaignFileStr;
-        AfxMessageBox(prompt, MB_ICONEXCLAMATION);
     } else {
         CDocument::ReportSaveLoadException(lpszPathName, e, bSaving, nIDPDefault);
+        return;
     }
+    AfxMessageBox(prompt, MB_ICONEXCLAMATION);
 }
 
 VA(0x00414be0, 0x1b0)
@@ -978,8 +1000,7 @@ BOOL TCampaignDoc::SaveModified()
         TNewCampaignDlg dlg(AfxGetMainWnd(), eCampaignVersionShadowOfDeath, kDefaultNewCampaignType);
         if (dlg.DoModal() != IDOK)
             return FALSE;
-        _m_newVersion = dlg.getVersion();
-        _m_newType = dlg.getType();
+        _m_newOptions = TNewCampaignOptions(dlg.getVersion(), dlg.getType());
     }
     return TRUE;
 }

@@ -446,12 +446,18 @@ float type_AI_player::getAttackBonus(short player)
 // its type/amount at sp+0x6c/0x74; Mac uses the same C0/C8 homes before the
 // later whole-record copy. This recovers retail's word growth addition and
 // the top-three loop's three-dword copy, including its amount-word reload.
-// Residual (95.8698%): retail expands std::_Unguarded_insert within sort;
-// VC6 retains it here (79 vs 81 blocks). Other masked instruction differences
-// are the adjacent vector begin/end reload order. Independent population
-// locals or one collapsed value double lose native stores; using the record
-// type as the initialization/valuation counter does not improve the match.
-// Direct final-loop reads are supported by DC; an accessor call lost score.
+// The initialization and valuation loops count in that record's type field:
+// DC keeps both counters in creature.m_type (@(40,r14) = sp+0x6c) and Mac in
+// its 0xc0 home. The final running sum is an explicit assignment, as in
+// getResourceValue. Together they let VC6 expand sort's _Unguarded_insert as
+// retail does (the += sum and independent counters keep it out of line).
+// Residual (99.6719%): one 64-bit bit-mask test loads its halves in another
+// order and four spill slots (this, town counter, town, building) rotate.
+// Shared town/resource counters (99.24) or one currentTown (99.16) are lower;
+// declaration order, for-scoped counters, operand order, a long cast sum and
+// the efficiency declaration's placement are byte-neutral.
+// Independent population locals or one collapsed value double lose native
+// stores. Direct final-loop reads are supported by DC; an accessor lost score.
 VA(0x00428740, 0x68E)
 DC_ADDRESS(0x02e188, 0x64e)
 MAC_ADDRESS(0x02b43c, 0x704)  // linkorder
@@ -493,10 +499,10 @@ void type_AI_player::calculateDemand()
     }
 
     std::vector<type_creature_value> creatures(kNumCreatureTypes);
-    int creatureIndex;
-    for (creatureIndex = 0; creatureIndex < kNumCreatureTypes; creatureIndex++) {
-        creatures[creatureIndex].m_type = H3_ENUM_DECODE(TCreatureType, creatureIndex);
-        creatures[creatureIndex].m_amount = 0;
+    for (creature.m_type = TCreatureType(0); creature.m_type < kNumCreatureTypes;
+         creature.m_type = TCreatureType(creature.m_type + 1)) {
+        creatures[creature.m_type].m_type = creature.m_type;
+        creatures[creature.m_type].m_amount = 0;
     }
 
     int dwellingTownIndex;
@@ -516,10 +522,10 @@ void type_AI_player::calculateDemand()
         }
     }
 
-    int valueCreature;
-    for (valueCreature = 0; valueCreature < kNumCreatureTypes; valueCreature++)
-        creatures[valueCreature].m_value = creatures[valueCreature].m_amount
-            * akCreatureTypeTraits[valueCreature].AI_value;
+    for (creature.m_type = TCreatureType(0); creature.m_type < kNumCreatureTypes;
+         creature.m_type = TCreatureType(creature.m_type + 1))
+        creatures[creature.m_type].m_value = creatures[creature.m_type].m_amount
+            * akCreatureTypeTraits[creature.m_type].AI_value;
 
     std::sort(creatures.begin(), creatures.end(),
               std::greater<type_creature_value>());
@@ -578,7 +584,7 @@ void type_AI_player::calculateDemand()
     int resourceTotal = 0;
     int averageResource;
     for (averageResource = 0; averageResource < 6; averageResource++)
-        resourceTotal += m_resourceValue[averageResource];
+        resourceTotal = resourceTotal + m_resourceValue[averageResource];
     player->m_ai.m_averageResourceValue = resourceTotal / 5;
 }
 
@@ -1025,26 +1031,12 @@ long type_AI_player::getTotalValue(long basicValue, int* cost)
     return basicValue * 1000 / totalCost;
 }
 
-// Residual (85.8333%, polish-45 - first full evidence pass on this row):
-// blocks (31/31), branches (17/17) and the report-level call view AGREE, so
-// the whole 63 B is induction-variable HOMING.  The loop needs four
-// call-crossing values - &supply[resource], trade_qty, this+0x40 (the shared
-// base for reserved_funds/resource_supply/resource_demand) and
-// &player->resources[resource] - plus the constant `cost - supply` byte
-// difference.  Retail parks only TWO in registers (ESI = supply, EDX =
-// this+0x40, which is live only on the else path and therefore never crosses
-// push_back) and keeps player->resources in memory at [ebp+0x14] and the
-// constant at [ebp-0x8]; that leaves EDI free, so retail loads
-// `cost[resource]` into EDI for the `> 0` test and divides with `idiv edi`.
-// This compile keeps player->resources in EDX and this+0x40 in EDI, so the
-// `> 0` test has to use EAX, EAX is then needed for the dividend, and the
-// divisor is re-read as the memory operand `idiv [ecx+esi]` (plus the extra
-// `mov ecx,[ebp+0x14]` that costs the byte delta).  Dreamcast agrees with the
-// source as written: dc loads cost[resource] twice (bp 1398 and the
-// `cmp/pl` at 0x303a8) and reuses the SECOND load as the __divls divisor, so
-// a single hoisted `int resource_cost` above the statement would contradict
-// it.  Per docs/vc6/regalloc.md 5 this is first-fit fed a different pseudo
-// processing order - the C1 handle-state class.
+// Exact: the reserve clamp is a ternary on the reserved-funds load, and the
+// supply-minus-demand cap is written inline (no `available` local), which
+// makes VC6 base the array addressing on the demand slot as retail does.
+// Failed probes: named reserve local with if (85.8), int/bool flags, limit
+// declared in-branch, push_back of the expression, postincrement, swapped
+// guard order, avail-first local, ternary/min()/max() clamps, negated demand.
 // E:\gamedcs\ai_player.cpp:1383
 VA(0x0042a2b0, 0x1BF)
 DC_ADDRESS(0x030334, 0x196)
@@ -1069,15 +1061,14 @@ bool type_AI_player::checkTradeSupply(const int* cost, long number,
             limit = player->m_resources[resource] / cost[resource] + 1;
             tradeQty.push_back(limit);
         } else {
-            int reserve = m_reservedFunds[resource];
-            if (reserve < 20)
-                reserve = 20;
-            supply[resource] -= reserve;
+            supply[resource] -= m_reservedFunds[resource] < 20
+                                    ? 20
+                                    : m_reservedFunds[resource];
 
-            int available = static_cast<int>(m_resourceSupply[resource]
-                                             - m_resourceDemand[resource]);
-            if (supply[resource] > available)
-                supply[resource] = available;
+            if (supply[resource]
+                > m_resourceSupply[resource] - m_resourceDemand[resource])
+                supply[resource] =
+                    m_resourceSupply[resource] - m_resourceDemand[resource];
             if (supply[resource] <= 0)
                 supply[resource] = 0;
             else
@@ -1135,6 +1126,10 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
     // Current residual: 89/89 CFG blocks, same 35 calls (folded native vector
     // aliases differ), but VC6 uses eight extra frame bytes and different loop
     // register homes. Keep true vector size(), not synthetic cardinality helpers.
+    // Retail keeps markets/canBuildMarket in EDI/BL and spills player; ours
+    // spills the first two. Flat: bool flag, int/unsigned markets, the
+    // currentTown declaration outside the loop, flag-first declarations, an
+    // `else if (flag && canBuild)` arm. Player-first falls to 84.54%.
     long markets = 0;
     unsigned char canBuildMarket = 0;
     playerData* player = &g_game->m_players[m_team];
@@ -1378,10 +1373,12 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
         switch (currentTown->m_type) {
         case TOWN_RAMPART:
             if (building == EXTRA_1_ID) {
-                if (g_game->m_day == g_aiDayOfWeekSunday)
-                    return static_cast<long>(
-                        player->m_resources[GOLD]
-                        * player->m_ai.m_resourceValue[GOLD] / 10.0);
+                // DC line 1227 and Mac 0x2dc04 keep this early return 0.
+                if (g_game->m_day != g_aiDayOfWeekSunday)
+                    return 0;
+                return static_cast<long>(
+                    player->m_resources[GOLD]
+                    * player->m_ai.m_resourceValue[GOLD] / 10.0);
             } else if (building == SPECIAL_BUILDING_ID) {
                 return 2 * player->m_ai.m_averageResourceValue;
             }
@@ -1428,37 +1425,34 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
 // rescans from zero. Returns the chain, or 0 when a link is not legal
 // here. Single call site - no retail body.
 
-// `k` STARTS AT `building`, NOT AT 0, and retail proves it twice inside
-// purchase_building: `k = 0` makes `k < MAX_BUILDING_TYPE` provably true,
-// so VC6 drops the while's top test (54 branches against retail's 55) AND
-// strength-reduces `building` away entirely, giving a 0x690 frame against
-// retail's 0x694. With `k = building` the guard is retail's
-// `cmp <&bitNumber[building]>, <end> / jge` and `building` keeps its own
-// slot at [ebp-0x34]. The two spellings are equivalent - `requirements`
-// starts as bitNumber[building] alone, so a scan from 0 can only hit at
-// `building` - and this one is what the bytes say. 96.20 -> 97.32.
+// DC CodeView names the working set `prerequisites` and the returned
+// chain `requirements`, and records no separate scan index: DC r6 and Mac r4
+// keep the `building` parameter itself as the scan, reset at line 1300 and
+// stepped at 1303. Scanning the parameter instead of a `k = building` copy
+// lets VC6 keep the chain's low word in ECX through get_full_cost as retail
+// does (purchase_building 94.13 -> 97.93). The scan must start at `building`:
+// a scan reset to 0 before the loop drops the while's top test.
 DC_ADDRESS(0x030048, 0x106)
 MAC_ADDRESS(0x02dd5c, 0x10c)
 static __int64 getRequirements(const town* currentTown,
                                 type_building_id building)
 {
-    __int64 requirements = g_bitNumber[building];
-    __int64 seen = 0;
-    int k = building;
-    while (k < MAX_BUILDING_TYPE) {
-        if (requirements & g_bitNumber[k]) {
-            if (!currentTown->isLegalBuilding(H3_ENUM_DECODE(type_building_id, k)))
+    __int64 prerequisites = g_bitNumber[building];
+    __int64 requirements = 0;
+    while (building < MAX_BUILDING_TYPE) {
+        if (prerequisites & g_bitNumber[building]) {
+            if (!currentTown->isLegalBuilding(H3_ENUM_DECODE(type_building_id, building)))
                 return 0;
-            seen |= g_bitNumber[k];
-            requirements |= g_hierarchyMask[currentTown->m_type][k];
-            requirements &= ~currentTown->getBuildingMask();
-            requirements &= ~seen;
-            k = 0;
+            requirements |= g_bitNumber[building];
+            prerequisites |= g_hierarchyMask[currentTown->m_type][building];
+            prerequisites &= ~currentTown->getBuildingMask();
+            prerequisites &= ~requirements;
+            building = H3_ENUM_DECODE(type_building_id, 0);
         } else {
-            ++k;
+            building = H3_ENUM_DECODE(type_building_id, building + 1);
         }
     }
-    return seen;
+    return requirements;
 }
 
 // E:\gamedcs\ai_player.cpp:1313
@@ -1502,12 +1496,14 @@ static void markValues(long* fullValue, long totalValue,
 // towns is bought after a trade pass, gated by CanBuy for the
 // hall/marketplace band and by reserved funds everywhere else.
 
-// Residual (97.42%): VC6 hoists a second `gpGame` load above the faction
-// switch, where retail reloads it inside the RAMPART arm and again inside
-// the NECROPOLIS hero scan; that stolen register is also why our scan
+// Residual (97.93%): VC6 CSEs the value_of_building `gpGame` load into the
+// faction switch, where retail reloads it inside the RAMPART arm and again
+// inside the NECROPOLIS hero scan; that stolen register is also why our scan
 // counter spills to the frame where retail keeps it in EDX, and why the
-// three growth arms' scratch registers are rotated by one against
-// retail's. Branches, rets and the frame are all exact.
+// growth arms' scratch registers are rotated by one against retail's.
+// Branches, rets, calls and the frame are all exact. Flat probes: a
+// playerData reference, a named hero local, an int Necropolis value, and a
+// single-expression prerequisites update.
 // DC lines 1710/1776 call game::TownAlreadyBuiltOn and line 1721 calls
 // town::HasBuilding. Mac purchaseBuilding at 0:0x2ed58 expands both town
 // vector built flags and the active-building mask in those positions.
@@ -1871,9 +1867,10 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     type_building_id bestBuilding;
     __int64 buildMask = currentTown->getBuildableMask();
     short morale = currentHero->getMorale(0, 0, 1);
+    __int64* maskPtr = &buildMask;
     for (int building = DWELLING_0_ID;
          building <= DWELLING_6_ID; building++) {
-        if (buildMask & g_bitNumber[building]) {
+        if (*maskPtr & g_bitNumber[building]) {
             creature = g_dwellingType[currentTown->m_type][building - DWELLING_0_ID];
             traits = &akCreatureTypeTraits[creature];
             int* cost = currentTown->getBuildCostArray(
@@ -2858,7 +2855,7 @@ static void markDangerZones(const hero* ourHero, hero* enemyHero,
         for (long visitedIndex =
                  g_searchArray->getVisitedCount();
              visitedIndex--;) {
-            const type_point& point = g_searchArray->getVisitedCell(visitedIndex)->m_point;
+            const type_point& point = *g_searchArray->getVisitedCell(visitedIndex);
             if (value >= -500000000) {
                 getDangerCell(dangerZones, point) += value;
             } else {
@@ -2902,6 +2899,12 @@ void aiMarkDangerZones(hero* currentHero, long* dangerZones)
 // both retail calls (findAllDestinations +0x694/+0x73f), without either old
 // depth pin. Before the point-overload recovery, direct-map/no-pin measured
 // 93.7016%, and the typed temporary/no-artifact-pin measured 61.8460%.
+// DC's lexical scopes are all function-level if statements whose bodies are
+// lone exits: the helper is a chain of early returns, with `point` declared
+// after the first one (its constructor follows the guess test) and the
+// friendly-distance test as one expression. That flat form lets the caller
+// reload the guess word after the y store as retail does (96.94 -> 99.66%);
+// keeping the declaration inside an `if (guess >= 0)` block did not.
 DC_ADDRESS(0x032e30, 0x208)
 MAC_ADDRESS(0x031cc0, 0x2bc)
 static void checkHolyGrail(
@@ -2910,48 +2913,43 @@ static void checkHolyGrail(
     const unsigned short* friendlyDistances)
 {
     playerData* player = &g_game->m_players[currentHero->m_owner];
-    if (player->m_puzzleGuess.m_x >= 0) {
-        HeroDestination point;
-        point.m_point.m_x = player->m_puzzleGuess.m_x;
-        point.m_point.m_y = player->m_puzzleGuess.m_y;
-        point.m_point.m_z = player->m_puzzleGuess.m_z;
-        point.m_isCritical = 0;
-        pathCell* guessCell = currentSearchArray->getCell(point.m_point, 0);
-        if (guessCell->m_visited) {
-            NewmapCell* mapCell = g_game->getCell(point.m_point);
-            if (!(mapCell->m_type == HERO && mapCell->m_isTrigger)
-                || mapCell->m_extraInfo
-                    == static_cast<unsigned long>(currentHero->m_id)) {
-                if (currentHero->isInPatrolRadius(
-                        point.m_point)) {
-                    point.m_moveCost = guessCell->m_cost;
-                    unsigned short friendlyCost = friendlyDistances[
-                        (point.m_point.m_z * g_mapHeight
-                         + point.m_point.m_y)
-                            * g_mapWidth
-                        + point.m_point.m_x];
-                    if (point.m_moveCost <= friendlyCost) {
-                        if (g_game->m_mapHeader.m_victoryCondition.m_type
-                            == VICTORY_CONDITION_BUILD_GRAIL) {
-                            // Windows0x42f4f4 and Mac0x31edc/0x31ee0
-                            // store the five-million victory objective value.
-                            point.m_value = 5000000;
-                        } else {
-                            point.m_value = aiGetValueOfArtifact(
-                                type_artifact(ARTIFACT_HOLY_GRAIL),
-                                currentHero->m_owner);
-                        }
-                        point.m_moveCost = max(
-                            point.m_moveCost,
-                            currentHero->getMobility()
-                                + currentHero->m_movePoints);
-                        if (point.m_value > 0)
-                            destinations.push_back(point);
-                    }
-                }
-            }
-        }
+    if (player->m_puzzleGuess.m_x < 0)
+        return;
+    HeroDestination point;
+    point.m_x = player->m_puzzleGuess.m_x;
+    point.m_y = player->m_puzzleGuess.m_y;
+    point.m_z = player->m_puzzleGuess.m_z;
+    point.m_isCritical = 0;
+    pathCell* guessCell = currentSearchArray->getCell(point, 0);
+    if (!guessCell->m_visited)
+        return;
+    NewmapCell* mapCell = g_game->getCell(point);
+    if (mapCell->m_type == HERO && mapCell->m_isTrigger
+        && mapCell->m_extraInfo
+            != static_cast<unsigned long>(currentHero->m_id))
+        return;
+    if (!currentHero->isInPatrolRadius(point))
+        return;
+    point.m_moveCost = guessCell->m_cost;
+    if (point.m_moveCost > friendlyDistances[
+            (point.m_z * g_mapHeight + point.m_y)
+                * g_mapWidth
+            + point.m_x])
+        return;
+    if (g_game->m_mapHeader.m_victoryCondition.m_type
+        == VICTORY_CONDITION_BUILD_GRAIL) {
+        // Windows0x42f4f4 and Mac0x31edc/0x31ee0
+        // store the five-million victory objective value.
+        point.m_value = 5000000;
+    } else {
+        point.m_value = aiGetValueOfArtifact(
+            type_artifact(ARTIFACT_HOLY_GRAIL), currentHero->m_owner);
     }
+    point.m_moveCost = max(
+        point.m_moveCost,
+        currentHero->getMobility() + currentHero->m_movePoints);
+    if (point.m_value > 0)
+        destinations.push_back(point);
 }
 
 // E:\gamedcs\ai_player.cpp:3390
@@ -2972,12 +2970,12 @@ static void markStrategicMap(
 
     for (short i = 0; i < destinations.size(); ++i) {
         point = destinations[i];
-        NewmapCell* cell = g_advManager->getCell(point.m_point);
+        NewmapCell* cell = g_advManager->getCell(point);
         int type = cell->m_type;
-        if (!(getMapExtra(point.m_point)
+        if (!(getMapExtra(point)
               & g_curPlayerBit)) {
-            strategicMap[point.m_point.m_z * levelSize
-                          + point.m_point.m_y * g_mapWidth + point.m_point.m_x]
+            strategicMap[point.m_z * levelSize
+                          + point.m_y * g_mapWidth + point.m_x]
                 += point.m_value;
             continue;
         }
@@ -2986,14 +2984,14 @@ static void markStrategicMap(
         if (akAdvObjectTypeTraits[type].m_blocksLanding)
             cell->m_isTrigger = 0;
 
-        rect.left = max(0L, static_cast<long>(point.m_point.m_x) - 5);
-        rect.top = max(0L, static_cast<long>(point.m_point.m_y) - 5);
-        rect.right = min(static_cast<long>(point.m_point.m_x) + 6, g_mapWidth);
-        rect.bottom = min(static_cast<long>(point.m_point.m_y) + 6, g_mapHeight);
+        rect.left = max(0L, static_cast<long>(point.m_x) - 5);
+        rect.top = max(0L, static_cast<long>(point.m_y) - 5);
+        rect.right = min(static_cast<long>(point.m_x) + 6, g_mapWidth);
+        rect.bottom = min(static_cast<long>(point.m_y) + 6, g_mapHeight);
         currentSearchArray.setRectangle(rect);
         g_advManager->m_advWindow->animateBottomView(0);
         currentSearchArray.seedPosition(
-            currentHero, point.m_point, type_point(-1, -1, -1), 500,
+            currentHero, point, type_point(-1, -1, -1), 500,
             cell->m_groundSet == eTerrainWater, const_AI_treasure_search,
             59999, 0);
 
@@ -3002,13 +3000,13 @@ static void markStrategicMap(
             nearbyCost = 0;
         } else {
             cell->m_isTrigger = wasTrigger;
-            topX = max(0L, static_cast<long>(point.m_point.m_x) - 1);
-            topY = max(0L, static_cast<long>(point.m_point.m_y) - 1);
-            short stopX = min(static_cast<long>(point.m_point.m_x) + 2,
+            topX = max(0L, static_cast<long>(point.m_x) - 1);
+            topY = max(0L, static_cast<long>(point.m_y) - 1);
+            short stopX = min(static_cast<long>(point.m_x) + 2,
                                g_mapWidth);
-            short stopY = min(static_cast<long>(point.m_point.m_y) + 2,
+            short stopY = min(static_cast<long>(point.m_y) + 2,
                                g_mapHeight);
-            pt.m_z = point.m_point.m_z;
+            pt.m_z = point.m_z;
             nearbyCost = 0;
             for (pt.m_x = topX; pt.m_x < stopX; ++pt.m_x) {
                 for (pt.m_y = topY; pt.m_y < stopY; ++pt.m_y) {
@@ -3028,8 +3026,8 @@ static void markStrategicMap(
                 value = point.m_value * 300
                     / (visited->m_cost - nearbyCost + 300);
             }
-            strategicMap[visited->m_point.m_z * levelSize
-                          + visited->m_point.m_y * g_mapWidth + visited->m_point.m_x]
+            strategicMap[visited->m_z * levelSize
+                          + visited->m_y * g_mapWidth + visited->m_x]
                 += value;
         }
     }
@@ -3086,12 +3084,12 @@ static void unblockLith(hero* currentHero,
             g_searchArray->getCell(point, false);
         if (!currentPathCell->m_visited)
             continue;
-        if (destination.m_point.m_x >= 0 && closest <= currentPathCell->m_cost)
+        if (destination.m_x >= 0 && closest <= currentPathCell->m_cost)
             continue;
         if (g_searchArray->getDangerValue(point) < 0)
             continue;
         closest = currentPathCell->m_cost;
-        destination.m_point = point;
+        static_cast<type_point&>(destination) = point;
         destination.m_isCritical = 0;
         bestDistance = 0;
     }
@@ -3137,6 +3135,12 @@ static void unblockLith(hero* currentHero,
 // expands the final getCell as retail does (82.66%). Residual: unblockLith's
 // nested budget is 42; the loop's getMapExtra(point) (48) needs 48 while
 // getTown (45) must still be refused - not satisfiable under one shared budget.
+// 82.67 -> 71.98% (73.02% with the type_point bases): the Dreamcast static
+// linkage of netValueOfLocation (cc4341034) makes its later body a root
+// candidate (cb 501, refused), one more remaining site in every root
+// division. markStrategicMap's nested budget falls from 92 to 86, so its
+// getMapExtra(point) (48, after size's 42) is refused, while the main
+// loop's second operator== (84) now fits where retail calls it.
 VA(0x0042e0b0, 0xb6e)
 DC_ADDRESS(0x033cf8, 0x46a)
 MAC_ADDRESS(0x0332f8, 0x71c)  // anchor-caller move_hero + order bracket
@@ -3175,7 +3179,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
         noTowns = 1;
     bestPoint.m_isCritical = 0;
 
-    if (bestPoint.m_point.m_x < 0) {
+    if (bestPoint.m_x < 0) {
         bestPoint.m_isNearby = 0;
         if (rawValue < 0) {
             bestPoint.m_value = 0;
@@ -3189,7 +3193,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
         rawValue = bestRawValue;
         if (bestDistance > 100)
             rawValue = rawValue * 100 / bestDistance;
-        pathCell* bestCell = g_searchArray->getCell(bestPoint.m_point,
+        pathCell* bestCell = g_searchArray->getCell(bestPoint,
                                                       false);
         bestPoint.m_isNearby =
             bestCell->m_lastPoint == start
@@ -3206,7 +3210,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
         if (bestPoint.m_value > 0 && point.m_value == 0)
             continue;
 
-        pathCell* currentPathCell = g_searchArray->getCell(point.m_point, false);
+        pathCell* currentPathCell = g_searchArray->getCell(point, false);
         unsigned char isNearby = 0;
         if (currentPathCell->m_lastPoint == start
             && g_game->getCell(currentPathCell->m_lastPoint)->m_isTrigger) {
@@ -3262,11 +3266,11 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
         bestDistance -= currentHero->m_movePoints;
     else
         bestDistance = 0;
-    currentHero->m_pathTargetX = bestPoint.m_point.m_x;
-    currentHero->m_pathTargetY = bestPoint.m_point.m_y;
-    currentHero->m_pathTargetZ = bestPoint.m_point.m_z;
+    currentHero->m_pathTargetX = bestPoint.m_x;
+    currentHero->m_pathTargetY = bestPoint.m_y;
+    currentHero->m_pathTargetZ = bestPoint.m_z;
     currentHero->m_targetIsCritical = bestPoint.m_isCritical;
-    currentHero->m_targetDistance = static_cast<short>(bestDistance);
+    currentHero->m_targetDistance = static_cast<unsigned short>(bestDistance);
     delete[] strategicMap;
     return rawValue;
 }
@@ -3301,12 +3305,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 // the player's puzzle-guess grail spot, valued 5000000 under the build-grail
 // victory or as the Holy Grail artifact otherwise. Returns the danger under
 // the hero (mark_destinations' result).
-// Residual (96.365%, 80/81 blocks, 54/54 branches): Complete retains the
-// first of three nested vector<HeroDestination>::size calls in the loop's
-// push_back growth expression; this compile retains the latter two only.
-// Dreamcast proves push_back itself, so do not replace it with insert or add
-// caller mass. Recovered locals, helper boundaries, condition groups and the
-// unnamed get_location temporary are retained through the expected dips.
+// Dreamcast proves push_back itself; do not replace it with insert.
 // Forward prototypes: all three bodies sit later in RVA order.
 static long markDestinations(hero* currentHero, long maxDistance,
                               searchArray* currentSearchArray,
@@ -3315,16 +3314,15 @@ static long markDestinations(hero* currentHero, long maxDistance,
 long aiValueOfEvent(const hero* currentHero, type_point point,
                        long& moveCost);
 
-// Residual (96.9365%): all 81 CFG blocks agree in flow/instruction count;
-// 29 call sites align, including vector::size at +0x3fd and both Grail
-// calls. Remaining differences are register allocation/bitfield scheduling and folded
-// template target identities. DC lines 3300/3359 call GetMapExtra(point),
-// not pasted coordinate extraction. Their canonical header overload removes
-// the old missing-size-call mismatch and permits both Grail pins to retire.
-// Controls in the 24-state boundary family: only one point call restored
-// leaves the unpinned caller at 91.0238..91.3555%; a named first-point copy
-// with the typed Grail temporary gives 91.0238%. The original two direct
-// point calls and typed temporary together give the current 96.9365%.
+// Residual (99.6587%): all 81 CFG blocks agree. Left: the 5000000 Grail
+// immediate equals a retail code address and is delinked as a relocation,
+// and a register tie-break at the isInPatrolRadius push (retail eax, ours
+// ecx) that carries into animateBottomView's g_advManager load. DC lines
+// 3300/3359 call GetMapExtra(point), not pasted coordinate extraction; DC
+// 3300 is one if scope, so the trigger/explored test is one condition.
+// Retail loads g_mapWidth first for levelSize where markDestinations' W*H
+// loads g_mapHeight first, hence H*W here (+0.02). Byte-flat probes: a
+// while loop for j, function-scope cell/mapCell, nested trigger test.
 VA(0x0042edd0, 0x79b)
 DC_ADDRESS(0x033038, 0x3ca)
 MAC_ADDRESS(0x031f7c, 0x558)  // anchor-callee + arity
@@ -3339,7 +3337,7 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
     unsigned char protectingTown;
     long levelSize;
 
-    levelSize = g_mapWidth * g_mapHeight;
+    levelSize = g_mapHeight * g_mapWidth;
     int levelCells = g_game->getNumMapLevels() * levelSize;
     unsigned short* friendlyDistances = new unsigned short[levelCells];
     memset(friendlyDistances, -1, levelCells * sizeof(unsigned short));
@@ -3372,13 +3370,12 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
         pathCell* cell = currentSearchArray->getVisitedCell(j);
         if (!allowSpells && cell->m_cost < cell->m_adjustedCost)
             continue;
-        NewmapCell* mapCell = g_advManager->getCell(cell->m_point);
-        if (!mapCell->m_isTrigger) {
-            if ((getMapExtra(cell->m_point) & g_curPlayerBit)
-                || g_currentPlayer->m_numTowns == 0)
-                continue;
-        }
-        if (!currentHero->isInPatrolRadius(cell->m_point))
+        NewmapCell* mapCell = g_advManager->getCell(*cell);
+        if (!mapCell->m_isTrigger
+            && ((getMapExtra(*cell) & g_curPlayerBit)
+                || g_currentPlayer->m_numTowns == 0))
+            continue;
+        if (!currentHero->isInPatrolRadius(*cell))
             continue;
         g_advManager->m_advWindow->animateBottomView(0);
         checkDoMain(0, 0);
@@ -3395,22 +3392,22 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
             point.m_isCritical = 1;
         }
 
-        point.m_point.m_x = cell->m_point.m_x;
-        point.m_point.m_y = cell->m_point.m_y;
-        point.m_point.m_z = cell->m_point.m_z;
+        point.m_x = cell->m_x;
+        point.m_y = cell->m_y;
+        point.m_z = cell->m_z;
         point.m_moveCost = cell->m_cost;
-        if (point.m_point == currentHero->getLocation())
+        if (point == currentHero->getLocation())
             continue;
 
         if (g_oneUseEvents[mapCell->m_type]
             && point.m_moveCost > friendlyDistances[
-                point.m_point.m_z * levelSize + point.m_point.m_y * g_mapWidth
-                + point.m_point.m_x])
+                point.m_z * levelSize + point.m_y * g_mapWidth
+                + point.m_x])
             continue;
         point.m_moveCost = cell->m_adjustedCost;
         if (hiringHero)
             point.m_moveCost = 10000;
-        if (!(getMapExtra(point.m_point) & g_curPlayerBit)
+        if (!(getMapExtra(point) & g_curPlayerBit)
             && g_currentPlayer->m_numTowns > 0) {
             if (exploreMode) {
                 point.m_value = 100000;
@@ -3418,7 +3415,7 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
                 point.m_value = 100;
             }
         } else {
-            point.m_value = aiValueOfEvent(currentHero, point.m_point,
+            point.m_value = aiValueOfEvent(currentHero, point,
                                             point.m_moveCost);
             if (point.m_value <= 0
                 && (point.m_value != 0 || currentValue >= 0))
@@ -3464,7 +3461,8 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
 // player seeds a friendly allied search from that hero's path target (or
 // position when the target is invalid) and folds each visited cell's cost
 // plus the friend's remaining-target cost into the friendly-distance map,
-// clipped to the patrol radius. Returns the danger under the hero's feet.
+// clipped to that friend's patrol radius. Returns the danger under the
+// hero's feet.
 // DC lines 3060/3078 nest get_location in get_danger_value/SeedPosition;
 // Complete expands both into separate point temporaries at entry. DC line
 // 3053 names level_size; line 3054 calls GetNumMapLevels and multiplies by
@@ -3476,8 +3474,14 @@ static long findAllDestinations(hero* currentHero, searchArray* currentSearchArr
 // coordinates (3102), and fills the function-scope point field by field
 // from the path target and then the position (3109..3115). Accessor
 // getTarget()/getLocation() for the friend cost Windows 91.17 -> 83.69%;
-// the DC form reaches 92.35%. Residual: whole-body EBX/EDI role swap for
-// currentHero (why-reg: only a synthetic zero-local carrier moves it).
+// the DC form reaches 92.35%. Exact (100%) with four DC-backed facts: DC
+// 3141 and retail test the FRIEND's patrol radius (r9/esi), not the current
+// hero's; DC 3095/3096 are separate rows for the hero id and GetHero; DC
+// 3102 builds the friend's cell point as an unnamed get_cell argument; and
+// DC 3144 forms the distance-slot address before 3146's cost. Measured: the
+// receiver fix alone 95.58, plus the slot pointer 97.34, plus the unnamed
+// point 97.76; inlining movePoints 96.62; DC local names, point-first
+// declarations and a named friendPoint were flat or lower.
 VA(0x0042f570, 0x40e)
 DC_ADDRESS(0x032a84, 0x3ac)
 MAC_ADDRESS(0x03180c, 0x4b4)  // anchor-callee + arity
@@ -3509,11 +3513,12 @@ static long markDestinations(hero* currentHero, long maxDistance,
         type_point(currentHero->m_x, currentHero->m_y, currentHero->m_z), 0);
 
     for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
-        hero* friendly = g_game->getHero(g_currentPlayer->m_heroes[i]);
+        int heroId = g_currentPlayer->m_heroes[i];
+        hero* friendly = g_game->getHero(heroId);
         if (friendly == currentHero)
             continue;
-        type_point friendPoint(friendly->m_x, friendly->m_y, friendly->m_z);
-        pathCell* friendCell = currentSearchArray->getCell(friendPoint, 0);
+        pathCell* friendCell = currentSearchArray->getCell(
+            type_point(friendly->m_x, friendly->m_y, friendly->m_z), 0);
         if (!friendCell->m_visited)
             continue;
 
@@ -3545,12 +3550,13 @@ static long markDestinations(hero* currentHero, long maxDistance,
         for (int j = static_cast<int>(friendlySearch.getVisitedCount());
              j-- != 0;) {
             pathCell* visited = friendlySearch.getVisitedCell(j);
-            if (currentHero->isInPatrolRadius(visited->m_point)) {
-                int index = visited->m_point.m_z * levelSize
-                    + visited->m_point.m_y * g_mapWidth + visited->m_point.m_x;
+            if (friendly->isInPatrolRadius(*visited)) {
+                unsigned short* distance = &friendlyDistances[
+                    visited->m_z * levelSize
+                    + visited->m_y * g_mapWidth + visited->m_x];
                 unsigned short cost = visited->m_cost + extraCost;
-                if (cost < friendlyDistances[index])
-                    friendlyDistances[index] = cost;
+                if (cost < *distance)
+                    *distance = cost;
             }
         }
     }
@@ -3576,7 +3582,7 @@ static int netValueOfLocation(hero* currentHero, HeroDestination& destination,
                           long* strategicMap, pathCell* currentPathCell,
                           searchArray* currentSearchArray)
 {
-    type_point point = destination.m_point;
+    type_point point = destination;
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
     if (cell->m_isTrigger && akAdvObjectTypeTraits[type].m_blocksLanding
@@ -3597,7 +3603,7 @@ static int netValueOfLocation(hero* currentHero, HeroDestination& destination,
 
     type_point monsterPos;
     if (!akAdvObjectTypeTraits[type].m_blocksLanding) {
-        point = destination.m_point;
+        point = destination;
         if (g_advManager->findAdjacentMonster(point, monsterPos, point)) {
             if (currentPathCell->m_monster != monsterPos
                 && value >= -500000000)
@@ -3606,9 +3612,9 @@ static int netValueOfLocation(hero* currentHero, HeroDestination& destination,
         }
     }
 
-    if (destination.m_point.m_x == currentHero->m_pathTargetX
-        && destination.m_point.m_y == currentHero->m_pathTargetY
-        && destination.m_point.m_z == currentHero->m_pathTargetZ) {
+    if (destination.m_x == currentHero->m_pathTargetX
+        && destination.m_y == currentHero->m_pathTargetY
+        && destination.m_z == currentHero->m_pathTargetZ) {
         if (value < 0)
             value = static_cast<float>(value) / 1.5f;
         else
@@ -3676,7 +3682,7 @@ bool attemptStep(hero* currentHero, pathCell& currentPathCell,
     int direction = currentPathCell.m_direction;
     considerHidingMouse(currentHero, direction);
 
-    triggerPoint = currentPathCell.m_point;
+    triggerPoint = currentPathCell;
     NewmapCell* cell = g_game->getCell(triggerPoint);
 
     if (currentPathCell.m_inBoat && !(currentHero->m_flags & 0x40000)) {
@@ -3753,12 +3759,12 @@ static void buildPath(hero* currentHero, searchArray* currentSearchArray,
     while (i-- > 0) {
         const pathCell* currentPathCell = g_searchArray->getStepCell(i);
         if (currentPathCell->m_flying
-            && (abs(currentPathCell->m_point.m_x - currentPathCell->m_lastPoint.m_x) > 1
-                || abs(currentPathCell->m_point.m_y - currentPathCell->m_lastPoint.m_y) > 1
-                || currentPathCell->m_point.m_z != currentPathCell->m_lastPoint.m_z)) {
-            destination.m_point.m_x = currentPathCell->m_lastPoint.m_x;
-            destination.m_point.m_y = currentPathCell->m_lastPoint.m_y;
-            destination.m_point.m_z = currentPathCell->m_lastPoint.m_z;
+            && (abs(currentPathCell->m_x - currentPathCell->m_lastPoint.m_x) > 1
+                || abs(currentPathCell->m_y - currentPathCell->m_lastPoint.m_y) > 1
+                || currentPathCell->m_z != currentPathCell->m_lastPoint.m_z)) {
+            destination.m_x = currentPathCell->m_lastPoint.m_x;
+            destination.m_y = currentPathCell->m_lastPoint.m_y;
+            destination.m_z = currentPathCell->m_lastPoint.m_z;
             currentHero->m_pathTargetX = currentPathCell->m_lastPoint.m_x;
             currentHero->m_pathTargetY = currentPathCell->m_lastPoint.m_y;
             currentHero->m_pathTargetZ = currentPathCell->m_lastPoint.m_z;
@@ -3886,11 +3892,11 @@ static unsigned char attemptTeleport(hero* current_hero,
                 will_teleport = 1;
             if (!path[i].m_canStop)
                 continue;
-            if (abs(path[i].m_point.m_x - start_point.m_x) > 9
-                || abs(path[i].m_point.m_y - start_point.m_y) > 8
-                || path[i].m_point.m_z != start_point.m_z)
+            if (abs(path[i].m_x - start_point.m_x) > 9
+                || abs(path[i].m_y - start_point.m_y) > 8
+                || path[i].m_z != start_point.m_z)
                 continue;
-            if (g_game->getCell(path[i].m_point)->m_isTrigger)
+            if (g_game->getCell(path[i])->m_isTrigger)
                 continue;
             if (path[i].m_inBoat != in_boat)
                 continue;
@@ -3919,15 +3925,15 @@ static unsigned char attemptTeleport(hero* current_hero,
                 pathIndex = destination_index;
                 break;
             }
-            if (path[pathIndex].m_point.m_z == start_point.m_z
+            if (path[pathIndex].m_z == start_point.m_z
                 && path[pathIndex].m_inBoat == in_boat) {
-                start_point = path[pathIndex].m_point;
+                start_point = path[pathIndex];
                 break;
             }
         }
     } while (pathIndex < destination_index);
 
-    type_point destination = path[destination_index].m_point;
+    type_point destination = path[destination_index];
     g_advManager->teleportTo(current_hero, destination, 0, 0, 1, 0);
     current_hero->useSpell(mana_cost);
     ++current_hero->m_dWalkSpellsCast;
@@ -3970,6 +3976,12 @@ static inline void checkGatePurchase(type_point point)
 // two; we cross-jump both arms into the can-stop return's tail instead.
 // That is the merged-return class (both predecessors are jumps) and the
 // duplicate cannot be spelled, because the block IS a destructor.
+// 98.83%: DC line 4234 is one town-portal statement subtracting the expert
+// 200/300 ternary (retail's sbb select); both CFGs now have 81 blocks.
+// Residual: the totalCost/standEnd and min/max temporary slot pairs swap,
+// plus the inlined puzzle-guess comparison's register order. Byte-flat:
+// an unconverted m_cost argument to min and a function-scope standEnd;
+// totalCost = 0 before standEnd is 98.72%.
 VA(0x0042fee0, 0x6b8)
 DC_ADDRESS(0x034b08, 0x4b0)
 MAC_ADDRESS(0x0346d4, 0x938)  // anchor-caller move_hero + order bracket
@@ -4027,23 +4039,23 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
         if (path[step].m_castleGate) {
             type_point gatePoint = currentHero->getLocation();
             checkGatePurchase(gatePoint);
-            checkGatePurchase(path[step].m_point);
+            checkGatePurchase(path[step]);
             currentHero->m_movePoints = max(currentHero->m_movePoints - 100, 0);
-            g_advManager->teleportTo(currentHero, path[step].m_point, 0,
+            g_advManager->teleportTo(currentHero, path[step], 0,
                                      0, 1, 0);
             return;
         }
 
         if (path[step].m_townPortal && step == 0) {
-            g_advManager->teleportTo(currentHero, path[step].m_point, 0,
+            g_advManager->teleportTo(currentHero, path[step], 0,
                                      0, 1, 0);
             currentHero->useSpell(
                 currentHero->getManaCost(SPELL_TOWN_PORTAL));
-            if (currentHero->getSpellLevel(SPELL_TOWN_PORTAL)
-                == eMasteryExpert)
-                currentHero->m_movePoints -= 200;
-            else
-                currentHero->m_movePoints -= 300;
+            currentHero->m_movePoints -=
+                currentHero->getSpellLevel(SPELL_TOWN_PORTAL)
+                        == eMasteryExpert
+                    ? 200
+                    : 300;
             if (currentHero->m_movePoints < 0)
                 currentHero->m_movePoints = 0;
             return;
@@ -4086,10 +4098,10 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
         if (path[step].m_canStop
             && currentHero->m_movePoints >= 100
             && !bestPoint.m_isCritical) {
-            destination = bestPoint.m_point;
+            destination = bestPoint;
             aiChooseDestination(currentHero, maxDistance, bestPoint,
                                   bestRawValue, 0, exploreMode);
-            if (destination != bestPoint.m_point) {
+            if (destination != bestPoint) {
                 buildPath(currentHero, g_searchArray, path, bestPoint);
                 totalCost = 0;
                 firstStep = 1;
@@ -4382,6 +4394,11 @@ static bool considerHiring(long playerId, hero* candidate)
 // DC's local-procedure record proves static ownership and searchArray&;
 // the sole Complete caller supplies its live search-array object. Keep the
 // reference boundary; only findAllDestinations still requires its address.
+// With the type_point-base HeroDestination (98.19%), the first loop's inline
+// getCell(destination, 0) slices through an extra temporary that reshapes
+// the hero loop's point store; a base-reference cast restores 99.95% but is
+// codegen-only. DC line 4422 constructs the other hero's type_point
+// directly (no get_location call, unlike AI_choose_destination); byte-flat.
 VA(0x00431bd0, 0x64b)
 DC_ADDRESS(0x034fb8, 0x446)
 MAC_ADDRESS(0x035070, 0x770)  // anchor-callee (consider_hiring 0x432bce + AI_arrange_army 0x431d9d)
@@ -4423,8 +4440,8 @@ static long valueOfHiring(town* currentTown, hero* candidate,
     unsigned int i;
     for (i = 0; i < destinations.size(); ++i) {
         destination = destinations[i];
-        pathCell* cell = currentSearchArray.getCell(destination.m_point, 0);
-        NewmapCell* mapCell = g_advManager->getCell(destination.m_point);
+        pathCell* cell = currentSearchArray.getCell(destination, 0);
+        NewmapCell* mapCell = g_advManager->getCell(destination);
         if (mapCell->m_type == HERO && mapCell->m_isTrigger
             && g_game->getHero(mapCell->m_extraInfo)->m_owner == playerId) {
             cell->m_barrierValue = destination.m_value;
@@ -4452,7 +4469,7 @@ static long valueOfHiring(town* currentTown, hero* candidate,
         hero* other = g_game->getHero(player->m_heroes[heroIndex]);
         if (other->m_z == candidate->m_z) {
             pathCell* cell = currentSearchArray.getCell(
-                other->getLocation(), 0);
+                type_point(other->m_x, other->m_y, other->m_z), 0);
 
             if (cell->m_visited) {
                 ++heroesTouched;
@@ -5669,6 +5686,19 @@ void aiInitialize()
 // with the original body assignment is byte-flat for constructor and caller.
 // Six vector-reference/pointer and effect-local lifetime combinations emit
 // identical objects at 97.50%; these do not change the Alliance inline budget.
+
+// 97.47 -> 99.97: DC gives the artifact read (4938) and the clear (4941)
+// separate rows with no reference line between them, and push_back (5031)
+// reuses the CSE'd vector address. A TArtifact id local indexing the table
+// at clear and push_back makes the first block exact (retail folds the
+// table base into the first _Last load before lea). The typed local's cast
+// also raises caller cb 1362 -> 1364, which gives the Alliance arm the 63
+// nested units its combat base needs and leaves the undead-cloak arm at 49,
+// as retail. An int id is 95.23 (inline decision swaps to the cloak arm);
+// the TArtifact id plus a vector reference is 97.03 (first block regresses).
+// 99.97 -> 100: the last residual was only retail's labels for the
+// ICF-folded std::copy and vector::insert targets; refreshed delink fold
+// proofs (`delink --unit ai_player`) name them at this function's sites.
 VA(0x00434100, 0x490)
 DC_ADDRESS(0x035f08, 0x2be)
 MAC_ADDRESS(0x036748, 0x4b4)  // tail target/fresh frame + DC helper
@@ -5676,9 +5706,8 @@ static void initializeArtifactEffects()
 {
     const int* definition = g_aiArtifactEffectDefinitions;
     while (*definition >= 0) {
-        std::vector<type_artifact_effect*>& effects =
-            g_constArtifactEffects[*definition++];
-        effects.clear();
+        TArtifact artifact = (TArtifact)*definition++;
+        g_constArtifactEffects[artifact].clear();
         while (*definition >= 0) {
             EArtifactEffectKind kind = (EArtifactEffectKind)*definition++;
             type_artifact_effect* effect;
@@ -5767,7 +5796,7 @@ static void initializeArtifactEffects()
                     effect = new type_statue_of_legion_artifact;
                     break;
             }
-            effects.push_back(effect);
+            g_constArtifactEffects[artifact].push_back(effect);
         }
         ++definition;
     }

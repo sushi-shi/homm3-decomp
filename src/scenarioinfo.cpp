@@ -53,9 +53,11 @@ public:
     // the row ProcessRightSelect fetches back with GetWidget to reach
     // heroPortrait.  The store sits INSIDE the new-expression's
     // allocation-succeeded arm, so it is the constructor's, not the caller's.
+    // Retail stores the vtable before town (+0x38), so town is a body
+    // assignment; a mem-initializer stores it ahead of the vptr.
     CScenarioPlayerInfoWidget(CSprite* town, int widgetId)
-        : m_townSprite(town)
     {
+        m_townSprite = town;
         m_townType = 0;
         m_panel = 0;
         m_flag = 0;
@@ -91,11 +93,10 @@ public:
         m_startingBonus = startingBonus;
         m_bonusSprite = bonusSprite;
         m_startingHero = startingHero;
-        if (m_startingHero)
-            m_heroPortrait = ResourceManager::GetBitmap816(
-                akHeroTraits[m_startingHero->m_portrait].m_small_portrait_name);
-        else
-            m_heroPortrait = ResourceManager::GetBitmap816("hpsrand6.pcx");
+        // Retail +0xf72..+0xf91 selects the name into one GetBitmap816 call.
+        m_heroPortrait = ResourceManager::GetBitmap816(m_startingHero
+            ? akHeroTraits[m_startingHero->m_portrait].m_small_portrait_name
+            : "hpsrand6.pcx");
     }
 
     virtual ~CScenarioPlayerInfoWidget();
@@ -118,15 +119,16 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     : CAdvPopup((WINDOW_SCREEN_WIDTH - 763) / 2,
                 (WINDOW_SCREEN_HEIGHT - 585) / 2, 763, 585, 2)
 {
-    // Residual: 99.4649%; the last two button appends retain one vector::size
-    // call each that retail expands. Before recovering the setter, all 24
-    // buffer declaration orders were byte-flat; moving the setter before the
-    // constructor is byte-flat. DC records no widget-vector local.
-    // Probes: assigning m_townSprite in the row constructor's body (99.56%)
-    // plus staging the five difficulty buttons through one reused pointer
-    // (99.92% alone) reach 100% together. Neither is adopted: the row class
-    // has no DC counterpart, and DC lines 432..436 record one
-    // new/construct/push_back statement per difficulty button.
+    // Exact. The last two button appends' nested vector::size expansions
+    // are late-budget decisions (trace: caller cb 4346, retail window
+    // 4364..4405). Three source facts close them together: the row
+    // constructor assigns town in its body (vptr-first store order, 99.56%),
+    // the setter selects the portrait name into one call, and the player
+    // slot attributes are read through g_game rather than a slot-pointer
+    // alias (cb 4359 alone). Each alone is short of 100%. Rejected: staging
+    // the difficulty buttons through one reused pointer (DC lines 432..436
+    // record one new/construct/push_back statement per button), inlining
+    // the hotspot y (flat), and respelling the starting-hero id (98.55%).
     char tempText[256];
     char lossText[1024];
     char tempName[256];
@@ -298,11 +300,12 @@ CScenarioInfoDlg::CScenarioInfoDlg()
             continue;
 
         int playerType;
-        CMapHeaderData::TPlayerSlotAttributes* slot =
-            &g_game->m_mapHeader.m_playerSlotAttributes[i];
-        if (slot->m_canBeHuman)
-            playerType = slot->m_canBeComputer ? 0 : 1;
-        else if (slot->m_canBeComputer)
+        // Retail +0xe19..+0xe37 addresses each attribute from g_game.
+        if (g_game->m_mapHeader.m_playerSlotAttributes[i].m_canBeHuman)
+            playerType =
+                g_game->m_mapHeader.m_playerSlotAttributes[i].m_canBeComputer
+                    ? 0 : 1;
+        else if (g_game->m_mapHeader.m_playerSlotAttributes[i].m_canBeComputer)
             playerType = 2;
         else
             continue;

@@ -87,8 +87,8 @@ const THero* THeroPropsGeneralPage::_getOldHero() const
 VA(0x0044f93a, 0x62)
 THero* THeroPropsGeneralPage::_getNewHero()
 {
-    TGameMap::TLayer& layer = _m_newMap.getLayer(_m_bSecondLayer);
-    TGameObject* pObject = layer.getPObject(_m_objectID);
+    TGameMap::TLayer* pLayer = _m_newMap.getPLayer(_m_bSecondLayer);
+    TGameObject* pObject = pLayer->getPObject(_m_objectID);
     THero* pHero = dynamic_cast<THero*>(pObject);
     if (pHero == NULL)
         pHero = dynamic_cast<TTown*>(pObject)->getPVisitingHero();
@@ -227,8 +227,8 @@ const TRandomHero* TRandomHeroPropsGeneralPage::_getOldHero() const
 VA(0x004500f5, 0x75)
 TRandomHero* TRandomHeroPropsGeneralPage::_getNewHero()
 {
-    TGameMap::TLayer& layer = _m_newMap.getLayer(_m_bSecondLayer);
-    TGameObject* pObject = layer.getPObject(_m_objectID);
+    TGameMap::TLayer* pLayer = _m_newMap.getPLayer(_m_bSecondLayer);
+    TGameObject* pObject = pLayer->getPObject(_m_objectID);
     TRandomHero* pHero = dynamic_cast<TRandomHero*>(pObject);
     if (pHero == NULL)
         pHero = dynamic_cast<TRandomHero*>(dynamic_cast<TTown*>(pObject)->getPVisitingHero());
@@ -357,8 +357,8 @@ const TIdentifiedHero* TIdentifiedHeroPropsGeneralPage::_getOldHero() const
 VA(0x004509c5, 0x75)
 TIdentifiedHero* TIdentifiedHeroPropsGeneralPage::_getNewHero()
 {
-    TGameMap::TLayer& layer = _m_newMap.getLayer(_m_bSecondLayer);
-    TGameObject* pObject = layer.getPObject(_m_objectID);
+    TGameMap::TLayer* pLayer = _m_newMap.getPLayer(_m_bSecondLayer);
+    TGameObject* pObject = pLayer->getPObject(_m_objectID);
     TIdentifiedHero* pHero = dynamic_cast<TIdentifiedHero*>(pObject);
     if (pHero == NULL)
         pHero = dynamic_cast<TIdentifiedHero*>(dynamic_cast<TTown*>(pObject)->getPVisitingHero());
@@ -509,10 +509,12 @@ BOOL TIdentifiedHeroPropsGeneralPage::OnInitDialog()
     return TRUE;
 }
 
-// Residual: retail retains a member pointer through the portrait
-// adjustment; a named reference to _m_portrait reproduces it but is only an
-// alias. Changing _adjustPortrait's reference formal to a pointer is
-// byte-flat.
+// Retail calls the old hero's getHeroID before the new one's; spelling that
+// test old-first reproduces it (98.13 -> 98.19). Residual: retail retains a member pointer
+// through the portrait adjustment; a named reference to _m_portrait
+// reproduces it but is only an alias (removed in aa3149d81). Changing
+// _adjustPortrait's reference formal to a pointer, or dropping its inline
+// keyword, is byte-flat.
 VA(0x00451315, 0x247)
 void TIdentifiedHeroPropsGeneralPage::OnOK()
 {
@@ -534,7 +536,7 @@ void TIdentifiedHeroPropsGeneralPage::OnOK()
     }
     _m_pNewHero->setSex(_m_gender - 1);
     _m_bModified = THeroPropsGeneralPage::wasModified() || _m_bModified
-                   || _m_pNewHero->getHeroID() != _m_pOldHero->getHeroID()
+                   || _m_pOldHero->getHeroID() != _m_pNewHero->getHeroID()
                    || _m_pOldHero->getBCustomName() != _m_pNewHero->getBCustomName()
                    || _m_pNewHero->getName() != _m_pOldHero->getName()
                    || _m_pOldHero->getBCustomPortrait() != _m_pNewHero->getBCustomPortrait()
@@ -545,7 +547,7 @@ void TIdentifiedHeroPropsGeneralPage::OnOK()
 VA(0x0045155c, 0x45)
 void TIdentifiedHeroPropsGeneralPage::OnSelChangeIdentityCombo()
 {
-    THeroID heroID = _m_identityCombo.GetItemData(_m_identityCombo.GetCurSel());
+    THeroID heroID = THeroID(_m_identityCombo.GetItemData(_m_identityCombo.GetCurSel()));
     if (heroID != _m_heroID) {
         _m_heroID = heroID;
         _onSetHeroID();
@@ -649,8 +651,8 @@ const TNonRandomHero* TNonRandomHeroPropsGeneralPage::_getOldHero() const
 VA(0x0045190f, 0x75)
 TNonRandomHero* TNonRandomHeroPropsGeneralPage::_getNewHero()
 {
-    TGameMap::TLayer& layer = _m_newMap.getLayer(_m_bSecondLayer);
-    TGameObject* pObject = layer.getPObject(_m_objectID);
+    TGameMap::TLayer* pLayer = _m_newMap.getPLayer(_m_bSecondLayer);
+    TGameObject* pObject = pLayer->getPObject(_m_objectID);
     TNonRandomHero* pHero = dynamic_cast<TNonRandomHero*>(pObject);
     if (pHero == NULL)
         pHero = dynamic_cast<TNonRandomHero*>(dynamic_cast<TTown*>(pObject)->getPVisitingHero());
@@ -735,8 +737,8 @@ const TPrison* TPrisonPropsGeneralPage::_getOldPrison() const
 VA(0x00451cd0, 0x42)
 TPrison* TPrisonPropsGeneralPage::_getNewPrison()
 {
-    TGameMap::TLayer& layer = _m_newMap.getLayer(_m_bSecondLayer);
-    return dynamic_cast<TPrison*>(layer.getPObject(_m_objectID));
+    TGameMap::TLayer* pLayer = _m_newMap.getPLayer(_m_bSecondLayer);
+    return dynamic_cast<TPrison*>(pLayer->getPObject(_m_objectID));
 }
 
 VA(0x00451d12, 0x25)

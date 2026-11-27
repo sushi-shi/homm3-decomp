@@ -537,7 +537,10 @@ public:
     signed char m_stats[kNumPrimarySkills];  // +0x34
     int m_numSSs;  // +0x38
 
-    // DC netmsg.h:488: DoCombat expands this header body.
+    // DC netmsg.h:488: DoCombat expands this header body. Both scalar
+    // stores precede the skill copy: Mac DoCombat stores numSSs (0xbbf94)
+    // before its first opaque BlockMoveData call (0xbbf98), and DC fills
+    // that copy's delay slot with the store (rows 490/491 share it).
     DC_ADDRESS(0x09cb78, 0x58)
     CHeroLevelUpdateMsg(int hero, int numSSs,
                         signed char* ssLevel,
@@ -545,9 +548,9 @@ public:
         : CNetMsg(RS_HERO_LEVEL_UPDATE, sizeof(CHeroLevelUpdateMsg))
     {
         m_hero = hero;
+        m_numSSs = numSSs;
         memcpy(m_ssLevel, ssLevel, sizeof(m_ssLevel));
         memcpy(m_stats, stats, sizeof(m_stats));
-        m_numSSs = numSSs;
     }
 };
 SIZE(CHeroLevelUpdateMsg, 0x3c);

@@ -1240,7 +1240,7 @@ void CObject::findTrigger(int& resultX, int& resultY) const
                 continue;
 
             if (objType->m_triggerCells[
-                    CObjectType::getBitPos(horiz, vert)]) {
+                    CObjectType::_getBitPos(horiz, vert)]) {
                 resultX = m_x - horiz;
                 resultY = m_y - vert;
                 return;
@@ -1977,15 +1977,24 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 
 // DC records the BlackBoxData reference and function-scope
 // int_buffer, short_buffer, char_buffer, count (read status), number (list
-// length), and x. Its stores distinguish status from the list length;
-// preserve those owners even where VC6 optimizes their assignments away.
-// Native Mac reuses scalar homes +0x60/+0x5d across resources and skills.
-// The Complete-only creature reader owns the versioned unchecked read;
-// keep that canonical helper rather than the older DC checked-byte tail.
-// Finite ownership/enum probes retained the same 91.41% residual; the DC
-// declaration-order variant is byte-flat. Secondary-skill resize expands
-// erase into copy/_Destroy where retail retains erase. Routing every read
-// through readValue lowers the caller to 83.58% through vector inlining.
+// length), and x; all six locals and the NUM_RESOURCES/kNumPrimarySkills
+// bounds are kept. Mac reuses scalar homes +0x60/+0x5d across the resource
+// and skill reads, and the creature reader owns the versioned unchecked read.
+// Only the first checked read stores its status in count. Dreamcast stores
+// count after all 17 reads, but retail's inlining of the three list resizes
+// matches a body with almost no stored statuses (91.56% with all of them,
+// 96.14% with the first only), so the Windows source is taken to differ from
+// the older Dreamcast build here. Each artifact byte is read into intBuffer and
+// narrowed through unsigned char, which is retail's dword load + and 0xff; an
+// int local read with sizeof(int) also scores higher but would read four
+// bytes per artifact. Flat probes: resize argument forms (number, charBuffer,
+// int(number)), number as int, declaration order, signed charBuffer, raw enum
+// casts instead of H3_ENUM_DECODE, the artifact mask / static_cast spellings.
+// Residual: retail keeps the list length in ebx and the vector in edi across
+// the resize/erase expansions.
+// Secondary-skill resize expands erase into copy/_Destroy where retail
+// retains erase. Routing every read through readValue lowers the caller to
+// 83.58% through vector inlining.
 VA(0x00500430, 0x478)
 DC_ADDRESS(0x0ef158, 0x484)
 MAC_ADDRESS(0x122720, 0x49c)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic)
@@ -2008,89 +2017,74 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
             return -1;
     }
 
-    count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (count < sizeof(intBuffer))
+    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
         return -1;
     thisBox.m_experienceBonus = intBuffer;
-    count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (count < sizeof(intBuffer))
+    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
         return -1;
     thisBox.m_manaBonus = intBuffer;
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     thisBox.m_moraleBonus = charBuffer;
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     thisBox.m_luckBonus = charBuffer;
 
     for (x = 0; x < NUM_RESOURCES; ++x) {
-        count = infile->read(&intBuffer, sizeof(intBuffer));
-        if (count < sizeof(intBuffer))
+        if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
             return -1;
         thisBox.m_resQty[x] = intBuffer;
     }
     for (x = 0; x < kNumPrimarySkills; ++x) {
-        count = infile->read(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
             return -1;
         thisBox.m_primarySkillBonus[x] = charBuffer;
     }
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     thisBox.m_secondarySkills.resize(number);
     for (x = 0; x < number; ++x) {
-        count = infile->read(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
             return -1;
         // Mac 0x12298c..0x1229d8 stores enum words directly after each read.
         thisBox.m_secondarySkills[x].m_type =
             H3_ENUM_DECODE(TSecondarySkill, charBuffer);
-        count = infile->read(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
             return -1;
         thisBox.m_secondarySkills[x].m_level =
             H3_ENUM_DECODE(TSkillMastery, charBuffer);
     }
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     thisBox.m_artifacts.resize(number);
     for (x = 0; x < number; ++x) {
-        unsigned char artifact;
-        infile->read(&artifact, sizeof(artifact));
-        thisBox.m_artifacts[x] = TArtifact(artifact);
+        infile->read(&intBuffer, sizeof(unsigned char));
+        thisBox.m_artifacts[x] = (TArtifact)(unsigned char)intBuffer;
     }
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     thisBox.m_spells.resize(number);
     for (x = 0; x < number; ++x) {
-        count = infile->read(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
             return -1;
         thisBox.m_spells[x] = H3_ENUM_DECODE(ESpellId, charBuffer);
     }
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     thisBox.m_creatures.initialize();
     for (x = 0; x < number; ++x) {
         thisBox.m_creatures.m_armies[x] =
             readSavedCreatureId(infile, saveVersion);
-        count = infile->read(&shortBuffer, sizeof(shortBuffer));
-        if (count < sizeof(shortBuffer))
+        if (infile->read(&shortBuffer, sizeof(shortBuffer)) < sizeof(shortBuffer))
             return -1;
         thisBox.m_creatures.m_numTroops[x] = shortBuffer;
     }
@@ -3306,9 +3300,11 @@ void NewfullMap::readRandomDwellingFactionData(TAbstractFile* infile,
     char padding[3];
     infile->read(padding, 3);
 
-    dwelling.m_castleId = 0;
+    // Native Mac 0x125b08/0x125b0c stores the faction mask before the zero
+    // castle id; retail readObject schedules the two stores in that order.
     dwelling.m_factionMask = static_cast<unsigned short>(
         1 << m_objectTypes[object->m_typeIndex].m_extra);
+    dwelling.m_castleId = 0;
 
     dwelling.m_minLevel = readValue<char>(infile);
     dwelling.m_maxLevel = readValue<char>(infile);
@@ -3398,9 +3394,8 @@ void NewfullMap::readHeroPlaceholderData(TAbstractFile* infile, CObject* tempObj
 // versus direct two-argument insert at 60.0594%; no sibling score moves.
 // Both guard/data insertion workers still expand where retail calls the
 // two-argument bodies, so this does not close that native-vector frontier.
-// Current residual (59.40%): readSeerData expands with its owned temporary,
-// read and pool insertion. VC6 also expands the temporary TSeerHut constructor
-// that retail retains; other map-reader call/expansion differences remain.
+// Exact (99.52 -> 100) once readRandomDwellingFactionData writes its faction
+// mask before the zero castle id, the order native Mac stores them in.
 VA(0x00502e00, 0x832)
 DC_ADDRESS(0x0f16c8, 0x454)
 MAC_ADDRESS(0x125ebc, 0x3ac)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined
@@ -4193,13 +4188,13 @@ void NewfullMap::generateHeightMap(const CObject* object,
         int depth = 1;
         for (int row = 0; row < m_objectTypes[typeIndex].m_height; ++row) {
             if (row > 0) {
-                if (!m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row)]
-                    && m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row - 1)])
+                if (!m_objectTypes[typeIndex].m_passableCells[CObjectType::_getBitPos(col, row)]
+                    && m_objectTypes[typeIndex].m_passableCells[CObjectType::_getBitPos(col, row - 1)])
                     depth = 1;
             }
             if (col > 0) {
-                if (m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row)]
-                    && !m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col - 1, row)])
+                if (m_objectTypes[typeIndex].m_passableCells[CObjectType::_getBitPos(col, row)]
+                    && !m_objectTypes[typeIndex].m_passableCells[CObjectType::_getBitPos(col - 1, row)])
                     depth = heightMap[col - 1][row];
             }
             heightMap[col][row] = static_cast<signed char>(depth);
@@ -4328,7 +4323,7 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         int row = it->m_cellY;
         int col = it->m_cellX;
         if (objectType->m_triggerCells.test(
-                CObjectType::getBitPos(col, row))) {
+                CObjectType::_getBitPos(col, row))) {
             thisCell->m_objectTypeIndex = it->m_objectIndex;
             thisCell->m_typeValue = objectType->m_objectType;
             thisCell->m_isTrigger = 1;
@@ -4347,7 +4342,7 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
             int row = it->m_cellY;
             int col = it->m_cellX;
             if (!objectType->m_passableCells.test(
-                    CObjectType::getBitPos(col, row))) {
+                    CObjectType::_getBitPos(col, row))) {
                 thisCell->m_objectTypeIndex = it->m_objectIndex;
                 thisCell->m_typeValue = objectType->m_objectType;
                 thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
@@ -4367,7 +4362,7 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         int row = it->m_cellY;
         int col = it->m_cellX;
         if (!objectType->m_passableCells.test(
-                CObjectType::getBitPos(col, row))) {
+                CObjectType::_getBitPos(col, row))) {
             thisCell->m_objectTypeIndex = it->m_objectIndex;
             thisCell->m_typeValue = objectType->m_objectType;
             thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
@@ -4470,7 +4465,7 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
 
             if (objectClass == EVENT) {
                 if (objectType->m_triggerCells.test(
-                        CObjectType::getBitPos(col, row))) {
+                        CObjectType::_getBitPos(col, row))) {
                     cell->m_isBlocked = 0;
                     cell->m_isTrigger = 0;
                     cell->m_typeValue = EVENT;
@@ -4583,7 +4578,7 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // terrainMask stay with the editor template.
 // Complete-only conversion constructor: retail 0x506080 constructs the
 // string and five masks, then copies the editor template's runtime fields.
-// Controls: equivalent reversed-grid getBitPos arithmetic and signed/long
+// Controls: equivalent reversed-grid _getBitPos arithmetic and signed/long
 // position locals produced no constructor gain across nine source states.
 // DC CObjectType fieldlist 0x309c (class 0x309b) declares only the generated
 // default/copy constructors (attributes 0x103), with no editor-template overload.
@@ -4603,10 +4598,17 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // test<10> (52 < 58) and expands set<10> (155), the reverse of retail
 // (44.72%). Not adopted.
 // Canonical const cell queries now own each source mask lookup and its
-// coordinate mapping. Metadata queries and the const source contract recover
-// the retail test/set call decisions for all five masks (85.2364%). Control
-// flow agrees; remaining differences are register homes and spills. Template
-// mask and metadata storage is private; existing setters own their updates.
+// coordinate mapping. Template mask and metadata storage is private;
+// existing setters own their updates. The terrain copy reads Loki's const
+// getRecommendedTerrainMask() through its subscript: that one more inline
+// site divides the passable test's nested budget below its cost, so draw and
+// passable call test while shadow and trigger expand it, as retail does
+// (77.93% -> 85.24%; the project-named isRecommendedTerrain query and a
+// direct .test(terrain) on the mask (65.93%) do not). The destination
+// position is a signed local: retail strength-reduces it apart from the
+// unsigned query positions (edi versus esi), which an unsigned pos shared
+// with them through CSE (85.24% -> 100%). Failed probe: a _getBitPos call in
+// each destination subscript instead of the local (62.81%).
 // Const-reference input is inferred from the sole caller converting an
 // existing table record, with no writes or nullable-source path.
 VA(0x00506080, 0x1D4)
@@ -4619,7 +4621,7 @@ CObjectType::CObjectType(const TObjectType& source)
 
     for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
-            unsigned pos = getBitPos(x, y);
+            int pos = _getBitPos(x, y);
             m_drawCells[pos] = source.getBCellPlaced(x, y);
             m_passableCells[pos] = source.getBCellPassable(x, y);
             m_shadowCells[pos] = source.getBCellShadow(x, y);
@@ -4628,9 +4630,9 @@ CObjectType::CObjectType(const TObjectType& source)
     }
 
     // Mac 0x128d4c..0x128d6c tests and sets each terrain bit. The const
-    // source selects the read-only terrain query, without a mutable proxy.
+    // source's const mask subscript reads it without a mutable proxy.
     for (int terrain = 0; terrain < kNumTerrainTypes; terrain++)
-        m_recommendedTerrainMask[terrain] = source.isRecommendedTerrain(terrain);
+        m_recommendedTerrainMask[terrain] = source.getRecommendedTerrainMask()[terrain];
 
     m_objectType = source.getType();
     m_extra = source.getExtra();

@@ -122,9 +122,9 @@ DATA(0x00699288) int g_waitForRemoteReceive;
 const long g_dplayErrorUserCancel = 0x88770118;
 
 // The sole retail read at 0x50fade promotes the DirectPlay session from the
-// mandatory migrate-host flag to migrate-host|keep-alive. No public symbol
-// survives for the byte; its descriptive name follows that flag operation.
-DATA(0x00681628) static unsigned char g_sessionKeepAlive = 1;
+// mandatory migrate-host flag to migrate-host|keep-alive. Dreamcast original:
+// gbKeepAlive, an external bool of multiplayerwindow.obj (`?gbKeepAlive@@3_NA`).
+DATA(0x00681628) unsigned char g_sessionKeepAlive = 1;
 
 // Dialog help comes from g_mpHelp, populated by initializeHelpText at
 // 0x6a7750: row 1 edit, 2 OK, 3 Back, 4 name, 5 password, 6 label,

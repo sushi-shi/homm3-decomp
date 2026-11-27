@@ -77,7 +77,9 @@ BEGIN_MESSAGE_MAP(TMonsterPropsTreasurePage, CPropertyPage)
 END_MESSAGE_MAP()
 
 // Residual: retail loads each quantity before constructing the text, as a
-// named int copy of it does; Format takes the member directly here.
+// named int copy of it does; Format takes the member directly here. No
+// change: the page's getResourceQuantity, int(quantity), an int member;
+// lower: indexing the array without controls, the text before LimitText.
 VA(0x0048a24c, 0x28d)
 BOOL TMonsterPropsTreasurePage::OnInitDialog()
 {

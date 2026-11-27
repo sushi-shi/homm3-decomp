@@ -17,7 +17,8 @@
 #include "editor/Player.h"
 #include "editor/Town.h"
 
-class TEditTownEventSheet : public CPropertySheet, public TEditTimedEventGeneralPageParentSheet {
+// RTTI: the interface base is private (attributes 9).
+class TEditTownEventSheet : public CPropertySheet, private TEditTimedEventGeneralPageParentSheet {
 public:
     TEditTownEventSheet(CWnd* pParentWnd, const TPlayerMask& playersPresent, TTownType townType,
                         EGameVersion mapVersion, const TTown::TTimedEvent& event);

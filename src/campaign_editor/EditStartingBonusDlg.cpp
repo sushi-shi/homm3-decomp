@@ -55,6 +55,11 @@ protected:
     virtual void DoDataExchange(CDataExchange* pDX);
     virtual BOOL OnInitDialog();
 
+    // The chosen recipient. Every hero bonus factory passes it through this
+    // value getter (the bonuses' own accessor style); reading the field
+    // directly reorders the hero load or store in five of the six factories.
+    int getHero() const { return _m_hero; }
+
     const TCampaignScenarioMap* _m_pMap;
     int _m_player;
     int _m_hero;
@@ -357,13 +362,10 @@ TStartingBonusSpellDlg::TStartingBonusSpellDlg(TClient* pClient, const TCampaign
 VA_COMPGEN(0x0041e560, 0x1e, SCALAR_DELETING_DTOR, TStartingBonusSpellDlg)
 VA_COMPGEN(0x0041e580, 0x5f, IMPLICIT_DTOR, TStartingBonusSpellDlg)
 
-// Residual (shared by the artifact and spell-scroll factories): retail loads
-// the value before the hero; the constructors keep the hero-first order of
-// their siblings and the serializer.
 VA(0x0041e5e0, 0xa5)
 std::auto_ptr<TScenarioStartingBonus> TStartingBonusSpellDlg::getBonus() const
 {
-    std::auto_ptr<TScenarioStartingBonus> pBonus(new TScenarioBonusSpell(_m_hero, _m_spell));
+    std::auto_ptr<TScenarioStartingBonus> pBonus(new TScenarioBonusSpell(getHero(), _m_spell));
     if (pBonus.get() == NULL)
         throw TAllocationFailure();
     return pBonus;
@@ -467,7 +469,7 @@ VA(0x0041ea80, 0xb4)
 std::auto_ptr<TScenarioStartingBonus> TStartingBonusCreatureDlg::getBonus() const
 {
     std::auto_ptr<TScenarioStartingBonus> pBonus(
-        new TScenarioBonusCreature(_m_hero, _m_stack));
+        new TScenarioBonusCreature(getHero(), _m_stack));
     if (pBonus.get() == NULL)
         throw TAllocationFailure();
     return pBonus;
@@ -616,7 +618,7 @@ void TStartingBonusArtifactDlg::setBonus(const TScenarioBonusArtifact& bonus)
 VA(0x0041f320, 0xa5)
 std::auto_ptr<TScenarioStartingBonus> TStartingBonusArtifactDlg::getBonus() const
 {
-    std::auto_ptr<TScenarioStartingBonus> pBonus(new TScenarioBonusArtifact(_m_hero, _m_artifact));
+    std::auto_ptr<TScenarioStartingBonus> pBonus(new TScenarioBonusArtifact(getHero(), _m_artifact));
     if (pBonus.get() == NULL)
         throw TAllocationFailure();
     return pBonus;
@@ -681,7 +683,7 @@ void TStartingBonusSpellScrollDlg::setBonus(const TScenarioBonusSpellScroll& bon
 VA(0x0041f6b0, 0xa5)
 std::auto_ptr<TScenarioStartingBonus> TStartingBonusSpellScrollDlg::getBonus() const
 {
-    std::auto_ptr<TScenarioStartingBonus> pBonus(new TScenarioBonusSpellScroll(_m_hero, _m_spell));
+    std::auto_ptr<TScenarioStartingBonus> pBonus(new TScenarioBonusSpellScroll(getHero(), _m_spell));
     if (pBonus.get() == NULL)
         throw TAllocationFailure();
     return pBonus;
@@ -815,7 +817,7 @@ void TStartingBonusPrimarySkillDlg::setBonus(const TScenarioBonusPrimarySkill& b
 VA(0x0041fbf0, 0xae)
 std::auto_ptr<TScenarioStartingBonus> TStartingBonusPrimarySkillDlg::getBonus() const
 {
-    std::auto_ptr<TScenarioStartingBonus> pBonus(new TScenarioBonusPrimarySkill(_m_hero, _m_skills));
+    std::auto_ptr<TScenarioStartingBonus> pBonus(new TScenarioBonusPrimarySkill(getHero(), _m_skills));
     if (pBonus.get() == NULL)
         throw TAllocationFailure();
     return pBonus;
@@ -921,7 +923,7 @@ void TStartingBonusSecondarySkillDlg::setBonus(const TScenarioBonusSecondarySkil
 VA(0x00420260, 0xb5)
 std::auto_ptr<TScenarioStartingBonus> TStartingBonusSecondarySkillDlg::getBonus() const
 {
-    std::auto_ptr<TScenarioStartingBonus> pBonus(new TScenarioBonusSecondarySkill(_m_hero, _m_skill, _m_mastery));
+    std::auto_ptr<TScenarioStartingBonus> pBonus(new TScenarioBonusSecondarySkill(getHero(), _m_skill, _m_mastery));
     if (pBonus.get() == NULL)
         throw TAllocationFailure();
     return pBonus;

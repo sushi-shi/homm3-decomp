@@ -165,7 +165,7 @@ protected:
 
 public:
     const army* enemy;  // +0x08
-    searchArray* search_array;  // +0x0c
+    const searchArray* search_array;  // +0x0c
     const long* enemy_attacks;  // +0x10
     long retaliation_strength;  // +0x14
     long our_strength;  // +0x18
@@ -178,12 +178,12 @@ public:
     long best_attack_time;  // +0x24
 
 public:
-    const type_AI_combat_parameters* estimate;  // +0x28
+    const type_AI_combat_parameters& estimate;  // +0x28
 
     type_AI_attack_hex_chooser(const army* attack_army, const army* enemy_army,
                                const long* enemy_attack_array,
                                searchArray* search_data,
-                               const type_AI_combat_parameters* data);
+                               const type_AI_combat_parameters& data);
     unsigned char findAttackHex();
     // dc 0x3d154. Inlined into check_adjacent_hexes and carrying no
     // retail body of its own.

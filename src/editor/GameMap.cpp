@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <algorithm>
+#include <limits>
 #include <map>
 #include <memory>
 #include <vector>
@@ -41,6 +42,12 @@
 #include "editor/Town.h"
 #include "editor/VictoryCondition.h"
 #include "retailobjecttype.h"
+
+// The reserved bytes after each object record and after the map's header,
+// and the zeros that end the map file (Loki GameMap.cpp).
+const unsigned int kNumObjectReserved = 5;
+const unsigned int kNumMapReserved = 31;
+const unsigned int kNumMapTrailer = 124;
 
 namespace {
 
@@ -118,10 +125,11 @@ private:
     std::vector<TCappedObjectTypeInfo> _m_aInfo;
 };
 
-// Built on first use (h3maped 0x4226d8: guard 0x5aa6b3, object 0x5aa6c0).
+// Built on first use (h3maped 0x4226d8).
 inline const TCappedObjectTypeInfoMap& getCappedObjectTypeInfoMap()
 {
-    static const TCappedObjectTypeInfoMap s_map;
+    DATA_COMPGEN_GUARD(0x005aa6b3, cappedObjectTypeInfoMapGuard, s_map)
+    DATA(0x005aa6c0) static const TCappedObjectTypeInfoMap s_map;
     return s_map;
 }
 
@@ -181,18 +189,21 @@ static const TCappedObjectTypeGroup<5> kCappedGeneratorTypes = {
 
 // Loki builds each info through its constructor (Loki GameMap.cpp 150);
 // Complete adds the type. Retail resets the ordinal before keying the shared
-// infos and discards every insertion result. Residual: retail reads each
-// row's type before its cap and expands the last insertion's result pair;
-// aggregate infos and (void) casts on the discarded insertions recover both,
-// but Loki has neither. The mine info temporary schedule and the tables'
-// end-address names also differ.
+// infos and discards every insertion result. The ordinal is a plain int (no
+// native type; an unsigned counter leaves two result-pair constructors out of
+// line, int one, 85.94% -> 91.55%). Residual: retail reads each row's type
+// before its cap and expands the remaining insertion result pair; aggregate
+// infos and (void) casts recover both, but Loki has neither. The tables'
+// end-address names also differ. No gain: ctor parameter order or body
+// assignments, no row references, loop-step ordinal increments, a for-init
+// counter, an out-of-class ctor, this->insert, inline sizeof bounds.
 VA(0x0041e98d, 0x28d)
 TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
 {
     const unsigned int kNumSingles = sizeof(akCappedObjectTypes) / sizeof(akCappedObjectTypes[0]);
     const unsigned int kNumPairs = sizeof(akCappedObjectTypePairs) / sizeof(akCappedObjectTypePairs[0]);
     _m_aInfo.reserve(kNumSingles + kNumPairs + 2);
-    unsigned int ordinal = 0;
+    int ordinal = 0;
     unsigned int i;
     for (i = 0; i < kNumSingles; i++) {
         const TCappedObjectType& type = akCappedObjectTypes[i];
@@ -228,11 +239,13 @@ TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
 // town, the Conflux dwellings, hero classes and monsters); Shadow of Death
 // the types from 222, the combination artifacts from 129 and the new
 // monoliths. Retail has no setcc: each case returns only its newer edition
-// and breaks to one shared ROE return, and the artifact case owns the shared
-// AB tail, which VC6 gives the last AB-returning case. The other cases' order
-// does not change the object. Still open: retail keeps the AB return at the
-// top guard and the SoD one in the monolith case; nested guards, a block
-// around the switch and one grouped monolith case all lose ground.
+// and breaks to one shared ROE return. Case order decides which copy of each
+// shared return survives: with the one-way monolith case closing the switch
+// VC6 keeps retail's SoD return in the monolith case and the AB one at the
+// top guard (elsewhere it keeps the SoD return at the top guard, and some
+// other orders also move the AB tail). Nested guards, else-if
+// guards, break-first monolith cases, one grouped monolith case and a named
+// result (inlined away) all lose ground.
 VA(0x0041ec1f, 0x79)
 EGameVersion getRequiredVersion(const TObjectType& objType)
 {
@@ -248,11 +261,6 @@ EGameVersion getRequiredVersion(const TObjectType& objType)
     case HERO:
         if (objType.getExtra() >= 16)
             return GAME_VERSION_AB;
-        break;
-    case LITH_ONEWAY_ENTRANCE:
-    case LITH_ONEWAY_EXIT:
-        if (objType.getExtra() >= 3)
-            return GAME_VERSION_SOD;
         break;
     case LITH_TWOWAY:
         if (objType.getExtra() >= 3)
@@ -271,6 +279,11 @@ EGameVersion getRequiredVersion(const TObjectType& objType)
             return GAME_VERSION_SOD;
         if (objType.getExtra() >= 127)
             return GAME_VERSION_AB;
+        break;
+    case LITH_ONEWAY_ENTRANCE:
+    case LITH_ONEWAY_EXIT:
+        if (objType.getExtra() >= 3)
+            return GAME_VERSION_SOD;
         break;
     }
     return GAME_VERSION_ROE;
@@ -357,7 +370,8 @@ public:
     TLayer* getPLayer(unsigned int num) { return &_m_aLayer[num]; }
     TLayer* getPLayer(bool bSecondLayer);
     const TLayer* getPLayer(unsigned int num) const { return &_m_aLayer[num]; }
-    const TLayer& getLayer(bool bSecondLayer) const { return _m_aLayer[bSecondLayer ? 1U : 0U]; }
+    const TLayer* getPLayer(bool bSecondLayer) const { return getPLayer(bSecondLayer ? 1U : 0U); }
+    const TLayer& getLayer(bool bSecondLayer) const { return *getPLayer(bSecondLayer); }
     const TLayer& getLayer(unsigned int num) const { return *getPLayer(num); }
     EGameVersion getVersion() const { return _m_version; }
     unsigned int getWidth() const { return _s_akDimension[_m_size]; }
@@ -726,7 +740,7 @@ inline TCreateObjFailureTooManyTownsOnMap::TCreateObjFailureTooManyTownsOnMap()
 
 // Fills a map's victory-condition record from a condition (h3maped RTTI
 // _TGetVictoryConditionDataFunc@_TImpl@TGameMap, twelve slots).
-class TGameMap::_TImpl::_TGetVictoryConditionDataFunc : public TVictoryCondition::TVisitor {
+class TGameMap::_TImpl::_TGetVictoryConditionDataFunc : private TVictoryCondition::TVisitor {
 public:
     explicit _TGetVictoryConditionDataFunc(const _TImpl& map) : _m_map(map), _m_pData(NULL) {}
 
@@ -766,7 +780,7 @@ private:
 };
 
 // ...and its loss-condition record (four slots).
-class TGameMap::_TImpl::_TGetLossConditionDataFunc : public TLossCondition::TVisitor {
+class TGameMap::_TImpl::_TGetLossConditionDataFunc : private TLossCondition::TVisitor {
 public:
     explicit _TGetLossConditionDataFunc(const _TImpl& map) : _m_map(map), _m_pData(NULL) {}
 
@@ -892,7 +906,7 @@ void TGameMap::_TImpl::_TGetLossConditionDataFunc::visit(const TLCTimeExpires& l
 
 // Whether a condition still names objects of the right kinds; a missing
 // condition is valid. The two validaters' isValid bodies fold (0x41ef90).
-class TGameMap::_TImpl::_TVictoryConditionValidater : public TVictoryCondition::TVisitor {
+class TGameMap::_TImpl::_TVictoryConditionValidater : private TVictoryCondition::TVisitor {
 public:
     _TVictoryConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
 
@@ -917,7 +931,7 @@ private:
     bool _m_bValid;
 };
 
-class TGameMap::_TImpl::_TLossConditionValidater : public TLossCondition::TVisitor {
+class TGameMap::_TImpl::_TLossConditionValidater : private TLossCondition::TVisitor {
 public:
     _TLossConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
 
@@ -1079,23 +1093,28 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, TSize size, boo
 // cells, the object types and the objects (a town's visiting hero follows
 // it at its location), the timed events, then the players, teams,
 // conditions and the heroes the edition and the map leave available.
-// The object-type, object and timed-event counts come through
-// readValue<long>, the Complete-era read form of the campaign editor's header
-// reader (h3ccmped GameMapHeader.cpp); Loki's long locals (Loki GameMap.cpp
-// 1145-1153) are RoE-era. Both hero-mask loops read the masks through bitset
-// subscripts, Loki's bitset idiom: retail's first loop keeps the proxies'
-// test calls, its second the proxy's bool conversion. The team loop counter
-// is signed (retail jl). The late inline decisions are one budget wall: the
-// replay gives every retail decision at a root cost of 2986..2996, or nearly
-// so with every scalar read 6 tuples lighter, which the free-helper reads
-// supply: the team-info and condition holders' get() splits now follow
-// retail. Residual: retail hoists the edition's availability offset (see
-// the new-map constructor), expands the default TRumor's first string
-// constructor (a _Tidy call) and the header availability subscript's bool
-// conversion (a test call) where VC6 here calls them; calling
-// setVictoryCondition/setLossCondition and proxies for the disabled-hero
-// sets score lower, and heavier or uncalled readCellData bodies give the
-// get() splits only.
+// The object-type and object counts are Loki's long locals read in place
+// (Loki GameMap.cpp 1145-1153): retail tests and counts them in their own
+// stack slots with no copy. The timed-event count comes through
+// readValue<long>, the Complete-era read form of the campaign editor's
+// header reader (h3ccmped GameMapHeader.cpp): retail copies it and counts the
+// copy down, which an in-place local does not give. The condition holders
+// take the reconstructed auto_ptr by implicit conversion (retail addresses
+// the temporary from its slot, not the constructor's return). The hero-mask
+// loops index akHeroTraits at each use (retail steps the record offset and
+// keeps the hero counter in memory, which a traits reference does not give)
+// and read the masks through bitset subscripts, Loki's bitset idiom. The
+// team loop counter is signed (retail jl). Residual: retail hoists the
+// edition's availability offset (see the new-map constructor) and, with a
+// root cost about 80 tuples heavier in the replay, expands the default
+// TRumor's first string constructor (a _Tidy call), the loss holder's
+// _TProperties get() split and the first loop's header availability bool
+// conversion (a test call). Failed probes: Loki's in-place timed-event count
+// (92.98: the count is no longer copied), calling
+// setVictoryCondition/setLossCondition (92.39), team-info writes through the
+// holder instead of a reference (93.24), subscript writes to the disabled
+// heroes (94.33), resize's default TRumor, and the timed-event block without
+// its braces (both unchanged).
 VA(0x0041f350, 0xa6e)
 TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStreamBuf, int fileVersion)
     : _m_pClient(pClient), _m_version(version)
@@ -1104,7 +1123,7 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
     assert(pStreamBuf != NULL);
     TRawIStream stream(pStreamBuf);
     TGameMapHeader header(stream, fileVersion);
-    signed char aReserved[31];
+    signed char aReserved[kNumMapReserved];
     stream >> aReserved;
     _m_size = TSize(find(_s_akDimension, _s_akDimension + s_kNumSizes, header.m_dimension) - _s_akDimension);
     assert((int)_m_size >= (int)0 && (int)_m_size < (int)s_kNumSizes);
@@ -1152,19 +1171,21 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
     readCellData(stream, &_m_aLayer[0]);
     if (_m_bTwoLayer)
         readCellData(stream, &_m_aLayer[1]);
-    long numObjTypes = readValue<long>(stream);
+    long numObjTypes;
+    stream >> numObjTypes;
     vector<TObjectType> tempObjTypeTable;
     tempObjTypeTable.resize(numObjTypes, TObjectType());
     vector<TObjectType>::iterator iter = tempObjTypeTable.begin();
     while (numObjTypes-- > 0)
         stream >> *iter++;
-    long numObjs = readValue<long>(stream);
+    long numObjs;
+    stream >> numObjs;
     if (numObjs > 0) {
         unsigned char x;
         unsigned char y;
         unsigned char layerNum;
         long typeID;
-        signed char aObjReserved[5];
+        signed char aObjReserved[kNumObjectReserved];
         stream >> x >> y >> layerNum >> typeID >> aObjReserved;
         for (;;) {
             assert(layerNum == 0 || (_m_bTwoLayer && layerNum == 1));
@@ -1243,26 +1264,25 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
         for (int player = 0; player < kNumPlayers; player++)
             teamInfo.setPlayerTeam(TPlayer(player), header.m_aTeam[player]);
     }
-    _m_pProperties->m_pVictoryCondition =
-        TRefCountingAutoPtr<TVictoryCondition>(_reconstructVictoryCondition(header.m_vcData));
-    _m_pProperties->m_pLossCondition = TRefCountingAutoPtr<TLossCondition>(_reconstructLossCondition(header.m_lcData));
+    _m_pProperties->m_pVictoryCondition = _reconstructVictoryCondition(header.m_vcData);
+    _m_pProperties->m_pLossCondition = _reconstructLossCondition(header.m_lcData);
     if (fileVersion >= 18) {
         bitset<kNumHeroes> heroesOnMap = getHeroesOnMap();
-        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
-            const THeroTraits& traits = akHeroTraits[heroID];
+        for (int heroID = 0; heroID < kNumHeroes; heroID++) {
             if (!heroesOnMap[heroID]
                 && (!header.m_availableHeroes[heroID]
-                    || !(_m_version >= GAME_VERSION_AB ? traits.m_availableInExpansion : traits.m_availableInOriginal)
-                    || (fileVersion < 20 && traits.m_special)))
+                    || !(_m_version >= GAME_VERSION_AB ? akHeroTraits[heroID].m_availableInExpansion
+                                                       : akHeroTraits[heroID].m_availableInOriginal)
+                    || (fileVersion < 20 && akHeroTraits[heroID].m_special)))
                 _m_pProperties->m_disabledHeroes.set(heroID, true);
         }
     } else {
         bitset<kNumHeroes> heroesOnMap = getHeroesOnMap();
-        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
-            const THeroTraits& traits = akHeroTraits[heroID];
+        for (int heroID = 0; heroID < kNumHeroes; heroID++) {
             if (!heroesOnMap[heroID]
-                && (traits.m_special
-                    || !(_m_version >= GAME_VERSION_AB ? traits.m_availableInExpansion : traits.m_availableInOriginal)))
+                && (akHeroTraits[heroID].m_special
+                    || !(_m_version >= GAME_VERSION_AB ? akHeroTraits[heroID].m_availableInExpansion
+                                                       : akHeroTraits[heroID].m_availableInOriginal)))
                 _m_pProperties->m_disabledHeroes.set(heroID, true);
         }
     }
@@ -1502,7 +1522,7 @@ void TGameMap::_TImpl::setPlaceholderHeroID(bool bSecondLayer, unsigned int objI
 {
     THeroPlaceholder* pPlaceholder = dynamic_cast<THeroPlaceholder*>(getPLayer(bSecondLayer)->getPObject(objID));
     _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[pPlaceholder->getOwner()];
-    if (pPlaceholder->getHeroID() != -1) {
+    if (pPlaceholder->getHeroID() != eHeroNone) {
         THeroID heroID = pPlaceholder->getHeroID();
         playerBookkeeping.m_aNumHeroesOfType[THero::s_akClassTraits[THero::s_akTraits[heroID].m_class].m_townType]--;
         playerBookkeeping.m_paHeroPlaceholderID->erase(heroID);
@@ -1527,7 +1547,7 @@ void TGameMap::_TImpl::clearPlaceholderHeroID(bool bSecondLayer, unsigned int ob
         ->m_aNumHeroesOfType[THero::s_akClassTraits[heroClass].m_townType]--;
     playerBookkeeping.m_paHeroPlaceholderID->erase(heroID);
     _m_pBookkeeping->m_heroesOnMap.set(heroID, false);
-    pPlaceholder->setHeroID(-1);
+    pPlaceholder->setHeroID(eHeroNone);
 }
 
 VA(0x00420b62, 0x6c)
@@ -1695,7 +1715,8 @@ void TGameMap::_TImpl::addSecondLayer()
 }
 
 // One edition at a time. Armageddon's Blade enables the heroes Restoration
-// lacked, moves hero 4 to its new id 144 and disables the heroes it lacks.
+// lacked, moves Lord Haart (eHeroLordHaart, 4) to his new id 144, whose
+// Complete enumerator is not recovered, and disables the heroes it lacks.
 // Cleanup probes: a heroMoved flag with nested breaks flips the layer-loop
 // branch; putting the flag in its condition scores 89.67%. No native evidence
 // establishes that extra flag, so retain the shared search exit.
@@ -1726,8 +1747,8 @@ void TGameMap::_TImpl::setVersion(EGameVersion newVersion)
                     if (pTown != NULL && pTown->getPVisitingHero() != NULL)
                         pHero = dynamic_cast<TIdentifiedHero*>(pTown->getPVisitingHero());
                 }
-                if (pHero != NULL && pHero->getHeroID() == 4) {
-                    setHeroID(layerNum != 0, *iter, 144);
+                if (pHero != NULL && pHero->getHeroID() == eHeroLordHaart) {
+                    setHeroID(layerNum != 0, *iter, THeroID(144));
                     goto heroMoved;
                 }
             }
@@ -1814,7 +1835,7 @@ auto_ptr<TGameObject> TGameMap::_TImpl::createObject(const TObjectType& objType,
             if (numHeroes >= s_kMaxHeroesPerPlayer)
                 throw TCreateObjFailureTooManyHeroesForPlayer();
             THeroID heroID = _pickRandomHero(THeroClass(objType.getExtra()));
-            if (heroID == -1)
+            if (heroID == eHeroNone)
                 throw TCreateObjFailureNoAvailableHeroesInClass();
             auto_ptr<TNonRandomHero> pHero = _s_pObjectFactory->createNonRandomHero(objType, owner, heroID);
             if (pHero.get() == NULL)
@@ -1847,7 +1868,7 @@ auto_ptr<TGameObject> TGameMap::_TImpl::createObject(const TObjectType& objType,
                 throw TCreateObjFailureTooManyHeroesOnMap();
             int heroClass = 0;
             THeroID heroID;
-            while ((heroID = _pickRandomHero(THeroClass(heroClass))) == -1) {
+            while ((heroID = _pickRandomHero(THeroClass(heroClass))) == eHeroNone) {
                 if (++heroClass >= kNumHeroClasses)
                     throw TCreateObjFailureTooManyHeroesOnMap();
             }
@@ -2126,7 +2147,7 @@ bool TGameMap::_TImpl::canCreate(const TObjectType& objType, TPlayer player) con
             if (numHeroes >= s_kMaxHeroesPerPlayer)
                 return false;
             const THero::TClassTraits& classTraits = THero::s_akClassTraits[objType.getExtra()];
-            for (set<int>::const_iterator pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end();
+            for (set<THeroID>::const_iterator pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end();
                  ++pHeroID)
                 if (THero::s_akTraits[*pHeroID].m_gameVersions.test(_m_version)
                     && !_m_pBookkeeping->m_heroesOnMap.test(*pHeroID)
@@ -2156,7 +2177,7 @@ set<THeroID> TGameMap::_TImpl::getAvailableHeroesInClass(THeroClass heroClass) c
 {
     const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
     set<THeroID> result;
-    for (set<int>::const_iterator pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end();
+    for (set<THeroID>::const_iterator pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end();
          ++pHeroID)
         if (THero::s_akTraits[*pHeroID].m_gameVersions.test(_m_version) && !_m_pBookkeeping->m_heroesOnMap.test(*pHeroID)
             && !_m_pProperties->m_disabledHeroes.test(*pHeroID))
@@ -2231,10 +2252,15 @@ TPlayerInfo::TTownTypes TGameMap::_TImpl::getDefaultTownTypes(TPlayer player) co
 // Complete's retained test/equality calls. Retail re-reads each player's
 // placeholder set through the bookkeeping handle for begin and every end
 // test, names the main town's layer before the object lookup, and reads the
-// game prototype before the map's. Residual: stack homes and scheduling, and
-// the timed-event count's store order (a named size_type count matches it).
-// Temporary condition visitors, a by-value main-town reference and implicit
-// resize default arguments score lower.
+// game prototype before the map's. A named first iterator gives the older
+// edition's artifact copy retail's argument order and ebx reload. Residual:
+// stack homes (retail's 31-byte reserved array shares its slot with later
+// block locals, as in the reader, so its scope ends early; a bare block
+// reproduces that but has no other evidence), that copy's 0x81 register and
+// a pos store at its return slot, and the timed-event count's store order (a
+// named size_type count matches it). Temporary condition visitors, a by-value
+// main-town reference, implicit resize default arguments and naming the last
+// or destination iterator score lower.
 VA(0x00423b20, 0xc10)
 void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
 {
@@ -2315,7 +2341,7 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
             header.m_aTeam[player] = teamInfo.getPlayerTeam(TPlayer(player));
     }
     int numHeroes = _m_version != GAME_VERSION_ROE ? kNumHeroes : 128;
-    THeroID heroID;
+    int heroID;
     for (heroID = 0; heroID < numHeroes; heroID++)
         header.m_availableHeroes.set(heroID, !_m_pBookkeeping->m_heroesOnMap[heroID]
                                                 && !_m_pProperties->m_disabledHeroes[heroID]);
@@ -2343,15 +2369,15 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
         }
     }
     header.write(stream, _m_version);
-    signed char aReserved[31];
+    signed char aReserved[kNumMapReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     stream << aReserved;
     if (_m_version >= GAME_VERSION_SOD) {
         writeBitset(stream, _m_pProperties->m_disabledArtifacts);
     } else if (_m_version >= GAME_VERSION_AB) {
         bitset<129> disabledArtifacts(0);
-        copy(TConstBitsetIterator<kNumArtifacts>(_m_pProperties->m_disabledArtifacts, 0),
-             TConstBitsetIterator<kNumArtifacts>(_m_pProperties->m_disabledArtifacts, 129),
+        TConstBitsetIterator<kNumArtifacts> first(_m_pProperties->m_disabledArtifacts, 0);
+        copy(first, TConstBitsetIterator<kNumArtifacts>(_m_pProperties->m_disabledArtifacts, 129),
              TBitsetIterator<129>(disabledArtifacts, 0));
         writeBitset(stream, disabledArtifacts);
     }
@@ -2362,9 +2388,9 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     writeContainer(stream, *_m_pProperties->m_paRumor);
     if (_m_version >= GAME_VERSION_SOD)
         _writeHeroSettings(&stream, _m_version);
-    long numObjs = 0;
     unsigned int numLayers = _m_bTwoLayer ? 2 : 1;
     unsigned int layerNum;
+    long numObjs = 0;
     for (layerNum = 0; layerNum < numLayers; layerNum++) {
         writeCellData(stream, _m_aLayer[layerNum]);
         for (TLayer::TObjectIDIter iter = _m_aLayer[layerNum].objectIDBegin(); iter != _m_aLayer[layerNum].objectIDEnd();
@@ -2380,7 +2406,7 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     VA_COMPGEN(0x0042489a, 0xa, STATIC_DTOR, kObjTypeTable)
     DATA(0x0059e380) static const TObjectTypeTable kObjTypeTable("objtmplt.txt");
     for (vector<TObjectType>::const_iterator pObjType = kObjTypeTable.m_objectTypes.begin();
-         pObjType != kObjTypeTable.m_objectTypes.end(); ++pObjType)
+         pObjType != kObjTypeTable.m_objectTypes.end(); pObjType++)
         objTypes.add(*pObjType);
     vector<long> aObjTypeID(numObjs);
     long objNum = 0;
@@ -2401,7 +2427,7 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     stream << static_cast<long>(objTypes.numItems());
     for (unsigned int typeID = 0; typeID < objTypes.numItems(); typeID++)
         stream << objTypes.get(typeID);
-    signed char aObjReserved[5];
+    signed char aObjReserved[kNumObjectReserved];
     fill_n(aObjReserved, sizeof(aObjReserved), 0);
     objNum = 0;
     stream << numObjs;
@@ -2428,9 +2454,9 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     stream << static_cast<long>(_m_pProperties->m_paTimedEvent->size());
     for (unsigned int event = 0; event < _m_pProperties->m_paTimedEvent->size(); event++)
         (*_m_pProperties->m_paTimedEvent)[event].write(&stream, _m_version);
-    signed char aMapReserved[124];
-    fill_n(aMapReserved, sizeof(aMapReserved), 0);
-    stream << aMapReserved;
+    signed char aTrailer[kNumMapTrailer];
+    fill_n(aTrailer, sizeof(aTrailer), 0);
+    stream << aTrailer;
 }
 
 namespace {
@@ -2533,7 +2559,7 @@ void TGameMap::_TImpl::importText(istream* pIStream)
         getline(*pIStream, line);
         if (line != kSectionStart + kHeroesPageCaptionStr + kSectionEnd)
             throw TImportTextFailure();
-        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        for (THeroID heroID = THeroID(0); heroID < kNumHeroes; heroID = THeroID(heroID + 1)) {
             const THeroPrototype& prototype = getHeroPrototype(heroID);
             bool bCustomName = prototype.getName() != THero::s_akTraits[heroID].m_prototype.getName();
             bool bCustomBiography = prototype.getBiography() != THero::s_akTraits[heroID].m_prototype.getBiography();
@@ -2678,7 +2704,7 @@ void TGameMap::_TImpl::exportText(ostream* pOStream) const
     *pOStream << '\n';
     if (getVersion() >= GAME_VERSION_SOD) {
         *pOStream << kSectionStart + kHeroesPageCaptionStr + kSectionEnd << '\n';
-        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        for (THeroID heroID = THeroID(0); heroID < kNumHeroes; heroID = THeroID(heroID + 1)) {
             const THeroPrototype& prototype = getHeroPrototype(heroID);
             bool bCustomName = prototype.getName() != THero::s_akTraits[heroID].m_prototype.getName();
             bool bCustomBiography = prototype.getBiography() != THero::s_akTraits[heroID].m_prototype.getBiography();
@@ -2718,15 +2744,16 @@ void TGameMap::_TImpl::exportText(ostream* pOStream) const
 // Whether an object fits at (x, y): its trigger cells on the map, its
 // blocking cells on terrain it allows, no trigger under another's blocking
 // cell or blocking cell over another's trigger, and no object both above
-// and below it.
+// and below it. The id lists hold unsigned ids, as Loki's
+// find<unsigned int *, unsigned int> over them shows.
 VA(0x0042650e, 0x3dd)
 bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y)
 {
     DATA_COMPGEN_GUARD(0x0059e370, placementObjIDsGuard, aLowerObjIDs)
     VA_COMPGEN(0x00426931, 0xa, STATIC_DTOR, aLowerObjIDs)
-    DATA(0x0059e2c8) static vector<int> aLowerObjIDs;
+    DATA(0x0059e2c8) static vector<unsigned int> aLowerObjIDs;
     VA_COMPGEN(0x00426927, 0xa, STATIC_DTOR, aHigherObjIDs)
-    DATA(0x0059e288) static vector<int> aHigherObjIDs;
+    DATA(0x0059e288) static vector<unsigned int> aHigherObjIDs;
     aLowerObjIDs.clear();
     aHigherObjIDs.clear();
     unsigned int heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT];
@@ -2797,7 +2824,7 @@ bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject&
             }
         }
     }
-    for (vector<int>::const_iterator pObjID = aLowerObjIDs.begin(); pObjID != aLowerObjIDs.end(); ++pObjID)
+    for (vector<unsigned int>::const_iterator pObjID = aLowerObjIDs.begin(); pObjID != aLowerObjIDs.end(); ++pObjID)
         if (find(aHigherObjIDs.begin(), aHigherObjIDs.end(), *pObjID) != aHigherObjIDs.end())
             return false;
     return obj.getType() != SHIPYARD || _isValidShipyardPlacement(layer, obj, x, y);
@@ -2838,12 +2865,18 @@ bool TGameMap::_TImpl::_isValidShipyardPlacement(const TLayer& layer, const TGam
 // sign-extends the sex before testing -1. The secondary-skills stream
 // temporary preserves its construction/assignment EH states. Residual:
 // retail keeps ~TArtifactContainer out of line (its nested ~TArray budget
-// falls short here) and the stream in EBX; readValue<string> for the
-// biography scores lower.
+// falls short here) and the stream in EBX. The inline solver fits only a
+// ~TArray<TArtifact, 19> 3+ tuples cheaper or one fewer site after the
+// artifacts (the biography string's constructor or destructor): retail's
+// ~TArtifactContainer then expands ~TArray and the veto keeps it a call.
+// readValue<string> for the biography fixes EBX (93.36) but is an
+// out-of-line call retail does not make. Failed probes: an empty explicit
+// ~TArtifactContainer, named artifact or secondary-skills locals, a
+// signed char sex, a bool experience flag.
 VA(0x00426a65, 0x215)
 void TGameMap::_TImpl::_readHeroSettings(TRawIStream* pIStream, int version)
 {
-    for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+    for (int heroID = 0; heroID < kNumHeroes; heroID++) {
         if (!readValue<signed char>(*pIStream))
             continue;
         THeroPrototype& prototype = (*_m_pProperties->m_aHeroPrototype)[heroID];
@@ -2947,8 +2980,7 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TBasicHer
         const TRefCountingPtr<_TPlayerBookkeeping>& pConstPlayerBookkeeping =
             _m_apPlayerBookkeeping[pHero->getOwner()];
         unsigned int numHeroes = pConstPlayerBookkeeping->m_numHeroes;
-        const TRefCountingPtr<_TProperties>& pConstProperties = _m_pProperties;
-        if ((*pConstProperties->m_paPlayer)[pHero->getOwner()].getBGenerateHero())
+        if (getPlayers()[pHero->getOwner()].getBGenerateHero())
             numHeroes++;
         if (numHeroes >= s_kMaxHeroesPerPlayer)
             throw TPlaceObjFailureTooManyHeroesForPlayer();
@@ -2962,8 +2994,8 @@ VA(0x0042710f, 0x47)
 TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, THeroPlaceholder* pPlaceholder,
                                                    const TTilePoint& loc, TTileExtent* pUpdatedExtent)
 {
-    if (pPlaceholder->getHeroID() != -1 && !_isHeroAvailable(pPlaceholder->getHeroID()))
-        pPlaceholder->setHeroID(-1);
+    if (pPlaceholder->getHeroID() != eHeroNone && !_isHeroAvailable(pPlaceholder->getHeroID()))
+        pPlaceholder->setHeroID(eHeroNone);
     return _placeNewObject(bSecondLayer, static_cast<TBasicHero*>(pPlaceholder), loc, pUpdatedExtent);
 }
 
@@ -2974,7 +3006,7 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TNonRando
 {
     if (!_isHeroAvailable(pHero->getHeroID())) {
         THeroID heroID = _pickRandomHero(pHero->getHeroClass());
-        if (heroID == -1)
+        if (heroID == eHeroNone)
             throw TPlaceObjFailureNoAvailableHeroesInClass();
         pHero->setHeroID(heroID);
     }
@@ -2991,10 +3023,10 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TPrison* 
 {
     if (!_isHeroAvailable(pPrison->getHeroID())) {
         THeroID heroID = _pickRandomHero(pPrison->getHeroClass());
-        if (heroID == -1) {
+        if (heroID == eHeroNone) {
             for (int heroClass = 0;;) {
                 heroID = _pickRandomHero(THeroClass(heroClass));
-                if (heroID != -1)
+                if (heroID != eHeroNone)
                     break;
                 if (++heroClass >= kNumHeroClasses)
                     throw TPlaceObjFailureNoAvailableHeroesInClass();
@@ -3012,6 +3044,9 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TPrison* 
 // /O1 candidate limit of 128. Spellings under the limit change the helper's
 // own exact body: a map reference local (cb 123, 80.79%), a single
 // `while (find != end)` test (51.68%) or `end != find` (cb 87, 73.06%).
+// Same-code spellings stay over it: `!(it == end)` (cb 132), a for loop
+// (135), direct-initialized iterator (140), iterator declared before a for
+// loop (141).
 VA(0x004272a9, 0x16e)
 TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TTown* pTown, const TTilePoint& loc,
                                                    TTileExtent* pUpdatedExtent)
@@ -3026,15 +3061,14 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TTown* pT
         const TRefCountingPtr<_TPlayerBookkeeping>& pConstPlayerBookkeeping =
             _m_apPlayerBookkeeping[pTown->getOwner()];
         unsigned int numHeroes = pConstPlayerBookkeeping->m_numHeroes;
-        const TRefCountingPtr<_TProperties>& pConstProperties = _m_pProperties;
-        if ((*pConstProperties->m_paPlayer)[pTown->getOwner()].getBGenerateHero())
+        if (getPlayers()[pTown->getOwner()].getBGenerateHero())
             numHeroes++;
         if (numHeroes >= s_kMaxHeroesPerPlayer)
             throw TPlaceObjFailureTooManyHeroesForPlayer();
         TIdentifiedHero* pIdentifiedHero = dynamic_cast<TIdentifiedHero*>(pVisitingHero);
         if (pIdentifiedHero != NULL && !_isHeroAvailable(pIdentifiedHero->getHeroID())) {
             THeroID heroID = _pickRandomHero(pIdentifiedHero->getHeroClass());
-            if (heroID != -1)
+            if (heroID != eHeroNone)
                 pIdentifiedHero->setHeroID(heroID);
             else
                 pTown->setVisitingHero(NULL);
@@ -3068,12 +3102,13 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TAbstract
                            pUpdatedExtent);
 }
 
-// A defeat quest keeps its target only if the map still has it.
-// Calls, branches and the monster-arm quest reload agree with retail. The
-// remaining 92.85% residual exchanges the quest-location and zero registers
-// (EBX/EDI) and schedules the first receiver load differently. Conditional
-// cast declarations, a truth guard and an initial quest value reproduce no
-// gain; native supplies no additional helper or temporary-lifetime boundary.
+// A defeat quest keeps its target only if the map still has it, as a hero
+// or a monster. The typed target, null unless the link resolves, gives
+// retail's quest-location EBX and zero EDI (99.17%). The remaining residual
+// is the merged final test: retail `test eax, eax`, ours `cmp eax, edi`.
+// Tested: `pTarget == NULL || dynamic_cast(..) == NULL`, split ifs, a bool
+// of that test, a hoisted target or quest local, an early return (92.85% or
+// lower); a ternary typed target (96.25%); one arm alone (90.76%).
 VA(0x0042754b, 0xb5)
 TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TQuestLocation* pQuestLocation,
                                                    const TTilePoint& loc, TTileExtent* pUpdatedExtent)
@@ -3082,14 +3117,20 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TQuestLoc
         const TQuestDefeatHero* pDefeatHero = dynamic_cast<const TQuestDefeatHero*>(pQuestLocation->getPQuest());
         if (pDefeatHero != NULL) {
             const TLinkableObject* pTarget = _findLinkableObject(pDefeatHero->getHeroLinkID());
-            if (pTarget == NULL || dynamic_cast<const THero*>(pTarget) == NULL)
+            const THero* pHero = NULL;
+            if (pTarget != NULL)
+                pHero = dynamic_cast<const THero*>(pTarget);
+            if (pHero == NULL)
                 pQuestLocation->clearQuest();
         } else {
             const TQuestDefeatMonster* pDefeatMonster =
                 dynamic_cast<const TQuestDefeatMonster*>(pQuestLocation->getPQuest());
             if (pDefeatMonster != NULL) {
                 const TLinkableObject* pTarget = _findLinkableObject(pDefeatMonster->getMonsterLinkID());
-                if (pTarget == NULL || dynamic_cast<const TMonster*>(pTarget) == NULL)
+                const TMonster* pMonster = NULL;
+                if (pTarget != NULL)
+                    pMonster = dynamic_cast<const TMonster*>(pTarget);
+                if (pMonster == NULL)
                     pQuestLocation->clearQuest();
             }
         }
@@ -3222,6 +3263,23 @@ void TGameMap::_TImpl::_onPlayableAdded(const TPlayableObject* pPlayable, bool b
 // A player's last unit makes the player absent: the first remaining
 // computer-playable player becomes human playable if none is, the teams
 // close up, and each hero the player could hire is offered elsewhere.
+// The has-teams test reads through the const getTeamInfo() accessor and
+// each team loop owns its counter (retail steps the counter before its
+// strength-reduced offset in the closing-up loop). Residual: retail keeps
+// the _TProperties get() of the teamInfo reference out of line (the inline
+// solver fits only heavier handle accessors, ~4 more free sites after it,
+// or a ~93-tuple lighter caller), the first team loop's counter/offset
+// update order and one base+index operand order. Failed probes: the
+// pConstProperties alias with scoped counters alone, a static_cast const
+// handle, a break-index test instead of bTeamInUse, swapped declarations,
+// Loki's reuse of the first loop's counter in the closing-up loop (97.11:
+// that loop then takes the first loop's update order), a prefix increment
+// or nested ifs in the first loop (unchanged), a non-const team-info
+// accessor (86.76). The C2 trace gives the teamInfo get() a 2080/39 = 53
+// budget share against cb 49: four more free sites after it would leave it
+// a call. Retail's 0x42df99 is TRefCountingPtr<_TProperties>::get(); with
+// no masked-exact caller the placements leave it unnamed, which costs the
+// four call rows of the get() retail calls.
 VA(0x00427b17, 0x3d1)
 void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
 {
@@ -3245,8 +3303,7 @@ void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
                 pFirstPlayable->setBHumanPlayable(true);
             }
         }
-        const TRefCountingPtr<_TProperties>& pConstProperties = _m_pProperties;
-        if (pConstProperties->m_pTeamInfo->getBHasTeams()) {
+        if (getTeamInfo().getBHasTeams()) {
             TTeamInfo& teamInfo = *_m_pProperties->m_pTeamInfo;
             assert(_m_pBookkeeping->m_numPlayableSlots >= teamInfo.getNumTeams());
             if (_m_pBookkeeping->m_numPlayableSlots == TTeamInfo::s_kMinTeams) {
@@ -3255,8 +3312,7 @@ void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
                 unsigned int team = teamInfo.getPlayerTeam(owner);
                 teamInfo.setPlayerTeam(owner, 0);
                 bool bTeamInUse = false;
-                unsigned int otherPlayer;
-                for (otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
+                for (unsigned int otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
                     if ((*_m_pProperties->m_paPlayer)[otherPlayer].getBPresent()
                         && teamInfo.getPlayerTeam(TPlayer(otherPlayer)) == team) {
                         bTeamInUse = true;
@@ -3267,7 +3323,7 @@ void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
                     if (teamInfo.getNumTeams() == TTeamInfo::s_kMinTeams) {
                         teamInfo.setBHasTeams(false);
                     } else {
-                        for (otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
+                        for (unsigned int otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
                             if ((*_m_pProperties->m_paPlayer)[otherPlayer].getBPresent()) {
                                 unsigned int otherTeam = teamInfo.getPlayerTeam(TPlayer(otherPlayer));
                                 if (otherTeam > team)
@@ -3290,7 +3346,7 @@ void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
                 }
             }
         }
-        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        for (THeroID heroID = THeroID(0); heroID < kNumHeroes; heroID = THeroID(heroID + 1)) {
             TPlayerMask availability = getHeroPrototype(heroID).getAvailability();
             unsigned int availableTo = owner;
             if (availability[owner]) {
@@ -3399,7 +3455,7 @@ void TGameMap::_TImpl::_onHeroPlaceholderAdded(const THeroPlaceholder* pPlacehol
                                                unsigned int objID)
 {
     _onBasicHeroAdded(pPlaceholder, bSecondLayer, objID);
-    if (pPlaceholder->getHeroID() != -1) {
+    if (pPlaceholder->getHeroID() != eHeroNone) {
         THeroID heroID = pPlaceholder->getHeroID();
         THeroClass heroClass = THero::s_akTraits[heroID].m_class;
         _m_pBookkeeping->m_heroesOnMap.set(heroID, true);
@@ -3414,7 +3470,7 @@ void TGameMap::_TImpl::_onHeroPlaceholderAdded(const THeroPlaceholder* pPlacehol
 VA(0x0042834e, 0xeb)
 void TGameMap::_TImpl::_onRemovingHeroPlaceholder(const THeroPlaceholder* pPlaceholder)
 {
-    if (pPlaceholder->getHeroID() != -1) {
+    if (pPlaceholder->getHeroID() != eHeroNone) {
         THeroID heroID = pPlaceholder->getHeroID();
         THeroClass heroClass = THero::s_akTraits[heroID].m_class;
         _m_apPlayerBookkeeping[pPlaceholder->getOwner()]
@@ -3538,7 +3594,7 @@ void TGameMap::_TImpl::_onRemovingObject(const TGameObject& obj, TObjectTypesFro
 VA(0x00428892, 0x237)
 void TGameMap::_TImpl::_writeHeroSettings(TRawOStream* pOStream, int version) const
 {
-    for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+    for (int heroID = 0; heroID < kNumHeroes; heroID++) {
         const THeroPrototype& prototype = (*_m_pProperties->m_aHeroPrototype)[heroID];
         const THeroPrototype& gamePrototype = THero::s_akTraits[heroID].m_prototype;
         bool bCustomized = !(prototype == gamePrototype);
@@ -3669,7 +3725,7 @@ THeroID TGameMap::_TImpl::_pickRandomHero(THeroClass heroClass) const
     const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
     vector<THeroID> candidates;
     candidates.reserve(classTraits.m_heroes.size());
-    set<int>::const_iterator pHeroID;
+    set<THeroID>::const_iterator pHeroID;
     for (pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end(); pHeroID++) {
         const THero::TTraits& traits = THero::s_akTraits[*pHeroID];
         if (traits.m_gameVersions[_m_version] && !traits.m_bSpecial
@@ -3686,7 +3742,7 @@ THeroID TGameMap::_TImpl::_pickRandomHero(THeroClass heroClass) const
     }
     THeroID result;
     if (candidates.size() == 0)
-        result = -1;
+        result = eHeroNone;
     else
         result = candidates[rand() % candidates.size()];
     return result;
@@ -3749,23 +3805,31 @@ bool TGameMap::_TImpl::_isRandomTownLink(unsigned int linkID) const
     return false;
 }
 
-// Retail retains TLayer::getPObject here; VC6 currently expands that wrapper.
-// Naming the object or trigger point leaves it unchanged; compound subtraction
-// lowers the match.
+// Loki h3maped's _write (the map writer's object location) with the
+// Windows TMapLoc as its output: Loki's object local and asserts, and its
+// three numeric_limits max() calls for no object (parenthesized against
+// the MFC max macro). Those three inline calls follow the object lookup,
+// so its share of the budget leaves _TObjectLink::getPObject a call and
+// the /O1 size veto keeps TLayer::getPObject out of line, as retail does.
+// Failed probes: -1 literals with or without the object local and asserts
+// (95.88), per-coordinate subtraction through a trigger reference (84.73)
+// or repeated getObjectLoc calls (33.78).
 VA(0x0042921c, 0x70)
 void TGameMap::_TImpl::_getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const
 {
+    assert(!objRef.getBSecondLayer() || _m_bTwoLayer);
     if (objRef.getObjectID() != TLayer::s_kInvalidObjID) {
         const TLayer& layer = getLayer(objRef.getBSecondLayer());
-        TTilePoint loc = layer.getObjectLoc(objRef.getObjectID())
-                         - layer.getObject(objRef.getObjectID()).getTriggerLoc();
+        const TGameObject& obj = layer.getObject(objRef.getObjectID());
+        assert(obj.hasTrigger());
+        TTilePoint loc = layer.getObjectLoc(objRef.getObjectID()) - obj.getTriggerLoc();
         pLoc->m_x = loc.x();
         pLoc->m_y = loc.y();
         pLoc->m_layer = objRef.getBSecondLayer() ? 1 : 0;
     } else {
-        pLoc->m_x = -1;
-        pLoc->m_y = -1;
-        pLoc->m_layer = -1;
+        pLoc->m_x = (std::numeric_limits<unsigned int>::max)();
+        pLoc->m_y = (std::numeric_limits<unsigned int>::max)();
+        pLoc->m_layer = (std::numeric_limits<unsigned int>::max)();
     }
 }
 
@@ -4615,7 +4679,7 @@ private:
         vector<TRefCountingPtr<_TSegment> > _m_aSegment;
     };
 
-    void _stampObject(TGameObject* pObj, const TTilePoint& loc, unsigned int objID);
+    void _stampObject(const TGameObject* pObj, const TTilePoint& loc, unsigned int objID);
     void _unstampObject(unsigned int objID);
     TTileExtent _computeObjExtent(const TTilePoint& loc, const TPoint<unsigned int>& size) const;
 
@@ -4782,8 +4846,10 @@ void TGameMap::TLayer::_TImpl::_removeObject(unsigned int objID)
     aObjectLink[objID].clearObject();
 }
 
+// Enters an object into its cells' footprint lists (Loki mangles the
+// object as const TGameObject *).
 VA(0x0042ac12, 0x332)
-void TGameMap::TLayer::_TImpl::_stampObject(TGameObject* pObj, const TTilePoint& loc, unsigned int objID)
+void TGameMap::TLayer::_TImpl::_stampObject(const TGameObject* pObj, const TTilePoint& loc, unsigned int objID)
 {
     assert(pObj != NULL);
     const TTileExtent objExtent = _computeObjExtent(loc, TPoint<unsigned int>(pObj->getWidth(), pObj->getHeight()));
@@ -4926,8 +4992,7 @@ void TGameMap::TLayer::_TImpl::_unfloatObject(const TTilePoint& loc)
     aObjectLink[_m_floatingObjID].m_prev = aObjectLink[0].m_prev;
     aObjectLink[aObjectLink[0].m_prev].m_next = _m_floatingObjID;
     aObjectLink[0].m_prev = _m_floatingObjID;
-    _stampObject(const_cast<TGameObject*>(static_cast<const _TObjectLink&>(aObjectLink[_m_floatingObjID]).getPObject()),
-                 loc, _m_floatingObjID);
+    _stampObject(static_cast<const _TObjectLink&>(aObjectLink[_m_floatingObjID]).getPObject(), loc, _m_floatingObjID);
     _m_floatingObjID = s_kInvalidObjID;
 }
 
@@ -5171,11 +5236,11 @@ void readCell(TRawIStream* pIStream, TGameMap::TLayer::TCell* pCell)
     pCell->setTileNum(tileNum);
     pCell->setBHFlipped(flags & 1);
     pCell->setBVFlipped((flags >> 1) & 1);
-    pCell->setRiverType(riverType);
+    pCell->setRiverType(TRiverType(riverType));
     pCell->setRiverTileNum(riverTileNum);
     pCell->setBRiverHFlipped((flags >> 2) & 1);
     pCell->setBRiverVFlipped((flags >> 3) & 1);
-    pCell->setRoadType(roadType);
+    pCell->setRoadType(TRoadType(roadType));
     pCell->setRoadTileNum(roadTileNum);
     pCell->setBRoadHFlipped((flags >> 4) & 1);
     pCell->setBRoadVFlipped((flags >> 5) & 1);
@@ -5262,6 +5327,9 @@ inline TGameMap::_TImpl::_TPlayerBookkeeping::_TPlayerBookkeeping()
 VA_COMPGEN(0x0042c28f, 0xa4, VECTOR_RESERVE, TCappedObjectTypeInfo)
 VA_COMPGEN(0x0042db3f, 0xf0, TREE_INSERT, TCappedObjectTypeInfo)
 VA_COMPGEN(0x00430930, 0x89, TREE_INIT, TCappedObjectTypeInfo)
+
+// The hero-ID sets' insert, which setHeroID and the hero bookkeeping call.
+VA_COMPGEN(0x0042d20d, 0xf0, TREE_INSERT, THeroID_set)
 
 // The maps' and the object-reference set's implicit destructors, each a tail
 // jump to its tree's destructor that only unwind funclets call: the capped
@@ -5514,7 +5582,10 @@ inline void TGameMapHeader::_writeLossCondition(const TLossConditionData& data, 
 // scores lower. Complete each custom-hero record before its map insertion
 // (the twin's inline temporary scores lower). Residual: retail keeps the
 // identity loop's vector base across extraction and applies the index
-// afterward.
+// afterward (h3ccmped's retail loop does the same with registers to spare).
+// Reference, pointer, iterator and field-reference spellings, int or long
+// counts and resize's default argument all compile alike; without the
+// reference the base is loaded after the read.
 VA(0x0043b0ff, 0x5c4)
 inline TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
 {
@@ -5616,7 +5687,7 @@ inline TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
         unsigned int numPlaceholderHeroes = readValue<long>(stream);
         m_placeholderHeroIDs.reserve(numPlaceholderHeroes);
         for (unsigned int i = 0; i < numPlaceholderHeroes; i++) {
-            int heroID = readValue<unsigned char>(stream);
+            THeroID heroID = THeroID(readValue<unsigned char>(stream));
             m_placeholderHeroIDs.push_back(heroID);
         }
     }
@@ -5718,7 +5789,7 @@ inline void TGameMapHeader::write(TRawOStream& stream, EGameVersion version) con
     }
     if (version >= GAME_VERSION_AB) {
         stream << static_cast<long>(m_placeholderHeroIDs.size());
-        for (std::vector<int>::const_iterator pHeroID = m_placeholderHeroIDs.begin();
+        for (std::vector<THeroID>::const_iterator pHeroID = m_placeholderHeroIDs.begin();
              pHeroID != m_placeholderHeroIDs.end(); ++pHeroID)
             stream << static_cast<unsigned char>(*pHeroID);
     }

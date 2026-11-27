@@ -29,7 +29,7 @@ enum TQuestType {
     kNumQuestTypes = 10
 };
 
-class TQuestWriter : public TQuest::TVisitor {
+class TQuestWriter : private TQuest::TVisitor {
 public:
     TQuestWriter(TRawOStream* pOStream, int version) : _m_pOStream(pOStream), _m_version(version) {}
 

@@ -386,11 +386,14 @@ static void buyArtifacts(hero* currentHero, TArtifact* artifactList,
 // a full backpack, select the cell's seven-artifact market record, and sum
 // the five-marketplace purchase value of every slot.
 // Mac aiValueOfEvent retains this helper and the Campfire, Defense Tower,
-// Flotsam, Garden and Skeleton helpers. Ordinary definitions restore their
+// Flotsam, Garden and Skeleton helpers. Their definitions restore the
 // candidate call boundaries; VC6 still expands them in the Windows dispatcher.
+// Dreamcast emits this and the other AI_value_of_event appraisals below
+// (value_of_garrison ... ValueOfShrine) as S_LPROC32 file-static procedures,
+// so they are declared only by their philai.cpp bodies.
 DC_ADDRESS(0x10dae8, 0x7c)
 MAC_ADDRESS(0x13ddec, 0xac)
-long valueOfBlackMarket(const hero* currentHero,
+static long valueOfBlackMarket(const hero* currentHero,
                                   const NewmapCell* cell)
 {
     if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
@@ -654,7 +657,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     long maximumDistance = 32000;
     if (currentHero->m_pathTargetX < 0)
         currentHero->m_targetIsCritical = 0;
-    destination.m_point.m_x = -1;
+    destination.m_x = -1;
     destination.m_isNearby = 0;
     rawValue = 0;
 
@@ -662,7 +665,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     if (currentHero->m_pathTargetX >= 0) {
         maxDistance = max(
             currentHero->m_movePoints
-                + static_cast<unsigned short>(currentHero->m_targetDistance)
+                + currentHero->m_targetDistance
                 + 200,
             1000);
     }
@@ -680,7 +683,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     for (int attempt = 0; attempt < 5; ++attempt) {
         rv = aiChooseDestination(currentHero, maxDistance, destination,
                                    rawValue, 1, exploreMode);
-        if (!((destination.m_point.m_x < 0
+        if (!((destination.m_x < 0
                || (rv < 0 && !destination.m_isCritical))
               && g_searchArray->limitWasReached()
               && maxDistance < maximumDistance))
@@ -691,14 +694,14 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     if (currentHero->m_maxMovePoints == currentHero->m_movePoints)
         incrementHourGlass();
 
-    if (destination.m_point.m_x < 0) {
+    if (destination.m_x < 0) {
         currentHero->m_pathTargetX = -1;
         currentHero->m_pathTargetY = -1;
         currentHero->m_isSleeping = 1;
         return;
     }
 
-    originalDestination = destination.m_point;
+    originalDestination = destination;
     unsigned char destinationWasUnvisited =
         !(getMapExtra(originalDestination)
           & g_curPlayerBit);
@@ -1140,7 +1143,7 @@ static long valueOfBank(const hero* currentHero, NewmapCell* cell)
 // short type; an int local costs the CAMPFIRE arm's scratch registers.
 DC_ADDRESS(0x1108e0, 0xd6)
 MAC_ADDRESS(0x1426c8, 0x6c)
-int valueOfCampfire(playerData* player, NewmapCell* cell)
+static int valueOfCampfire(playerData* player, NewmapCell* cell)
 {
     short size = cell->getCampfireSize();
     return static_cast<int>(
@@ -1154,7 +1157,7 @@ int valueOfCampfire(playerData* player, NewmapCell* cell)
 // experience accessor into the DEFENSE_TOWER arm.
 DC_ADDRESS(0x110c58, 0x36)
 MAC_ADDRESS(0x142b14, 0x84)
-int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell)
+static int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->m_defenseTowerFlags & (1UL << cell->m_extraInfo))
         return 0;
@@ -1169,7 +1172,7 @@ int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell)
 // gates plus the Angelic Alliance input used by its widened swapper method.
 DC_ADDRESS(0x110cf8, 0xbc)
 MAC_ADDRESS(0x142c74, 0x164)
-inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
+static long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
 {
     garrison* currentGarrison = g_game->getGarrison(cell->m_extraInfo);
     if (currentGarrison->m_playerOwner == currentHero->m_owner
@@ -1206,7 +1209,7 @@ inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
 // spring calls.
 DC_ADDRESS(0x110db4, 0x1d4)
 MAC_ADDRESS(0x142dd8, 0x184)
-inline long valueOfIdol(const hero* currentHero, long moveCost)
+static long valueOfIdol(const hero* currentHero, long moveCost)
 {
     if (currentHero->m_flags & 0x10)
         return 0;
@@ -1239,7 +1242,7 @@ inline long valueOfIdol(const hero* currentHero, long moveCost)
 // five wood.
 DC_ADDRESS(0x110f88, 0x7c)
 MAC_ADDRESS(0x142f5c, 0x28)
-int valueOfFlotsam(playerData* player)
+static int valueOfFlotsam(playerData* player)
 {
     return static_cast<int>(
         player->m_ai.m_resourceValue[GOLD] * 175.0
@@ -1251,7 +1254,7 @@ int valueOfFlotsam(playerData* player)
 // knowledge value. Complete expands both the helper and accessor.
 DC_ADDRESS(0x111004, 0x24)
 MAC_ADDRESS(0x142f84, 0x28)
-int valueOfGarden(const hero* currentHero, NewmapCell* cell)
+static int valueOfGarden(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->m_gardenOfRevelationFlags & (1UL << cell->m_extraInfo))
         return 0;
@@ -1264,7 +1267,7 @@ int valueOfGarden(const hero* currentHero, NewmapCell* cell)
 // into the event arm without changing that shape.
 DC_ADDRESS(0x111028, 0x32)
 MAC_ADDRESS(0x142fac, 0x34)
-inline int valueOfLeanTo(NewmapCell* cell, playerData* player)
+static int valueOfLeanTo(NewmapCell* cell, playerData* player)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
@@ -1281,7 +1284,7 @@ inline int valueOfLeanTo(NewmapCell* cell, playerData* player)
 // movement-cost guard around the friendly-army increase check.
 DC_ADDRESS(0x111328, 0x1cc)
 MAC_ADDRESS(0x1432e8, 0x2e8)
-inline long valueOfHeroEvent(const hero* currentHero,
+static long valueOfHeroEvent(const hero* currentHero,
                                        NewmapCell* cell, short x, short y,
                                        short z, short moveCost)
 {
@@ -1350,7 +1353,7 @@ inline long valueOfHeroEvent(const hero* currentHero,
 // Complete's elemental-upgrade restriction.
 DC_ADDRESS(0x1114f4, 0x13a)
 MAC_ADDRESS(0x1435d0, 0x298)
-inline long valueOfHillFort(const hero* currentHero,
+static long valueOfHillFort(const hero* currentHero,
                                       long moveCost)
 {
     int funds[NUM_RESOURCES];
@@ -1400,7 +1403,7 @@ inline long valueOfHillFort(const hero* currentHero,
 // two power values, two knowledge values, and one tenth of the army value.
 DC_ADDRESS(0x11173c, 0x94)
 MAC_ADDRESS(0x143aa4, 0xb0)
-inline int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
+static int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->m_libraryFlags & (1UL << cell->m_extraInfo))
         return 0;
@@ -1419,7 +1422,7 @@ inline int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
 // the same OnSameTeam boundary.
 DC_ADDRESS(0x1117d0, 0x36)
 MAC_ADDRESS(0x143b54, 0x80)
-inline int valueOfLighthouse(NewmapCell* cell)
+static int valueOfLighthouse(NewmapCell* cell)
 {
     if (g_game->onSameTeam(
             g_game->getMine(cell->m_extraInfo)->m_playerOwner,
@@ -1434,7 +1437,7 @@ inline int valueOfLighthouse(NewmapCell* cell)
 // and retains the static experience accessor call.
 DC_ADDRESS(0x1118f8, 0x78)
 MAC_ADDRESS(0x143cb8, 0x84)
-inline int valueOfMercenaryCamp(const hero* currentHero,
+static int valueOfMercenaryCamp(const hero* currentHero,
                                        NewmapCell* cell)
 {
     if (currentHero->m_mercCampFlags & (1UL << cell->m_extraInfo))
@@ -1447,7 +1450,7 @@ inline int valueOfMercenaryCamp(const hero* currentHero,
 // Mac retains this ordinary helper at 0:0x1440a0 at all three event sites;
 // VC6 keeps the same Windows dispatcher bytes with its natural call decisions.
 DC_ADDRESS(0x111c44, 0x34)
-int valueOfMoveSource(const hero* currentHero, long flag,
+static int valueOfMoveSource(const hero* currentHero, long flag,
                                 short increase, long& moveCost)
 {
     if (currentHero->m_flags & flag)
@@ -1465,7 +1468,7 @@ int valueOfMoveSource(const hero* currentHero, long flag,
 // both boundaries into AI_value_of_event's HUT_OF_MAGI arm.
 DC_ADDRESS(0x111e18, 0x1c)
 MAC_ADDRESS(0x1442e4, 0x14)
-inline long valueOfMagusHut(long playerId)
+static long valueOfMagusHut(long playerId)
 {
     return g_aiPlayers[playerId].getMagusHutValue();
 }
@@ -1477,7 +1480,7 @@ inline long valueOfMagusHut(long playerId)
 // when the backpack is full.
 DC_ADDRESS(0x112488, 0x88)
 MAC_ADDRESS(0x1449a0, 0xb4)
-int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
+static int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
@@ -1497,7 +1500,7 @@ int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
 // the helper/accessor but retains value_of_learning as a real call.
 DC_ADDRESS(0x1125ec, 0x1e)
 MAC_ADDRESS(0x144b3c, 0x2c)
-inline int valueOfShrine(const hero* currentHero, NewmapCell* cell)
+static int valueOfShrine(const hero* currentHero, NewmapCell* cell)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
@@ -1697,6 +1700,7 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
 
     long armyValue = 1000;
     long rangedValue = 500;
+    long scaled;
     if (complexChoice) {
         for (int group = 0; group < armyGroup::ARMY_GROUP_SLOT_COUNT;
              group++) {
@@ -1719,18 +1723,18 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     case eSecSkillArchery: {
         DATA(0x00640380)
         static const int constArcheryValue[3] = {16, 7, 11};
-        return constArcheryValue[level] * rangedValue / 100;
+        scaled = rangedValue * constArcheryValue[level];
+        break;
     }
     case eSecSkillLogistics:
         return armyValue / 10;
-    case eSecSkillScouting:
-        return armyValue / 20;
     case eSecSkillDiplomacy:
         return armyValue / 100;
     case eSecSkillNavigation:
         return static_cast<long>(
             g_aiWaterMapFraction * armyValue / 2.0);
     case eSecSkillLeadership:
+    case eSecSkillLuck:
         return armyValue / 50;
     case eSecSkillWisdom:
         if (complexChoice)
@@ -1741,8 +1745,6 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
         if (complexChoice)
             return ourHero->getValueOfKnowledge() / 10;
         return 1;
-    case eSecSkillLuck:
-        return armyValue / 50;
     case eSecSkillSiegeBallistics:
         return armyValue / 8;
     case eSecSkillEagleEye:
@@ -1751,8 +1753,6 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
         if (complexChoice)
             return ourHero->getValueOfPower() / 5;
         return 2;
-    case eSecSkillNecromancy:
-        return armyValue / 20;
     case eSecSkillEstates: {
         DATA(0x0064038c)
         static const int constEstateValue[3] = {725, 725, 1550};
@@ -1802,12 +1802,15 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                    ARTIFACT_BALLISTA))
             return 0;
         return ourHero->getPrimarySkill(0) * 10;
+    case eSecSkillScouting:
+    case eSecSkillNecromancy:
     case eSecSkillLearning:
         return armyValue / 20;
     case eSecSkillOffense:
         return armyValue * 7 / 100;
     case eSecSkillDefense:
-        return armyValue * 7 / 100;
+        scaled = armyValue * 7;
+        break;
     case eSecSkillIntelligence:
         if (complexChoice)
             return ourHero->getValueOfKnowledge()
@@ -1829,6 +1832,7 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     default:
         return 0;
     }
+    return scaled / 100;
 }
 
 VA(0x00524dd0, 0xF3)
@@ -1944,12 +1948,12 @@ static long valueOfWarFactory(const hero* currentHero,
         type_artifact(engine), currentHero, false, true);
     TCreatureType creature = siegeArtifactToCreature(engine);
     const int* costs = akCreatureTypeTraits[creature].cost;
-    const double* resourceValues = g_currentPlayer->m_ai.m_resourceValue;
     long resourceCost = 0;
-    for (int resource = 0; resource < NUM_RESOURCES; ++resource, ++costs) {
-        if (g_currentPlayer->m_resources[resource] < *costs)
+    for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
+        if (g_currentPlayer->m_resources[resource] < costs[resource])
             return 0;
-        resourceCost += *costs * resourceValues[resource];
+        resourceCost += costs[resource]
+            * g_currentPlayer->m_ai.m_resourceValue[resource];
     }
 
     if (moveCost <= 500)
@@ -2617,6 +2621,11 @@ void aiSetHeroBonuses(hero* ourHero)
 // implicitly promoting artifactCount is also Windows byte-flat; Mac falls
 // from 88.70% to 85.82%, so that probe was restored. Implicit numerator or
 // denominator conversions and C-style double casts are also byte-flat.
+// Also flat: a type_artifact temporary argument, int totals, swapped total/
+// count declarations, one shared C-style loop index. Worse: incrementing
+// the count after the call (91.59) or after the constructor (95.74), and
+// hoisting the totals above the hero loop (81.06). This is the open x87
+// rounding-temporary order of docs/vc6/regalloc.md.
 VA(0x00527960, 0x140)
 DC_ADDRESS(0x110018, 0x15a)
 MAC_ADDRESS(0x141bf8, 0x1a0)  // anchor-callee
@@ -3120,7 +3129,7 @@ static long valueOfMonsters(const hero* currentHero, NewmapCell* cell, type_poin
 
 VA(0x0052a1e0, 0xc3)
 MAC_ADDRESS(0x1440a0, 0x64)
-int valueOfMoveSource(const hero* currentHero, long flag,
+static int valueOfMoveSource(const hero* currentHero, long flag,
                          short increase, long& moveCost);
 
 VA(0x0052a2b0, 0xc5)

@@ -3,7 +3,8 @@
 #
 # Evidence: each scope as the editor's RTTI type descriptors spell it in
 # h3maped.exe; the file offset of its first `?%` spelling is given per row.
-# Units the image compiles today are `objecttype` and `resourcemanager`;
+# Units the image compiles today are `objecttype`, `resourcemanager` and
+# `rmg_terrain` (the editor's TerrainPlacement.cpp);
 # the editor's own units take their original file stem (`Player`, `MapDoc`).
 # `Map Editor.cpp` (file offset 0x18b724) is the unit `MapEditor`: a unit name
 # has no space.
@@ -27,7 +28,7 @@
 # RandomGeneratorPropsDlg: `?%` at file offset 0x18e60d
 # SeersHut: `?%` at file offset 0x18e9aa
 # SeersHutPropsDlg: `?%` at file offset 0x18f0e7
-# TerrainPlacement: `?%` at file offset 0x1929a7
+# rmg_terrain (TerrainPlacement.cpp): `?%` at file offset 0x1929a7
 # ToolkitBase: `?%` at file offset 0x192c7a
 # TownTypeTraits: `?%` at file offset 0x192e6d
 # VictoryCondition: `?%` at file offset 0x192fb7
@@ -51,7 +52,7 @@ QuestLocationPropsDlg	questlocationpropsdlg.cpp	C:\Dev\Heroes 3 Exp 2\Editor\Que
 RandomGeneratorPropsDlg	randomgeneratorpropsdlg.cpp	C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979
 SeersHut	seershut.cpp	C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111
 SeersHutPropsDlg	seershutpropsdlg.cpp	C:\Dev\Heroes 3 Exp 2\Editor\SeersHutPropsDlg.cpp929930200
-TerrainPlacement	terrainplacement.cpp	C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156
+rmg_terrain	rmg_terrain.cpp	C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156
 ToolkitBase	toolkitbase.cpp	C:\Dev\Heroes 3 Exp 2\Editor\ToolkitBase.cpp94647960
 TownTypeTraits	towntypetraits.cpp	C:\Dev\Heroes 3 Exp 2\Editor\TownTypeTraits.cpp373414956
 VictoryCondition	victorycondition.cpp	C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907

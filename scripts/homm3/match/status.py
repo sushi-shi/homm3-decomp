@@ -682,13 +682,21 @@ def function_rvas() -> dict[tuple[str, str], int]:
     return out
 
 
-def census_targets() -> set | None:
-    """Census starts less platform library code, or None without a census."""
+def census_universe() -> tuple[set, set] | None:
+    """(targets, library): census starts less platform library code, and
+    that library code; None without a census."""
     if not CENSUS_FUNCTIONS.is_file():
         return None
     from homm3.match import universe
     category, _sizes = universe.classify()
-    return {rva for rva, kind in category.items() if kind != "runtime"}
+    library = {rva for rva, kind in category.items() if kind == "runtime"}
+    return set(category) - library, library
+
+
+def census_targets() -> set | None:
+    """Census starts less platform library code, or None without a census."""
+    census = census_universe()
+    return None if census is None else census[0]
 
 
 def load_baseline_comments() -> tuple:
@@ -889,7 +897,8 @@ def _previous_row(key, rva, previous, by_rva):
 
 def update_rows(current: dict, previous: dict, rvas: dict,
                 hashes: dict | None = None,
-                targets: set | None = None) -> tuple[dict, dict]:
+                targets: set | None = None,
+                library: set | None = None) -> tuple[dict, dict]:
     """Pure CUR/MAX/HIST update; stable RVA, not label, owns history.
 
     CUR <= MAX <= HIST. MAX is monotone only while the function's own source
@@ -899,7 +908,12 @@ def update_rows(current: dict, previous: dict, rvas: dict,
     `targets`, when given, is the census's reconstruction targets (function
     starts less library code): a missing 0% row whose RVA left them (a catch
     handler folded into its parent, code the runtime map now names) records
-    no matching achievement and retires.
+    no matching achievement and retires. `library`, when given, is the
+    census's platform library code: a missing row on such a body retires
+    whatever it scored, because library bodies are verified against their
+    pinned members outside the scores (the README never weighs them) and a
+    game label banked there was a misplacement. Git history keeps that peak
+    by RVA (`historical_maxima_from_git`) should the body rejoin the targets.
     """
     hashes = hashes or {}
     by_rva = {}
@@ -952,6 +966,9 @@ def update_rows(current: dict, previous: dict, rvas: dict,
             continue
         if (targets is not None and old.rva is not None and old.rva not in targets
                 and old.hist <= 1e-9):
+            stats["retired"] += 1
+            continue
+        if library is not None and old.rva in library:
             stats["retired"] += 1
             continue
         rows[key] = MatchRow(
@@ -1013,8 +1030,9 @@ def cmd_update(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = Non
         previous, historical_maxima_from_git(history_patch))
     hashes, legacy = fingerprint_pair if fingerprint_pair is not None else source_hash_pair()
     previous = migrate_source_hashes(previous, hashes, legacy)
+    targets, library = census_universe() or (None, None)
     rows, stats = update_rows(
-        fn_fuzzy(report), previous, function_rvas(), hashes, census_targets())
+        fn_fuzzy(report), previous, function_rvas(), hashes, targets, library)
     rows, losses = guard_peaks(previous, rows, allow_loss=allow_loss)
     report_peak_losses(losses, allowed=allow_loss)
     write_baseline(rows)
@@ -1023,7 +1041,7 @@ def cmd_update(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = Non
           f"{stats['raised']} checkpoint(s) raised, "
           f"{stats['reset']} MAX reset(s) by source edit, "
           f"{recovered} historical peaks recovered, "
-          f"{stats['retired']} empty legacy retired -> {BASELINE.name} "
+          f"{stats['retired']} empty legacy or library-owned retired -> {BASELINE.name} "
           f"({len(rows)} rows)")
     return 0
 

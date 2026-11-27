@@ -41,7 +41,10 @@ ADDRESS IDENTITIES (`identities`). Retail code addresses can carry several
 proven names: every symbol a byte-verified library section defines at its
 offset, and every candidate function a voter calls at a claimed retail
 function whose candidate body is exactly that retail body (an identical-code
-fold). Normalization uses these names to compare a candidate relocation
+fold). A library function the linker folded onto a game body has no
+candidate body; the reviewed `alias` row whose section verifies exactly
+there is its body proof (h3maped `std::uncaught_exception`, folded onto
+rmg's `xor al,al; ret`). Normalization uses these names to compare a candidate relocation
 against the retail one only when both resolve to the same address.
 
 Outputs (under build/gen/):
@@ -1034,20 +1037,22 @@ def address_identities(model, state: State | None = None,
     """Phase 2 (resolved model): proven extra names of retail code addresses.
 
     Library: every symbol a byte-verified library section defines there.
-    Fold: a code pairing whose candidate body is exactly the retail body at a
-    differently named claimed function. Thunk: a candidate import thunk name
+    Fold: a code pairing whose candidate body, or exact library `alias`
+    section, is exactly the retail body at a differently named claimed
+    function. Thunk: a candidate import thunk name
     at a retail `jmp [slot]` whose IAT slot the model names `__imp_<name>`.
     """
     from homm3.core import common
     from homm3.core.pe import image
     from homm3.delink.coffx import Obj
     from homm3.delink.image import retail
-    from homm3.verify.byte_accounting import library_ranges
+    from homm3.verify.byte_accounting import library_alias_names, library_verdicts
     from homm3.verify.startup_bodies import Candidate, match
     state = state or _STATE
     base_dir = Path(base_dir or common.HOMM3_DIR / _image_path("build/objdiff/base"))
     rows: list[tuple[int, str, str, str, str]] = []
-    _ranges, _summary, defined = library_ranges(image(), model)
+    verdicts, defined = library_verdicts(image(), model)
+    folded_library = library_alias_names(verdicts)
     for rva, names in sorted(defined.items()):
         for name in sorted(names):
             rows.append((rva, name, "library", "verified library section", ""))
@@ -1085,6 +1090,8 @@ def address_identities(model, state: State | None = None,
                 definers[name].append(path.stem)
 
     def prove(symbol: str, rva: int) -> str:
+        if symbol in folded_library.get(rva, ()):
+            return ""
         reasons = []
         for unit in dict.fromkeys(definers.get(symbol, ())):
             verdict, _deps, why = match(candidates[unit], symbol, rva, img, sizes, targets)

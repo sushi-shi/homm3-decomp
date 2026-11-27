@@ -134,7 +134,23 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // reach, and the pin lever is out of bounds for this lane; max/hist keep the
 // 98.4726 peak the shadow bought.
 // DC 93 calls SCampaign::clear(); an inline `clear() { *this = SCampaign(); }`
-// call site measured 94.12% (2026-10-05), so the direct assignment stays.
+// call site measured 94.12% (2026-10-05; 87.06% again 2026-11-24), so the
+// direct assignment stays.
+// Mac clears campaignAvailable as a counted, unguarded byte loop that
+// reloads its value from a constant each store: std::fill_n's const-ref
+// value (Mac's memset is a bzero call, and its std::fill keeps a range
+// guard). VC6 folds the loop into the same 21-byte store run, and the
+// fill_n site is charged (cb 43) between the temporary and the reserve.
+// The row loop reads its preview through one row pointer, as openPreview
+// and the hover handler do; that settles the loop-tail induction registers
+// (97.26 -> 97.30). Residual: ~vector<MapScore> still expands under
+// ~SCampaign (budget 111 vs its cb 94). The inline replay fits it with two
+// or more extra free (cb <= 40) sites between the temporary and the reserve
+// - an in-class completed-campaign accessor at the 13 switch tests measures
+// 99.96% - or root cb ~1290; no native evidence for either, so neither is
+// adopted. Probes: named SCampaign local (94.42), std::fill (93.82),
+// `last` default (96.53), caption local (96.43); braces on the reset arm,
+// help-row pointer, id operand order, reference/const preview: flat.
 VA(0x0045ea40, 0x692)
 DC_ADDRESS(0x05b570, 0x790)
 MAC_ADDRESS(0x069f7c, 0xb58)  // campbkx2.pcx + vtable/global stores; Complete narrows the reset flag and adds the campaign-set slot;
@@ -148,7 +164,7 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     if (newGame)
         g_game->m_campaign = SCampaign();
 
-    memset(m_campaignAvailable, 0, sizeof(m_campaignAvailable));
+    std::fill_n(m_campaignAvailable, sizeof(m_campaignAvailable), 0);
 
     // Retail dispatches this three ways with `sub eax,0; je / dec; je /
     // dec; jne`, the switch selector form, not a compare chain.
@@ -252,16 +268,17 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     }
 
     for (int campaign = m_firstCampaign; campaign <= last; ++campaign) {
+        SCampaignPreview* preview = &g_campaignPreviews[campaign];
         if (g_game->m_campaign.m_campaignCompleted[campaign])
             m_widgets.push_back(new bitmapBorder(
-                g_campaignPreviews[campaign].m_x + 6,
-                g_campaignPreviews[campaign].m_y + 74, 42, 40,
+                preview->m_x + 6,
+                preview->m_y + 74, 42, 40,
                 campaign - m_firstCampaign + CHECK_FIRST_ID,
                 "CampChk.pcx", 0x800));
         m_widgets.push_back(new textWidget(
-            g_campaignPreviews[campaign].m_textX,
-            g_campaignPreviews[campaign].m_textY,
-            g_campaignPreviews[campaign].m_textWidth, 34,
+            preview->m_textX,
+            preview->m_textY,
+            preview->m_textWidth, 34,
             g_campaignWindowHelp[campaign + 1].m_text, "medfont.fnt",
             font::HEADING_HIGHLIGHT,
             campaign - m_firstCampaign + PREVIEW_FIRST_ID, 5, 0, 8));

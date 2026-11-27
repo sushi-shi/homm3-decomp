@@ -531,11 +531,14 @@ void type_university_window::~type_university_window()
 // the identity is byte-proven - 0x49e0e0 stores the ResourceManager
 // return for "advevent.txt" (0x677710) into 0x696a18 and every one of
 // the 194 references to that cell is inside events.obj's link bracket.
-DATA(0x00696a18) static TTextResource* g_adventureEventText;
-DATA(0x00696a1c) static TTextResource* g_randomSignTextResource;
-DATA(0x00696a2c) static const char* g_artifactEventText[ARTIFACT_COUNT];
-DATA(0x00696c70) static TTextResource* g_artifactEventTextResource;
-DATA(0x00696c74) static const char* g_randomSignText[25];
+// Dreamcast publishes all five as external globals of events.obj:
+// AdventureEventText, RandomSignText, gArtifactEvent, ArtifactEventText and
+// cRandomSignText (`?cRandomSignText@@3PAPBDA`).
+DATA(0x00696a18) TTextResource* g_adventureEventText;
+DATA(0x00696a1c) TTextResource* g_randomSignTextResource;
+DATA(0x00696a2c) const char* g_artifactEventText[ARTIFACT_COUNT];
+DATA(0x00696c70) TTextResource* g_artifactEventTextResource;
+DATA(0x00696c74) const char* g_randomSignText[25];
 
 VA(0x0049e0e0, 0x15)
 DC_ADDRESS(0x09028c, 0x24)
@@ -1081,7 +1084,10 @@ void doMonsterJoinDialog(hero* inHero, armyGroup* monsters, int flag);
 
 // DC and Mac
 // place showRewards before addReward and giveBlackBoxReward. Restoring
-// that ordinary body order is byte-flat; selective nested expansion remains open.
+// that ordinary body order is byte-flat. The threshold compares through the
+// implicit unsigned conversion (DC cmp/hs, Mac cmplw); the former explicit
+// static_cast was a stub-era spelling that made this body one cb heavier
+// and kept giveBlackBoxReward's sixth addReward from expanding it.
 VA(0x004a0b00, 0x112)
 DC_ADDRESS(0x0912bc, 0x4a)
 MAC_ADDRESS(0x0aab7c, 0x7c)
@@ -1089,7 +1095,7 @@ static void showRewards(std::string& text,
                   std::vector<type_dialog_resource>& rewards,
                   long threshold)
 {
-    if (rewards.size() >= static_cast<unsigned long>(threshold)) {
+    if (rewards.size() >= threshold) {
         extendedDialog(text.c_str(), rewards, -1, -1, 0);
         text = DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, "");
         rewards.clear();
@@ -1132,6 +1138,29 @@ static void addReward(std::string& text, const std::string& alternate,
 // addReward (trace site 104, budget 75 against cost 77). A root cb of
 // 2381..2440 (now 2350) flips exactly that site; more also expands earlier
 // showRewards and the erase at site 362.
+// One function-scope int i counts every loop: retail homes the secondary
+// skill and creature counters in the same frame slot (-0x24), and DC keeps
+// the primary and secondary counters in one register (r13). Separate loop
+// counters put them in two slots (95.63 -> 95.65%). Retail's frame is 12
+// bytes larger (0xc0): its loop-body formatString temporaries and later
+// reward records take their own slots. A bool skillGiven is flat; declaring
+// the artifact with the other locals gives 95.02%.
+// The spell arm's rewards.size() > 0 keeps retail's sar/je (!= 0 folds to a
+// test mask), and MAKELONG(type, amount) packs the RES_MONSTER qualifier that
+// the dialog decodes with HIWORD/LOWORD: 95.65 -> 97.79%. Primary, morale and
+// luck apply their bonus before setting rewardGiven, as DC 881/882, 964/965
+// and 986/987 do (byte-flat). DC reads skillLevel bytes directly at 889/896
+// and 1041 although hero::get_secondary_skill exists out of line (ai_player)
+// and this body keeps every other header inline (is_in_spellbook, size,
+// c_str, Dismiss) as a call, so the skill tests index m_skillLevel. With
+// showRewards' implicit threshold conversion, retail's sixth addReward now
+// expands its showRewards: 97.79 -> 99.37%. Residual: the post-spell
+// showRewards still expands erase (budget 69 against cost 69); a root cb
+// of 2332..2336 (now 2344) would keep the call. Flat probes: function-wide
+// for (int i ...), split or function-scope skill/level, function-scope
+// amount, operator[] or GetText at every text, DC's mana reload and per-arm
+// amount, bool skillGiven, DC's if (skillGiven) block, true literals; a
+// cached skill level gives 95.22%, !rewards.empty() 97.09%.
 VA(0x0049fa90, 0x106B)
 DC_ADDRESS(0x09138c, 0x870)
 MAC_ADDRESS(0x0aac80, 0xab0)  // dc-bracket forced, ret 0x18=p7 + format_string reward text
@@ -1144,6 +1173,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     std::string msg(text);
     std::string alternate;
     std::vector<type_dialog_resource> rewards;
+    int i;
     alternate = formatString((*g_adventureEventText)[ADV_EVENT_TEXT_BLACK_BOX_REWARD_FORMAT],
                               currentHero->m_name);
 
@@ -1156,30 +1186,30 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         rewardGiven = 1;
     }
 
-    for (int i = 0; i < kNumPrimarySkills; i++) {
+    for (i = 0; i < kNumPrimarySkills; i++) {
         if (blackBox->m_primarySkillBonus[i] > 0) {
             if (humanPlayer) {
                 addReward(msg, alternate, rewards,
                           EGameResource(RES_PRIMARY_SKILL_ATTACK + i),
                            blackBox->m_primarySkillBonus[i]);
             }
-            rewardGiven = 1;
             currentHero->adjustPrimarySkill(i, blackBox->m_primarySkillBonus[i]);
+            rewardGiven = 1;
         }
     }
 
-    for (unsigned int j = 0; j < blackBox->m_secondarySkills.size(); j++) {
-        TSecondarySkill skill = blackBox->m_secondarySkills[j].m_type;
-        TSkillMastery level = blackBox->m_secondarySkills[j].m_level;
+    for (i = 0; i < blackBox->m_secondarySkills.size(); i++) {
+        TSecondarySkill skill = blackBox->m_secondarySkills[i].m_type;
+        TSkillMastery level = blackBox->m_secondarySkills[i].m_level;
         unsigned char skillGiven = 0;
-        if (currentHero->getSecondarySkill(skill) == 0
+        if (currentHero->m_skillLevel[skill] == 0
             && currentHero->m_skillCount < kNumSecSkillsPerHero) {
             currentHero->giveSS(skill, level);
             skillGiven = 1;
-        } else if (currentHero->getSecondarySkill(skill) > 0
-                   && currentHero->getSecondarySkill(skill) < level) {
+        } else if (currentHero->m_skillLevel[skill] > 0
+                   && currentHero->m_skillLevel[skill] < level) {
             currentHero->giveSS(skill,
-                level - currentHero->getSecondarySkill(skill));
+                level - currentHero->m_skillLevel[skill]);
             skillGiven = 1;
         }
         if (!skillGiven)
@@ -1224,8 +1254,8 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                            blackBox->m_moraleBonus);
             }
         }
-        rewardGiven = 1;
         currentHero->m_moraleBonus += blackBox->m_moraleBonus;
+        rewardGiven = 1;
     }
 
     if (blackBox->m_luckBonus != 0) {
@@ -1242,42 +1272,42 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                            blackBox->m_luckBonus);
             }
         }
-        rewardGiven = 1;
         currentHero->m_luckBonus += blackBox->m_luckBonus;
+        rewardGiven = 1;
     }
     showRewards(msg, rewards, 1);
 
-    for (int k = 0; k < NUM_RESOURCES; k++) {
-        if (blackBox->m_resQty[k] != 0) {
+    for (i = 0; i < NUM_RESOURCES; i++) {
+        if (blackBox->m_resQty[i] != 0) {
             if (humanPlayer) {
-                if (blackBox->m_resQty[k] > 0) {
+                if (blackBox->m_resQty[i] > 0) {
                     addReward(msg, formatString(
                         g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
-                        currentHero->m_name), rewards, EGameResource(k),
-                               blackBox->m_resQty[k]);
+                        currentHero->m_name), rewards, EGameResource(i),
+                               blackBox->m_resQty[i]);
                 } else {
                     addReward(msg, formatString(
                         g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_TREASURE_FORMAT),
-                        currentHero->m_name), rewards, EGameResource(k),
-                               blackBox->m_resQty[k] - 100000);
+                        currentHero->m_name), rewards, EGameResource(i),
+                               blackBox->m_resQty[i] - 100000);
                 }
             }
-            currentHero->giveResource(k, blackBox->m_resQty[k]);
+            currentHero->giveResource(i, blackBox->m_resQty[i]);
             rewardGiven = 1;
         }
     }
     showRewards(msg, rewards, 1);
 
     type_artifact artifact(ARTIFACT_NONE);
-    for (unsigned int m = 0; m < blackBox->m_artifacts.size(); m++) {
+    for (i = 0; i < blackBox->m_artifacts.size(); i++) {
         if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
             if (humanPlayer) {
                 addReward(msg, formatString(
                     g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
                     currentHero->m_name), rewards, RES_ARTIFACT,
-                           blackBox->m_artifacts[m]);
+                           blackBox->m_artifacts[i]);
             }
-            artifact.m_artifactId = blackBox->m_artifacts[m];
+            artifact.m_artifactId = blackBox->m_artifacts[i];
             currentHero->giveArtifact(artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
@@ -1287,16 +1317,16 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     showRewards(msg, rewards, 1);
 
     if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-        for (unsigned int n = 0; n < blackBox->m_spells.size(); n++) {
-            if (akSpellTraits[blackBox->m_spells[n]].m_level
-                    <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
-                && !currentHero->isInSpellbook(blackBox->m_spells[n])) {
+        for (i = 0; i < blackBox->m_spells.size(); i++) {
+            if (akSpellTraits[blackBox->m_spells[i]].m_level
+                    <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
+                && !currentHero->isInSpellbook(blackBox->m_spells[i])) {
                 if (humanPlayer) {
                     // Mac 0xab3c8..0xab3e8 assigns the returned string
                     // directly. A named copy adds a CodeWarrior copy ctor
                     // and destructor absent from native; preserve this
                     // lifetime despite Windows 96.35 -> 95.28%.
-                    if (rewards.size() != 0) {
+                    if (rewards.size() > 0) {
                         msg = formatString(
                             g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELLS_FORMAT),
                             currentHero->m_name);
@@ -1304,9 +1334,9 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                     addReward(msg, formatString(
                         g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELL_FORMAT),
                         currentHero->m_name), rewards, RES_SPELL,
-                               blackBox->m_spells[n]);
+                               blackBox->m_spells[i]);
                 }
-                currentHero->addSpell(blackBox->m_spells[n]);
+                currentHero->addSpell(blackBox->m_spells[i]);
                 rewardGiven = 1;
             }
         }
@@ -1320,11 +1350,11 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     // into the same procedure-local long amount at sp+0x24 used for mana;
     // 1069/1078/1081/1086 read that carrier. Reusing it here preserves the
     // native model and improves the full Windows caller 95.28% -> 95.62%.
-    for (int p = 0; p < armyGroup::ARMY_GROUP_SLOT_COUNT; p++) {
+    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         // Read the native creature enum view and pass it directly to the
         // typed AI boundary; legacy Add/GetArmyName accept its int value.
-        TCreatureType type = newCreatures.m_armyTypes[p];
-        amount = newCreatures.m_numTroops[p];
+        TCreatureType type = newCreatures.m_armyTypes[i];
+        amount = newCreatures.m_numTroops[i];
         if (type == CREATURE_NONE)
             continue;
         if (humanPlayer) {
@@ -1337,10 +1367,10 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                     g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_CREATURES_JOIN_FORMAT),
                     getArmyName(type, 2), currentHero->m_name);
             addReward(msg, alternate, rewards, RES_MONSTER,
-                       ((amount & 0xffff) << 16) | (type & 0xffff));
+                       MAKELONG(type, amount));
         }
         if (currentHero->m_army.add(type, amount, -1)) {
-            newCreatures.dismiss(p);
+            newCreatures.dismiss(i);
         } else if (humanPlayer) {
             joinDialogNeeded = 1;
         } else {
@@ -2207,7 +2237,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     const int taughtIconCount = max(
         3, 7 - static_cast<int>(spellsLearned.size()));
 
-    if (spellsLearned.size()) {
+    if (spellsLearned.size() > 0) {
         msg += (*g_generalText)[GENERAL_TEXT_LEARNS_FRAGMENT];
         for (int i = 0; i < spellsLearned.size(); i++) {
             if (i < learnedIconCount) {
@@ -2226,8 +2256,8 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
         msg += formatString((*g_generalText)[GENERAL_TEXT_FROM_HERO_FORMAT], secondHero->m_name);
     }
 
-    if (spellsTaught.size()) {
-        if (spellsLearned.size()) {
+    if (spellsTaught.size() > 0) {
+        if (spellsLearned.size() > 0) {
             msg += DATA_COMPGEN(0x00660db4, commaText, ",");
             msg += (*g_generalText)[GENERAL_TEXT_LIST_AND];
         }
@@ -3045,23 +3075,6 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
     g_currentPlayer->m_deadGuyFlags |= 1 << cell->getItemId();
 }
 
-// E:\gamedcs\events.cpp:3039.  The shared handler for all three shrine
-// tiers.  Dreamcast names the string local and its helper stream; retail
-// fixes the packed spell as the signed ten-bit lane at bits 13..22.  The
-// three refusal tails are advevent.txt rows 174 (already known), 131 (no
-// spellbook), and 130 (insufficient Wisdom).
-// Residual (89.65%): retail's SetInfoFlag expansion here CALLS the nested
-// game::getTeam. Traced /Ob2 (2026-10-05): caller cb 482 sits on the 1000
-// floor; setInfoFlag (cb 115) reaches depth 1 with budget 956 and 18 root
-// candidates left, so its child pool is 841/18 = 46, exactly getTeam's cb.
-// Retail's call needs one more cost-free root candidate between setInfoFlag
-// and the wisdom arm's +=, or 14 more budget spent before setInfoFlag.
-// Neither the DC nor the Mac call stream shows such a candidate, and the
-// remaining differences are register homing around that call.
-// Probe (2026-10-25): DC GetTeam (dc 0x37fbc) has braced then and else arms
-// (coincident scope pairs). That spelling costs 54 and breaks exact philai
-// moveHero, buyCreatures and checkForArtifactWin. Bracing only the then arm
-// (cost 48) gives this body 95.14%, but checkForArtifactWin needs <= 46.
 VA(0x004a5610, 0x346)
 DC_ADDRESS(0x0957fc, 0x236)
 MAC_ADDRESS(0x0b1f74, 0x3fc)  // DC identity + unique call/CFG stream
@@ -3076,8 +3089,10 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
         result = formatString("%s'%s'.", prompt,
                                akSpellTraits[spell].m_name);
 
-    g_game->setInfoFlag(type, g_netLocalGamePos);
+    game* g = g_game;
+    g->setInfoFlag(type, g_netLocalGamePos);
     cell->setCellVisited(currentHero->m_owner);
+    result.c_str();
 
     if (currentHero->isInSpellbook(spell)) {
         if (!humanPlayer)
@@ -5312,10 +5327,16 @@ void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 // never reads it. All three active source callers supply an empty literal.
 // Native reward-list review: Mac 0xb906c..0xb90b0 retains two separate
 // character append sites, supporting the existing if/else operators below.
-// Windows 89.5621% residual: the comma arm calls append where retail expands
-// its _Xlen/_Grow/_Eos chain. A four-state family of resource declaration
-// order and independent artifact/list counters passed both controls and
-// reproduced two distinct objects without score movement; keep this form.
+// Retail expands the comma arm's append (_Xlen/_Grow/_Eos chain). A
+// four-state family of resource declaration order and independent
+// artifact/list counters reproduced two distinct objects without score
+// movement; keep this form.
+// The gold-after-artifacts test uses size() > 0 (retail keeps the sar; != 0
+// folds to a mask test, 98.71 -> 98.81). DC 5737/5742 store the resource
+// count into resource.m_qualifier and format that member, as retail's
+// [ebp-0x20] reload does. Alone it starves the ", " append expansion
+// (89.69%: one budget unit short); reading the guard slot directly in the
+// leader scan, without the unevidenced `type` copy, restores it (100%).
 VA(0x004abdc0, 0x6D0)
 DC_ADDRESS(0x09a898, 0x532)
 MAC_ADDRESS(0x0b8ca8, 0x618)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6
@@ -5327,11 +5348,10 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
     if (humanPlayer) {
         int best = 0;
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-            int type = bank.m_guards.m_armies[i];
-            if (type != CREATURE_NONE
-                && akCreatureTypeTraits[type].AI_value > best) {
-                best = akCreatureTypeTraits[type].AI_value;
-                leaderMonster = TCreatureType(type);
+            if (bank.m_guards.m_armies[i] != CREATURE_NONE
+                && akCreatureTypeTraits[bank.m_guards.m_armies[i]].AI_value > best) {
+                best = akCreatureTypeTraits[bank.m_guards.m_armies[i]].AI_value;
+                leaderMonster = TCreatureType(bank.m_guards.m_armies[i]);
             }
         }
     }
@@ -5378,13 +5398,13 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
             if (bank.m_resources[j] > 0) {
                 resource.m_resource = j;
                 resource.m_qualifier = bank.m_resources[j];
-                if (j == GOLD && bank.m_artifacts.size() != 0)
+                if (j == GOLD && bank.m_artifacts.size() > 0)
                     resource.m_resource = 0x24;
                 resources.push_back(resource);
                 result = formatString(
                     DATA_COMPGEN(0x006778a4, resourceQuantityFormat,
                                  "%d %s"),
-                    bank.m_resources[j], g_resourceNames[j]);
+                    resource.m_qualifier, g_resourceNames[j]);
                 rewardStrings.push_back(result);
             }
         }
@@ -5402,8 +5422,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
         // state 6) is alive before the formatted temporary (ebp-0x74, state
         // 7, nested in 6) that is assigned into it, so the line is default
         // constructed and then assigned (85.35 -> 89.48%). The initializer
-        // form yields seven states. Residual: retail expands one more string
-        // append chain (_Xlen/_Grow/_Eos calls) in the reward-list loop.
+        // form yields seven states.
         std::string rewardText;
         rewardText = formatString(
             (*g_adventureEventText)[ADV_EVENT_TEXT_CREATURE_BANK_REWARD_FORMAT],
@@ -5564,11 +5583,12 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
     // 5884 overwrites ratio with the unweighted double quotient. Mac
     // 0xb9590/0xb9598/0xb95a0 retains the three calls but drops the dead
     // integer arithmetic. Keep both meaningful expressions and one ratio.
-    // This source form is byte-flat at 99.2966%; the remaining x87 reload
-    // order gives VC6 an extra qword lifetime versus retail's reused slot.
+    // Retail reuses one qword slot for the numerator, denominator and result;
+    // the embedded assignment is the only source form that reproduces that
+    // x87 reload order; split statements and explicit casts keep a second slot.
     double ratio = who->m_army.getAIValue()
         * (who->getPrimarySkillTotal() + 40) / 40;
-    ratio = static_cast<double>(who->m_army.getAIValue()) / combatValue;
+    ratio = (ratio = static_cast<double>(who->m_army.getAIValue())) / combatValue;
 
     int numGroups = 7;
     for (int thresholdIndex = 5;
@@ -5635,8 +5655,8 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
         TCreatureType tempArmies[armyGroup::ARMY_GROUP_SLOT_COUNT];
         // DC names both arrays; Mac copies their slots without memcpy calls.
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-            tempNumTroops[slot] = armyGroupForCombat.m_numTroops[slot];
             tempArmies[slot] = armyGroupForCombat.m_armyTypes[slot];
+            tempNumTroops[slot] = armyGroupForCombat.m_numTroops[slot];
         }
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             armyGroupForCombat.m_armyTypes[i] =
@@ -6004,11 +6024,13 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // Pause-guard source tests (header declaration versus CPP-owned in-class or
 // ordinary out-of-class bodies) are flat at 95.6234 and keep its dtor exact.
 // DC netmsg.h:488..494 confirms CHeroLevelUpdateMsg's two memcpy calls, not
-// counted loops. Putting its scalar fields before both copies, whether by
-// assignment or initializer list, gives 94.5662 here; putting numSSs between
-// the copies is flat. DC's scheduled store alone does not settle the spelling.
-// Windows retail has no separate draw arm after quick combat: the winner
-// selects the defeated hero directly (Mac 0xbaf6c's draw check scores 92.78%).
+// counted loops; Mac's numSSs store ahead of its first BlockMoveData puts
+// both scalar stores before the copies (netmsg.h), as retail schedules them.
+// Quick combat keeps DC 6326..6356's if/else winner and its winner == 0 /
+// winner == 1 selection (loser first, as DC and Mac 0xbafc0 store it); VC6
+// threads the known winner, which puts retail's winner = 1 arm after the
+// epilogue. Windows retail has no draw arm there (Mac 0xbaf6c's draw check
+// is not folded: 90.81%).
 // Original DC public ?DoCombat@advManager@@QAAHUtype_point@@PAVhero@@
 // PAVarmyGroup@@JPAVtown@@12H_N4@Z proves both trailing flags bool.
 // Retail calls SRandom for the default seed. The replay flag is cleared and
@@ -6018,50 +6040,78 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // and retail re-indexes the player row for the second byte store; that
 // costs the constructor 69 inline units, which leaves the final pause
 // destructor 68 of its 72 (96.22%, against 96.99% for a shared-row helper).
-// Every guarded statement is braced (cb 2110 -> 2152), which gives the final
-// CTurnDurationPause destructor its 72 units as retail (96.22 -> 96.95%).
-// Retail also expands one of the three string _Tidy calls this body keeps
-// inside the town/hero copy-and-delete chains; the nearest, under the town
-// delete, gets 134 against 152 (about three fewer later depth-1 candidates).
+// Single-statement bodies are unbraced, as DC's consecutive line records
+// show (6308/6309, 6326..6329, 6538..6541, 6683/6684, against 6696/6697's
+// own brace line). With the threaded quick-combat selection that keeps the
+// final CTurnDurationPause destructor and the heroLoses expansions as retail
+// (97.82 -> 97.85%); DC's gbInCombat-before-saves order and loser-first
+// combatFinished arms give 97.88%. Braced bodies push the fourth heroLoses
+// site over its budget (93.38%).
+// MAKELONG packs the necromancy dialog's count/type qualifier (97.88 ->
+// 97.90%).
+// Retail expands the town delete's string _Tidy and keeps both hero
+// deletes' calls; see the draw-arm note below for the budget that does it.
+// The default seed is Random, not SRandom: DC line 6309 and Mac's bl to
+// random (0x130cf4) agree; the pickup sample keeps SRandom (DC 6628).
+// DC 6336..6362 and Mac 0xbaf6c also keep a draw arm in the quick-combat
+// path (both CheckForHeroDefeatWin calls, then the winner/loser arm), with
+// its own loser/winning_player pair (DC sp+0x5c/0x58, against the
+// aftermath's sp+0x54/0x50). DC 6535 compares both heroes' tactics bytes
+// directly; this DC body keeps every header inline out of line and has no
+// hero.h residue, so no getSecondarySkill call. VC6 folds the draw arm, but
+// its front-end size gives the town delete's nested _Tidy the budget retail
+// spends on it while the fourth heroLoses site still stays a call
+// (98.27 -> 99.62%). Alone, the draw arm expands that fourth site (94.66%).
+// Residual: retail hoists rightPlayer's esi load above the aftermath's
+// winner test (register choice; a single function-level winner is 99.61%).
 VA(0x004ad470, 0x1531)
 DC_ADDRESS(0x09b970, 0x9ec)
 MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique)
 int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, bool finishHeroes, bool alternateLayout)
 {
     int leftPlayer = leftHero ? leftHero->m_owner : -1;
-    int winningPlayer;  // DC winning_player
     hero* loser;
+    int winningPlayer;  // DC winning_player
     CTurnDurationPause turnDurationPause;
 
     unsigned char rightHuman =
         rightPlayer >= 0 && g_game->isHuman(rightPlayer);
     unsigned char leftHuman = leftPlayer >= 0 && g_game->isHuman(leftPlayer);
-    if (seed == -1) {
-        seed = sRandom(1, 1000);
-    }
+    if (seed == -1)
+        seed = random(1, 1000);
     demobilizeCurrHero(0, 1);
     reseed(0, 0);
 
     unsigned char replay = 0;
-    if (g_goSolo && g_goSoloTest) {
+    if (g_goSolo && g_goSoloTest)
         replay = 1;
-    }
     if (!rightHuman && !leftHuman && !replay) {
+        hero* loser;
+        int winningPlayer;
         int winner;
         NewmapCell* target = g_game->getCell(point);
         if (aiQuickCombat(leftHero, rightHero, *rightArmyGroup, rightTown,
-                            target)) {
-            winningPlayer = leftPlayer;
+                            target))
             winner = 0;
-            loser = rightHero;
-        } else {
+        else
             winner = 1;
-            winningPlayer = rightPlayer;
-            loser = leftHero;
-        }
-        if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                winningPlayer, loser)) {
-            checkEndGame(0);
+        if (winner == -1) {
+            if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
+                    leftPlayer, rightHero)
+                || g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
+                       rightPlayer, leftHero))
+                checkEndGame(0);
+        } else {
+            if (winner == 0) {
+                loser = rightHero;
+                winningPlayer = leftPlayer;
+            } else if (winner == 1) {
+                loser = leftHero;
+                winningPlayer = rightPlayer;
+            }
+            if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
+                    winningPlayer, loser))
+                checkEndGame(0);
         }
         mobilizeCurrHero(0, 0, 1);
         return winner;
@@ -6069,9 +6119,9 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
 
     g_mouseManager->setPointer(2, mouseManager::DEFAULT_SET);
     g_mouseManager->showPointer(1);
+    g_adventureCombatActive = 1;
     int savePlayer = g_netLocalGamePos;
     int saveShowIt = g_completeDrawEnabled;
-    g_adventureCombatActive = 1;
 
     if (leftPlayer >= 0 && rightPlayer >= 0
         && g_game->isHuman(rightPlayer)) {
@@ -6130,13 +6180,12 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             g_game->turnOffAIMusic();
             char text[256];  // DC sText[256]
             const char* target;
-            if (rightTown) {
+            if (rightTown)
                 target = g_generalText->GetText(GENERAL_TEXT_ATTACK_TARGET_TOWN);
-            } else if (rightHero) {
+            else if (rightHero)
                 target = g_generalText->GetText(GENERAL_TEXT_ATTACK_TARGET_HERO);
-            } else {
+            else
                 target = g_generalText->GetText(GENERAL_TEXT_ATTACK_TARGET_GARRISON);
-            }
             sprintf(text, g_generalText->GetText(GENERAL_TEXT_TOWN_UNDER_ATTACK_FORMAT),
                     g_game->getPlayerName(rightPlayer), target);
             g_game->waitForPlayer(text, rightPlayer);
@@ -6147,26 +6196,22 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     g_combatManager->setupCombat(point, leftHero, leftArmyGroup, rightPlayer,
                                  rightTown, rightHero, rightArmyGroup,
                                  point.m_x, point.m_y, seed, alternateLayout);
-    if (!leftHuman) {
+    if (!leftHuman)
         aiArrangeArmyForCombat(leftHero, rightHero, *rightArmyGroup);
-    }
     if (!rightHuman && rightHero
-        && rightHero->getSecondarySkill(eSecSkillBattleTactics)
-               > leftHero->getSecondarySkill(eSecSkillBattleTactics)) {
+        && rightHero->m_skillLevel[eSecSkillBattleTactics]
+               > leftHero->m_skillLevel[eSecSkillBattleTactics])
         aiArrangeArmyForCombat(rightHero, leftHero, *leftArmyGroup);
-    }
-    if (g_highMemBuffer > 2900) {
+    if (g_highMemBuffer > 2900)
         g_adventureGraphicsPreserveMode = 2;
-    } else if (g_highMemBuffer > 900) {
+    else if (g_highMemBuffer > 900)
         g_adventureGraphicsPreserveMode = 1;
-    }
     g_executive->callManager(g_combatManager);
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
     g_mouseManager->showPointer(1);
     g_adventureGraphicsPreserveMode = 0;
-    if (leftHero) {
+    if (leftHero)
         leftHero->checkLevel();
-    }
     if (rightHero) {
         if (g_remoteOn && rightHuman && leftHuman
             && g_combatManager->m_winner == 1) {
@@ -6178,9 +6223,8 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             } else {
                 CLevelPickWaitDlg dlg2;
                 dlg2.waitForLevels(rightHero->m_owner);
-                if (dlg2.m_playerDropped) {
+                if (dlg2.m_playerDropped)
                     rightHero->checkLevel();
-                }
             }
         } else {
             rightHero->checkLevel();
@@ -6190,30 +6234,27 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
 
 combatFinished:
     int winner = g_combatManager->m_winner;
-    if (winner != 0) {
+    if (winner != 0)
         g_game->m_worldMap.notifyHeroDefeated(leftHero->m_id, rightPlayer);
-    }
     if (winner != 1) {
-        if (rightHero) {
+        if (rightHero)
             g_game->m_worldMap.notifyHeroDefeated(rightHero->m_id, leftPlayer);
-        } else {
+        else
             g_game->m_worldMap.notifyMonsterDefeated(point, leftPlayer);
-        }
     }
     if (winner == -1) {
         if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
                 leftPlayer, rightHero)
             || g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                   rightPlayer, leftHero)) {
+                   rightPlayer, leftHero))
             checkEndGame(0);
-        }
     } else {
         if (winner == 0) {
-            winningPlayer = leftPlayer;
             loser = rightHero;
+            winningPlayer = leftPlayer;
         } else if (winner == 1) {
-            winningPlayer = rightPlayer;
             loser = leftHero;
+            winningPlayer = rightPlayer;
         }
         g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
             winningPlayer, loser);
@@ -6233,10 +6274,8 @@ combatFinished:
         }
         normalDialog(
             g_text, 1, -1, -1, 0x15,
-            (static_cast<unsigned short>(g_combatManager->m_raisedCreatureCount)
-             << 16)
-                | static_cast<unsigned short>(
-                      g_combatManager->m_raisedCreatureType),
+            MAKELONG(g_combatManager->m_raisedCreatureType,
+                     g_combatManager->m_raisedCreatureCount),
             -1, 0, -1, 15000, -1, 0);
         g_game->m_mapHeader.m_victoryCondition.checkForTotalCreatures();
         clearMemSample(sample);
@@ -6246,11 +6285,10 @@ combatFinished:
         switch (g_combatManager->m_winner) {
         case COMBAT_WINNER_LEFT:
             if (rightTown && rightHero
-                && rightTown->m_garrisonHeroId == rightHero->m_id) {
+                && rightTown->m_garrisonHeroId == rightHero->m_id)
                 heroLoses(rightHero, -1);
-            } else {
+            else
                 heroLoses(rightHero, 0);
-            }
             break;
         case COMBAT_WINNER_RIGHT:
             heroLoses(leftHero, 0);
@@ -6258,11 +6296,10 @@ combatFinished:
         case COMBAT_WINNER_NONE:
             heroLoses(leftHero, 0);
             if (rightTown && rightHero
-                && rightTown->m_garrisonHeroId == rightHero->m_id) {
+                && rightTown->m_garrisonHeroId == rightHero->m_id)
                 heroLoses(rightHero, -1);
-            } else {
+            else
                 heroLoses(rightHero, 0);
-            }
             break;
         }
     }
@@ -6270,9 +6307,8 @@ combatFinished:
     g_completeDrawEnabled = saveShowIt;
     g_netLocalGamePos = savePlayer;
     if (!g_currentPlayer->isHuman()) {
-        if (!g_remoteOn) {
+        if (!g_remoteOn)
             g_game->showComputerScreen();
-        }
         g_game->turnOnAIMusic();
         setNoDialogMenus(0);
     } else {

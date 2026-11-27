@@ -32,7 +32,7 @@ namespace {
 enum { kMaxChoices = 3 };
 
 // A bonus's line in the bonus list: what it gives and to which hero.
-class TGetScenarioStartingBonusNameFunc : public TScenarioStartingBonus::TVisitor {
+class TGetScenarioStartingBonusNameFunc : private TScenarioStartingBonus::TVisitor {
 public:
     TGetScenarioStartingBonusNameFunc(const TScenario& scenario, int player);
 
@@ -292,16 +292,23 @@ void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusSpellScroll& b
                    _getHeroName(bonus));
 }
 
-// Residual: retail loads each quantity once and passes that value to the
-// formatter, with its own scan rotation and second-loop induction.
+// Retail's first scan tests at the top and jumps back unconditionally: a
+// break out of while (true); VC6 rotates for/while-condition scans and
+// for (;;) (76.5%). Residual: retail loads each quantity once and passes
+// that value to the formatter (a named quantity, removed as unevidenced),
+// and walks the second loop with separate pointer and offset inductions.
+// Reading bonus.getSkills() at each use: 78.2%.
 VA(0x0042e6d0, 0x127)
 void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusPrimarySkill& bonus)
 {
     const TArray<unsigned int, kNumPrimarySkills>& quantities = bonus.getSkills();
     CString skills;
-    unsigned int skill;
-    for (skill = 0; quantities[skill] <= 0; skill++)
-        ;
+    unsigned int skill = 0;
+    while (true) {
+        if (quantities[skill] > 0)
+            break;
+        ++skill;
+    }
     skills = TFormattedString("+%d %s", quantities[skill], akHeroPrimarySkillTraits[skill].m_name);
     for (skill++; skill < kNumPrimarySkills; skill++) {
         if (quantities[skill] > 0)
@@ -545,7 +552,9 @@ void TScenarioOptionsBonusDlg::OnRemoveButton()
 }
 
 // A building bonus builds in the player's main town: another player with
-// another town type loses them.
+// another town type loses them. Residual: retail keeps the no-town path's
+// `or ebp,-1` ahead of the -1 test; nested ifs, early returns, a named new
+// town type and getMap()->getPlayer all jump-thread it to the exit.
 VA(0x0042f780, 0x105)
 void TScenarioOptionsBonusDlg::OnSelChangePlayerCombo()
 {
@@ -723,7 +732,8 @@ void TScenarioOptionsCrossoverScenarioDlg::_removeChoice(int index)
 }
 
 // Proxy assignment and named player-info/map references leave the expanded
-// bitset word-index/mask scheduling unchanged.
+// bitset word-index/mask scheduling unchanged, as do ++player, an outer
+// counter and set(player, true); an int counter is worse.
 VA(0x004301a0, 0x67)
 TPlayerMask TScenarioOptionsCrossoverScenarioDlg::_getPlayers() const
 {
@@ -943,9 +953,9 @@ bool TScenarioOptionsStartingHeroDlg::isAvailable() const
 }
 
 // Preserve the formatted CString then conditional hero-name string cleanup.
-// Residual: retail calls runtime_error(const string&) and _Xran's
-// assign(const char*, size_t) and expands logic_error. A named insertion
-// iterator, proxy assignment and set(pos, false) leave them unchanged.
+// The proxy assignment's operator[] and reference::operator= are two inline
+// sites where reset() is one: the extra site starves runtime_error's
+// constructor and _Xran's assign(const char*, size_t), as retail calls them.
 VA(0x00430cc0, 0x22b)
 void TScenarioOptionsStartingHeroDlg::_insertChoice(int index, const TScenarioOptionsStartingHero::TChoice& choice)
 {
@@ -961,7 +971,7 @@ void TScenarioOptionsStartingHeroDlg::_insertChoice(int index, const TScenarioOp
     if (choice.getHero() == TScenarioOptionsStartingHero::kRandomHero)
         _m_bRandomHeroAvailable = false;
     else
-        _m_heroesAvailable.reset(choice.getHero());
+        _m_heroesAvailable[choice.getHero()] = false;
 }
 
 VA(0x00430ef0, 0xa4)

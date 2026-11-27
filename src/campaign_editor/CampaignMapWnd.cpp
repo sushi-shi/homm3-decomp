@@ -40,7 +40,11 @@ TCampaignMapWnd::TCampaignMapWnd(CWnd* pParent, TCampaignMapWndClient* pClient)
 }
 
 VA_COMPGEN(0x00419790, 0x1e, SCALAR_DELETING_DTOR, TCampaignMapWnd)
-VA_COMPGEN(0x004197b0, 0x10b, IMPLICIT_DTOR, TCampaignMapWnd)
+VA(0x004197b0, 0x10b)
+TCampaignMapWnd::~TCampaignMapWnd()
+{
+}
+
 VA_COMPGEN(0x00419ea0, 0x78, IMPLICIT_DTOR, TRegionImages)
 
 // Range-erase and implicit resource-conversion probes do not improve this

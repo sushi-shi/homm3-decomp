@@ -30,10 +30,14 @@
 // nested _TWrapper: VC6 completes a nested class with its enclosing
 // template, and the handle is a member of the classes whose implementation
 // it holds, before that implementation is complete. The name is not proven.
+// The empty destructor is declared (a user-provided one changes VC6's unwind
+// states): without it ~TRefCountingWrapper<TScenario::_TImpl> stored a state
+// before each auto_ptr member; with it retail's single state 4 is reproduced.
 template<class T>
 struct TRefCountingWrapper {
     TRefCountingWrapper() : m_refCnt(1) {}
     TRefCountingWrapper(const T& object) : m_refCnt(1), m_object(object) {}
+    ~TRefCountingWrapper() {}
 
     unsigned int m_refCnt;
     T m_object;

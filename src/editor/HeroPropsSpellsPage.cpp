@@ -72,8 +72,10 @@ BOOL THeroPropsSpellsPage::OnInitDialog()
     return TRUE;
 }
 
-// Residual: retail constructs the empty spell set as a named local before
-// passing it; the argument temporary here is scheduled differently.
+// The empty set is a hero spell set (THeroPrototype::TSpells, as the
+// prototype page's spells are): its inline constructor makes retail take
+// the temporary's frame address after the bitset constructor, which a
+// plain std::bitset temporary (the constructor's returned this) does not.
 VA(0x00455158, 0xb2)
 void THeroPropsSpellsPage::OnOK()
 {
@@ -84,7 +86,7 @@ void THeroPropsSpellsPage::OnOK()
     if (_m_bCustomSpells)
         _m_pNewHero->setSpells(_m_customSpells);
     else
-        _m_pNewHero->setSpells(std::bitset<kNumSpells>());
+        _m_pNewHero->setSpells(THeroPrototype::TSpells());
     _m_bModified = _m_bModified || _m_pOldHero->getBCustomSpells() != _m_pNewHero->getBCustomSpells()
                    || _m_pNewHero->getSpells() != _m_pOldHero->getSpells();
 }

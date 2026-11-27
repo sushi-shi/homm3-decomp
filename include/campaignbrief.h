@@ -208,6 +208,7 @@ public:
         }
         // The loader needs the scalar span to advance its stream offset.
         int getMapDataSize() const { return m_mapDataSize; }
+        void setOffset(int offset) { m_offset = offset; }
         // Mac repeats this positive-size scenario predicate in the map
         // count, pool query and pruning path. Name/boundary are inferred.
         bool hasMap() const { return getMapDataSize() > 0; }

@@ -463,7 +463,7 @@ MAC_ADDRESS(0x1b0510, 0x230)
 void textEntryWidget::setupDisplayString(char* core, unsigned short inCursorIndex)
 {
     if (GameTime::isPast(g_timers[0])) {
-        m_cursorFlashOn = static_cast<unsigned char>(1 - m_cursorFlashOn);
+        m_cursorFlashOn = static_cast<signed char>(1 - m_cursorFlashOn);
         g_timers[0] = GameTime::get() + 360;
     }
 

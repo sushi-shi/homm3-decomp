@@ -383,6 +383,22 @@ class UpdateRowsTest(unittest.TestCase):
         self.assertEqual(sorted(rows), [("unit", "?kept@@YAXXZ"), ("unit", "?scored@@YAXXZ")])
         self.assertEqual(stats["retired"], 1)
 
+    def test_missing_scored_row_on_library_code_is_retired(self):
+        # A game label once placed on a body the runtime map now names (the
+        # map editor's ios_base::failure members, banked as overflow_error).
+        old = {("artifact", "??1overflow_error@std@@UAE@XZ"):
+                   MatchRow(None, 100.0, 100.0, 0x200),
+               ("unit", "?handler@@YAXXZ"): MatchRow(None, 40.0, 40.0, 0x300),
+               ("unit", "?library@@YAXXZ"): MatchRow(100.0, 100.0, 100.0, 0x500)}
+        rows, stats = update_rows({("unit", "?library@@YAXXZ"): 100.0}, old,
+                                  {("unit", "?library@@YAXXZ"): 0x500},
+                                  targets={0x400}, library={0x200, 0x500})
+        # Only the missing library row retires: a scored row outside the
+        # targets for another reason, and a measured row, are kept.
+        self.assertEqual(sorted(rows), [("unit", "?handler@@YAXXZ"),
+                                        ("unit", "?library@@YAXXZ")])
+        self.assertEqual(stats["retired"], 1)
+
     def test_separate_overload_claim_selects_unique_parameter_arity(self):
         from homm3.retail_labels.source import mask_lexical_noise
 

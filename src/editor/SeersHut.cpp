@@ -16,6 +16,9 @@
 // The reserved bytes after a hut's reward (Loki's kNumSeersHutReserved).
 const unsigned int kNumSeersHutReserved = 2;
 
+// The RTTI marks every visitor's TVisitor base private (attributes 9); the
+// testers befriend the class that hands them to accept, keeping Loki's
+// dispatcher shape.
 namespace {
 
 enum TRewardType {
@@ -33,7 +36,7 @@ enum TRewardType {
     kNumRewardTypes = 11
 };
 
-class TRewardWriter : public TSeersHut::TReward::TVisitor {
+class TRewardWriter : private TSeersHut::TReward::TVisitor {
 public:
     TRewardWriter(TRawOStream* pOStream, int version) : _m_pOStream(pOStream), _m_version(version) {}
 
@@ -97,7 +100,9 @@ TSeersHut::TReward* (TRewardReader::* const TRewardReader::_s_apfnRead[kNumRewar
 };
 
 template<class T>
-class TRewardRHSEquivalencyTester : public TSeersHut::TReward::TVisitor {
+class TRewardRHSEquivalencyTester : private TSeersHut::TReward::TVisitor {
+    friend class TRewardEquivalencyTester;
+
 public:
     TRewardRHSEquivalencyTester(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
 
@@ -110,7 +115,9 @@ private:
     bool _m_bEquivalent;
 };
 
-class TRewardEquivalencyTester : public TSeersHut::TReward::TVisitor {
+class TRewardEquivalencyTester : private TSeersHut::TReward::TVisitor {
+    friend class TSeersHut::TReward;
+
 public:
     TRewardEquivalencyTester(const TSeersHut::TReward& rhs) : _m_rhs(rhs), _m_bEquivalent(false) {}
 
@@ -142,7 +149,7 @@ private:
     bool _m_bEquivalent;
 };
 
-class TRewardCloner : public TSeersHut::TReward::TVisitor {
+class TRewardCloner : private TSeersHut::TReward::TVisitor {
 public:
     std::auto_ptr<TSeersHut::TReward> clone(const TSeersHut::TReward& reward)
     {

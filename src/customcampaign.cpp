@@ -1272,39 +1272,21 @@ void TCampaignBonus::setTown(int)
 // by this TU. /Gr passes the hidden return object in ECX and infile in EDX.
 // Retail freezes the resized string buffer, then reads/copies 512-byte chunks.
 
-// Residual (95.1988%): end the scalar-read temporary's scope before string
-// construction, carrying its value into resize and the remaining-byte loop.
-// That restores the string at ebp-0x1c, the EBX result and ESI count, raising
-// 81.6506 -> 95.1988. Changing resize(length) alone is byte-flat at 81.6506;
-// the temporary lifetime is essential. Moving the chunk buffer outside the
-// loop, separate zero assignment, memset/value initialization, signed/long
-// read-word types, and ordinary/template value-return readers are all byte-flat
-// on the scoped form. No speculative helper is retained.
-// Retail still has one immediate zero store to the read word at ebp-0x34;
-// VC6 emits two zero-register stores at ebp-0x24. The allocator temporary,
-// saved infile/result and destination slots differ; the string/resize/copy
-// code and call decisions otherwise align. The passive inline trace shows
-// default construction, resize/append, begin/Freeze, copy and destruction
-// expanding with the retained Grow/Eos/assign calls. No Dreamcast counterpart.
-// Mac 0x93f80 loads the file length with lwbrx; the shared platform macro
-// supplies that byte order while leaving Windows unchanged. Windows
-// 0x485dc5 zeros the read word explicitly; do not discard that initialization.
-// A function-scope, uninitialized-word/count-arm model failed that fact and
-// gave Mac 33.90%, versus 55.17% here. Buffer lifetime placement was flat.
-// Native 0x93f8c copies decoded count into remaining before constructing
-// the string; the loop then reuses count, with separate conditional arms.
-// That lifetime reproduces its r31/r30/r29 count/remaining/destination roles
-// and branch sequence; Windows remains 95.1988% with the same calls.
+// The length word goes through the canonical value reader, as ScenarioStruct::
+// read's map-size word does. Mac 0x93f80 decodes it with lwbrx straight after
+// the read, with no byte-count test (the value form), and VC6 places the
+// inlined reader's word below the saved infile/result slots and emits
+// retail's single zero store at 0x485dc5 itself: 100%. The earlier scoped
+// `length = 0` temporary, kept for that store, reached 95.1988%: VC6 then
+// zeroed the word twice and homed it beside `remaining`. Native 0x93f8c
+// copies the decoded count into remaining before constructing the string;
+// the loop then reuses count, with separate conditional arms (r31/r30/r29
+// count/remaining/destination roles). No Dreamcast counterpart.
 VA(0x00485d90, 0x1BB)
 MAC_ADDRESS(0x093f48, 0xe8)  // anchor-caller(ScenarioStruct::Read +0x2b), retail-only
 std::string readLengthPrefixedString(TAbstractFile* infile)
 {
-    unsigned int count;
-    {
-        unsigned int length = 0;
-        infile->read(&length, sizeof(length));
-        count = LITTLE_ENDIAN_LONG(length);
-    }
+    unsigned int count = readLittleEndianValue<unsigned int>(infile);
     unsigned int remaining = count;
     std::string text;
     text.resize(count);
@@ -2034,26 +2016,18 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
 
     m_regionDesc = readLengthPrefixedString(infile);
 
-    {
-        unsigned char present = readValue<unsigned char>(infile);
-        if (!present) {
-            m_prologue = 0;
-        } else {
-            MapTextStruct* text = new MapTextStruct;
-            m_prologue = text;
-            text->read(infile);
-        }
+    if (!readValue<unsigned char>(infile)) {
+        m_prologue = 0;
+    } else {
+        m_prologue = new MapTextStruct;
+        m_prologue->read(infile);
     }
 
-    {
-        unsigned char present = readValue<unsigned char>(infile);
-        if (!present) {
-            m_epilogue = 0;
-        } else {
-            MapTextStruct* text = new MapTextStruct;
-            m_epilogue = text;
-            text->read(infile);
-        }
+    if (!readValue<unsigned char>(infile)) {
+        m_epilogue = 0;
+    } else {
+        m_epilogue = new MapTextStruct;
+        m_epilogue->read(infile);
     }
 
     {
@@ -2081,19 +2055,15 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     }
 
     unsigned char optionType = readValue<unsigned char>(infile);
-    TCampaignStartOption* record;
     switch (optionType) {
     case CAMPAIGN_START_OPTION_BONUS:
-        record = new TCampaignStartBonusOption;
-        m_options = record;
+        m_options = new TCampaignStartBonusOption;
         break;
     case CAMPAIGN_START_OPTION_CROSSOVER:
-        record = new TCampaignStartCrossoverOption;
-        m_options = record;
+        m_options = new TCampaignStartCrossoverOption;
         break;
     case CAMPAIGN_START_OPTION_HERO:
-        record = new TCampaignStartHeroOption;
-        m_options = record;
+        m_options = new TCampaignStartHeroOption;
         break;
     default:
         m_options = 0;
@@ -2275,6 +2245,17 @@ static void applyCampaignMapHeader(
             mapHeader.m_playerSlotAttributes[slotIndex].m_defaultPlaceholders);
 }
 
+// Region count of the campaign's map traits row. Name inferred.
+static int getCampaignRegionCount(int regionMap)
+{
+    return g_campaignMapTraits[regionMap].m_numRegions;
+}
+
+// The region count and record offset go through getCampaignRegionCount and
+// setOffset (score-neutral). An earlier shape carried four bare
+// m_scenarios.size() statements with no native support (Mac's vector calls
+// belong to readScenario's push_back); they only steered the inline budget
+// and were removed (94.38 -> 88.80% expected).
 VA(0x00488880, 0x5D6)
 MAC_ADDRESS(0x096df0, 0x5ac)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::load()
@@ -2284,6 +2265,7 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
 
     clearScenarios();
 
+    int numScenarios = 0;
     std::filebuf* fileBuf = new std::filebuf;
     char currentDirectory[200];
     getcwd(currentDirectory, sizeof(currentDirectory));
@@ -2307,24 +2289,10 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
         m_stream = fileBuf;
     }
 
-    int numScenarios;
     {
         TGzInflateBuf inflateBuf(m_stream);
         TStreamBufFile streamFile(&inflateBuf);
-        // Retail reads through the abstract interface, not through the
-        // concrete local: every read is an indirect `call [vptr+4]` on
-        // TStreamBufFile's slot 1. Spelling `streamFile.Read(...)` instead
-        // lets VC6 resolve the call statically and expand the one-line body,
-        // which turns all six reads into direct sgetn calls on the inflater.
         TAbstractFile* file = &streamFile;
-        // Mac 0x96fa4 decodes the version with lwbrx, then reads an
-        // unsigned region byte and separate signed difficulty/music bytes.
-        // Probe (2026-09-29): the older Windows spelling (one int buffer for
-        // version and masked region, one char buffer for difficulty/music)
-        // under a platform fork measured 82.28% against 83.40%; VC6 still
-        // expands CMapHeaderData's constructor inside mapHeader's, which
-        // retail calls (retail FuncInfo has 19 states; the two extra
-        // vector/player-array states here are that ctor's members).
         int version = readLittleEndianValue<int>(file);
         m_campaignVersion = version;
         if (m_campaignVersion < 4) {
@@ -2341,18 +2309,16 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
             m_campaignMusic = 0x25;
         else
             m_campaignMusic = readValue<signed char>(file);
-        numScenarios = g_campaignMapTraits[m_regionMap].m_numRegions;
+        numScenarios = getCampaignRegionCount(m_regionMap);
         for (int newValue = 0; newValue < numScenarios; ++newValue)
             readScenario(file, numScenarios);
     }
 
     int mapOffset = m_stream->pubseekoff(0, std::ios::cur, std::ios::in);
     NewSMapHeader mapHeader;
-    // Windows' -0x20 local and Mac 0x972e8 retain the selected record across
-    // loadMapHeader before applying its header; do not re-fetch the vector slot.
     for (int scenario2 = 0; scenario2 < numScenarios; ++scenario2) {
         ScenarioStruct* scenario = m_scenarios[scenario2];
-        scenario->m_offset = mapOffset;
+        scenario->setOffset(mapOffset);
         if (scenario->hasMap()) {
             mapOffset += scenario->getMapDataSize();
             scenario->loadMapHeader(m_stream, &mapHeader, scenario2);

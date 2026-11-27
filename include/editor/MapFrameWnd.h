@@ -33,7 +33,8 @@ public:
     void showGrid(bool bShow);
     void showPassability(bool bShow);
     void selectObject(unsigned int objID);
-    void grabObject(const TGUIGameObject* pObj);
+    // Loki mangles grabObject(const TGUIGameObject &).
+    void grabObject(const TGUIGameObject& obj);
     void onUndo();
     void onObjectRemoved(unsigned int objID);
     void animate(unsigned int frameNum, bool bForce);

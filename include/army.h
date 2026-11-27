@@ -616,10 +616,10 @@ public:
     // back onto attackSkill, its STONE_SKIN arm subtracts +0x470 from
     // defenseSkill, and its PRAYER arm subtracts +0x478 from attack,
     // defense and speed. The slot between them, DC 1104
-    // disruptiverayPenalty/+0x474, stays a pad until a body reads it.
+    // disruptiverayPenalty/+0x474, is an int there too.
     int m_weaknessPenalty;          // +0x46c
     int m_toughskinBonus;           // +0x470
-    char m_disruptiverayPenalty[0x4];
+    int m_disruptiverayPenalty;     // +0x474
     int m_prayerBonus;              // +0x478
     int m_moraleBonus;              // +0x47c
     int m_moralePenalty;            // +0x480
@@ -728,8 +728,9 @@ public:
     // scalar run does not survive the retail STL-layout shift, so keep
     // this address-ordinal until that callee is identified.
     int m_faerieDragonSpell;                // +0x4e0
-    // Magic Mirror redirect percentage; DC/NH3API name backlash_chance.
-    unsigned int m_backlashChance;  // +0x4e4
+    // Magic Mirror redirect percentage; DC/NH3API name backlash_chance,
+    // a long in the Dreamcast fieldlist.
+    long m_backlashChance;  // +0x4e4
 
     // Dreamcast LF_FIELDLIST 0x205b, entries 97..114.  This is the exact
     // declaration prefix through do_attack, after the public data run and
@@ -989,10 +990,11 @@ private:
     // attack DISTANCE in hexes; getAITargetTime divides that distance by
     // the stack's speed to get turns.
     int AI_expected_damage;               // +0x534
-    army* AI_target;                      // +0x538
+    // Dreamcast records the target as const army*.
+    const army* AI_target;                // +0x538
     long AI_target_value;                 // +0x53c
     long AI_target_distance;              // +0x540
-    unsigned AI_possible_targets;         // +0x544
+    long AI_possible_targets;             // +0x544
 
 public:
     enum EArmyCreatureId {

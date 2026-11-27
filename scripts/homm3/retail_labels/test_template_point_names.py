@@ -28,6 +28,17 @@ class TemplatePointNamesTest(unittest.TestCase):
         self.assertIsNone(vc6_function_name(clang.replace('?0H@', '?0E@'), [vc6], 'example'))
         self.assertIsNone(vc6_function_name(clang, [vc6.replace('QAE', 'QBE')], 'example'))
 
+    def test_member_operator_template_bridge_reads_its_reference_parameter(self):
+        # RawStream.h's TRawOStream::operator<< <long> (h3maped 0x40771d)
+        clang = '??$?6J@TRawOStream@@QAEAAV0@ABJ@Z'
+        vc6 = '??6TRawOStream@@QAEAAV0@ABJ@Z'
+        self.assertEqual(vc6_function_name(clang, [vc6], 'example'), vc6)
+        # the int instance is another name; an argument the parameter does
+        # not carry is no instance of it
+        self.assertIsNone(vc6_function_name(clang, [vc6.replace('ABJ', 'ABH')], 'example'))
+        self.assertIsNone(vc6_function_name(clang.replace('?6J@', '?6H@'), [vc6], 'example'))
+        self.assertIsNone(vc6_function_name(clang, [vc6.replace('QAE', 'QBE')], 'example'))
+
     def test_free_function_template_bridge_drops_argument_list(self):
         # RawStream.h's writeContainer<TRumor> (h3maped 0x434342)
         clang = ('??$writeContainer@VTRumor@@@@YAXAAVTRawOStream@@'

@@ -7,10 +7,15 @@
 #include "va.h"
 #include "editor/Quest.h"
 
+// The RTTI marks every visitor's TVisitor base private (attributes 9); the
+// testers befriend the class that hands them to accept, keeping Loki's
+// dispatcher shape.
 namespace {
 
 template<class T>
-class TQuestRHSEquivalencyTester : public TQuest::TVisitor {
+class TQuestRHSEquivalencyTester : private TQuest::TVisitor {
+    friend class TQuestEquivalencyTester;
+
 public:
     TQuestRHSEquivalencyTester(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
 
@@ -23,7 +28,9 @@ private:
     bool _m_bEquivalent;
 };
 
-class TQuestEquivalencyTester : public TQuest::TVisitor {
+class TQuestEquivalencyTester : private TQuest::TVisitor {
+    friend class TQuest;
+
 public:
     TQuestEquivalencyTester(const TQuest& rhs) : _m_rhs(rhs), _m_bEquivalent(false) {}
 
@@ -54,7 +61,7 @@ private:
     bool _m_bEquivalent;
 };
 
-class TQuestCloner : public TQuest::TVisitor {
+class TQuestCloner : private TQuest::TVisitor {
 public:
     std::auto_ptr<TQuest> clone(const TQuest& quest)
     {

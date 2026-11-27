@@ -17,7 +17,8 @@
 // timer latches, tested and set around the whole swap (name
 // provisional, no DC row for it).
 DATA(0x0069ca21) unsigned char g_mouseSetPointerBusy;
-DATA(0x0069ca22) unsigned char g_mouseInUpdate;
+// Dreamcast original: InUpdate, a file-static unsigned char of mousemgr.obj.
+DATA(0x0069ca22) static unsigned char g_mouseInUpdate;
 
 // LoadFrame's DirectDraw targets. Its channel masks belong to wingraph's
 // complete DDPIXELFORMAT object, shared through the RGBto16 helper.
@@ -31,8 +32,9 @@ DATA(0x006aacc8) IDirectDrawSurface* g_ddsMouseSaveSurface;
 DATA(0x006aaccc) IDirectDrawSurface* g_ddsMouseScratchSurface;
 
 // The pointer-set sprite table SetPointer indexes with field_4c: five
-// .DEF names in EPointerSet order (.data 0x67ff38).
-DATA(0x0067ff38) const char* g_pointerSetSprites[mouseManager::MAX_POINTER_SETS] = {
+// .DEF names in EPointerSet order (.data 0x67ff38). Dreamcast original:
+// PointerSetResourceNames, a file-static char*[5] of mousemgr.obj.
+DATA(0x0067ff38) static const char* g_pointerSetSprites[mouseManager::MAX_POINTER_SETS] = {
     DATA_COMPGEN(0x0068160c, pointerSpriteDefault, "crdeflt.DEF"),
     DATA_COMPGEN(0x006815fc, pointerSpriteAdventure, "cradvntr.DEF"),
     DATA_COMPGEN(0x006815ec, pointerSpriteCombat, "crcombat.DEF"),

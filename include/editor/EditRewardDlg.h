@@ -16,7 +16,8 @@
 #include "editor/SeersHut.h"
 #include "editor/resource.h"
 
-class TEditRewardDlg : public CDialog, public TSeersHut::TReward::TVisitor {
+// RTTI: the interface base is private (attributes 9).
+class TEditRewardDlg : public CDialog, private TSeersHut::TReward::TVisitor {
 public:
     enum { s_kNumRewardTypes = 11 };
 

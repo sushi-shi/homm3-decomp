@@ -26,10 +26,10 @@ static double valueOfLuckAndMorale(long value, long change,
 static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex,
                               long troopCount, const army* enemy,
                               long enemyHex,
-                              const type_AI_combat_parameters* estimate);
+                              const type_AI_combat_parameters& estimate);
 static long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex,
                            long troopCount, const army* enemy, long enemyHex,
-                           const type_AI_combat_parameters* estimate);
+                           const type_AI_combat_parameters& estimate);
 
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
@@ -358,9 +358,9 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
 VA(0x004360c0, 0xBC)
 DC_ADDRESS(0x03ceb8, 0x98)
 MAC_ADDRESS(0x03d9ac, 0xe4)
-type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attack_army, const army* enemy_army, const long* enemy_attack_array, searchArray* search_data, const type_AI_combat_parameters* data)
+type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attack_army, const army* enemy_army, const long* enemy_attack_array, searchArray* search_data, const type_AI_combat_parameters& data)
+    : estimate(data)
 {
-    estimate = data;
     attacker = attack_army;
     speed = attack_army->getSpeed();
     enemy = enemy_army;
@@ -369,8 +369,8 @@ type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attack_army, 
     enemy_attacks = enemy_attack_array;
     search_array = search_data;
     best_hex = -1;
-    long enemyHits = enemy_army->getTotalHitPoints(data->m_simulated);
-    long ourHits = attack_army->getTotalHitPoints(data->m_simulated);
+    long enemyHits = enemy_army->getTotalHitPoints(data.m_simulated);
+    long ourHits = attack_army->getTotalHitPoints(data.m_simulated);
     enemyHits -= aiGetAttackDamage(*attack_army, ourHits, *enemy_army, 0, 0);
     if (enemyHits < 0)
         enemyHits = 0;
@@ -387,7 +387,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
     double combatValue;
     long value = 0;
     if (!g_game->m_setup.m_difficulty
-        && !g_combatManager->IsHuman[estimate->getGroup()])
+        && !g_combatManager->IsHuman[estimate.getGroup()])
         return 0;
     for (long direction = 0; direction < COMBAT_DIRECTION_COUNT; direction++) {
         long index = g_combatManager->m_adjacentCells[hex][direction];
@@ -405,14 +405,14 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
         checked |= 1 << neighbor->index;
         if (!neighbor->canShoot(attacker))
             continue;
-        long hits = neighbor->getTotalHitPoints(estimate->m_simulated);
+        long hits = neighbor->getTotalHitPoints(estimate.m_simulated);
         if (hits == 0)
             continue;
         combatValue = neighbor->getUnitCombatValue(
-                           estimate->m_lowestAttack, estimate->m_lowestDefense, 1,
+                           estimate.m_lowestAttack, estimate.m_lowestDefense, 1,
                            attacker);
         combatValue -= neighbor->getUnitCombatValue(
-                           estimate->m_lowestAttack, estimate->m_lowestDefense, 0, 0);
+                           estimate.m_lowestAttack, estimate.m_lowestDefense, 0, 0);
         long share = static_cast<long>(combatValue * static_cast<double>(hits)
                                        / static_cast<double>(neighbor->m_monInfo.hitPoints));
         if (share < 1)
@@ -432,7 +432,7 @@ long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
     if (speed == 0)
         return 0 < cell->m_cost ? 100 : 1;
     long turns = (cell->m_cost + speed - 1) / speed;
-    if (search_array->isMoat(cell->m_point.m_x))
+    if (search_array->isMoat(cell->m_x))
         turns++;
     if (turns < 1)
         turns = 1;
@@ -479,7 +479,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
         checked = 0;
         long value = getHexAttackValue(hex, checked);
         if (g_game->m_setup.m_difficulty > 0
-                || g_combatManager->IsHuman[estimate->getGroup()]) {
+                || g_combatManager->IsHuman[estimate.getGroup()]) {
             if (attacker->is(creatureMultiHeaded))
                 value += getMultiHeadBonus(g_combatManager->m_currentSide,
                                               attacker, hex, our_strength,
@@ -521,7 +521,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
                 if ((attacker->m_creatureType == CREATURE_CAVALIER
                             || attacker->m_creatureType == CREATURE_CHAMPION)
                         && (g_game->m_setup.m_difficulty > 0
-                            || g_combatManager->IsHuman[estimate->getGroup()])) {
+                            || g_combatManager->IsHuman[estimate.getGroup()])) {
                     if (difference <= 0)
                         continue;
                 } else {
@@ -543,7 +543,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
 VA(0x00436620, 0x13A)
 DC_ADDRESS(0x03c608, 0xfe)
 MAC_ADDRESS(0x03ccf4, 0x184)
-static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
+static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters& estimate)
 {
     long alreadyChecked = 1 << enemy->index;
     long validDirections = ourArmy->getMultiHeadDirections(ourHex, enemy, enemyHex);
@@ -562,11 +562,11 @@ static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, l
         if (alreadyChecked & (1 << target->index))
             continue;
         long damage = ourArmy->getAverageDamage(*target, 0, troopCount, 1, 0);
-        if (estimate->m_simulated)
+        if (estimate.m_simulated)
             damage = min(static_cast<int>(damage),
                            static_cast<int>(target->getTotalHitPoints(1)));
-        value += target->getLossCombatValue(estimate->m_lowestAttack,
-                                               estimate->m_lowestDefense, 0, damage, 0);
+        value += target->getLossCombatValue(estimate.m_lowestAttack,
+                                               estimate.m_lowestDefense, 0, damage, 0);
         alreadyChecked |= 1 << target->index;
     }
     return value;
@@ -576,7 +576,7 @@ static long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, l
 VA(0x00436760, 0xDF)
 DC_ADDRESS(0x03c708, 0x108)
 MAC_ADDRESS(0x03ce78, 0x160)
-static long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
+static long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters& estimate)
 {
     long direction = ourArmy->getAttackDirection(ourHex, enemy, enemyHex);
     long breathHex = ourArmy->getAdjacentHex(ourHex, direction);
@@ -587,12 +587,12 @@ static long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long
     if (target == 0 || target == enemy)
         return 0;
     long damage = ourArmy->getAverageDamage(*target, 0, troopCount, 1, 0);
-    if (estimate->m_simulated)
+    if (estimate.m_simulated)
         damage = min(static_cast<int>(damage),
                        static_cast<int>(target->getTotalHitPoints(1)));
-    long value = target->getLossCombatValue(estimate->m_lowestAttack,
-                                               estimate->m_lowestDefense, 0, damage,
-                                               estimate->m_killsOnly);
+    long value = target->getLossCombatValue(estimate.m_lowestAttack,
+                                               estimate.m_lowestDefense, 0, damage,
+                                               estimate.m_killsOnly);
     if (target->getOwningSide() == ourGroup)
         return -value;
     return value;
@@ -1063,35 +1063,19 @@ long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data c
 // `caster` reaches the body only through its duration.
 // No traits row at all - the mastery bonus never enters the price.
 
-// Residual (99.0%): ONE frame slot, nothing else - every instruction,
-// immediate, reloc and branch agrees unmasked. Retail runs BOTH
-// int->double conversions of the `combined / old_damage` division
-// through the same scratch slot [ebp-0x2c]; our CL gives the divisor's
-// conversion a second slot at [ebp-0x24] (which it then reuses for
-// `factor`, so no other displacement moves). Frame-slot colouring, the
-// class already documented on get_attack_skill_value. Tried and
-// rejected: dropping either explicit cast (98.98 both ways) and
-// dropping the `combined` local for one inlined sum (98.98). Swept
-// again 2026-08-08 with the naming lever that closed the
-// SpellCastWorkChance family - `double increase = combined; increase
-// /= old_damage;`, the same split with an explicit cast, and a named
-// `divisor` - all three move the pair of scratch slots around
-// (increase's own slot, or a named divisor slot) but NONE reproduces
-// retail's single reused slot, because retail's `fld` of the numerator
-// happens BEFORE the divisor's fild and no source order we can write
-// makes our CL emit that fld early.
-// With the canonical boost helper restored, direct ratio arguments,
-// meaningful reuse of newDamage, a reference-bound ratio and a named return
-// value also fail to reuse retail's divisor scratch (seven states, five
-// emitted objects). The named ratio and both early guards stay intact.
-// Fresh comparison retains all 18 CFG blocks, 15 calls and 18 relocations.
-// why-reg --model diagnoses no register-binding divergence: the conversion
-// scratch lifetime is outside its model, not a named-local register swap.
-// DC CodeView preserves the local names enemy, our_hits, enemy_hits and
-// increase; retain those spellings rather than normalized replacements.
-// An embedded assignment to a second local, `increase = (combined = sum) /
-// oldDamage`, reproduces the reused slot exactly; DC records no such local
-// and the double assignment is no developer spelling, so it is not kept.
+// Retail's single reused x87 rounding bin is the only residual. Both
+// int->double conversions of `combined / old_damage` round through
+// [ebp-0x2c]: the dividend is stored, loaded, the divisor is rounded into
+// the same slot, then fdiv reads it. An ordinary cast (static_cast or
+// C-style), a named double quotient, compound division and a separate
+// numerator local all keep a second divisor scratch at [ebp-0x24].
+// The assignment expression as the dividend is the one source form whose
+// IL loads the numerator before the divisor is converted, so the divisor's
+// rounding temporary reuses the numerator bin; it is the same recovered x87
+// reload order already documented for combatMonsterEvent's ratio.
+// `combined` is the named numerator temporary; DC CodeView's four local
+// records (enemy, our_hits, enemy_hits, increase) are a lower bound and do
+// not list old/new damage locals either.
 VA(0x004375d0, 0x224)
 DC_ADDRESS(0x03e280, 0x13a)
 MAC_ADDRESS(0x03f3fc, 0x174)  // anchor-vtable
@@ -1110,8 +1094,8 @@ long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data 
     long newDamage = aiGetAttackDamage(*(ourArmy), our_hits, *(enemy), ranged, 0);
     if (ranged && ourArmy->is(creatureTwoAttacks))
         newDamage /= 2;
-    double increase = static_cast<double>(newDamage + oldDamage)
-                      / static_cast<double>(oldDamage);
+    double combined;
+    double increase = (combined = newDamage + oldDamage) / oldDamage;
     return getAttackBoostValue(ourArmy, enemy, caster.m_duration, increase);
 }
 

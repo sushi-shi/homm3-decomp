@@ -551,7 +551,7 @@ public:
     type_creature_bank& getCreatureBank() const;
     void clearVisitedBits();
     short getCustomIndex() const;
-    short getItemId() const;
+    int getItemId() const;
     bool playerKnowsCell(short player) const;
     void setCellVisited(short player);
     bool gardenIsFull() const;
@@ -733,13 +733,15 @@ public:
     CObjectType() {}
 
     // Dreamcast retains an out-of-line copy; Complete inlines this header
-    // helper at the view-world draw-cell test.
+    // helper at the view-world draw-cell test. DC's _getBitPos (spelling
+    // proven) and Mac 0x127c38 (subfic 6-y, slwi 3, subf x, addi -1) both
+    // compute the reversed-row form, TObjectType::_getBitPos's formula.
     // E:\gamedcs\MapCell.h:565
     DC_ADDRESS(0x01f958, 0x1a)
     MAC_ADDRESS(0x127c38, 0x14)
-    static unsigned getBitPos(unsigned x, unsigned y)
+    static unsigned _getBitPos(unsigned x, unsigned y)
     {
-        return OBJECT_MASK_CELLS - 1 - y * OBJECT_MASK_WIDTH - x;
+        return (OBJECT_MASK_HEIGHT - y) * OBJECT_MASK_WIDTH - x - 1;
     }
     // The table loader converts an existing record; no nullable source is
     // used. Const-reference ownership is inferred; DC lacks this overload.
@@ -1404,7 +1406,7 @@ DC_ADDRESS(0x09c7c8, 0xc)
 inline short ExtraInfoUnion::getCustomIndex() const { return m_monsterInfo.m_index; }
 
 DC_ADDRESS(0x01fa80, 0x12)
-inline short ExtraInfoUnion::getItemId() const { return m_skeletonInfo.m_id; }
+inline int ExtraInfoUnion::getItemId() const { return m_skeletonInfo.m_id; }
 
 DC_ADDRESS(0x09c7d4, 0x32)
 inline void ExtraInfoUnion::setLeanTo(short id, short amount, int resource)
@@ -1634,7 +1636,7 @@ inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 // E:\gamedcs\MapCell.h:1176
 VA(0x004c2360, 0x27)
 DC_ADDRESS(0x0bcac8, 0x74)
-inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
+void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
 {
     m_wagonInfo.m_resource = resource;
     m_wagonInfo.m_resourceAmount = amount;

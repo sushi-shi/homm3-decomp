@@ -1388,8 +1388,14 @@ def _demangle_key(mangled: str):
     tree_set_primitive = re.match(
         r"^\?\w+@(?:const_iterator@)?\?\$_Tree@([CDEFGHIJK])\1U_Kfn@"
         r"\?\$set@\1", mangled)
+    # `set<enum>`'s members: the element `W4Name@@` repeats as the name
+    # backreference `W4<n>@`, and the enum's own name is the owner.
+    tree_set_enum = re.match(
+        r"^\?\w+@(?:const_iterator@)?\?\$_Tree@W4([A-Za-z_]\w*)@@W4\d@"
+        r"U_Kfn@\?\$set@W4\1@@", mangled)
     tree_owner = ((DEQUE_PRIMITIVE_ELEMENT[tree_set_primitive.group(1)]
                    + "_set") if tree_set_primitive else
+                  (tree_set_enum.group(1) + "_set") if tree_set_enum else
                   tree_value.group(1) if tree_value else
                   tree_named_owner.group(1) if tree_named_owner else
                   (tree_template_owner.group(1) + '_' +
@@ -2036,11 +2042,16 @@ def vc6_function_name(mangled: str, candidates, unit: str) -> str | None:
     # constructor or a free operator template (`??$?0H@` -> `??0`, `??$?MII@@`
     # -> `??M@`), while Clang keeps it. Confirm each primitive argument in a
     # concrete class specialization of the signature and retain the complete
-    # scope/calling/signature suffix.
+    # scope/calling/signature suffix. A member operator template deduced from
+    # its last const-reference parameter (RawStream.h's `TRawOStream::
+    # operator<< <long>(const long&)`, `??$?6J@...ABJ@Z` -> `??6...ABJ@Z`)
+    # carries its one primitive argument as that parameter's type instead.
     template = re.fullmatch(r'\?\?\$\?([0-9M])([CDEFGHIJK]{1,2})@(.+)', mangled)
-    if template and all(re.search(
+    if template and (all(re.search(
             r'\?\$[A-Za-z_]\w*@' + argument + r'@@', template.group(3))
-            for argument in template.group(2)):
+            for argument in template.group(2))
+            or (len(template.group(2)) == 1
+                and template.group(3).endswith('AB' + template.group(2) + '@Z'))):
         spelling = '??' + template.group(1) + template.group(3)
         if spelling in candidates:
             return spelling
@@ -3754,6 +3765,10 @@ def selftest() -> list[str]:
         "?_Insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@"
         "V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@":
             "int_set@tree_node_insert",
+        "?insert@?$_Tree@W4THeroID@@W41@U_Kfn@?$set@W4THeroID@@"
+        "U?$less@W4THeroID@@@std@@V?$allocator@W4THeroID@@@3@@std@@"
+        "U?$less@W4THeroID@@@4@V?$allocator@W4THeroID@@@4@@std@@QAE":
+            "theroid_set@tree_insert",
         "?insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
             "type_map_hero_info@tree_insert",
         "?_Insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":

@@ -224,6 +224,7 @@ public:
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
     virtual unsigned char requiresLinkedPlacement();
+    int getDensity() const { return m_density; }
 
     int m_objectType;
     int m_subtype;
@@ -667,7 +668,8 @@ inline TRmgVector operator-(TRmgPoint left, TRmgPoint right)
 // stack under /Gr: orientation 0x5fdae0 returns with ret 0x18, distance
 // 0x5fdb10 with ret 0x10. Names describe the proven geometry operations.
 int getRmgPointOrientation(TRmgPoint first, TRmgPoint second, TRmgPoint third);
-// carveBranchingPaths expands the distance; addSite keeps its call.
+// addSite keeps its call. carveBranchingPaths squares its offset in place
+// (Mac 0x24761c..0x24763c: x first, no operand copies), not through this body.
 VA(0x005FDB10, 0x21)
 MAC_ADDRESS(0x25c3b4, 0x38) // anchor-callee addSite; Complete-only, ret 0x10; MAC_ABSTRACTION_FROM(tokens1:311342e68a5c,100.0000): aa93e92de's retail object split makes the squared distance a header inline body that carveBranchingPaths expands; CodeWarrior emits no out-of-line copy for addSite's call.
 inline int getRmgSquaredDistance(TRmgPoint first, TRmgPoint second)
@@ -1464,7 +1466,7 @@ class type_road_map : public TRoadOp::TAbstractMap {
 public:
     type_random_map* m_map;
 
-    type_road_map(type_random_map* map) : m_map(map) {}
+    type_road_map(type_random_map* map) { m_map = map; }
     virtual void setTile(const TTilePoint& point, const TRmgTerrainTile& tile);
     virtual void setLineType(const TTilePoint& point, int value);
     virtual TTilePoint getSize();

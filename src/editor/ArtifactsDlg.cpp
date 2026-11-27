@@ -207,7 +207,7 @@ int TArtifactsDlg::_insertItem(int index, TArtifact artifact, TArtifactSlot slot
             }
         }
         if (slot >= s_kBackpackSlot)
-            _m_artifacts.getBackpack().insert(artifact);
+            _m_artifacts.getPBackpack()->insert(artifact);
         else {
             _m_artifacts.setSlot(slot, artifact);
             try {
@@ -247,7 +247,7 @@ void TArtifactsDlg::_removeItem(int index)
     TArtifactSlot slot = TArtifactSlot(HIWORD(data));
     _m_list.DeleteItem(index);
     if (slot >= s_kBackpackSlot)
-        _m_artifacts.getBackpack().erase(_m_artifacts.getBackpack().find(artifact));
+        _m_artifacts.getPBackpack()->erase(_m_artifacts.getPBackpack()->find(artifact));
     else {
         int combination = akArtifactTraits[artifact].m_comboType;
         if (combination != -1) {

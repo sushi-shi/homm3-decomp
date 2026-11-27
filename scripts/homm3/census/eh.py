@@ -46,11 +46,14 @@ def funclet_rows(c, folded=()):
     return rows, orphans
 
 
-def initializer_rows(c):
-    """[(thunk rva, slot)] of the `.CRT$XCU` table: the larger of the two
-    tables the CRT passes to the same `_initterm` (push end; push start; call)."""
+def initializer_slots(c):
+    """[(thunk rva, slot)]: the code pointers of the `.CRT$XCU` table, the
+    larger of the two tables the CRT passes to the same `_initterm` (push
+    end; push start; call) in the bodies decoded so far."""
     base = c.image.image_base
-    data = next(s for s in c.image.sections if s.name == ".data")
+    data = next((s for s in c.image.sections if s.name == ".data"), None)
+    if data is None:
+        return []
     lo, hi = data.rva, data.rva + data.size
     pairs = Counter()
     sites = []
@@ -75,16 +78,24 @@ def initializer_rows(c):
     initterm = pairs.most_common(1)[0][0]
     tables = sorted({(b, e) for t, b, e in sites if t == initterm}, key=lambda be: be[1] - be[0])
     begin, end = tables[-1]
-    rows = []
+    slots = []
     for slot, at in enumerate(range(begin, end, 4)):
         v = c.dword(at)
         if v and c.in_text(v - base):
-            rows.append((v - base, slot))
-            # an `/O1` slot holds `jmp $+5`: the initializer body follows it
-            body = v - base + 5
-            if c.blob[v - base - c.text_lo:v - base - c.text_lo + 5] == JMP0 \
-                    and body in c.starts:
-                rows.append((body, slot))
+            slots.append((v - base, slot))
+    return slots
+
+
+def initializer_rows(c):
+    """[(thunk rva, slot)] of the `.CRT$XCU` table (`initializer_slots`),
+    each `/O1` slot thunk followed by the initializer body after it."""
+    rows = []
+    for rva, slot in initializer_slots(c):
+        rows.append((rva, slot))
+        # an `/O1` slot holds `jmp $+5`: the initializer body follows it
+        body = rva + 5
+        if c.blob[rva - c.text_lo:rva - c.text_lo + 5] == JMP0 and body in c.starts:
+            rows.append((body, slot))
     return rows
 
 

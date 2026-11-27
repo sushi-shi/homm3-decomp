@@ -9,7 +9,9 @@
 // +0x3c..+0x50. Member names are the Dreamcast field list verbatim
 // (type 0x1fe4/0x3d94, size 84 on both builds).
 struct SMonFrameInfo {
-    short m_missileOffset[6];     // +0x00
+    // Dreamcast iMissileOffset[3][2]: an x/y pair for each of the
+    // upper, middle and lower missile directions.
+    short m_missileOffset[3][2];  // +0x00
     float m_arrowAngle[12];       // +0x0c
     int m_extraNumTroopsXOffset;  // +0x3c
     int m_attackFrames;           // +0x40

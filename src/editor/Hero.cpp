@@ -288,8 +288,15 @@ namespace {
 // bitset subscript proxies (Loki's bitset idiom): retail stages each edition
 // flag in its own bool argument home before the out-of-line set, and keeps
 // the first skill-pair and insertion-result constructors out of line.
+// Binding the destination row before the source row gives retail's register
+// pairing (the loop counter shares the source row's register).
+// The counter is a THeroID: the roster insert binds it directly, where an
+// int counter needs a converted temporary for set<THeroID> (99.98 -> 91.07).
 // Residual: the class roster's set::insert stays out of line (budget 22
-// against cb 64); a default bitset<3> expands it but keeps its result pair.
+// against cb 64). A default bitset<3> expands it (budget 113) but keeps its
+// result pair, which needs 146; the window that also keeps the skill pairs
+// out of line is +33..+70 budget over the default form. Indexing
+// aHeroTraitsImp directly reaches it but recomputes the row (74.49%).
 VA(0x0044a8b5, 0x3b0)
 void initializeTraitsTable()
 {
@@ -300,9 +307,9 @@ void initializeTraitsTable()
     TResourcePtr<TTextResource> pBiographies(ResourceManager::GetText("HeroBios.txt"));
     if (!pBiographies.get())
         throw TRuntimeError();
-    for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
-        const THeroTraits& heroTraits = akHeroTraits[heroID];
+    for (THeroID heroID = THeroID(0); heroID < kNumHeroes; heroID = THeroID(heroID + 1)) {
         THero::TTraits& traits = aHeroTraitsImp[heroID];
+        const THeroTraits& heroTraits = akHeroTraits[heroID];
         traits.m_class = heroTraits.m_class;
         traits.m_prototype.setName(heroTraits.m_name);
         traits.m_prototype.setBiography(pBiographies->GetText(heroID));
@@ -359,12 +366,12 @@ TBasicHero::TBasicHero(const TObjectType& objType, TRawIStream* pIStream, int ve
 VA(0x0044ad60, 0x4)
 THeroID TBasicHero::getHeroID() const
 {
-    return -1;
+    return eHeroNone;
 }
 
 VA(0x0044ad64, 0x81)
 THeroPlaceholder::THeroPlaceholder(const TObjectType& objType, TPlayer owner)
-    : TGameObject(objType), TBasicHero(objType, owner), _m_powerRank(1), _m_heroID(-1)
+    : TGameObject(objType), TBasicHero(objType, owner), _m_powerRank(1), _m_heroID(eHeroNone)
 {
 }
 
@@ -376,7 +383,7 @@ THeroPlaceholder::THeroPlaceholder(const TObjectType& objType, TRawIStream* pISt
 {
     unsigned char heroID;
     *pIStream >> heroID;
-    _m_heroID = heroID != 0xff ? heroID : -1;
+    _m_heroID = heroID != 0xff ? THeroID(heroID) : eHeroNone;
     if (!hasHeroID()) {
         signed char powerRank;
         *pIStream >> powerRank;
@@ -405,7 +412,7 @@ void THeroPlaceholder::setPowerRank(unsigned int newPowerRank)
 VA(0x0044aea5, 0x1f)
 bool THeroPlaceholder::isCustomized() const
 {
-    return getHeroID() != -1 || _m_powerRank != 1;
+    return getHeroID() != eHeroNone || _m_powerRank != 1;
 }
 
 VA(0x0044aec4, 0x4d)
@@ -413,7 +420,7 @@ void THeroPlaceholder::write(TRawOStream* pOStream, int version) const
 {
     TPlayableObject::write(pOStream, version);
     *pOStream << static_cast<unsigned char>(_m_heroID);
-    if (getHeroID() == -1)
+    if (getHeroID() == eHeroNone)
         *pOStream << static_cast<signed char>(_m_powerRank);
 }
 
@@ -631,16 +638,16 @@ void THero::importText(std::istream* pIStream, EGameVersion version)
 }
 
 VA(0x0044b91e, 0x59)
-bool THero::hasArtifact(TArtifact artifact) const
+bool THero::getBHasArtifact(TArtifact whichArtifact) const
 {
     if (!_m_bCustomArtifacts)
         return false;
     const THeroPrototype::TArtifactContainer& artifacts = getArtifacts();
     for (unsigned int slot = 0; slot < kNumArtifactSlots + 1; slot++)
-        if (artifacts.getSlot(TArtifactSlot(slot)) == artifact)
+        if (artifacts.getSlot(TArtifactSlot(slot)) == whichArtifact)
             return true;
     const std::multiset<TArtifact>& backpack = artifacts.getBackpack();
-    return find(backpack.begin(), backpack.end(), artifact) != backpack.end();
+    return find(backpack.begin(), backpack.end(), whichArtifact) != backpack.end();
 }
 
 VA(0x0044b977, 0x2a)
@@ -762,7 +769,7 @@ unsigned char TRandomHero::getStoredHeroID() const
 
 VA(0x0044bf15, 0x93)
 TIdentifiedHero::TIdentifiedHero(const TObjectType& objType)
-    : TGameObject(objType), THero(objType, ePlayerNone), _m_heroID(-1)
+    : TGameObject(objType), THero(objType, ePlayerNone), _m_heroID(eHeroNone)
 {
 }
 
@@ -781,7 +788,7 @@ THeroID TIdentifiedHero::getHeroID() const
 VA(0x0044c045, 0xe)
 void TIdentifiedHero::setStoredHeroID(unsigned char heroID)
 {
-    setHeroID(heroID);
+    setHeroID(THeroID(heroID));
 }
 
 VA(0x0044c053, 0x7)

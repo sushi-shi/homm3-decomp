@@ -18,6 +18,7 @@ homm3 verify data-coverage --tsv
 homm3 verify library-data-refs
 homm3 verify library-code
 homm3 verify generated-code        # per-function library/compiler-generated verdicts
+homm3 verify rtti --images game,h3maped,h3ccmped --eh   # class hierarchies and catchable types
 ```
 
 The normal build refreshes the complete byte report and its README summary.
@@ -101,7 +102,11 @@ that reads the wrong global.
 `build/gen/address_identities.tsv` lists further proven names of retail code
 addresses: symbols a byte-verified library section defines, candidate
 functions a voter calls at a claimed function whose candidate body is exactly
-that retail body (identical-code folding), and import thunks. Normalization
+that retail body (identical-code folding), and import thunks. A library
+function folded onto a game body has no candidate body; an exact reviewed
+`alias` row at that address is its body proof instead (h3maped
+`std::uncaught_exception` at rmg's `xor al,al; ret`). The alias name still
+claims no bytes and no library ownership. Normalization
 (`homm3.build.identity_relocations`) compares a paired target relocation
 under the candidate's symbol only when that symbol has one proven address and
 both sides resolve to the same address and addend. A pairing names an address;
@@ -487,6 +492,26 @@ candidate `.xdata$x` record reached through the function's associative
 `.text$x` stub. Self references must name the same offset; unwind actions must
 name the census funclets of that parent in order. Records of functions whose
 bodies still differ are reported non-comparable, not mismatching.
+
+`homm3 verify rtti` (`homm3/verify/rtti.py`) compares every retail Class
+Hierarchy Descriptor reached from a Complete Object Locator with the `??_R3`
+descriptor of our existing `objdiff/base` objects, read through `??_R2`,
+`??_R1` and `??_R0` by relocation: class attributes, then each base's name,
+preorder position, contained-base count, mdisp/pdisp/vdisp and attributes
+(a public base where retail derives privately differs in the BCD
+attributes). `--eh` also compares each retail ThrowInfo's CatchableTypeArray
+with our `__CTA` records of the same thrown type; a retail-only thrown type
+whose every throw site lies in a runtime-map/runtime-functions library function
+(`bad_cast`, MFC's `CFileException*`) is counted as `library`, apart from the
+findings, and any other is a `retail-throw` finding. Our anonymous scopes take
+the unit's `anon-ns-paths.tsv` spelling, then both sides compare by source
+file name. Findings are `hierarchy`, `scope` (the class agrees only once
+anonymous namespaces are removed), `inconsistent` (our objects disagree),
+`catchable` and `retail-throw`; a scope matched without a reviewed row is a
+note. Classes on one side only are counted (library classes, discarded header
+COMDATs; `--all` lists them). The report is informational; `--gate` returns nonzero for any
+finding. Nothing is compiled: rebuild a stale unit with `build --fast`
+first (an object predating a source's anonymous namespace reports `scope`).
 
 Raw initializer comparisons also resolve a pointer through identical code
 folding (the object's own definition of the named symbol reproduces retail at

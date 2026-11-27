@@ -406,9 +406,10 @@ class town {
 public:
     enum { TOWN_DOCK_SITE_NONE = 0xff };
     // Index of this town in gpGame->towns (byte, sign-extended).
-    char m_id;
+    // Dreamcast types id, playerOwner and townType as signed char.
+    signed char m_id;
     // Owning player, -1 when unowned (Deallocate stores -1 here).
-    char m_owner;
+    signed char m_owner;
     // can_build's first gate: nonzero in gpGame->towns[id] refuses
     // every build. Name unattested - ordinal placeholder.
     unsigned char m_builtThisTurn;
@@ -418,7 +419,7 @@ public:
     // Faction id (armyGroup::GetLuck gates the Fountain of Fortune on
     // type == 1, Rampart).
     // Before normalization (Dreamcast): townType.
-    char m_type;
+    signed char m_type;
     // +5..+7, the town's map cell. can_take_town (0x428410) widens all
     // three with movzx from these bytes and packs them into a
     // type_point (x &0x3ff, y &0x3ff, z &0xf) before asking
@@ -536,7 +537,7 @@ public:
     // DC Town.h:305-306 returns generatorBonus[dwelling].
     // set_bonus_display calls this header helper; inlined.
     DC_ADDRESS(0x181404, 0x12)
-    long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
+    const long& getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
     // Original ?get_gold_income@town@@QBAF_N@Z proves bool includeSilo.
     short getGoldIncome(bool includeSilo) const;
     // Original ?get_horde@town@@QBA?AW4type_building_id@@J@Z proves enum return.

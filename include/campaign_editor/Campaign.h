@@ -470,6 +470,7 @@ public:
         return getMovie() == other.getMovie() && getMusic() == other.getMusic()
                && getText() == other.getText();
     }
+    bool operator!=(const TScenarioPrologue& other) const { return !(*this == other); }
 
 private:
     int m_movie;

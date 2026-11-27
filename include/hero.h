@@ -439,7 +439,7 @@ public:
     // retail +0x3f under the same -5 repack). hero::CheckLevel writes the
     // new `level` here whenever the level-up offers a magic school.
     short m_lastMagicSchoolLevel;  // +0x3f
-    short m_targetDistance;  // +0x41
+    unsigned short m_targetDistance;  // +0x41, Dreamcast unsigned short
     unsigned char m_targetIsCritical;  // +0x43
     // The patrol triple at +0x44..+0x46 and the compass facing at
     // +0x47, all byte-proven by hero::is_in_patrol_radius (0x4e56e0)
@@ -702,8 +702,8 @@ public:
     unsigned char hasArtifact(int whichArtifact) const;
     unsigned char hasSecondarySkill(int whichSkill);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
-    // Native hero initialization and campaign carry-over both expand these
-    // counted byte clears. Share their body here; original name is unknown.
+    // Complete-only custom-spell setup and campaign carry-over share these
+    // clears (name provisional); DC hero::initialize fills them directly.
     void clearSpells()
     {
         std::fill_n(m_inSpellbook, sizeof(m_inSpellbook),
@@ -976,6 +976,10 @@ public:
         return getObscuredTown();
     }
 
+    // The floor is an if/return pair (DC hero.h:677 opens it). VC6 emits
+    // the same setge for the ternary, but only the branch form lets an
+    // inlined loop caller (TBottomViewHero, TQuickHeroWindow) replace the
+    // `skill >= 2` test with its own induction cursor.
     VA(0x005bde40, 0x31)  // exact body + sole caller above
     DC_ADDRESS(0x02c668, 0x28)
     int getPrimarySkill(int skill) const
@@ -984,7 +988,9 @@ public:
             return 99;
         if (m_stats[skill] > 0)
             return m_stats[skill];
-        return skill >= 2 ? 1 : 0;
+        if (skill >= 2)
+            return 1;
+        return 0;
     }
 
     DC_ADDRESS(0x01fd0c, 0x24)

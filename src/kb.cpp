@@ -305,14 +305,16 @@ void pollSound()
 
 // kb.obj's own once-only latch: a reloc census over the whole image finds
 // exactly two references to 0x699580 and both are in EarlySetup, so kb.cpp
-// owns it under the same rule as oldmain's private cells below. The cell at
-// 0x6985bc is the same case - InitVars' single zero store is its only
-// reference anywhere.
+// owns it. The cell at 0x6985bc is the same case - InitVars' single zero
+// store is its only reference anywhere. Dreamcast publishes both as external
+// globals: bEarlySetupDone (kb.obj) and gPalette (global.obj,
+// `?gPalette@@3PAVpalette@@A`).
+// Original DC name: bEarlySetupDone.
 DATA(0x00699580)
-static int g_earlySetupDone;
+int g_earlySetupDone;
 // Original DC name: gPalette; InitVars clears it between gGameCommand and the view frame.
 DATA(0x006985bc)
-static palette* g_palette;
+palette* g_palette;
 
 // The startup callees whose own rows are still unclaimed. Every name is the
 // Dreamcast CodeView spelling for the compiland the retail address falls in,
@@ -448,39 +450,33 @@ int earlySetup()
     if (!loadSoundHeaders())
         shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
             "Unable to initialize resources - possible disk problem."));
-    if (g_cdDriveNumber &&
-        g_cdDriveNumber != CD_DRIVE_NUMBER_NO_CD_REQUIRED) {
+    if (!g_cdDriveNumber) {
         int i;
 
-        bool found = 0;
         i = 0;
         while (1) {
-            if (i >= g_videoCount3)
+            if (i >= g_videoCount3) {
+                i = 0;
+                while (1) {
+                    if (i >= g_videoCount3) {
+                        g_cdDriveNumber = 5;
+                        break;
+                    }
+                    if (!strcmpi(g_videoHeader3[i].m_name,
+                                  DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
+                                      "h3abab1.smk"))) {
+                        g_cdDriveNumber = 6;
+                        break;
+                    }
+                    i++;
+                }
                 break;
+            }
             if (!strcmpi(g_videoHeader3[i].m_name,
                           DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
-                              "h3x2_rne1.smk"))) {
-                found = 1;
+                              "h3x2_rne1.smk")))
                 break;
-            }
             i++;
-        }
-        if (!found) {
-            i = 0;
-            while (1) {
-                if (i >= g_videoCount3)
-                    break;
-                if (!strcmpi(g_videoHeader3[i].m_name,
-                              DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
-                                  "h3abab1.smk"))) {
-                    g_cdDriveNumber = 6;
-                    found = 1;
-                    break;
-                }
-                i++;
-            }
-            if (!found)
-                g_cdDriveNumber = 5;
         }
     }
 
@@ -850,14 +846,15 @@ static Bitmap16Bit* g_gameSelectBack;
 
 // Complete's front-end keeps these process globals beside the multiplayer
 // setup state. Their declarations live with their owning/domain headers; the
-// two cells below are private oldmain state (their only retail references are
-// in this function).
+// two cells below are only referenced by oldmain in retail, but Dreamcast
+// publishes both (`?gbDirectConnect@@3HA`, `?gbGameInitialized@@3HA`), as it
+// does gcWinText and giSetupGameType.
 // Original DC name: gbDirectConnect; DoNewGame / DoLoadGame.
 DATA(0x0069953c)
-static int g_directConnect;
+int g_directConnect;
 // Original DC name: gbGameInitialized; oldmain sets it before entering the adventure loop.
 DATA(0x00699558)
-static int g_gameInitialized;
+int g_gameInitialized;
 // oldmain's own scenario-summary scratch: the only retail reference to
 // this .bss cell is the sprintf that formats general text row 116 with
 // the finished game's turn number. The extent is NOT proven - nothing
@@ -865,12 +862,12 @@ static int g_gameInitialized;
 // neighbour - so the declared width is a placeholder, not a claim.
 // Original DC name: gcWinText; oldmain formats the completed game turn count.
 DATA(0x00699294)
-static char g_winText[300];
+char g_winText[300];
 DATA(0x00699584)
 static int g_runStartEventsOnEntry;
 // Original DC name: giSetupGameType; zero for DoNewGame, one for DoLoadGame.
 DATA(0x006972e8)
-static unsigned char g_setupGameType;
+unsigned char g_setupGameType;
 
 // Dreamcast CodeView marks these menu helpers source-static.  Complete's
 // VC6 build expands DoNewGame and DoLoadGame into oldmain but retains the
@@ -1597,9 +1594,12 @@ static int doCampaignWindow(bool newGame, int campaignSet)
 // Mac retains doCampaignWindow(true, set) in all three campaign-set arms
 // (0x111108, 0x111130, 0x111158). Each cancellation reopens the campaign
 // video after the helper returns; keep that caller operation separate.
-// Retail's frame has one unreferenced four-byte slot between exitCampaigns
-// (-0xd) and the set window (-0x60 vs our -0x5c). int/bool exitCampaigns
-// (99.77/99.89%) and a named switch selector are flat or lower.
+// Retail's set-window object occupies 0x50 bytes: the modal object sits at
+// [ebp-0x60], its declared 0x4c-byte class ends at [ebp-0x15], and the four
+// bytes above it ([ebp-0x14..-0x11]) are touched by no instruction, so the
+// retail class carries one trailing dword that every carved body leaves
+// unread. Model that proven extent with a local record; the member keeps
+// TCampaignSetWindow's own constructor, doModal and destructor calls.
 VA(0x004f00a0, 0x3EE)
 MAC_ADDRESS(0x111028, 0x264)
 static unsigned char doCampaignWindow()
@@ -1612,8 +1612,11 @@ static unsigned char doCampaignWindow()
 
     while (1) {
         {
-            TCampaignSetWindow campaignSetWindow;
-            campaignSetWindow.doModal();
+            struct CampaignSetRecord {
+                TCampaignSetWindow m_window;
+                int m_unusedTail;
+            } campaignSetWindow;
+            campaignSetWindow.m_window.doModal();
         }
 
         switch (g_windowManager->m_dialogReturn) {
@@ -1695,25 +1698,26 @@ static int doSinglePlayerWindow()
         singleSelectionWindow.doModal(0);
     }
 
-    // DC and Windows normalize the adjacent cancel/okay results. The Mac
-    // explicit-case switch raises its score to 66.5323% but lowers Windows
-    // to 94.9296%; a normalized switch scores 98.5915% Windows and 42.4603%
-    // Mac. An unused post-decrement of dialogResult is byte-flat on both;
-    // a consumed pre-decrement adds a VC6 test after dec (98.5915% Windows)
-    // and scores 89.8305% Mac, even when nested in a separate scope.
-    // Capturing the window manager before the modal call scores 58.8983% Mac.
-    // Keep this six-block Windows form. Mac loads g_game once for the
-    // map-header call's three arguments, then reloads it after the call.
-    int dialogResult =
-        g_windowManager->m_dialogReturn - DIALOG_RETURN_CANCEL;
-    if (dialogResult && dialogResult == 1) {
+    // The empty CANCEL arm is kept as a goto to the shared return (100%).
+    // The former dead dialogResult subtraction/assignment pushed the front-end
+    // size estimate past the 175 save gate, so oldmain's two lobby sites
+    // could not expand this helper; the goto form stays under it (oldmain
+    // 80.81% -> 88.67% CUR).
+    switch (g_windowManager->m_dialogReturn) {
+    case DIALOG_RETURN_CANCEL:
+        goto done;
+
+    case DIALOG_RETURN_OK: {
         game* currentGame = g_game;
         if (!currentGame->m_mapHeader.get(currentGame->m_setup.m_path,
                                         currentGame->m_setup.m_filename, 0)
             && g_game->m_mapHeader.m_minNumHumanPlayers <= g_numHumanPlayers)
             strcpy(g_mapName, g_game->m_setup.m_filename);
+        break;
+    }
     }
 
+done:
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
@@ -1828,13 +1832,14 @@ static int pickLoadGame()
 }
 
 // Two write-only process cells whose ONLY retail reference in the whole
-// image is the reset run below (verified with a reloc census), so kb.obj
-// owns them under the same rule as oldmain's private cells above. The
-// .data one ships initialized to 1 and is re-armed here.
+// image is the reset run below (verified with a reloc census). Dreamcast
+// publishes them as the external globals giScreenScroll and gbUseWaveout of
+// global.obj (`?giScreenScroll@@3HA`). The .data one ships initialized to 1
+// and is re-armed here.
 DATA(0x006783d8)
-static int g_screenScroll = 1;
+int g_screenScroll = 1;
 DATA(0x00698a38)
-static int g_useWaveout;
+int g_useWaveout;
 
 // E:\gamedcs\kb.cpp:2174
 // EarlySetup's last gate: reset the process-wide session flags, take the
@@ -2410,20 +2415,21 @@ void sendPlayerLost()
 // 256-byte sNames local, switch/source order, helper boundaries and all ten
 // RoE-era message families. Retail corroborates those facts and adds the two
 // Complete-only victory kinds plus three campaign-specific artifact texts.
-// Residual (97.3784%): the Complete campaign artifact cases each write
-// their own string, followed by the ordinary victory announcement/dialog
-// tail. This removes five control-flow labels and improves 94.9521%.
-// DC supplies the base artifact/ordinary-victory scopes and common tail;
-// PC retail adds the 714/764/738 campaign texts. The old merged-block
-// representative diagnosis did not exhaust structured source forms.
+// The Complete campaign artifact cases each write their own string,
+// followed by the ordinary victory announcement/dialog tail. This removes
+// five control-flow labels and improves 94.9521%. DC supplies the base
+// artifact/ordinary-victory scopes and common tail; PC retail adds the
+// 714/764/738 campaign texts. The closing empty default (100%) is what
+// lets VC6 keep the shared TransmitRemoteData/NormalDialog tail in the
+// artifact arm, as retail does; without it every identical tail jumps into
+// the flag-mines arm's copy (97.4619%). The out-of-range dispatch reaches
+// the switch exit on DC and Mac either way. The NONE case stays first and
+// explicit: moving it last, or dropping it with no default, is byte-flat.
 // A campaign text ID selector scores 95.1482%; a pointer plus explicit
 // found flag stays at 94.9521%. Do not test the text pointer itself as a
 // success flag: that would change behavior if a text lookup returns null.
 // An explicit first-campaign send/dialog followed by switch break adds a
 // second CNetMsg construction and falls to 94.8657% (59 versus 57 calls).
-// The remaining call-stream displacement is the shared TransmitRemoteData/
-// NormalDialog pair, still emitted twice on both sides. The apparent extra
-// self-call difference is the switch table's shifted +0x1318/+0x1314 addend.
 // DC retains a text lookup in the older victory arms. Keep Complete's getText
 // helper; this spelling is Windows byte-flat here.
 // DC 3165/3167 separately admits a won defeat-hero condition and its team;
@@ -2852,9 +2858,13 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                          -1, 0, -1, 0, -1, 0);
         }
         break;
+    default:
+        break;
     }
 
-    return gameWon || gameLost;
+    if (gameWon || gameLost)
+        return true;
+    return false;
 }
 
 // DC kb.cpp:3419..3436 names this ordinary function and its nested
@@ -3154,8 +3164,8 @@ static void initVars()
     strcpy(g_game->m_setup.m_filename,
            DATA_COMPGEN(0x0067f5c8, defaultScenarioName, "test.h3m"));
     g_game->m_setup.m_fileInitialized = 0;
-    memset(g_timers, 0, sizeof(g_timers));
     g_inSetup = 0;
+    memset(g_timers, 0, sizeof(g_timers));
     if (g_cheatMenus) {
         g_dfltMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x6f));
         g_gameMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x71));
@@ -3580,9 +3590,14 @@ short game::getBaseMapScore() const
 VA(0x004f3eb0, 0xA7)
 DC_ADDRESS(0x0e4300, 0x2e)
 MAC_ADDRESS(0x115bbc, 0x78)
+// DC kb.cpp:4096 records the base-score call as its own statement and
+// 4097 the float scaling, so the short base score is a named local. VC6
+// keeps this body unchanged; showCongrats' inline copy now reproduces
+// retail's register choice (97.52 -> 100; an int local stays 97.52).
 short game::getMapScore() const
 {
-    return static_cast<short>(static_cast<float>(getBaseMapScore())
+    short baseScore = getBaseMapScore();
+    return static_cast<short>(static_cast<float>(baseScore)
                               * g_mapScoreDifficultyFactor[m_setup.m_difficulty]);
 }
 
@@ -3597,13 +3612,9 @@ std::string getCampaignName();
 // or the cheat row when gpGame's cheat latch is up.  Then the closing
 // movie and "Win Scenario" run under CongratsWait, and the result is
 // banked before the screen fades.
-// Moving temp[30] ahead of landName is byte-flat in both retail comparisons:
-// Windows remains 97.51938%, Mac 19.2647% with all 23 calls aligned.
-// Moving temp[30] to the DC line gap before GetMonType is likewise byte-flat
-// in both compilers; it does not change CodeWarrior's buffer stack slot.
 // DC 4123/4124 records campaign score assignment then the separate base-score
-// copy (Mac 0x115d28/0x115d2c). Restoring that statement boundary is Windows
-// byte-flat at 97.5194%; the scenario calendar/float register residual remains.
+// copy (Mac 0x115d28/0x115d2c). The scenario arm's register residual was
+// getMapScore's single-expression body; its DC two-statement form matches.
 VA(0x004f3f60, 0x357)
 DC_ADDRESS(0x0e4330, 0x1be)
 MAC_ADDRESS(0x115c34, 0x2a8)  // anchor-callee (CongratsWait/AddScoreToHighScore) + "Win Scenario"
@@ -4311,20 +4322,12 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // raised 93.8074% to 99.9719%; the two-state family emitted two objects
 // and reproduced both. Retail's pre-loop ECX += inRow is VC6 strength
 // reduction of the per-element cursor, not evidence for a bulk source step.
-// Residual (99.9762%): raw objdiff retains nine row-array address differences
-// and two exchanged x/width load operands at +0x435/+0x43b. All 87 CFG block
-// sizes/flows and all branch destinations agree. The jump table agrees too.
-// A four-state array-declaration/triple-addition-order follow-up emitted one
-// reproduced object at 99.9719%. An 18-state actual-element/center-icon
-// lifetime and chained-zero family emitted eight reproduced objects. The
-// chained zero assignment preserves DC5219/5220's icon-then-label stores
-// and improves to 99.9762% by fixing the height-sum operands at +0x2a0/+0x2a4.
-// Element references/pointers fall to 99.7143/99.7186%; center-icon bindings
-// do not help. All 45 exact kb siblings stayed exact.
-// Reversing the commutative triple-row spriteX/spriteWidth operands was byte-flat
-// at 99.9762%; retain the DC5407 spriteX-first load order.
-// Paired control: separate icon/label zero statements leave Mac unchanged
-// at79.6296% and lower VC6 to99.9719%; the existing chain is retained.
+// DC5219/5220 records two separate zero stores, icon then label. Writing
+// them as separate statements here gives label_height the high frame slot
+// and icon_height the low slot; the icon-first height sums then reproduce
+// every retail block, including the row-array loads at +0x2a0/+0x2a4.
+// The rightmost triple-row icon starts at spriteWidth + spriteX + 40; this
+// operand order is what reproduces the retail load sequence.
 // Grouping numIcons before i while initializing it after the zero loop is
 // byte-flat in both compilers; the existing declaration lifetime stays.
 VA(0x004f5d80, 0x51C)
@@ -4334,15 +4337,15 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
 {
     long widestIcon = 0;
     long spacing = 0;
-    int labelHeight[g_dialogIconMaxRows];
-    int iconHeight[g_dialogIconMaxRows];
+    int icon_height[g_dialogIconMaxRows];
+    int label_height[g_dialogIconMaxRows];
     int iconRows;
     int i;
     int iconsPerLine;
 
-    // DC 5219/5220 stores icon then label; chaining preserves that order.
     for (i = 0; i < g_dialogIconMaxRows; ++i) {
-        labelHeight[i] = iconHeight[i] = 0;
+        icon_height[i] = 0;
+        label_height[i] = 0;
     }
 
     int numIcons = 0;
@@ -4359,9 +4362,9 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
             widestIcon = max(dialogInfo.m_icons[i].m_textWidth, widestIcon);
             spacing = max(spacing, dialogInfo.m_icons[i].m_textWidth
                                       - dialogInfo.m_icons[i].m_spriteWidth);
-            iconHeight[row] = max(iconHeight[row],
+            icon_height[row] = max(icon_height[row],
                                         dialogInfo.m_icons[i].m_spriteHeight);
-            labelHeight[row] = max(labelHeight[row],
+            label_height[row] = max(label_height[row],
                                       dialogInfo.m_icons[i].m_textHeight);
         }
     }
@@ -4426,8 +4429,8 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
     boxHeight += dialogInfo.m_textWidgetHeight;
     if (numIcons > 0) {
         boxHeight += 20;
-        for (i = 0; i < iconRows; i++)
-            boxHeight += labelHeight[i] + iconHeight[i];
+        for (int j = 0; j < iconRows; j++)
+            boxHeight += icon_height[j] + label_height[j];
         boxHeight += 20 * (iconRows - 1);
     }
     if (dialogInfo.m_mbType != NORMAL_DIALOG_POPUP)
@@ -4442,11 +4445,11 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
     if (numIcons == 0)
         return;
 
-    int iconY = dialogInfo.m_height - labelHeight[0] - 30;
+    int iconY = dialogInfo.m_height - label_height[0] - 30;
     if (dialogInfo.m_mbType != NORMAL_DIALOG_POPUP)
         iconY -= 50;
     if (iconRows == g_dialogIconMaxRows)
-        iconY -= labelHeight[1] + iconHeight[1] + 20;
+        iconY -= icon_height[1] + label_height[1] + 20;
     int firstInRow = 0;
     for (i = 0; i < iconRows; i++) {
         int rowsLeft = iconRows - i;
@@ -4472,8 +4475,8 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
                 dialogInfo.m_icons[firstInRow + 1].m_spriteX
                 - dialogInfo.m_icons[firstInRow].m_spriteWidth - 40;
             dialogInfo.m_icons[firstInRow + 2].m_spriteX =
-                dialogInfo.m_icons[firstInRow + 1].m_spriteX
-                + dialogInfo.m_icons[firstInRow + 1].m_spriteWidth + 40;
+                dialogInfo.m_icons[firstInRow + 1].m_spriteWidth
+                + dialogInfo.m_icons[firstInRow + 1].m_spriteX + 40;
             break;
         case g_dialogIconRowQuad:
             dialogInfo.m_icons[firstInRow + 1].m_spriteX =
@@ -4500,7 +4503,7 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
             // DC5430 advances the current icon before the inner backedge.
             ++firstInRow;
         }
-        iconY += labelHeight[1] + iconHeight[1] + 20;
+        iconY += icon_height[1] + label_height[1] + 20;
     }
 }
 

@@ -132,10 +132,10 @@ void TMapFrameWnd::selectObject(unsigned int objID)
 }
 
 VA(0x0046fa3a, 0xf)
-void TMapFrameWnd::grabObject(const TGUIGameObject* pObj)
+void TMapFrameWnd::grabObject(const TGUIGameObject& obj)
 {
     assert(_m_pEditWnd != NULL);
-    _m_pEditWnd->grabObject(pObj);
+    _m_pEditWnd->grabObject(obj);
 }
 
 VA(0x0046fa49, 0x8)

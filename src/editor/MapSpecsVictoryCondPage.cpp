@@ -878,7 +878,7 @@ BOOL TDefeatHeroDlg::OnInitDialog()
             } else {
                 const THeroPlaceholder* pPlaceholder = dynamic_cast<const THeroPlaceholder*>(pHero);
                 if (pPlaceholder != NULL) {
-                    bool bHasHero = pPlaceholder->getHeroID() != -1;
+                    bool bHasHero = pPlaceholder->getHeroID() != eHeroNone;
                     if (bHasHero) {
                         THeroID heroID = pPlaceholder->getHeroID();
                         const THero::TTraits& heroTraits = THero::s_akTraits[heroID];

@@ -80,8 +80,8 @@ const TTown* TTownPropsSpellsPage::_getOldTown() const
 VA(0x004c7171, 0x42)
 TTown* TTownPropsSpellsPage::_getNewTown()
 {
-    TGameMap::TLayer& layer = _m_newMap.getLayer(_m_bSecondLayer);
-    return dynamic_cast<TTown*>(layer.getPObject(_m_objectID));
+    TGameMap::TLayer* pLayer = _m_newMap.getPLayer(_m_bSecondLayer);
+    return dynamic_cast<TTown*>(pLayer->getPObject(_m_objectID));
 }
 
 VA(0x004c71b3, 0x43)

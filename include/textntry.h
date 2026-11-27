@@ -68,7 +68,7 @@ public:
                                  // writes it - scanned every 8/16/32-bit
                                  // store form at this displacement.
     short m_displayStart;  // 0x6a, first shown character
-    unsigned char m_cursorFlashOn;  // 0x6c, the caret blink phase: OnKeyPress
+    signed char m_cursorFlashOn;  // 0x6c, Dreamcast signed char, the caret blink phase: OnKeyPress
                                  // forces it to 1 on every keystroke and
                                  // SetupDisplayString toggles it
                                  // (`1 - field_6C`) every 360 ticks off

@@ -158,7 +158,7 @@ public:
     armyGroup* m_currentArmy;  // +0x28
 
 protected:
-    hero* m_enemyHero;  // +0x2c
+    const hero* m_enemyHero;  // +0x2c, Dreamcast const hero*
 
 public:
     unsigned char m_wallArcheryPenalty;  // +0x30, natural padding at +0x31
