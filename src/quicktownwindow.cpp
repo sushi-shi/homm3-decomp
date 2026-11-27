@@ -50,7 +50,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
 
     m_widgets.push_back(new iconWidget(
         12, 13, 58, 64, PORTRAIT_ID, "itpt.def",
-        thisTown->getPortraitFrame(false), 0, 0, 0, 0x10));
+        thisTown->getPortraitFrame(false), 0, false, 0, 0x10));
 
     m_widgets.push_back(new textWidget(
         75, 12, 107, 16, thisTown->m_name.c_str(), "smalfont.fnt",
@@ -71,7 +71,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
     if (viewLevel >= ViewAll) {
         m_widgets.push_back(new iconWidget(
             76, 42, 34, 34, HALL_LEVEL_ID, "itmtls.def", hallLevel,
-            0, 0, 0, 0x10));
+            0, false, 0, 0x10));
 
         if (thisTown->m_garrisonHeroId != -1) {
             m_widgets.push_back(new bitmapBorder(
@@ -101,21 +101,21 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
             if (resourceCount == DOUBLE_RESOURCE_BONUS) {
                 iconWidget* firstBonus = new iconWidget(
                     15, 86, 20, 18, RESOURCE_BONUS_ID, "smalres.def",
-                    resource[1], 0, 0, 0, 0x10);
+                    resource[1], 0, false, 0, 0x10);
                 m_widgets.push_back(firstBonus);
                 iconWidget* secondBonus = new iconWidget(
                     15, 98, 20, 18, RESOURCE_BONUS_ID, "smalres.def",
-                    resource[2], 0, 0, 0, 0x10);
+                    resource[2], 0, false, 0, 0x10);
                 m_widgets.push_back(secondBonus);
             } else if (resourceCount == SINGLE_RESOURCE_BONUS) {
                 iconWidget* singleBonus = new iconWidget(
                     15, 92, 22, 18, RESOURCE_BONUS_ID, "smalres.def",
-                    resource[1], 0, 0, 0, 0x10);
+                    resource[1], 0, false, 0, 0x10);
                 m_widgets.push_back(singleBonus);
             }
         }
 
-        sprintf(g_text, "%d", thisTown->getGoldIncome(1));
+        sprintf(g_text, "%d", thisTown->getGoldIncome(true));
         m_widgets.push_back(new textWidget(
             153, 65, 27, 11, g_text, "tiny.fnt", font::WHITE,
             GOLD_PER_DAY_ID, 1, 0, 8));
@@ -134,7 +134,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
         castleLevel = 3;
     m_widgets.push_back(new iconWidget(
         114, 42, 34, 34, CASTLE_LEVEL_ID, "itmcls.def", castleLevel,
-        0, 0, 0, 0x10));
+        0, false, 0, 0x10));
 
     initializeArmyDisplay(thisTown->getArmy(), viewLevel);
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -199,7 +199,7 @@ void TQuickTownWindow::initializeArmyDisplay(
         m_widgets.push_back(new iconWidget(
             g_quickTownArmyPositions[displaySlot][0],
             g_quickTownArmyPositions[displaySlot][1], 32, 32, widgetId++,
-            "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
+            "cprsmall.def", creature + 2, 0, false, 0, 0x10));
 
         if (viewLevel >= ViewArmySizes) {
             int count = currentArmyGroup.m_numTroops[slot];

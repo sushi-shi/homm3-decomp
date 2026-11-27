@@ -139,7 +139,7 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
         launchSample("newday.wav", 30000, 3);
     }
 
-    m_icon = new iconWidget(0, 0, 175, 166, id++, iconName, 0, 0, 0, 0, 0x10);
+    m_icon = new iconWidget(0, 0, 175, 166, id++, iconName, 0, 0, false, 0, 0x10);
     m_icon->setIconFrame(0);
     m_widgets.push_back(m_icon);
 
@@ -229,7 +229,7 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
 
         m_widgets.push_back(new iconWidget((m_width - sprite->GetWidth()) / 2, 50,
             sprite->GetWidth(), sprite->GetHeight(), 0x837, "resour82.def", res,
-            0, 0, 0, 0x10));
+            0, false, 0, 0x10));
 
         std::ostrstream quantityText;
         quantityText << quantity << std::ends;
@@ -416,9 +416,9 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
         font::WHITE, 0x7da, 1, 0, 8));
 
     m_widgets.push_back(new iconWidget(5, 74, 22, 12, 0x7d8, "imrl22.def",
-        who->getMorale(0, 0, 1) + 3, 0, 0, 0, 0x10));
+        who->getMorale(0, false, true) + 3, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(5, 91, 22, 12, 0x7d9, "ilck22.def",
-        who->getLuck(0, 0, 1) + 3, 0, 0, 0, 0x10));
+        who->getLuck(0, false, true) + 3, 0, false, 0, 0x10));
 
     int numStacks = 0;
     for (int n = 0; n < armyGroup::ARMY_GROUP_SLOT_COUNT; n++) {
@@ -433,7 +433,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
             if (type != CREATURE_NONE) {
                 m_widgets.push_back(new iconWidget(g_heroArmyCoords[j][0],
                     g_heroArmyCoords[j][1], 32, 32, id++, "cprsmall.def",
-                    type + 2, 0, 0, 0, 0x10));
+                    type + 2, 0, false, 0, 0x10));
 
                 std::string text;
                 if (who->m_army.m_numTroops[j] < 10000)
@@ -621,7 +621,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
     town* which = g_game->getCurrTown();
 
     m_widgets.push_back(new iconWidget(3, 2, 58, 64, 0x7d1, "itpt.def",
-        which->getPortraitFrame(false), 0, 0, 0, 0x10));
+        which->getPortraitFrame(false), 0, false, 0, 0x10));
     m_widgets.push_back(new textWidget(66, 1, 107, 16, which->m_name.c_str(),
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
@@ -637,7 +637,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
     std::string townSizeName = g_townSizeNames[hallLevel];
 
     m_widgets.push_back(new iconWidget(67, 31, 34, 34, 0x7d3, "itmtls.def",
-        hallLevel, 0, 0, 0, 0x10));
+        hallLevel, 0, false, 0, 0x10));
 
     int fortLevel;
     if (which->hasBuilding(CASTLE_FORT_ID, false)) {
@@ -651,7 +651,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
     }
 
     m_widgets.push_back(new iconWidget(105, 31, 34, 34, 0x7d4, "itmcls.def",
-        fortLevel, 0, 0, 0, 0x10));
+        fortLevel, 0, false, 0, 0x10));
 
     if (which->m_garrisonHeroId != -1)
         m_widgets.push_back(new bitmapBorder(149, 76, 22, 30, 0x7d8,
@@ -670,16 +670,16 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         }
         if (found == BOTTOM_VIEW_SILO_TWO_RESOURCES) {
             m_widgets.push_back(new iconWidget(6, 75, 20, 18, 0x7d7,
-                "smalres.def", resource[1], 0, 0, 0, 0x10));
+                "smalres.def", resource[1], 0, false, 0, 0x10));
             m_widgets.push_back(new iconWidget(6, 87, 20, 18, 0x7d7,
-                "smalres.def", resource[2], 0, 0, 0, 0x10));
+                "smalres.def", resource[2], 0, false, 0, 0x10));
         } else if (found == BOTTOM_VIEW_SILO_ONE_RESOURCE) {
             m_widgets.push_back(new iconWidget(6, 81, 20, 18, 0x7d7,
-                "smalres.def", resource[1], 0, 0, 0, 0x10));
+                "smalres.def", resource[1], 0, false, 0, 0x10));
         }
     }
 
-    sprintf(g_text, "%d", which->getGoldIncome(1));
+    sprintf(g_text, "%d", which->getGoldIncome(true));
     m_widgets.push_back(new textWidget(144, 54, 28, 12, g_text, "tiny.fnt",
         font::WHITE, 0x7d6, 1, 0, 8));
 
@@ -696,7 +696,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
 
             m_widgets.push_back(new iconWidget(g_townArmyCoords[displaySlot][0],
                 g_townArmyCoords[displaySlot][1],
-                32, 32, id++, "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
+                32, 32, id++, "cprsmall.def", creature + 2, 0, false, 0, 0x10));
 
             std::ostrstream quantityText;
             if (which->getArmy().m_numTroops[i] < 10000)
@@ -771,7 +771,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 
     for (i = 0; i < 4; i++) {
         m_widgets.push_back(new iconWidget(42 * i + 6, 11, 38, 38, id++,
-            "itmtl.def", i, 0, 0, 0, 0x10));
+            "itmtl.def", i, 0, false, 0, 0x10));
         if (townCount[i] > 0)
             m_widgets.push_back(new textWidget(42 * i + 7, 56, 37, 17,
                 formatString("%d", townCount[i]).c_str(), "smalfont.fnt",
@@ -791,11 +791,11 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
         if (!g_game->m_playerDisabled[i]) {
             if (g_game->onSameTeam(i, g_curWatchPlayer)) {
                 m_widgets.push_back(new iconWidget(allyX, 102, 15, 20, id++,
-                    "itgflags.def", i, 0, 0, 0, 0x10));
+                    "itgflags.def", i, 0, false, 0, 0x10));
                 allyX += 15;
             } else {
                 m_widgets.push_back(new iconWidget(enemyX, 133, 15, 20, id++,
-                    "itgflags.def", i, 0, 0, 0, 0x10));
+                    "itgflags.def", i, 0, false, 0, 0x10));
                 enemyX += 15;
             }
         }
@@ -837,11 +837,11 @@ TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
         0, 0, 176, 166, id++, "AdStatNx.pcx", 0x800));
 
     m_crest = new iconWidget(20, 51, 58, 64, id++, "crest58.def",
-        g_netLocalGamePos, 0, 0, 0, 0x10);
+        g_netLocalGamePos, 0, false, 0, 0x10);
     m_widgets.push_back(m_crest);
 
     m_sand = new iconWidget(98, 51, 58, 64, id++, "HourSand.def",
-        0, 0, 0, 0, 0x10);
+        0, 0, false, 0, 0x10);
     m_sand->setIconFrame(0);
     m_widgets.push_back(m_sand);
 
@@ -849,7 +849,7 @@ TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
     m_frameDelay = 50;
 
     m_hourGlass = new iconWidget(98, 51, 58, 64, id++, "HourGlas.def",
-        0, 0, 0, 0, 0x10);
+        0, 0, false, 0, 0x10);
     m_widgets.push_back(m_hourGlass);
 
     m_step = 0;
@@ -924,12 +924,12 @@ void TBottomViewEnemyTurn::animate()
         m_crest->draw();
         m_crest->forceUpdate();
         if (g_currentPlayer->isHuman()) {
-            m_hourGlass->setVisible(0);
-            m_sand->setVisible(0);
+            m_hourGlass->setVisible(false);
+            m_sand->setVisible(false);
             return;
         }
-        m_hourGlass->setVisible(1);
-        m_sand->setVisible(1);
+        m_hourGlass->setVisible(true);
+        m_sand->setVisible(true);
         m_mobility[g_netLocalGamePos] = sumMobility(g_netLocalGamePos);
         m_step = 0;
     }

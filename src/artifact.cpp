@@ -387,7 +387,7 @@ bool InitializeArtifactTraitsTable()
                 DATA_COMPGEN(0x00660b80, artifactTraitsSpreadsheetName,
                              "artraits.txt")));
         if (!traitsSheet.get() || traitsSheet->GetNumberOfRows() < 146) {
-            return 0;
+            return false;
         }
 
         unsigned stringBytes = 0;
@@ -410,7 +410,7 @@ bool InitializeArtifactTraitsTable()
         DATA(0x00694c90)
         static TAutoArrayPtr<char> artifactStrings(new char[stringBytes]);
         if (!artifactStrings.get())
-            return 0;
+            return false;
 
         char* destination = artifactStrings.get();
         int row = 2;
@@ -471,7 +471,7 @@ bool InitializeArtifactTraitsTable()
                 DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
                              "artslots.txt")));
         if (!slotsSheet.get() || slotsSheet->GetNumberOfRows() < kNumArtifactSlots + 1) {
-            return 0;
+            return false;
         }
 
         unsigned stringBytes = 0;
@@ -487,7 +487,7 @@ bool InitializeArtifactTraitsTable()
         DATA(0x00694c98)
         static TAutoArrayPtr<char> artifactSlotStrings(new char[stringBytes]);
         if (!artifactSlotStrings.get())
-            return 0;
+            return false;
 
         char* destination = artifactSlotStrings.get();
         for (slot = 0; slot < kNumArtifactSlots + 1; ++slot) {
@@ -503,7 +503,7 @@ bool InitializeArtifactTraitsTable()
             g_artifactSlotTraitsStorage[slot].m_type = mask;
         }
     }
-    return 1;
+    return true;
 }
 
 // DC 0x050058 proves the ordinary static two-argument row parser; the

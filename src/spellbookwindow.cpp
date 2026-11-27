@@ -202,7 +202,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
     for (row = 89; row < 377; row += 96) {
         for (column = 117; column < 289; column += 86) {
             m_widgets.push_back(new iconWidget(
-                column, row, 78, 65, id++, 0, 0, 0, 0, 0,
+                column, row, 78, 65, id++, 0, 0, 0, false, 0,
                 iconWidget::ICON_STYLE_PLAIN));
         }
     }
@@ -210,7 +210,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
     for (row = 89; row < 377; row += 96) {
         for (column = 333; column < 505; column += 86) {
             m_widgets.push_back(new iconWidget(
-                column, row, 78, 65, id++, 0, 0, 0, 0, 0,
+                column, row, 78, 65, id++, 0, 0, 0, false, 0,
                 iconWidget::ICON_STYLE_PLAIN));
         }
     }
@@ -222,7 +222,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
             m_widgets.push_back(new iconWidget(
                 column, row, 78, 65, id++,
                 DATA_COMPGEN(0x00660208, m_spellIcons, "spells.def"),
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+                0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
         }
     }
     id = SPELL_6_ID;
@@ -231,7 +231,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
             m_widgets.push_back(new iconWidget(
                 column, row, 78, 65, id++,
                 DATA_COMPGEN(0x00660208, m_spellIcons, "spells.def"),
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+                0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
         }
     }
 
@@ -260,14 +260,14 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
     m_headingWidget = new iconWidget(
         117, 74, 160, 96, SCHOOL_HEADING_ID,
         DATA_COMPGEN(0x00684bc0, spellbookSchools, "schools.def"),
-        0, 0, 0, 0,
+        0, 0, false, 0,
         iconWidget::ICON_STYLE_PLAIN);
     m_widgets.push_back(m_headingWidget);
 
     m_schoolTabsWidget = new iconWidget(
         524, 88, 83, 294, SCHOOL_TABS_ID,
         DATA_COMPGEN(0x00684bb4, spellbookTabs, "SpelTab.def"),
-        0, 0, 0, 0,
+        0, 0, false, 0,
         iconWidget::ICON_STYLE_PLAIN);
     m_widgets.push_back(m_schoolTabsWidget);
 
@@ -541,7 +541,7 @@ void TSpellbookWindow::displayNewSchool(int position)
     setSchool(getSchoolFromPosition(position));
     gotoPage(0);
     m_schoolTabsWidget->setIconFrame(position);
-    drawWindow(1, -65535, 65535);
+    drawWindow(true, -65535, 65535);
 }
 
 // E:\gamedcs\spellbookwindow.cpp:702
@@ -613,7 +613,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                 if (g_config.m_animateSpellBook)
                     videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                 previousPage();
-                drawWindow(1, -65535, 65535);
+                drawWindow(true, -65535, 65535);
             }
             break;
 
@@ -622,7 +622,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                 if (g_config.m_animateSpellBook)
                     videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                 nextPage();
-                drawWindow(1, -65535, 65535);
+                drawWindow(true, -65535, 65535);
             }
             break;
 
@@ -650,7 +650,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                     videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                 setContext(eContextAdventure);
                 gotoPage(0);
-                drawWindow(1, -65535, 65535);
+                drawWindow(true, -65535, 65535);
             }
             break;
 
@@ -660,7 +660,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                     videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                 setContext(eContextCombat);
                 gotoPage(0);
-                drawWindow(1, -65535, 65535);
+                drawWindow(true, -65535, 65535);
             }
             break;
 
@@ -724,7 +724,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                         videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                     setContext(eContextCombat);
                     gotoPage(0);
-                    drawWindow(1, -65535, 65535);
+                    drawWindow(true, -65535, 65535);
                 }
                 break;
 
@@ -734,7 +734,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                         videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                     setContext(eContextAdventure);
                     gotoPage(0);
-                    drawWindow(1, -65535, 65535);
+                    drawWindow(true, -65535, 65535);
                 }
                 break;
 
@@ -742,14 +742,14 @@ int TSpellbookWindow::windowHandler(message& msg)
                 if (g_config.m_animateSpellBook)
                     videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                 previousPage();
-                drawWindow(1, -65535, 65535);
+                drawWindow(true, -65535, 65535);
                 break;
 
             case NEXT_PAGE_ID:
                 if (g_config.m_animateSpellBook)
                     videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                 nextPage();
-                drawWindow(1, -65535, 65535);
+                drawWindow(true, -65535, 65535);
                 break;
 
             case DIALOG_RETURN_CANCEL:
@@ -781,7 +781,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 
             textWidget* rolloverWidget = m_rolloverWidget;
             rolloverWidget->setText(rollover.c_str());
-            drawWindow(0, ROLLOVER_ID, ROLLOVER_ID);
+            drawWindow(false, ROLLOVER_ID, ROLLOVER_ID);
             g_windowManager->updateScreen(
                 m_x + rolloverWidget->m_x, m_y + rolloverWidget->m_y,
                 rolloverWidget->m_width, rolloverWidget->m_height);

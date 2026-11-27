@@ -1286,7 +1286,7 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
             }
             experience = static_cast<int>(
                 m_currentHero->getExperienceBonusFactor() * experience);
-            m_currentHero->giveExperience(experience, 1, 1);
+            m_currentHero->giveExperience(experience, 1, true);
 
             if (defeatedHero)
                 defeatedHero->removeArtifact(ARTIFACT_HOLY_GRAIL);
@@ -1294,7 +1294,7 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
                 defeatedHero->transferArtifacts(m_currentHero);
 
             if (enemyTown)
-                g_game->claimTown(enemyTown->m_id, m_currentHero->m_owner, 0, 1);
+                g_game->claimTown(enemyTown->m_id, m_currentHero->m_owner, false, true);
         }
     } else if (m_currentHero) {
         m_currentHero->removeArtifact(ARTIFACT_HOLY_GRAIL);
@@ -1336,10 +1336,10 @@ bool aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendin
     attacker.simulateCombat(defender);
     if (attacker.getTotal() > 0) {
         attacker.doAftermath(defender, defendingTown);
-        return 1;
+        return true;
     }
     defender.doAftermath(attacker, 0);
-    return 0;
+    return false;
 }
 
 // E:\gamedcs\ai_combat.cpp:1539

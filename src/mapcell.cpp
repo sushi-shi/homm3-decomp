@@ -395,21 +395,21 @@ MAC_ADDRESS(0x11e514, 0xe4)
 bool NewmapCell::isDiggable() const
 {
     if (m_groundSet == eTerrainWater || m_groundSet == eTerrainRock)
-        return 0;
+        return false;
     if (!(m_flags0011 & 0x40))
-        return 0;
+        return false;
 
     TAdventureObjectType objectType = getMapObject();
     if (objectType != ANCHOR_POINT) {
         if (objectType != HOLY_GRAIL && objectType != NOTHING)
-            return 0;
+            return false;
     } else {
         for (long i = 0; i < m_objects.size(); ++i) {
             if (m_objects[i].getObject()->getType() == TERRAIN_HOLE)
-                return 0;
+                return false;
         }
     }
-    return 1;
+    return true;
 }
 
 // DC 0xec354/0xec396 test giCurPlayerBit; retail reads 0x69ccc4.
@@ -422,14 +422,14 @@ const bool NewmapCell::hasTriggerableEvent() const
     if (m_type == EVENT) {
         if (g_currentPlayer->isLocalHuman()
             && ((m_extraInfo >> 10) & g_curPlayerBit))
-            return 1;
+            return true;
 
         if (!g_currentPlayer->isLocalHuman()
             && (m_extraInfo & 0x40000)
             && ((m_extraInfo >> 10) & g_curPlayerBit))
-            return 1;
+            return true;
     }
-    return 0;
+    return false;
 }
 
 VA(0x004fce20, 0x116)
@@ -576,7 +576,7 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
             return -1;
     }
 
-    incProgressBar(1);
+    incProgressBar(true);
 
     m_objectTypes.clear();
     m_objects.clear();
@@ -743,7 +743,7 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
             return -1;
     }
 
-    incProgressBar(1);
+    incProgressBar(true);
 
     m_objectTypes.clear();
     m_objects.clear();
@@ -791,7 +791,7 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
     if (count < 0)
         return -1;
 
-    incProgressBar(1);
+    incProgressBar(true);
     return 0;
 }
 
@@ -1198,7 +1198,7 @@ int NewfullMap::readBoatData(TAbstractFile* infile, CObject* boatObject)
     int y;
     boatObject->findTrigger(x, y);
     boatObject->m_extraInfo = g_game->createBoat(
-        x, y, boatObject->m_z, -1, 1, boatType);
+        x, y, boatObject->m_z, -1, true, boatType);
     return 0;
 }
 
@@ -2799,7 +2799,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                  || g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
                 && g_game->m_gameVersion >= 1)
                 legalAlignments = 0x1ff;
-            tempTown.m_townType = pickAlignment(legalAlignments, 0);
+            tempTown.m_townType = pickAlignment(legalAlignments, false);
         } else {
             tempTown.m_townType = g_game->m_setup.m_alignment[tempTown.m_playerOwner];
         }
@@ -3059,7 +3059,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 heroData->m_customSpells = 1;
                 heroData->m_spells = std::bitset<hero::NUM_SPELLS>();
                 if (intBuffer != -1)
-                    heroData->m_spells[intBuffer] = 1;
+                    heroData->m_spells[intBuffer] = true;
             }
         } else {
             charBuffer = readValue<char>(infile);
@@ -3168,7 +3168,7 @@ void NewfullMap::resolveRandomDwellings()
             }
             alignment = g_game->m_scenarioTowns[townIndex].m_townType;
         } else {
-            alignment = pickAlignment(dwelling.m_factionMask, 0);
+            alignment = pickAlignment(dwelling.m_factionMask, false);
         }
 
         TCreatureType creature = g_dwellingType[alignment][random(dwelling.m_minLevel, dwelling.m_maxLevel)];
@@ -4002,13 +4002,13 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
         if (count < 0)
             return -1;
         if (x == m_objectTypes.size() / 2)
-            incProgressBar(1);
+            incProgressBar(true);
         if (count == READ_OBJECT_TYPE_DEFAULT_MASK)
             g_invalidPlacementList.push_back(x);
     }
 
     rebuildObjectTypeIndex();
-    incProgressBar(1);
+    incProgressBar(true);
 
     std::vector<CSprite*> oldSprites;
     oldSprites.resize(m_sprites.size());
@@ -4020,16 +4020,16 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
         m_sprites[x] =
             ResourceManager::GetSprite(m_objectTypes[x].m_imageName.c_str());
         if (x == m_objectTypes.size() / 3)
-            incProgressBar(1);
+            incProgressBar(true);
         if (x == m_objectTypes.size() / 3 * 2)
-            incProgressBar(1);
+            incProgressBar(true);
     }
 
     for (x = 0; x < oldSprites.size(); ++x)
         oldSprites[x]->dispose();
     oldSprites.clear();
 
-    incProgressBar(1);
+    incProgressBar(true);
 
     count = infile->read(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer)) {
@@ -4064,7 +4064,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
         m_objects[x].m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
 
-    incProgressBar(1);
+    incProgressBar(true);
     return 1;
 }
 
@@ -4126,7 +4126,7 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
             return -1;
     }
 
-    incProgressBar(1);
+    incProgressBar(true);
     rebuildObjectTypeIndex();
 
     std::vector<CSprite*> oldSprites;
@@ -4139,16 +4139,16 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
         m_sprites[x] =
             ResourceManager::GetSprite(m_objectTypes[x].m_imageName.c_str());
         if (x == m_objectTypes.size() / 3)
-            incProgressBar(1);
+            incProgressBar(true);
         if (x == m_objectTypes.size() / 3 * 2)
-            incProgressBar(1);
+            incProgressBar(true);
     }
 
     for (x = 0; x < oldSprites.size(); ++x)
         ResourceManager::Dispose(oldSprites[x]);
     oldSprites.clear();
 
-    incProgressBar(1);
+    incProgressBar(true);
 
     count = readValue(infile, intBuffer);
     if (count < sizeof(intBuffer))
@@ -4162,7 +4162,7 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
         m_objects[x].m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
 
-    incProgressBar(1);
+    incProgressBar(true);
     return 1;
 }
 

@@ -54,7 +54,7 @@ type_university_skill_button::type_university_skill_button(
     long x, long y, long width, long height, long newId,
     const char* image, TSecondarySkill newSkill)
     : iconWidget(x, y, width, height, newId, image,
-                 newSkill * 3, 0, 0, 0, ICON_STYLE_PLAIN)
+                 newSkill * 3, 0, false, 0, ICON_STYLE_PLAIN)
 {
     m_skill = newSkill;
     m_click = 0;
@@ -72,17 +72,17 @@ bool type_university_skill_button::handleClick(
         if (rightClick) {
             normalDialog(akSSkillTraits[m_skill].m_levelNames[0], 4,
                          -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            return 1;
+            return true;
         }
 
         if (m_click)
-            return 1;
+            return true;
 
         static_cast<type_university_window*>(m_parentWindow)->skillClick(m_skill);
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
 // DC 124/133/236 use TTextResource::operator[] for all four text lookups.
@@ -125,7 +125,7 @@ type_university_window::type_university_window(
     if (townUniversity) {
         newWidget = new iconWidget(
             157, 41, 150, 70, widgetId++, "hallelem.def", 21,
-            0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            0, false, 0, iconWidget::ICON_STYLE_PLAIN);
     } else {
         newWidget = new bitmapBorder(
             175, 36, 114, 80, widgetId++, "univbldg.pcx", 0x800);
@@ -150,14 +150,14 @@ type_university_window::type_university_window(
 
         m_skills[i].m_topBar = new iconWidget(
             g_topBarPositions[i].x, g_topBarPositions[i].y, 100, 18,
-            widgetId++, "Univcolr.def", 0, 0, 0, 0,
+            widgetId++, "Univcolr.def", 0, 0, false, 0,
             iconWidget::ICON_STYLE_PLAIN);
         m_widgets.push_back(m_skills[i].m_topBar);
         m_selectionWidgets.push_back(m_skills[i].m_topBar);
 
         m_skills[i].m_bottomBar = new iconWidget(
             g_topBarPositions[i].x, g_topBarPositions[i].y + 70, 100, 18,
-            widgetId++, "Univcolr.def", 0, 0, 0, 0,
+            widgetId++, "Univcolr.def", 0, 0, false, 0,
             iconWidget::ICON_STYLE_PLAIN);
         m_widgets.push_back(m_skills[i].m_bottomBar);
         m_selectionWidgets.push_back(m_skills[i].m_bottomBar);
@@ -188,7 +188,7 @@ type_university_window::type_university_window(
         exitClick, 0, 1);
     exitButton->setHotkey(1);
     exitButton->setHotkey(28);
-    exitButton->setHelpText(g_universityWindowHelp[1].m_text, 0, 1);
+    exitButton->setHelpText(g_universityWindowHelp[1].m_text, 0, true);
     m_widgets.push_back(exitButton);
     m_selectionWidgets.push_back(exitButton);
 
@@ -224,10 +224,10 @@ type_university_window::type_university_window(
 
     iconWidget* resourceIcon = new iconWidget(
         216, 208, 32, 32, widgetId++, "resource.def", 0,
-        0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+        0, false, 0, iconWidget::ICON_STYLE_PLAIN);
     resourceIcon->setIconFrame(6);
     resourceIcon->setHelpText(
-        g_generalText->GetText(GENERAL_TEXT_VIEW_WORLD_GOLD), g_generalText->GetText(GENERAL_TEXT_RESOURCES_HELP), 1);
+        g_generalText->GetText(GENERAL_TEXT_VIEW_WORLD_GOLD), g_generalText->GetText(GENERAL_TEXT_RESOURCES_HELP), true);
     m_widgets.push_back(resourceIcon);
     m_purchaseWidgets.push_back(resourceIcon);
 
@@ -255,7 +255,7 @@ type_university_window::type_university_window(
     type_func_button* cancelButton = new type_func_button(
         252, 300, 64, 32, widgetId++, "iCancel.def",
         cancelClick, 0, 1);
-    cancelButton->setHelpText(g_universityWindowHelp[0].m_text, 0, 1);
+    cancelButton->setHelpText(g_universityWindowHelp[0].m_text, 0, true);
     cancelButton->setHotkey(1);
     m_widgets.push_back(cancelButton);
     m_purchaseWidgets.push_back(cancelButton);
@@ -324,7 +324,7 @@ void type_university_window::updateSkillButton(type_university_skill& skill)
             skill.m_bottomBar->setIconFrame(1);
     }
     skill.m_button->setIconFrame((skill.m_skill + 1) * 3);
-    skill.m_button->setHelpText(text.c_str(), 0, 1);
+    skill.m_button->setHelpText(text.c_str(), 0, true);
 }
 
 VA(0x005f0a20, 0x92)
@@ -373,15 +373,15 @@ void type_university_window::skillClick(TSecondarySkill skill)
     newText = formatString(g_generalText->GetText(GENERAL_TEXT_UNIVERSITY_TUITION_FORMAT), g_secondarySkillLevels[0],
                              skillName, TUITION);
     m_selectedSkill.m_skill = skill;
-    m_selectedSkill.m_button->setSkill(skill, 1);
+    m_selectedSkill.m_button->setSkill(skill, true);
     m_selectedSkill.m_textWidget->setText(skillName);
     m_purchaseTextWidget->setText(newText.c_str());
     newText = formatString(g_generalText->GetText(GENERAL_TEXT_PURCHASE_FORMAT), skillName);
-    m_purchaseButton->setHelpText(newText.c_str(), 0, 1);
+    m_purchaseButton->setHelpText(newText.c_str(), 0, true);
     updateSkillButton(m_selectedSkill);
     m_purchaseButton->enable(
         m_currentHero->getPlayer()->m_resources[GOLD] >= TUITION);
-    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    drawWindow(true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\university_window.cpp:404
@@ -414,7 +414,7 @@ void type_university_window::handleWidgetHover(widget* currentWidget)
         m_rolloverWidget->setText("");
     else
         m_rolloverWidget->setText(helpText);
-    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    drawWindow(true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 VA(0x005f0e00, 0xE4)
@@ -434,7 +434,7 @@ int type_university_window::cancelClick(message& msg)
             static_cast<type_university_window*>(msg.m_window);
         window->setSelectionMode();
         window->drawWindow(
-            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return 1;
     }
     return 0;
@@ -498,7 +498,7 @@ int type_university_window::purchaseClick(message& msg)
         window->m_currentHero->giveSS(window->m_selectedSkill.m_skill, 1);
         window->setSelectionMode();
         window->drawWindow(
-            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return 1;
     }
     return 0;

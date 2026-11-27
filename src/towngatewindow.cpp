@@ -82,20 +82,20 @@ TTownGateWindow::TTownGateWindow(bool adventureSpell)
     if (m_adventureSpell) {
         m_widgets.push_back(new iconWidget(
             111, 44, 83, 61, ICON_ID, "SpellScr.def",
-            9, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            9, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
     } else {
         m_widgets.push_back(new iconWidget(
             78, 40, 150, 70, ICON_ID, "hallinfr.def",
-            22, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            22, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
     }
 
     m_widgets.push_back(new slider(
         277, 120, 16, 258, SLIDER_ID, 10, townGateSliderCallback,
-        slider::BROWN, NUM_TOWN_ENTRIES, 0));
+        slider::BROWN, NUM_TOWN_ENTRIES, false));
     m_widgets.push_back(new button(
-        15, 402, 64, 30, 0x7802, "iOkay.def", 0, 1, 0, 28, 2));
+        15, 402, 64, 30, 0x7802, "iOkay.def", 0, 1, false, 28, 2));
     m_widgets.push_back(new button(
-        228, 402, 64, 30, 0x7801, "iCancel.def", 0, 1, 0, 1, 2));
+        228, 402, 64, 30, 0x7801, "iCancel.def", 0, 1, false, 1, 2));
 
     for (std::vector<widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
@@ -205,7 +205,7 @@ void TTownGateWindow::updateTownLocators()
     for (int i = 0; i < NUM_TOWN_ENTRIES; ++i)
         updateTownLocator(i);
 
-    drawWindow(1, 0xffff0001, 0xffff);
+    drawWindow(true, 0xffff0001, 0xffff);
 }
 
 VA(0x005c2770, 0xC8)
@@ -223,7 +223,7 @@ void TTownGateWindow::doModal()
     updateTownLocators();
 
     getWidget(DIALOG_RETURN_OK)->enable(0);
-    heroWindow::doModal(0);
+    heroWindow::doModal(false);
 }
 
 // E:\gamedcs\towngatewindow.cpp:208
@@ -280,5 +280,5 @@ static void townGateSliderCallback(int state, heroWindow* parentWindow)
 {
     g_townGateWindow->m_topTown = state;
     g_townGateWindow->updateTownLocators();
-    g_townGateWindow->drawWindow(1, 0xffff0001, 0xffff);
+    g_townGateWindow->drawWindow(true, 0xffff0001, 0xffff);
 }

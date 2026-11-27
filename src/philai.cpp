@@ -239,7 +239,7 @@ static void restoreMouse(unsigned char mouseWasVisible)
     if (mouseWasVisible && !g_mouseManager->isVis()) {
         int saveShowIt = g_completeDrawEnabled;
         g_completeDrawEnabled = 1;
-        g_mouseManager->showPointer(0);
+        g_mouseManager->showPointer(false);
         g_completeDrawEnabled = saveShowIt;
     }
 }
@@ -350,7 +350,7 @@ static void buyArtifacts(hero* currentHero, TArtifact* artifactList,
     EGameResource resource;
     long bestArtifact;
     do {
-        if (currentHero->getNumberInBackpack(1)
+        if (currentHero->getNumberInBackpack(true)
                 == HERO_BACKPACK_CAPACITY)
             return;
         bestArtifact = -1;
@@ -396,7 +396,7 @@ MAC_ADDRESS(0x13ddec, 0xac)
 static long valueOfBlackMarket(const hero* currentHero,
                                   const NewmapCell* cell)
 {
-    if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
+    if (const_cast<hero*>(currentHero)->getNumberInBackpack(true)
             == HERO_BACKPACK_CAPACITY)
         return 0;
 
@@ -682,7 +682,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 
     for (int attempt = 0; attempt < 5; ++attempt) {
         rv = aiChooseDestination(currentHero, maxDistance, destination,
-                                   rawValue, 1, exploreMode);
+                                   rawValue, true, exploreMode);
         if (!((destination.m_x < 0
                || (rv < 0 && !destination.m_isCritical))
               && g_searchArray->limitWasReached()
@@ -773,7 +773,7 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
     if (selectedHero)
         return selectedHero;
     *isLastHero = 0;
-    g_advManager->demobilizeCurrHero(0, 1);
+    g_advManager->demobilizeCurrHero(false, true);
     player->m_currHeroId = -1;
     if (player->m_numHeroes < playerData::HERO_SLOT_COUNT) {
         for (short townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
@@ -813,7 +813,7 @@ static void moveAllHeroes(long playerId, long* dangerZones)
         if (g_gameOver)
             break;
     }
-    g_advManager->demobilizeCurrHero(0, 1);
+    g_advManager->demobilizeCurrHero(false, true);
 }
 
 VA(0x00526c70, 0x48)
@@ -976,7 +976,7 @@ DC_ADDRESS(0x110408, 0x16a)
 MAC_ADDRESS(0x142010, 0x1d8)
 static inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
 {
-    if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
+    if (const_cast<hero*>(currentHero)->getNumberInBackpack(true)
             >= HERO_BACKPACK_CAPACITY)
         return 0;
 
@@ -1222,18 +1222,18 @@ static long valueOfIdol(const hero* currentHero, long moveCost)
         if (g_game->m_day == DAY_OF_WEEK_SUNDAY)
             return static_cast<long>(
                 aiValueOfMorale(
-                    currentHero->getMorale(0, 0, 1), 1)
+                    currentHero->getMorale(0, false, true), 1)
                 + aiValueOfLuck(
-                    currentHero->getLuck(0, 0, 1), 1));
+                    currentHero->getLuck(0, false, true), 1));
         if (g_game->m_day & 1)
             return static_cast<long>(aiValueOfLuck(
-                currentHero->getLuck(0, 0, 1), 1));
+                currentHero->getLuck(0, false, true), 1));
         return static_cast<long>(aiValueOfMorale(
-            currentHero->getMorale(0, 0, 1), 1));
+            currentHero->getMorale(0, false, true), 1));
     }
     return static_cast<long>(
-        aiValueOfMorale(currentHero->getMorale(0, 0, 1), 1)
-        + aiValueOfLuck(currentHero->getLuck(0, 0, 1), 1) / 2);
+        aiValueOfMorale(currentHero->getMorale(0, false, true), 1)
+        + aiValueOfLuck(currentHero->getLuck(0, false, true), 1) / 2);
 }
 
 // E:\\gamedcs\\philai.cpp:2274. Dreamcast recovers this as one expression
@@ -1489,7 +1489,7 @@ static int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
         return 0;
 
     playerData* player = currentHero->getPlayer();
-    if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
+    if (const_cast<hero*>(currentHero)->getNumberInBackpack(true)
             < HERO_BACKPACK_CAPACITY)
         return static_cast<int>(player->m_ai.m_turnValueOfAvgArtifact / 5.0f);
     return static_cast<int>(player->m_ai.m_resourceValue[GOLD] * 200.0);
@@ -2012,7 +2012,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
         && !currentTown->hasBuilding(HOLY_GRAIL_ID, false)
         && currentTown->isLegalBuilding(HOLY_GRAIL_ID)) {
         currentHero->removeArtifact(ARTIFACT_HOLY_GRAIL);
-        currentTown->buildBuilding(HOLY_GRAIL_ID, 1, 1);
+        currentTown->buildBuilding(HOLY_GRAIL_ID, true, true);
         if (g_game->m_mapHeader.m_victoryCondition.checkForGrailBuildingWin())
             checkEndGame(0);
     }
@@ -2033,7 +2033,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
 
     playerData* player = &g_game->m_players[currentHero->m_owner];
     if (player->m_resources[GOLD] >= 500
-        && currentTown->hasBuilding(MAGE_GUILD_ID, 1)
+        && currentTown->hasBuilding(MAGE_GUILD_ID, true)
         && !currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         type_artifact artifact(ARTIFACT_SPELLBOOK);
         currentHero->giveArtifact(artifact, 1, 1);
@@ -2063,14 +2063,14 @@ void aiEnterTown(hero* currentHero, town* currentTown)
     }
 
     if (currentTown->m_type == TOWN_CONFLUX) {
-        if (currentTown->hasBuilding(EXTRA_0_ID, 1)) {
+        if (currentTown->hasBuilding(EXTRA_0_ID, true)) {
             type_university university;
             university.initializeMagicSkills();
             aiVisitUniversity(currentHero, &university);
         }
     }
 
-    g_advManager->demobilizeCurrHero(0, 0);
+    g_advManager->demobilizeCurrHero(false, false);
     if (garrisonHero)
         currentTown->applySpecialBuildingEffect(garrisonHero);
     if (currentTown->m_visitingHeroId != -1) {
@@ -2257,7 +2257,7 @@ void philAI::doAI(int whichPlayer)
         }
     }
     g_game->checkHeroConsistency();
-    g_mouseManager->showPointer(1);
+    g_mouseManager->showPointer(true);
 }
 
 // Original: MoveHero; philai.cpp:1056
@@ -2294,8 +2294,8 @@ static void moveHero(hero* currentHero, long* dangerZones,
         if (g_game->getCurrHero() == currentHero) {
             isLastHero = 0;
         } else {
-            g_advManager->demobilizeCurrHero(0, 1);
-            g_advManager->setHeroContext(currentHero->m_id, 1, 0, 1);
+            g_advManager->demobilizeCurrHero(false, true);
+            g_advManager->setHeroContext(currentHero->m_id, 1, false, true);
             memset(dangerZones, 0,
                    g_mapWidth * g_mapHeight * g_game->getNumMapLevels()
                        * sizeof(long));
@@ -2317,7 +2317,7 @@ static void moveHero(hero* currentHero, long* dangerZones,
                                         currentHero->m_z);
         if (townId >= 0) {
             town* currentTown = g_game->getTown(townId);
-            g_advManager->demobilizeCurrHero(0, 1);
+            g_advManager->demobilizeCurrHero(false, true);
             if (currentTown->m_owner == currentHero->m_owner) {
                 if (currentTown->m_garrisonHeroId < 0) {
                     player->addGarrisonHero(currentTown);
@@ -2696,8 +2696,8 @@ void aiPurchaseCreatures(hero* currentHero, generator* currentGenerator)
         g_game->m_players[currentHero->m_owner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doPurchase(&currentHero->m_army,
-                          currentHero->getMorale(0, 0, 1), 0,
-                          g_currentPlayer->m_resources, 1,
+                          currentHero->getMorale(0, false, true), 0,
+                          g_currentPlayer->m_resources, true,
                           hasAngelicAlliance);
 }
 
@@ -2755,7 +2755,7 @@ int hero::moraleIncreaseValue(int value)
     if (m_army.hasAllUndead())
         return 0;
 
-    double valueAdded = aiValueOfMorale(getMorale(0, 0, 1), value);
+    double valueAdded = aiValueOfMorale(getMorale(0, false, true), value);
     valueAdded *= (getPrimarySkillTotal() + 40)
                    * m_army.getAIValue() / 40;
     return static_cast<int>(valueAdded);
@@ -2769,7 +2769,7 @@ DC_ADDRESS(0x111c78, 0xf0)
 MAC_ADDRESS(0x144104, 0xdc)
 int hero::luckIncreaseValue(int value)
 {
-    int luck = getLuck(0, 0, 1);
+    int luck = getLuck(0, false, true);
     if (luck + value > 3) {
         luck = 3 - luck;
         if (value <= 0)
@@ -2788,13 +2788,13 @@ MAC_ADDRESS(0x144744, 0xd4)
 void aiRecruitRefugees(hero* currentHero, TCreatureType type, short* number)
 {
     type_AI_creature_purchaser purchaser(currentHero->m_owner, type, number,
-                                         0);
+                                         false);
     unsigned char hasAngelicAlliance =
         g_game->m_players[currentHero->m_owner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doPurchase(&currentHero->m_army,
-                          currentHero->getMorale(0, 0, 1), 0,
-                          g_currentPlayer->m_resources, 1,
+                          currentHero->getMorale(0, false, true), 0,
+                          g_currentPlayer->m_resources, true,
                           hasAngelicAlliance);
 }
 
@@ -2959,7 +2959,7 @@ static int valueOfGenerator(const hero* currentHero, int x, int y, int z, Newmap
             ARTIFACT_ANGELIC_ALLIANCE);
     long purchaseValue = purchaser.getPurchaseValue(
         &currentHero->m_army,
-        currentHero->getMorale(0, 0, 1), 0,
+        currentHero->getMorale(0, false, true), 0,
         g_currentPlayer->m_resources, hasAngelicAlliance);
 
     if (moveCost >= 400
@@ -3007,7 +3007,7 @@ static long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, sho
     }
 
     townValue = static_cast<long>(
-        enemyTown->getGoldIncome(0) * player->m_ai.m_resourceValue[GOLD] * 3.0);
+        enemyTown->getGoldIncome(false) * player->m_ai.m_resourceValue[GOLD] * 3.0);
     if (enemyTown->hasBuilding(MARKETPLACE_SILO_ID, false)) {
         int* siloIncome = enemyTown->getSiloIncome();
         townValue += 3 * aiResourceCost(player, siloIncome);
@@ -3238,9 +3238,9 @@ static int valueOfRallyFlag(const hero* currentHero, long& moveCost)
     return static_cast<int>(
         valueOfMoveSource(currentHero, 0x10000, 200, moveCost)
         + aiValueOfLuck(
-            currentHero->getLuck(0, 0, 1), 1)
+            currentHero->getLuck(0, false, true), 1)
         + aiValueOfMorale(
-            currentHero->getMorale(0, 0, 1), 1));
+            currentHero->getMorale(0, false, true), 1));
 }
 
 static long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
@@ -3263,13 +3263,13 @@ static long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
                                 short amount)
 {
     type_AI_creature_purchaser purchaser(
-        currentHero->m_owner, creature, &amount, 0);
+        currentHero->m_owner, creature, &amount, false);
     unsigned char hasAngelicAlliance =
         g_game->m_players[currentHero->m_owner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     return purchaser.getPurchaseValue(
         &currentHero->m_army,
-        currentHero->getMorale(0, 0, 1), 0,
+        currentHero->getMorale(0, false, true), 0,
         g_currentPlayer->m_resources, hasAngelicAlliance);
 }
 
@@ -3303,7 +3303,7 @@ MAC_ADDRESS(0x144914, 0x8c)
 static int valueOfSeaChest(const hero* currentHero, NewmapCell* cell)
 {
     playerData* player = currentHero->getPlayer();
-    if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
+    if (const_cast<hero*>(currentHero)->getNumberInBackpack(true)
             < HERO_BACKPACK_CAPACITY)
         return static_cast<int>(player->m_ai.m_turnValueOfAvgArtifact / 10.0f
             + player->m_ai.m_resourceValue[GOLD] * 1200.0);
@@ -3316,7 +3316,7 @@ MAC_ADDRESS(0x144a54, 0xe8)
 static int valueOfScroll(const hero* currentHero, NewmapCell* cell)
 {
     SpellID spell;
-    if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
+    if (const_cast<hero*>(currentHero)->getNumberInBackpack(true)
             >= HERO_BACKPACK_CAPACITY)
         return 0;
 
@@ -3511,7 +3511,7 @@ static long valueOfReinforcing(hero* currentHero, town* currentTown, short moveC
         &currentTown->getArmy(), garrisonHero,
         hasAngelicAlliance);
     long purchaseValue = purchaser.getPurchaseValue(
-        &currentHero->m_army, currentHero->getMorale(0, 0, 1),
+        &currentHero->m_army, currentHero->getMorale(0, false, true),
         &currentTown->getArmy(), player->m_resources,
         hasAngelicAlliance);
 
@@ -3875,10 +3875,10 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
             return 0;
         if (cell->playerKnowsCell(currentHero->m_owner))
             return static_cast<int>(aiValueOfLuck(
-                currentHero->getLuck(0, 0, 1),
+                currentHero->getLuck(0, false, true),
                 cell->m_fountainInfo.m_luck));
         return static_cast<int>(aiValueOfLuck(
-            currentHero->getLuck(0, 0, 1), 1));
+            currentHero->getLuck(0, false, true), 1));
     case FOUNTAIN_OF_YOUTH:
         return valueOfMoveSource(
             currentHero, 0x4000, 200, moveCost);
@@ -4022,7 +4022,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         // An unvisited tomb shares the survivor appraisal below.
     case SHIPWRECK_SURVIVOR:
         if (const_cast<hero*>(currentHero)
-                ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
+                ->getNumberInBackpack(true) >= HERO_BACKPACK_CAPACITY)
             return 0;
         return static_cast<int>(g_currentPlayer->m_ai.m_turnValueOfAvgArtifact);
     case WATER_WHEEL:
@@ -4117,13 +4117,13 @@ void aiJoinDecision(hero* currentHero, TCreatureType creature,
                       short amount)
 {
     type_AI_creature_purchaser purchaser(currentHero->m_owner, creature,
-                                         &amount, 1);
+                                         &amount, true);
     unsigned char hasAngelicAlliance =
         g_game->m_players[currentHero->m_owner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doPurchase(&currentHero->m_army,
-                          currentHero->getMorale(0, 0, 0), 0,
-                          g_currentPlayer->m_resources, 0,
+                          currentHero->getMorale(0, false, false), 0,
+                          g_currentPlayer->m_resources, false,
                           hasAngelicAlliance);
 }
 

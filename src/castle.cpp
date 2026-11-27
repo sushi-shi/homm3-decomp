@@ -434,7 +434,7 @@ int THallWindow::windowHandler(message& msg)
             msg.m_extraText = g_text;
             g_townManager->dialogWindow->broadcastMessage(msg);
             g_townManager->dialogWindow->drawWindow(
-                0, CASTLE_ROLLOVER_DRAW_FIRST_ID, CASTLE_ROLLOVER_TEXT_ID);
+                false, CASTLE_ROLLOVER_DRAW_FIRST_ID, CASTLE_ROLLOVER_TEXT_ID);
             g_windowManager->updateScreen(8, 0x22c, 0x2de, 0x12);
             return MESSAGE_DISPATCH_CONSUME;
         }

@@ -110,7 +110,7 @@ public:
     void reset()
     {
         for (int i = 0; i < m_available.size(); ++i)
-            m_available[i] = 1;
+            m_available[i] = true;
         m_numbersLeft = m_available.size();
     }
 };

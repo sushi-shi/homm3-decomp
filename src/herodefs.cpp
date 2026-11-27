@@ -273,11 +273,11 @@ bool InitializeHeroClassTraitsTable()
         DATA_COMPGEN(0x0067f164, heroClassTraitsSpreadsheetName,
                      "hctraits.txt"));
     if (!resource)
-        return 0;
+        return false;
 
     if (resource->GetNumberOfRows() < 20) {
         ResourceManager::Dispose(resource);
-        return 0;
+        return false;
     }
 
     int id = 0;
@@ -287,7 +287,7 @@ bool InitializeHeroClassTraitsTable()
     }
 
     ResourceManager::Dispose(resource);
-    return 1;
+    return true;
 }
 
 VA(0x004e6b10, 0x1C8)
@@ -299,11 +299,11 @@ bool InitializeSSkillTraitsTable()
         DATA_COMPGEN(0x0067f174, secondarySkillTraitsSpreadsheetName,
                      "sstraits.txt"));
     if (!resource)
-        return 0;
+        return false;
 
     if (resource->GetNumberOfRows() < 30) {
         ResourceManager::Dispose(resource);
-        return 0;
+        return false;
     }
 
     int id = 0;
@@ -313,7 +313,7 @@ bool InitializeSSkillTraitsTable()
     }
 
     ResourceManager::Dispose(resource);
-    return 1;
+    return true;
 }
 
 // The DC table loaders call these ordinary static functions. Complete's

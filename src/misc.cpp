@@ -827,7 +827,7 @@ int TPickANumber::pick()
         idx++;
     }
     m_numbersLeft--;
-    m_available[idx] = 0;
+    m_available[idx] = false;
     return m_low + idx;
 }
 
@@ -837,7 +837,7 @@ void TPickANumber::markOut(int number)
 {
     if (isAvailable(number)) {
         --m_numbersLeft;
-        m_available[number - m_low] = 0;
+        m_available[number - m_low] = false;
     }
 }
 

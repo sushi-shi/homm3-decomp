@@ -147,10 +147,10 @@ bool CDPlayHeroes::SysMsgHost(DPMSG_GENERIC* message,
 {
     unsigned char wasHost = isHost();
     if (!CDPlay::SysMsgHost(message, toId))
-        return 0;
+        return false;
     if (!wasHost)
         handleHostXFer();
-    return 1;
+    return true;
 }
 
 VA(0x00552740, 0x1DE)
@@ -160,7 +160,7 @@ bool CDPlayHeroes::SysMsgSessionLost(DPMSG_GENERIC* message,
 {
     CSessionLostMsg msg;
     queueMsg(&msg);
-    return 1;
+    return true;
 }
 
 // E:\gamedcs\remote.cpp:204. DC207 calls HandlePlayerDrop for a player,
@@ -172,7 +172,7 @@ bool CDPlayHeroes::SysMsgDestroyPlayerOrGroup(
 {
     if (message->dwPlayerType == DPLAY_PLAYER_TYPE_PLAYER) {
         handlePlayerDrop(message->dpId);
-        return 1;
+        return true;
     }
     return CDPlay::SysMsgDestroyPlayerOrGroup(message, toId);
 }
@@ -325,10 +325,10 @@ bool CDPlayHeroes::HandleLowLevelMsg(CNetMsg* netMsg)
         break;
 
     default:
-        return 0;
+        return false;
     }
 
-    return 1;
+    return true;
 }
 
 // Original: CDPlayHeroes::GetRemoteData; remote.cpp:350
@@ -341,7 +341,7 @@ CNetMsg* CDPlayHeroes::GetRemoteData(bool removeFromQueue,
                                      bool* wasCompressed)
 {
     if (wasCompressed)
-        *wasCompressed = 0;
+        *wasCompressed = false;
     if (!g_remoteOn)
         return 0;
     if (m_msgQueue.empty())
@@ -362,7 +362,7 @@ CNetMsg* CDPlayHeroes::GetRemoteData(bool removeFromQueue,
                 destroyMsg(netMsg);
             netMsg = uncompressedMsg;
             if (wasCompressed)
-                *wasCompressed = 1;
+                *wasCompressed = true;
         }
     }
     return netMsg;
@@ -1429,7 +1429,7 @@ void CAnimatedDlg::drawSprite()
     int dy = m_y + m_spriteY + s0y - m_sprite->GetCroppedY(m_seq, 0);
     m_sprite->DrawCreature(
         m_seq, m_spriteFrame, s0x, s0y, sw, sh,
-        g_windowManager->m_screenBitmap, dx, dy, 0, 0);
+        g_windowManager->m_screenBitmap, dx, dy, false, 0);
 }
 
 VA(0x00554d90, 0x80)
@@ -1452,7 +1452,7 @@ void CAnimatedDlg::tickAnimation()
         m_spriteFrame = (m_spriteFrame + 1)
                       % m_sprite->GetNumFrames(m_seq);
         m_lastTick = currentTime;
-        drawWindow(0, 0xffff0001, 0xffff);
+        drawWindow(false, 0xffff0001, 0xffff);
         g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
     }
 }
@@ -1502,7 +1502,7 @@ void CWaitForReadyPlayersDlg::wait()
 
     setup(g_generalText->GetText(GENERAL_TEXT_WAIT_FOR_READY_PLAYERS), g_mediumFont,
           akCreatureTypeTraits[creature].m_sprite_name, 0);
-    doModal(0);
+    doModal(false);
 
     if (g_dPlay->isHost()) {
         CAllReadyToPlayMsg msg;
@@ -1517,9 +1517,9 @@ bool CWaitForReadyPlayersDlg::allPlayersReady()
 {
     for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (g_game->isHuman(i) && !m_playerReady[i])
-            return 0;
+            return false;
     }
-    return 1;
+    return true;
 }
 
 // E:\gamedcs\remote.cpp:1813 - forget the dropped player's DirectPlay
@@ -1570,7 +1570,7 @@ int CWaitForReadyPlayersDlg::handleMessage(message& msg)
     }
 
     if (GameTime::elapsedSince(m_startTime) >= 3000) {
-        CNetMsg* netMsg = GetRemoteData(1, 0);
+        CNetMsg* netMsg = GetRemoteData(true, 0);
         if (netMsg) {
             CMessageKill killMsg(netMsg);
             switch (netMsg->m_subType) {
@@ -1731,11 +1731,11 @@ bool testIfLobbyLaunched()
     char executableName[256];
 
     if (g_mPlayer)
-        return 1;
+        return true;
     if (!createDPlayObject())
-        return 0;
+        return false;
     if (!g_dPlay)
-        return 0;
+        return false;
 
     const char* registryKey = g_dplayRegistryKey;
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, registryKey, 0, KEY_READ, &key)
@@ -1876,7 +1876,7 @@ unsigned char lobbyLaunchConnect()
         return 0;
     }
 
-    CHourGlass hourGlass(1);
+    CHourGlass hourGlass(true);
     g_logFile.log(DATA_COMPGEN(0x00682cc4, lobbyAttemptingConnect,
                             "Attempting connect..."));
     if (!g_dPlay->Connect()) {
@@ -2060,10 +2060,10 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
     CTextDialog dlg(0x12);
     dlg.setup((*g_generalText)[GENERAL_TEXT_PLAYER_DROP_RELOAD],
               g_mediumFont);
-    dlg.open(0, 1);
+    dlg.open(0, true);
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
-    CHourGlass hourGlass(1);
+    CHourGlass hourGlass(true);
     if (!g_game->loadGame(g_config.m_scFile, 0, 0)) {
         g_game->loadGame(g_config.m_rcFile, 0, 0);
     }
@@ -2212,7 +2212,7 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
 
     setup(g_generalText->GetText(GENERAL_TEXT_WAIT_FOR_LEVEL_SELECTION), g_mediumFont,
           akCreatureTypeTraits[creature].m_sprite_name, 0);
-    doModal(0);
+    doModal(false);
 }
 
 VA_COMPGEN(0x00556b70, 0x21, SCALAR_DELETING_DTOR, CLevelPickWaitDlg)
@@ -2225,7 +2225,7 @@ int CLevelPickWaitDlg::handleMessage(message& msg)
     CAnimatedDlg::handleMessage(msg);
     pollSound();
 
-    CNetMsg* netMsg = GetRemoteData(1, 0);
+    CNetMsg* netMsg = GetRemoteData(true, 0);
     if (netMsg) {
         CMessageKill msgKill(netMsg);
         switch (netMsg->m_subType) {
@@ -2322,7 +2322,7 @@ void CWaitForRemoteBattleDlg::wait(int playerPos)
     int creature = sRandom(0, 111);
     setup(g_generalText->GetText(GENERAL_TEXT_WAIT_FOR_REMOTE_BATTLE), g_mediumFont,
           akCreatureTypeTraits[creature].m_sprite_name, 12);
-    doModal(0);
+    doModal(false);
 }
 
 VA(0x005570f0, 0x1E9)
@@ -2333,7 +2333,7 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
     CAnimatedDlg::handleMessage(msg);
     pollSound();
 
-    CNetMsg* netMsg = GetRemoteData(1, 0);
+    CNetMsg* netMsg = GetRemoteData(true, 0);
     if (netMsg) {
         CMessageKill killMsg(0);
         if (netMsg->m_subType != RS_COMBAT_INIT)
@@ -2415,7 +2415,7 @@ void CSaveScreen::restore(unsigned char update)
 {
     if (m_screenSaved) {
         Draw(0, 0, GetWidth(), GetHeight(), g_windowManager->m_screenBitmap,
-             m_x, m_y, 0);
+             m_x, m_y, false);
         if (update)
             g_windowManager->updateScreen(m_x, m_y, GetWidth(), GetHeight());
     }
@@ -2471,7 +2471,7 @@ MAC_ADDRESS(0x21510c, 0x4c)
 void CGameTransferSmack::start()
 {
     m_started = 1;
-    openSmackerVideo(0x3f, m_x, m_y, 160, 160, 0, 0, 0);
+    openSmackerVideo(0x3f, m_x, m_y, 160, 160, 0, false, false);
 }
 
 // DrawCurrentFrame is defined in remote.cpp:2784 in DC. Mac additionally
@@ -2604,7 +2604,7 @@ CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup,
         m_abortPopupMsg = 0;
         return handleNetMsg(abortMsg);
     }
-    CNetMsg* netMsg = GetRemoteData(1, 0);
+    CNetMsg* netMsg = GetRemoteData(true, 0);
     if (netMsg == 0)
         return 0;
     if (msgReceived)
@@ -2673,10 +2673,10 @@ bool CTurnDuration::isOn()
 {
     // DC remote.cpp:2921/2922 and 2925 retain two separate early-outs.
     if (m_currDuration == 0)
-        return 0;
+        return false;
     if (g_inCampaign)
-        return 0;
-    return 1;
+        return false;
+    return true;
 }
 
 VA(0x00557aa0, 0x4D)
@@ -2689,9 +2689,9 @@ bool CTurnDuration::isExpired()
             && m_pauseTime <= 0) {
         if (m_turnStartTime > 0
                 && GameTime::elapsedSince(m_turnStartTime) > m_currDuration)
-            return 1;
+            return true;
     }
-    return 0;
+    return false;
 }
 
 // E:\gamedcs\remote.cpp:2950
@@ -2773,14 +2773,14 @@ MAC_ADDRESS(0x215a3c, 0x9c)
 bool CTurnDuration::isClose(unsigned long howClose)
 {
     if (!isOn())
-        return 0;
+        return false;
     if (m_turnStartTime == 0)
-        return 0;
+        return false;
     if (m_pauseTime != 0)
-        return 0;
+        return false;
     if (GameTime::get() + howClose <= m_turnStartTime + m_currDuration)
-        return 0;
-    return 1;
+        return false;
+    return true;
 }
 
 VA(0x00557d60, 0xB)

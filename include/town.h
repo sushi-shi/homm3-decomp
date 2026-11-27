@@ -587,9 +587,9 @@ public:
     DC_ADDRESS(0x0bcc40, 0x74)
     bool isCastle() const
     {
-        return hasBuilding(CASTLE_FORT_ID, 0)
-            || hasBuilding(CASTLE_CITADEL_ID, 0)
-            || hasBuilding(CASTLE_CASTLE_ID, 0);
+        return hasBuilding(CASTLE_FORT_ID, false)
+            || hasBuilding(CASTLE_CITADEL_ID, false)
+            || hasBuilding(CASTLE_CASTLE_ID, false);
     }
 
     // E:\gamedcs\Town.h:342. Public ?IsCapitol@town@@QBA_NXZ likewise
@@ -597,7 +597,7 @@ public:
     DC_ADDRESS(0x0bccb4, 0x28)
     bool isCapitol() const
     {
-        return hasBuilding(HALL_CAPITOL_ID, 0);
+        return hasBuilding(HALL_CAPITOL_ID, false);
     }
     void setSummoningGenerator();
     int getPortraitFrame(bool isSmall) const;

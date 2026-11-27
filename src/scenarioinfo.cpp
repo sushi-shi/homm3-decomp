@@ -170,7 +170,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     iconWidget* mapSizeIcon = new iconWidget(
-        711, 22, 29, 23, 189, "scnrmpsz.def", 0, 0, 0, 0,
+        711, 22, 29, 23, 189, "scnrmpsz.def", 0, 0, false, 0,
         iconWidget::ICON_STYLE_PLAIN);
     m_widgets.push_back(mapSizeIcon);
 
@@ -225,10 +225,10 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     for (i = 0; i < 8; ++i) {
         m_widgets.push_back(new iconWidget(
             457 + i * 15, 399, 15, 20, 112 + i, "itgflags.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
         m_widgets.push_back(new iconWidget(
             637 + i * 15, 399, 15, 20, 120 + i, "itgflags.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
     }
 
     m_widgets.push_back(new CHotspotWidget(453, 396, 310, 25, 387));
@@ -259,7 +259,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new button(
         581, 529, 166, 40, SCENARIO_INFO_ACCEPT_ID, "scnrback.def",
-        0, 1, 0, 1, 2));
+        0, 1, false, 1, 2));
 
     m_victoryIcon = ResourceManager::GetSprite("scnrvict.def");
     m_lossIcon = ResourceManager::GetSprite("scnrloss.def");
@@ -275,7 +275,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     }
 
     slider* durationSlider = new slider(
-        55, 551, 194, 16, 338, 11, 0, slider::BLUE, 0, 0);
+        55, 551, 194, 16, 338, 11, 0, slider::BLUE, 0, false);
     durationSlider->setState(g_game->m_setup.m_turnDuration);
     m_widgets.push_back(durationSlider);
 
@@ -333,7 +333,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     }
 
     iconWidget* victory = new iconWidget(
-        417, 302, 32, 24, -1, "scnrvict.def", 0, 0, 0, 0,
+        417, 302, 32, 24, -1, "scnrvict.def", 0, 0, false, 0,
         iconWidget::ICON_STYLE_PLAIN);
     if (vc->m_type >= 0)
         victory->setIconFrame(vc->m_type);
@@ -342,7 +342,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     m_widgets.push_back(victory);
 
     iconWidget* loss = new iconWidget(
-        417, 359, 32, 24, -1, "scnrloss.def", 0, 0, 0, 0,
+        417, 359, 32, 24, -1, "scnrloss.def", 0, 0, false, 0,
         iconWidget::ICON_STYLE_PLAIN);
     if (lc->m_type >= 0)
         loss->setIconFrame(lc->m_type);
@@ -351,15 +351,15 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     m_widgets.push_back(loss);
 
     m_widgets.push_back(new button(
-        503, 450, 30, 46, 107, "gspbut3.def", 0, 1, 0, 0, 2));
+        503, 450, 30, 46, 107, "gspbut3.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(
-        535, 450, 30, 46, 108, "gspbut4.def", 0, 1, 0, 0, 2));
+        535, 450, 30, 46, 108, "gspbut4.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(
-        567, 450, 30, 46, 109, "gspbut5.def", 0, 1, 0, 0, 2));
+        567, 450, 30, 46, 109, "gspbut5.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(
-        599, 450, 30, 46, 110, "gspbut6.def", 0, 1, 0, 0, 2));
+        599, 450, 30, 46, 110, "gspbut6.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(
-        631, 450, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2));
+        631, 450, 30, 46, 111, "gspbut7.def", 0, 1, false, 0, 2));
 
     addWidgetsToMessageStream();
     updateAllyEnemyFlags();
@@ -378,7 +378,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     // ordinary member boundary; retail expands its five-widget/message body
     // here. Keep the declaration non-inline and let VC6 choose this caller.
     setDifficultyHiLite();
-    setHelpText(g_singleSelectionHelp + 4, 104, 345, 0);
+    setHelpText(g_singleSelectionHelp + 4, 104, 345, false);
     // Retail +0xccd saves the duration slider in [ebp-0x10]; +0x205c
     // reloads that same object for Enable(false), after SetHelpText.
     durationSlider->enable(0);
@@ -395,10 +395,10 @@ void CScenarioPlayerInfoWidget::draw() const
 
     m_panel->Draw(0, 0, m_panel->GetWidth(), m_panel->GetHeight(),
                 g_windowManager->m_screenBitmap,
-                windowX + 54, windowY + m_playerPosition * 50 + 122, 1);
+                windowX + 54, windowY + m_playerPosition * 50 + 122, true);
     m_flag->Draw(0, 0, m_flag->GetWidth(), m_flag->GetHeight(),
                g_windowManager->m_screenBitmap,
-               windowX + 11, windowY + m_playerPosition * 50 + 124, 1);
+               windowX + 11, windowY + m_playerPosition * 50 + 124, true);
 
     g_smallFont->DrawBoundedString(
         m_playerName, g_windowManager->m_screenBitmap,
@@ -421,7 +421,7 @@ void CScenarioPlayerInfoWidget::draw() const
                      m_townSprite->GetWidth(), m_townSprite->GetHeight(),
                      g_windowManager->m_screenBitmap,
                      windowX + 173, windowY + m_playerPosition * 50 + 124,
-                     0, 1);
+                     false, true);
     g_tinyFont->DrawBoundedString(
         g_townTypeNames[m_townType + 1], g_windowManager->m_screenBitmap,
         windowX + 161, windowY + m_playerPosition * 50 + 156,
@@ -432,7 +432,7 @@ void CScenarioPlayerInfoWidget::draw() const
         m_heroPortrait->Draw(0, 0, m_heroPortrait->GetWidth(), m_heroPortrait->GetHeight(),
                            g_windowManager->m_screenBitmap,
                            windowX + 249,
-                           windowY + m_playerPosition * 50 + 124, 0);
+                           windowY + m_playerPosition * 50 + 124, false);
     }
     if (m_startingHero) {
         g_tinyFont->DrawBoundedString(
@@ -468,7 +468,7 @@ void CScenarioPlayerInfoWidget::draw() const
                       m_bonusSprite->GetWidth(), m_bonusSprite->GetHeight(),
                       g_windowManager->m_screenBitmap,
                       windowX + 325, windowY + m_playerPosition * 50 + 124,
-                      0, 1);
+                      false, true);
 
     if (m_startingBonus == NEW_MAP_BONUS_RANDOM) {
         g_tinyFont->DrawBoundedString(
@@ -522,7 +522,7 @@ MAC_ADDRESS(0x160514, 0x34)
 int CScenarioInfoDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id == SCENARIO_INFO_ACCEPT_ID)
-        exitFlag = 1;
+        exitFlag = true;
     return CHeroWindowEx::onWidgetDeselect(id, exitFlag);
 }
 
@@ -587,9 +587,9 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
 {
     switch (id) {
     case SCENARIO_INFO_TEAM_ID: {
-        CTeamAlignmentDlg dlg(0);
+        CTeamAlignmentDlg dlg(false);
         dlg.createWin();
-        dlg.doModal(0);
+        dlg.doModal(false);
         return 1;
     }
 
@@ -604,11 +604,11 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
         int townType =
             g_game->m_setup.m_alignment[id - SCENARIO_INFO_TOWN_FIRST_ID];
         if (townType != -1) {
-            CTownDlg dlg(0);
+            CTownDlg dlg(false);
             dlg.createWin(
                 m_townPix, townType * 2 + 2,
                 static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
-            dlg.doModal(0);
+            dlg.doModal(false);
         }
         return 1;
     }
@@ -628,12 +628,12 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
                 static_cast<CScenarioPlayerInfoWidget*>(getWidget(
                     playerPosition + SCENARIO_INFO_PLAYER_ROW_FIRST_ID));
             hero* startingHero = g_game->getHero(heroId);
-            CHeroDlg dlg(0);
+            CHeroDlg dlg(false);
             dlg.createWin(row->m_heroPortrait, startingHero->m_name,
                           m_heroSpecificAbility, heroId,
                           startingHero->getSpecificAbilityTextShort(),
                           startingHero->getClassName());
-            dlg.doModal(0);
+            dlg.doModal(false);
         }
         return 1;
     }
@@ -647,7 +647,7 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
     case SCENARIO_INFO_BONUS_FIRST_ID + 6:
     case SCENARIO_INFO_BONUS_FIRST_ID + 7: {
         int playerPosition = id - SCENARIO_INFO_BONUS_FIRST_ID;
-        CBonusDlg dlg(0);
+        CBonusDlg dlg(false);
         int frame = 9;
         const char* title =
             DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, "");
@@ -688,7 +688,7 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
         }
 
         dlg.createWin(title, m_bonusSprite, frame, botTitle, description);
-        dlg.doModal(0);
+        dlg.doModal(false);
         return 1;
     }
     }

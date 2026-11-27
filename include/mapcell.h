@@ -1346,7 +1346,7 @@ DC_ADDRESS(0x01fa40, 0x40)
 inline bool ExtraInfoUnion::playerKnowsCell(short player) const
 {
     if (player < 0 || player >= 8)
-        return 0;
+        return false;
     return (m_cellVisitedInfo.m_visited & (1 << player)) != 0;
 }
 

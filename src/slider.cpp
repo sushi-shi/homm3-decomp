@@ -127,7 +127,7 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
         x1, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
         g_windowManager->m_screenBitmap,
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-        0);
+        false);
     int endY = m_parentWindow->m_y + m_y;
     endY -= m_knobStart;
     endY += m_length;
@@ -136,16 +136,16 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
         g_windowManager->m_screenBitmap,
         m_x + m_parentWindow->m_x,
         endY,
-        0);
+        false);
     m_sliderBitmap->Draw(
         x3, 0, m_width, m_length - m_knobStart * 2,
         g_windowManager->m_screenBitmap,
-        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobStart, 0);
+        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobStart, false);
     m_sliderSprite->DrawInterface(
         x4, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
         g_windowManager->m_screenBitmap,
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobPos,
-        0);
+        false);
     g_windowManager->updateScreen(
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
     g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT] = GameTime::get() + 60;
@@ -322,12 +322,12 @@ int slider::main(message& msg)
         return 2;
 
     case MESSAGE_WIDGET: {
-        bool handled = 0;
+        bool handled = false;
         switch (msg.m_codeX) {
         case WIDGET_SET_SLIDER_STATE:
             if (msg.m_codeY == m_id) {
                 setState(msg.m_extra);
-                handled = 1;
+                handled = true;
                 break;
             }
             break;
@@ -480,12 +480,12 @@ void slider::draw() const
             m_sliderSprite->DrawInterface(
                 1, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
-                m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 0);
+                m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, false);
         } else {
             m_sliderSprite->DrawInterface(
                 0, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
-                m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 0);
+                m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, false);
         }
 
         if ((m_status & WIDGET_SELECTED)
@@ -494,34 +494,34 @@ void slider::draw() const
                 3, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x + m_length - m_knobStart,
-                m_y + m_parentWindow->m_y, 0);
+                m_y + m_parentWindow->m_y, false);
         } else {
             m_sliderSprite->DrawInterface(
                 2, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x + m_length - m_knobStart,
-                m_y + m_parentWindow->m_y, 0);
+                m_y + m_parentWindow->m_y, false);
         }
 
         m_sliderBitmap->Draw(
             0, 0, m_length - m_knobStart * 2, m_height,
             g_windowManager->m_screenBitmap,
-            m_x + m_parentWindow->m_x + m_knobStart, m_y + m_parentWindow->m_y, 0);
+            m_x + m_parentWindow->m_x + m_knobStart, m_y + m_parentWindow->m_y, false);
         m_sliderSprite->DrawInterface(
             4, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
             g_windowManager->m_screenBitmap,
-            m_x + m_parentWindow->m_x + m_knobPos, m_y + m_parentWindow->m_y, 0);
+            m_x + m_parentWindow->m_x + m_knobPos, m_y + m_parentWindow->m_y, false);
     } else {
         if ((m_status & WIDGET_SELECTED) && m_clickY - m_y < m_knobStart) {
             m_sliderSprite->DrawInterface(
                 1, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
-                m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 0);
+                m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, false);
         } else {
             m_sliderSprite->DrawInterface(
                 0, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
-                m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 0);
+                m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, false);
         }
 
         if ((m_status & WIDGET_SELECTED)
@@ -530,23 +530,23 @@ void slider::draw() const
                 3, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x,
-                m_y + m_parentWindow->m_y + m_length - m_knobStart, 0);
+                m_y + m_parentWindow->m_y + m_length - m_knobStart, false);
         } else {
             m_sliderSprite->DrawInterface(
                 2, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x,
-                m_y + m_parentWindow->m_y + m_length - m_knobStart, 0);
+                m_y + m_parentWindow->m_y + m_length - m_knobStart, false);
         }
 
         m_sliderBitmap->Draw(
             0, 0, m_width, m_length - m_knobStart * 2,
             g_windowManager->m_screenBitmap,
-            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobStart, 0);
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobStart, false);
         m_sliderSprite->DrawInterface(
             4, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
             g_windowManager->m_screenBitmap,
-            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobPos, 0);
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobPos, false);
     }
 }
 

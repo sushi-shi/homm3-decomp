@@ -39,38 +39,38 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
 
     button* action = new button(
         25, 24, 49, 51, VIEW_WORLD_ID,
-        "AdvView.def", 0, 1, 0, 0, 2);
+        "AdvView.def", 0, 1, false, 0, 2);
     action->setHotkey(ADVENTURE_OPTION_VIEW_HOTKEY);
     m_widgets.push_back(action);
 
     action = new button(
         25, 82, 49, 51, VIEW_PUZZLE_ID,
-        "AdvPuz.def", 0, 1, 0, 0, 2);
+        "AdvPuz.def", 0, 1, false, 0, 2);
     action->setHotkey(ADVENTURE_OPTION_PUZZLE_HOTKEY);
     m_widgets.push_back(action);
 
     action = new button(
         25, 140, 49, 51, DIG_ID,
-        "AdvDig.def", 0, 1, 0, 0, 2);
+        "AdvDig.def", 0, 1, false, 0, 2);
     action->setHotkey(ADVENTURE_OPTION_DIG_HOTKEY);
     m_widgets.push_back(action);
 
     action = new button(
         25, 198, 49, 51, VIEW_SCENARIO_ID,
-        "AdvInfo.def", 0, 1, 0, 0, 2);
+        "AdvInfo.def", 0, 1, false, 0, 2);
     action->setHotkey(ADVENTURE_OPTION_INFO_HOTKEY);
     m_widgets.push_back(action);
 
     action = new button(
         25, 256, 49, 51, REPLAY_ID,
-        "AdvTurn.def", 0, 1, 0, 0, 2);
+        "AdvTurn.def", 0, 1, false, 0, 2);
     action->enable(g_game->replayAvailable());
     action->setHotkey(ADVENTURE_OPTION_TURN_HOTKEY);
     m_widgets.push_back(action);
 
     button* accept = new button(
         203, 313, 64, 32, ADVENTURE_OPTION_ACCEPT_ID,
-        "iOk6432.def", 0, 1, 1, 0, 2);
+        "iOk6432.def", 0, 1, true, 0, 2);
     accept->setHotkey(ADVENTURE_OPTION_ACCEPT_HOTKEY_1);
     accept->setHotkey(ADVENTURE_OPTION_ACCEPT_HOTKEY_2);
     m_widgets.push_back(accept);
@@ -185,7 +185,7 @@ int TAdventureOptionsWindow::windowHandler(message& msg)
                 g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
             }
             m_rolloverWidget->setText(rollover);
-            drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            drawWindow(true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         }
     }
 

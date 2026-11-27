@@ -267,81 +267,81 @@ TAdventureMapWindow::TAdventureMapWindow()
     button* newButton = new button(
         679, 196, 32, 32, KINGDOM_OVERVIEW_ID,
         DATA_COMPGEN(0x0065F3C0, adventureIam002, "iam002.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     newButton->setHotkey(0x25);
     m_widgets.push_back(newButton);
 
     newButton = new button(
         711, 196, 32, 32, ELEVATION_TOGGLE_ID,
         DATA_COMPGEN(0x0065F268, adventureIam010, "iam010.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     newButton->setHotkey(0x16);
     m_widgets.push_back(newButton);
 
     newButton = new button(
         679, 228, 32, 32, QUEST_LOG_ID,
         DATA_COMPGEN(0x0065F3B4, adventureIam004, "iam004.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     newButton->setHotkey(0x10);
     m_widgets.push_back(newButton);
 
     newButton = new button(
         711, 228, 32, 32, SLEEP_ID,
         DATA_COMPGEN(0x0065F250, adventureIam005, "iam005.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     newButton->setHotkey(0x2c);
     m_widgets.push_back(newButton);
 
     newButton = new button(
         679, 260, 32, 32, MOVE_ID,
         DATA_COMPGEN(0x0065F3A8, adventureIam006, "iam006.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     newButton->setHotkey(0x32);
     m_widgets.push_back(newButton);
 
     newButton = new button(
         711, 260, 32, 32, CAST_SPELL_ID,
         DATA_COMPGEN(0x0065F39C, adventureIam007, "iam007.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     newButton->setHotkey(0x2e);
     m_widgets.push_back(newButton);
 
     newButton = new button(
         679, 292, 32, 32, ADVENTURE_OPTIONS_ID,
         DATA_COMPGEN(0x0065F390, adventureIam008, "iam008.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     newButton->setHotkey(0x1e);
     m_widgets.push_back(newButton);
 
     newButton = new button(
         711, 292, 32, 32, SYSTEM_OPTIONS_ID,
         DATA_COMPGEN(0x0065F384, adventureIam009, "iam009.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     newButton->setHotkey(0x18);
     m_widgets.push_back(newButton);
 
     newButton = new button(
         679, 324, 64, 32, NEXT_HERO_ID,
         DATA_COMPGEN(0x0065F378, adventureIam000, "iam000.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     newButton->setHotkey(0x23);
     m_widgets.push_back(newButton);
 
     newButton = new button(
         679, 356, 64, 32, END_TURN_ID,
         DATA_COMPGEN(0x0065F36C, adventureIam001, "iam001.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     newButton->setHotkey(0x12);
     m_widgets.push_back(newButton);
 
     m_widgets.push_back(new button(
         609, 196, 64, 16, HERO_UP_ID,
         DATA_COMPGEN(0x0065F360, adventureIam012, "iam012.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(
         609, 372, 64, 16, HERO_DOWN_ID,
         DATA_COMPGEN(0x0065F354, adventureIam013, "iam013.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
 
     std::string unusedText;
 
@@ -367,7 +367,7 @@ TAdventureMapWindow::TAdventureMapWindow()
             m_widgets.push_back(new iconWidget(
                 610, y, 8, 32, widgetId,
                 DATA_COMPGEN(0x0065F348, adventureImobil, "imobil.def"),
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+                0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
             ++widgetId;
             y += 32;
         }
@@ -379,7 +379,7 @@ TAdventureMapWindow::TAdventureMapWindow()
             m_widgets.push_back(new iconWidget(
                 666, y, 8, 32, widgetId,
                 DATA_COMPGEN(0x0065F33C, adventureImana, "imana.def"),
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+                0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
             ++widgetId;
             y += 32;
         }
@@ -388,11 +388,11 @@ TAdventureMapWindow::TAdventureMapWindow()
     m_widgets.push_back(new button(
         747, 196, 48, 16, TOWN_UP_ID,
         DATA_COMPGEN(0x0065F330, adventureIam014, "iam014.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(
         747, 372, 48, 16, TOWN_DOWN_ID,
         DATA_COMPGEN(0x0065F324, adventureIam015, "iam015.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
 
     {
         int y = 212;
@@ -401,7 +401,7 @@ TAdventureMapWindow::TAdventureMapWindow()
             m_widgets.push_back(new iconWidget(
                 747, y, 48, 32, widgetId,
                 DATA_COMPGEN(0x0065F318, adventureItpa, "itpa.def"),
-                0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+                0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
             ++widgetId;
             y += 32;
         }
@@ -439,7 +439,7 @@ TAdventureMapWindow::TAdventureMapWindow()
     }
 
     m_bottomView = 0;
-    m_resourceDisplay = new TResourceDisplay(this, 0);
+    m_resourceDisplay = new TResourceDisplay(this, false);
 }
 
 // Defined at its retail address below; SendChat is its only caller and
@@ -471,7 +471,7 @@ void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)
     if (chatString == DATA_COMPGEN(0x0065f3cc, advChatGoSolo, "gosolo")) {
         if (!g_remoteOn)
             g_mapVisibilityBit = 0xff;
-        g_goSolo = 1;
+        g_goSolo = true;
         g_soloPos = g_game->getLocalPlayerGamePos();
         g_config.m_combatBallista = 1;
         g_config.m_combatCatapult = 1;
@@ -550,7 +550,7 @@ static void checkAdvCheatCode(std::string& chatString)
                && currentHero) {
         cheatUsed = true;
         int increment = currentHero->getExperienceIncrement();
-        currentHero->giveExperience(increment, 1, 1);
+        currentHero->giveExperience(increment, 1, true);
     } else if (code.compare(followTheWhiteRabbitCode)
                && currentHero) {
         cheatUsed = true;
@@ -592,7 +592,7 @@ static void checkAdvCheatCode(std::string& chatString)
         for (int resource = 0; resource < NUM_RESOURCES; resource++)
             g_currentPlayer->m_resources[resource] +=
                 resource == GOLD ? 100000 : 100;
-        g_advManager->m_advWindow->updateResourceDisplay(1, 1);
+        g_advManager->m_advWindow->updateResourceDisplay(true, true);
     } else if (code.compare(bluePillCode)) {
         cheatUsed = true;
         checkEndGame(2);
@@ -796,7 +796,7 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
             return 0;
 
         g_advManager->heroQuickView(player->m_heroes[m_topHero + slot], 508,
-            portrait->m_y + portrait->m_height / 2, 0);
+            portrait->m_y + portrait->m_height / 2, false);
         return 1;
     }
 
@@ -811,7 +811,7 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
 
         g_advManager->townQuickView(
             player->m_townIds[m_topTown + msg->m_codeY - TOWN_0_ID], 508,
-            portrait->m_y + portrait->m_height / 2, 0);
+            portrait->m_y + portrait->m_height / 2, false);
         return 1;
     }
 
@@ -936,7 +936,7 @@ generic_help:
         // the actual message object.
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
             ROLLOVER_TEXT_ID, reinterpret_cast<int>(rolloverText));
-        drawWindow(0, ROLLOVER_TEXT_ID, ROLLOVER_TEXT_ID);
+        drawWindow(false, ROLLOVER_TEXT_ID, ROLLOVER_TEXT_ID);
         g_windowManager->updateScreen(m_x + m_rolloverTextWidget->m_x,
             m_y + m_rolloverTextWidget->m_y, m_rolloverTextWidget->m_width,
             m_rolloverTextWidget->m_height);
@@ -957,7 +957,7 @@ void TAdventureMapWindow::doHeroKnob(bool up)
         if (m_topHero < player->m_numHeroes - NUM_HERO_BUTTONS)
             m_topHero++;
     }
-    updateHeroLocators(-1, 1, 1);
+    updateHeroLocators(-1, true, true);
 }
 
 VA(0x00403280, 0x59)
@@ -973,7 +973,7 @@ void TAdventureMapWindow::doTownKnob(bool up)
         if (m_topTown < player->m_numTowns - NUM_TOWN_BUTTONS)
             m_topTown++;
     }
-    updateTownLocators(-1, 1, 1);
+    updateTownLocators(-1, true, true);
 }
 
 VA(0x004032e0, 0x134)
@@ -996,7 +996,7 @@ void TAdventureMapWindow::updateHeroLocators(int top, bool drawWin,
 
     int i;
     for (i = 0; i < NUM_HERO_BUTTONS; i++)
-        updateHeroLocator(i, 0, 0);
+        updateHeroLocator(i, false, false);
 
     if (!m_topHero)
         widgetSetStatus(HERO_UP_ID, widget::WIDGET_DIMMED);
@@ -1009,13 +1009,13 @@ void TAdventureMapWindow::updateHeroLocators(int top, bool drawWin,
         widgetClearStatus(HERO_DOWN_ID, widget::WIDGET_DIMMED);
 
     if (drawWin) {
-        drawWindow(0, 0xffff0001, 0xffff);
+        drawWindow(false, 0xffff0001, 0xffff);
 
         for (i = 0; i < NUM_HERO_BUTTONS; i++) {
             int heroId = player->m_heroes[m_topHero + i];
             if (heroId != -1 && !g_completeDrawAllCells
                 && heroId == player->m_currHeroId) {
-                m_heroLocators[i]->setVisible(1);
+                m_heroLocators[i]->setVisible(true);
                 m_heroLocators[i]->setImage("hpsyyy.pcx");
                 m_heroLocators[i]->draw();
                 break;
@@ -1047,7 +1047,7 @@ void TAdventureMapWindow::updateTownLocators(int top, bool drawWin,
 
     int i;
     for (i = 0; i < NUM_TOWN_BUTTONS; i++)
-        updateTownLocator(i, 0, 0);
+        updateTownLocator(i, false, false);
 
     if (!m_topTown)
         widgetSetStatus(TOWN_UP_ID, widget::WIDGET_DIMMED);
@@ -1060,7 +1060,7 @@ void TAdventureMapWindow::updateTownLocators(int top, bool drawWin,
         widgetClearStatus(TOWN_DOWN_ID, widget::WIDGET_DIMMED);
 
     if (drawWin) {
-        drawWindow(0, 0xffff0001, 0xffff);
+        drawWindow(false, 0xffff0001, 0xffff);
 
         for (i = 0; i < NUM_TOWN_BUTTONS; i++) {
             int townId = player->m_townIds[m_topTown + i];
@@ -1068,7 +1068,7 @@ void TAdventureMapWindow::updateTownLocators(int top, bool drawWin,
                 && townId == player->m_currTownId) {
                 broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
                                  TOWN_0_ID + i, 1);
-                drawWindow(0, TOWN_0_ID + i, TOWN_0_ID + i);
+                drawWindow(false, TOWN_0_ID + i, TOWN_0_ID + i);
                 break;
             }
         }
@@ -1128,13 +1128,13 @@ void TAdventureMapWindow::updateHeroLocator(int which, bool drawWinSect,
         && heroId == player->m_currHeroId);
 
     if (drawWinSect) {
-        drawWindow(0, HERO_0_ID + which, HERO_0_ID + which);
-        drawWindow(0, HERO_MOVEMENT_0_ID + which, HERO_MOVEMENT_0_ID + which);
-        drawWindow(0, HERO_MANA_0_ID + which, HERO_MANA_0_ID + which);
+        drawWindow(false, HERO_0_ID + which, HERO_0_ID + which);
+        drawWindow(false, HERO_MOVEMENT_0_ID + which, HERO_MOVEMENT_0_ID + which);
+        drawWindow(false, HERO_MANA_0_ID + which, HERO_MANA_0_ID + which);
         if (heroId != -1 && !g_completeDrawAllCells
             && heroId == player->m_currHeroId) {
             m_heroLocators[which]->setImage("hpsyyy.pcx");
-            m_heroLocators[which]->setVisible(1);
+            m_heroLocators[which]->setVisible(true);
             m_heroLocators[which]->draw();
         }
         if (update)
@@ -1154,7 +1154,7 @@ void TAdventureMapWindow::updateTownLocator(int which, bool drawWinSect,
     if (which < player->m_numTowns && !g_completeDrawAllCells) {
         widgetSetStatus(TOWN_0_ID + which, widget::WIDGET_ACTIVE);
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
-            TOWN_0_ID + which, g_game->getTown(townId)->getPortraitFrame(1));
+            TOWN_0_ID + which, g_game->getTown(townId)->getPortraitFrame(true));
     } else {
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
             TOWN_0_ID + which, 0);
@@ -1162,12 +1162,12 @@ void TAdventureMapWindow::updateTownLocator(int which, bool drawWinSect,
     }
 
     if (drawWinSect) {
-        drawWindow(0, TOWN_0_ID + which, TOWN_0_ID + which);
+        drawWindow(false, TOWN_0_ID + which, TOWN_0_ID + which);
         if (which < player->m_numTowns && !g_completeDrawAllCells
             && townId == player->m_currTownId) {
             broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
                              TOWN_0_ID + which, 1);
-            drawWindow(0, TOWN_0_ID + which, TOWN_0_ID + which);
+            drawWindow(false, TOWN_0_ID + which, TOWN_0_ID + which);
         }
         if (update)
             g_windowManager->updateScreen(0x2eb, 32 * which + 0xd4, 0x30, 0x20);
@@ -1194,13 +1194,13 @@ void TAdventureMapWindow::highlightLocators(bool update)
     }
 
     for (i = 0; i < NUM_HERO_BUTTONS; i++)
-        m_heroLocators[i]->setVisible(0);
+        m_heroLocators[i]->setVisible(false);
 
     for (i = 0; i < NUM_HERO_BUTTONS; i++) {
         int heroId = player->m_heroes[m_topHero + i];
         if (heroId != -1 && !g_completeDrawAllCells
             && heroId == player->m_currHeroId) {
-            m_heroLocators[i]->setVisible(1);
+            m_heroLocators[i]->setVisible(true);
             m_heroLocators[i]->setImage("hpsyyy.pcx");
             m_heroLocators[i]->draw();
             break;
@@ -1365,7 +1365,7 @@ MAC_ADDRESS(0x003bec, 0x30)  // anchor-global
 void TAdventureMapWindow::updateResourceDisplay(bool draw, bool update)
 {
     if (!draw)
-        update = 0;
+        update = false;
     m_resourceDisplay->update(draw, update);
 }
 
@@ -1374,7 +1374,7 @@ DC_ADDRESS(0x0011f4, 0x44)
 MAC_ADDRESS(0x003c1c, 0x78)
 void TAdventureMapWindow::drawChatText(bool update)
 {
-    drawWindow(0, CHAT_TEXT_ID, CHAT_TEXT_ID);
+    drawWindow(false, CHAT_TEXT_ID, CHAT_TEXT_ID);
     if (update)
         g_windowManager->updateScreen(m_chatTextWidget->m_x, m_chatTextWidget->m_y,
             m_chatTextWidget->m_width, m_chatTextWidget->m_height);

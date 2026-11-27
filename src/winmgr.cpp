@@ -76,7 +76,7 @@ int heroWindowManager::open(int newPriority)
     robAppBlit(&tempRect);
 
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
-    g_mouseManager->showPointer(1);
+    g_mouseManager->showPointer(true);
 
     m_priority = newPriority;
     m_id = 32;
@@ -247,7 +247,7 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
             try {
                 m_lastHover = -1;
                 if (dialogWindow)
-                    addWindow(dialogWindow, -1, 1);
+                    addWindow(dialogWindow, -1, true);
                 try {
                     if (fadeIn)
                         g_windowManager->fadeScreen(0, 4, 0);
@@ -340,7 +340,7 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
             try {
                 m_lastHover = -1;
                 if (dialogWindow)
-                    addWindow(dialogWindow, -1, 1);
+                    addWindow(dialogWindow, -1, true);
                 try {
                     message msg;
                     endFlag = 0;
@@ -425,7 +425,7 @@ void heroWindowManager::doQuickView(heroWindow* window)
         sleepAllWindows(1);
         try {
             if (window)
-                addWindow(window, -1, 1);
+                addWindow(window, -1, true);
             try {
                 for (;;) {
                     message msg;
@@ -521,7 +521,7 @@ void heroWindowManager::fadeScreen(int inOut, int speed, unsigned char expectFad
     } else {
         fadeFromBlack(speed);
         if (m_isWaitingForFadeIn)
-            g_mouseManager->showPointer(0);
+            g_mouseManager->showPointer(false);
         m_isWaitingForFadeIn = 0;
     }
 }

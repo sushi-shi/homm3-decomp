@@ -535,7 +535,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
 
     if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, false)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
-        townHero->m_townSpecialGrantedMask[m_id] = 1;
+        townHero->m_townSpecialGrantedMask[m_id] = true;
         townHero->adjustPrimarySkill(3, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
@@ -545,7 +545,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
 
     if (m_type == TOWN_INFERNO && hasBuilding(EXTRA_2_ID, false)
         && townHero->m_townSpecialGrantedMask[m_id] == 0) {
-        townHero->m_townSpecialGrantedMask[m_id] = 1;
+        townHero->m_townSpecialGrantedMask[m_id] = true;
         townHero->adjustPrimarySkill(2, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog((*g_generalText)[GENERAL_TEXT_ORDER_OF_FIRE_VISIT], // Order of Fire
@@ -560,8 +560,8 @@ void town::applySpecialBuildingEffect(hero* townHero)
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_BATTLE_SCHOLAR_ACADEMY_VISIT], // Battle Scholar Academy
                 1, -1, -1, 0x11, experience, -1, 0, -1, 0, -1, 0);
-        townHero->m_townSpecialGrantedMask[m_id] = 1;
-        townHero->giveExperience(experience, 1, 1);
+        townHero->m_townSpecialGrantedMask[m_id] = true;
+        townHero->giveExperience(experience, 1, true);
     }
 
     if (m_type == TOWN_STRONGHOLD && hasBuilding(EXTRA_2_ID, false)
@@ -570,7 +570,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_HALL_OF_VALHALLA_VISIT], // Hall of Valhalla
                 1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
-        townHero->m_townSpecialGrantedMask[m_id] = 1;
+        townHero->m_townSpecialGrantedMask[m_id] = true;
         townHero->adjustPrimarySkill(0, 1);
     }
 
@@ -580,7 +580,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_CAGE_OF_WARLORDS_VISIT], // Cage of Warlords
                 1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
-        townHero->m_townSpecialGrantedMask[m_id] = 1;
+        townHero->m_townSpecialGrantedMask[m_id] = true;
         townHero->adjustPrimarySkill(1, 1);
     }
 }
@@ -721,7 +721,7 @@ void town::view(int alreadyFaded)
     if (heroId != -1) {
         hero* visitingHero = g_game->getHero(heroId);
         if (visitingHero->m_owner == g_curWatchPlayer) {
-            g_advManager->setHeroContext(visitingHero->m_id, 0, 0, 1);
+            g_advManager->setHeroContext(visitingHero->m_id, 0, false, true);
             g_adventureGraphicsPreserveMode = 0;
             g_townViewActive = 0;
             return;
@@ -748,7 +748,7 @@ void town::deallocate()
     if (player->m_currTownId == m_id)
         player->m_currTownId = -1;
     player->m_numTowns--;
-    g_advManager->m_advWindow->updateTownLocators(0, 1, 1);
+    g_advManager->m_advWindow->updateTownLocators(0, true, true);
     g_game->m_towns[m_id].m_owner = -1;
     m_owner = -1;
 }
@@ -766,7 +766,7 @@ void town::removeGarrisonHero()
     int player = m_owner;
     m_visitingHeroId = m_garrisonHeroId;
     m_garrisonHeroId = -1;
-    placeInMap(garrisonHero->m_id, player, 0);
+    placeInMap(garrisonHero->m_id, player, false);
 }
 
 // E:\gamedcs\town.cpp:1111
@@ -812,7 +812,7 @@ void town::swapHeroes()
 
     // Dreamcast town.cpp:1143 retains the ordinary town::PlaceInMap call.
     int player = currentTown->m_owner;
-    currentTown->placeInMap(garrisonHero->m_id, player, 0);
+    currentTown->placeInMap(garrisonHero->m_id, player, false);
 }
 
 // The array access and the DC-attested bitset reference assignment.
@@ -1111,24 +1111,24 @@ MAC_ADDRESS(0x1b4948, 0x224)
 bool town::buyBuilding(type_building_id building)
 {
     if (m_owner < 0)
-        return 0;
+        return false;
     if (!canBuild(building))
-        return 0;
+        return false;
     int* costs = getBuildCostArray(building);
     playerData* player = &g_game->m_players[m_owner];
     if (!player->isHuman()) {
         tradePlayerResources(m_owner, costs, 1);
         if (m_builtThisTurn)
-            return 0;
+            return false;
     }
     for (int resource = 0; resource < NUM_RESOURCES; resource++) {
         if (player->m_resources[resource] < costs[resource])
-            return 0;
+            return false;
     }
     for (int paid = 0; paid < NUM_RESOURCES; paid++)
         player->m_resources[paid] -= costs[paid];
-    buildBuilding(building, 1, 1);
-    return 1;
+    buildBuilding(building, true, true);
+    return true;
 }
 
 VA(0x005bf4e0, 0xC)
@@ -1491,7 +1491,7 @@ void town::giveEventReward(const TTownEvent& thisEvent)
     type_dialog_resource reward;
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (grantable & g_bitNumber[i]) {
-            buildBuilding(i, 0, 1);
+            buildBuilding(i, false, true);
             reward.m_resource = m_type + 0x16;
             reward.m_qualifier = i;
             rewards.push_back(reward);
@@ -1659,7 +1659,7 @@ void town::initialize(const TownExtra* townSetup)
     m_type = townSetup->m_townType;
     m_owner = -1;
     memset(m_generatorBonus, 0, sizeof(m_generatorBonus));
-    g_game->claimTown(m_id, townSetup->m_playerOwner, 0, 0);
+    g_game->claimTown(m_id, townSetup->m_playerOwner, false, false);
     initializeArmy(this, townSetup);
     initializeBuildings(this, townSetup);
     updateFullBuildingMask();
@@ -1737,10 +1737,10 @@ bool town::canBuild(short buildingId) const
                 requirements &= ~g_bitNumber[BLACKSMITH_ID];
             if (!(buildingMask & g_bitNumber[buildingId])
                 && (buildingMask & requirements) == requirements)
-                return 1;
+                return true;
         }
     }
-    return 0;
+    return false;
 }
 
 // Dreamcast town.cpp:2141/2147 calls is_legal_building and CanBuildDock.
@@ -1758,10 +1758,10 @@ bool town::canEverBuild(int buildingId) const
               && g_game->m_players[m_owner].hasCapitol())) {
             __int64 requirements = g_hierarchyMask[m_type][buildingId];
             if (((getBuildingMask() | m_legalBuildings) & requirements) == requirements)
-                return 1;
+                return true;
         }
     }
-    return 0;
+    return false;
 }
 
 // Dreamcast town.cpp:2188 calls CanBuildDock (Mac retains the call); town
@@ -1873,7 +1873,7 @@ DC_ADDRESS(0x168a50, 0x48)
 bool town::isDisabled(type_building_id building) const
 {
     if (isLegalBuilding(building))
-        return 0;
+        return false;
     return (g_townEligibleBuildMask[m_type] & g_bitNumber[building]) != 0;
 }
 
@@ -1894,7 +1894,7 @@ void town::hire(hero* newHero, long playerId)
     }
 
     player->m_resources[GOLD] -= g_heroGoldCost;
-    placeInMap(heroId, playerId, 1);
+    placeInMap(heroId, playerId, true);
     giveSpells(0);
     g_game->replaceRecruit(playerId, recruitSlot);
 }
@@ -1996,7 +1996,7 @@ bool town::initializeBuildingCostsTables()
     TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00688fb4, townBuildingSpreadsheetName, "building.txt"));
     if (!sheet)
-        return 0;
+        return false;
 
     int row = 2;
     for (int type = 0; type < TOWN_TYPE_COUNT; ++type) {
@@ -2025,7 +2025,7 @@ bool town::initializeBuildingCostsTables()
     }
 
     sheet->dispose();
-    return 1;
+    return true;
 }
 
 // COMDAT pairing: bitset<48>::set(pos, bool).

@@ -97,7 +97,7 @@ int heroWindow::open(int newPriority, bool update)
         g_windowManager->m_screenBitmap->Darken(m_x + 8, m_y + m_height, m_width, 8);
     }
     if (videoPlaying()) {
-        drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        drawWindow(false, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         videoDrawCurrentFrame();
         if (update && !(m_type & WINDOW_FLAG_FIXED_LAYER)) {
             if (m_type & WINDOW_FLAG_SHADOWED)
@@ -354,7 +354,7 @@ void heroWindow::restoreBackground(unsigned char update)
                      g_windowManager->m_screenBitmap->GetMap(0, 0), m_x, m_y,
                      g_windowManager->m_screenBitmap->GetWidth(),
                      g_windowManager->m_screenBitmap->GetHeight(),
-                     g_windowManager->m_screenBitmap->GetPitch(), 0);
+                     g_windowManager->m_screenBitmap->GetPitch(), false);
     if (update)
         g_windowManager->updateScreen(m_x, m_y, m_background->GetWidth(), m_background->GetHeight());
     delete m_background;
@@ -387,7 +387,7 @@ void heroWindow::moveWindow(int deltaX, int deltaY)
     m_x = newX;
     m_y = newY;
     m_background->Grab(g_windowManager->m_screenBitmap, m_x, m_y);
-    drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    drawWindow(false, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     startW += abs(m_x - startX);
     startH += abs(m_y - startY);
     if (m_x < startX)
@@ -439,7 +439,7 @@ void heroWindow::centerWindow(int centerX, int centerY)
         m_x = newX;
         m_y = newY;
         m_background->Grab(g_windowManager->m_screenBitmap, m_x, m_y);
-        drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        drawWindow(false, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         startW += abs(m_x - startX);
         startH += abs(m_y - startY);
         if (m_x < startX)
@@ -614,7 +614,7 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
             g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
         }
         rollover->setText(text);
-        drawWindow(0, rollover->m_id, rollover->m_id);
+        drawWindow(false, rollover->m_id, rollover->m_id);
         g_windowManager->updateScreen(rollover->m_x + m_x, rollover->m_y + m_y,
                                       rollover->m_width, rollover->m_height);
     }
@@ -646,7 +646,7 @@ DC_ADDRESS(0x197eb4, 0x92)
 MAC_ADDRESS(0x20c094, 0x104)  // anchor-vtable (slot 9 of 0x243ce8)
 int CHeroWindowEx::windowHandler(message& msg)
 {
-    bool exitFlag = 0;
+    bool exitFlag = false;
 
     if ((msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
         && (msg.m_codeX == widget::WIDGET_SELECT

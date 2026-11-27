@@ -115,15 +115,15 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
         for (int newDelta = 0; newDelta < 64; ++newDelta) {
             for (int oldDelta = 0; oldDelta < 64; ++oldDelta) {
                 if (oldOffset + oldDelta + 16 >= m_oldSize)
-                    return 0;
+                    return false;
                 if (newOffset + newDelta + 16 >= m_newSize)
-                    return 0;
+                    return false;
 
                 if (memcmp(m_newData + newOffset + newDelta,
                            m_oldData + oldOffset + oldDelta, 16) == 0) {
                     newCount += newDelta;
                     oldCount += oldDelta;
-                    return 1;
+                    return true;
                 }
             }
         }
@@ -164,7 +164,7 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
             int oldCount = 0;
             int newCount = 0;
             if (findNextSame(oldOffset, newOffset, oldCount, newCount)) {
-                CDiffHeader diffHeader(newCount, 1, oldCount);
+                CDiffHeader diffHeader(newCount, true, oldCount);
                 memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
                        &diffHeader, sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
@@ -174,7 +174,7 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
                 newOffset += newCount;
                 oldOffset += oldCount;
             } else {
-                CDiffHeader diffHeader(m_newSize - newOffset, 1, 0);
+                CDiffHeader diffHeader(m_newSize - newOffset, true, 0);
                 memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
                        &diffHeader, sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
@@ -184,7 +184,7 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
                 break;
             }
         } else {
-            CDiffHeader diffHeader(sameCount, 0, 0);
+            CDiffHeader diffHeader(sameCount, false, 0);
             memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
                    &diffHeader, sizeof(CDiffHeader));
             diffOffset += sizeof(CDiffHeader);

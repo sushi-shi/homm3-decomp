@@ -473,7 +473,7 @@ type_func_button::type_func_button(long x, long y, long w, long h, long id,
                                    const char* image,
                                    handler_type newHandler,
                                    int normal, int selected)
-    : button(x, y, w, h, id, image, normal, selected, 0, 0, 2)
+    : button(x, y, w, h, id, image, normal, selected, false, 0, 2)
 {
     m_handler = newHandler;
 }
@@ -483,7 +483,7 @@ DC_ADDRESS(0x057cdc, 0x6a)
 type_func_button::type_func_button(const type_icon_definition& def, int id,
                                    handler_type handler)
     : button(def.m_x, def.m_y, def.m_width, def.m_height, id, def.m_image,
-             0, 1, 0, 0, 2)
+             0, 1, false, 0, 2)
 {
     m_handler = handler;
 }

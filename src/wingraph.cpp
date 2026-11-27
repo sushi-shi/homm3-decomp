@@ -219,7 +219,7 @@ void robAppBlit(tagRECT* combRect)
                     static_cast<unsigned short*>(surfaceDesc.lpSurface),
                     pointerRect.left, pointerRect.top,
                     surfaceDesc.dwWidth, surfaceDesc.dwHeight,
-                    surfaceDesc.lPitch, 0, 1);
+                    surfaceDesc.lPitch, false, true);
                 result = g_ddsBack->Unlock(0);
                 if (result != DD_OK)
                     ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
@@ -1337,7 +1337,7 @@ unsigned char setFullScreenStatus(int fullScreenOn)
     unsigned char changed = ddSetFullScreenStatus(fullScreenOn);
     g_windowManager->updateScreen();
     if (fullScreenOn)
-        g_mouseManager->update(1);
+        g_mouseManager->update(true);
     writePrefs();
     return changed;
 }

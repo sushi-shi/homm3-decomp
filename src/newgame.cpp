@@ -109,7 +109,7 @@ void game::initNewGame(int difficulty, int campaignMap,
             m_setup.m_handicap[slot] = 0;
 
             m_setup.m_alignment[slot] = pickAlignment(
-                this->m_mapHeader.m_playerSlotAttributes[slot].m_legalAlignments, 0);
+                this->m_mapHeader.m_playerSlotAttributes[slot].m_legalAlignments, false);
             m_setup.m_playerPos[slot] = -1;
             m_setup.m_canFlipFromToComputer[slot] = -1;
         }
@@ -150,13 +150,13 @@ MAC_ADDRESS(0x13275c, 0x94)
 void game::showScenInfo()
 {
     if (g_inCampaign) {
-        TCampaignBrief campaignBrief(0, 1);
+        TCampaignBrief campaignBrief(false, true);
         campaignBrief.doModal();
         if (g_windowManager->m_dialogReturn == NEWGAME_CAMPAIGN_BRIEF_EXIT)
             g_gameCommand = NEWGAME_COMMAND_QUIT;
     } else {
         CScenarioInfoDlg scenarioInfo;
-        scenarioInfo.doModal(0);
+        scenarioInfo.doModal(false);
     }
 }
 

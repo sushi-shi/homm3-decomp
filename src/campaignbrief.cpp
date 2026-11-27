@@ -117,7 +117,7 @@ void TCampaignBrief::select(int which)
         updateBonusIcons();
         updateDifficultyButtons();
         updateAllyEnemyFlags();
-        drawWindow(1, 0xffff0001, 0xffff);
+        drawWindow(true, 0xffff0001, 0xffff);
     }
 }
 
@@ -131,7 +131,7 @@ static int decreaseCampaignDifficulty(message& msg)
         TCampaignBrief* window = static_cast<TCampaignBrief*>(msg.m_window);
         --g_game->m_setup.m_difficulty;
         window->updateDifficultyButtons();
-        window->drawWindow(1, 0xffff0001, 0xffff);
+        window->drawWindow(true, 0xffff0001, 0xffff);
         return MESSAGE_DISPATCH_CONSUME;
     }
     return 0;
@@ -147,7 +147,7 @@ static int increaseCampaignDifficulty(message& msg)
         TCampaignBrief* window = static_cast<TCampaignBrief*>(msg.m_window);
         ++g_game->m_setup.m_difficulty;
         window->updateDifficultyButtons();
-        window->drawWindow(1, 0xffff0001, 0xffff);
+        window->drawWindow(true, 0xffff0001, 0xffff);
         return MESSAGE_DISPATCH_CONSUME;
     }
     return 0;
@@ -311,49 +311,49 @@ void TCampaignBrief::addBonusIcons()
         612, 455, 58, 64, 228, 0, 0x800);
 
     m_spriteBonusImages[0] = new iconWidget(
-        476, 455, 58, 64, 229, 0, 0, 0, 0, 0,
+        476, 455, 58, 64, 229, 0, 0, 0, false, 0,
         iconWidget::ICON_STYLE_PLAIN);
     m_spriteBonusImages[1] = new iconWidget(
-        544, 455, 58, 64, 230, 0, 0, 0, 0, 0,
+        544, 455, 58, 64, 230, 0, 0, 0, false, 0,
         iconWidget::ICON_STYLE_PLAIN);
     m_spriteBonusImages[2] = new iconWidget(
-        612, 455, 58, 64, 231, 0, 0, 0, 0, 0,
+        612, 455, 58, 64, 231, 0, 0, 0, false, 0,
         iconWidget::ICON_STYLE_PLAIN);
 
     for (i = 0; i < 3; ++i) {
-        m_startBonusBorders[i]->setVisible(0);
+        m_startBonusBorders[i]->setVisible(false);
         m_widgets.push_back(m_startBonusBorders[i]);
-        m_bitmapBonusImages[i]->setVisible(0);
+        m_bitmapBonusImages[i]->setVisible(false);
         m_widgets.push_back(m_bitmapBonusImages[i]);
-        m_spriteBonusImages[i]->setVisible(0);
+        m_spriteBonusImages[i]->setVisible(false);
         m_widgets.push_back(m_spriteBonusImages[i]);
     }
 
     m_difficultyButtons[0] = new button(
         710, 455, 30, 46, 235,
         DATA_COMPGEN(0x00660e5c, campaignDifficultyButton3, "gspbut3.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     m_difficultyButtons[1] = new button(
         710, 455, 30, 46, 236,
         DATA_COMPGEN(0x00660e50, campaignDifficultyButton4, "gspbut4.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     m_difficultyButtons[2] = new button(
         710, 455, 30, 46, 237,
         DATA_COMPGEN(0x00660e44, campaignDifficultyButton5, "gspbut5.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     m_difficultyButtons[3] = new button(
         710, 455, 30, 46, 238,
         DATA_COMPGEN(0x00660e38, campaignDifficultyButton6, "gspbut6.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     m_difficultyButtons[4] = new button(
         710, 455, 30, 46, 239,
         DATA_COMPGEN(0x00660e2c, campaignDifficultyButton7, "gspbut7.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
 
     for (i = 0; i < 5; ++i) {
         m_difficultyButtons[i]->setHelpText(
             g_singleSelectionHelp[i + 7].m_text,
-            g_singleSelectionHelp[i + 7].m_rclick, 0);
+            g_singleSelectionHelp[i + 7].m_rclick, false);
         m_difficultyButtons[i]->hide();
         m_widgets.push_back(m_difficultyButtons[i]);
     }
@@ -417,10 +417,10 @@ void TCampaignBrief::updateBonusIcons()
         m_startBonusBorders[i]->show();
         if (i == g_game->m_campaign.m_briefingChoice) {
             coloredBorderFrame* border = m_startBonusBorders[i];
-            border->setVisible(1);
+            border->setVisible(true);
         } else {
             coloredBorderFrame* border = m_startBonusBorders[i];
-            border->setVisible(0);
+            border->setVisible(false);
         }
         SCampaign* activeCampaign = &g_game->m_campaign;
         const char* name = scenario->getStartOptions()->getIconResourceName(activeCampaign, i);
@@ -436,8 +436,8 @@ void TCampaignBrief::updateBonusIcons()
         }
         std::string text;
         text = scenario->getBonusText(m_campaign, i);
-        m_bitmapBonusImages[i]->setHelpText("", text.c_str(), 1);
-        m_spriteBonusImages[i]->setHelpText("", text.c_str(), 1);
+        m_bitmapBonusImages[i]->setHelpText("", text.c_str(), true);
+        m_spriteBonusImages[i]->setHelpText("", text.c_str(), true);
     }
     for (; i < 3; i++) {
         m_startBonusBorders[i]->hide();
@@ -650,25 +650,25 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                         476, 536, 146, 40, RESTART_ID,
                         DATA_COMPGEN(0x00660e9c, campaignBriefRestartButton,
                                      "CBRESTB.DEF"),
-                        0, 1, 0, 19, 2));
+                        0, 1, false, 19, 2));
         m_widgets.push_back(new button(
                         705, 214, 64, 30, VIDEO_ID,
                         DATA_COMPGEN(0x00660e90, campaignBriefVideoButton,
                                      "CBVIDEB.DEF"),
-                        0, 1, 0, 47, 2));
+                        0, 1, false, 47, 2));
     } else {
         m_widgets.push_back(new button(
                         476, 536, 146, 40, 0x7802,
                         DATA_COMPGEN(0x00660e84, campaignBriefBeginButton,
                                      "CBBEGIB.DEF"),
-                        0, 1, 0, 28, 2));
+                        0, 1, false, 28, 2));
         m_widgets.back()->enable(0);
     }
     m_widgets.push_back(new button(
                     624, 536, 146, 40, 0x7801,
                     DATA_COMPGEN(0x00660e78, campaignBriefCancelButton,
                                  "CBCANCB.DEF"),
-                    0, 1, 0, 1, 2));
+                    0, 1, false, 1, 2));
 
     if (m_campaign->getCampaignName().length() > 0) {
         m_widgets.push_back(new textWidget(
@@ -711,7 +711,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                     735, 26, 29, 23, WHICHMAP_ID,
                     DATA_COMPGEN(0x00660e68, campaignBriefScenarioMapSize,
                                  "scnrmpsz.def"),
-                    0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+                    0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
 
     sprintf(g_text,
             DATA_COMPGEN(0x00660d28, campaignBriefLabelFormat, "%s:"),
@@ -734,7 +734,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             ALLY_FLAG1_ID + flagIndex,
             DATA_COMPGEN(0x00660d18, campaignBriefFlagSprites,
                          "itgflags.def"),
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN);
         w->hide();
         // Dreamcast proves the canonical widget-vector append here.
         m_widgets.push_back(w);
@@ -744,7 +744,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             ENEMY_FLAG1_ID + flagIndex,
             DATA_COMPGEN(0x00660d18, campaignBriefFlagSprites,
                          "itgflags.def"),
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN);
         w->hide();
         // The second DC append has the same source operation.
         m_widgets.push_back(w);
@@ -999,7 +999,7 @@ static int campaignBriefHandler(message& msg)
             if (!g_campaignBriefFlashLeft)
                 brief->select(brief->m_selectedScenario);
             else
-                brief->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                brief->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                                   WINDOW_ALL_WIDGETS_HIGH);
         }
         return 0;
@@ -1059,7 +1059,7 @@ static int campaignBriefHandler(message& msg)
     case TCampaignBrief::VIDEO_ID:
         g_soundManager->stopAllSamples(1);
         g_game->m_campaign.playScenarioPrologue(brief->m_campaign);
-        brief->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+        brief->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                           WINDOW_ALL_WIDGETS_HIGH);
         g_soundManager->stopAllSamples(1);
         break;
@@ -1155,7 +1155,7 @@ static int campaignBriefHandler(message& msg)
             if (ok)
                 ok->enable(1);
             brief->updateAllyEnemyFlags();
-            brief->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+            brief->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                               WINDOW_ALL_WIDGETS_HIGH);
         }
         break;
@@ -1176,23 +1176,23 @@ static int campaignBriefHandler(message& msg)
             g_game->m_campaign.playScenarioPrologue(brief->m_campaign);
 
         showProgressBar();
-        incProgressBar(1);
+        incProgressBar(true);
 
         NewSMapHeader mapHeader;
         brief->m_campaign->loadScenario(selected, &mapHeader);
         g_game->resetGame(difficulty, selected, &mapHeader);
         g_game->m_campaign.applyBriefingChoice(choice);
         memset(g_newMapStartingBonus, 3, sizeof(g_newMapStartingBonus));
-        incProgressBar(1);
+        incProgressBar(true);
 
         int gamePos = brief->m_campaign->m_scenarios[selected]
                           ->getStartOptions()->getPlayer(choice);
         strcpy(g_game->m_players[gamePos].m_name, g_config.m_networkDefaultName);
         g_localGamePos = gamePos;
         brief->m_campaign->startScenario(selected, choice);
-        incProgressBar(1);
+        incProgressBar(true);
         g_soundManager->stopMP3();
-        incProgressBar(1);
+        incProgressBar(true);
         exitFlag = 1;
         break;
     }

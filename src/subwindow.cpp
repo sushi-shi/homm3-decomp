@@ -80,7 +80,7 @@ void TSubWindow::draw(unsigned char update, int lowID, int highID)
         lowID = m_lowId;
     if (highID == WINDOW_ALL_WIDGETS_HIGH)
         highID = m_highId;
-    m_parentWindow->drawWindow(0, lowID, highID);
+    m_parentWindow->drawWindow(false, lowID, highID);
     if (update) {
         // DC selects a full combat refresh for its combat-mode branch;
         // Complete has only this ordinary parent-relative rectangle path.

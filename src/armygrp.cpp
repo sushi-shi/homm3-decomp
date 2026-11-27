@@ -54,9 +54,9 @@ bool armyGroup::hasCreatures() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] != CREATURE_NONE)
-            return 1;
+            return true;
     }
-    return 0;
+    return false;
 }
 
 // Dreamcast armygrp.cpp:62 and Mac place this standalone helper between
@@ -80,7 +80,7 @@ void TSplitWindow::updateSplitArmy(unsigned char update)
     broadcastMessage(msg);
 
     if (update)
-        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        drawWindow(true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 VA(0x004496c0, 0xC3)
@@ -124,9 +124,9 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
 
     strcpy(g_text, akCreatureTypeTraits[m_creature].m_sprite_name);
     m_widgets.push_back(new iconWidget(
-        20, 54, 100, 130, 2, g_text, 0, 2, 0, 0, 0x12));
+        20, 54, 100, 130, 2, g_text, 0, 2, false, 0, 0x12));
     m_widgets.push_back(new iconWidget(
-        177, 54, 100, 130, 3, g_text, 0, 2, 0, 0, 0x12));
+        177, 54, 100, 130, 3, g_text, 0, 2, false, 0, 0x12));
 
     m_sourceEntry = new textEntryWidget(
         20, 218, 101, 37, 10, "99999", "bigfont.fnt", font::WHITE, 5,
@@ -139,7 +139,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
 
     m_splitSlider = new slider(
         21, 194, 257, 16, 6, 10, splitSliderCallback,
-        slider::BROWN, 0, 0);
+        slider::BROWN, 0, false);
     m_widgets.push_back(m_splitSlider);
 
     m_widgets.push_back(new bitmapBorder(
@@ -150,10 +150,10 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
 
     m_widgets.push_back(new button(
         20, 263, 64, 32, DIALOG_RETURN_SPLIT_ACCEPT,
-        "iOk6432.def", 0, 1, 1, 0x1c, 2));
+        "iOk6432.def", 0, 1, true, 0x1c, 2));
     m_widgets.push_back(new button(
         214, 263, 64, 30, 0x7801,
-        "iCancel.def", 0, 1, 1, 1, 2));
+        "iCancel.def", 0, 1, true, 1, 2));
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -221,9 +221,9 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
         - g_splitWindow->m_minimumTransfer;
     g_splitWindow->broadcastMessage(msg);
 
-    g_splitWindow->m_destinationEntry->setFocus(1);
+    g_splitWindow->m_destinationEntry->setFocus(true);
     g_splitWindow->updateSplitArmy(0);
-    g_splitWindow->doModal(0);
+    g_splitWindow->doModal(false);
 
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_SPLIT_ACCEPT) {
         int maximumTransfer = g_splitWindow->m_totalTroops
@@ -269,7 +269,7 @@ void TSplitWindow::setRolloverText(int codeY)
     }
 
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8, int(g_text));
-    drawWindow(0, 7, 8);
+    drawWindow(false, 7, 8);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x138, 0x11a, 0x11);
 }
 
@@ -296,7 +296,7 @@ int TSplitWindow::windowHandler(message& msg)
                 m_sourceTroops = atoi(msg.m_extraText);
                 m_sourceTroops = limit(0, m_sourceTroops, m_totalTroops);
                 m_destinationTroops = m_totalTroops - m_sourceTroops;
-                m_destinationEntry->setFocus(0);
+                m_destinationEntry->setFocus(false);
                 break;
 
             case SPLIT_WIDGET_DESTINATION_ENTRY:
@@ -304,7 +304,7 @@ int TSplitWindow::windowHandler(message& msg)
                 m_destinationTroops = limit(
                     0, m_destinationTroops, m_totalTroops);
                 m_sourceTroops = m_totalTroops - m_destinationTroops;
-                m_sourceEntry->setFocus(0);
+                m_sourceEntry->setFocus(false);
                 break;
 
             }
@@ -879,7 +879,7 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
         return 0;
     int morale = 0;
     if (ownerHero)
-        morale = ownerHero->getMorale(otherHero, 0, 0);
+        morale = ownerHero->getMorale(otherHero, false, false);
     unsigned char alignments[TOWN_TYPE_COUNT + 1];
     int numAlignments = getAlignments(alignments);
     if (groupAlignments) {
@@ -925,7 +925,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
         return 0;
     if (akCreatureTypeTraits[m_armies[index]].attributes & g_ctaNoMorale)
         return 0;
-    int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
+    int morale = getMorale(ownerHero, ownerTown, 0, 0, false, arg5, false);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = m_armies[index];
         int alignment = classifyTownAlignment(g_game->getAlignment(type));
@@ -967,7 +967,7 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
         return 0;
     int luck = 0;
     if (ownerHero)
-        luck = ownerHero->getLuck(otherHero, 0, 0);
+        luck = ownerHero->getLuck(otherHero, false, false);
     if (otherGroup
         && (otherGroup->isMember(CREATURE_DEVIL)
             || otherGroup->isMember(CREATURE_ARCH_DEVIL)))
@@ -987,7 +987,7 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
-    int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
+    int luck = getLuck(ownerHero, ownerTown, 0, 0, false, false);
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int creature = m_armies[index];
         if (classifyTownAlignment(g_game->getAlignment(creature))
@@ -1192,8 +1192,8 @@ std::string armyGroup::getMoraleDescription(
         return g_moraleInfo[28];
 
     int currentMorale = getMorale(
-        ownerHero, ownerTown, other_hero, other_group, 0,
-        groupAlignments, 0);
+        ownerHero, ownerTown, other_hero, other_group, false,
+        groupAlignments, false);
     std::string result;
 
     if (ownerHero)
@@ -1335,7 +1335,7 @@ std::string armyGroup::getLuckDescription(
     }
 
     int currentLuck = getLuck(
-        ourHero, ourTown, enemyHero, enemyGroup, 0, 0);
+        ourHero, ourTown, enemyHero, enemyGroup, false, false);
     std::string result;
     if (ourHero)
         result = ourHero->getLuckDescription();

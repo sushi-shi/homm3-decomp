@@ -51,7 +51,7 @@ TGameTypeWindow::TGameTypeWindow(bool loadGameMode)
     : heroWindow(0, 0, 800, 600, 0)
 {
     g_gameTypeWindow = this;
-    g_game->m_isTutorial = 0;
+    g_game->m_isTutorial = false;
 
     m_widgets.reserve(NWIDGETS);
     m_widgets.push_back(new bitmapBorder16(
@@ -67,24 +67,24 @@ TGameTypeWindow::TGameTypeWindow(bool loadGameMode)
     if (!g_noCdRom) {
         m_widgets.push_back(new button(
             single.m_x, single.m_y, single.m_width, single.m_height, SINGLE_ID,
-            "gtsingl.def", 0, 1, 0, 31, 2));
+            "gtsingl.def", 0, 1, false, 31, 2));
 
         m_widgets.push_back(new button(
             campaign.m_x, campaign.m_y, campaign.m_width, campaign.m_height,
-            CAMPAIGN_ID, "gtcampn.def", 0, 1, 0, 46, 2));
+            CAMPAIGN_ID, "gtcampn.def", 0, 1, false, 46, 2));
 
         m_widgets.push_back(new button(
             tutorial.m_x, tutorial.m_y, tutorial.m_width, tutorial.m_height,
-            TUTORIAL_ID, "gttutor.def", 0, 1, 0, 20, 2));
+            TUTORIAL_ID, "gttutor.def", 0, 1, false, 20, 2));
     }
 
     m_widgets.push_back(new button(
         multi.m_x, multi.m_y, multi.m_width, multi.m_height,
-        MULTIPLAYER_ID, "gtmulti.def", 0, 1, 0, 50, 2));
+        MULTIPLAYER_ID, "gtmulti.def", 0, 1, false, 50, 2));
 
     m_widgets.push_back(new button(
         back.m_x, back.m_y, back.m_width, back.m_height, QUIT_ID,
-        "gtback.def", 0, 1, 0, 1, 2));
+        "gtback.def", 0, 1, false, 1, 2));
 
     widget** first = m_widgets.begin();
     if (first != m_widgets.end()) {
@@ -202,7 +202,7 @@ static int gameTypeWindowHandler(message& msg)
 
     if (videoNeedsUpdate() || redraw) {
         g_gameTypeWindow->drawWindow(
-            0, TGameTypeWindow::SINGLE_ID,
+            false, TGameTypeWindow::SINGLE_ID,
             TGameTypeWindow::NEW_LOAD_ID);
         g_windowManager->updateScreen(526, 7, 250, 560);
         g_windowManager->updateScreen(114, 312, 300, 48);

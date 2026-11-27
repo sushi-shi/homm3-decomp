@@ -108,7 +108,7 @@ TCustomCampaignWindow::TCustomCampaignWindow()
 
     m_campaignSlider = new slider(376, 92, 16, 480, widgetId, 2,
                                 customCampaignSliderHandler, slider::BLUE,
-                                CAMPAIGN_LIST_ROWS, 0);
+                                CAMPAIGN_LIST_ROWS, false);
     m_campaignSlider->hide();
     m_widgets.push_back(m_campaignSlider);
 
@@ -245,14 +245,14 @@ int TCustomCampaignWindow::onWidgetDeselect(int id, bool& exitFlag)
 
     if (GameTime::elapsedSince(m_lastClickTime) < 400) {
         if (acceptSelection()) {
-            exitFlag = 1;
+            exitFlag = true;
             g_windowManager->m_dialogReturn = 1;
             return 1;
         }
     }
     m_lastClickTime = GameTime::get();
     updateList();
-    drawWindow(1, 0xffff0001, 0xffff);
+    drawWindow(true, 0xffff0001, 0xffff);
     return 1;
 }
 
@@ -264,10 +264,10 @@ bool TCustomCampaignWindow::acceptSelection()
 {
     int index = m_selected + m_firstVisible;
     if (index >= m_campaignHeaders.size())
-        return 0;
+        return false;
     g_game->m_campaign.selectCampaign(
         20, m_campaignHeaders[index]->getFileName().c_str());
-    return 1;
+    return true;
 }
 
 VA(0x00483740, 0x134)
@@ -316,7 +316,7 @@ static void customCampaignSliderHandler(int state, heroWindow* window)
         static_cast<TCustomCampaignWindow*>(window);
     campaignWindow->m_firstVisible = state;
     campaignWindow->updateList();
-    campaignWindow->drawWindow(1, 0xffff0001, 0xffff);
+    campaignWindow->drawWindow(true, 0xffff0001, 0xffff);
 }
 
 // Dinkumware's _Insertion_sort_1 for the Complete-only custom-campaign list

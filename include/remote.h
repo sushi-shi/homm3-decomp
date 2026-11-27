@@ -362,7 +362,7 @@ inline int CGameChatEdit::onEscape(message msg)
 {
     m_activated = 0;
     m_parentWindow->setFocus(-1);
-    setFocus(0);
+    setFocus(false);
     return CChatEdit::onEscape(msg);
 }
 
@@ -373,7 +373,7 @@ MAC_ADDRESS(0x0040d4, 0x68)
 inline void CGameChatEdit::sendChatCleanup()
 {
     m_parentWindow->setFocus(-1);
-    setFocus(0);
+    setFocus(false);
     m_activated = 0;
     draw();
 }
@@ -385,7 +385,7 @@ MAC_ADDRESS(0x00413c, 0x78)
 inline void CGameChatEdit::activate()
 {
     m_activated = 1;
-    setFocus(1);
+    setFocus(true);
     m_parentWindow->setFocus(m_id);
     draw();
     updateScreen();

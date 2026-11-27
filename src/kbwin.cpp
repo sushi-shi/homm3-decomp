@@ -195,7 +195,7 @@ static LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messagePara
                     g_soundManager->resumeSamples();
                     if (!g_remoteOn)
                         videoResume();
-                    g_mouseManager->showSystemCursor(0);
+                    g_mouseManager->showSystemCursor(false);
                     g_appDeactivated = 0;
                 }
             } else {
@@ -205,7 +205,7 @@ static LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messagePara
                 if (!g_remoteOn)
                     videoPause();
                 if (!g_appDeactivated)
-                    g_mouseManager->showSystemCursor(1);
+                    g_mouseManager->showSystemCursor(true);
                 g_appDeactivated = 1;
             }
             return 0;
@@ -270,10 +270,10 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
     command = LOWORD(messageParam);
     switch (command) {
         case KBWIN_MENU_ABOUT:
-            g_mouseManager->showSystemCursor(1);
+            g_mouseManager->showSystemCursor(true);
             DialogBoxParamA(g_instance, MAKEINTRESOURCEA(0x67), window,
                 (DLGPROC)appAbout, 0);
-            g_mouseManager->showSystemCursor(0);
+            g_mouseManager->showSystemCursor(false);
             break;
         case KBWIN_MENU_HELP:
             if (g_config.m_windowConfig.m_fullScreen)

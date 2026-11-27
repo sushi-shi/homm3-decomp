@@ -144,7 +144,7 @@ public:
                       unsigned short outcolor) const
     {
         DrawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
-                         pal, hflip, outcolor, 0);
+                         pal, hflip, outcolor, false);
     }
 
     // Original: CSpriteFrame::DrawCreatureAlpha; CSpriteFrame.h:152
@@ -155,7 +155,7 @@ public:
                            unsigned short outcolor) const
     {
         DrawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
-                         pal, hflip, outcolor, 1);
+                         pal, hflip, outcolor, true);
     }
 
     // DC CSpriteFrame.h:157..179 records each public forwarding boundary.
@@ -219,7 +219,7 @@ public:
                      int dpitch, TPalette16& pal, bool hflip) const
     {
         Draw(0, 0, Width, Height, dst, dx, dy, dw, dh, dpitch,
-             pal, hflip, 1);
+             pal, hflip, true);
     }
 
     // Original: CSpriteFrame::DrawInterface; CSpriteFrame.h:187
@@ -228,7 +228,7 @@ public:
                        int dx, int dy, int dw, int dh, int dpitch,
                        TPalette16& pal, bool hflip) const
     {
-        Draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
+        Draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, true);
     }
 
     // Original: CSpriteFrame::DrawShroudTile; CSpriteFrame.h:192

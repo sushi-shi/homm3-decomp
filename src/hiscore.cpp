@@ -292,7 +292,7 @@ inline CHSInputDlg::CHSInputDlg(int maxChars)
     m_widgets.push_back(new button(
         84, 143, 64, 32, OKAY_ID,
         DATA_COMPGEN(0x0067f4dc, highScoreOkayButton, "mubchck.def"),
-        0, 1, 0, 28, 2));
+        0, 1, false, 28, 2));
 
     m_rollover = new textWidget(
         8, 186, 216, 18, 0,
@@ -302,7 +302,7 @@ inline CHSInputDlg::CHSInputDlg(int maxChars)
 
     addWidgetsToMessageStream();
     setFocus(m_field1->m_id);
-    m_field1->setFocus(1);
+    m_field1->setFocus(true);
     m_field1->setAutoDraw(1);
 }
 
@@ -315,9 +315,9 @@ bool CHSInputDlg::onOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
         if (!strlen(m_field1->getText()))
-            return 0;
+            return false;
     }
-    return 1;
+    return true;
 }
 
 void memError();
@@ -461,7 +461,7 @@ int highScoreManager::addScoreToHighScore(int score, int days,
     {
         CHSInputDlg hsDlg(40);
         hsDlg.m_field1->setText(g_game->getLocalPlayer()->getName());
-        hsDlg.doModal(0);
+        hsDlg.doModal(false);
 
         memset(&scores[rank], 0, sizeof(scores[rank]));
         strcpy(scores[rank].m_playerName, hsDlg.m_field1->getText());
@@ -524,7 +524,7 @@ int CHSInputDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id == OKAY_ID) {
         if (onOK()) {
-            exitFlag = 1;
+            exitFlag = true;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
             return 1;
         }
@@ -592,28 +592,28 @@ THighScoreWindow::THighScoreWindow()
     okay = new button(
         726, 346, 41, 199, DIALOG_RETURN_OK,
         DATA_COMPGEN(0x0067f538, highScoreExitButton, "HiScExt.def"),
-        0, 1, 0, 28, 2);
+        0, 1, false, 28, 2);
     okay->setHotkey(1);
     m_widgets.push_back(okay);
     m_widgets.push_back(new button(
         726, 114, 41, 199, 1003,
         DATA_COMPGEN(0x0067f52c, highScoreResetButton, "HiScRes.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(
         31, 114, 41, 199, 1001,
         DATA_COMPGEN(0x0067f520, highScoreCampaignButton, "HiScCam.def"),
-        0, 1, 0, 46, 2));
+        0, 1, false, 46, 2));
     m_widgets.push_back(new button(
         31, 346, 41, 199, 1002,
         DATA_COMPGEN(0x0067f514, highScoreStandardButton, "HiScSta.def"),
-        0, 1, 0, 31, 2));
+        0, 1, false, 31, 2));
 
     memset(m_creatureFrames, 0, sizeof(m_creatureFrames));
     for (i = 0; i < 11; ++i) {
         m_creatures[1][i] = new iconWidget(
             649, 26 + 50 * i, 64, 64, 1004 + i,
             highScoreCreatureImageName(i, 1),
-            0, 0, 0, 0,
+            0, 0, false, 0,
             iconWidget::ICON_STYLE_PLAIN);
         m_creatures[1][i]->hide();
         m_widgets.push_back(m_creatures[1][i]);
@@ -622,7 +622,7 @@ THighScoreWindow::THighScoreWindow()
         m_creatures[0][i] = new iconWidget(
             649, 26 + 50 * i, 64, 64, 1015 + i,
             highScoreCreatureImageName(i, 0),
-            0, 0, 0, 0,
+            0, 0, false, 0,
             iconWidget::ICON_STYLE_PLAIN);
         m_creatures[0][i]->hide();
         m_widgets.push_back(m_creatures[0][i]);
@@ -795,7 +795,7 @@ static void updateCreatures()
             ->show();
     }
     g_highScoreWindow->update();
-    g_highScoreWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+    g_highScoreWindow->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                                  WINDOW_ALL_WIDGETS_HIGH);
 }
 
@@ -882,7 +882,7 @@ static int highScoreWindowHandler(message& msg)
             creature->sendMessage(widget::WIDGET_SET_ICON_FRAME, frameNumber);
         }
         g_highScoreWindow->update();
-        g_highScoreWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+        g_highScoreWindow->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                                       WINDOW_ALL_WIDGETS_HIGH);
     }
 

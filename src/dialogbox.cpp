@@ -99,37 +99,37 @@ unsigned char TDialogBox::setup(int winX, int winY,
 
     m_widgets.push_back(new iconWidget(
         0, 0, EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         m_width - EDGE_SIZE, 0, EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
-        1, 0, 0, 0, 0x10));
+        1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0, m_height - EDGE_SIZE, EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
-        2, 0, 0, 0, 0x10));
+        2, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         m_width - EDGE_SIZE, m_height - EDGE_SIZE,
         EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
-        3, 0, 0, 0, 0x10));
+        3, 0, false, 0, 0x10));
 
     int edge;
     for (edge = 1; edge < tilesWide2 - 1; ++edge) {
         m_widgets.push_back(new iconWidget(
             edge * EDGE_SIZE, 0, EDGE_SIZE, EDGE_SIZE,
-            id++, "dialgbox.def", 6, 0, 0, 0, 0x10));
+            id++, "dialgbox.def", 6, 0, false, 0, 0x10));
         m_widgets.push_back(new iconWidget(
             edge * EDGE_SIZE, m_height - EDGE_SIZE,
             EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
-            7, 0, 0, 0, 0x10));
+            7, 0, false, 0, 0x10));
     }
 
     for (edge = 1; edge < tilesHigh2 - 1; ++edge) {
         m_widgets.push_back(new iconWidget(
             0, edge * EDGE_SIZE, EDGE_SIZE, EDGE_SIZE,
-            id++, "dialgbox.def", 4, 0, 0, 0, 0x10));
+            id++, "dialgbox.def", 4, 0, false, 0, 0x10));
         m_widgets.push_back(new iconWidget(
             m_width - EDGE_SIZE, edge * EDGE_SIZE,
             EDGE_SIZE, EDGE_SIZE, id++, "dialgbox.def",
-            5, 0, 0, 0, 0x10));
+            5, 0, false, 0, 0x10));
     }
 
     m_endId = id - 1;

@@ -154,7 +154,7 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
                                        "box66x32.pcx", 0x800));
 
     button* accept = new button(670, 538, 66, 32, ACCEPT_ID,
-                                "iOkay32.def", 0, 1, 0, 28, 2);
+                                "iOkay32.def", 0, 1, false, 28, 2);
     accept->setHotkey(1);
     m_widgets.push_back(accept);
 
@@ -171,8 +171,8 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
         m_puzzlePieces[i] = getPuzzleBitmap(m_puzWhich, i);
     }
 
-    m_puzzleResourceBar = new TResourceDisplay(this, 0);
-    drawWindow(0, -65535, 65535);
+    m_puzzleResourceBar = new TResourceDisplay(this, false);
+    drawWindow(false, -65535, 65535);
 }
 
 VA_COMPGEN(0x0052c570, 0x21, SCALAR_DELETING_DTOR, TPuzzleWindow)
@@ -258,12 +258,12 @@ int TPuzzleWindow::updatePuzzle(int full)
             const short* yCoordinate = g_puzzleCoordinates[m_puzWhich].m_y;
             bitmap->Draw(0, 0, bitmap->GetWidth(), bitmap->GetHeight(),
                          g_windowManager->m_screenBitmap,
-                         xCoordinate[piece], yCoordinate[piece], 1);
+                         xCoordinate[piece], yCoordinate[piece], true);
             ++piecesNotFound;
         }
     }
 
-    m_puzzleResourceBar->update(1, 0);
+    m_puzzleResourceBar->update(true, false);
     return piecesNotFound;
 }
 

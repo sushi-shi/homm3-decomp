@@ -257,7 +257,7 @@ int TCampaignSetWindow::handleMessage(message& msg)
         int lastPlate = LAST_PLATE_ID;
         if (g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
             lastPlate = LAST_PLATE_WITH_AB_ID;
-        drawWindow(0, SOD_PLATE_ID, lastPlate);
+        drawWindow(false, SOD_PLATE_ID, lastPlate);
         g_windowManager->updateScreen(482, 9, 308, 562);
         videoDrawRects();
     }

@@ -417,7 +417,7 @@ bool videoNeedsUpdate()
         return SmackManager::g_needsUpdate && !SmackManager::g_playingSmack.m_paused;
     else if (BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2)
         return BinkManager::g_needsUpdate && !BinkManager::g_playingBink.m_paused;
-    return 0;
+    return false;
 }
 
 VA(0x00597990, 0x3F)
@@ -426,10 +426,10 @@ MAC_ADDRESS(0x25e9fc, 0x68)
 bool videoPlaying()
 {
     if ((SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2) && !SmackManager::g_playingSmack.m_paused)
-        return 1;
+        return true;
     if ((BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2) && !BinkManager::g_playingBink.m_paused)
-        return 1;
-    return 0;
+        return true;
+    return false;
 }
 
 // E:\gamedcs\smackmgr.cpp:328
@@ -557,8 +557,8 @@ void videoDrawRects()
             g_ddsBack->Lock(NULL, &ddsd, DDLOCK_WAIT, NULL);
         }
     }
-    BinkManager::g_needsUpdate = 0;
-    SmackManager::g_needsUpdate = 0;
+    BinkManager::g_needsUpdate = false;
+    SmackManager::g_needsUpdate = false;
 }
 
 VA(0x00597c70, 0x84)
@@ -959,7 +959,7 @@ void openSmackerVideo(int id, int x, int y, int w, int h, int loop, bool autoDra
             g_windowManager->m_screenBitmap->GetPitch(),
             g_windowManager->m_screenBitmap->GetHeight(),
             g_windowManager->m_screenBitmap->GetMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
-    SmackManager::g_playingSmacker = 1;
+    SmackManager::g_playingSmacker = true;
 }
 
 // SmackManager is a namespace in DC's raw publics (YA functions, 3 globals).
@@ -1032,8 +1032,8 @@ void closeSmacker()
     SmackManager::g_playingSmack.m_smack2 = 0;
     SmackManager::g_playingSmack.m_smack = 0;
     SmackManager::g_playingSmack.m_paused = 0;
-    SmackManager::g_playingSmacker = 0;
-    SmackManager::g_needsUpdate = 0;
+    SmackManager::g_playingSmacker = false;
+    SmackManager::g_needsUpdate = false;
 }
 
 // Mac separates playback setup/state cleanup from its modal loop.
@@ -1045,7 +1045,7 @@ int playSmacker(int id, int x, int y, int w, int h)
     g_soundManager->m_playSounds = 1;
     unsigned char result = playSmackerCore(id, x, y, w, h);
     SmackManager::g_playingSmack.m_paused = 0;
-    g_playingSmacker = 0;
+    g_playingSmacker = false;
     return result;
 }
 
@@ -1069,7 +1069,7 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
     unsigned char aborted;
     viewHeight = h;
     viewWidth = w;
-    openSmackerVideo(id, x, y, viewWidth, viewHeight, 0, 0, 1);
+    openSmackerVideo(id, x, y, viewWidth, viewHeight, 0, false, true);
     if (!SmackManager::g_playingSmack.m_smack) {
         result = 0;
     } else {
@@ -1119,7 +1119,7 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
             g_windowManager->fadeScreen(1, 4, 0);
         else
             g_windowManager->updateScreen(videoPosition.x, videoPosition.y, viewWidth, viewHeight);
-        g_mouseManager->showPointer(0);
+        g_mouseManager->showPointer(false);
         result = !aborted;
     }
     return result;

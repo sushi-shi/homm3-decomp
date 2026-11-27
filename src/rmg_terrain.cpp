@@ -308,7 +308,7 @@ s32 TRockTraits::pickTransitionTile(
             (transition * 2 + requestedFlip.m_flipX) * 2 + requestedFlip.m_flipY];
         oldFrame = rand() % range.m_frameCount + range.m_firstFrame;
     }
-    selectedFlip = TRmgTerrainFlip(0, 0);
+    selectedFlip = TRmgTerrainFlip(false, false);
     return oldFrame;
 }
 
@@ -457,8 +457,8 @@ s32 selectTerrainTransition(
     VA_COMPGEN(0x005b45e0, 0x1, STATIC_DTOR, flips)
     DATA(0x006A52B8)
     static TRmgTerrainFlip flips[4] = {
-        makeTerrainFlip(0, 0), makeTerrainFlip(0, 1),
-        makeTerrainFlip(1, 0), makeTerrainFlip(1, 1)
+        makeTerrainFlip(false, false), makeTerrainFlip(false, true),
+        makeTerrainFlip(true, false), makeTerrainFlip(true, true)
     };
     u32 i;
     for (i = 0; i < 4; ++i) {
@@ -637,7 +637,7 @@ s32 selectTerrainTransition(
             return SHAPE_SE_HARD;
         }
     }
-    *flip = makeTerrainFlip(0, 0);
+    *flip = makeTerrainFlip(false, false);
     return SHAPE_FILL;
 }
 
@@ -1187,8 +1187,8 @@ void TRmgTerrainPainter::paintTransitions()
                 s32 newFrame = selectBaseFrame(point, tile.m_terrain, tile.m_frame);
                 if (tile.m_frame != newFrame || tile.m_flipX || tile.m_flipY) {
                     tile.m_frame = newFrame;
-                    tile.m_flipX = 0;
-                    tile.m_flipY = 0;
+                    tile.m_flipX = false;
+                    tile.m_flipY = false;
                     setTile(point, tile);
                 }
             }

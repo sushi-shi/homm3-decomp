@@ -313,7 +313,7 @@ void type_town_threat_checker::markTowns(hero* enemyHero,
         town* ourTown = g_game->getTown(player.m_townIds[townIndex]);
         if (!isMarked(ourTown)) {
             type_point location = ourTown->getLocation();
-            if (currentSearchArray->getCell(location, 0)->m_visited
+            if (currentSearchArray->getCell(location, false)->m_visited
                 && canTakeTown(enemyHero, ourTown)) {
                 enemyHero->m_bounty = 5000000 / player.m_numTowns;
                 markTown(ourTown);
@@ -390,9 +390,9 @@ void type_garrison_purchaser::markTown(town* ourTown) const
     type_AI_creature_purchaser purchaser(m_currentPlayerId, ourTown);
     playerData* player = &g_game->m_players[m_currentPlayerId];
     unsigned char hasAngelicAlliance = player->hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
-    purchaser.setSubtractMode(0);
+    purchaser.setSubtractMode(false);
     purchaser.doPurchase(&ourTown->getArmy(), 3, 0, player->m_resources,
-                          1, hasAngelicAlliance);
+                          true, hasAngelicAlliance);
 }
 
 VA_COMPGEN(0x004286e0, 0x26, IMPLICIT_DTOR, type_AI_creature_purchaser)
@@ -749,7 +749,7 @@ void type_AI_player::makeGift(long playerId)
             } else if (g_remoteOn) {
                 CGiftMsg msg(g_netLocalGamePos, displayedResource.m_resource,
                              displayedResource.m_qualifier);
-                transmitRemoteData(&msg, playerId, 0, 1);
+                transmitRemoteData(&msg, playerId, false, true);
             }
         }
     }
@@ -772,7 +772,7 @@ void type_AI_player::makeGift(long playerId)
                 list.push_back(requestedResource);
             } else if (g_remoteOn) {
                 CGiftRequestMsg msg(g_netLocalGamePos, requestedResource.m_resource);
-                transmitRemoteData(&msg, playerId, 0, 1);
+                transmitRemoteData(&msg, playerId, false, true);
             }
         }
     }
@@ -980,23 +980,23 @@ static void fillProhibitedArray(playerData* player, bool* prohibited)
     }
 
     for (int creature = 0; creature < kNumCreatureTypes; ++creature) {
-        prohibited[creature] = 0;
+        prohibited[creature] = false;
         getMonsterCost(creature, resources);
         for (short resource = 0; resource < 6; ++resource) {
             if (resources[resource] > 0 && income[resource] <= 0)
-                prohibited[creature] = 1;
+                prohibited[creature] = true;
         }
 
         if (g_game->m_setup.m_difficulty == 0) {
             if (!g_game->isHumanAlly(g_netLocalGamePos)) {
                 if (akCreatureTypeTraits[creature].level
                         == TOWN_DWELLING_COUNT - 1)
-                    prohibited[creature] = 1;
+                    prohibited[creature] = true;
                 if (akCreatureTypeTraits[creature].growthRate
                             * akCreatureTypeTraits[creature].AI_value
                         + localGrowth
                         > humanStrength) {
-                    prohibited[creature] = 1;
+                    prohibited[creature] = true;
                 }
             }
         }
@@ -1593,28 +1593,28 @@ bool type_AI_player::purchaseBuilding(
     }
 
     if (!bestTown)
-        return 0;
+        return false;
 
     bestTown->getBuildCost(H3_ENUM_DECODE(type_building_id, bestBuilding), cost);
     tradeResources(cost, 1);
     if (g_game->townAlreadyBuiltOn(bestTown->m_id))
-        return 0;
+        return false;
     if (bestBuilding >= HALL_VILLAGE_ID
         && bestBuilding <= MARKETPLACE_SILO_ID) {
         if (!canBuy(bestTown, bestBuilding))
-            return 0;
+            return false;
     } else {
         // MAX 97.8283 was measured with `i != 7` - an unnamed domain compare
         // that fails the cleanliness floor (docs/vc6/behavior-catalog.md D24).
         for (short i = 0; i < NUM_RESOURCES; ++i) {
             if (m_reservedFunds[i] + cost[i] > player->m_resources[i])
-                return 0;
+                return false;
         }
     }
     if (!bestTown->buyBuilding(H3_ENUM_DECODE(type_building_id, bestBuilding)))
-        return 0;
+        return false;
     calculateDemand();
-    return 1;
+    return true;
 }
 
 VA(0x0042b520, 0x8b)
@@ -1815,11 +1815,11 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     purchaser.doSwap(currentHero, &currentTown->getArmy(),
                      garrisonHero, alliance);
 
-    purchaser.setSubtractMode(0);
+    purchaser.setSubtractMode(false);
     purchaser.doPurchase(&currentHero->m_army,
-                          currentHero->getMorale(0, 0, 1),
+                          currentHero->getMorale(0, false, true),
                           &currentTown->getArmy(), player->m_resources,
-                          1, alliance);
+                          true, alliance);
 
     // DC ai_player.cpp:1869/1873 has two early exits; 1893 records short
     // morale, and amount/funds/traits belong to function scope. Retail
@@ -1866,7 +1866,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     long bestValue = 0;
     type_building_id bestBuilding;
     __int64 buildMask = currentTown->getBuildableMask();
-    short morale = currentHero->getMorale(0, 0, 1);
+    short morale = currentHero->getMorale(0, false, true);
     __int64* maskPtr = &buildMask;
     for (int building = DWELLING_0_ID;
          building <= DWELLING_6_ID; building++) {
@@ -1900,13 +1900,13 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     if (bestValue > 0) {
         int* cost =
             currentTown->getBuildCostArray(bestBuilding);
-        currentTown->buildBuilding(bestBuilding, 1, 1);
+        currentTown->buildBuilding(bestBuilding, true, true);
         for (int resource = 0; resource < NUM_RESOURCES; ++resource)
             player->m_resources[resource] -= cost[resource];
         purchaser.set(currentTown);
         purchaser.doPurchase(&currentHero->m_army, morale,
                               &currentTown->getArmy(), player->m_resources,
-                              1, alliance);
+                              true, alliance);
     }
 }
 
@@ -2141,7 +2141,7 @@ void type_AI_creature_swapper::doSwap(hero* currentHero,
     m_hasAngelicAlliance = newHasAngelicAlliance;
     m_army = &currentHero->m_army;
     m_adjacentArmy = sourceArmy;
-    m_morale = currentHero->getMorale(0, 0, 1);
+    m_morale = currentHero->getMorale(0, false, true);
     m_improvement = calculateImprovement(currentHero, secondHero);
     aiConsolidateArmy(*m_army);
     dumpExtraCreature();
@@ -2169,7 +2169,7 @@ long type_AI_creature_swapper::getSwapValue(
     m_hasAngelicAlliance = newHasAngelicAlliance;
     m_army = &localArmy;
     m_adjacentArmy = &localSource;
-    m_morale = currentHero->getMorale(0, 0, 1);
+    m_morale = currentHero->getMorale(0, false, true);
     m_improvement = calculateImprovement(currentHero, secondHero);
 
     aiConsolidateArmy(localArmy);
@@ -2322,8 +2322,8 @@ long type_AI_creature_swapper::valueOfAddingArmy(
         else
             minimumMorale = 1;
 
-        if (m_army->getMorale(0, 0, 0, 0, 0,
-                           m_hasAngelicAlliance, 0)
+        if (m_army->getMorale(0, 0, 0, 0, false,
+                           m_hasAngelicAlliance, false)
                 + m_morale < minimumMorale) {
             int index;
             for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT;
@@ -2454,7 +2454,7 @@ void type_AI_creature_purchaser::set(town* currentTown)
         TCreatureType type = g_dwellingType[currentTown->m_type][dwelling];
         short amount = *population;
         if (amount > 0) {
-            m_creatures.push_back(type_creature_source(type, population, 0));
+            m_creatures.push_back(type_creature_source(type, population, false));
         }
     }
 }
@@ -2920,7 +2920,7 @@ static void checkHolyGrail(
     point.m_y = player->m_puzzleGuess.m_y;
     point.m_z = player->m_puzzleGuess.m_z;
     point.m_isCritical = 0;
-    pathCell* guessCell = currentSearchArray->getCell(point, 0);
+    pathCell* guessCell = currentSearchArray->getCell(point, false);
     if (!guessCell->m_visited)
         return;
     NewmapCell* mapCell = g_game->getCell(point);
@@ -3510,7 +3510,7 @@ static long markDestinations(hero* currentHero, long maxDistance,
     // DC 3090 looks up the hero's own search cell and drops the result;
     // the inline lookup leaves no retail code (byte-flat).
     currentSearchArray->getCell(
-        type_point(currentHero->m_x, currentHero->m_y, currentHero->m_z), 0);
+        type_point(currentHero->m_x, currentHero->m_y, currentHero->m_z), false);
 
     for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
         int heroId = g_currentPlayer->m_heroes[i];
@@ -3518,7 +3518,7 @@ static long markDestinations(hero* currentHero, long maxDistance,
         if (friendly == currentHero)
             continue;
         pathCell* friendCell = currentSearchArray->getCell(
-            type_point(friendly->m_x, friendly->m_y, friendly->m_z), 0);
+            type_point(friendly->m_x, friendly->m_y, friendly->m_z), false);
         if (!friendCell->m_visited)
             continue;
 
@@ -3590,7 +3590,7 @@ static int netValueOfLocation(hero* currentHero, HeroDestination& destination,
         point = currentPathCell->m_lastPoint;
         destination.m_moveCost -= currentPathCell->m_cost;
         // The refund changes the active path cell, not just its cost.
-        currentPathCell = currentSearchArray->getCell(point, 0);
+        currentPathCell = currentSearchArray->getCell(point, false);
         destination.m_moveCost += currentPathCell->m_cost;
     }
 
@@ -3687,11 +3687,11 @@ bool attemptStep(hero* currentHero, pathCell& currentPathCell,
 
     if (currentPathCell.m_inBoat && !(currentHero->m_flags & 0x40000)) {
         if (!(cell->m_type == BOAT && cell->m_isTrigger)) {
-            g_advManager->stopCursor(1);
+            g_advManager->stopCursor(true);
             if (currentHero->canSummonBoat()) {
                 if (firstStep)
                     g_advManager->castSpell(SPELL_SUMMON_BOAT);
-                return 0;
+                return false;
             }
             // can_build_ship is bit 11 of the proven cellFlags word (the
             // header pools bits 10-11; this is the first admitted reader).
@@ -3716,8 +3716,8 @@ bool attemptStep(hero* currentHero, pathCell& currentPathCell,
     int noMove;
     int foughtBattle;
     NewmapCell* eventCell = g_advManager->moveHero(
-        currentPathCell.m_direction, standEnd, triggerPoint, &noMove, 1,
-        &foughtBattle, 0);
+        currentPathCell.m_direction, standEnd, triggerPoint, &noMove, true,
+        &foughtBattle, false);
     if (retargeted) {
         currentHero->m_pathTargetX = savedX;
         currentHero->m_pathTargetY = savedY;
@@ -3725,7 +3725,7 @@ bool attemptStep(hero* currentHero, pathCell& currentPathCell,
     }
 
     if (currentHero->m_owner != g_netLocalGamePos)
-        return 0;
+        return false;
 
     if (eventCell == 0) {
         if (noMove != 0)
@@ -3733,7 +3733,7 @@ bool attemptStep(hero* currentHero, pathCell& currentPathCell,
     } else {
         g_advManager->doAIEvent(eventCell, currentHero, triggerPoint);
         if (g_currentPlayer->m_currHeroId == -1)
-            return 0;
+            return false;
         if (eventCell->getMapObject() == HUT_OF_MAGI
             && eventCell->cellIsTrigger())
             g_aiPlayers[currentHero->m_owner].clearMagusHutValue();
@@ -3803,7 +3803,7 @@ static unsigned char checkMoveSpell(hero* currentHero,
     }
 
     if (!alreadyActive) {
-        g_advManager->stopCursor(1);
+        g_advManager->stopCursor(true);
         g_advManager->castSpell(spell);
     }
     return 1;
@@ -3934,7 +3934,7 @@ static unsigned char attemptTeleport(hero* current_hero,
     } while (pathIndex < destination_index);
 
     type_point destination = path[destination_index];
-    g_advManager->teleportTo(current_hero, destination, 0, 0, 1, 0);
+    g_advManager->teleportTo(current_hero, destination, 0, false, true, false);
     current_hero->useSpell(mana_cost);
     ++current_hero->m_dWalkSpellsCast;
     return 1;
@@ -4018,7 +4018,7 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
     }
 
     if (path[0].m_startAtTrigger) {
-        g_advManager->mobilizeCurrHero(0, 0, 1);
+        g_advManager->mobilizeCurrHero(0, false, true);
         type_point point = currentHero->getLocation();
         NewmapCell* cell = g_game->getCell(point);
         g_advManager->doAIEvent(cell, currentHero,
@@ -4031,7 +4031,7 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
         min(static_cast<long>(path[maxDistance].m_cost),
             currentHero->m_movePoints),
         350);
-    firstStep = 1;
+    firstStep = true;
     bool standEnd = false;
     totalCost = 0;
 
@@ -4042,13 +4042,13 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
             checkGatePurchase(path[step]);
             currentHero->m_movePoints = max(currentHero->m_movePoints - 100, 0);
             g_advManager->teleportTo(currentHero, path[step], 0,
-                                     0, 1, 0);
+                                     false, true, false);
             return;
         }
 
         if (path[step].m_townPortal && step == 0) {
             g_advManager->teleportTo(currentHero, path[step], 0,
-                                     0, 1, 0);
+                                     false, true, false);
             currentHero->useSpell(
                 currentHero->getManaCost(SPELL_TOWN_PORTAL));
             currentHero->m_movePoints -=
@@ -4068,27 +4068,27 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
 
         if (path[step].m_flying
             && !checkMoveSpell(currentHero, path, step, SPELL_FLY,
-                                 currentHero->isFlying(0)))
+                                 currentHero->isFlying(false)))
             return;
 
         if (path[step].m_waterWalking
             && !checkMoveSpell(
                 currentHero, path, step, SPELL_WATER_WALK,
-                currentHero->isFlying(0)
-                    || currentHero->canWalkOnWater(0)))
+                currentHero->isFlying(false)
+                    || currentHero->canWalkOnWater(false)))
             return;
 
         if (step + 1 >= path.size()
             || static_cast<long>(path[step + 1].m_cost) - totalCost
                    > currentHero->m_movePoints)
-            standEnd = 1;
+            standEnd = true;
 
         if (!attemptStep(currentHero, path[step], standEnd, firstStep))
             return;
         if (standEnd)
             return;
 
-        firstStep = 0;
+        firstStep = false;
         bestPoint.m_moveCost -=
             static_cast<long>(path[step].m_cost) - totalCost;
         if (bestPoint.m_moveCost < 0)
@@ -4100,11 +4100,11 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
             && !bestPoint.m_isCritical) {
             destination = bestPoint;
             aiChooseDestination(currentHero, maxDistance, bestPoint,
-                                  bestRawValue, 0, exploreMode);
+                                  bestRawValue, false, exploreMode);
             if (destination != bestPoint) {
                 buildPath(currentHero, g_searchArray, path, bestPoint);
                 totalCost = 0;
-                firstStep = 1;
+                firstStep = true;
                 step = -1;
             }
         }
@@ -4217,7 +4217,7 @@ void aiBuildShip(const hero* ourHero, long x, long y, long z)
 
     if (player->m_resources[WOOD] < 10 || player->m_resources[GOLD] < 1000)
         return;
-    if (g_game->createBoat(x, y, z, ourHero->m_owner, 0, 1) == -1)
+    if (g_game->createBoat(x, y, z, ourHero->m_owner, false, 1) == -1)
         return;
     player->m_resources[GOLD] -= 1000;
     player->m_resources[WOOD] -= 10;
@@ -4335,7 +4335,7 @@ static bool considerHiring(long playerId, hero* candidate)
         * player.m_ai.m_resourceValue[GOLD] * g_heroGoldCost);
     if (bestValue > total
         && player.m_resources[GOLD] < player.m_numHeroes * g_heroGoldCost)
-        return 0;
+        return false;
 
     for (int i = 0; i < player.m_numTowns; ++i) {
         town* currentTown = g_game->getTown(player.m_townIds[i]);
@@ -4357,16 +4357,16 @@ static bool considerHiring(long playerId, hero* candidate)
         }
     }
     if (bestTown == 0)
-        return 0;
+        return false;
 
     if (!bestTown->hasBuilding(TAVERN_ID, true)) {
         if (!bestTown->buyBuilding(TAVERN_ID))
-            return 0;
+            return false;
         if (player.m_resources[GOLD] < g_heroGoldCost)
-            return 0;
+            return false;
     }
     bestTown->hire(candidate, playerId);
-    return 1;
+    return true;
 }
 
 // E:\gamedcs\ai_player.cpp:4320
@@ -4423,8 +4423,8 @@ static long valueOfHiring(town* currentTown, hero* candidate,
         candidate->isWieldingArtifact(ARTIFACT_ANGELIC_ALLIANCE)
         || player->hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doSwap(candidate, &townArmy, 0, hasAlliance);
-    purchaser.doPurchase(&candidate->m_army, candidate->getMorale(0, 0, 1),
-                          &townArmy, player->m_resources, 0, hasAlliance);
+    purchaser.doPurchase(&candidate->m_army, candidate->getMorale(0, false, true),
+                          &townArmy, player->m_resources, false, hasAlliance);
 
     std::vector<HeroDestination> destinations;
     candidate->m_x = currentTown->m_mapX;
@@ -4440,14 +4440,14 @@ static long valueOfHiring(town* currentTown, hero* candidate,
     unsigned int i;
     for (i = 0; i < destinations.size(); ++i) {
         destination = destinations[i];
-        pathCell* cell = currentSearchArray.getCell(destination, 0);
+        pathCell* cell = currentSearchArray.getCell(destination, false);
         NewmapCell* mapCell = g_advManager->getCell(destination);
         if (mapCell->m_type == HERO && mapCell->m_isTrigger
             && g_game->getHero(mapCell->m_extraInfo)->m_owner == playerId) {
             cell->m_barrierValue = destination.m_value;
         } else if (cell->m_barrierValue < 0
                    && cell->m_monster.m_x < 255) {
-            monsterCell = currentSearchArray.getCell(cell->m_monster, 0);
+            monsterCell = currentSearchArray.getCell(cell->m_monster, false);
             if (monsterCell->m_visited) {
                 monsters.push_back(monsterCell);
                 monsterCell->m_visited = 0;
@@ -4469,13 +4469,13 @@ static long valueOfHiring(town* currentTown, hero* candidate,
         hero* other = g_game->getHero(player->m_heroes[heroIndex]);
         if (other->m_z == candidate->m_z) {
             pathCell* cell = currentSearchArray.getCell(
-                type_point(other->m_x, other->m_y, other->m_z), 0);
+                type_point(other->m_x, other->m_y, other->m_z), false);
 
             if (cell->m_visited) {
                 ++heroesTouched;
                 long value = cell->m_barrierValue;
                 if (cell->m_monster.m_x < 255) {
-                    monsterCell = currentSearchArray.getCell(cell->m_monster, 0);
+                    monsterCell = currentSearchArray.getCell(cell->m_monster, false);
                     if (monsterCell->m_barrierValue < 0)
                         value += monsterCell->m_barrierValue;
                 }
@@ -4672,7 +4672,7 @@ long type_morale_artifact::getValue(const hero* owner, unsigned char equipped, u
 {
     if (exact)
         return 0;
-    int morale = owner->getMorale(0, 0, 0);
+    int morale = owner->getMorale(0, false, false);
     if (equipped)
         morale -= m_bonus;
     return static_cast<long>(aiValueOfMorale(morale, m_bonus)
@@ -4686,7 +4686,7 @@ long type_luck_artifact::getValue(const hero* owner, unsigned char equipped, uns
 {
     if (exact)
         return 0;
-    int luck = owner->getLuck(0, 0, 0);
+    int luck = owner->getLuck(0, false, false);
     if (equipped)
         luck -= m_bonus;
     return static_cast<long>(aiValueOfLuck(luck, m_bonus)
@@ -4778,7 +4778,7 @@ long type_antimorale_artifact::getValue(const hero* owner, unsigned char, unsign
     long result = static_cast<long>(aiValueOfMorale(0, 2) * army);
     if (exact)
         return result;
-    int morale = owner->getMorale(0, 0, 1);
+    int morale = owner->getMorale(0, false, true);
     if (morale > 0)
         result = static_cast<long>(aiValueOfMorale(morale, -morale) * army + result);
     return result;
@@ -4793,7 +4793,7 @@ long type_antiluck_artifact::getValue(const hero* owner, unsigned char, unsigned
     long result = static_cast<long>(aiValueOfLuck(0, 2) * army);
     if (exact)
         return result;
-    int luck = owner->getLuck(0, 0, 1);
+    int luck = owner->getLuck(0, false, true);
     if (luck > 0)
         result = static_cast<long>(aiValueOfLuck(luck, -luck) * army + result);
     return result;
@@ -5234,7 +5234,7 @@ static long removeNegativeArtifacts(hero* ourHero)
 {
     type_artifact artifact(ARTIFACT_NONE);
     long bestValue = getFullValue(ourHero);
-    if (ourHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
+    if (ourHero->getNumberInBackpack(true) >= HERO_BACKPACK_CAPACITY)
         return bestValue;
 
     for (int slot = 0; slot < 17; ++slot) {
@@ -5247,7 +5247,7 @@ static long removeNegativeArtifacts(hero* ourHero)
             } else {
                 ourHero->addToBackpack(artifact, -1);
                 bestValue = value;
-                if (ourHero->getNumberInBackpack(1)
+                if (ourHero->getNumberInBackpack(true)
                     >= HERO_BACKPACK_CAPACITY) {
                     return bestValue;
                 }
@@ -5314,7 +5314,7 @@ static unsigned char addArtifact(hero* ourHero, type_artifact artifact,
                                   long sourceSlot, long* sourceValue,
                                   long bestChange)
 {
-    if (ourHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
+    if (ourHero->getNumberInBackpack(true) >= HERO_BACKPACK_CAPACITY)
         return 0;
 
     type_artifact oldArtifact(ARTIFACT_NONE);

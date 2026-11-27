@@ -91,16 +91,16 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
             font::WHITE, MANA_ID, 1, 0, 8));
 
         int morale = limit(
-            -3, thisHero->getMorale(0, 0, 1), 3);
+            -3, thisHero->getMorale(0, false, true), 3);
         widgets.push_back(new iconWidget(
             14, 86, 22, 12, MORALE_ID, "imrl22.def", morale + 3,
-            0, 0, 0, 0x10));
+            0, false, 0, 0x10));
 
         int luck = limit(
-            -3, thisHero->getLuck(0, 0, 1), 3);
+            -3, thisHero->getLuck(0, false, true), 3);
         widgets.push_back(new iconWidget(
             14, 103, 22, 12, LUCK_ID, "ilck22.def", luck + 3,
-            0, 0, 0, 0x10));
+            0, false, 0, 0x10));
     }
 
     if (viewLevel >= ViewSome && thisHero->m_army.getNumArmies() > 0) {
@@ -153,7 +153,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
             widgets.push_back(new iconWidget(
                 g_armyPos[displaySlot][0],
                 g_armyPos[displaySlot][1], 32, 32, widgetId++,
-                "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
+                "cprsmall.def", creature + 2, 0, false, 0, 0x10));
 
             int count;
             if (thisHero->m_disguiseLevel >= DisguiseAdvanced)

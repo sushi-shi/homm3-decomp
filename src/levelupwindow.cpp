@@ -88,7 +88,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
         TEXT3_ID, 5, 0, 8));
     m_widgets.push_back(new iconWidget(
         174, 190, 42, 42, PRISKILL_ID, "pskil42.def", gainedSkill,
-        0, 0, 0, 0x10));
+        0, false, 0, 0x10));
 
     if (secondChoice != -1) {
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT],
@@ -108,20 +108,20 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             122, 325, 47, 46, SKILLBORDER_1_ID,
             g_systemPalette->Palette[45], 0x400));
         widget* addedLeft = m_widgets.back();
-        addedLeft->setVisible(0);
+        addedLeft->setVisible(false);
 
         m_widgets.push_back(new coloredBorderFrame(
             220, 325, 47, 46, SKILLBORDER_2_ID,
             g_systemPalette->Palette[45], 0x400));
         widget* addedRight = m_widgets.back();
-        addedRight->setVisible(0);
+        addedRight->setVisible(false);
 
         m_widgets.push_back(new iconWidget(
             124, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
-            firstChoice, 0, 0, 0, 0x10));
+            firstChoice, 0, false, 0, 0x10));
         m_widgets.push_back(new iconWidget(
             222, 326, 44, 44, SKILLICON_2_ID, "secskill.def",
-            secondChoice, 0, 0, 0, 0x10));
+            secondChoice, 0, false, 0, 0x10));
 
         sprintf(g_text, "%s\n%s", g_secondarySkillLevels[firstChoice % 3],
                 akSSkillTraits[firstChoice / 3 - 1].m_name);
@@ -145,7 +145,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             g_systemPalette->Palette[45], 0x400));
         m_widgets.push_back(new iconWidget(
             170, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
-            firstChoice, 0, 0, 0, 0x10));
+            firstChoice, 0, false, 0, 0x10));
         sprintf(g_text, "%s\n%s", g_secondarySkillLevels[firstChoice % 3],
                 akSSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
@@ -156,7 +156,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
 
     button* accept = new button(
         296, 413, 64, 30, LEVELUP_ACCEPT_ID, "iokay.def",
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     accept->setHotkey(1);
     accept->setHotkey(28);
     accept->enable(firstChoice == -1 || secondChoice == -1);
@@ -217,13 +217,13 @@ int TLevelUpWindow::windowHandler(message& msg)
             if (g_levelUpWindow->m_rightSkill == -1)
                 break;
             widget* leftBorder = g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
-            leftBorder->setVisible(0);
+            leftBorder->setVisible(false);
             widget* rightBorder = g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
-            rightBorder->setVisible(1);
+            rightBorder->setVisible(true);
             g_levelUpWindow->m_selected = SKILLICON_2_ID;
             widget* accept = g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);
             accept->enable(1);
-            g_levelUpWindow->drawWindow(1, 0xffff0001, 0xffff);
+            g_levelUpWindow->drawWindow(true, 0xffff0001, 0xffff);
             return MESSAGE_DISPATCH_CONSUME;
         }
 
@@ -231,16 +231,16 @@ int TLevelUpWindow::windowHandler(message& msg)
             if (g_levelUpWindow->m_leftSkill == -1)
                 break;
             widget* leftBorder = g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
-            leftBorder->setVisible(1);
+            leftBorder->setVisible(true);
             if (g_levelUpWindow->m_rightSkill != -1) {
                 widget* rightBorder =
                     g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
-                rightBorder->setVisible(0);
+                rightBorder->setVisible(false);
             }
             g_levelUpWindow->m_selected = SKILLICON_1_ID;
             widget* accept = g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);
             accept->enable(1);
-            g_levelUpWindow->drawWindow(1, 0xffff0001, 0xffff);
+            g_levelUpWindow->drawWindow(true, 0xffff0001, 0xffff);
             return MESSAGE_DISPATCH_CONSUME;
         }
         }
@@ -282,14 +282,14 @@ int TLevelUpWindow::windowHandler(message& msg)
                     g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
                 widget* leftBorder =
                     g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
-                leftBorder->setVisible(1);
+                leftBorder->setVisible(true);
                 if (rightBorder)
-                    rightBorder->setVisible(0);
+                    rightBorder->setVisible(false);
                 g_levelUpWindow->m_selected = SKILLICON_1_ID;
                 widget* accept =
                     g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);
                 accept->enable(1);
-                g_levelUpWindow->drawWindow(1, 0xffff0001, 0xffff);
+                g_levelUpWindow->drawWindow(true, 0xffff0001, 0xffff);
                 return MESSAGE_DISPATCH_CONSUME;
             }
 
@@ -297,15 +297,15 @@ int TLevelUpWindow::windowHandler(message& msg)
             case SKILLBORDER_2_ID: {
                 widget* leftBorder =
                     g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
-                leftBorder->setVisible(0);
+                leftBorder->setVisible(false);
                 widget* rightBorder =
                     g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
-                rightBorder->setVisible(1);
+                rightBorder->setVisible(true);
                 g_levelUpWindow->m_selected = SKILLICON_2_ID;
                 widget* accept =
                     g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);
                 accept->enable(1);
-                g_levelUpWindow->drawWindow(1, 0xffff0001, 0xffff);
+                g_levelUpWindow->drawWindow(true, 0xffff0001, 0xffff);
                 return MESSAGE_DISPATCH_CONSUME;
             }
 

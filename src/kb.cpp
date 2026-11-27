@@ -205,7 +205,7 @@ void drawProgressCount()
                          g_progDots->GetWidth(),
                          g_progDots->GetHeight(),
                          g_windowManager->m_screenBitmap,
-                         395 + i * 18, 548, 0, 0);
+                         395 + i * 18, 548, false, false);
     }
 }
 
@@ -239,7 +239,7 @@ void showProgressBar()
     if (g_loadBar) {
         g_loadBar->Draw(0, 0, g_loadBar->GetWidth(),
                         g_loadBar->GetHeight(),
-                        g_windowManager->m_screenBitmap, 0, 0, 0);
+                        g_windowManager->m_screenBitmap, 0, 0, false);
         drawProgressCount();
         g_windowManager->updateScreen(0, 0, 800, 600);
     }
@@ -427,7 +427,7 @@ int earlySetup()
     }
     ResourceManager::SetPath(
         DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"));
-    if (!ResourceManager::Open(1, 1, &openResult)) {
+    if (!ResourceManager::Open(true, true, &openResult)) {
         if (openResult == 1)
             shutDown(DATA_COMPGEN(0x0067f64c, filesMissingMessage,
                 "Files from Heroes III are missing.   "
@@ -525,7 +525,7 @@ void creditsWait()
         460, 10, g_windowManager->m_screenBitmap->GetWidth(),
         g_windowManager->m_screenBitmap->GetHeight(), background->GetMap(0, 0),
         0, 0, background->GetWidth(), background->GetHeight(),
-        background->GetPitch(), 1);
+        background->GetPitch(), true);
     Bitmap16Bit* credits =
         new Bitmap16Bit(328, textHeight + creditsFont->fs.height);
     if (!credits)
@@ -558,27 +558,27 @@ void creditsWait()
                 background->Draw(0, 0, background->GetWidth(),
                                  background->GetHeight(), screen->GetMap(0, 0),
                                  460, 10, screen->GetWidth(), screen->GetHeight(),
-                                 screen->GetPitch(), 0);
+                                 screen->GetPitch(), false);
                 if (startOffset) {
                     startOffset -= 2;
                     screen = g_windowManager->m_screenBitmap;
                     credits->Draw(0, 0, 328, 580 - startOffset,
                                   screen->GetMap(0, 0), 460, startOffset + 10,
                                   screen->GetWidth(), screen->GetHeight(),
-                                  screen->GetPitch(), 1);
+                                  screen->GetPitch(), true);
                 } else if (yOffset < textHeight - 580) {
                     yOffset += 2;
                     screen = g_windowManager->m_screenBitmap;
                     credits->Draw(0, yOffset, 328, 580, screen->GetMap(0, 0), 460,
                                   10, screen->GetWidth(), screen->GetHeight(),
-                                  screen->GetPitch(), 1);
+                                  screen->GetPitch(), true);
                 } else if (endOffset >= 0) {
                     endOffset -= 2;
                     yOffset += 2;
                     screen = g_windowManager->m_screenBitmap;
                     credits->Draw(0, yOffset, 328, endOffset, screen->GetMap(0, 0),
                                   460, 10, screen->GetWidth(), screen->GetHeight(),
-                                  screen->GetPitch(), 1);
+                                  screen->GetPitch(), true);
                     if (endOffset < 435)
                         g_smallFont->DrawBoundedString(
                             g_credits[1], g_windowManager->m_screenBitmap, 460, 10,
@@ -746,7 +746,7 @@ static void playFramedVideo(int videoId, const char* frameName)
 {
     Bitmap16Bit* frame = ResourceManager::GetBitmap16(frameName);
 
-    videoOpen(videoId, 80, 187, 0, 0, 0, 0, 1);
+    videoOpen(videoId, 80, 187, 0, 0, 0, false, true);
     frame->Draw(0, 0, frame->GetWidth(), frame->GetHeight(),
                 g_windowManager->m_screenBitmap, 0, 0, false);
     videoNextFrame();
@@ -758,7 +758,7 @@ static void playFramedVideo(int videoId, const char* frameName)
             break;
 
         {
-            bool done = 0;
+            bool done = false;
             process1WindowsMessage();
             message msg = g_inputManager->getEvent();
             switch (msg.m_id) {
@@ -769,7 +769,7 @@ static void playFramedVideo(int videoId, const char* frameName)
             case MESSAGE_LEFT_BUTTON_DOWN:
             case MESSAGE_RIGHT_BUTTON_DOWN:
                 if (!g_firstTimeThrough) {
-                    done = 1;
+                    done = true;
                     break;
                 }
                 break;
@@ -792,7 +792,7 @@ MAC_ADDRESS(0x10fafc, 0x1a4)
 void lostGame()
 {
     unsigned char done = 0;
-    videoOpen(34, 0, 0, 0, 0, 0, 1, 1);
+    videoOpen(34, 0, 0, 0, 0, 0, true, true);
     g_soundManager->startMP3("UltimateLose", 1, 1);
     for (int i = 0; i < 3; i++) {
         Sleep(500);
@@ -910,7 +910,7 @@ static int pickLoadGame();
 MAC_ADDRESS(0x10e810, 0x40)
 static void openCampaignVideo()
 {
-    videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+    videoOpen(33, 0, 0, 800, 600, 1, false, true);
 }
 
 // E:\gamedcs\kb.cpp:814. Dreamcast exposes this source boundary and its
@@ -1190,7 +1190,7 @@ int oldmain()
         case TMainMenu::RESTART_ID: {
             g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
             showProgressBar();
-            incProgressBar(1);
+            incProgressBar(true);
 
             playerData playerSave[NUM_PLAYERS];
             for (int i = 0; i < NUM_PLAYERS; ++i)
@@ -1227,7 +1227,7 @@ int oldmain()
                 g_game->m_players[playerPos].m_isHuman = 1;
                 g_game->m_players[playerPos].m_isLocal = 1;
                 g_localGamePos = playerPos;
-                incProgressBar(1);
+                incProgressBar(true);
                 g_game->setupFirstPlayer();
                 campaignBrief.startScenario(currentMap, briefingChoice);
             } else {
@@ -1245,13 +1245,13 @@ int oldmain()
                     g_newMapStartingBonus[j] = g_game->m_setup.m_startingBonus[j];
                 }
 
-                incProgressBar(1);
+                incProgressBar(true);
                 g_game->setupFirstPlayer();
                 g_game->newMap(g_game->m_setup.m_path, g_game->m_setup.m_filename,
                                g_startingHeroOverrides, g_game->m_gameVersion);
             }
-            incProgressBar(1);
-            incProgressBar(1);
+            incProgressBar(true);
+            incProgressBar(true);
             break;
         }
 
@@ -1270,10 +1270,10 @@ int oldmain()
         g_gameSelectBack = 0;
         videoClose();
 
-        bool campaignScored = 0;
+        bool campaignScored = false;
         if (!unused) {
         runGame:
-            campaignScored = 0;
+            campaignScored = false;
             g_windowManager->m_colorCyclingOn = 1;
             computeAdvNetControl();
             g_gameInitialized = 1;
@@ -1286,7 +1286,7 @@ int oldmain()
                 showProgressBar();
                 g_defeatedAllPlayers = g_gameResultCampaignMapScored;
                 unloadProgressBar();
-                campaignScored = 1;
+                campaignScored = true;
             } else {
 
                 if (g_executive->addManager(g_advManager, -1))
@@ -1315,7 +1315,7 @@ int oldmain()
                 g_turnDuration.start();
                 g_executive->mainLoop();
                 g_soundManager->m_playSounds = 1;
-                g_goSolo = 0;
+                g_goSolo = false;
                 g_soundManager->stopAllSamples(1);
                 g_executive->removeManager(g_advManager);
                 g_windowManager->fadeScreen(1, 4, false);
@@ -1346,7 +1346,7 @@ int oldmain()
                     // Complete reloads gpGame here (+0x1572), after the
                     // header load; the following epilogue keeps cached ESI.
                     g_game->m_campaign.completeCurrentMap(&campaignBrief);
-                    saveGame(1);
+                    saveGame(true);
                     campaign.playScenarioEpilogue(&campaignBrief);
                     if ((campaign.m_currentCampaign == g_campaignOrdinal03
                          && campaign.campaignComplete())
@@ -1364,7 +1364,7 @@ int oldmain()
                             g_highScoreManager->viewHiScore();
                         }
                         g_gameOver = 0;
-                        g_inCampaign = 0;
+                        g_inCampaign = false;
                         continue;
                     }
                 }
@@ -1397,7 +1397,7 @@ int oldmain()
                         doCampaignWindow(false, nextCampaign);
                     }
                 } else {
-                    TCampaignBrief campaignBriefWindow(0, 0);
+                    TCampaignBrief campaignBriefWindow(false, false);
                     campaignBriefWindow.doModal();
                 }
 
@@ -1441,13 +1441,13 @@ MAC_ADDRESS(0x11128c, 0x490)
 static int doNewGame()
 {
     g_inSetupDialog = 1;
-    g_inCampaign = 0;
+    g_inCampaign = false;
     g_mpExtendedType = 10;
     g_mpBaseType = 10;
     g_numHumanPlayers = 1;
     g_waitForRemoteReceive = 0;
     g_directConnect = 0;
-    g_game->m_isTutorial = 0;
+    g_game->m_isTutorial = false;
     g_setupGameType = 0;
 
     g_gameSelectBack->Draw(0, 0, g_gameSelectBack->GetWidth(),
@@ -1457,7 +1457,7 @@ static int doNewGame()
     int exitNewGame = 0;
     while (!exitNewGame) {
         {
-            TGameTypeWindow gameTypeWindow(0);
+            TGameTypeWindow gameTypeWindow(false);
             gameTypeWindow.doModal();
         }
 
@@ -1479,7 +1479,7 @@ static int doNewGame()
             if (doCampaignWindow())
                 exitNewGame = 1;
             else
-                g_inCampaign = 0;
+                g_inCampaign = false;
             break;
 
         case TGameTypeWindow::MULTIPLAYER_ID:
@@ -1496,10 +1496,10 @@ static int doNewGame()
             break;
 
         case TGameTypeWindow::TUTORIAL_ID: {
-            g_game->m_isTutorial = 1;
+            g_game->m_isTutorial = true;
             g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
             showProgressBar();
-            incProgressBar(1);
+            incProgressBar(true);
 
             strcpy(g_game->m_setup.m_path,
                    DATA_COMPGEN(0x006772d0, oldMainMapsDir, "maps"));
@@ -1510,7 +1510,7 @@ static int doNewGame()
             g_config.m_combatShadeLevel = 1;
 
             g_game->resetGame(0, 0, 0);
-            incProgressBar(1);
+            incProgressBar(true);
 
             g_game->m_players[0].m_isLocal = 1;
             g_game->m_players[0].m_isHuman = 1;
@@ -1527,8 +1527,8 @@ static int doNewGame()
 
             if (g_game->newMap(g_game->m_setup.m_path,
                                g_game->m_setup.m_filename, 0, -1)) {
-                incProgressBar(1);
-                incProgressBar(1);
+                incProgressBar(true);
+                incProgressBar(true);
                 exitNewGame = 1;
             } else {
                 g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
@@ -1572,7 +1572,7 @@ static int doNewGame()
 MAC_ADDRESS(0x10fca0, 0xc8)
 static int doCampaignWindow(bool newGame, int campaignSet)
 {
-    g_inCampaign = 1;
+    g_inCampaign = true;
     while (1) {
         {
             TCampaignWindow campaignWindow(newGame, campaignSet);
@@ -1647,16 +1647,16 @@ static unsigned char doCampaignWindow()
         case TCampaignSetWindow::CUSTOM_CAMPAIGN_ID: {
             videoPause();
             TCustomCampaignWindow customCampaignWindow;
-            customCampaignWindow.doModal(0);
+            customCampaignWindow.doModal(false);
             if (g_windowManager->m_dialogReturn) {
-                g_inCampaign = 1;
+                g_inCampaign = true;
                 {
-                    TCampaignBrief campaignBrief(1, 0);
+                    TCampaignBrief campaignBrief(true, false);
                     campaignBrief.doModal();
                     if (g_windowManager->m_dialogReturn
                         != DIALOG_RETURN_CANCEL)
                         return 1;
-                    g_inCampaign = 0;
+                    g_inCampaign = false;
                 }
             }
             break;
@@ -1692,10 +1692,10 @@ DC_ADDRESS(0x0e1630, 0x110)
 MAC_ADDRESS(0x11171c, 0xec)
 static int doSinglePlayerWindow()
 {
-    g_game->m_isTutorial = 0;
+    g_game->m_isTutorial = false;
     {
         TSingleSelectionWindow singleSelectionWindow(0);
-        singleSelectionWindow.doModal(0);
+        singleSelectionWindow.doModal(false);
     }
 
     // The empty CANCEL arm is kept as a goto to the shared return (100%).
@@ -1728,7 +1728,7 @@ static int doMultiPlayerWindow()
 {
     {
         TMultiPlayerWindow multiPlayerWindow;
-        multiPlayerWindow.doModal(0);
+        multiPlayerWindow.doModal(false);
     }
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
 }
@@ -1742,13 +1742,13 @@ MAC_ADDRESS(0x111860, 0x25c)
 static int doLoadGame()
 {
     g_inSetupDialog = 1;
-    g_inCampaign = 0;
+    g_inCampaign = false;
     g_mpExtendedType = 10;
     g_mpBaseType = 10;
     g_numHumanPlayers = 1;
     g_waitForRemoteReceive = 0;
     g_directConnect = 0;
-    g_game->m_isTutorial = 0;
+    g_game->m_isTutorial = false;
     g_setupGameType = 1;
 
     g_gameSelectBack->Draw(0, 0, g_gameSelectBack->GetWidth(),
@@ -1758,7 +1758,7 @@ static int doLoadGame()
     int exitLoadGame = 0;
     while (!exitLoadGame) {
         {
-            TGameTypeWindow gameTypeWindow(1);
+            TGameTypeWindow gameTypeWindow(true);
             gameTypeWindow.doModal();
         }
 
@@ -1776,7 +1776,7 @@ static int doLoadGame()
         case TGameTypeWindow::CAMPAIGN_ID:
             // Same proven PickLoadGame boundary, retail oldmain+0xc54.
             if (pickLoadGame()) {
-                g_inCampaign = 1;
+                g_inCampaign = true;
                 exitLoadGame = 1;
             }
             break;
@@ -1788,7 +1788,7 @@ static int doLoadGame()
             break;
 
         case TGameTypeWindow::TUTORIAL_ID:
-            g_game->m_isTutorial = 1;
+            g_game->m_isTutorial = true;
             // DC2122 and retail's tutorial-load arm retain PickLoadGame.
             if (pickLoadGame())
                 exitLoadGame = 1;
@@ -1824,7 +1824,7 @@ static int pickLoadGame()
 {
     {
         TSingleSelectionWindow singleSelectionWindow(1);
-        singleSelectionWindow.doModal(0);
+        singleSelectionWindow.doModal(false);
     }
     if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL)
         return 1;
@@ -2104,9 +2104,9 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         }
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 VA(0x004f0fc0, 0x1C3)
@@ -2130,13 +2130,13 @@ int eventWindowHandler(message& msg)
                 || g_normalDialogMbType == NORMAL_DIALOG_CHOOSE) {
                 widget* first =
                     getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_1);
-                first->setVisible(1);
+                first->setVisible(true);
                 widget* second =
                     getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_2);
-                second->setVisible(0);
+                second->setVisible(false);
                 getCurrentNormalDialog()->getWidget(DIALOG_RETURN_OK)->enable(1);
                 g_normalDialogSelection = DIALOG_RETURN_CHOICE_1;
-                getCurrentNormalDialog()->drawWindow(1, -65535, 65535);
+                getCurrentNormalDialog()->drawWindow(true, -65535, 65535);
             }
             break;
 
@@ -2145,13 +2145,13 @@ int eventWindowHandler(message& msg)
                 || g_normalDialogMbType == NORMAL_DIALOG_CHOOSE) {
                 widget* first =
                     getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_1);
-                first->setVisible(0);
+                first->setVisible(false);
                 widget* second =
                     getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_2);
-                second->setVisible(1);
+                second->setVisible(true);
                 getCurrentNormalDialog()->getWidget(DIALOG_RETURN_OK)->enable(1);
                 g_normalDialogSelection = DIALOG_RETURN_CHOICE_2;
-                getCurrentNormalDialog()->drawWindow(1, -65535, 65535);
+                getCurrentNormalDialog()->drawWindow(true, -65535, 65535);
             }
             break;
 
@@ -2237,7 +2237,7 @@ void playerDead(int whichPlayer)
     }
 
     for (i = player->m_numHeroes - 1; i >= 0; i--)
-        g_game->getHero(player->m_heroes[i])->deallocate(1, 0);
+        g_game->getHero(player->m_heroes[i])->deallocate(true, false);
 
     for (i = 0; i < 2; i++) {
         int recruitId = player->m_recruits[i];
@@ -2288,7 +2288,7 @@ static void checkPlayerLoss()
             && player.m_numTowns == 0) {
             playerDead(i);
             if (i == g_game->getLocalPlayerGamePos()) {
-                g_goSolo = 0;
+                g_goSolo = false;
                 normalDialog((*g_generalText)[GENERAL_TEXT_LOCAL_PLAYER_DEFEATED], NORMAL_DIALOG_DEFAULT,
                              -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             } else {
@@ -2311,7 +2311,7 @@ static void checkPlayerLoss()
                 if (g_game->isLocalHuman(i) && i == g_netLocalGamePos) {
                     const char* localFormat = (*g_generalText)[GENERAL_TEXT_PLAYER_BANISHED_FORMAT];
                     sprintf(g_text, localFormat, g_game->getPlayerName(i));
-                    g_goSolo = 0;
+                    g_goSolo = false;
                 } else {
                     const char* otherFormat = (*g_generalText)[GENERAL_TEXT_PLAYER_BANISHED_THIRD_PERSON_FORMAT];
                     sprintf(g_text, otherFormat, g_game->getPlayerName(i));
@@ -2978,8 +2978,8 @@ bool displayLCWinLoss(LossConditionStruct& lossCondition,
     }
 
     if (gameWon || gameLost)
-        return 1;
-    return 0;
+        return true;
+    return false;
 }
 
 // The re-entry latch CheckEndGame holds while it runs; its only five
@@ -3010,7 +3010,7 @@ void checkEndGame(int forceWin)
     if (g_inCheckEndGame)
         return;
     g_inCheckEndGame = 1;
-    bool conditionHandled = 0;
+    bool conditionHandled = false;
     checkPlayerLoss();
     liveOpponents = getEnemyCount();
 
@@ -3026,8 +3026,8 @@ void checkEndGame(int forceWin)
     gameLost = 0;
     int standardVictoryAllowed = 1;
     if (displayVCWinLoss(g_game->m_mapHeader.m_victoryCondition, gameWon,
-                         gameLost, 0)) {
-        conditionHandled = 1;
+                         gameLost, false)) {
+        conditionHandled = true;
     }
     if (!conditionHandled) {
         displayLCWinLoss(g_game->m_mapHeader.m_lossCondition, gameWon,
@@ -3097,7 +3097,7 @@ MAC_ADDRESS(0x11513c, 0x1dc)
 void game::showMoraleInfo(hero* thisHero, int mbType)
 {
     int icon;
-    int morale = thisHero->getMorale(0, 0, 1);
+    int morale = thisHero->getMorale(0, false, true);
     std::string text;
 
     if (morale > 0) {
@@ -3127,7 +3127,7 @@ MAC_ADDRESS(0x115318, 0x130)
 void game::showLuckInfo(hero* thisHero, int mbType)
 {
     int icon;
-    int luck = thisHero->getLuck(0, 0, 1);
+    int luck = thisHero->getLuck(0, false, true);
 
     if (luck > 0) {
         sprintf(g_text, g_luckInfo[3], g_luckInfo[0]);
@@ -3183,7 +3183,7 @@ MAC_ADDRESS(0x115448, 0x1c4)
 void shutDown(const char* inExitMessage)
 {
     if (!g_inShutDown) {
-        g_inShutDown = 1;
+        g_inShutDown = true;
         g_closingApp = 1;
         g_shutDownDone = 1;
         g_soundManager->close();
@@ -3232,7 +3232,7 @@ void shutDown(const char* inExitMessage)
         ResourceManager::Close();
         appExit();
         timeEndPeriod(1);
-        g_inShutDown = 0;
+        g_inShutDown = false;
         exit(0);
     }
 }
@@ -3649,14 +3649,14 @@ static void showCongrats(int hsType)
     if (g_game->m_isCheater)
         strcpy(temp, (*g_generalText)[GENERAL_TEXT_CHEATER]);
     temp[0] = static_cast<char>(toupper(temp[0]));
-    videoOpen(0x23, 0, 0, 0, 0, 1, 0, 1);
+    videoOpen(0x23, 0, 0, 0, 0, 1, false, true);
     g_soundManager->startMP3(
         DATA_COMPGEN(0x0066c29c, congratsMusicName, "Win Scenario"), 0, 1);
     congratsWait(hsType, temp, baseScore, score, dayz);
     videoClose();
     g_highScoreManager->addScoreToHighScore(score, dayz, rating, hsType,
                                            landName.c_str());
-    g_mouseManager->showPointer(0);
+    g_mouseManager->showPointer(false);
     g_windowManager->m_colorCyclingOn = 1;
     g_windowManager->fadeScreen(1, 4, 0);
 }
@@ -3739,8 +3739,8 @@ int handleAppSpecificMenuCommands(int idItem)
         }
         if (currentHero)
             g_advManager->reseed(0, 0);
-        g_advManager->updateRadar(1, 1, 0, 0, 0);
-        g_advManager->completeDraw(0);
+        g_advManager->updateRadar(true, true, false, false, false);
+        g_advManager->completeDraw(false);
         g_advManager->updateScreen(0, 0);
         break;
     }
@@ -3759,7 +3759,7 @@ int handleAppSpecificMenuCommands(int idItem)
                                  : APP_MENU_RESOURCE_BONUS;
         }
         if (g_advManager->m_advWindow)
-            g_advManager->m_advWindow->updateResourceDisplay(1, 1);
+            g_advManager->m_advWindow->updateResourceDisplay(true, true);
         break;
     }
 
@@ -3789,7 +3789,7 @@ int handleAppSpecificMenuCommands(int idItem)
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B79B, MF_CHECKED);
         else
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B79B, MF_UNCHECKED);
-        g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
+        g_combatManager->drawFrame(true, false, false, 0, true, false);
         break;
 
     case APP_MENU_COMBAT_ORDINAL_B79C:
@@ -3800,13 +3800,13 @@ int handleAppSpecificMenuCommands(int idItem)
         else
             CheckMenuItem(g_activeMenu, APP_MENU_COMBAT_ORDINAL_B79C, MF_UNCHECKED);
         g_combatManager->m_backgroundDrawn = 0;
-        g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
+        g_combatManager->drawFrame(true, false, false, 0, true, false);
         break;
 
     case APP_MENU_COMBAT_REBUILD_OBSTACLES:
         markGameAsCheated();
         g_combatManager->placeAllObstacles();
-        g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
+        g_combatManager->drawFrame(true, false, false, 0, true, false);
         break;
 
     case APP_MENU_COMBAT_ORDINAL_B79E:
@@ -3989,7 +3989,7 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
                         }
                     }
                 }
-                if (!g_game->transmitSaveGame(nextPlayer, 0, 1, 0))
+                if (!g_game->transmitSaveGame(nextPlayer, 0, true, false))
                     shutDown(0);
             }
             remoteCleanup();
@@ -4696,7 +4696,7 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
             leftButtonLoc + 1, buttonY + 1, 64, 30,
             DIALOG_RETURN_ACCEPT,
             DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
-            0, 1, 0, 0x1c, 2);
+            0, 1, false, 0x1c, 2);
         widgets.push_back(acceptBorder);
         widgets.push_back(acceptButton);
 
@@ -4709,7 +4709,7 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
             DIALOG_RETURN_DECLINE,
             DATA_COMPGEN(0x00660b04, normalDialogCancelButton,
                          "iCancel.def"),
-            0, 1, 0, 1, 2);
+            0, 1, false, 1, 2);
         widgets.push_back(declineBorder);
         widgets.push_back(declineButton);
         break;
@@ -4726,7 +4726,7 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
             DIALOG_RETURN_CANCEL,
             DATA_COMPGEN(0x00660b04, normalDialogCancelButton,
                          "iCancel.def"),
-            0, 1, 0, 1, 2);
+            0, 1, false, 1, 2);
         widgets.push_back(cancelBorder);
         widgets.push_back(cancelButton);
 
@@ -4738,7 +4738,7 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
             leftButtonLoc + 1, buttonY + 1, 64, 30,
             DIALOG_RETURN_OK,
             DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
-            0, 1, 0, 0x1c, 2);
+            0, 1, false, 0x1c, 2);
         if (dialogInfo.m_mbType == NORMAL_DIALOG_CHOOSE_OPTIONAL)
             okayButton->enable(0);
         widgets.push_back(okayBorder);
@@ -4756,7 +4756,7 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
             centerButtonLoc + 1, buttonY + 1, 64, 30,
             DIALOG_RETURN_OK,
             DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
-            0, 1, 0, 0x1c, 2);
+            0, 1, false, 0x1c, 2);
         widgets.push_back(okayBorder);
         widgets.push_back(okayButton);
         break;
@@ -4771,7 +4771,7 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
             centerButtonLoc + 1, buttonY + 1, 64, 30,
             DIALOG_RETURN_OK,
             DATA_COMPGEN(0x00670160, normalDialogOkayButton, "iOkay.def"),
-            0, 1, 0, 0x1c, 2);
+            0, 1, false, 0x1c, 2);
         okayButton->enable(0);
         widgets.push_back(okayBorder);
         widgets.push_back(okayButton);
@@ -4788,7 +4788,7 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
             DIALOG_RETURN_CANCEL,
             DATA_COMPGEN(0x00660b04, normalDialogCancelButton,
                          "iCancel.def"),
-            0, 1, 0, 1, 2);
+            0, 1, false, 1, 2);
         widgets.push_back(cancelBorder);
         widgets.push_back(cancelButton);
         break;
@@ -4806,7 +4806,7 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
             dialogInfo.m_icons[iconIndex].m_spriteHeight,
             -1, dialogInfo.m_icons[iconIndex].m_spriteName.c_str(),
             dialogInfo.m_icons[iconIndex].m_spriteFrameIndex,
-            0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            0, false, 0, iconWidget::ICON_STYLE_PLAIN);
         if (!image) {
             memError();
         }
@@ -4836,7 +4836,7 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
             0x7809 + iconIndex,
             dialogInfo.m_icons[iconIndex].m_resource,
             dialogInfo.m_icons[iconIndex].m_qualifier);
-        frame->setVisible(0);
+        frame->setVisible(false);
         widgets.push_back(frame);
     }
 
@@ -4863,7 +4863,7 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
 
     mouseManager::EPointerSet oldSet = g_mouseManager->getSet();
     int oldFrame = g_mouseManager->getFrame();
-    g_mouseManager->showPointer(1);
+    g_mouseManager->showPointer(true);
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 
     videoPause();
