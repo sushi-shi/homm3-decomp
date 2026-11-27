@@ -5583,12 +5583,18 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
     // 5884 overwrites ratio with the unweighted double quotient. Mac
     // 0xb9590/0xb9598/0xb95a0 retains the three calls but drops the dead
     // integer arithmetic. Keep both meaningful expressions and one ratio.
-    // Retail reuses one qword slot for the numerator, denominator and result;
-    // the embedded assignment is the only source form that reproduces that
-    // x87 reload order; split statements and explicit casts keep a second slot.
+    // Residual (99.2966%): retail rounds the numerator and the denominator
+    // through one qword slot, loading the numerator between the two /Op
+    // conversions; VC6 converts both first and keeps a second slot here
+    // (docs/vc6/regalloc.md, "x87 rounding temporaries"). Eighteen ordinary
+    // spellings all score this same value: explicit and implicit casts, split
+    // and compound division, named numerator and denominator locals, an int
+    // first statement, and eight inline conversion, division and setter helpers.
+    // `ratio = (ratio = double(value)) / combatValue` reaches 100% by pinning
+    // the load; no developer writes it and DC records one plain double.
     double ratio = who->m_army.getAIValue()
         * (who->getPrimarySkillTotal() + 40) / 40;
-    ratio = (ratio = static_cast<double>(who->m_army.getAIValue())) / combatValue;
+    ratio = static_cast<double>(who->m_army.getAIValue()) / combatValue;
 
     int numGroups = 7;
     for (int thresholdIndex = 5;

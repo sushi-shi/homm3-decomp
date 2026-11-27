@@ -1068,14 +1068,12 @@ long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data c
 // [ebp-0x2c]: the dividend is stored, loaded, the divisor is rounded into
 // the same slot, then fdiv reads it. An ordinary cast (static_cast or
 // C-style), a named double quotient, compound division and a separate
-// numerator local all keep a second divisor scratch at [ebp-0x24].
-// The assignment expression as the dividend is the one source form whose
-// IL loads the numerator before the divisor is converted, so the divisor's
-// rounding temporary reuses the numerator bin; it is the same recovered x87
-// reload order already documented for combatMonsterEvent's ratio.
-// `combined` is the named numerator temporary; DC CodeView's four local
-// records (enemy, our_hits, enemy_hits, increase) are a lower bound and do
-// not list old/new damage locals either.
+// numerator local all keep a second divisor scratch at [ebp-0x24]
+// (docs/vc6/regalloc.md, "x87 rounding temporaries").
+// An embedded assignment to a second local, `increase = (combined = sum) /
+// oldDamage`, reproduces the reused slot exactly (100%); DC records no such
+// local (enemy, our_hits, enemy_hits, increase) and the double assignment is
+// no developer spelling, so it is not kept.
 VA(0x004375d0, 0x224)
 DC_ADDRESS(0x03e280, 0x13a)
 MAC_ADDRESS(0x03f3fc, 0x174)  // anchor-vtable
@@ -1094,8 +1092,8 @@ long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data 
     long newDamage = aiGetAttackDamage(*(ourArmy), our_hits, *(enemy), ranged, 0);
     if (ranged && ourArmy->is(creatureTwoAttacks))
         newDamage /= 2;
-    double combined;
-    double increase = (combined = newDamage + oldDamage) / oldDamage;
+    double increase = static_cast<double>(newDamage + oldDamage)
+                      / static_cast<double>(oldDamage);
     return getAttackBoostValue(ourArmy, enemy, caster.m_duration, increase);
 }
 

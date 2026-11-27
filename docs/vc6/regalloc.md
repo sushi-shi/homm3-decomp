@@ -1983,6 +1983,20 @@ interleaves, and neither matches retail's dword divisor. Treat this as one
 open stack-bin difference across those four functions rather than four
 spelling problems.
 
+`getFrenzyValue` (0x4375d0) is a fifth site, in double precision like
+`combatMonsterEvent`. An assignment expression as the dividend,
+`quotient = (numerator = double(a)) / b`, also interleaves and reproduces
+all five bodies exactly, because the assignment's value is loaded before the
+divisor is converted. Like the `volatile` dividend it pins the load from the
+source and is no developer spelling, so neither is kept: the three functions
+that used the assignment expression carry the ordinary division again
+(`combatMonsterEvent` 99.2966%, `resetBoltAngle` 98.7602%, `getFrenzyValue`
+98.9849%). In `combatMonsterEvent` eighteen ordinary spellings all score
+that same 99.2966%: explicit and implicit casts, split and compound division,
+named numerator and denominator locals, an int first statement, and ten
+calls of eight inline conversion, division and setter helpers (by value, by
+reference, and returning the assigned reference).
+
 ### Stack-bin priorities have unstable ties
 
 For frames exceeding 128 bytes, the pinned backend sorts the movable stack
