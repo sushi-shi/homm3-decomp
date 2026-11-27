@@ -822,7 +822,7 @@ int advManager::open(int newPriority)
     m_id = 0x400;
     strcpy(m_mgrName,
            DATA_COMPGEN(0x00660294, advManagerMgrName, "advManager"));
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
 
     if (g_dPlay) {
         m_netMsgHandler = new CAdvMgrNetMsgHandler();
@@ -1148,7 +1148,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
 
     case ADV_COMMAND_VIEW_OBSCURED_TOWN:
         demobilizeCurrHero(0, 1);
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         newTown = currHero->getObscuredTown();  // DC 1398, Mac 0x8920 call it directly
         newTown->view(0);
         eventCell = 0;
@@ -1157,7 +1157,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
     case ADV_COMMAND_VIEW_TOWN:
         if (g_currentPlayer->isLocalHuman())
             demobilizeCurrHero(0, 1);
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         {
             // Before normalization: localPlayer.
             playerData* viewingPlayer = g_game->getLocalPlayer();
@@ -1178,7 +1178,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
         if (viewingPlayer && viewingPlayer->m_currHeroId != -1) {
             // Before normalization: currHero.
             hero* currentHero = g_game->getHero(viewingPlayer->m_currHeroId);
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             if (g_lowMemory)
                 setEnvironmentOrigin(type_point(-1, -1, 0), 1);
             trimLoopingSounds(0);
@@ -1210,7 +1210,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
 
     case ADV_COMMAND_SHIPYARD: {
         g_mouseManager->showPointer(0);
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         doEventShipyard(getCell(get_mouse_map_point()), get_mouse_map_point(),
                         g_currentPlayer->isLocalHuman());
         updateRadar(1, 1, 0, 0, 0);
@@ -1537,7 +1537,7 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
         break;
 
     case KEYCODE_I:
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         g_game->showScenInfo();
         if (g_windowManager->m_dialogReturn != SYSOPT_COMMAND_111)
             break;
@@ -1808,7 +1808,7 @@ int advManager::processDeSelect(const message& msg, bool& exitFlag, type_point& 
         if (g_overviewReturnAction == OVERVIEW_EXIT_TOWN) {
             demobilizeCurrHero(0, 1);
             g_mouseManager->showPointer(1);
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             g_game->getTown(g_overviewReturnActionExtra)->view(1);
             fadeOut = 0;
         } else if (g_lowMemory) {
@@ -3515,7 +3515,7 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
                 if (g_game->isLocalHuman(town->m_owner)) {
                     m_advCommand = thisPlayer->m_currTownId == -1 ? 5 : 3;
                     g_mouseManager->setPointer(
-                        3, mouseManager::ADVENTURE_SET);
+                        ADV_TOWN_INFO_POINTER, mouseManager::ADVENTURE_SET);
                     return 1;
                 }
                 break;
@@ -3525,7 +3525,7 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
                 if (g_game->isLocalHuman(hero->m_owner)
                     && hero->m_owner == g_netLocalGamePos) {
                     g_mouseManager->setPointer(
-                        2, mouseManager::ADVENTURE_SET);
+                        ADV_HERO_INFO_POINTER, mouseManager::ADVENTURE_SET);
                     m_advCommand = thisPlayer->m_currHeroId == -1 ? 4 : 2;
                     return 1;
                 }
@@ -3533,18 +3533,18 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
             }
             }
         } else {
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             return 1;
         }
 
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         return 1;
     }
 
     if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
         || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
         || !mouseInScrollZone())
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
 
     m_advWindow->processHover(mouseX, mouseY);
     return 1;
@@ -3647,7 +3647,7 @@ int advManager::processHover(int mouseX, int mouseY)
 
         if (!m_lastMapHover.isValid()
             || !(getMapExtra(m_lastMapHover) & g_curPlayerBit)) {
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             return 1;
         }
 
@@ -3657,7 +3657,7 @@ int advManager::processHover(int mouseX, int mouseY)
         if (g_currentPlayer->m_currHeroId != -1
             && g_game->getHero(g_currentPlayer->m_currHeroId)->m_z
                != m_lastMapHover.m_z) {
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             return 1;
         }
 
@@ -3668,7 +3668,7 @@ int advManager::processHover(int mouseX, int mouseY)
                     currCell->getTriggerCell()->getMapExtraInfo());
                 if (g_game->onSameTeam(currentTown->m_owner, g_netLocalGamePos)
                     || m_debugViewAll) {
-                    g_mouseManager->setPointer(3,
+                    g_mouseManager->setPointer(ADV_TOWN_INFO_POINTER,
                                                mouseManager::ADVENTURE_SET);
                     m_advCommand = 3;
                     return 1;
@@ -3677,7 +3677,7 @@ int advManager::processHover(int mouseX, int mouseY)
 
             if (currCell->m_type == HERO
                 && g_game->getHero(currCell->m_extraInfo)->m_owner == g_netLocalGamePos) {
-                g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
+                g_mouseManager->setPointer(ADV_HERO_INFO_POINTER, mouseManager::ADVENTURE_SET);
                 m_advCommand = 2;
                 return 1;
             }
@@ -3688,19 +3688,19 @@ int advManager::processHover(int mouseX, int mouseY)
                     currCell->getTriggerCell()->getMapExtraInfo();
                 if (g_game->onSameTeam(cellExtra.m_shipyardInfo.owner,
                                        g_netLocalGamePos)) {
-                    g_mouseManager->setPointer(6, mouseManager::ADVENTURE_SET);
+                    g_mouseManager->setPointer(ADV_BOAT_POINTER, mouseManager::ADVENTURE_SET);
                     m_advCommand = 8;
                     return 1;
                 }
             }
 
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             return 1;
         } else {
 
         hero* currHero = g_game->getCurrHero();
         if (currHero->getLocation() == m_lastMapHover) {
-            g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_HERO_INFO_POINTER, mouseManager::ADVENTURE_SET);
             m_advCommand = 2;
             return 1;
         }
@@ -3711,7 +3711,7 @@ int advManager::processHover(int mouseX, int mouseY)
                     currCell->getTriggerCell()->getMapExtraInfo());
                 if (g_game->onSameTeam(currentTown->m_owner, g_netLocalGamePos)
                     || m_debugViewAll) {
-                    g_mouseManager->setPointer(3,
+                    g_mouseManager->setPointer(ADV_TOWN_INFO_POINTER,
                                                mouseManager::ADVENTURE_SET);
                     m_advCommand = 5;
                     return 1;
@@ -3722,14 +3722,14 @@ int advManager::processHover(int mouseX, int mouseY)
                     currCell->getTriggerCell()->getMapExtraInfo();
                 if (g_game->onSameTeam(cellExtra.m_shipyardInfo.owner,
                                        g_netLocalGamePos)) {
-                    g_mouseManager->setPointer(6, mouseManager::ADVENTURE_SET);
+                    g_mouseManager->setPointer(ADV_BOAT_POINTER, mouseManager::ADVENTURE_SET);
                     m_advCommand = 8;
                     return 1;
                 }
             }
 
             g_searchArray->clearPath();
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             return 1;
         }
 
@@ -3739,7 +3739,7 @@ int advManager::processHover(int mouseX, int mouseY)
             && (currCell->m_type != BOAT || !currCell->m_isTrigger)
             && (currCell->m_type != SHIPWRECK || !currCell->m_isTrigger)) {
             g_searchArray->clearPath();
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             return 1;
         }
 
@@ -3747,7 +3747,7 @@ int advManager::processHover(int mouseX, int mouseY)
             && currCell->m_groundSet != eTerrainWater
             && currCell->m_type != ANCHOR_POINT) {
             g_searchArray->clearPath();
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             return 1;
         }
 
@@ -3832,7 +3832,7 @@ int advManager::processHover(int mouseX, int mouseY)
         if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
             || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
             || !mouseInScrollZone())
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         m_advWindow->processHover(mouseX, mouseY);
     }
     return 1;
@@ -7747,7 +7747,7 @@ bool saveGame(bool campaignWinMode)
                 humanCount++;
         }
     }
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
 
     if (g_inCampaign)
         sprintf(g_saveGameSuffix,
@@ -8478,7 +8478,7 @@ void advManager::checkScreenScroll()
         if (g_mouseManager->getFrame() >= ADV_SCROLL_POINTER
             && g_mouseManager->getFrame() <= ADV_SCROLL_NORTHWEST
             && origX == m_radarOrigin.m_x && origY == m_radarOrigin.m_y)
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
     } else {
         g_lastMapScrollTime = GameTime::get();
     }
@@ -8925,7 +8925,7 @@ DC_ADDRESS(0x01e068, 0x2f8)
 MAC_ADDRESS(0x01b408, 0x2b0)  // anchor-callee
 void advManager::viewPuzzle()
 {
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
     demobilizeCurrHero(0, 1);
     int pos = g_game->getLocalPlayerGamePos();
     g_game->setupPuzzlePieces(pos, 0);
@@ -8982,7 +8982,7 @@ MAC_ADDRESS(0x01b798, 0x12c)
 void advManager::doAdventureOptions()
 {
     trimLoopingSounds(4);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
 
     unsigned char saveMobile = m_curHeroMobile;
     demobilizeCurrHero(0, 1);
@@ -9024,7 +9024,7 @@ bool advManager::doSystemOptions()
 {
     int result = -1;
     trimLoopingSounds(4);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
 
     unsigned char saveMobile = m_curHeroMobile;
     int walkSpeed = g_config.m_walkSpeed[1];

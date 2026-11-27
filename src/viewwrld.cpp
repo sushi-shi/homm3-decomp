@@ -1513,7 +1513,7 @@ void TViewWorldWindow::init(type_point newCenter, bool updateFlag)
 
     g_vwCenterOffsetW = (608 - m_viewableWidth * g_viewWorldScale) >> 1;
     g_vwCenterOffsetH = (544 - m_viewableHeight * g_viewWorldScale) >> 1;
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
     g_advManager->updateRadar(m_origin, updateFlag, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
     if (g_game->getNumMapLevels() > 1) {

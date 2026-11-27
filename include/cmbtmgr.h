@@ -189,6 +189,45 @@ enum ECombatGrid {
     COMBAT_HEX_LOWER_TOWER = 0xfb
 };
 
+// The combat command domain: what a click on a combat hex means, and
+// with it the frame of the combat pointer set that shows it. Dreamcast
+// CodeView publishes the enum as type_combat_cursor (type 0x40fd; each
+// enumerator is also kept as an S_CONSTANT record, so each was used by
+// name). combatManager::GetCommand (0x476490) answers these,
+// combatManager::DoCommand (0x476bd0) consumes them through a 22-entry
+// jump table over `command - 1`, and combatManager::GetPointer maps its
+// `inCombatCommand` argument to the pointer frame: SELECT_ENEMY_TENT and
+// const_select_tower_info show SELECT_ARMY_INFO's frame, every other
+// value is its own frame. const_attack_northeast opens the six compass
+// sword frames SetCombatDirections stores per attack angle, followed by
+// the two wide-creature frames (up, down). CBT_ARROW_POINTER is the plain
+// arrow, which GetCommand also answers for a hex that is not actionable.
+// Dreamcast's other five compass frames, const_attack_east (8),
+// const_attack_southeast (9), const_attack_southwest (10),
+// const_attack_west (11) and const_attack_northwest (12), are only
+// reached as const_attack_northeast + direction and are not declared yet.
+enum type_combat_cursor {
+    SELECT_NULL = 0,
+    SELECT_MOVE = 1,
+    SELECT_FLY = 2,
+    SELECT_SPECIAL_ATTACK = 3,
+    SELECT_TENT = 4,
+    SELECT_ARMY_INFO = 5,
+    CBT_ARROW_POINTER = 6,
+    const_attack_northeast = 7,
+    SELECT_ATTACK = 7,
+    const_attack_up = 13,
+    const_attack_down = 14,
+    SELECT_SPECIAL_ATTACK_BROKEN = 15,
+    SELECT_ATTACK_WALL = 16,
+    SELECT_FIRST_AID = 17,
+    SELECT_SACRIFICE = 18,
+    SELECT_TELEPORT = 19,
+    SELECT_CREATURE_SPELL = 20,
+    SELECT_ENEMY_TENT = 21,
+    const_select_tower_info = 22
+};
+
 // SetCombatDirections has two approach records per ordinary six-way combat
 // direction. These four endpoints are the source's asymmetric tie-break set.
 enum ECombatAttackAngle {

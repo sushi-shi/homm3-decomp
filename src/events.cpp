@@ -2127,7 +2127,7 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
 
     hero* otherHero = g_game->getHero(cell->m_extraInfo);
     if (humanPlayer || otherHero->belongsToHuman()) {
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         g_mouseManager->showPointer(true);
     }
 
@@ -4288,7 +4288,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
     switch (eventType) {
     case ALTAR_OF_SACRIFICE:
         if (humanPlayer) {
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             g_mouseManager->showPointer(1);
             {
                 type_sacrifice_window sacrificeWindow(
@@ -4444,7 +4444,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventGarden(currentHero, cell, humanPlayer);
         break;
     case GARRISON: {
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         g_mouseManager->showPointer(1);
         garrison* thisGarrison = g_game->getGarrison(cell->m_extraInfo);
         if (!g_game->onSameTeam(thisGarrison->m_playerOwner,
@@ -4471,7 +4471,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         if (!humanPlayer) {
             aiVisitHillFort(currentHero);
         } else {
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             g_mouseManager->showPointer(1);
             THillFortWindow hillFortWindow;
             hillFortWindow.centerWindow(-1, -1);
@@ -4700,7 +4700,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventSurvivor(currentHero, cell, point, humanPlayer);
         break;
     case SHIPYARD:
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         g_mouseManager->showPointer(1);
         doEventShipyard(cell, point, humanPlayer);
         break;
@@ -4748,7 +4748,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             break;
         type_point heroPos = currentHero->getLocation();
         if (heroPos != point) {
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             g_mouseManager->showPointer(1);
             doMapTavern(point);
             m_advWindow->updateHeroLocators(-1, 1, 1);
@@ -4761,7 +4761,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
     case THIEVES_DEN: {
         if (!humanPlayer)
             break;
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         g_mouseManager->showPointer(1);
         normalDialog((*g_adventureEventText)[
                          ADV_EVENT_TEXT_THIEVES_DEN],
@@ -4777,7 +4777,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     }
     case TOWN:
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         g_mouseManager->showPointer(1);
         townEvent(cell, point, humanPlayer);
         break;
@@ -4825,7 +4825,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             aiVisitUniversity(currentHero,
                                 cell->getUniversity());
         } else {
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
             g_mouseManager->showPointer(1);
             {
                 type_university_window universityWindow(
@@ -6207,7 +6207,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     else if (g_highMemBuffer > 900)
         g_adventureGraphicsPreserveMode = 1;
     g_executive->callManager(g_combatManager);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
     g_mouseManager->showPointer(1);
     g_adventureGraphicsPreserveMode = 0;
     if (leftHero)

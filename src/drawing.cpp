@@ -331,7 +331,7 @@ void combatManager::combatMessage(int command)
 
     long distance;
     switch (command) {
-    case COMBAT_COMMAND_NONE:
+    case SELECT_NULL:
         if (currentArmy->is(creatureShootingArmy) && currentArmy->m_monInfo.numShots == 0
                 && targetArmy)
             strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_NO_SHOTS_LEFT));
@@ -339,15 +339,15 @@ void combatManager::combatMessage(int command)
             strcpy(g_text, "");
         break;
 
-    case COMBAT_COMMAND_WALK:
+    case SELECT_MOVE:
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_MOVE_CURSOR_FORMAT), currentArmy->getName());
         break;
 
-    case COMBAT_COMMAND_FLY:
+    case SELECT_FLY:
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_FLY_CURSOR_FORMAT), currentArmy->getName());
         break;
 
-    case COMBAT_COMMAND_ATTACK:
+    case SELECT_ATTACK:
         distance = getDistance(currentArmy->m_gridIndex, m_lastMoveToIndex);
         if (g_config.m_combatArmyInfoLevel) {
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_ATTACK_DAMAGE_FORMAT), targetArmy->getName(),
@@ -359,8 +359,8 @@ void combatManager::combatMessage(int command)
         priority = 1;
         break;
 
-    case COMBAT_COMMAND_SHOOT:
-    case COMBAT_COMMAND_SHOOT_PENALTY: {
+    case SELECT_SPECIAL_ATTACK:
+    case SELECT_SPECIAL_ATTACK_BROKEN: {
         distance = getDistance(currentArmy->m_gridIndex,
                                 targetArmy->m_gridIndex);
         long targetHits = targetArmy->getTotalHitPoints(0);
@@ -383,19 +383,19 @@ void combatManager::combatMessage(int command)
         break;
     }
 
-    case COMBAT_COMMAND_SPELL_BOOK:
+    case SELECT_TENT:
         strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_VIEW_HERO_STATS));
         break;
 
-    case COMBAT_COMMAND_VIEW_OTHER_HERO:
+    case SELECT_ENEMY_TENT:
         strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_VIEW_ENEMY_HERO_STATS));
         break;
 
-    case COMBAT_COMMAND_VIEW_TOWERS:
+    case const_select_tower_info:
         strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_VIEW_ARROW_TOWER_INFO));
         break;
 
-    case COMBAT_COMMAND_VIEW_ARMY:
+    case SELECT_ARMY_INFO:
         if (validHex(m_lastCellIndex)) {
             army* viewedArmy = m_cells[m_lastCellIndex].getArmy();
             if (viewedArmy)
@@ -406,7 +406,7 @@ void combatManager::combatMessage(int command)
         }
         break;
 
-    case COMBAT_COMMAND_BOMBARD_WALL: {
+    case SELECT_ATTACK_WALL: {
         int wall;
         for (wall = 0; wall < WALL_TARGET_COUNT; wall++) {
             if (currentArmy->indexToAttack == s_wallTargets[wall].m_targetHex) {
@@ -419,11 +419,11 @@ void combatManager::combatMessage(int command)
         break;
     }
 
-    case COMBAT_COMMAND_CREATURE_SPELL:
+    case SELECT_CREATURE_SPELL:
         getCreatureSpellMessage(g_text, currentArmy, m_lastCellIndex);
         break;
 
-    case COMBAT_COMMAND_FIRST_AID:
+    case SELECT_FIRST_AID:
         // DC drawing.cpp:445 reads manager +0x12984, the same side used
         // by get_current_army.
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_APPLY_FIRST_AID_TO_FORMAT),
@@ -436,10 +436,10 @@ void combatManager::combatMessage(int command)
         break;
     }
 
-    if (command == COMBAT_COMMAND_NONE
-            || command == COMBAT_COMMAND_WALK
-            || command == COMBAT_COMMAND_FLY
-            || command == COMBAT_COMMAND_VIEW_ARMY) {
+    if (command == SELECT_NULL
+            || command == SELECT_MOVE
+            || command == SELECT_FLY
+            || command == SELECT_ARMY_INFO) {
         if (showCreatureSpellError(g_text, currentArmy))
             priority = 1;
     }

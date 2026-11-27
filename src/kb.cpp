@@ -1188,7 +1188,7 @@ int oldmain()
             continue;
 
         case TMainMenu::RESTART_ID: {
-            g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_WAIT_POINTER, mouseManager::ADVENTURE_SET);
             showProgressBar();
             incProgressBar(1);
 
@@ -1497,7 +1497,7 @@ static int doNewGame()
 
         case TGameTypeWindow::TUTORIAL_ID: {
             g_game->m_isTutorial = 1;
-            g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_WAIT_POINTER, mouseManager::ADVENTURE_SET);
             showProgressBar();
             incProgressBar(1);
 
@@ -1531,7 +1531,7 @@ static int doNewGame()
                 incProgressBar(1);
                 exitNewGame = 1;
             } else {
-                g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+                g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
                 normalDialog(g_generalText->GetText(GENERAL_TEXT_TUTORIAL_MAP_MISSING), 1, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             }

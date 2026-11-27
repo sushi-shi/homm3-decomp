@@ -3958,7 +3958,7 @@ void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount)
     monsters.add(type, amount, -1);
 
     type_monster_join_window joinWindow(inHero, &monsters, 0);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
     g_mouseManager->showPointer(true);
     joinWindow.doModal(0);
 }
@@ -3969,7 +3969,7 @@ MAC_ADDRESS(0x1cd214, 0x84)
 void doMonsterJoinDialog(hero* inHero, armyGroup* monsters, int flags)
 {
     type_monster_join_window joinWindow(inHero, monsters, flags);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
     g_mouseManager->showPointer(true);
     joinWindow.doModal(0);
 }

@@ -534,7 +534,7 @@ void startMouseThread()
     unsigned threadId;
 
     if (!g_mouseThread) {
-        g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_WAIT_POINTER, mouseManager::ADVENTURE_SET);
         g_endMouseThreadEvent = CreateEvent(0, TRUE, FALSE, 0);
         if (g_endMouseThreadEvent) {
             g_soundManager->serviceSounds();
@@ -562,7 +562,7 @@ void stopMouseThread()
         g_mouseThread = 0;
         CloseHandle(g_endMouseThreadEvent);
         g_endMouseThreadEvent = 0;
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
     }
 }
 
@@ -5273,7 +5273,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
             ? GAME_VERSION_AB
             : GAME_VERSION_ROE;
 
-    g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_WAIT_POINTER, mouseManager::ADVENTURE_SET);
     startMouseThread();
 
     {
@@ -5490,7 +5490,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         if (m_saveMode) {
             *exitFlag = saveValid(m_saveGameEdit->getText());
             if (*exitFlag)
-                g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+                g_mouseManager->setPointer(ADV_WAIT_POINTER, mouseManager::ADVENTURE_SET);
         } else {
             *exitFlag = onBeginGame();
         }
@@ -7628,7 +7628,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         }
     }
 
-    g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_WAIT_POINTER, mouseManager::ADVENTURE_SET);
 
     if (g_remoteOn) {
         DPSESSIONDESC2* sessionDesc = g_dPlay->getCurrSession();

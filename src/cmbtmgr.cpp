@@ -740,7 +740,7 @@ int combatManager::open(int newPriority)
         g_windowManager->updateScreen();
         g_config.m_showCombatMouseHex = savedShowMouseHex;
         g_mouseManager->m_noChangePointer = 0;
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
         g_mouseManager->showPointer(0);
         g_windowManager->fadeScreen(0, 4, 0);
         waitEndSample(sample, 10000);

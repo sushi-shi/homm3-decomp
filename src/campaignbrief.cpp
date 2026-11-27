@@ -809,7 +809,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     }
 
     select(m_selectedScenario);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
     g_campaignBriefReady = 1;
 }
 
