@@ -1992,6 +1992,20 @@ void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
 // in readPackedBits reproduces every other decision near cb 650..710; the
 // copy loop's legacy dereference still differs. DC and Mac show no extra
 // accessor calls in this Complete-only reader.
+// The optional texts and the retention flags are plain statements of this
+// body (2026-11-28). Mac keeps every one-byte read's local in one descending
+// run - color 0x1cf, difficulty 0x1ce, prologue flag 0x1cd, epilogue flag
+// 0x1c5, retention flags 0x1bc - and CodeWarrior reproduces exactly that run
+// from this source. Moving the flags into an inline reader or an in-class
+// setter that takes the byte sends that local below the option-type byte, and
+// an inline optional-text reader sends both presence bytes there. On Windows a
+// text reader pushes MapTextStruct::read and its string constructor to inline
+// depth 2, where VC6 calls them; retail expands both (91.78 -> 79.71%).
+// Inline-budget lead: either flags helper lowers this root's cb from 767 to
+// 704 and keeps the bonus and crossover option vectors' constructors out of
+// line as retail does (91.78 -> 94.64%), but the hero option's constructor
+// still expands and no root cb reproduces all three decisions, so the lighter
+// part of retail's body is not the flags.
 VA(0x00487e40, 0x586)
 MAC_ADDRESS(0x0960b0, 0x6f4)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
@@ -2030,17 +2044,15 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
         m_epilogue->read(infile);
     }
 
-    {
-        unsigned char flags = readValue<unsigned char>(infile);
-        // Mac 0x96308..0x96370 masks each bit in its original position and
-        // normalizes the result before the five bool stores. VC6 folds these
-        // truth tests to retail's shifts/masks; Windows remains 84.44137%.
-        m_retainXp = (flags & 1) != 0;
-        m_retainPskills = (flags & 2) != 0;
-        m_retainSskills = (flags & 4) != 0;
-        m_retainSpellbook = (flags & 8) != 0;
-        m_retainArtifacts = (flags & 16) != 0;
-    }
+    // Mac 0x96308..0x96370 masks each bit in its original position and
+    // normalizes the result before the five bool stores. VC6 folds these
+    // truth tests to retail's shifts/masks.
+    unsigned char flags = readValue<unsigned char>(infile);
+    m_retainXp = (flags & 1) != 0;
+    m_retainPskills = (flags & 2) != 0;
+    m_retainSskills = (flags & 4) != 0;
+    m_retainSpellbook = (flags & 8) != 0;
+    m_retainArtifacts = (flags & 16) != 0;
 
     m_crossoverCreatures = readPackedBits<g_crossoverCreatureBits>(infile);
 
