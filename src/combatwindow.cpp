@@ -97,14 +97,14 @@ TCombatWindow::TCombatWindow(unsigned char doPlacement)
     : heroWindow(0, 0, 800, 600, 1)
 {
     g_combatWindow = this;
-    m_chatWidget = 0;
-    m_chatEdit = 0;
+    m_chatWidget = NULL;
+    m_chatEdit = NULL;
 
     m_widgets.reserve(3);
     m_widgets.push_back(new border(0, 0, 800, 556, 0, 1));
 
     m_chatWidget = new textWidget(
-        75, 100, 520, 440, 0,
+        75, 100, 520, 440, NULL,
         DATA_COMPGEN(0x0065f2ec, combatWindowMedfont, "medfont.fnt"),
         font::CHAT, 1, font::BOTTOM_JUSTIFIED, 0, 8);
     m_chatEdit = new CCombatChatEdit(
@@ -227,7 +227,7 @@ void TCombatWindow::close(unsigned char update)
 {
     if (m_controlSubWindow) {
         delete m_controlSubWindow;
-        m_controlSubWindow = 0;
+        m_controlSubWindow = NULL;
     }
     heroWindow::close(update);
 }
@@ -254,7 +254,7 @@ TCombatWindow::~TCombatWindow()
     delete m_creatureSubWindows[2];
     delete m_creatureSubWindows[3];
 
-    g_combatWindow = 0;
+    g_combatWindow = NULL;
 }
 
 // The DC helper at combatwindow.cpp:322-346 is inlined into its only caller.
@@ -467,7 +467,7 @@ void TCombatWindow::endPlacementPhase()
 {
     if (m_controlSubWindow) {
         delete m_controlSubWindow;
-        m_controlSubWindow = 0;
+        m_controlSubWindow = NULL;
     }
     m_controlSubWindow = new TCombatControlSubWindow(this);
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);

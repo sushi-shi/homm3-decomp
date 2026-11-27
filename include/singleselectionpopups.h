@@ -86,7 +86,7 @@ public:
             if (g_remoteOn && g_dPlay) {
                 CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
                 if (handler) {
-                    handler->checkHandleNet(1, 0);
+                    handler->checkHandleNet(1, NULL);
                     if (handler->getAbortPopupMsg()) {
                         return exitDialog(msg);
                     }

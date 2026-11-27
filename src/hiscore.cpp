@@ -281,7 +281,7 @@ inline CHSInputDlg::CHSInputDlg(int maxChars)
         18, 105, 199, 23, maxChars,
         DATA_COMPGEN(0x00691210, highScoreInputEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
-        font::WHITE, font::VERT_CENTER_JUSTIFIED, 0, 0, FIELD1_ID,
+        font::WHITE, font::VERT_CENTER_JUSTIFIED, NULL, 0, FIELD1_ID,
         0x100, 0, 7, 5);
     m_header1 = new textWidget(
         13, 13, 205, 100, g_generalText->GetText(GENERAL_TEXT_HIGH_SCORE_NAME_PROMPT),
@@ -295,7 +295,7 @@ inline CHSInputDlg::CHSInputDlg(int maxChars)
         0, 1, 0, 28, 2));
 
     m_rollover = new textWidget(
-        8, 186, 216, 18, 0,
+        8, 186, 216, 18, NULL,
         DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
         font::PRIMARY, ROLLOVER_ID, 1, 32, 8);
     m_widgets.push_back(m_rollover);
@@ -491,8 +491,8 @@ CHighScoreEdit::CHighScoreEdit(int x, int y, int w, int h, int textSize,
                       justification, backgroundIcon, backgroundFrame, id,
                       style, readType, insetX, insetY)
 {
-    m_nextEdit = 0;
-    m_prevEdit = 0;
+    m_nextEdit = NULL;
+    m_prevEdit = NULL;
 }
 
 VA(0x004e9710, 0x2C)

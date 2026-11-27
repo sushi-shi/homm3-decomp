@@ -40,13 +40,13 @@ MAC_ADDRESS(0x20d13c, 0x6c)
 heroWindowManager::heroWindowManager()
 {
     m_status = 0;
-    m_activeWindow = 0;
-    m_lastActive = 0;
-    m_tailWindow = 0;
-    m_headWindow = 0;
-    m_screenBitmap = 0;
+    m_activeWindow = NULL;
+    m_lastActive = NULL;
+    m_tailWindow = NULL;
+    m_headWindow = NULL;
+    m_screenBitmap = NULL;
     m_colorCyclingOn = 0;
-    m_bmpFizzleSource = 0;
+    m_bmpFizzleSource = NULL;
     m_lastHover = -1;
     m_dialogReturn = -1;
     m_isWaitingForFadeIn = 0;
@@ -60,7 +60,7 @@ int heroWindowManager::open(int newPriority)
     initVideo();
 
     m_screenBitmap = new Bitmap16Bit(0, 0);
-    if (m_screenBitmap == 0)
+    if (m_screenBitmap == NULL)
         memError();
 
     // DC winmgr.cpp:112 calls these four InitWin accessors.
@@ -177,13 +177,13 @@ void heroWindowManager::addWindow(heroWindow* newWindow, int newPriority,
 
     if (!at) {
         newWindow->m_nextWindow = m_headWindow;
-        newWindow->m_prevWindow = 0;
+        newWindow->m_prevWindow = NULL;
         m_headWindow = newWindow;
         if (!m_tailWindow)
             m_tailWindow = newWindow;
     } else if (!at->m_nextWindow) {
         newWindow->m_prevWindow = m_tailWindow;
-        newWindow->m_nextWindow = 0;
+        newWindow->m_nextWindow = NULL;
         m_tailWindow->m_nextWindow = newWindow;
         m_tailWindow = newWindow;
     } else {
@@ -207,12 +207,12 @@ void heroWindowManager::removeWindow(heroWindow* killWindow)
     if (killWindow == m_headWindow) {
         m_headWindow = killWindow->m_nextWindow;
         if (!m_headWindow)
-            m_tailWindow = 0;
+            m_tailWindow = NULL;
         else
-            m_headWindow->m_prevWindow = 0;
+            m_headWindow->m_prevWindow = NULL;
     } else if (killWindow == m_tailWindow) {
         m_tailWindow = killWindow->m_prevWindow;
-        m_tailWindow->m_nextWindow = 0;
+        m_tailWindow->m_nextWindow = NULL;
     } else {
         heroWindow* prev = killWindow->m_prevWindow;
         if (prev)
@@ -222,7 +222,7 @@ void heroWindowManager::removeWindow(heroWindow* killWindow)
             next->m_prevWindow = killWindow->m_prevWindow;
     }
     if (m_activeWindow == killWindow)
-        m_activeWindow = 0;
+        m_activeWindow = NULL;
     m_lastActive = m_activeWindow ? m_activeWindow : m_tailWindow;
 }
 
@@ -262,7 +262,7 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
                     msg.m_mouseX = 0;
                     msg.m_mouseY = 0;
                     msg.m_extra = 0;
-                    msg.m_window = 0;
+                    msg.m_window = NULL;
                     while (!endFlag) {
                         pollSound();
                         process1WindowsMessage();
@@ -351,7 +351,7 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                     msg.m_mouseX = 0;
                     msg.m_mouseY = 0;
                     msg.m_extra = 0;
-                    msg.m_window = 0;
+                    msg.m_window = NULL;
                     dialogDrawFunction(msg);
                     if (fadeIn)
                         g_windowManager->fadeScreen(0, 4, 0);
@@ -440,7 +440,7 @@ void heroWindowManager::doQuickView(heroWindow* window)
                         CNetMsgHandler* pump =
                             g_dPlay->getNetMsgHandler();
                         if (pump) {
-                            pump->checkHandleNet(1, 0);
+                            pump->checkHandleNet(1, NULL);
                             if (pump->getAbortPopupMsg())
                                 break;
                         }
@@ -783,7 +783,7 @@ void heroWindowManager::releaseFizzleSource()
 {
     if (m_bmpFizzleSource)
         delete m_bmpFizzleSource;
-    m_bmpFizzleSource = 0;
+    m_bmpFizzleSource = NULL;
 }
 
 // E:\gamedcs\winmgr.cpp:1707 - the fade-out, FadeScreen's first call.

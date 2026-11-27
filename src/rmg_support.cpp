@@ -23,7 +23,7 @@
 VA(0x004f9be0, 0xb7)
 MAC_ADDRESS(0x22210c, 0x1ec)
 TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatterns)
-    : m_frameCount(frameCount), m_framePatterns(0)
+    : m_frameCount(frameCount), m_framePatterns(NULL)
 {
     s32* allocated = new s32[m_frameCount];
     m_framePatterns = allocated;

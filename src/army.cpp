@@ -62,18 +62,18 @@ DC_ADDRESS(0x0436b8, 0xf4)
 MAC_ADDRESS(0x048b38, 0x1ac)  // anchor-global + member-construction run
 army::army()
 {
-    m_stdIcon = 0;
-    m_missileIcon = 0;
+    m_stdIcon = NULL;
+    m_missileIcon = NULL;
     m_imageHeight = 0;
     m_gridIndex = 0;
     for (int i = 0; i < MAX_SAMPLES; i++) {
-        m_armySample[i] = 0;
+        m_armySample[i] = NULL;
     }
     groupToAttack = -1;
     indexToAttack = -1;
     attackLimit = 0;
     targetCellIndex = 0;
-    m_yModify = 0;
+    m_yModify = NULL;
     m_showTroopCount = 1;
     m_ySpecialMod = 0;
     m_xSpecialMod = 0;
@@ -140,14 +140,14 @@ MAC_ADDRESS(0x049008, 0x100)  // anchor-bracket + arity
 void army::initClean()
 {
     for (int i = 0; i < MAX_SAMPLES; i++) {
-        m_armySample[i] = 0;
+        m_armySample[i] = NULL;
     }
     m_roundsLeftBeforeVanish = -1;
     m_numSpellInfluences = 0;
     memset(m_spellInfluence, 0, sizeof(m_spellInfluence));
     m_spellInfluenceQueue.clear();
     m_lastFidgetTime = GameTime::get();
-    m_stdIcon = 0;
+    m_stdIcon = NULL;
     m_imageHeight = 0;
     m_showPowEffect = 0;
     m_resetThisRound = 0;
@@ -187,7 +187,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     TCreatureTypeTraits* traits = &m_monInfo;
     *traits = akCreatureTypeTraits[type];
     traits->townType = g_game->getAlignment(type);
-    if (owner != 0)
+    if (owner != NULL)
         owner->applyCreatureStatBonuses(type, traits);
     if (g_combatManager->m_magicTerrain
             != COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS
@@ -275,7 +275,7 @@ void army::loadResources()
         s = ResourceManager::GetSample(g_text);
         m_armySample[WALK_SAMPLE] = s;
     } else {
-        m_armySample[WALK_SAMPLE] = 0;
+        m_armySample[WALK_SAMPLE] = NULL;
     }
 
     if (m_creatureType == CREATURE_BALLISTA)
@@ -324,7 +324,7 @@ void army::loadResources()
         s = ResourceManager::GetSample(g_text);
         m_armySample[SHOOT_SAMPLE] = s;
     } else {
-        m_armySample[SHOOT_SAMPLE] = 0;
+        m_armySample[SHOOT_SAMPLE] = NULL;
     }
 
     if (m_creatureType == CREATURE_VAMPIRE
@@ -342,8 +342,8 @@ void army::loadResources()
         s = ResourceManager::GetSample(g_text);
         m_armySample[POST_WALK_SAMPLE] = s;
     } else {
-        m_armySample[PRE_WALK_SAMPLE] = 0;
-        m_armySample[POST_WALK_SAMPLE] = 0;
+        m_armySample[PRE_WALK_SAMPLE] = NULL;
+        m_armySample[POST_WALK_SAMPLE] = NULL;
     }
 
     for (int i = 0; i < MAX_SAMPLES; i++) {
@@ -446,7 +446,7 @@ void army::loadResources()
         CSprite* missile = ResourceManager::GetSprite(missileName);
         m_missileIcon = missile;
     } else {
-        m_missileIcon = 0;
+        m_missileIcon = NULL;
     }
 }
 
@@ -657,7 +657,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
             m_facing == 0 ? x - m_stdIcon->GetWidth() + 196 : x - 196;
         long drawY = y - 267;
         g_combatManager->drawCreature(
-            m_stdIcon, m_currFrameType, m_currFrameIndex, drawX, drawY, 0,
+            m_stdIcon, m_currFrameType, m_currFrameIndex, drawX, drawY, NULL,
             m_gridIndex, m_facing == 0, g_systemPalette->Palette[highlight]);
 
         if (restore)
@@ -1156,7 +1156,7 @@ void army::rangeAttack(army* armyToAttack)
         g_combatManager->clearEffects();
         int killed = 0;
         long damage = 0;
-        army* first = 0;
+        army* first = NULL;
         unsigned char multiple = 0;
         int dmg;
         int killedNow;
@@ -1175,7 +1175,7 @@ void army::rangeAttack(army* armyToAttack)
             if (g_combatManager->m_effected[side][slot] != 0)
                 continue;
             g_combatManager->m_effected[side][slot] = 1;
-            if (first == 0)
+            if (first == NULL)
                 first = a;
             else if (first->m_creatureType != a->m_creatureType)
                 multiple = 1;
@@ -1185,7 +1185,7 @@ void army::rangeAttack(army* armyToAttack)
         }
         if (damage > 0) {
             if (multiple)
-                first = 0;
+                first = NULL;
             g_combatManager->damageMessage(getName(),
                                             m_numTroops, damage, first,
                                             killed);
@@ -1214,7 +1214,7 @@ void army::rangeAttack(army* armyToAttack)
         g_combatManager->clearEffects();
         int killed = 0;
         int damage = 0;
-        army* first = 0;
+        army* first = NULL;
         unsigned char multiple = 0;
         int dmg;
         int killedNow;
@@ -1238,14 +1238,14 @@ void army::rangeAttack(army* armyToAttack)
             damageEnemy(a, &dmg, &killedNow, 1);
             damage += dmg;
             killed += killedNow;
-            if (first == 0)
+            if (first == NULL)
                 first = a;
             else if (first->m_creatureType != a->m_creatureType)
                 multiple = 1;
         }
         if (damage > 0) {
             if (multiple)
-                first = 0;
+                first = NULL;
             g_combatManager->damageMessage(getName(),
                                             m_numTroops, damage, first,
                                             killed);
@@ -1272,7 +1272,7 @@ DC_ADDRESS(0x045e70, 0x150)
 MAC_ADDRESS(0x04bd10, 0x1a0)
 void army::rangeAttack()
 {
-    m_yModify = 0;
+    m_yModify = NULL;
     if (groupToAttack < 0)
         return;
     if (indexToAttack < 0)
@@ -1343,7 +1343,7 @@ MAC_ADDRESS(0x04bf70, 0x1fc)
 void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed,
                                 long* fireDamage)
 {
-    army* firstTarget = 0;
+    army* firstTarget = NULL;
     int tempDamage;
     int tempKilled;
     unsigned char mixedTypes = 0;
@@ -1372,7 +1372,7 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
             mixedTypes = 1;
     }
     if (mixedTypes)
-        firstTarget = 0;
+        firstTarget = NULL;
     g_combatManager->damageMessage(getName(), m_numTroops,
                                     *damageAmount, firstTarget, *killed);
 }
@@ -1627,7 +1627,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                                                 target, 1, 1)) {
                 long damage = m_numTroops * 10;
                 damage = g_combatManager->modifySpellDamage(
-                    damage, SPELL_LIGHTNING_BOLT, 0, 0, target, 0);
+                    damage, SPELL_LIGHTNING_BOLT, NULL, NULL, target, 0);
                 if (damage > 0) {
                     std::string text;
                     SAMPLE2 sample;
@@ -1741,7 +1741,7 @@ MAC_ADDRESS(0x04d288, 0x638)  // corroborates
 bool army::doAttack(army* armyToAttack, int direction)
 {
     unsigned attackMask;
-    army* behind = 0;
+    army* behind = NULL;
     g_combatManager->resetHitByCreature();
     if (is(creatureMultiHeaded)) {
         if (m_spellInfluence[59])
@@ -1764,7 +1764,7 @@ bool army::doAttack(army* armyToAttack, int direction)
                 behind = g_combatManager->m_cells[behindHex].getArmy();
                 if (behind) {
                     if (behind->m_hitByCreature)
-                        behind = 0;
+                        behind = NULL;
                     else
                         behind->m_hitByCreature = 1;
                 }
@@ -1833,7 +1833,7 @@ bool army::doAttack(army* armyToAttack, int direction)
         if (behind && behind->m_creatureType != armyToAttack->m_creatureType)
             g_combatManager->damageMessage(
                 getName(), m_numTroops,
-                damage + nextDamage, 0, killed + nextKilled);
+                damage + nextDamage, NULL, killed + nextKilled);
         else
             g_combatManager->damageMessage(
                 getName(), m_numTroops, damage, armyToAttack, killed);
@@ -2117,8 +2117,8 @@ long army::getAdjustedDefense(const army* enemy,
             secondHex = m_gridIndex + offsetToFront(-1);
         else
             secondHex = -1;
-        if (g_combatManager->isInMoat(m_gridIndex, 0)
-            || g_combatManager->isInMoat(secondHex, 0))
+        if (g_combatManager->isInMoat(m_gridIndex, NULL)
+            || g_combatManager->isInMoat(secondHex, NULL))
             defense -= 3;
     }
     return defense;
@@ -2129,7 +2129,7 @@ DC_ADDRESS(0x0478c8, 0x32)
 MAC_ADDRESS(0x04e498, 0x50)
 long army::getDefenseModifier() const
 {
-    long adjusted = getAdjustedDefense(0, 1);
+    long adjusted = getAdjustedDefense(NULL, 1);
     return adjusted - akCreatureTypeTraits[m_creatureType].defenseSkill;
 }
 
@@ -2211,7 +2211,7 @@ long army::getAverageDamage(const army& enemy, bool rangedAttack, long amount, b
     double average = getAverageDamage();
     long damage = adjustDamage(const_cast<army*>(&enemy),
                                 static_cast<long>(amount * average),
-                                rangedAttack, 1, distance, 0);
+                                rangedAttack, 1, distance, NULL);
     long totalLife = enemy.getTotalHitPoints(0);
     if (damage < 1)
         damage = 1;
@@ -2293,11 +2293,11 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    bool ranged,
                                    const army* excluded) const
 {
-    long attackDiff = getAttackModifier(0, ranged) - lowestAttack;
+    long attackDiff = getAttackModifier(NULL, ranged) - lowestAttack;
     long defenseDiff = getDefenseModifier() - lowestDefense;
     double defense = computeDefenderDamageReduction(ranged);
     defense = (defenseDiff * 0.05 + 1.0) * defense;
-    if (ranged && !canShoot(0))
+    if (ranged && !canShoot(NULL))
         ranged = 0;
     double attack = attackDiff * 0.05 + 1.0;
     if (!ranged && is(creatureShootingArmy))
@@ -2354,9 +2354,9 @@ long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
 {
     if (m_numTroops <= 0)
         return 0;
-    bool ranged = canShoot(0);
+    bool ranged = canShoot(NULL);
     double value = getUnitCombatValue(lowestAttack, lowestDefense,
-                                         ranged, 0);
+                                         ranged, NULL);
     if (is(creatureClone))
         return static_cast<long>(m_numTroops * value / 5.0);
     return static_cast<long>(getTotalHitPoints(0)
@@ -2373,7 +2373,7 @@ long army::getLossCombatValue(long lowestAttack, long lowestDefense,
                                  bool killsOnly) const
 {
     double value = getUnitCombatValue(lowestAttack, lowestDefense,
-                                         ranged, 0);
+                                         ranged, NULL);
     if (is(creatureClone))
         return static_cast<long>(m_numTroops * value / 5.0);
     if (killsOnly)
@@ -2491,7 +2491,7 @@ int army::computeAttackerBonus(int baseDamage, bool isShooting,
         bonus = static_cast<long>(baseDamage * factor + bonus);
     }
 
-    if (defender != 0) {
+    if (defender != NULL) {
         switch (m_creatureType) {
         case CREATURE_EARTH_ELEMENTAL:
         case CREATURE_MAGMA_ELEMENTAL:
@@ -2545,7 +2545,7 @@ int army::computeAttackerBonus(int baseDamage, bool isShooting,
 
     long total = bonus;
     hero* controller = getController();
-    if (controller != 0) {
+    if (controller != NULL) {
         if (isShooting)
             total = static_cast<long>(
                 controller->getArcheryFactor()
@@ -3270,7 +3270,7 @@ void army::getBerserkTargets(std::vector<army*>& armies) const
     long closest = 0;
     unsigned char canShootTarget;
     army* target;
-    if (canShoot(0)) {
+    if (canShoot(NULL)) {
         canShootTarget = 1;
     } else {
         canShootTarget = 0;
@@ -3320,7 +3320,7 @@ void army::goBerserk()
         return;
     }
     army* target = berserkTargets[random(0, count - 1)];
-    if (canShoot(0)) {
+    if (canShoot(NULL)) {
         g_combatManager->m_nextAction = 7;
         g_combatManager->m_nextActionGridIndex = target->m_gridIndex;
         if (target->getOwningSide() == getOwningSide())
@@ -3388,9 +3388,9 @@ bool army::simpleMove(int hex, bool restoreFacing)
     indexToAttack = -1;
     if (!g_combatManager->validHex(hex))
         return 0;
-    if (!canFit(hex, 0, 0))
+    if (!canFit(hex, 0, NULL))
         return 0;
-    g_combatManager->m_lastMovedArmy = 0;
+    g_combatManager->m_lastMovedArmy = NULL;
     g_combatManager->turnOffHighlighter(1);
     g_combatManager->beginObstacleTraversal(this);
     bool moved;
@@ -3434,12 +3434,12 @@ bool army::attackHex(int hex, bool restoreFacing)
     army* target = cell->getArmy();
     if (!target || target == this)
         return 0;
-    g_combatManager->m_lastMovedArmy = 0;
+    g_combatManager->m_lastMovedArmy = NULL;
     g_combatManager->turnOffHighlighter(1);
     groupToAttack = cell->m_armySide;
     indexToAttack = cell->m_armySlot;
     targetCellIndex = hex;
-    if (canShoot(0)) {
+    if (canShoot(NULL)) {
         rangeAttack();
     } else {
         int direction = getAttackDirection(target);
@@ -3546,7 +3546,7 @@ DC_ADDRESS(0x04a97c, 0xc0)
 MAC_ADDRESS(0x051d54, 0x13c)
 void army::attackWall(int targetGridIndex)
 {
-    g_combatManager->m_lastMovedArmy = 0;
+    g_combatManager->m_lastMovedArmy = NULL;
     g_combatManager->turnOffHighlighter(1);
     TWallTargetId wall;
     {
@@ -4128,7 +4128,7 @@ void army::newTurn()
             || m_creatureType == CREATURE_TROLL
             || ((akCreatureTypeTraits[m_creatureType].attributes
                  & g_ctaAlive)
-                && g_combatManager->m_heroes[group] != 0
+                && g_combatManager->m_heroes[group] != NULL
                 && g_combatManager->m_heroes[group]
                        ->isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))) {
             long heal = m_topCreatureDamage;
@@ -4322,27 +4322,27 @@ bool army::canCastSpell(long hex) const
     case CREATURE_MASTER_GENIE:
         return target && getValidCaliphSpells(target) > 0;
     case CREATURE_FAERIE_DRAGON:
-        return target != 0
+        return target != NULL
             && g_combatManager->validSpellTargetArmy(
                 m_faerieDragonSpell, getControllingSide(), target, 1, 1);
     case CREATURE_STORM_ELEMENTAL:
-        return target != 0
+        return target != NULL
             && g_combatManager->validSpellTargetArmy(
                 SPELL_PROTECTION_FROM_AIR, getControllingSide(), target, 1, 1);
     case CREATURE_ICE_ELEMENTAL:
-        return target != 0
+        return target != NULL
             && g_combatManager->validSpellTargetArmy(
                 SPELL_PROTECTION_FROM_WATER, getControllingSide(), target, 1, 1);
     case CREATURE_ENERGY_ELEMENTAL:
-        return target != 0
+        return target != NULL
             && g_combatManager->validSpellTargetArmy(
                 SPELL_PROTECTION_FROM_FIRE, getControllingSide(), target, 1, 1);
     case CREATURE_MAGMA_ELEMENTAL:
-        return target != 0
+        return target != NULL
             && g_combatManager->validSpellTargetArmy(
                 SPELL_PROTECTION_FROM_EARTH, getControllingSide(), target, 1, 1);
     case CREATURE_OGRE_MAGE:
-        return target != 0
+        return target != NULL
             && g_combatManager->validSpellTargetArmy(
                 SPELL_BLOODLUST, getControllingSide(), target, 1, 1);
     }
@@ -4390,7 +4390,7 @@ static bool groupHasMelee(long group)
     long i = g_combatManager->m_numArmies[group];
     while (i-- > 0) {
         army* enemy = &g_combatManager->m_armies[group][i];
-        if (!enemy->cannotAttack() && !enemy->canShoot(0))
+        if (!enemy->cannotAttack() && !enemy->canShoot(NULL))
             return 1;
     }
     return 0;
@@ -4404,7 +4404,7 @@ static bool groupHasShooters(long group)
     long i = g_combatManager->m_numArmies[group];
     while (i-- > 0) {
         army* enemy = &g_combatManager->m_armies[group][i];
-        if (!enemy->cannotAttack() && enemy->canShoot(0))
+        if (!enemy->cannotAttack() && enemy->canShoot(NULL))
             return 1;
     }
     return 0;
@@ -4460,9 +4460,9 @@ bool isCreatureSpellUsefulOnTarget(int spell, const army* target)
     case SPELL_AIR_SHIELD:
         return groupHasShooters(1 - side);
     case SPELL_PRECISION:
-        return target->canShoot(0);
+        return target->canShoot(NULL);
     case SPELL_BLOODLUST:
-        return !target->canShoot(0);
+        return !target->canShoot(NULL);
     }
     return 1;
 }
@@ -4782,7 +4782,7 @@ DC_ADDRESS(0x04c898, 0x80)
 MAC_ADDRESS(0x054fb8, 0x70)
 long army::getAITargetTime(long speed) const
 {
-    if (canShoot(0))
+    if (canShoot(NULL))
         return 1;
     if (!speed)
         return 1;

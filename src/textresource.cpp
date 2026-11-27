@@ -7,7 +7,7 @@
 
 // Original: TTextResource::TTextResource; textresource.cpp:33
 DC_ADDRESS(0x163808, 0x50)
-TTextResource::TTextResource() : resource(0, RESOURCE_TYPE_NONE), Data(0)
+TTextResource::TTextResource() : resource(NULL, RESOURCE_TYPE_NONE), Data(NULL)
 {
 }
 
@@ -33,7 +33,7 @@ TTextResource::TTextResource(const char* name, int size, const char* data)
         ++scan;
         --bytesLeft;
     }
-    Text.resize(numStrings, 0);
+    Text.resize(numStrings, NULL);
 
     char* next = Data;
     for (TTextVector::iterator it = Text.begin(); it != Text.end(); ++it) {
@@ -96,7 +96,7 @@ unsigned int TTextResource::getSize() const
 // Original: TSpreadsheetResource::TSpreadsheetResource; textresource.cpp:177
 DC_ADDRESS(0x1639ec, 0x84)
 TSpreadsheetResource::TSpreadsheetResource()
-    : resource(0, RESOURCE_TYPE_NONE), Data(0)
+    : resource(NULL, RESOURCE_TYPE_NONE), Data(NULL)
 {
 }
 
@@ -124,7 +124,7 @@ TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
         ++scan;
         --bytesLeft;
     }
-    Spreadsheet.resize(numRows, 0);
+    Spreadsheet.resize(numRows, NULL);
 
     char* next = Data;
     for (TArray::iterator rowIt = Spreadsheet.begin();
@@ -140,7 +140,7 @@ TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
             ++scan;
         }
         ++numColumns;
-        row->resize(numColumns, 0);
+        row->resize(numColumns, NULL);
 
         for (TStringVector::iterator cell = row->begin();
              cell != row->end(); ++cell) {

@@ -1794,7 +1794,7 @@ TRmgTemplateZone* TRmgTemplate::findZone(int zoneIndex)
         if (m_zones[zone]->m_zoneIndex == zoneIndex)
             return m_zones[zone];
     }
-    return 0;
+    return NULL;
 }
 
 #if !defined(HOMM3_RMG_HOTFIX)
@@ -2285,11 +2285,11 @@ MAC_ADDRESS(0x2311fc, 0x78) // vtable 0x640af4 slot 2 + retained callee 0x54b490
 unsigned char t_quest_artifact::completePlacement()
 {
     if (m_generator->placeSeerHutForArtifact(this)) {
-        m_seerHut = 0;
+        m_seerHut = NULL;
         return 1;
     }
     delete m_seerHut;
-    m_seerHut = 0;
+    m_seerHut = NULL;
 #if defined(HOMM3_RMG_HOTFIX)
     // Replaced by a treasure (not just short of artifacts): nothing owns it.
     std::vector<type_object*>& objects = m_generator->m_objects;
@@ -2804,7 +2804,7 @@ type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
 {
     int heroIndex = generator->selectPrisonHero();
     if (heroIndex == -1)
-        return 0;
+        return NULL;
     return new type_hero(properties, generator,
         generator->m_nextObjectId++, heroIndex, m_experience);
 }
@@ -3549,7 +3549,7 @@ void t_abstract_random_generator::loadObjectPrototypes()
 TRmgObjectPropertiesRef::TRmgObjectPropertiesRef(TObjectType* prototype)
 {
     m_prototype = prototype;
-    m_placementRule = 0;
+    m_placementRule = NULL;
     m_refCount = 0;
     m_prototypeIndex = 0;
     m_preferredTerrain = -1;
@@ -3713,7 +3713,7 @@ void t_abstract_random_generator::readObjectPlacementRules()
              ++index) {
             TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][index];
             TObjectType* prototype = properties->m_prototype;
-            properties->m_placementRule = 0;
+            properties->m_placementRule = NULL;
             for (terrain = eTerrainDirt; terrain < eTerrainRock;
                  terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1)) {
                 if (prototype->getRecommendedTerrainMask()[terrain])
@@ -6045,7 +6045,7 @@ void type_random_map_generator::buildZoneBoundaries(
         memset(testSlot.m_allowedTowns, false, sizeof(testSlot.m_allowedTowns));
 #endif
         TRmgZone testZone(&testSlot);
-        TRmgZone* addedZone = 0;
+        TRmgZone* addedZone = NULL;
         for (zone = 0; zone < originalZones; ++zone) {
             TRmgZone* current = m_zones[zone];
             if (current->getLevelPosition().m_z != level)
@@ -6281,7 +6281,7 @@ TRmgZoneConnection* TRmgTemplateZone::findConnection(int destinationZone)
         if (m_connections[i].m_destination->m_zoneIndex == destinationZone)
             return &m_connections[i];
     }
-    return 0;
+    return NULL;
 }
 
 // Complete-only island and distance helpers, called at 0x53f81d and 0x53f603.
@@ -7027,7 +7027,7 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
         }
     }
     if (!eligibleCount)
-        return 0;
+        return NULL;
     int chosen = rand() % eligibleCount;
     for (creature = RMG_CREATURE_TYPE_COUNT - 1; creature >= 0; --creature) {
         if (prototypeIndices[creature] >= 0 && --chosen < 0)
@@ -7860,7 +7860,7 @@ MAC_ADDRESS(0x245bd4, 0x6e8) // anchor-caller 0x543240; Complete-only, thiscall 
 void type_random_map_generator::createMonolithConnection(
     TRmgZone* source, TRmgZoneConnection* connection, int prototypeIndex)
 {
-    TRmgObjectPropertiesRef* exitProperties = 0;
+    TRmgObjectPropertiesRef* exitProperties = NULL;
     TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
     if (source->getTerrain() == eTerrainWater || destination->m_terrain == eTerrainWater)
         return;
@@ -9227,7 +9227,7 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
         candidates.push_back(properties);
     }
     if (!candidates.size())
-        return 0;
+        return NULL;
     return candidates[rand() % candidates.size()];
 }
 
@@ -9312,7 +9312,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
         properties.push_back(candidate);
     }
     if (!candidates.size())
-        return 0;
+        return NULL;
     int selected = rand() % totalWeight;
     unsigned int selectedIndex;
     for (selectedIndex = 0; selectedIndex < candidates.size(); ++selectedIndex) {
@@ -9392,7 +9392,7 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
             nextObject->releaseReservation();
             delete nextObject;
             if (++attempts >= RMG_TREASURE_ATTEMPTS) {
-                nextObject = 0;
+                nextObject = NULL;
                 break;
             }
         }

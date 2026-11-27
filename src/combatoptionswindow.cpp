@@ -214,7 +214,7 @@ DC_ADDRESS(0x0679ac, 0x68)
 MAC_ADDRESS(0x07d418, 0xb4)
 TCombatOptionsWindow::~TCombatOptionsWindow()
 {
-    g_combatOptionsWindow = 0;
+    g_combatOptionsWindow = NULL;
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;

@@ -13,8 +13,8 @@ VA(0x005aa340, 0x41)
 DC_ADDRESS(0x158d34, 0x78)
 MAC_ADDRESS(0x19b838, 0x90)
 TSubWindow::TSubWindow()
-    : m_x(0), m_y(0), m_width(0), m_height(0), m_parentWindow(0),
-      m_lowId(0xffff), m_highId(0xffff0001), m_background(0)
+    : m_x(0), m_y(0), m_width(0), m_height(0), m_parentWindow(NULL),
+      m_lowId(0xffff), m_highId(0xffff0001), m_background(NULL)
 {
 }
 
@@ -25,7 +25,7 @@ DC_ADDRESS(0x158dac, 0x66)
 MAC_ADDRESS(0x19b8c8, 0x94)
 TSubWindow::TSubWindow(int inX, int inY, int w, int h, heroWindow* parentWindow)
     : m_x(inX), m_y(inY), m_width(w), m_height(h), m_parentWindow(parentWindow),
-      m_lowId(0xffff), m_highId(0xffff0001), m_background(0)
+      m_lowId(0xffff), m_highId(0xffff0001), m_background(NULL)
 {
 }
 
@@ -115,6 +115,6 @@ void TSubWindow::restoreBackground()
             screen, drawX, drawY, false);
         g_windowManager->updateScreen(drawX, drawY, m_width + 1, m_height);
         delete m_background;
-        m_background = 0;
+        m_background = NULL;
     }
 }

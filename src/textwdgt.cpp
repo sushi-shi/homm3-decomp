@@ -16,7 +16,7 @@
 DC_ADDRESS(0x164c14, 0x6c)
 textWidget::textWidget() : widget(0, 0, 0, 0, 0, 0)
 {
-    m_font = 0;
+    m_font = NULL;
     m_color = font::PRIMARY;
     m_backColor = 0;
     m_justify = font::CENTER_JUSTIFIED;
@@ -207,7 +207,7 @@ void textWidget::dim() const
 // Original: iconBackedTextWidget::iconBackedTextWidget; textwdgt.cpp:266
 DC_ADDRESS(0x165038, 0x58)
 iconBackedTextWidget::iconBackedTextWidget()
-    : m_background(0), m_backgroundFrame(0)
+    : m_background(NULL), m_backgroundFrame(0)
 {
 }
 
@@ -241,7 +241,7 @@ void iconBackedTextWidget::draw() const
 
 // Original: bitmapBackedTextWidget::bitmapBackedTextWidget; textwdgt.cpp:319
 DC_ADDRESS(0x165184, 0x54)
-bitmapBackedTextWidget::bitmapBackedTextWidget() : m_image(0) {}
+bitmapBackedTextWidget::bitmapBackedTextWidget() : m_image(NULL) {}
 
 VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 

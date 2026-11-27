@@ -507,7 +507,7 @@ void searchArray::checkTownPortal(const hero* currentHero,
                 destinations.push_back(currentTown->getLocation());
         }
     } else {
-        town* closestTown = 0;
+        town* closestTown = NULL;
         long closest = 0;
         for (i = 0; i < player->m_numTowns; i++) {
             town* currentTown = g_game->getTown(player->m_townIds[i]);
@@ -647,7 +647,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
         }
     }
 
-    if (m_cellData == 0)
+    if (m_cellData == NULL)
         init();
 
     if (!seedContinuation) {

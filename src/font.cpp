@@ -10,7 +10,7 @@
 
 // Original: font::font; font.cpp:33
 DC_ADDRESS(0x0a1ba8, 0x5c)
-font::font() : resource("", RESOURCE_TYPE_FONT), Data(0)
+font::font() : resource("", RESOURCE_TYPE_FONT), Data(NULL)
 {
 }
 

@@ -141,7 +141,7 @@ long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, c
     damage = modifySpellDamage(damage, spell, m_type);
     if (damage == 0)
         return 0;
-    damage = const_cast<hero*>(castingHero)->modifySpellDamage(spell, damage, 0);
+    damage = const_cast<hero*>(castingHero)->modifySpellDamage(spell, damage, NULL);
     if (damage == 0)
         return 0;
     damage *= m_combatValuePerHit;
@@ -174,21 +174,21 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
     checkWallArcheryPenalty(enemyTown);
     m_enemyHero = enemyHero;
 
-    if (newHero == 0)
+    if (newHero == NULL)
         m_mana = 0;
     else
         m_mana = m_currentHero->m_mana;
 
     m_canCastSpells = 1;
-    if (m_currentHero == 0
+    if (m_currentHero == NULL
         || !m_currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK))
         m_canCastSpells = 0;
-    if (m_currentHero != 0
+    if (m_currentHero != NULL
         && m_currentHero->isWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION))
         m_canCastSpells = 0;
 
     m_magicTerrain = -1;
-    if (mapCell != 0) {
+    if (mapCell != NULL) {
         switch (mapCell->getSpecialTerrain()) {
         case MAGIC_PLAINS:
             m_magicTerrain = kMagicTerrainMagicPlains;
@@ -215,7 +215,7 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
         }
     }
 
-    if (m_enemyHero != 0
+    if (m_enemyHero != NULL
         && m_enemyHero->isWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION))
         m_canCastSpells = 0;
     initializeCreatures(baseModifier, m_enemyHero);
@@ -331,7 +331,7 @@ void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
 {
     m_wallArcheryPenalty = 0;
     m_wallSpeedLimit = 0;
-    if (enemyTown == 0)
+    if (enemyTown == NULL)
         return;
     if (enemyTown->hasBuilding(CASTLE_FORT_ID, false)) {
         m_wallArcheryPenalty = 1;
@@ -1279,7 +1279,7 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
             if (defeatedHero && random(0, 100) < 60) {
                 retreated = 1;
                 experience = g_game->experienceValueOfStack(
-                    defeatedArmy, 0);
+                    defeatedArmy, NULL);
             } else {
                 experience = g_game->experienceValueOfStack(
                     defeatedArmy, defeatedHero);
@@ -1332,13 +1332,13 @@ bool aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendin
                                  attackerModifier, defendingHero,
                                  defendingTown, cell);
     type_AI_combat_data defender(defendingHero, &defendingArmy,
-                                 defenderModifier, attackingHero, 0, cell);
+                                 defenderModifier, attackingHero, NULL, cell);
     attacker.simulateCombat(defender);
     if (attacker.getTotal() > 0) {
         attacker.doAftermath(defender, defendingTown);
         return 1;
     }
-    defender.doAftermath(attacker, 0);
+    defender.doAftermath(attacker, NULL);
     return 0;
 }
 
@@ -1355,7 +1355,7 @@ void aiAutoCombat(hero* attackingHero, hero* defendingHero, armyGroup& attacking
                                  attackerLuck, defendingHero,
                                  defendingTown, cell);
     type_AI_combat_data defender(defendingHero, &defendingArmy,
-                                 defenderModifier, attackingHero, 0, cell);
+                                 defenderModifier, attackingHero, NULL, cell);
     attacker.simulateCombat(defender);
     attacker.adjustArmy(0);
     defender.adjustArmy(0);
@@ -1395,13 +1395,13 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
     type_AI_combat_data attacker(attackingHero, &localArmy, aggression,
                                  defendingHero, defendingTown, cell);
     type_AI_combat_data defender(defendingHero, &localDefender,
-                                 defenderLuck, attackingHero, 0, cell);
+                                 defenderLuck, attackingHero, NULL, cell);
     attacker.simulateCombat(defender);
     if (attacker.getTotal() == 0)
         return -1000000000;
 
     attacker.adjustArmy(1);
-    long experience = g_game->experienceValueOfStack(&defendingArmy, 0);
+    long experience = g_game->experienceValueOfStack(&defendingArmy, NULL);
     float experienceValue = static_cast<float>(experience);
     experience = static_cast<long>(
         experienceValue
@@ -1454,7 +1454,7 @@ long aiValueOfCombat(const hero* attackingHero, TCreatureType type, long size,
                      NewmapCell* cell)
 {
     armyGroup monsters(type, size);
-    return aiValueOfCombat(attackingHero, 0, monsters, 0, cell);
+    return aiValueOfCombat(attackingHero, NULL, monsters, NULL, cell);
 }
 
 VA(0x00427650, 0x33)
@@ -1473,7 +1473,7 @@ MAC_ADDRESS(0x029710, 0x80)  // corroborates (hd-crossbuild + ida)
 long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy)
 {
     long value = currentArmy.getAIValue();
-    if (currentHero == 0)
+    if (currentHero == NULL)
         return value;
     return static_cast<long>(currentHero->getCombatValueModifier() * value);
 }

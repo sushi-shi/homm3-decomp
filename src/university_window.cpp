@@ -188,7 +188,7 @@ type_university_window::type_university_window(
         exitClick, 0, 1);
     exitButton->setHotkey(1);
     exitButton->setHotkey(28);
-    exitButton->setHelpText(g_universityWindowHelp[1].m_text, 0, 1);
+    exitButton->setHelpText(g_universityWindowHelp[1].m_text, NULL, 1);
     m_widgets.push_back(exitButton);
     m_selectionWidgets.push_back(exitButton);
 
@@ -197,7 +197,7 @@ type_university_window::type_university_window(
     m_widgets.push_back(newWidget);
     m_purchaseWidgets.push_back(newWidget);
 
-    m_selectedSkill.m_topBar = 0;
+    m_selectedSkill.m_topBar = NULL;
     m_selectedSkill.m_textWidget = new textWidget(
         179, 27, 100, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
@@ -208,7 +208,7 @@ type_university_window::type_university_window(
         210, 50, 44, 44, widgetId++, "SecSkill.def", kNumSecSkills);
     m_widgets.push_back(m_selectedSkill.m_button);
     m_purchaseWidgets.push_back(m_selectedSkill.m_button);
-    m_selectedSkill.m_bottomBar = 0;
+    m_selectedSkill.m_bottomBar = NULL;
 
     newWidget = new textWidget(
         179, 97, 100, 16, g_secondarySkillLevels[0], "smalfont.fnt",
@@ -255,7 +255,7 @@ type_university_window::type_university_window(
     type_func_button* cancelButton = new type_func_button(
         252, 300, 64, 32, widgetId++, "iCancel.def",
         cancelClick, 0, 1);
-    cancelButton->setHelpText(g_universityWindowHelp[0].m_text, 0, 1);
+    cancelButton->setHelpText(g_universityWindowHelp[0].m_text, NULL, 1);
     cancelButton->setHotkey(1);
     m_widgets.push_back(cancelButton);
     m_purchaseWidgets.push_back(cancelButton);
@@ -324,7 +324,7 @@ void type_university_window::updateSkillButton(type_university_skill& skill)
             skill.m_bottomBar->setIconFrame(1);
     }
     skill.m_button->setIconFrame((skill.m_skill + 1) * 3);
-    skill.m_button->setHelpText(text.c_str(), 0, 1);
+    skill.m_button->setHelpText(text.c_str(), NULL, 1);
 }
 
 VA(0x005f0a20, 0x92)
@@ -377,7 +377,7 @@ void type_university_window::skillClick(TSecondarySkill skill)
     m_selectedSkill.m_textWidget->setText(skillName);
     m_purchaseTextWidget->setText(newText.c_str());
     newText = formatString(g_generalText->GetText(GENERAL_TEXT_PURCHASE_FORMAT), skillName);
-    m_purchaseButton->setHelpText(newText.c_str(), 0, 1);
+    m_purchaseButton->setHelpText(newText.c_str(), NULL, 1);
     updateSkillButton(m_selectedSkill);
     m_purchaseButton->enable(
         m_currentHero->getPlayer()->m_resources[GOLD] >= TUITION);

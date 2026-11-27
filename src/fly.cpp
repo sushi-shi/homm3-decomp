@@ -51,7 +51,7 @@ bool army::findFlyerAttackCell(int start, int target) const
         long hex = adjacent - start + m_gridIndex;
         if (adjacent >= 0 && combatManager::validHex(hex)
                 && combatManager::getDistance(start, adjacent) <= getSpeed()
-                && canFit(hex, 0, 0))
+                && canFit(hex, 0, NULL))
             return 1;
     }
     return 0;
@@ -82,7 +82,7 @@ bool army::validFlight(int destIndex, bool literalTest) const
         if (combatManager::getDistance(m_gridIndex, destIndex) > getSpeed()
                 && !g_combatManager->m_creaturePlacement)
             return 0;
-        if (!canFit(destIndex, 0, 0))
+        if (!canFit(destIndex, 0, NULL))
             return 0;
     } else {
         const army* enemy = &g_combatManager->m_armies[groupToAttack][indexToAttack];

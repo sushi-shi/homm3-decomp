@@ -49,7 +49,7 @@ public:
     char* getName(int player)
     {
         if (player >= m_playerCount)
-            return 0;
+            return NULL;
         return m_names[player];
     }
 };
@@ -544,7 +544,7 @@ public:
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
                                                  unsigned char* msgReceived)
     {
-        return 0;
+        return NULL;
     }
 
     // E:\gamedcs\remote.h:659
@@ -553,7 +553,7 @@ public:
     MAC_ADDRESS(0x215e24, 0x8)
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg)
     {
-        return 0;
+        return NULL;
     }
 };
 SIZE(CNetMsgHandlerPause, 0x10);

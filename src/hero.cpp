@@ -382,7 +382,7 @@ unsigned char initializeHeroSpecificAbilitiesTable()
 {
     TSpreadsheetResource* text = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00679ccc, heroSpecificAbilityTextName, "HeroSpec.txt"));
-    if (text == 0)
+    if (text == NULL)
         return 0;
 
     if (text->GetNumberOfRows() < 158) {
@@ -505,7 +505,7 @@ mine* type_obscuring_object::getObscuredMine() const
 {
     if (m_valid && m_obscuredType == MINE && m_wasTrigger)
         return g_game->getMine(m_extraInfo);
-    return 0;
+    return NULL;
 }
 
 VA(0x004d7490, 0x35)
@@ -515,7 +515,7 @@ town* type_obscuring_object::getObscuredTown() const
 {
     if (m_valid && m_obscuredType == TOWN && m_wasTrigger)
         return g_game->getTown(m_extraInfo);
-    return 0;
+    return NULL;
 }
 
 VA(0x004d74d0, 0x1D)
@@ -892,7 +892,7 @@ hero::hero()
     std::fill_n(m_backpack, 64, ARTIFACT_NONE);
     m_townSpecialGrantedMask.reset();
 
-    g_heroScreenWindow = 0;
+    g_heroScreenWindow = NULL;
     g_heroScreenArmySlot = -1;
     m_isSleeping = 0;
 }
@@ -2275,7 +2275,7 @@ void updateBackpack()
     arrows.m_mouseX = 0;
     arrows.m_mouseY = 0;
     arrows.m_extra = 0;
-    arrows.m_window = 0;
+    arrows.m_window = NULL;
     arrows.m_id = MESSAGE_WIDGET;
 
     for (int i = 0; i < 5; i++)
@@ -2370,18 +2370,18 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
         break;
 
     case MORALE_ID:
-        if (g_currentHero->getMorale(0, 0, 1) > 0)
+        if (g_currentHero->getMorale(NULL, 0, 1) > 0)
             strcpy(g_text, g_heroScreen[3]);
-        else if (g_currentHero->getMorale(0, 0, 1) == 0)
+        else if (g_currentHero->getMorale(NULL, 0, 1) == 0)
             strcpy(g_text, g_heroScreen[4]);
         else
             strcpy(g_text, g_heroScreen[5]);
         break;
 
     case LUCK_ID:
-        if (g_currentHero->getLuck(0, 0, 1) > 0)
+        if (g_currentHero->getLuck(NULL, 0, 1) > 0)
             strcpy(g_text, g_heroScreen[6]);
-        else if (g_currentHero->getLuck(0, 0, 1) == 0)
+        else if (g_currentHero->getLuck(NULL, 0, 1) == 0)
             strcpy(g_text, g_heroScreen[7]);
         else
             strcpy(g_text, g_heroScreen[8]);
@@ -2603,7 +2603,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                 }
             } else if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
                 TSpellbookWindow spellBookWindow(
-                    *g_currentHero, 0, TSpellbookWindow::eContextNeither,
+                    *g_currentHero, NULL, TSpellbookWindow::eContextNeither,
                     g_currentHero->getSpecialTerrain());
                 spellBookWindow.doModal(0);
             } else if (slot == hero::EQUIPPED_SLOT_WAR_MACHINE_4) {
@@ -2927,7 +2927,7 @@ std::string hero::getMoraleDescription() const
         }
     }
 
-    int effectiveMorale = this->getMorale(0, 0, 0);
+    int effectiveMorale = this->getMorale(NULL, 0, 0);
     if (effectiveMorale - morale < 0)
         result += formatString(g_moraleInfo[24], abs(effectiveMorale - morale));
     else if (effectiveMorale - morale > 0)
@@ -3056,7 +3056,7 @@ std::string hero::getLuckDescription() const
         }
     }
 
-    int otherModifier = this->getLuck(0, 0, 0) - luck;
+    int otherModifier = this->getLuck(NULL, 0, 0) - luck;
     if (otherModifier < 0)
         result += formatString(g_luckInfo[19], abs(otherModifier));
     else if (otherModifier > 0)
@@ -3520,7 +3520,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                            || (!rightMouse && g_heroScreenArmySlot == slot)) {
                     g_heroScreenArmyStripLive = 0;
                     g_game->viewArmy(g_currentHero->m_army, slot, g_currentHero,
-                                     0, 0x77, 0x14,
+                                     NULL, 0x77, 0x14,
                                      !g_castleOpen
                                          && g_currentHero->m_army.getNumArmies() > 1,
                                      rightMouse);
@@ -3711,51 +3711,51 @@ THeroScreenWindow::THeroScreenWindow()
     m_widgets.push_back(new bitmapBorder(
         0, 0, m_width, m_height, 0, background, 0x800));
     m_widgets.push_back(new textWidget(
-        0x52, 0x1e, 0xdc, 0x28, 0, "bigfont.fnt",
+        0x52, 0x1e, 0xdc, 0x28, NULL, "bigfont.fnt",
         font::HEADING, 0x1, 0x1, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x52, 0x39, 0xdc, 0x1e, 0, "medfont.fnt",
+        0x52, 0x39, 0xdc, 0x1e, NULL, "medfont.fnt",
         font::PRIMARY, 0x8c, 0x1, 0, 0x8));
     m_widgets.push_back(new bitmapBorder(
-        0x13, 0x13, 0x3a, 0x40, 0x2d, 0, 0x800));
+        0x13, 0x13, 0x3a, 0x40, 0x2d, NULL, 0x800));
     m_widgets.push_back(new textWidget(
-        0x14, 0x5b, 0x42, 0x12, 0, "smalfont.fnt",
+        0x14, 0x5b, 0x42, 0x12, NULL, "smalfont.fnt",
         font::HEADING, 0x67, 0x1, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x5a, 0x5b, 0x42, 0x12, 0, "smalfont.fnt",
+        0x5a, 0x5b, 0x42, 0x12, NULL, "smalfont.fnt",
         font::HEADING, 0x68, 0x1, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xa0, 0x5b, 0x42, 0x12, 0, "smalfont.fnt",
+        0xa0, 0x5b, 0x42, 0x12, NULL, "smalfont.fnt",
         font::HEADING, 0x69, 0x1, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xe6, 0x5b, 0x42, 0x12, 0, "smalfont.fnt",
+        0xe6, 0x5b, 0x42, 0x12, NULL, "smalfont.fnt",
         font::HEADING, 0x6a, 0x1, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x44, 0xb8, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0xb8, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x6b, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x44, 0xe8, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0xe8, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x6c, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xd3, 0xe8, 0x5a, 0x12, 0, "smalfont.fnt",
+        0xd3, 0xe8, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x6d, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x173, 0x1af, 0x42, 0x28, 0, "smalfont.fnt",
+        0x173, 0x1af, 0x42, 0x28, NULL, "smalfont.fnt",
         font::PRIMARY, 0x6e, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x1ff, 0x1af, 0x42, 0x28, 0, "smalfont.fnt",
+        0x1ff, 0x1af, 0x42, 0x28, NULL, "smalfont.fnt",
         font::PRIMARY, 0x6f, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x1f, 0x9e, 0x2c, 0x12, 0, "smalfont.fnt",
+        0x1f, 0x9e, 0x2c, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x2e, 0x1, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x65, 0x9e, 0x2c, 0x12, 0, "smalfont.fnt",
+        0x65, 0x9e, 0x2c, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x2f, 0x1, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xab, 0x9e, 0x2c, 0x12, 0, "smalfont.fnt",
+        0xab, 0x9e, 0x2c, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x30, 0x1, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xf1, 0x9e, 0x2c, 0x12, 0, "smalfont.fnt",
+        0xf1, 0x9e, 0x2c, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x31, 0x1, 0, 0x8));
     m_widgets.push_back(new iconWidget(
         0xf, 0x1e5, 0x3a, 0x40, 0x36, "twcrport.def",
@@ -3779,25 +3779,25 @@ THeroScreenWindow::THeroScreenWindow()
         0x19b, 0x1e5, 0x3a, 0x40, 0x3c, "twcrport.def",
         0, 0, 0, 0, 0x10));
     m_widgets.push_back(new textWidget(
-        0xf, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        0xf, 0x216, 0x3a, 0x12, NULL, "Verd10B.fnt",
         font::PRIMARY, 0x3d, 0x2, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x51, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        0x51, 0x216, 0x3a, 0x12, NULL, "Verd10B.fnt",
         font::PRIMARY, 0x3e, 0x2, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x93, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        0x93, 0x216, 0x3a, 0x12, NULL, "Verd10B.fnt",
         font::PRIMARY, 0x3f, 0x2, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xd5, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        0xd5, 0x216, 0x3a, 0x12, NULL, "Verd10B.fnt",
         font::PRIMARY, 0x40, 0x2, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x117, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        0x117, 0x216, 0x3a, 0x12, NULL, "Verd10B.fnt",
         font::PRIMARY, 0x41, 0x2, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x159, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        0x159, 0x216, 0x3a, 0x12, NULL, "Verd10B.fnt",
         font::PRIMARY, 0x42, 0x2, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x19b, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        0x19b, 0x216, 0x3a, 0x12, NULL, "Verd10B.fnt",
         font::PRIMARY, 0x43, 0x2, 0, 0x8));
     m_widgets.push_back(new iconWidget(
         0x20, 0x6f, 0x2a, 0x2a, 0x32, "pskil42.def",
@@ -3857,52 +3857,52 @@ THeroScreenWindow::THeroScreenWindow()
         0xa1, 0x1a4, 0x2c, 0x2c, 0x56, "secskill.def",
         0, 0, 0, 0, 0x10));
     m_widgets.push_back(new textWidget(
-        0x44, 0x12c, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0x12c, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x57, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xd3, 0x12c, 0x5a, 0x12, 0, "smalfont.fnt",
+        0xd3, 0x12c, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x58, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x44, 0x15b, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0x15b, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x59, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xd3, 0x15b, 0x5a, 0x12, 0, "smalfont.fnt",
+        0xd3, 0x15b, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x5a, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x44, 0x18b, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0x18b, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x5b, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xd3, 0x18b, 0x5a, 0x12, 0, "smalfont.fnt",
+        0xd3, 0x18b, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x5c, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x44, 0x1bb, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0x1bb, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x5d, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xd3, 0x1bb, 0x5a, 0x12, 0, "smalfont.fnt",
+        0xd3, 0x1bb, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x5e, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x44, 0x118, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0x118, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x5f, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xd3, 0x118, 0x5a, 0x12, 0, "smalfont.fnt",
+        0xd3, 0x118, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x60, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x44, 0x148, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0x148, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x61, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xd3, 0x148, 0x5a, 0x12, 0, "smalfont.fnt",
+        0xd3, 0x148, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x62, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x44, 0x178, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0x178, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x63, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xd3, 0x178, 0x5a, 0x12, 0, "smalfont.fnt",
+        0xd3, 0x178, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x64, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x44, 0x1a8, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0x1a8, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x65, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xd3, 0x1a8, 0x5a, 0x12, 0, "smalfont.fnt",
+        0xd3, 0x1a8, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x66, 0, 0, 0x8));
     m_widgets.push_back(new iconWidget(
         0x1bc, 0x16, 0x2c, 0x2c, 0x15, "artifact.def",
@@ -4054,36 +4054,36 @@ THeroScreenWindow::THeroScreenWindow()
         0x25d, 0x7, 0x3a, 0x40, 0x8d, "crest58.def",
         0, 0, 0, 0, 0x10));
     m_widgets.push_back(new bitmapBorder(
-        0x263, 0x57, 0x30, 0x20, 0x82, 0, 0x800));
+        0x263, 0x57, 0x30, 0x20, 0x82, NULL, 0x800));
     m_widgets.push_back(new bitmapBorder(
-        0x263, 0x8d, 0x30, 0x20, 0x83, 0, 0x800));
+        0x263, 0x8d, 0x30, 0x20, 0x83, NULL, 0x800));
     m_widgets.push_back(new bitmapBorder(
-        0x263, 0xc3, 0x30, 0x20, 0x84, 0, 0x800));
+        0x263, 0xc3, 0x30, 0x20, 0x84, NULL, 0x800));
     m_widgets.push_back(new bitmapBorder(
-        0x263, 0xf9, 0x30, 0x20, 0x85, 0, 0x800));
+        0x263, 0xf9, 0x30, 0x20, 0x85, NULL, 0x800));
     m_widgets.push_back(new bitmapBorder(
-        0x263, 0x12f, 0x30, 0x20, 0x86, 0, 0x800));
+        0x263, 0x12f, 0x30, 0x20, 0x86, NULL, 0x800));
     m_widgets.push_back(new bitmapBorder(
-        0x263, 0x165, 0x30, 0x20, 0x87, 0, 0x800));
+        0x263, 0x165, 0x30, 0x20, 0x87, NULL, 0x800));
     m_widgets.push_back(new bitmapBorder(
-        0x263, 0x19b, 0x30, 0x20, 0x88, 0, 0x800));
+        0x263, 0x19b, 0x30, 0x20, 0x88, NULL, 0x800));
     m_widgets.push_back(new bitmapBorder(
-        0x263, 0x1d1, 0x30, 0x20, 0x89, 0, 0x800));
+        0x263, 0x1d1, 0x30, 0x20, 0x89, NULL, 0x800));
     m_widgets.push_back(new bitmapBorder(
         0x263, 0x57, 0x30, 0x20, 0x8a, "hpsyyy.pcx", 0x800));
     m_widgets.push_back(new bitmapBorder(
         0x8, 0x22f, 0x290, 0x13, 0x72, "HeroBar.pcx", 0x800));
     m_widgets.push_back(new textWidget(
-        0x8, 0x22f, 0x290, 0x13, 0, "smalfont.fnt",
+        0x8, 0x22f, 0x290, 0x13, NULL, "smalfont.fnt",
         font::PRIMARY, 0x73, 0x1, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x44, 0xcc, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0xcc, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x8b, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0x44, 0xfc, 0x5a, 0x12, 0, "smalfont.fnt",
+        0x44, 0xfc, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x70, 0, 0, 0x8));
     m_widgets.push_back(new textWidget(
-        0xd3, 0xfc, 0x5a, 0x12, 0, "smalfont.fnt",
+        0xd3, 0xfc, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x71, 0, 0, 0x8));
     m_widgets.push_back(new button(
         0x21b, 0x207, 0x36, 0x20, 0x7f, "hsbtns9.def",
@@ -4204,13 +4204,13 @@ void hero::updateStats()
         g_heroScreenWindow->broadcastMessage(msg);
     }
 
-    int luckFrame = limit(-3, getLuck(0, 0, 1), 3) + 3;
+    int luckFrame = limit(-3, getLuck(NULL, 0, 1), 3) + 3;
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 0x75;
     msg.m_extra = luckFrame;
     g_heroScreenWindow->broadcastMessage(msg);
 
-    int moraleFrame = limit(-3, getMorale(0, 0, 1), 3) + 3;
+    int moraleFrame = limit(-3, getMorale(NULL, 0, 1), 3) + 3;
     msg.m_codeY = 0x74;
     msg.m_extra = moraleFrame;
     g_heroScreenWindow->broadcastMessage(msg);
@@ -4265,7 +4265,7 @@ int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickVie
     }
     g_currentHero->m_maxMovePoints =
         g_currentHero->getMobility();
-    g_currentHero = 0;
+    g_currentHero = NULL;
     return 0;
 }
 
@@ -4288,7 +4288,7 @@ void THeroScreenWindow::setupHeroView()
     msg.m_mouseX = 0;
     msg.m_mouseY = 0;
     msg.m_extra = 0;
-    msg.m_window = 0;
+    msg.m_window = NULL;
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
@@ -6005,7 +6005,7 @@ MAC_ADDRESS(0x1066e4, 0x38)
 playerData* hero::getPlayer() const
 {
     if (m_owner < 0)
-        return 0;
+        return NULL;
     return &g_game->m_players[m_owner];
 }
 

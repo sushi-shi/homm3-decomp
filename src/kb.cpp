@@ -255,8 +255,8 @@ void unloadProgressBar()
     if (g_progDots)
         ResourceManager::Dispose(g_progDots);
     g_progressCount = 0;
-    g_progDots = 0;
-    g_loadBar = 0;
+    g_progDots = NULL;
+    g_loadBar = NULL;
 }
 
 VA(0x004ed490, 0x1B5)
@@ -650,40 +650,40 @@ static void deleteMainClasses()
 {
     if (g_philAI)
         delete g_philAI;
-    g_philAI = 0;
+    g_philAI = NULL;
     if (g_searchArray)
         delete g_searchArray;
-    g_searchArray = 0;
+    g_searchArray = NULL;
     if (g_townManager)
         delete g_townManager;
-    g_townManager = 0;
+    g_townManager = NULL;
     if (g_combatManager)
         delete g_combatManager;
-    g_combatManager = 0;
+    g_combatManager = NULL;
     if (g_advManager)
         delete g_advManager;
-    g_advManager = 0;
+    g_advManager = NULL;
     if (g_game)
         delete g_game;
-    g_game = 0;
+    g_game = NULL;
     if (g_highScoreManager)
         delete g_highScoreManager;
-    g_highScoreManager = 0;
+    g_highScoreManager = NULL;
     if (g_soundManager)
         delete g_soundManager;
-    g_soundManager = 0;
+    g_soundManager = NULL;
     if (g_windowManager)
         delete g_windowManager;
-    g_windowManager = 0;
+    g_windowManager = NULL;
     if (g_mouseManager)
         delete g_mouseManager;
-    g_mouseManager = 0;
+    g_mouseManager = NULL;
     if (g_inputManager)
         delete g_inputManager;
-    g_inputManager = 0;
+    g_inputManager = NULL;
     if (g_executive)
         delete g_executive;
-    g_executive = 0;
+    g_executive = NULL;
 }
 
 // E:\gamedcs\kb.cpp:553. The WinCE body reduces to exit(0), but the two
@@ -1029,7 +1029,7 @@ int oldmain()
     } else {
         if (g_dPlay)
             delete g_dPlay;
-        g_dPlay = 0;
+        g_dPlay = NULL;
     }
     g_chatMan.init();
 
@@ -1204,7 +1204,7 @@ int oldmain()
                                   g_game->m_campaign.m_currentMap,
                                   &g_game->m_mapHeader);
             else
-                g_game->resetGame(g_game->m_setup.m_difficulty, 0, 0);
+                g_game->resetGame(g_game->m_setup.m_difficulty, 0, NULL);
 
             if (g_inCampaign) {
                 // Original lifetime defect: retail +0x10dd destroys the
@@ -1265,9 +1265,9 @@ int oldmain()
         }
 
         ResourceManager::Dispose(g_mainBack);
-        g_mainBack = 0;
+        g_mainBack = NULL;
         ResourceManager::Dispose(g_gameSelectBack);
-        g_gameSelectBack = 0;
+        g_gameSelectBack = NULL;
         videoClose();
 
         bool campaignScored = 0;
@@ -1428,7 +1428,7 @@ int oldmain()
             unused = 1;
     }
 
-    shutDown(0);
+    shutDown(NULL);
     return 0;
 }
 
@@ -1509,7 +1509,7 @@ static int doNewGame()
             g_config.m_showCombatMouseHex = 1;
             g_config.m_combatShadeLevel = 1;
 
-            g_game->resetGame(0, 0, 0);
+            g_game->resetGame(0, 0, NULL);
             incProgressBar(1);
 
             g_game->m_players[0].m_isLocal = 1;
@@ -1526,7 +1526,7 @@ static int doNewGame()
             g_game->setupFirstPlayer();
 
             if (g_game->newMap(g_game->m_setup.m_path,
-                               g_game->m_setup.m_filename, 0, -1)) {
+                               g_game->m_setup.m_filename, NULL, -1)) {
                 incProgressBar(1);
                 incProgressBar(1);
                 exitNewGame = 1;
@@ -3097,7 +3097,7 @@ MAC_ADDRESS(0x11513c, 0x1dc)
 void game::showMoraleInfo(hero* thisHero, int mbType)
 {
     int icon;
-    int morale = thisHero->getMorale(0, 0, 1);
+    int morale = thisHero->getMorale(NULL, 0, 1);
     std::string text;
 
     if (morale > 0) {
@@ -3127,7 +3127,7 @@ MAC_ADDRESS(0x115318, 0x130)
 void game::showLuckInfo(hero* thisHero, int mbType)
 {
     int icon;
-    int luck = thisHero->getLuck(0, 0, 1);
+    int luck = thisHero->getLuck(NULL, 0, 1);
 
     if (luck > 0) {
         sprintf(g_text, g_luckInfo[3], g_luckInfo[0]);
@@ -3156,10 +3156,10 @@ DC_ADDRESS(0x0e3a04, 0x60)
 MAC_ADDRESS(0x11505c, 0xe0)
 static void initVars()
 {
-    g_nullSample2.m_resSample = 0;
-    g_nullSample2.m_playSample = 0;
+    g_nullSample2.m_resSample = NULL;
+    g_nullSample2.m_playSample = NULL;
     g_gameCommand = -1;
-    g_palette = 0;
+    g_palette = NULL;
     g_game->m_viewFrame = 0;
     strcpy(g_game->m_setup.m_filename,
            DATA_COMPGEN(0x0067f5c8, defaultScenarioName, "test.h3m"));
@@ -3200,19 +3200,19 @@ void shutDown(const char* inExitMessage)
         aiShutDown();
         if (g_calligraphicFont) {
             g_calligraphicFont->dispose();
-            g_calligraphicFont = 0;
+            g_calligraphicFont = NULL;
         }
         if (g_bigFont) {
             g_bigFont->dispose();
-            g_bigFont = 0;
+            g_bigFont = NULL;
         }
         if (g_smallFont) {
             g_smallFont->dispose();
-            g_smallFont = 0;
+            g_smallFont = NULL;
         }
         if (g_playerPalette24) {
             delete g_playerPalette24;
-            g_playerPalette24 = 0;
+            g_playerPalette24 = NULL;
         }
         remoteCleanup();
         g_executive->shutDownSystem();
@@ -3222,11 +3222,11 @@ void shutDown(const char* inExitMessage)
 
         if (g_gameEvent) {
             CloseHandle(g_gameEvent);
-            g_gameEvent = 0;
+            g_gameEvent = NULL;
         }
         if (g_mapExtra) {
             delete[] g_mapExtra;
-            g_mapExtra = 0;
+            g_mapExtra = NULL;
         }
         deleteMainClasses();
         ResourceManager::Close();
@@ -3481,7 +3481,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
         g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_RANK)
     };
     char temp[100];
-    Smack* smk = 0;
+    Smack* smk = NULL;
     int i;
     int x;
 
@@ -3703,7 +3703,7 @@ VA(0x004f4350, 0x7F2)
 DC_ADDRESS(0x0e49b0, 0x79c)
 int handleAppSpecificMenuCommands(int idItem)
 {
-    hero* currentHero = 0;
+    hero* currentHero = NULL;
     if (g_currentPlayer && g_game->getCurrHeroId() != -1)
         currentHero = g_game->getCurrHero();
 
@@ -3990,7 +3990,7 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
                     }
                 }
                 if (!g_game->transmitSaveGame(nextPlayer, 0, 1, 0))
-                    shutDown(0);
+                    shutDown(NULL);
             }
             remoteCleanup();
         } else {

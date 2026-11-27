@@ -71,8 +71,8 @@ void advManager::stopCursor(bool standEnd)
         m_cursorFrameCount = 0;
         if (g_walkSample)
             g_soundManager->stopSample(g_walkSample);
-        g_walkSample = 0;
-        g_newWalkSample = 0;
+        g_walkSample = NULL;
+        g_newWalkSample = NULL;
     }
     m_cursorTurning = 0;
 }
@@ -224,7 +224,7 @@ void advManager::drawCursorAlpha()
                     g_soundManager->stopSample(g_walkSample);
                     g_walkSample =
                         g_soundManager->memorySample(g_newWalkSample);
-                    g_newWalkSample = 0;
+                    g_newWalkSample = NULL;
                 }
             } else {
                 m_cursorFrameCount = 0;
@@ -282,7 +282,7 @@ NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, bool isR
                 checkAdjacentMon(foughtBattle);
 
             if (curr->m_owner != g_netLocalGamePos)
-                returnCell = 0;
+                returnCell = NULL;
         }
     }
 
@@ -429,7 +429,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
     g_heroMoveTriggeredEvent = 0;
     *foughtBattle = 0;
     *noMove = 0;
-    returnCell = 0;
+    returnCell = NULL;
 
     curr = g_game->getCurrHero();
     origX = curr->m_x;
@@ -469,7 +469,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         *noMove = 1;
         curr->m_movePoints = 0;
         stopCursor(1);
-        return endMoveHero(curr, 0, 0, origX, origY, standEnd,
+        return endMoveHero(curr, NULL, 0, origX, origY, standEnd,
                              foughtBattle);
     }
 
@@ -516,7 +516,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         switch (destCell->m_type) {
         case BOAT:
             if (curr->m_flags & 0x40000)
-                return endMoveHero(curr, 0, isRemoteMove,
+                return endMoveHero(curr, NULL, isRemoteMove,
                                      origX, origY, standEnd,
                                      foughtBattle);
             else {
@@ -543,7 +543,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
             if (curr->m_flags & 0x40000) {
                 hero* other = g_game->getHero(destCell->m_extraInfo);
                 if (!(other->m_flags & 0x40000))
-                    return endMoveHero(curr, 0, isRemoteMove,
+                    return endMoveHero(curr, NULL, isRemoteMove,
                                          origX, origY, standEnd,
                                          foughtBattle);
             }
@@ -586,7 +586,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
     if (!isRemoteMove && !validMove(curr, direction, 0, 0)) {
         if (computerMove)
             curr->m_movePoints = 0;
-        return endMoveHero(curr, 0, 0, origX, origY, standEnd,
+        return endMoveHero(curr, NULL, 0, origX, origY, standEnd,
                              foughtBattle);
     }
 
@@ -617,7 +617,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         if (enteredBoat)
             doEventBoat(curr, destCell);
         demobilizeCurrHero(0, 1);
-        return 0;
+        return NULL;
     }
 
     animateMove(curr, direction, xInc, yInc);
@@ -651,7 +651,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         if (m_cursorFrameCount) {
             g_newWalkSample = walkSample;
         } else {
-            g_newWalkSample = 0;
+            g_newWalkSample = NULL;
             g_soundManager->stopSample(g_walkSample);
             g_walkSample = g_soundManager->memorySample(walkSample);
         }
@@ -679,13 +679,13 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
                 && g_game->onSameTeam(
                     g_netLocalGamePos,
                     g_game->getGarrison(eventCell->m_extraInfo)->m_playerOwner))
-                returnCell = 0;
+                returnCell = NULL;
             break;
 
         case BORDER_GATE:
             if (curr->getTarget() != triggerPoint
                 && g_currentPlayer->isHuman())
-                returnCell = 0;
+                returnCell = NULL;
             break;
 
         case TERRAIN_CACTUS:
@@ -705,7 +705,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         case TERRAIN_STUMP:
         case TERRAIN_TREE:
         case TERRAIN_VOLCANO:
-            returnCell = 0;
+            returnCell = NULL;
             break;
         }
     }
@@ -887,7 +887,7 @@ void advManager::onTeleportHero(CMapChange* mapChange)
 {
     CMCTeleportHero* change = static_cast<CMCTeleportHero*>(mapChange);
     hero* currentHero = g_game->getHero(change->m_heroId);
-    teleportTo(currentHero, change->m_point, 0, 1, 1, 0);
+    teleportTo(currentHero, change->m_point, NULL, 1, 1, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1167

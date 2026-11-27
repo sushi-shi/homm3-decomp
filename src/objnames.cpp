@@ -144,7 +144,7 @@ void InitializeAdvObjectTypeTraitsTable()
         total += strlen(pTextResource->GetText(line)) + 1;
 
     nameBuffer = TAutoArrayPtr<char>(new char[total]);
-    if (nameBuffer.get() == 0)
+    if (nameBuffer.get() == NULL)
         throw TAllocationFailure();
 
     char* next = nameBuffer.get();

@@ -108,7 +108,7 @@ TGameTypeWindow::~TGameTypeWindow()
         if (*it)
             delete *it;
     }
-    g_gameTypeWindow = 0;
+    g_gameTypeWindow = NULL;
 }
 
 // DC GameTypeWindowHandler is a (static) procedure of this file.

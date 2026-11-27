@@ -98,7 +98,7 @@ DC_ADDRESS(0x11b940, 0x2a)
 MAC_ADDRESS(0x210260, 0x50)  // Mac and retail both call crc32 twice;
 unsigned long calcCrcLong(const unsigned char* buf, unsigned len)
 {
-    unsigned long seed = crc32(0, 0, 0);
+    unsigned long seed = crc32(0, NULL, 0);
     return crc32(seed, buf, len);
 }
 
@@ -113,7 +113,7 @@ CDPlayHeroes::CDPlayHeroes()
 {
     m_localIpAddress[0] = 0;
     m_confirmId = 0;
-    m_netMsgHandler = 0;
+    m_netMsgHandler = NULL;
 }
 
 // E:\gamedcs\remote.cpp:155,160 - DestroyMsgQueue is inlined into the
@@ -316,7 +316,7 @@ bool CDPlayHeroes::HandleLowLevelMsg(CNetMsg* netMsg)
                 normalDialog(
                     g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                shutDown(0);
+                shutDown(NULL);
             }
             else {
                 handlePlayerDrop(dpid);
@@ -343,9 +343,9 @@ CNetMsg* CDPlayHeroes::GetRemoteData(bool removeFromQueue,
     if (wasCompressed)
         *wasCompressed = 0;
     if (!g_remoteOn)
-        return 0;
+        return NULL;
     if (m_msgQueue.empty())
-        return 0;
+        return NULL;
 
     CNetMsg* netMsg = m_msgQueue.front();
     if (netMsg) {
@@ -356,7 +356,7 @@ CNetMsg* CDPlayHeroes::GetRemoteData(bool removeFromQueue,
             CNetMsg* uncompressedMsg = uncompressMsg(netMsg);
             if (!uncompressedMsg) {
                 destroyMsg(netMsg);
-                return 0;
+                return NULL;
             }
             if (removeFromQueue)
                 destroyMsg(netMsg);
@@ -405,7 +405,7 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
                 static_cast<const void*>(netMsg)) + sizeof(CNetMsg),
             netMsg->m_size - sizeof(CNetMsg), 6)) {
         destroyMsg(compressedMsg);
-        return 0;
+        return NULL;
     }
 
     compressedMsg->m_size = compressedSize + sizeof(CNetMsg);
@@ -413,7 +413,7 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
     compressedMsg->m_uncompressedSize = originalSize;
     if (compressedMsg->m_size >= originalSize) {
         destroyMsg(compressedMsg);
-        return 0;
+        return NULL;
     }
     return compressedMsg;
 }
@@ -433,7 +433,7 @@ CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
                    static_cast<const unsigned char*>(static_cast<const void*>(netMsg)) + sizeof(CNetMsg),
                    netMsg->m_size - sizeof(CNetMsg))) {
         destroyMsg(result);
-        return 0;
+        return NULL;
     }
     result->m_size = destSize + sizeof(CNetMsg);
     return result;
@@ -449,7 +449,7 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
                                           bool compressMsg, bool guaranteed)
 {
     msg->m_from = g_localGamePos;
-    CNetMsg* compressedMsg = 0;
+    CNetMsg* compressedMsg = NULL;
     msg->m_dpidFrom = g_thisNetPlayerInfo.m_dpid;
     if (compressMsg) {
         compressedMsg = this->compressMsg(msg);
@@ -520,7 +520,7 @@ bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 retries = -1;
             } else {
-                shutDown(0);
+                shutDown(NULL);
                 return false;
             }
         }
@@ -599,19 +599,19 @@ CChatManager::CChatManager(int maxChatLines)
     m_currMsg = 0;
     m_pauseTime = 0;
     m_changed = 1;
-    m_lastWidget = 0;
+    m_lastWidget = NULL;
     m_maxLines = maxChatLines;
-    m_widgetText = 0;
-    m_msgArray = 0;
+    m_widgetText = NULL;
+    m_msgArray = NULL;
     m_position = -1;
     m_chatKilled = 0;
     m_isSysMsg = 0;
-    m_chatMemSample = 0;
-    m_chatSample = 0;
-    m_playerDropSample = 0;
-    m_sysMsgSample = 0;
-    m_turnDurSample = 0;
-    m_playerEnterSample = 0;
+    m_chatMemSample = NULL;
+    m_chatSample = NULL;
+    m_playerDropSample = NULL;
+    m_sysMsgSample = NULL;
+    m_turnDurSample = NULL;
+    m_playerEnterSample = NULL;
     setMaxLines(maxChatLines);
 }
 
@@ -685,7 +685,7 @@ void CChatManager::addChat(const char* format, ...)
     m_changed = 1;
 
     if (!m_isSysMsg) {
-        playChatSample(0);
+        playChatSample(NULL);
     }
 }
 
@@ -1158,7 +1158,7 @@ MAC_ADDRESS(0x21294c, 0x30)
 CNetMsg* GetRemoteData(bool removeFromQueue,
                        bool* wasCompressed)
 {
-    return g_dPlay->GetRemoteData(removeFromQueue, 0);
+    return g_dPlay->GetRemoteData(removeFromQueue, NULL);
 }
 
 VA(0x00554410, 0x93)
@@ -1195,7 +1195,7 @@ void remoteCleanup()
                 g_dPlay->DestroyPlayer(g_thisNetPlayerInfo.m_dpid);
             g_dPlay->CloseSession();
             delete g_dPlay;
-            g_dPlay = 0;
+            g_dPlay = NULL;
         }
 
         g_remoteOn = 0;
@@ -1322,7 +1322,7 @@ MAC_ADDRESS(0x212fd8, 0x50)
 CAnimatedDlg::CAnimatedDlg()
     : CTextDialog(0x12)
 {
-    m_sprite = 0;
+    m_sprite = NULL;
     m_spriteFrame = 0;
     m_lastTick = 0;
     m_palUpdated = 0;
@@ -1570,7 +1570,7 @@ int CWaitForReadyPlayersDlg::handleMessage(message& msg)
     }
 
     if (GameTime::elapsedSince(m_startTime) >= 3000) {
-        CNetMsg* netMsg = GetRemoteData(1, 0);
+        CNetMsg* netMsg = GetRemoteData(1, NULL);
         if (netMsg) {
             CMessageKill killMsg(netMsg);
             switch (netMsg->m_subType) {
@@ -1585,7 +1585,7 @@ int CWaitForReadyPlayersDlg::handleMessage(message& msg)
                     normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                                  1, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
-                    shutDown(0);
+                    shutDown(NULL);
                     break;
 
                 case RS_READY_TO_PLAY:
@@ -1645,7 +1645,7 @@ unsigned char initConnection(char* ipAddressOrPhoneNbr,
         return 0;
     }
 
-    CDPlayConnection* connection = 0;
+    CDPlayConnection* connection = NULL;
     switch (g_mpNetProtocol) {
         case MP_TCP:
             if (ipAddressOrPhoneNbr)
@@ -1653,20 +1653,20 @@ unsigned char initConnection(char* ipAddressOrPhoneNbr,
                     ipAddressOrPhoneNbr,
                     DATA_COMPGEN(0x00682ba4, remoteTCPIPConnection,
                                  "TCP/IP Connection"),
-                    0);
+                    NULL);
             else
                 connection = g_dPlay->createTCPIPConnection(
                     "",
                     DATA_COMPGEN(0x00682ba4, remoteTCPIPConnection,
                                  "TCP/IP Connection"),
-                    0);
+                    NULL);
             break;
 
         case MP_IPX:
             connection = g_dPlay->createIPXConnection(
                 DATA_COMPGEN(0x00682b94, remoteIPXConnection,
                              "IPX Connection"),
-                0);
+                NULL);
             break;
 
         case MP_MODEM:
@@ -1674,7 +1674,7 @@ unsigned char initConnection(char* ipAddressOrPhoneNbr,
                 DATA_COMPGEN(0x00682b80, remoteModemConnection,
                              "Modem Connection"),
                 ipAddressOrPhoneNbr,
-                0);
+                NULL);
             break;
 
         case MP_SERIAL:
@@ -1753,7 +1753,7 @@ bool testIfLobbyLaunched()
 
     g_dPlay->RegisterApp(
         appName, fileName, commandLine, guidHeroes3,
-        executableName[0] ? executableName : 0);
+        executableName[0] ? executableName : NULL);
     return g_dPlay->TestLobbied();
 }
 
@@ -1776,18 +1776,18 @@ unsigned char handleMPlayerLaunch()
         g_logFile.log(DATA_COMPGEN(0x00682c34, remoteMPlayerHost,
                                 "We are the MPlayer host."));
         if (!initConnection(
-                DATA_COMPGEN(0x00691210, remoteMPlayerEmptyAddress, ""), 0))
+                DATA_COMPGEN(0x00691210, remoteMPlayerEmptyAddress, ""), NULL))
             return 0;
         if (!g_dPlay->HostSession(
                 DATA_COMPGEN(0x00682c24, remoteMPlayerSession,
                              "MPlayer Session"),
-                4, 8, 0))
+                4, 8, NULL))
             return 0;
     } else {
         g_logFile.log(DATA_COMPGEN(0x00682c00, remoteMPlayerClient,
                                 "We are a MPlayer client. Host IP=%s"),
                     g_tcpAddress);
-        if (!initConnection(g_tcpAddress, 0))
+        if (!initConnection(g_tcpAddress, NULL))
             return 0;
 
         bool connected = false;
@@ -1796,7 +1796,7 @@ unsigned char handleMPlayerLaunch()
             if (g_dPlay->EnumSessions(&sessions, 0, 2)
                 && sessions.getCount() > 0) {
                 if (!g_dPlay->JoinSession(
-                        &sessions.get(0)->m_guidInstance, 0)) {
+                        &sessions.get(0)->m_guidInstance, NULL)) {
                     sessions.destroy(1);
                     return 0;
                 }
@@ -1819,7 +1819,7 @@ unsigned char handleMPlayerLaunch()
 
     int version = g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
-        g_config.m_networkDefaultName, &version, sizeof(version), 0);
+        g_config.m_networkDefaultName, &version, sizeof(version), NULL);
     if (!g_thisNetPlayerInfo.m_dpid)
         return 0;
 
@@ -1849,7 +1849,7 @@ unsigned char lobbyLaunchConnect()
     g_logFile.log(DATA_COMPGEN(0x00682d7c, lobbyGettingSettings,
                             "Getting connection settings..."));
     DPLCONNECTION* connection =
-        g_dPlay->getConnectionSettings(0, 0);
+        g_dPlay->getConnectionSettings(0, NULL);
     if (!connection)
         return 0;
 
@@ -1906,7 +1906,7 @@ unsigned char lobbyLaunchConnect()
     initRemote(MP_TCP, g_config.m_networkDefaultName);
     int version = g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
-        g_config.m_networkDefaultName, &version, sizeof(version), 0);
+        g_config.m_networkDefaultName, &version, sizeof(version), NULL);
     if (!g_thisNetPlayerInfo.m_dpid)
         return 0;
     g_thisNetPlayerInfo.m_version = version;
@@ -1960,7 +1960,7 @@ MAC_ADDRESS(0x213d7c, 0x168)
 void updateCurrentPlayers()
 {
     CAutoArray<CDPlayPlayer> playerArray;
-    g_dPlay->EnumPlayers(&playerArray, 0, 0);
+    g_dPlay->EnumPlayers(&playerArray, NULL, 0);
 
     for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (g_game->m_players[i].m_dpid
@@ -2225,7 +2225,7 @@ int CLevelPickWaitDlg::handleMessage(message& msg)
     CAnimatedDlg::handleMessage(msg);
     pollSound();
 
-    CNetMsg* netMsg = GetRemoteData(1, 0);
+    CNetMsg* netMsg = GetRemoteData(1, NULL);
     if (netMsg) {
         CMessageKill msgKill(netMsg);
         switch (netMsg->m_subType) {
@@ -2244,7 +2244,7 @@ int CLevelPickWaitDlg::handleMessage(message& msg)
                 normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                              1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
-                shutDown(0);
+                shutDown(NULL);
                 break;
 
             case RS_CHAT_MSG:
@@ -2333,9 +2333,9 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
     CAnimatedDlg::handleMessage(msg);
     pollSound();
 
-    CNetMsg* netMsg = GetRemoteData(1, 0);
+    CNetMsg* netMsg = GetRemoteData(1, NULL);
     if (netMsg) {
-        CMessageKill killMsg(0);
+        CMessageKill killMsg(NULL);
         if (netMsg->m_subType != RS_COMBAT_INIT)
             killMsg.setMessage(netMsg);
 
@@ -2351,7 +2351,7 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
                 normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                              1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
-                shutDown(0);
+                shutDown(NULL);
                 break;
 
             case RS_COMBAT_INIT:
@@ -2438,7 +2438,7 @@ CGameTransferSmack::CGameTransferSmack()
     m_y = 0;
     m_lastFrame = -1;
     m_started = 0;
-    m_saveScreen = 0;
+    m_saveScreen = NULL;
     m_sending = 0;
     m_drawText = 1;
 }
@@ -2578,7 +2578,7 @@ MAC_ADDRESS(0x215484, 0x18)
 CNetMsgHandler::CNetMsgHandler()
 {
     m_inPopup = 0;
-    m_abortPopupMsg = 0;
+    m_abortPopupMsg = NULL;
 }
 
 // CNetMsgHandler's scalar deleting destructor, with the small destructor
@@ -2598,15 +2598,15 @@ CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup,
     if (m_abortPopupMsg) {
         if (inPopup) {
             *msgReceived = 1;
-            return 0;
+            return NULL;
         }
         CNetMsg* abortMsg = m_abortPopupMsg;
-        m_abortPopupMsg = 0;
+        m_abortPopupMsg = NULL;
         return handleNetMsg(abortMsg);
     }
-    CNetMsg* netMsg = GetRemoteData(1, 0);
-    if (netMsg == 0)
-        return 0;
+    CNetMsg* netMsg = GetRemoteData(1, NULL);
+    if (netMsg == NULL)
+        return NULL;
     if (msgReceived)
         *msgReceived = 1;
     return handleNetMsg(netMsg);
@@ -2616,7 +2616,7 @@ VA(0x005578d0, 0x30)  // anchor-vtable: slot 0 chain of 0x640f14; Complete-only
 CNetMsgHandler::~CNetMsgHandler()
 {
     if (g_dPlay && g_dPlay->getNetMsgHandler() == this)
-        g_dPlay->setNetMsgHandler(0);
+        g_dPlay->setNetMsgHandler(NULL);
 }
 
 // E:\gamedcs\remote.cpp:2875
@@ -2637,7 +2637,7 @@ CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     case RS_SET_AS_HOST:
         if (m_inPopup) {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         handleNewHost();
         break;
@@ -2645,13 +2645,13 @@ CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     case RS_SESSION_LOST:
         normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        shutDown(0);
+        shutDown(NULL);
         break;
     }
 
     if (netMsg)
         destroyMsg(netMsg);
-    return 0;
+    return NULL;
 }
 
 // Original: CTurnDuration::CTurnDuration; remote.cpp:2912
@@ -2716,7 +2716,7 @@ void CTurnDuration::checkForWarning()
         return;
     if (m_lastWarned == 0)
         return;
-    if (g_currentPlayer == 0)
+    if (g_currentPlayer == NULL)
         return;
     if (!g_currentPlayer->isLocalHuman())
         return;

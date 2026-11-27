@@ -499,7 +499,7 @@ static LODFile* findSpriteResource(const char* name)
     while (!file->pointAt(name)) {
         ++archive;
         if (!--remaining)
-            return 0;
+            return NULL;
         file = &g_resourceLodSlots[*archive].m_file;
     }
 
@@ -518,7 +518,7 @@ static LODFile* findBitmapResource(const char* name)
     while (!file->pointAt(name)) {
         ++archive;
         if (!--remaining)
-            return 0;
+            return NULL;
         file = &g_resourceLodSlots[*archive].m_file;
     }
 
@@ -752,7 +752,7 @@ Bitmap816* ResourceManager::GetBitmap816(const char* name)
                     DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
                                  "GetBitmap816"),
                     RESOURCE_TYPE_BITMAP, fallbackName);
-                return 0;
+                return NULL;
             }
         }
 
@@ -797,7 +797,7 @@ VA(0x0055ac40, 0x388)
 MAC_ADDRESS(0x152fc8, 0x1b4)
 Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 {
-    Bitmap16Bit* result = 0;
+    Bitmap16Bit* result = NULL;
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
 
     if (file) {
@@ -830,7 +830,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
                     DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
                                  "GetBitmap16"),
                     RESOURCE_TYPE_BITMAP16, fallbackName);
-                return 0;
+                return NULL;
             }
         }
 
@@ -928,7 +928,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
                 RESOURCE_TYPE_PALETTE, fallbackName);
-            return 0;
+            return NULL;
         }
     }
 
@@ -1013,7 +1013,7 @@ TPalette24* ResourceManager::GetPalette24(const char* name)
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
                 RESOURCE_TYPE_PALETTE, fallbackName);
-            return 0;
+            return NULL;
         }
     }
 
@@ -1040,7 +1040,7 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
 
     std::auto_ptr<font> result(
         new font(name, spec, dataSize, data.get()));
-    data = TAutoArrayPtr<unsigned char>(0);
+    data = TAutoArrayPtr<unsigned char>(NULL);
 
     TPalette16* palette = GetPalette("game.pal");
     if (palette) {
@@ -1099,7 +1099,7 @@ font* ResourceManager::loadFont(const char* name)
             reportMissingTypedResource(
                 DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
                 RESOURCE_TYPE_FONT, fallbackName);
-            return 0;
+            return NULL;
         }
     }
 
@@ -1172,7 +1172,7 @@ TTextResource* ResourceManager::loadText(const char* name)
         reportMissingTypedResource(
             DATA_COMPGEN(0x00683060, loadTextErrorContext, "GetText"),
             RESOURCE_TYPE_TEXT, name);
-        return 0;
+        return NULL;
     }
 
     int fileSize = lodFile->getItemIndex(name)->size;
@@ -1241,7 +1241,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
             DATA_COMPGEN(0x00683068, loadSpreadsheetErrorContext,
                          "GetSpreadsheet"),
             RESOURCE_TYPE_TEXT, name);
-        return 0;
+        return NULL;
     }
 
     int fileSize = lodFile->getItemIndex(name)->size;
@@ -1290,7 +1290,7 @@ resource* ResourceManager::GetFromCache(const char* name)
 {
     TCacheMap::iterator found = g_resourceCache.find(name);
     if (found == g_resourceCache.end())
-        return 0;
+        return NULL;
     resource* value = found->second;
     value->AddRef();
     return value;
@@ -1371,9 +1371,9 @@ bool ResourceManager::GetSoundFile(const char* localName,
                 SoundHeaderStruct& header = (*descriptor.m_sounds)[x];
                 *size = header.m_size;
                 data = std::auto_ptr<char>(new char[*size]);
-                SetFilePointer(*descriptor.m_file, header.m_offset, 0,
+                SetFilePointer(*descriptor.m_file, header.m_offset, NULL,
                                FILE_BEGIN);
-                ReadFile(*descriptor.m_file, data.get(), *size, &bytesRead, 0);
+                ReadFile(*descriptor.m_file, data.get(), *size, &bytesRead, NULL);
                 return true;
             }
         }
@@ -1435,7 +1435,7 @@ sample* ResourceManager::loadSample(const char* name)
         DATA(0x006410dc) static const char fallbackName[] = "default.wav";
         if (!GetSoundFile(fallbackName, data, &size)) {
             reportMissingSample(fallbackName);
-            return 0;
+            return NULL;
         }
     }
 
@@ -1519,7 +1519,7 @@ CSprite* ResourceManager::GetSprite(const char* name)
                 DATA_COMPGEN(0x00683088, getSpriteErrorContext, "GetSprite"),
                 RESOURCE_TYPE_SPRITE, name);
 #endif
-            return 0;
+            return NULL;
         }
     }
 
@@ -1540,7 +1540,7 @@ CSprite* ResourceManager::GetSprite(const char* name)
     sprite = new CSprite(
         name, Sdef.m_type, Sdef.m_width, Sdef.m_height);
     if (!sprite)
-        return 0;
+        return NULL;
 
     TSpriteDataHeader* sequences =
         new TSpriteDataHeader[Sdef.m_numSequences];

@@ -35,37 +35,37 @@ TQuestLogWindow::TQuestLogWindow()
         0, 0, m_width, m_height, 0, "QuestLog.pcx", 0x800));
 
     m_widgets.push_back(new textWidget(
-        45, 122, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 1, 1, 0, 8));
+        45, 122, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 142, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 2, 1, 0, 8));
+        45, 142, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 2, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 162, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 3, 1, 0, 8));
+        45, 162, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 3, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 182, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 4, 1, 0, 8));
+        45, 182, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 4, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 202, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 5, 1, 0, 8));
+        45, 202, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 5, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 222, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 6, 1, 0, 8));
+        45, 222, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 6, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 242, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 7, 1, 0, 8));
+        45, 242, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 7, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 262, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 8, 1, 0, 8));
+        45, 262, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 8, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 282, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 9, 1, 0, 8));
+        45, 282, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 9, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 302, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 10, 1, 0, 8));
+        45, 302, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 10, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 322, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 11, 1, 0, 8));
+        45, 322, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 11, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 342, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 12, 1, 0, 8));
+        45, 342, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 12, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 362, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 13, 1, 0, 8));
+        45, 362, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 13, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 382, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 14, 1, 0, 8));
+        45, 382, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 14, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 402, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 15, 1, 0, 8));
+        45, 402, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 15, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        45, 422, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 16, 1, 0, 8));
+        45, 422, 285, 20, NULL, "smalfont.fnt", font::PRIMARY, 16, 1, 0, 8));
 
     m_widgets.push_back(new slider(
         335, 112, 16, 343, 17, 10, questSliderCallback,

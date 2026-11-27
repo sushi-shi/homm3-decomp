@@ -62,7 +62,7 @@ private:
     static CString _createTeamStr(unsigned int teamNum);
 
     void _addNote(const CString& note);
-    bool _isArtifactOnMap(TArtifact whichArtifact, const TSeersHut* pExcludedHut = 0) const;
+    bool _isArtifactOnMap(TArtifact whichArtifact, const TSeersHut* pExcludedHut = NULL) const;
     bool _playerMayBeHuman(TPlayer whichPlayer) const;
     void _checkForUnreachableObjects();
 

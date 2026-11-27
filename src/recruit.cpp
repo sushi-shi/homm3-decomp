@@ -181,7 +181,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::WHITE,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED,
-        0, 0, RECRUIT_QUANTITY_ID, 0,
+        NULL, 0, RECRUIT_QUANTITY_ID, 0,
         textEntryWidget::READ_TYPE_INSET, 0, 0));
 
     m_quantitySlider = new slider(0xb0, 0x117, 0x87, 0x10, 0x22f, 0xa,
@@ -215,7 +215,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
     m_widgets.push_back(new bitmapBorder(8, 0x172, 0x1d4, 0x12, 0x230,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(8, 0x172, 0x1d4, 0x12, 0,
+    m_widgets.push_back(new textWidget(8, 0x172, 0x1d4, 0x12, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x231, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -246,7 +246,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         0, 1, 0, 1, 2));
 
     for (int i = 0; i < 4; i++)
-        m_creatureWidgets[i] = 0;
+        m_creatureWidgets[i] = NULL;
 
     if (recruitInfo->m_monType4 != CREATURE_NONE) {
         addCreatureWidgets(0x1c, 0x41, 0xb4,
@@ -1052,7 +1052,7 @@ recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
     m_type = RECRUIT_SOURCE_NONE;
     m_viewOnly = 0;
     m_inTownMainScreen = 0;
-    m_thisHero = 0;
+    m_thisHero = NULL;
     m_currArmyGroup = newGroup;
     m_currArmyGroupIsTownGarrison = groupIsTownGarrison;
     m_monsterType = monType1;
@@ -1089,7 +1089,7 @@ recruitUnit::recruitUnit(hero* thisHero,
     m_viewOnly = 0;
     m_inTownMainScreen = 0;
     m_thisHero = thisHero;
-    m_currArmyGroup = 0;
+    m_currArmyGroup = NULL;
     m_currArmyGroupIsTownGarrison = 0;
     m_monsterType = monType1;
     m_numAvail = numMon1;
@@ -1113,7 +1113,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
 {
     m_inTownMainScreen = inInTownMainScreen;
     m_type = RECRUIT_SOURCE_TOWN;
-    m_thisHero = 0;
+    m_thisHero = NULL;
     m_monsterType = g_dwellingType[newTown->m_type][newDwellingIndex];
     m_numAvail = &newTown->m_population[newDwellingIndex];
     m_currArmyGroup = &newTown->getArmy();
@@ -1125,9 +1125,9 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     m_selectedPosition = 0;
     m_monType1 = m_monsterType;
     m_available[0] = m_numAvail;
-    m_available[1] = 0;
-    m_available[2] = 0;
-    m_available[3] = 0;
+    m_available[1] = NULL;
+    m_available[2] = NULL;
+    m_available[3] = NULL;
     if (newDwellingIndex >= TOWN_DWELLING_COUNT) {
         m_monType2 = g_dwellingType[newTown->m_type][newDwellingIndex - TOWN_DWELLING_COUNT];
         m_available[1] = m_numAvail;

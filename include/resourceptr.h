@@ -12,7 +12,7 @@ class TResourcePtr {
 public:
 
     DC_ADDRESS(0x05b284, 0xe)
-    TResourcePtr(T* ptr = 0) : m_owns(ptr != 0), m_ptr(ptr) {}
+    TResourcePtr(T* ptr = NULL) : m_owns(ptr != NULL), m_ptr(ptr) {}
     // auto_ptr's transfer. The campaign editor expands it in its region
     // image vector (h3ccmped 0x41b4e0, under /O2 which expands only inline
     // functions).

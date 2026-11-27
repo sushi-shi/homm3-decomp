@@ -59,7 +59,7 @@ void TIndeterminateGeneratorTraits::initialize()
 {
     DATA_COMPGEN_GUARD(0x005a51f8, generatorNamesGuard, pNames)
     VA_COMPGEN(0x004c8810, 0x16, STATIC_DTOR, pNames)
-    DATA(0x005a6a58) static TAutoArrayPtr<char> pNames(0);
+    DATA(0x005a6a58) static TAutoArrayPtr<char> pNames(NULL);
     {
         TResourcePtr<TTextResource> pTextResource(ResourceManager::GetText("crgenerc.txt"));
         if (!pTextResource.get())
@@ -566,7 +566,7 @@ void InitializeTownTypeTraitsTable()
     DATA_COMPGEN_GUARD(0x005a6a50, townTypeTraitsGuard, pTypeNames)
     {
         VA_COMPGEN(0x004cb892, 0x16, STATIC_DTOR, pTypeNames)
-        DATA(0x005a51f0) static TAutoArrayPtr<char> pTypeNames(0);
+        DATA(0x005a51f0) static TAutoArrayPtr<char> pTypeNames(NULL);
         TResourcePtr<TTextResource> pTextResource(ResourceManager::GetText("towntype.txt"));
         if (!pTextResource.get())
             throw TRuntimeError();

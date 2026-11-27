@@ -12,7 +12,7 @@ public:
     // (__check_eh_spec with a zero type list at 0x833fe0a, 0x83401a3,
     // and 0x8340225). The destructor has no such specification.
     DC_ADDRESS(0x05b1f8, 0xe)
-    TAutoArrayPtr(T* ptr = 0) throw() : _m_bOwns(ptr != 0), _m_ptr(ptr) {}
+    TAutoArrayPtr(T* ptr = NULL) throw() : _m_bOwns(ptr != NULL), _m_ptr(ptr) {}
     // CodeView 0x57b9 declares this ordinary copy constructor, but has no
     // procedure/source location for its body. Current consumers construct
     // directly from pointers; retain the declaration without guessing a

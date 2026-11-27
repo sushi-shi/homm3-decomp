@@ -96,10 +96,10 @@ TRmgVoronoi::TRmgVoronoi()
     TRmgPoint second(400, -200);
     TRmgPoint third(400, 400);
     TRmgPoint fourth(-200, 400);
-    TRmgHalfEdge* firstEdge = createEdge(first, 0, second, 0);
-    TRmgHalfEdge* secondEdge = createEdge(second, 0, third, 0);
-    TRmgHalfEdge* thirdEdge = createEdge(third, 0, fourth, 0);
-    TRmgHalfEdge* fourthEdge = createEdge(fourth, 0, first, 0);
+    TRmgHalfEdge* firstEdge = createEdge(first, NULL, second, NULL);
+    TRmgHalfEdge* secondEdge = createEdge(second, NULL, third, NULL);
+    TRmgHalfEdge* thirdEdge = createEdge(third, NULL, fourth, NULL);
+    TRmgHalfEdge* fourthEdge = createEdge(fourth, NULL, first, NULL);
     firstEdge->getTwin()->splice(secondEdge);
     secondEdge->getTwin()->splice(thirdEdge);
     thirdEdge->getTwin()->splice(fourthEdge);

@@ -52,7 +52,7 @@ MAC_ADDRESS(0x062ab8, 0xb0)
 button::button()
     : widget(0, 0, 0, 0, 0, 0)
 {
-    m_buttonIcon = 0;
+    m_buttonIcon = NULL;
     m_normalFrame = 0;
     m_selectedFrame = 0;
     m_disabledFrame = 2;

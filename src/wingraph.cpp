@@ -104,14 +104,14 @@ static void ddCreatePrimary()
     HRESULT result;
     g_ddsPrimary = ddCreateSurface(800, 600, 1);
     if (g_ddClipper) {
-        result = g_ddsPrimary->SetClipper(0);
+        result = g_ddsPrimary->SetClipper(NULL);
         if (result != DD_OK && result != DDERR_NOCLIPPERATTACHED)
             ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                  0x6e);
         g_ddClipper->Release();
-        g_ddClipper = 0;
+        g_ddClipper = NULL;
     }
 }
 
@@ -121,7 +121,7 @@ static void ddSetupClipper()
 {
     HRESULT result;
     if (!g_config.m_windowConfig.m_fullScreen) {
-        result = g_directDraw->CreateClipper(0, &g_ddClipper, 0);
+        result = g_directDraw->CreateClipper(0, &g_ddClipper, NULL);
         if (result != DD_OK)
             ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
@@ -174,7 +174,7 @@ void robAppBlit(tagRECT* combRect)
     if (combRect->bottom <= combRect->top)
         return;
 
-    HRESULT result = g_ddsBack->Unlock(0);
+    HRESULT result = g_ddsBack->Unlock(NULL);
     if (result != DD_OK)
         ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0xdf);
@@ -207,7 +207,7 @@ void robAppBlit(tagRECT* combRect)
                 DDSURFACEDESC surfaceDesc;
                 memset(&surfaceDesc, 0, sizeof(surfaceDesc));
                 surfaceDesc.dwSize = sizeof(surfaceDesc);
-                result = g_ddsBack->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
+                result = g_ddsBack->Lock(NULL, &surfaceDesc, DDLOCK_WAIT, NULL);
                 if (result != DD_OK)
                     ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x119);
@@ -220,7 +220,7 @@ void robAppBlit(tagRECT* combRect)
                     pointerRect.left, pointerRect.top,
                     surfaceDesc.dwWidth, surfaceDesc.dwHeight,
                     surfaceDesc.lPitch, 0, 1);
-                result = g_ddsBack->Unlock(0);
+                result = g_ddsBack->Unlock(NULL);
                 if (result != DD_OK)
                     ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x124);
@@ -241,7 +241,7 @@ void robAppBlit(tagRECT* combRect)
     DDSURFACEDESC surfaceDesc;
     memset(&surfaceDesc, 0, sizeof(surfaceDesc));
     surfaceDesc.dwSize = sizeof(surfaceDesc);
-    result = g_ddsBack->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
+    result = g_ddsBack->Lock(NULL, &surfaceDesc, DDLOCK_WAIT, NULL);
     if (result != DD_OK)
         ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x13e);
@@ -296,7 +296,7 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
         while (1) {
             if (g_ddsPrimary->Blt(&region,
                     srcSurface,
-                    const_cast<RECT*>(&srcRect), flags, 0)
+                    const_cast<RECT*>(&srcRect), flags, NULL)
                 != DDERR_SURFACELOST) {
                 return;
             }
@@ -323,7 +323,7 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
         while (1) {
             if (dstSurface->Blt(const_cast<RECT*>(&dstRect),
                     g_ddsPrimary,
-                    &region, flags, 0)
+                    &region, flags, NULL)
                 != DDERR_SURFACELOST) {
                 return;
             }
@@ -347,7 +347,7 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
     GameTime::get();
     while (1) {
         if (dstSurface->Blt(const_cast<RECT*>(&dstRect), srcSurface,
-                const_cast<RECT*>(&srcRect), flags, 0)
+                const_cast<RECT*>(&srcRect), flags, NULL)
             != DDERR_SURFACELOST) {
             return;
         }
@@ -400,12 +400,12 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect)
 
     unsigned char desktopIsHighColor = getDesktopInfo();
 
-    HRESULT result = g_ddsPrimary->SetClipper(0);
+    HRESULT result = g_ddsPrimary->SetClipper(NULL);
     if (result != DD_OK)
         ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x168);
     g_ddsPrimary->Release();
-    g_ddsPrimary = 0;
+    g_ddsPrimary = NULL;
 
     if (!desktopIsHighColor) {
         POINT origin;
@@ -414,11 +414,11 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect)
         ScreenToClient(g_hwndApp, &origin);
         OffsetRect(&dstRect, origin.x, origin.y);
         g_ddClipper->Release();
-        g_ddClipper = 0;
+        g_ddClipper = NULL;
         g_config.m_windowConfig.m_fullScreen = 1;
         SetWindowLongA(g_hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
         SetWindowLongA(g_hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
-        kbChangeMenu(0);
+        kbChangeMenu(NULL);
         result = g_directDraw->SetCooperativeLevel(
             g_hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
         if (result != DD_OK)
@@ -463,7 +463,7 @@ IDirectDrawSurface* ddCreateSurface(unsigned long width, unsigned long height,
         surfaceDesc.dwWidth = width;
     }
 
-    HRESULT result = g_directDraw->CreateSurface(&surfaceDesc, &surface, 0);
+    HRESULT result = g_directDraw->CreateSurface(&surfaceDesc, &surface, NULL);
     if (result != DD_OK)
         ddsd(result,
              DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
@@ -471,7 +471,7 @@ IDirectDrawSurface* ddCreateSurface(unsigned long width, unsigned long height,
              0x263);
 
     if (!primary) {
-        result = surface->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
+        result = surface->Lock(NULL, &surfaceDesc, DDLOCK_WAIT, NULL);
         if (result != DD_OK)
             ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
@@ -513,7 +513,7 @@ static void ddCreateMouseSurfaces()
     result = g_directDraw->CreateSurface(
         &surfaceDesc,
         &g_ddsMouseSurface,
-        0);
+        NULL);
     if (result != DD_OK)
         ddsd(result,
              DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
@@ -535,7 +535,7 @@ static void ddCreateMouseSurfaces()
     result = g_directDraw->CreateSurface(
         &surfaceDesc,
         &g_ddsMouseSaveSurface,
-        0);
+        NULL);
     if (result != DD_OK)
         ddsd(result,
              DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
@@ -552,7 +552,7 @@ static void ddCreateMouseSurfaces()
     result = g_directDraw->CreateSurface(
         &surfaceDesc,
         &g_ddsMouseScratchSurface,
-        0);
+        NULL);
     if (result != DD_OK)
         ddsd(result,
              DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
@@ -566,15 +566,15 @@ static void ddReleaseMouseSurfaces()
 {
     if (g_ddsMouseSurface) {
         g_ddsMouseSurface->Release();
-        g_ddsMouseSurface = 0;
+        g_ddsMouseSurface = NULL;
     }
     if (g_ddsMouseSaveSurface) {
         g_ddsMouseSaveSurface->Release();
-        g_ddsMouseSaveSurface = 0;
+        g_ddsMouseSaveSurface = NULL;
     }
     if (g_ddsMouseScratchSurface) {
         g_ddsMouseScratchSurface->Release();
-        g_ddsMouseScratchSurface = 0;
+        g_ddsMouseScratchSurface = NULL;
     }
 
 }
@@ -1173,12 +1173,12 @@ VA(0x00601460, 0x52)
 DC_ADDRESS(0x19a418, 0x4)
 unsigned char getDesktopInfo()
 {
-    HDC desktopDC = GetDC(0);
+    HDC desktopDC = GetDC(NULL);
     if (desktopDC) {
         g_desktopBitsPerPixel = GetDeviceCaps(desktopDC, BITSPIXEL);
         g_desktopWidth = GetDeviceCaps(desktopDC, HORZRES);
         g_desktopHeight = GetDeviceCaps(desktopDC, VERTRES);
-        ReleaseDC(0, desktopDC);
+        ReleaseDC(NULL, desktopDC);
         return g_desktopBitsPerPixel == DESKTOP_REQUIRED_BITS_PER_PIXEL;
     }
     return 0;
@@ -1211,7 +1211,7 @@ void ddInitGraphics()
     if (g_winGraphBusy)
         return;
 
-    HRESULT result = DirectDrawCreate(0, &g_directDraw, 0);
+    HRESULT result = DirectDrawCreate(NULL, &g_directDraw, NULL);
     if (result != DD_OK)
         ddsd(result,
              DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
@@ -1292,7 +1292,7 @@ static void ddCleanUpWinGraphics()
 
         if (g_ddClipper) {
             if (g_ddsPrimary) {
-                HRESULT result = g_ddsPrimary->SetClipper(0);
+                HRESULT result = g_ddsPrimary->SetClipper(NULL);
                 if (result != DD_OK && result != DDERR_NOCLIPPERATTACHED)
                     ddsd(result,
                          DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
@@ -1300,16 +1300,16 @@ static void ddCleanUpWinGraphics()
                          0x378);
             }
             g_ddClipper->Release();
-            g_ddClipper = 0;
+            g_ddClipper = NULL;
         }
 
         if (g_ddsPrimary) {
             g_ddsPrimary->Release();
-            g_ddsPrimary = 0;
+            g_ddsPrimary = NULL;
         }
         if (g_ddsBack) {
             g_ddsBack->Release();
-            g_ddsBack = 0;
+            g_ddsBack = NULL;
         }
         ddReleaseMouseSurfaces();
 
@@ -1321,7 +1321,7 @@ static void ddCleanUpWinGraphics()
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                  0x396);
         g_directDraw->Release();
-        g_directDraw = 0;
+        g_directDraw = NULL;
     }
 }
 
@@ -1439,7 +1439,7 @@ static unsigned char ddSetFullScreenStatus(int newStatus)
 
     resizeWindow(g_config.m_windowConfig.m_x, g_config.m_windowConfig.m_y);
 
-    kbChangeMenu(0);
+    kbChangeMenu(NULL);
     videoRealignBuffers();
     if (g_mp3Stream)
         AIL_pause_stream(g_mp3Stream, 0);

@@ -344,184 +344,184 @@ DATA(0x0063bec0) const combatManager::SElevationOverlay combatManager::s_elevati
 // name/hitpoints at row + 0x1c/+0x20. Each 36-byte record starts with x/y.
 DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[TOWN_TYPE_COUNT][combatManager::kNumWallSections] = {
     { // Castle
-        { 400, 276, -1, 0, { "SgCsDrw3.pcx", "SgCsDrw2.pcx", "SgCsDrw1.pcx", 0, 0 }, 0, 0, 0 },
-        { 400, 276, -1, 0, { 0, "SgCsDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 410, 90, -1, 0, { "SgCsMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 403, 80, -1, 0, { "SgCsMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 600, 49, -1, 0, { "SgCsTpWl.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 569, 35, 255, 0, { "SgCsTw22.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx" }, 0, 0, 0 },
-        { 524, 32, 45, 0, { 0, "SgCsWa62.pcx", "SgCsWa61.pcx", "SgCsWa61.pcx", "SgCsWa61.pcx" }, 0, 0, 0 },
-        { 489, 79, 62, 0, { "SgCsWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 470, 127, 78, 0, { 0, "SgCsWa42.pcx", "SgCsWa41.pcx", "SgCsWa41.pcx", "SgCsWa41.pcx" }, 0, 0, 0 },
-        { 477, 238, 112, 0, { "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx" }, 0, 0, 0 },
-        { 469, 291, 130, 0, { 0, "SgCsWa32.pcx", "SgCsWa31.pcx", "SgCsWa31.pcx", "SgCsWa31.pcx" }, 0, 0, 0 },
-        { 512, 347, 165, 0, { "SgCsWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 528, 350, 182, 0, { 0, "SgCsWa12.pcx", "SgCsWa11.pcx", "SgCsWa11.pcx", "SgCsWa11.pcx" }, 0, 0, 0 },
-        { 602, 500, 251, 0, { "SgCsTw12.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx" }, 0, 0, 0 },
-        { 720, 158, 135, 0, { "SgCsMan2.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx" }, 0, 0, 0 },
-        { 720, 158, 135, 0, { 0, "SgCsManC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 602, 500, 251, 0, { 0, "SgCsTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 557, 24, 255, 0, { 0, "SgCsTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+        { 400, 276, -1, 0, { "SgCsDrw3.pcx", "SgCsDrw2.pcx", "SgCsDrw1.pcx", NULL, NULL }, NULL, 0, 0 },
+        { 400, 276, -1, 0, { NULL, "SgCsDrwC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 410, 90, -1, 0, { "SgCsMoat.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 403, 80, -1, 0, { "SgCsMlip.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 600, 49, -1, 0, { "SgCsTpWl.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 569, 35, 255, 0, { "SgCsTw22.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx" }, NULL, 0, 0 },
+        { 524, 32, 45, 0, { NULL, "SgCsWa62.pcx", "SgCsWa61.pcx", "SgCsWa61.pcx", "SgCsWa61.pcx" }, NULL, 0, 0 },
+        { 489, 79, 62, 0, { "SgCsWa5.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 470, 127, 78, 0, { NULL, "SgCsWa42.pcx", "SgCsWa41.pcx", "SgCsWa41.pcx", "SgCsWa41.pcx" }, NULL, 0, 0 },
+        { 477, 238, 112, 0, { "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx" }, NULL, 0, 0 },
+        { 469, 291, 130, 0, { NULL, "SgCsWa32.pcx", "SgCsWa31.pcx", "SgCsWa31.pcx", "SgCsWa31.pcx" }, NULL, 0, 0 },
+        { 512, 347, 165, 0, { "SgCsWa2.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 528, 350, 182, 0, { NULL, "SgCsWa12.pcx", "SgCsWa11.pcx", "SgCsWa11.pcx", "SgCsWa11.pcx" }, NULL, 0, 0 },
+        { 602, 500, 251, 0, { "SgCsTw12.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx" }, NULL, 0, 0 },
+        { 720, 158, 135, 0, { "SgCsMan2.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx" }, NULL, 0, 0 },
+        { 720, 158, 135, 0, { NULL, "SgCsManC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 602, 500, 251, 0, { NULL, "SgCsTw1C.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 557, 24, 255, 0, { NULL, "SgCsTw2C.pcx", NULL, NULL, NULL }, NULL, 0, 0 }
     },
     { // Rampart
-        { 404, 271, -1, 0, { "SgRmDrw3.pcx", "SgRmDrw2.pcx", "SgRmDrw1.pcx", 0, 0 }, 0, 0, 0 },
-        { 404, 271, -1, 0, { 0, "SgRmDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 410, 77, -1, 0, { "SgRmMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 410, 97, -1, 0, { "SgRmMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 608, 46, -1, 0, { "SgRmTpW1.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 565, 31, 255, 0, { "SgRmTw22.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx" }, 0, 0, 0 },
-        { 530, 57, 45, 0, { 0, "SgRmWa62.pcx", "SgRmWa61.pcx", "SgRmWa61.pcx", "SgRmWa61.pcx" }, 0, 0, 0 },
-        { 492, 103, 62, 0, { "SgRmWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 469, 186, 78, 0, { 0, "SgRmWa42.pcx", "SgRmWa41.pcx", "SgRmWa41.pcx", "SgRmWa41.pcx" }, 0, 0, 0 },
-        { 460, 220, 112, 0, { "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx" }, 0, 0, 0 },
-        { 469, 309, 130, 0, { 0, "SgRmWa32.pcx", "SgRmWa31.pcx", "SgRmWa31.pcx", "SgRmWa31.pcx" }, 0, 0, 0 },
-        { 510, 364, 165, 0, { "SgRmWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 549, 451, 182, 0, { 0, "SgRmWa12.pcx", "SgRmWa11.pcx", "SgRmWa11.pcx", "SgRmWa11.pcx" }, 0, 0, 0 },
-        { 594, 511, 251, 0, { "SgRmTw12.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx" }, 0, 0, 0 },
-        { 724, 189, 135, 0, { "SgRmMan2.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx" }, 0, 0, 0 },
-        { 724, 189, 135, 0, { 0, "SgRmManC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 594, 511, 251, 0, { 0, "SgRmTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 566, 31, 255, 0, { 0, "SgRmTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+        { 404, 271, -1, 0, { "SgRmDrw3.pcx", "SgRmDrw2.pcx", "SgRmDrw1.pcx", NULL, NULL }, NULL, 0, 0 },
+        { 404, 271, -1, 0, { NULL, "SgRmDrwC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 410, 77, -1, 0, { "SgRmMoat.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 410, 97, -1, 0, { "SgRmMlip.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 608, 46, -1, 0, { "SgRmTpW1.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 565, 31, 255, 0, { "SgRmTw22.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx" }, NULL, 0, 0 },
+        { 530, 57, 45, 0, { NULL, "SgRmWa62.pcx", "SgRmWa61.pcx", "SgRmWa61.pcx", "SgRmWa61.pcx" }, NULL, 0, 0 },
+        { 492, 103, 62, 0, { "SgRmWa5.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 469, 186, 78, 0, { NULL, "SgRmWa42.pcx", "SgRmWa41.pcx", "SgRmWa41.pcx", "SgRmWa41.pcx" }, NULL, 0, 0 },
+        { 460, 220, 112, 0, { "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx" }, NULL, 0, 0 },
+        { 469, 309, 130, 0, { NULL, "SgRmWa32.pcx", "SgRmWa31.pcx", "SgRmWa31.pcx", "SgRmWa31.pcx" }, NULL, 0, 0 },
+        { 510, 364, 165, 0, { "SgRmWa2.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 549, 451, 182, 0, { NULL, "SgRmWa12.pcx", "SgRmWa11.pcx", "SgRmWa11.pcx", "SgRmWa11.pcx" }, NULL, 0, 0 },
+        { 594, 511, 251, 0, { "SgRmTw12.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx" }, NULL, 0, 0 },
+        { 724, 189, 135, 0, { "SgRmMan2.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx" }, NULL, 0, 0 },
+        { 724, 189, 135, 0, { NULL, "SgRmManC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 594, 511, 251, 0, { NULL, "SgRmTw1C.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 566, 31, 255, 0, { NULL, "SgRmTw2C.pcx", NULL, NULL, NULL }, NULL, 0, 0 }
     },
     { // Tower
-        { 401, 253, -1, 0, { "SgTwDrw3.pcx", "SgTwDrw2.pcx", "SgTwDrw1.pcx", 0, 0 }, 0, 0, 0 },
-        { 401, 253, -1, 0, { 0, "SgTwDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 410, 90, -1, 0, { 0, 0, 0, 0, 0 }, 0, 0, 0 },
-        { 403, 80, -1, 0, { 0, 0, 0, 0, 0 }, 0, 0, 0 },
-        { 615, 57, -1, 0, { "SgTwTpWl.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 580, 36, 255, 0, { "SgTwTw22.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx" }, 0, 0, 0 },
-        { 547, 66, 45, 0, { 0, "SgTwWa62.pcx", "SgTwWa61.pcx", "SgTwWa61.pcx", "SgTwWa61.pcx" }, 0, 0, 0 },
-        { 514, 79, 62, 0, { "SgTwWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 488, 190, 78, 0, { 0, "SgTwWa42.pcx", "SgTwWa41.pcx", "SgTwWa41.pcx", "SgTwWa41.pcx" }, 0, 0, 0 },
-        { 471, 187, 112, 0, { "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx" }, 0, 0, 0 },
-        { 475, 298, 130, 0, { 0, "SgTwWa32.pcx", "SgTwWa31.pcx", "SgTwWa31.pcx", "SgTwWa31.pcx" }, 0, 0, 0 },
-        { 517, 365, 165, 0, { "SgTwWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 547, 452, 182, 0, { 0, "SgTwWa12.pcx", "SgTwWa11.pcx", "SgTwWa11.pcx", "SgTwWa11.pcx" }, 0, 0, 0 },
-        { 592, 516, 251, 0, { "SgTwTw12.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx" }, 0, 0, 0 },
-        { 726, 148, 135, 0, { "SgTwMan2.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx" }, 0, 0, 0 },
-        { 726, 148, 135, 0, { 0, "SgTwManC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 592, 516, 251, 0, { 0, "SgTwTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 580, 36, 255, 0, { 0, "SgTwTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+        { 401, 253, -1, 0, { "SgTwDrw3.pcx", "SgTwDrw2.pcx", "SgTwDrw1.pcx", NULL, NULL }, NULL, 0, 0 },
+        { 401, 253, -1, 0, { NULL, "SgTwDrwC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 410, 90, -1, 0, { NULL, NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 403, 80, -1, 0, { NULL, NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 615, 57, -1, 0, { "SgTwTpWl.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 580, 36, 255, 0, { "SgTwTw22.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx" }, NULL, 0, 0 },
+        { 547, 66, 45, 0, { NULL, "SgTwWa62.pcx", "SgTwWa61.pcx", "SgTwWa61.pcx", "SgTwWa61.pcx" }, NULL, 0, 0 },
+        { 514, 79, 62, 0, { "SgTwWa5.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 488, 190, 78, 0, { NULL, "SgTwWa42.pcx", "SgTwWa41.pcx", "SgTwWa41.pcx", "SgTwWa41.pcx" }, NULL, 0, 0 },
+        { 471, 187, 112, 0, { "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx" }, NULL, 0, 0 },
+        { 475, 298, 130, 0, { NULL, "SgTwWa32.pcx", "SgTwWa31.pcx", "SgTwWa31.pcx", "SgTwWa31.pcx" }, NULL, 0, 0 },
+        { 517, 365, 165, 0, { "SgTwWa2.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 547, 452, 182, 0, { NULL, "SgTwWa12.pcx", "SgTwWa11.pcx", "SgTwWa11.pcx", "SgTwWa11.pcx" }, NULL, 0, 0 },
+        { 592, 516, 251, 0, { "SgTwTw12.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx" }, NULL, 0, 0 },
+        { 726, 148, 135, 0, { "SgTwMan2.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx" }, NULL, 0, 0 },
+        { 726, 148, 135, 0, { NULL, "SgTwManC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 592, 516, 251, 0, { NULL, "SgTwTw1C.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 580, 36, 255, 0, { NULL, "SgTwTw2C.pcx", NULL, NULL, NULL }, NULL, 0, 0 }
     },
     { // Inferno
-        { 409, 254, -1, 0, { "SgInDrw3.pcx", "SgInDrw2.pcx", "SgInDrw1.pcx", 0, 0 }, 0, 0, 0 },
-        { 409, 254, -1, 0, { 0, "SgInDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 403, 68, -1, 0, { "SgInMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 403, 68, -1, 0, { "SgInMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 606, 52, -1, 0, { "SgInTpWl.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 569, 27, 255, 0, { "SgInTw22.pcx", "SgInTw21.pcx", "SgInTw21.pcx", "SgInTw21.pcx", "SgInTw21.pcx" }, 0, 0, 0 },
-        { 532, 71, 45, 0, { 0, "SgInWa62.pcx", "SgInWa61.pcx", "SgInWa61.pcx", "SgInWa61.pcx" }, 0, 0, 0 },
-        { 502, 92, 62, 0, { "SgInWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 480, 151, 78, 0, { 0, "SgInWa42.pcx", "SgInWa41.pcx", "SgInWa41.pcx", "SgInWa41.pcx" }, 0, 0, 0 },
-        { 477, 221, 112, 0, { "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx" }, 0, 0, 0 },
-        { 485, 316, 130, 0, { 0, "SgInWa32.pcx", "SgInWa31.pcx", "SgInWa31.pcx", "SgInWa31.pcx" }, 0, 0, 0 },
-        { 522, 376, 165, 0, { "SgInWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 561, 451, 182, 0, { 0, "SgInWa12.pcx", "SgInWa11.pcx", "SgInWa11.pcx", "SgInWa11.pcx" }, 0, 0, 0 },
-        { 595, 514, 251, 0, { "SgInTw12.pcx", "SgInTw11.pcx", "SgInTw11.pcx", "SgInTw11.pcx", "SgInTw11.pcx" }, 0, 0, 0 },
-        { 730, 179, 135, 0, { "SgInMan2.pcx", "SgInMan1.pcx", "SgInMan1.pcx", "SgInMan1.pcx", "SgInMan1.pcx" }, 0, 0, 0 },
-        { 730, 179, 135, 0, { 0, "SgInManC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 595, 514, 251, 0, { 0, "SgInTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 569, 27, 255, 0, { 0, "SgInTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+        { 409, 254, -1, 0, { "SgInDrw3.pcx", "SgInDrw2.pcx", "SgInDrw1.pcx", NULL, NULL }, NULL, 0, 0 },
+        { 409, 254, -1, 0, { NULL, "SgInDrwC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 403, 68, -1, 0, { "SgInMoat.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 403, 68, -1, 0, { "SgInMlip.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 606, 52, -1, 0, { "SgInTpWl.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 569, 27, 255, 0, { "SgInTw22.pcx", "SgInTw21.pcx", "SgInTw21.pcx", "SgInTw21.pcx", "SgInTw21.pcx" }, NULL, 0, 0 },
+        { 532, 71, 45, 0, { NULL, "SgInWa62.pcx", "SgInWa61.pcx", "SgInWa61.pcx", "SgInWa61.pcx" }, NULL, 0, 0 },
+        { 502, 92, 62, 0, { "SgInWa5.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 480, 151, 78, 0, { NULL, "SgInWa42.pcx", "SgInWa41.pcx", "SgInWa41.pcx", "SgInWa41.pcx" }, NULL, 0, 0 },
+        { 477, 221, 112, 0, { "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx" }, NULL, 0, 0 },
+        { 485, 316, 130, 0, { NULL, "SgInWa32.pcx", "SgInWa31.pcx", "SgInWa31.pcx", "SgInWa31.pcx" }, NULL, 0, 0 },
+        { 522, 376, 165, 0, { "SgInWa2.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 561, 451, 182, 0, { NULL, "SgInWa12.pcx", "SgInWa11.pcx", "SgInWa11.pcx", "SgInWa11.pcx" }, NULL, 0, 0 },
+        { 595, 514, 251, 0, { "SgInTw12.pcx", "SgInTw11.pcx", "SgInTw11.pcx", "SgInTw11.pcx", "SgInTw11.pcx" }, NULL, 0, 0 },
+        { 730, 179, 135, 0, { "SgInMan2.pcx", "SgInMan1.pcx", "SgInMan1.pcx", "SgInMan1.pcx", "SgInMan1.pcx" }, NULL, 0, 0 },
+        { 730, 179, 135, 0, { NULL, "SgInManC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 595, 514, 251, 0, { NULL, "SgInTw1C.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 569, 27, 255, 0, { NULL, "SgInTw2C.pcx", NULL, NULL, NULL }, NULL, 0, 0 }
     },
     { // Necropolis
-        { 402, 262, -1, 0, { "SgNcDrw3.pcx", "SgNcDrw2.pcx", "SgNcDrw1.pcx", 0, 0 }, 0, 0, 0 },
-        { 402, 262, -1, 0, { 0, "SgNcDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 406, 77, -1, 0, { "SgNcMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 474, 109, -1, 0, { "SgNcMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 604, 58, -1, 0, { "SgNcTpW1.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 561, 26, 255, 0, { "SgNcTw22.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx" }, 0, 0, 0 },
-        { 543, 66, 45, 0, { 0, "SgNcWa62.pcx", "SgNcWa61.pcx", "SgNcWa61.pcx", "SgNcWa61.pcx" }, 0, 0, 0 },
-        { 504, 97, 62, 0, { "SgNcWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 487, 164, 78, 0, { 0, "SgNcWa42.pcx", "SgNcWa41.pcx", "SgNcWa41.pcx", "SgNcWa41.pcx" }, 0, 0, 0 },
-        { 474, 240, 112, 0, { "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx" }, 0, 0, 0 },
-        { 478, 323, 130, 0, { 0, "SgNcWa32.pcx", "SgNcWa31.pcx", "SgNcWa31.pcx", "SgNcWa31.pcx" }, 0, 0, 0 },
-        { 509, 372, 165, 0, { "SgNcWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 536, 445, 182, 0, { 0, "SgNcWa12.pcx", "SgNcWa11.pcx", "SgNcWa11.pcx", "SgNcWa11.pcx" }, 0, 0, 0 },
-        { 592, 512, 251, 0, { "SgNcTw12.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx" }, 0, 0, 0 },
-        { 730, 164, 135, 0, { "SgNcMan2.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx" }, 0, 0, 0 },
-        { 730, 164, 135, 0, { 0, "SgNcManC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 592, 512, 251, 0, { 0, "SgNcTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 561, 26, 255, 0, { 0, "SgNcTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+        { 402, 262, -1, 0, { "SgNcDrw3.pcx", "SgNcDrw2.pcx", "SgNcDrw1.pcx", NULL, NULL }, NULL, 0, 0 },
+        { 402, 262, -1, 0, { NULL, "SgNcDrwC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 406, 77, -1, 0, { "SgNcMoat.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 474, 109, -1, 0, { "SgNcMlip.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 604, 58, -1, 0, { "SgNcTpW1.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 561, 26, 255, 0, { "SgNcTw22.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx" }, NULL, 0, 0 },
+        { 543, 66, 45, 0, { NULL, "SgNcWa62.pcx", "SgNcWa61.pcx", "SgNcWa61.pcx", "SgNcWa61.pcx" }, NULL, 0, 0 },
+        { 504, 97, 62, 0, { "SgNcWa5.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 487, 164, 78, 0, { NULL, "SgNcWa42.pcx", "SgNcWa41.pcx", "SgNcWa41.pcx", "SgNcWa41.pcx" }, NULL, 0, 0 },
+        { 474, 240, 112, 0, { "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx" }, NULL, 0, 0 },
+        { 478, 323, 130, 0, { NULL, "SgNcWa32.pcx", "SgNcWa31.pcx", "SgNcWa31.pcx", "SgNcWa31.pcx" }, NULL, 0, 0 },
+        { 509, 372, 165, 0, { "SgNcWa2.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 536, 445, 182, 0, { NULL, "SgNcWa12.pcx", "SgNcWa11.pcx", "SgNcWa11.pcx", "SgNcWa11.pcx" }, NULL, 0, 0 },
+        { 592, 512, 251, 0, { "SgNcTw12.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx" }, NULL, 0, 0 },
+        { 730, 164, 135, 0, { "SgNcMan2.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx" }, NULL, 0, 0 },
+        { 730, 164, 135, 0, { NULL, "SgNcManC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 592, 512, 251, 0, { NULL, "SgNcTw1C.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 561, 26, 255, 0, { NULL, "SgNcTw2C.pcx", NULL, NULL, NULL }, NULL, 0, 0 }
     },
     { // Dungeon
-        { 396, 260, -1, 0, { "SgDnDrw3.pcx", "SgDnDrw2.pcx", "SgDnDrw1.pcx", 0, 0 }, 0, 0, 0 },
-        { 396, 260, -1, 0, { 0, "SgDnDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 283, 94, -1, 0, { "SgDnMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 283, 94, -1, 0, { "SgDnMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 608, 50, -1, 0, { "SgDnTpW1.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 565, 15, 255, 0, { "SgDnTw22.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx" }, 0, 0, 0 },
-        { 523, 56, 45, 0, { 0, "SgDnWa62.pcx", "SgDnWa61.pcx", "SgDnWa61.pcx", "SgDnWa61.pcx" }, 0, 0, 0 },
-        { 494, 53, 62, 0, { "SgDnWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 477, 180, 78, 0, { 0, "SgDnWa42.pcx", "SgDnWa41.pcx", "SgDnWa41.pcx", "SgDnWa41.pcx" }, 0, 0, 0 },
-        { 471, 164, 112, 0, { "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx" }, 0, 0, 0 },
-        { 471, 296, 130, 0, { 0, "SgDnWa32.pcx", "SgDnWa31.pcx", "SgDnWa31.pcx", "SgDnWa31.pcx" }, 0, 0, 0 },
-        { 522, 305, 165, 0, { "SgDnWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 559, 448, 182, 0, { 0, "SgDnWa12.pcx", "SgDnWa11.pcx", "SgDnWa11.pcx", "SgDnWa11.pcx" }, 0, 0, 0 },
-        { 600, 495, 251, 0, { "SgDnTw12.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx" }, 0, 0, 0 },
-        { 732, 162, 135, 0, { "SgDnMan2.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx" }, 0, 0, 0 },
-        { 732, 162, 135, 0, { 0, "SgDnManC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 600, 495, 251, 0, { 0, "SgDnTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 565, 15, 255, 0, { 0, "SgDnTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+        { 396, 260, -1, 0, { "SgDnDrw3.pcx", "SgDnDrw2.pcx", "SgDnDrw1.pcx", NULL, NULL }, NULL, 0, 0 },
+        { 396, 260, -1, 0, { NULL, "SgDnDrwC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 283, 94, -1, 0, { "SgDnMoat.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 283, 94, -1, 0, { "SgDnMlip.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 608, 50, -1, 0, { "SgDnTpW1.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 565, 15, 255, 0, { "SgDnTw22.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx" }, NULL, 0, 0 },
+        { 523, 56, 45, 0, { NULL, "SgDnWa62.pcx", "SgDnWa61.pcx", "SgDnWa61.pcx", "SgDnWa61.pcx" }, NULL, 0, 0 },
+        { 494, 53, 62, 0, { "SgDnWa5.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 477, 180, 78, 0, { NULL, "SgDnWa42.pcx", "SgDnWa41.pcx", "SgDnWa41.pcx", "SgDnWa41.pcx" }, NULL, 0, 0 },
+        { 471, 164, 112, 0, { "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx" }, NULL, 0, 0 },
+        { 471, 296, 130, 0, { NULL, "SgDnWa32.pcx", "SgDnWa31.pcx", "SgDnWa31.pcx", "SgDnWa31.pcx" }, NULL, 0, 0 },
+        { 522, 305, 165, 0, { "SgDnWa2.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 559, 448, 182, 0, { NULL, "SgDnWa12.pcx", "SgDnWa11.pcx", "SgDnWa11.pcx", "SgDnWa11.pcx" }, NULL, 0, 0 },
+        { 600, 495, 251, 0, { "SgDnTw12.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx" }, NULL, 0, 0 },
+        { 732, 162, 135, 0, { "SgDnMan2.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx" }, NULL, 0, 0 },
+        { 732, 162, 135, 0, { NULL, "SgDnManC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 600, 495, 251, 0, { NULL, "SgDnTw1C.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 565, 15, 255, 0, { NULL, "SgDnTw2C.pcx", NULL, NULL, NULL }, NULL, 0, 0 }
     },
     { // Stronghold
-        { 408, 267, -1, 0, { "SgStDrw3.pcx", "SgStDrw2.pcx", "SgStDrw1.pcx", 0, 0 }, 0, 0, 0 },
-        { 408, 267, -1, 0, { 0, "SgStDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 410, 90, -1, 0, { "SgStMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 410, 91, -1, 0, { "SgStMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 617, 62, -1, 0, { "SgStTpW1.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 568, 30, 255, 0, { "SgStTw22.pcx", "SgStTw21.pcx", "SgStTw21.pcx", "SgStTw21.pcx", "SgStTw21.pcx" }, 0, 0, 0 },
-        { 534, 69, 45, 0, { 0, "SgStWa62.pcx", "SgStWa61.pcx", "SgStWa61.pcx", "SgStWa61.pcx" }, 0, 0, 0 },
-        { 499, 107, 62, 0, { "SgStWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 476, 189, 78, 0, { 0, "SgStWa42.pcx", "SgStWa41.pcx", "SgStWa41.pcx", "SgStWa41.pcx" }, 0, 0, 0 },
-        { 478, 235, 112, 0, { "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx" }, 0, 0, 0 },
-        { 483, 304, 130, 0, { 0, "SgStWa32.pcx", "SgStWa31.pcx", "SgStWa31.pcx", "SgStWa31.pcx" }, 0, 0, 0 },
-        { 511, 380, 165, 0, { "SgStWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 553, 440, 182, 0, { 0, "SgStWa12.pcx", "SgStWa11.pcx", "SgStWa11.pcx", "SgStWa11.pcx" }, 0, 0, 0 },
-        { 586, 508, 251, 0, { "SgStTw12.pcx", "SgStTw11.pcx", "SgStTw11.pcx", "SgStTw11.pcx", "SgStTw11.pcx" }, 0, 0, 0 },
-        { 731, 168, 135, 0, { "SgStMan2.pcx", "SgStMan1.pcx", "SgStMan1.pcx", "SgStMan1.pcx", "SgStMan1.pcx" }, 0, 0, 0 },
-        { 731, 168, 135, 0, { 0, "SgStManC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 586, 508, 251, 0, { 0, "SgStTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 568, 30, 255, 0, { 0, "SgStTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+        { 408, 267, -1, 0, { "SgStDrw3.pcx", "SgStDrw2.pcx", "SgStDrw1.pcx", NULL, NULL }, NULL, 0, 0 },
+        { 408, 267, -1, 0, { NULL, "SgStDrwC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 410, 90, -1, 0, { "SgStMoat.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 410, 91, -1, 0, { "SgStMlip.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 617, 62, -1, 0, { "SgStTpW1.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 568, 30, 255, 0, { "SgStTw22.pcx", "SgStTw21.pcx", "SgStTw21.pcx", "SgStTw21.pcx", "SgStTw21.pcx" }, NULL, 0, 0 },
+        { 534, 69, 45, 0, { NULL, "SgStWa62.pcx", "SgStWa61.pcx", "SgStWa61.pcx", "SgStWa61.pcx" }, NULL, 0, 0 },
+        { 499, 107, 62, 0, { "SgStWa5.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 476, 189, 78, 0, { NULL, "SgStWa42.pcx", "SgStWa41.pcx", "SgStWa41.pcx", "SgStWa41.pcx" }, NULL, 0, 0 },
+        { 478, 235, 112, 0, { "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx" }, NULL, 0, 0 },
+        { 483, 304, 130, 0, { NULL, "SgStWa32.pcx", "SgStWa31.pcx", "SgStWa31.pcx", "SgStWa31.pcx" }, NULL, 0, 0 },
+        { 511, 380, 165, 0, { "SgStWa2.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 553, 440, 182, 0, { NULL, "SgStWa12.pcx", "SgStWa11.pcx", "SgStWa11.pcx", "SgStWa11.pcx" }, NULL, 0, 0 },
+        { 586, 508, 251, 0, { "SgStTw12.pcx", "SgStTw11.pcx", "SgStTw11.pcx", "SgStTw11.pcx", "SgStTw11.pcx" }, NULL, 0, 0 },
+        { 731, 168, 135, 0, { "SgStMan2.pcx", "SgStMan1.pcx", "SgStMan1.pcx", "SgStMan1.pcx", "SgStMan1.pcx" }, NULL, 0, 0 },
+        { 731, 168, 135, 0, { NULL, "SgStManC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 586, 508, 251, 0, { NULL, "SgStTw1C.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 568, 30, 255, 0, { NULL, "SgStTw2C.pcx", NULL, NULL, NULL }, NULL, 0, 0 }
     },
     { // Fortress
-        { 393, 253, -1, 0, { "SgFrDrw3.pcx", "SgFrDrw2.pcx", "SgFrDrw1.pcx", 0, 0 }, 0, 0, 0 },
-        { 393, 253, -1, 0, { 0, "SgFrDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 383, 95, -1, 0, { "SgFrMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 376, 70, -1, 0, { "SgFrMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 599, 62, -1, 0, { "SgFrTpWl.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 548, 27, 255, 0, { "SgFrTw22.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx" }, 0, 0, 0 },
-        { 526, 80, 45, 0, { 0, "SgFrWa62.pcx", "SgFrWa61.pcx", "SgFrWa61.pcx", "SgFrWa61.pcx" }, 0, 0, 0 },
-        { 508, 130, 62, 0, { "SgFrWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 498, 184, 78, 0, { 0, "SgFrWa42.pcx", "SgFrWa41.pcx", "SgFrWa41.pcx", "SgFrWa41.pcx" }, 0, 0, 0 },
-        { 483, 236, 112, 0, { "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx" }, 0, 0, 0 },
-        { 487, 306, 130, 0, { 0, "SgFrWa32.pcx", "SgFrWa31.pcx", "SgFrWa31.pcx", "SgFrWa31.pcx" }, 0, 0, 0 },
-        { 522, 382, 165, 0, { "SgFrWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 546, 441, 182, 0, { 0, "SgFrWa12.pcx", "SgFrWa11.pcx", "SgFrWa11.pcx", "SgFrWa11.pcx" }, 0, 0, 0 },
-        { 599, 505, 251, 0, { "SgFrTw12.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx" }, 0, 0, 0 },
-        { 721, 178, 135, 0, { "SgFrMan2.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx" }, 0, 0, 0 },
-        { 721, 178, 135, 0, { 0, "SgFrManC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 599, 505, 251, 0, { 0, "SgFrTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 548, 27, 255, 0, { 0, "SgFrTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+        { 393, 253, -1, 0, { "SgFrDrw3.pcx", "SgFrDrw2.pcx", "SgFrDrw1.pcx", NULL, NULL }, NULL, 0, 0 },
+        { 393, 253, -1, 0, { NULL, "SgFrDrwC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 383, 95, -1, 0, { "SgFrMoat.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 376, 70, -1, 0, { "SgFrMlip.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 599, 62, -1, 0, { "SgFrTpWl.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 548, 27, 255, 0, { "SgFrTw22.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx" }, NULL, 0, 0 },
+        { 526, 80, 45, 0, { NULL, "SgFrWa62.pcx", "SgFrWa61.pcx", "SgFrWa61.pcx", "SgFrWa61.pcx" }, NULL, 0, 0 },
+        { 508, 130, 62, 0, { "SgFrWa5.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 498, 184, 78, 0, { NULL, "SgFrWa42.pcx", "SgFrWa41.pcx", "SgFrWa41.pcx", "SgFrWa41.pcx" }, NULL, 0, 0 },
+        { 483, 236, 112, 0, { "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx" }, NULL, 0, 0 },
+        { 487, 306, 130, 0, { NULL, "SgFrWa32.pcx", "SgFrWa31.pcx", "SgFrWa31.pcx", "SgFrWa31.pcx" }, NULL, 0, 0 },
+        { 522, 382, 165, 0, { "SgFrWa2.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 546, 441, 182, 0, { NULL, "SgFrWa12.pcx", "SgFrWa11.pcx", "SgFrWa11.pcx", "SgFrWa11.pcx" }, NULL, 0, 0 },
+        { 599, 505, 251, 0, { "SgFrTw12.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx" }, NULL, 0, 0 },
+        { 721, 178, 135, 0, { "SgFrMan2.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx" }, NULL, 0, 0 },
+        { 721, 178, 135, 0, { NULL, "SgFrManC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 599, 505, 251, 0, { NULL, "SgFrTw1C.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 548, 27, 255, 0, { NULL, "SgFrTw2C.pcx", NULL, NULL, NULL }, NULL, 0, 0 }
     },
     { // Conflux
-        { 409, 254, -1, 0, { "SgElDrw3.pcx", "SgElDrw2.pcx", "SgElDrw1.pcx", 0, 0 }, 0, 0, 0 },
-        { 409, 254, -1, 0, { 0, "SgElDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 407, 80, -1, 0, { "SgElMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 407, 80, -1, 0, { "SgElMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 600, 50, -1, 0, { "SgElTpWl.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 576, 28, 255, 0, { "SgElTw22.pcx", "SgElTw21.pcx", "SgElTw21.pcx", "SgElTw22.pcx", 0 }, 0, 0, 0 },
-        { 521, 41, 45, 0, { 0, "SgElWa62.pcx", "SgElWa61.pcx", "SgElWa61.pcx", 0 }, 0, 0, 0 },
-        { 490, 97, 62, 0, { "SgElWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 471, 147, 78, 0, { 0, "SgElWa42.pcx", "SgElWa41.pcx", "SgElWa41.pcx", 0 }, 0, 0, 0 },
-        { 486, 232, 112, 0, { "SgElArch.pcx", "SgElArch.pcx", "SgElArch.pcx", "SgElArch.pcx", 0 }, 0, 0, 0 },
-        { 468, 299, 130, 0, { 0, "SgElWa32.pcx", "SgElWa31.pcx", "SgElWa31.pcx", 0 }, 0, 0, 0 },
-        { 509, 346, 165, 0, { "SgElWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
-        { 509, 346, 182, 0, { 0, "SgElWa12.pcx", "SgElWa11.pcx", "SgElWa11.pcx", 0 }, 0, 0, 0 },
-        { 608, 505, 251, 0, { "SgElTw12.pcx", "SgElTw11.pcx", "SgElTw11.pcx", "SGElTw11.pcx", 0 }, 0, 0, 0 },
-        { 736, 159, 135, 0, { "SgElMan2.pcx", "SgElMan1.pcx", "SgElMan1.pcx", "SgElMan1.pcx", 0 }, 0, 0, 0 },
-        { 736, 159, 135, 0, { 0, "SgElManC.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 608, 505, 251, 0, { 0, "SgElTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
-        { 576, 28, 255, 0, { 0, "SgElTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+        { 409, 254, -1, 0, { "SgElDrw3.pcx", "SgElDrw2.pcx", "SgElDrw1.pcx", NULL, NULL }, NULL, 0, 0 },
+        { 409, 254, -1, 0, { NULL, "SgElDrwC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 407, 80, -1, 0, { "SgElMoat.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 407, 80, -1, 0, { "SgElMlip.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 600, 50, -1, 0, { "SgElTpWl.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 576, 28, 255, 0, { "SgElTw22.pcx", "SgElTw21.pcx", "SgElTw21.pcx", "SgElTw22.pcx", NULL }, NULL, 0, 0 },
+        { 521, 41, 45, 0, { NULL, "SgElWa62.pcx", "SgElWa61.pcx", "SgElWa61.pcx", NULL }, NULL, 0, 0 },
+        { 490, 97, 62, 0, { "SgElWa5.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 471, 147, 78, 0, { NULL, "SgElWa42.pcx", "SgElWa41.pcx", "SgElWa41.pcx", NULL }, NULL, 0, 0 },
+        { 486, 232, 112, 0, { "SgElArch.pcx", "SgElArch.pcx", "SgElArch.pcx", "SgElArch.pcx", NULL }, NULL, 0, 0 },
+        { 468, 299, 130, 0, { NULL, "SgElWa32.pcx", "SgElWa31.pcx", "SgElWa31.pcx", NULL }, NULL, 0, 0 },
+        { 509, 346, 165, 0, { "SgElWa2.pcx", NULL, NULL, NULL, NULL }, NULL, 0, 0 },
+        { 509, 346, 182, 0, { NULL, "SgElWa12.pcx", "SgElWa11.pcx", "SgElWa11.pcx", NULL }, NULL, 0, 0 },
+        { 608, 505, 251, 0, { "SgElTw12.pcx", "SgElTw11.pcx", "SgElTw11.pcx", "SGElTw11.pcx", NULL }, NULL, 0, 0 },
+        { 736, 159, 135, 0, { "SgElMan2.pcx", "SgElMan1.pcx", "SgElMan1.pcx", "SgElMan1.pcx", NULL }, NULL, 0, 0 },
+        { 736, 159, 135, 0, { NULL, "SgElManC.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 608, 505, 251, 0, { NULL, "SgElTw1C.pcx", NULL, NULL, NULL }, NULL, 0, 0 },
+        { 576, 28, 255, 0, { NULL, "SgElTw2C.pcx", NULL, NULL, NULL }, NULL, 0, 0 }
     }
 };
 DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[WALL_TARGET_COUNT] = {
@@ -550,7 +550,7 @@ DATA(0x00694f08) const SLimitData combatManager::s_leftHeroLimits(0, 16, 57, 127
 // Retail initial data; dimensions follow the typed table consumers.
 DATA(0x0063d2a0) const char* const g_townCombatBackgrounds[TOWN_TYPE_COUNT] = { "SgCsBack.pcx", "SgRmBack.pcx", "SgTwBack.pcx", "SgInBack.pcx", "SgNcBack.pcx", "SgDnBack.pcx", "SgStBack.pcx", "SgFrBack.pcx", "SgElBack.pcx" };
 DATA(0x0063d2c8) const char* const g_magicTerrainCombatBackgrounds[10] = {
-    0, "CmBkMag.pcx", "CmBkCur.pcx", "CmBkHG.pcx", "CmBkEF.pcx", "CmBkCF.pcx", "CmBkLP.pcx", "CmBkFF.pcx",
+    NULL, "CmBkMag.pcx", "CmBkCur.pcx", "CmBkHG.pcx", "CmBkEF.pcx", "CmBkCF.pcx", "CmBkLP.pcx", "CmBkFF.pcx",
     "CmBkRK.pcx", "CmBkMC.pcx"
 };
 // getBackgroundName indexes the rows with the hero's terrain type, so there
@@ -565,8 +565,8 @@ DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[kNumTerrainTypes][
     { "CmBkRgh.pcx", "CmBkRgh.pcx", "CmBkRgh.pcx" },
     { "CmBkSub.pcx", "CmBkSub.pcx", "CmBkSub.pcx" },
     { "CmBkLava.pcx", "CmBkLava.pcx", "CmBkLava.pcx" },
-    { 0, 0, 0 },
-    { 0, 0, 0 }
+    { NULL, NULL, NULL },
+    { NULL, NULL, NULL }
 };
 DATA(0x0063bd18) const int g_moatDamage[TOWN_TYPE_COUNT] = { 70, 70, 150, 90, 70, 90, 70, 90, 70 };
 DATA(0x0063abe0) const long g_castleWallGateTargets[5] = { 6, 8, 9, 10, 12 };
@@ -584,7 +584,7 @@ VA(0x00462760, 0x127)
 DC_ADDRESS(0x05d3e0, 0x158)
 MAC_ADDRESS(0x06de48, 0x150)
 combatManager::combatManager()
-    : m_combatWindow(0)
+    : m_combatWindow(NULL)
 {
     m_actingSide = 1;
     m_actingSlot = -1;
@@ -593,12 +593,12 @@ combatManager::combatManager()
     m_saveBiggestExtent = 0;
     m_limitToExtent = 0;
     m_computeExtentOnly = 0;
-    m_lastMovedArmy = 0;
+    m_lastMovedArmy = NULL;
     m_highlighterOn = 0;
     m_combatCommand = 0;
     m_fortificationLevel = eFortificationNone;
     m_combatShowIt = 0;
-    m_netMsgHandlerPause = 0;
+    m_netMsgHandlerPause = NULL;
 }
 
 VA_COMPGEN(0x00462890, 0x15, DEFAULT_CTOR_CLOSURE, set)
@@ -687,7 +687,7 @@ int combatManager::open(int newPriority)
 
     m_backgroundDrawn = 0;
     g_combatActive = m_combatCycleType;
-    m_powSprite = 0;
+    m_powSprite = NULL;
     m_powSpellEffect = -1;
 
     int leftTactics = m_heroes[0]
@@ -709,7 +709,7 @@ int combatManager::open(int newPriority)
     m_combatShowIt = 1;
 
     if (isQuickCombat()) {
-        m_combatWindow = 0;
+        m_combatWindow = NULL;
     } else {
         m_combatWindow = new TCombatWindow(m_creaturePlacement);
         if (!m_combatWindow)
@@ -799,7 +799,7 @@ void combatManager::close()
     freeIcons();
     if (m_combatWindow) {
         delete m_combatWindow;
-        m_combatWindow = 0;
+        m_combatWindow = NULL;
     }
     delete m_netMsgHandlerPause;
     m_status = 0;
@@ -829,11 +829,11 @@ void combatManager::loadIcons()
                 if ((g_game->m_gameVersion >= 2
                         || m_defendingTown->m_type != TOWN_STRONGHOLD
                         || wall != WALL_TRAITS_ROW_MOAT)
-                        && traits[wall].m_filenames[icon] != 0)
+                        && traits[wall].m_filenames[icon] != NULL)
                     m_wallImages[wall][icon] = ResourceManager::GetBitmap816(
                         traits[wall].m_filenames[icon]);
                 else
-                    m_wallImages[wall][icon] = 0;
+                    m_wallImages[wall][icon] = NULL;
             }
         }
     } else {
@@ -854,8 +854,8 @@ void combatManager::loadIcons()
             setPlayerPaletteColors(cmbtHeroFlag[side]->GetPalette(),
                 m_playerIds[side]);
         } else {
-            cmbtHero[side] = 0;
-            cmbtHeroFlag[side] = 0;
+            cmbtHero[side] = NULL;
+            cmbtHeroFlag[side] = NULL;
         }
     }
 }
@@ -1102,7 +1102,7 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
         m_fortificationLevel = eFortificationNone;
         m_moatIsWide = 0;
         m_moatOn = 0;
-        m_defendingTown = 0;
+        m_defendingTown = NULL;
     }
     determineCombatTerrain();
     m_isSurrounded = isSurrounded;
@@ -1223,7 +1223,7 @@ void combatManager::initNonVisualVars()
     m_sideRetreated[0] = 0;
     m_sideRetreated[1] = 0;
     m_winner = 3;
-    m_lastMovedArmy = 0;
+    m_lastMovedArmy = NULL;
     turnOffHighlighter(0);
 
     setupAdjacencyArray();
@@ -1681,7 +1681,7 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
     }
     for (int pass = (m_inSecondPhase != 0) + 1; pass <= 2; pass++) {
         while (1) {
-            army* best = 0;
+            army* best = NULL;
             for (int side = 0; side < 2; side++) {
                 for (int i = 0; i < m_numArmies[side]; i++) {
                     army* stack = &m_armies[side][i];
@@ -1849,7 +1849,7 @@ void combatManager::setNextArmy(int group, int index)
             break;
         }
     }
-    m_lastMovedArmy = 0;
+    m_lastMovedArmy = NULL;
     getControl();
 }
 
@@ -2299,7 +2299,7 @@ void combatManager::setupAndLoadObstacles()
                             SPELL_LAND_MINE, m_spellPower[1],
                             m_heroes[1]->getSpellLevel(SPELL_LAND_MINE,
                                                        m_magicTerrain),
-                            0, 0, 0, 0);
+                            NULL, NULL, NULL, 0);
                         if (cast > damage)
                             damage = cast;
                     }
@@ -2308,10 +2308,10 @@ void combatManager::setupAndLoadObstacles()
                         SPELL_LAND_MINE, m_spellPower[1],
                         m_heroes[1]->getSpellLevel(SPELL_LAND_MINE,
                                                    m_magicTerrain),
-                        0, 0, 0, 0);
+                        NULL, NULL, NULL, 0);
                 } else {
                     damage = computeSpellDamage(SPELL_LAND_MINE, 3, 0,
-                                                0, 0, 0, 0);
+                                                NULL, NULL, NULL, 0);
                 }
 
                 TObstacle newLandmine;
@@ -2486,7 +2486,7 @@ void combatManager::removeObstacle(int index)
     anchor.m_attributes &= ~hexcell::obstacleOrigin;
     anchor.m_obstacleIndex = -1;
     ResourceManager::Dispose(obstacle->m_sprite);
-    obstacle->m_sprite = 0;
+    obstacle->m_sprite = NULL;
 }
 
 VA(0x00466c50, 0x1A1)
@@ -2737,7 +2737,7 @@ unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIn
         return 0;
     if (inCastle(sourceIndex) || !inCastle(destIndex))
         return 0;
-    if (m_heroes[side] != 0
+    if (m_heroes[side] != NULL
             && (m_heroes[side]->isWieldingArtifact(ARTIFACT_GOLDEN_BOW)
                 || m_heroes[side]->isWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER)))
         return 0;
@@ -3543,7 +3543,7 @@ void combatManager::updateArmyLuckAndMorale()
             int ownerSide = stack.getControllingSide();
             town* ownerTown;
             if (!ownerSide)
-                ownerTown = 0;
+                ownerTown = NULL;
             else
                 ownerTown = m_defendingTown;
             stack.setLuck(m_heroes[ownerSide], m_armyGroups[ownerSide],
@@ -3739,7 +3739,7 @@ MAC_ADDRESS(0x076598, 0x144)
 unsigned char combatManager::applyMoatDamage(
     int hex, army* stack, unsigned char playSound)
 {
-    if (g_game->m_gameVersion >= 2 && stack->m_numTroops && isInMoat(hex, 0)) {
+    if (g_game->m_gameVersion >= 2 && stack->m_numTroops && isInMoat(hex, NULL)) {
         if (playSound)
             stack->stopSample(army::WALK_SAMPLE);
 

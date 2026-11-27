@@ -30,7 +30,7 @@ VA(0x0044df70, 0xA3)
 DC_ADDRESS(0x050b00, 0x104)
 MAC_ADDRESS(0x05be20, 0xc4)
 Bitmap16Bit::Bitmap16Bit(int w, int h)
-    : resource(0, RESOURCE_TYPE_NONE),
+    : resource(NULL, RESOURCE_TYPE_NONE),
       ImageSize(w * h * 2), Width(w), Height(h), Pitch(w * 2)
 {
     DataSize = ImageSize;
@@ -39,7 +39,7 @@ Bitmap16Bit::Bitmap16Bit(int w, int h)
         map = new unsigned short[DataSize / 2];
         referenced = 0;
     } else {
-        map = 0;
+        map = NULL;
     }
 }
 
@@ -58,7 +58,7 @@ Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
     if (w > 0 && h > 0)
         map = new unsigned short[DataSize / 2];
     else
-        map = 0;
+        map = NULL;
 }
 
 // Original: Bitmap16Bit::Bitmap16Bit; bitmap16.cpp:152
@@ -81,7 +81,7 @@ Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h,
 DC_ADDRESS(0x050e04, 0xb8)
 Bitmap16Bit::Bitmap16Bit(const char* name, const char* path)
     : resource(name, RESOURCE_TYPE_BITMAP16),
-      DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(0)
+      DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(NULL)
 {
     char fileName[261];
     strcpy(fileName, path);
@@ -211,7 +211,7 @@ void Bitmap16Bit::clear()
     if (map) {
         if (!referenced)
             delete[] map;
-        map = 0;
+        map = NULL;
         referenced = 0;
     }
 }

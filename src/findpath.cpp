@@ -43,9 +43,9 @@ DC_ADDRESS(0x09ed88, 0x80)
 MAC_ADDRESS(0x0c4594, 0xc8)
 searchArray::searchArray()
 {
-    m_cellData = 0;
-    m_isMoatSlowed = 0;
-    m_dangerZones = 0;
+    m_cellData = NULL;
+    m_isMoatSlowed = NULL;
+    m_dangerZones = NULL;
     m_maxQueueCount = 0;
     m_payTransitionCosts = 0;
     m_thisTurnsMovement = 0;
@@ -93,8 +93,8 @@ void searchArray::close()
         delete[] m_cellData;
     if (m_isMoatSlowed)
         delete[] m_isMoatSlowed;
-    m_cellData = 0;
-    m_isMoatSlowed = 0;
+    m_cellData = NULL;
+    m_isMoatSlowed = NULL;
 }
 
 // Dreamcast findpath.cpp:116 calls FindPath.h get_cell; inlined.
@@ -307,7 +307,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
     }
 
     long danger = 0;
-    if (m_dangerZones != 0) {
+    if (m_dangerZones != NULL) {
         danger = getDangerCell(m_dangerZones, point);
         if (cost > m_thisTurnsMovement) {
             danger = min(oldCell.m_dangerValue, danger);
@@ -896,7 +896,7 @@ MAC_ADDRESS(0x0c64ac, 0x2c0)  // anchor-global
 // Original SeedCombatPosition@@QAAXPBVarmy@@JJ_NJ: placement is bool.
 void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, bool inPlacementPhase, long baseSpeed)
 {
-    if (m_cellData == 0)
+    if (m_cellData == NULL)
         init();
     if (inPlacementPhase) {
         baseSpeed = 1000;
@@ -932,7 +932,7 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
         }
     }
 
-    if (thisArmy->canShoot(0) && !inPlacementPhase
+    if (thisArmy->canShoot(NULL) && !inPlacementPhase
             && thisArmy->m_creatureType != CREATURE_CATAPULT) {
         long other = 1 - currentGroup;
         const army* enemy = g_combatManager->m_armies[other];
@@ -954,14 +954,14 @@ DC_ADDRESS(0x0a0630, 0x1d2)
 MAC_ADDRESS(0x0c676c, 0x29c)
 void searchArray::markTeleport(const army* currentArmy, long currentGroup)
 {
-    if (m_cellData == 0)
+    if (m_cellData == NULL)
         init();
 
     for (long hex = 0; hex < COMBAT_GRID_CELLS; ++hex) {
         pathCell* cell = getHex(hex);
         cell->m_x = static_cast<short>(hex);
         if (!g_combatManager->inInvisibleColumn(hex)
-                && currentArmy->canFit(hex, 0, 0)
+                && currentArmy->canFit(hex, 0, NULL)
                 && g_combatManager->isValidTeleport(currentArmy, hex)) {
             g_combatManager->m_cells[hex].m_validMove = 1;
             cell->m_flightCost = 0;
@@ -1112,7 +1112,7 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
     if (!combatManager::validHex(hex))
         return 0;
     const army* enemy = g_combatManager->m_cells[hex].getArmy();
-    if (enemy == 0)
+    if (enemy == NULL)
         return 0;
     if (enemy->getOwningSide() == currentGroup)
         return 0;
@@ -1147,11 +1147,11 @@ bool searchArray::findCombatPath(const army* currentArmy,
                                           bool inPlacementPhase,
                                           long limit, long baseSpeed)
 {
-    if (currentArmy == 0)
+    if (currentArmy == NULL)
         return 0;
 
     unsigned char siegePressure = 0;
-    if (g_combatManager->m_defendingTown != 0
+    if (g_combatManager->m_defendingTown != NULL
             && g_combatManager->isComputerAction(currentArmy)) {
         if (currentGroup == 1
                 || g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP)
@@ -1182,7 +1182,7 @@ bool searchArray::findCombatPath(const army* currentArmy,
     }
 
     long startHex = currentArmy->m_gridIndex;
-    if (m_cellData == 0)
+    if (m_cellData == NULL)
         init();
     setMoat(currentArmy);
 
@@ -1242,7 +1242,7 @@ bool searchArray::findCombatPath(const army* currentArmy,
             if (moat && baseSpeed > 0)
                 step = baseSpeed - cost % baseSpeed;
 
-            if (!currentArmy->canFit(adjacent, 0, 0)
+            if (!currentArmy->canFit(adjacent, 0, NULL)
                     || (siegePressure && moat)) {
                 long enemyCost = pc.m_cost;
                 unsigned char blocked = 0;

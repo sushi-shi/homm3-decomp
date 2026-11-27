@@ -22,7 +22,7 @@ sample::sample(const char* newName, const void* src, long len,
     memSample.m_data = new char[len];
     memSample.m_size = len;
     memcpy(memSample.m_data, src, len);
-    memSample.memHSample = 0;
+    memSample.memHSample = NULL;
 }
 
 VA_COMPGEN(0x00566e30, 0x21, SCALAR_DELETING_DTOR, sample)
@@ -33,7 +33,7 @@ MAC_ADDRESS(0x15db68, 0x8c)
 sample::~sample()
 {
     delete[] memSample.m_data;
-    memSample.m_data = 0;
+    memSample.m_data = NULL;
     memSample.m_size = 0;
     memSample.memVolume = 0;
 }

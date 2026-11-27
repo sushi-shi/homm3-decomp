@@ -36,7 +36,7 @@ VA(0x00522650, 0x16)
 DC_ADDRESS(0x10a2a8, 0x48)
 MAC_ADDRESS(0x13b73c, 0x40)
 TPalette16::TPalette16()
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
 }
 
@@ -48,7 +48,7 @@ VA(0x005226a0, 0x2D)
 DC_ADDRESS(0x10a2f0, 0x48)
 MAC_ADDRESS(0x13b77c, 0x68)
 TPalette16::TPalette16(const unsigned short* newData)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     memcpy(Palette, newData, sizeof(Palette));
 }
@@ -58,7 +58,7 @@ DC_ADDRESS(0x10a338, 0x72)
 MAC_ADDRESS(0x13b7e4, 0x88)
 TPalette16::TPalette16(const TPalette24& p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     Convert24to16(p24.Palette, rbits, rshift, gbits, gshift,
                   bbits, bshift);
@@ -68,7 +68,7 @@ TPalette16::TPalette16(const TPalette24& p24, int rbits, int rshift,
 DC_ADDRESS(0x10a3ac, 0x6e)
 TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     ConvertRGBAto16(rgba, rbits, rshift, gbits, gshift, bbits, bshift);
 }
@@ -77,7 +77,7 @@ TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift,
 DC_ADDRESS(0x10a41c, 0x7c)
 TPalette16::TPalette16(const tagRGBQUAD* quad, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     ConvertRGBQUADto16(quad, rbits, rshift, gbits, gshift, bbits, bshift);
 }
@@ -98,7 +98,7 @@ VA(0x00522810, 0xC6)
 DC_ADDRESS(0x10a508, 0xd8)
 MAC_ADDRESS(0x13b8f0, 0x120)
 TPalette16::TPalette16(const TPalette24& p24)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     unsigned short* dst = Palette;
     const unsigned int redScale = (red_mask + red_mask) & ~red_mask;
@@ -117,7 +117,7 @@ TPalette16::TPalette16(const TPalette24& p24)
 // Original: TPalette16::TPalette16; palette.cpp:116
 DC_ADDRESS(0x10a5e0, 0xc2)
 TPalette16::TPalette16(const TRGBA* rgba)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     const unsigned int redScale = (red_mask + red_mask) & ~red_mask;
     const unsigned int greenScale = (green_mask + green_mask) & ~green_mask;
@@ -135,7 +135,7 @@ TPalette16::TPalette16(const TRGBA* rgba)
 // Original: TPalette16::TPalette16; palette.cpp:140
 DC_ADDRESS(0x10a6a4, 0xd8)
 TPalette16::TPalette16(const tagRGBQUAD* quad)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     const unsigned int redScale = (red_mask + red_mask) & ~red_mask;
     const unsigned int greenScale = (green_mask + green_mask) & ~green_mask;
@@ -175,7 +175,7 @@ VA(0x005228e0, 0x30)
 DC_ADDRESS(0x10a854, 0x4a)
 MAC_ADDRESS(0x13ba10, 0x68)
 TPalette16::TPalette16(const TPalette16* copy)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     memcpy(Palette, copy->Palette, sizeof(Palette));
 }
@@ -526,7 +526,7 @@ VA(0x00522e30, 0x16)
 DC_ADDRESS(0x10b898, 0x6c)
 MAC_ADDRESS(0x13c1ec, 0x40)  // null-name resource ctor + TPalette24 vtable
 TPalette24::TPalette24()
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
 }
 
@@ -536,7 +536,7 @@ VA(0x00522e80, 0x2D)
 DC_ADDRESS(0x10b904, 0x48)
 MAC_ADDRESS(0x13c22c, 0x68)
 TPalette24::TPalette24(const unsigned char* data)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     memcpy(Palette, data, sizeof(Palette));
 }
@@ -545,7 +545,7 @@ VA(0x00522eb0, 0x42)
 DC_ADDRESS(0x10b94c, 0x78)
 MAC_ADDRESS(0x13c294, 0x124)
 TPalette24::TPalette24(const TRGBA* rgba)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     for (int index = 0; index < 256; ++index) {
         Palette[3 * index + 0] = rgba->Red;
@@ -558,7 +558,7 @@ TPalette24::TPalette24(const TRGBA* rgba)
 // Original: TPalette24::TPalette24; palette.cpp:622
 DC_ADDRESS(0x10b9c4, 0x78)
 TPalette24::TPalette24(const tagRGBQUAD* quad)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     for (int index = 0; index < 256; ++index) {
         Palette[3 * index] = quad->rgbRed;
@@ -572,7 +572,7 @@ VA(0x00522f00, 0x30)
 DC_ADDRESS(0x10ba3c, 0x4a)
 MAC_ADDRESS(0x13c3b8, 0x68)
 TPalette24::TPalette24(const TPalette24* copy)
-    : resource(0, RESOURCE_TYPE_NONE)
+    : resource(NULL, RESOURCE_TYPE_NONE)
 {
     memcpy(Palette, copy->Palette, sizeof(Palette));
 }

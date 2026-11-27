@@ -23,7 +23,7 @@ void InitializePrimarySkillTraitsTable()
 {
     DATA_COMPGEN_GUARD(0x005a2570, primarySkillNamesGuard, pNames)
     VA_COMPGEN(0x00494d5d, 0x16, STATIC_DTOR, pNames)
-    DATA(0x005a2568) static TAutoArrayPtr<char> pNames(0);
+    DATA(0x005a2568) static TAutoArrayPtr<char> pNames(NULL);
     TResourcePtr<TTextResource> pTextResource(ResourceManager::GetText("priskill.txt"));
     if (!pTextResource.get())
         throw TRuntimeError();

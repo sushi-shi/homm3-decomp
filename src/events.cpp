@@ -965,7 +965,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
             return;
         }
 
-        if (doCombat(point, currentHero, &currentHero->m_army, -1, 0, 0,
+        if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
                      &treasure->m_guardians, -1, 1, 0))
             return;
         currentHero->checkLevel();
@@ -1433,7 +1433,7 @@ void advManager::doEventBlackBox(hero* currentHero, NewmapCell* cell,
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BLACK_BOX_GUARDED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        if (doCombat(point, currentHero, &currentHero->m_army, -1, 0, 0,
+        if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
                      &blackBox->m_guardians, -1, 1, 0))
             return;
         currentHero->checkLevel();
@@ -1471,7 +1471,7 @@ void advManager::handleMapEvent(hero* currentHero, NewmapCell* cell,
                 text = "";
             }
         }
-        if (doCombat(point, currentHero, &currentHero->m_army, -1, 0, 0,
+        if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
                      &blackBox->m_guardians, -1, 1, 0))
             return;
         currentHero->checkLevel();
@@ -1709,7 +1709,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
             } else if (aiValueOfEvent(currentHero, point) <= 0) {
                 return;
             }
-            if (doCombat(point, currentHero, &currentHero->m_army, -1, 0, 0,
+            if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
                          &currentGenerator.m_guards, -1, 1, 0))
                 return;
         }
@@ -2145,7 +2145,7 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    doCombat(point, currentHero, &currentHero->m_army, otherHero->m_owner, 0,
+    doCombat(point, currentHero, &currentHero->m_army, otherHero->m_owner, NULL,
              otherHero, &otherHero->m_army, -1, 1, 0);
 }
 
@@ -2530,7 +2530,7 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
                 normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MINE_CLEARED],
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else if (doCombat(point, currentHero, &currentHero->m_army,
-                            currentMine->m_playerOwner, 0, 0,
+                            currentMine->m_playerOwner, NULL, NULL,
                             &currentMine->m_guards, -1, 1, 0)) {
             return;
         }
@@ -2840,7 +2840,7 @@ void advManager::doCustomResource(NewmapCell* cell, hero* currentHero,
             return;
         }
 
-        if (doCombat(point, currentHero, &currentHero->m_army, -1, 0, 0,
+        if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
                      &treasure->m_guardians, -1, 1, 0))
             return;
         currentHero->checkLevel();
@@ -3184,7 +3184,7 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
             return;
         }
 
-        if (doCombat(point, currentHero, &currentHero->m_army, -1, 0, 0,
+        if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
                      &treasure->m_guardians, -1, 1, 0))
             return;
         currentHero->checkLevel();
@@ -4248,7 +4248,7 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
     type_point exitPoint;
     if (g_game->getRandomWhirlpool(cell->m_extraInfo, exitPoint)) {
         stopCursor(1);
-        g_advManager->teleportTo(currentHero, exitPoint, 0, 0, 1, 0);
+        g_advManager->teleportTo(currentHero, exitPoint, NULL, 0, 1, 0);
     }
 }
 
@@ -4451,7 +4451,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                                 g_netLocalGamePos)) {
             if (thisGarrison->m_garrisonArmy.hasCreatures()) {
                 if (doCombat(point, currentHero, &currentHero->m_army,
-                             thisGarrison->m_playerOwner, 0, 0,
+                             thisGarrison->m_playerOwner, NULL, NULL,
                              &thisGarrison->m_garrisonArmy, -1, 1, 0))
                     break;
             }
@@ -4817,7 +4817,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                 break;
         }
         if (exitCell->m_type == UNDERGROUND_GATE)
-            g_advManager->teleportTo(currentHero, exitPoint, 0, 0, 1, 0);
+            g_advManager->teleportTo(currentHero, exitPoint, NULL, 0, 1, 0);
         break;
     }
     case UNIVERSITY:
@@ -4852,7 +4852,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             recruitUnit* unitRecruiter = new recruitUnit(
                 currentHero, CREATURE_BALLISTA, &quantity,
                 CREATURE_FIRST_AID_TENT, &quantity,
-                CREATURE_AMMO_CART, &quantity, CREATURE_NONE, 0);
+                CREATURE_AMMO_CART, &quantity, CREATURE_NONE, NULL);
             if (!unitRecruiter)
                 memError();
             g_executive->doDialog(unitRecruiter);
@@ -5052,7 +5052,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
             defender = g_game->getHero(thisTown->m_visitingHeroId);
             if (thisTown->m_garrisonHeroId >= 0) {
                 doCombat(point, currentHero, &currentHero->m_army,
-                         defender->m_owner, 0, defender, &defender->m_army,
+                         defender->m_owner, NULL, defender, &defender->m_army,
                          -1, 1, 0);
                 currentHero->checkLevel();
                 checkEndGame(0);
@@ -5062,7 +5062,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
             defendingArmy = &defender->m_army;
         } else {
             if (thisTown->m_garrisonHeroId < 0)
-                defender = 0;
+                defender = NULL;
             else
                 defender = g_game->getHero(thisTown->m_garrisonHeroId);
             defendingArmy = &thisTown->getArmy();
@@ -5085,7 +5085,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
         }
     }
 
-    thisTown->giveSpells(0);
+    thisTown->giveSpells(NULL);
     currentHero->checkLevel();
     g_game->m_mapHeader.m_victoryCondition.checkForTotalCreatures();
     g_game->m_mapHeader.m_victoryCondition.checkForTotalResources();
@@ -5251,8 +5251,8 @@ short advManager::recruitEvent(hero* who, TCreatureType creature, short availabl
 {
     if (who->belongsToHuman()) {
         recruitUnit dialog(&who->m_army, 0, creature, &available,
-                           CREATURE_NONE, 0, CREATURE_NONE, 0,
-                           CREATURE_NONE, 0);
+                           CREATURE_NONE, NULL, CREATURE_NONE, NULL,
+                           CREATURE_NONE, NULL);
         g_executive->doDialog(&dialog);
     } else {
         aiRecruitRefugees(who, creature, &available);
@@ -5360,7 +5360,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
     int seed = point.m_y * 0x36814 + point.m_z * 0x3d0b5 + point.m_x * 0x29875
                + 0x14075;
     sRand(seed);
-    int winner = doCombat(point, who, &who->m_army, -1, 0, 0, &bank.m_guards,
+    int winner = doCombat(point, who, &who->m_army, -1, NULL, NULL, &bank.m_guards,
                           seed, 1, 1);
     mobilizeCurrHero(0, 0, 1);
     if (winner)
@@ -5666,7 +5666,7 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
         }
     }
 
-    int result = doCombat(point, who, &who->m_army, -1, 0, 0,
+    int result = doCombat(point, who, &who->m_army, -1, NULL, NULL,
                           &armyGroupForCombat, eventSeed, 1, 0);
     *numMons = armyGroupForCombat.getCreatureTotal(monType);
     mobilizeCurrHero(0, 0, 1);
@@ -5788,11 +5788,11 @@ DC_ADDRESS(0x09b788, 0x1e8)
 MAC_ADDRESS(0x0ba49c, 0x330)
 int advManager::doNetCombat(CNetMsg* netMsg)
 {
-    hero* leftHero = 0;
-    armyGroup* leftArmyGroup = 0;
-    town* rightTown = 0;
-    hero* rightHero = 0;
-    armyGroup* rightArmyGroup = 0;
+    hero* leftHero = NULL;
+    armyGroup* leftArmyGroup = NULL;
+    town* rightTown = NULL;
+    hero* rightHero = NULL;
+    armyGroup* rightArmyGroup = NULL;
     int rightPlayer = -1;
 
     CCombatInitMsg combatInitMsg;
@@ -6332,9 +6332,9 @@ void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* l
 {
     CCombatInitMsg combatInitMsg;
     combatInitMsg.m_point = point;
-    combatInitMsg.m_leftHero = leftHero != 0;
-    combatInitMsg.m_rightHero = rightHero != 0;
-    combatInitMsg.m_rightTown = rightTown != 0;
+    combatInitMsg.m_leftHero = leftHero != NULL;
+    combatInitMsg.m_rightHero = rightHero != NULL;
+    combatInitMsg.m_rightTown = rightTown != NULL;
     combatInitMsg.m_seed = seed;
     combatInitMsg.m_winner = winner;
     combatInitMsg.m_retreatWin = retreatWin;
@@ -6366,7 +6366,7 @@ void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* l
 
     int result = combatInitMsg.send(toWhoNetPos, 0, 1);
     if (!result)
-        shutDown(0);
+        shutDown(NULL);
 }
 
 VA(0x004aeee0, 0x3DF)
@@ -6374,11 +6374,11 @@ DC_ADDRESS(0x09c554, 0x224)
 MAC_ADDRESS(0x0bd314, 0xbe4)
 void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho, type_point& point, hero** leftHero, armyGroup** leftArmyGroup, int* rightPlayer, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* seed, signed char* winner, unsigned char* retreatWin, unsigned char* combatSurrender)
 {
-    *leftHero = 0;
-    *leftArmyGroup = 0;
-    *rightTown = 0;
-    *rightHero = 0;
-    *rightArmyGroup = 0;
+    *leftHero = NULL;
+    *leftArmyGroup = NULL;
+    *rightTown = NULL;
+    *rightHero = NULL;
+    *rightArmyGroup = NULL;
     *rightPlayer = -1;
 
     *fromWho = combatInitMsg->m_netmsg.m_from;

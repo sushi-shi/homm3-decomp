@@ -217,7 +217,7 @@ unsigned char initializeCreatureGeneratorNames()
 {
     g_creatureGenerator1Text = ResourceManager::GetText(
         DATA_COMPGEN(0x00660278, creatureGenerator1TextName, "crgen1.txt"));
-    if (g_creatureGenerator1Text == 0)
+    if (g_creatureGenerator1Text == NULL)
         return 0;
     int i;
     for (i = 0; i < 80; i++)
@@ -226,7 +226,7 @@ unsigned char initializeCreatureGeneratorNames()
 
     g_creatureGenerator4Text = ResourceManager::GetText(
         DATA_COMPGEN(0x0066026c, creatureGenerator4TextName, "crgen4.txt"));
-    if (g_creatureGenerator4Text == 0)
+    if (g_creatureGenerator4Text == NULL)
         return 0;
     for (i = 0; i < 2; i++)
         g_creatureGenerator4RolloverNames[i] =
@@ -241,7 +241,7 @@ unsigned char initializeExtraInfoText()
 {
     g_extraInfoText = ResourceManager::GetText(
         DATA_COMPGEN(0x00660284, extraInfoTextName, "xtrainfo.txt"));
-    if (g_extraInfoText == 0)
+    if (g_extraInfoText == NULL)
         return 0;
     for (int i = 0; i < 28; i++)
         g_globalInfoFlagNames[i] = g_extraInfoText->GetText(i);
@@ -282,14 +282,14 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         g_advManager->processMapChangeNew(
             static_cast<CMapChange*>(netMsg));
         destroyMsg(netMsg);
-        return 0;
+        return NULL;
     }
 
     switch (netMsg->m_subType) {
     case RS_GAME_TRANSMIT_INIT: {
         if (m_inPopup) {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         CGameTransmitInitMsg* msg =
             static_cast<CGameTransmitInitMsg*>(netMsg);
@@ -309,7 +309,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     case RS_COMBAT_INIT:
         if (m_inPopup) {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         g_advManager->doNetCombat(netMsg);
         break;
@@ -335,7 +335,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         if (m_inPopup
             && g_game->getGamePosFromDPID(msg->m_dpidFrom) == g_playerTurn) {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         handlePlayerDrop(msg->m_gamePos);
         break;
@@ -343,7 +343,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     case RS_PLAYER_DROP_UPDATE: {
         if (m_inPopup) {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         CPlayerDropUpdateMsg* msg =
             static_cast<CPlayerDropUpdateMsg*>(netMsg);
@@ -358,14 +358,14 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     case RS_PLAYER_WON:
         if (m_inPopup) {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         handlePlayerWon(netMsg);
         break;
     case RS_PLAYER_LOST:
         if (m_inPopup) {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         handlePlayerLost(netMsg);
         break;
@@ -397,7 +397,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     case RS_TRADE_REQUEST: {
         if (m_inPopup) {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         handleTradeRequestMsg(netMsg);
         break;
@@ -415,14 +415,14 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     case RS_SESSION_LOST:
         if (m_inPopup) {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         netMsg = CNetMsgHandler::handleNetMsg(netMsg);
         break;
     case RS_NORMAL_WIN:
         if (m_inPopup) {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         handleNormalWinMsg(netMsg);
         break;
@@ -433,7 +433,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 
     if (netMsg)
         destroyMsg(netMsg);
-    return 0;
+    return NULL;
 }
 
 VA_COMPGEN(0x00406480, 0x59F, IMPLICIT_COPY_ASSIGN, hero)
@@ -544,7 +544,7 @@ MAC_ADDRESS(0x007024, 0x3a8)  // anchor-global
 advManager::advManager()
 {
     m_radarOrigin = type_point(0, 0, 0);
-    m_radarIcons = 0;
+    m_radarIcons = NULL;
     m_scrollX = 0;
     m_scrollY = 0;
     m_animFrame = 0;
@@ -557,25 +557,25 @@ advManager::advManager()
     m_heroMoving = 0;
 
     for (int i = 0; i < 10; i++) {
-        m_groundTileset[i] = 0;
-        cursorSamples[i] = 0;
+        m_groundTileset[i] = NULL;
+        cursorSamples[i] = NULL;
     }
     int river;
     MEMSET(&m_riverTileset[1], 0, 4 * sizeof(m_riverTileset[0]), river);
     int road;
     MEMSET(&m_roadTileset[1], 0, 3 * sizeof(m_roadTileset[0]), road);
-    m_borderTileset = 0;
-    m_arrowTileset = 0;
-    m_gemIcons[0] = 0;
-    m_gemIcons[1] = 0;
-    m_gemIcons[2] = 0;
-    m_gemIcons[3] = 0;
-    m_starTileset = 0;
-    m_cloudIcons = 0;
+    m_borderTileset = NULL;
+    m_arrowTileset = NULL;
+    m_gemIcons[0] = NULL;
+    m_gemIcons[1] = NULL;
+    m_gemIcons[2] = NULL;
+    m_gemIcons[3] = NULL;
+    m_starTileset = NULL;
+    m_cloudIcons = NULL;
     memset(m_cursorIcons, 0, sizeof(m_cursorIcons));
     for (int boat = 0; boat < 3; boat++) {
-        m_boatIcons[boat] = 0;
-        m_boatFrothIcons[boat] = 0;
+        m_boatIcons[boat] = NULL;
+        m_boatFrothIcons[boat] = NULL;
     }
     int flag;
     MEMSET(m_flagIcons, 0, sizeof(m_flagIcons), flag);
@@ -586,9 +586,9 @@ advManager::advManager()
     }
     int looped;
     MEMSET(m_loopedSample, 0, sizeof(m_loopedSample), looped);
-    m_radarIcons = 0;
-    m_advWindow = 0;
-    m_routeArray = 0;
+    m_radarIcons = NULL;
+    m_advWindow = NULL;
+    m_routeArray = NULL;
     m_curHeroMobile = 0;
     m_showMode = 0;
     g_completeDrawEnabled = 1;
@@ -597,7 +597,7 @@ advManager::advManager()
     m_fullMap = g_game->getWorldMapData();
     m_cursorFrameCount = 0;
     m_cursorTurning = 0;
-    m_netMsgHandler = 0;
+    m_netMsgHandler = NULL;
 }
 
 // The adventure managers's resource-name tables, retail .data local to
@@ -662,13 +662,13 @@ int advManager::open(int newPriority)
     m_heroLogoShowing = 0;
     g_completeDrawEnabled = 0;
 
-    if (m_routeArray == 0) {
+    if (m_routeArray == NULL) {
         m_routeArray = new unsigned short[(g_game->getNumMapLevels())
                                         * g_mapHeight * g_mapWidth];
         memset(m_routeArray, 0,
                (g_game->getNumMapLevels()) * g_mapHeight * g_mapWidth
                    * sizeof(unsigned short));
-        if (m_routeArray == 0)
+        if (m_routeArray == NULL)
             memError();
     }
 
@@ -677,9 +677,9 @@ int advManager::open(int newPriority)
     m_seedingValid = 0;
     m_animCtrPaused = 0;
 
-    if (m_advWindow == 0) {
+    if (m_advWindow == NULL) {
         m_advWindow = new TAdventureMapWindow();
-        if (m_advWindow == 0)
+        if (m_advWindow == NULL)
             memError();
     }
     g_windowManager->addWindow(m_advWindow, 0, 1);
@@ -758,7 +758,7 @@ int advManager::open(int newPriority)
         ResourceManager::GetSprite(DATA_COMPGEN(0x006602b0, radarIconsName, "radar.def"));
 
     for (i = 0; i < max_environment_sounds; i++)
-        m_loopedSample[i] = 0;
+        m_loopedSample[i] = NULL;
     for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
         m_soundArray[i].m_soundId = invalid_sound;
         m_soundArray[i].m_priority = 0x7f;
@@ -867,77 +867,77 @@ void advManager::close()
 
     if (g_adventureGraphicsPreserveMode <= 0) {
         ResourceManager::Dispose(m_radarIcons);
-        m_radarIcons = 0;
+        m_radarIcons = NULL;
         ResourceManager::Dispose(m_cloudIcons);
-        m_cloudIcons = 0;
+        m_cloudIcons = NULL;
         for (i = 0; i < kNumHeroClasses; i++) {
             ResourceManager::Dispose(m_cursorIcons[i]);
-            m_cursorIcons[i] = 0;
+            m_cursorIcons[i] = NULL;
         }
         for (i = 0; i < m_cachedGraphics.size(); i++)
             ResourceManager::Dispose(m_cachedGraphics[i]);
         m_cachedGraphics.clear();
         ResourceManager::Dispose(monAttackSprites);
-        monAttackSprites = 0;
+        monAttackSprites = NULL;
         for (i = 0; i < 3; i++) {
             ResourceManager::Dispose(m_boatIcons[i]);
-            m_boatIcons[i] = 0;
+            m_boatIcons[i] = NULL;
             ResourceManager::Dispose(m_boatFrothIcons[i]);
-            m_boatFrothIcons[i] = 0;
+            m_boatFrothIcons[i] = NULL;
             for (j = 0; j < NUM_PLAYERS; j++) {
                 ResourceManager::Dispose(m_boatFlagIcons[i][j]);
-                m_boatFlagIcons[i][j] = 0;
+                m_boatFlagIcons[i][j] = NULL;
             }
         }
         for (i = 0; i < NUM_PLAYERS; i++) {
             ResourceManager::Dispose(m_flagIcons[i]);
-            m_flagIcons[i] = 0;
+            m_flagIcons[i] = NULL;
         }
     }
 
     for (i = 0; i < max_environment_sounds; i++) {
         if (m_loopedSample[i]) {
             m_loopedSample[i]->dispose();
-            m_loopedSample[i] = 0;
+            m_loopedSample[i] = NULL;
         }
     }
     for (i = 1; i < 5; i++) {
         ResourceManager::Dispose(m_riverTileset[i]);
-        m_riverTileset[i] = 0;
+        m_riverTileset[i] = NULL;
     }
     for (i = 1; i < 4; i++) {
         ResourceManager::Dispose(m_roadTileset[i]);
-        m_roadTileset[i] = 0;
+        m_roadTileset[i] = NULL;
     }
     ResourceManager::Dispose(m_borderTileset);
-    m_borderTileset = 0;
+    m_borderTileset = NULL;
     ResourceManager::Dispose(m_arrowTileset);
-    m_arrowTileset = 0;
+    m_arrowTileset = NULL;
     ResourceManager::Dispose(m_gemIcons[0]);
     ResourceManager::Dispose(m_gemIcons[1]);
     ResourceManager::Dispose(m_gemIcons[2]);
     ResourceManager::Dispose(m_gemIcons[3]);
-    m_gemIcons[0] = 0;
-    m_gemIcons[1] = 0;
-    m_gemIcons[2] = 0;
-    m_gemIcons[3] = 0;
+    m_gemIcons[0] = NULL;
+    m_gemIcons[1] = NULL;
+    m_gemIcons[2] = NULL;
+    m_gemIcons[3] = NULL;
     for (i = 0; i < kNumTerrainTypes; i++) {
         ResourceManager::Dispose(m_groundTileset[i]);
-        m_groundTileset[i] = 0;
+        m_groundTileset[i] = NULL;
         cursorSamples[i]->dispose();
-        cursorSamples[i] = 0;
+        cursorSamples[i] = NULL;
     }
 
     g_windowManager->removeWindow(m_advWindow);
     delete m_advWindow;
-    m_advWindow = 0;
+    m_advWindow = NULL;
     if (m_routeArray)
         delete[] m_routeArray;
-    m_routeArray = 0;
+    m_routeArray = NULL;
     m_status = 0;
     if (m_netMsgHandler) {
         delete m_netMsgHandler;
-        m_netMsgHandler = 0;
+        m_netMsgHandler = NULL;
     }
 }
 
@@ -1026,13 +1026,13 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
     hero* currHero;
     // Before normalization: bSaveShowRoute.
     int savedShowRoute;
-    NewmapCell* eventCell = 0;
+    NewmapCell* eventCell = NULL;
     message msg;
     triggerPoint.m_x = -1;
     // DC 1262..1265 and Mac 0x82cc..0x82fc test the acting player's hero id
     // before GetCurrHero repeats its own -1 guard.
     if (g_currentPlayer->m_currHeroId == -1)
-        currHero = 0;
+        currHero = NULL;
     else
         currHero = g_game->getCurrHero();
 
@@ -1134,7 +1134,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
             if (eventCell) {
                 doEvent(eventCell, triggerPoint);
                 triggerPoint.m_x = -1;
-                eventCell = 0;
+                eventCell = NULL;
                 reseed(0, 0);
             }
 
@@ -1151,7 +1151,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         newTown = currHero->getObscuredTown();  // DC 1398, Mac 0x8920 call it directly
         newTown->view(0);
-        eventCell = 0;
+        eventCell = NULL;
         break;
 
     case ADV_COMMAND_VIEW_TOWN:
@@ -1167,7 +1167,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
                 // DC 1420 stores the town cell in eventCell before 1423 clears it.
                 eventCell = getCell(viewedTown->getLocation());
                 viewedTown->view(0);
-                eventCell = 0;
+                eventCell = NULL;
             }
         }
         break;
@@ -1253,7 +1253,7 @@ int advManager::main(message& msg)
     }
 
     if (m_netMsgHandler)
-        m_netMsgHandler->checkHandleNet(0, 0);
+        m_netMsgHandler->checkHandleNet(0, NULL);
 
     if ((!g_currentPlayer->isHuman()
          || (g_goSolo && g_netLocalGamePos == g_soloPos))
@@ -1294,7 +1294,7 @@ int advManager::main(message& msg)
     type_point triggerPoint;
     result = MESSAGE_DISPATCH_CONSUME;
     exitFlag = 0;
-    eventCell = 0;
+    eventCell = NULL;
 
     if (msg.m_id != MESSAGE_NONE) {
         switch (msg.m_id) {
@@ -1391,7 +1391,7 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
     if (localPlayer->m_currHeroId != -1)
         currHero = g_game->getHero(localPlayer->m_currHeroId);
     else
-        currHero = 0;
+        currHero = NULL;
 
     switch (msg.m_codeX) {
     case KEYCODE_SPACE: {
@@ -1606,7 +1606,7 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
             if (peventCell) {
                 stopCursor(1);
                 doEvent(peventCell, walkTrigger);
-                peventCell = 0;
+                peventCell = NULL;
             }
             reseed(0, 0);
 
@@ -2024,7 +2024,7 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
     if (!visible)
         return;
 
-    hero* currHero = 0;
+    hero* currHero = NULL;
     int heroMobile = 0;
     playerData* thisPlayer = g_game->getLocalPlayer();
     if (thisPlayer->m_currHeroId != -1) {
@@ -2262,9 +2262,9 @@ DC_ADDRESS(0x00beac, 0x1a)
 MAC_ADDRESS(0x00bf14, 0x14)
 type_cell_adjuster::type_cell_adjuster()
 {
-    m_obscuringHero = 0;
-    m_obscuringBoat = 0;
-    m_mobileHero = 0;
+    m_obscuringHero = NULL;
+    m_obscuringBoat = NULL;
+    m_mobileHero = NULL;
 }
 
 // Retail-reconstructed. The body consolidates repeated creature
@@ -2343,7 +2343,7 @@ NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y
             m_mobileHero->obscureCell();
             return mapCell;
         }
-        m_mobileHero = 0;
+        m_mobileHero = NULL;
     }
 
     NewmapCell* triggerCell = mapCell->getTriggerCell();
@@ -2371,15 +2371,15 @@ void type_cell_adjuster::restoreCell()
 {
     if (m_obscuringHero) {
         m_obscuringHero->obscureCell();
-        m_obscuringHero = 0;
+        m_obscuringHero = NULL;
     }
     if (m_obscuringBoat) {
         m_obscuringBoat->obscureCell();
-        m_obscuringBoat = 0;
+        m_obscuringBoat = NULL;
     }
     if (m_mobileHero) {
         m_mobileHero->restoreCell();
-        m_mobileHero = 0;
+        m_mobileHero = NULL;
     }
 }
 
@@ -2530,7 +2530,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     if (player->m_currHeroId != -1)
         currHero = &g_game->m_heroes[player->m_currHeroId];
     else
-        currHero = 0;
+        currHero = NULL;
 
     type_cell_adjuster adjuster;
     NewmapCell* cell = adjuster.getTriggerCell(testCell, rx, ry);
@@ -5913,7 +5913,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
 
     // DC7545, 7561 and 7563 record these initial stores; release drops
     // them because every path assigns the locals again.
-    currHero = 0;
+    currHero = NULL;
 
     player = g_game->getLocalPlayer();
     playerId = g_game->getLocalPlayerGamePos();
@@ -5922,10 +5922,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
     if (player->m_currHeroId != -1) {
         currHero = g_game->getHero(player->m_currHeroId);
     } else {
-        currHero = 0;
+        currHero = NULL;
     }
 
-    testCell = 0;
+    testCell = NULL;
     testFlag = 0;
     // DC7564 calls the canonical three-coordinate point constructor.
     type_point mapPoint(m_radarOrigin.m_x + cellX,
@@ -7583,8 +7583,8 @@ void advManager::setTownContext(int townId, bool waitingPlayer, bool update)
     if (waitingPlayer || g_currentPlayer->isLocalHuman()) {
         m_advWindow->updateTownLocators(townSlot, 1, 0);
         m_advWindow->updateHeroLocators(-1, 1, 0);
-        m_advWindow->updateSpellButton(0);
-        m_advWindow->updateSleepButton(0);
+        m_advWindow->updateSpellButton(NULL);
+        m_advWindow->updateSleepButton(NULL);
     }
 
     hideRoute(0, 0, 1);
@@ -8735,7 +8735,7 @@ void advManager::trimLoopingSounds(int maxSoundsAllowed)
     for (i = 0; i < max_environment_sounds; ++i) {
         if (m_loopedSample[i] && !saveSounds[i]) {
             m_loopedSample[i]->dispose();
-            m_loopedSample[i] = 0;
+            m_loopedSample[i] = NULL;
         }
     }
 }

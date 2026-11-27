@@ -416,9 +416,9 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
         font::WHITE, 0x7da, 1, 0, 8));
 
     m_widgets.push_back(new iconWidget(5, 74, 22, 12, 0x7d8, "imrl22.def",
-        who->getMorale(0, 0, 1) + 3, 0, 0, 0, 0x10));
+        who->getMorale(NULL, 0, 1) + 3, 0, 0, 0, 0x10));
     m_widgets.push_back(new iconWidget(5, 91, 22, 12, 0x7d9, "ilck22.def",
-        who->getLuck(0, 0, 1) + 3, 0, 0, 0, 0x10));
+        who->getLuck(NULL, 0, 1) + 3, 0, 0, 0, 0x10));
 
     int numStacks = 0;
     for (int n = 0; n < armyGroup::ARMY_GROUP_SLOT_COUNT; n++) {

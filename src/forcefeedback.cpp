@@ -129,7 +129,7 @@ t_initializer::t_initializer(void* instance, void* hwnd)
     try {
         std::filebuf file;
         if (file.open((std::string("data\\") + shadowProjectName).c_str(),
-                      std::ios_base::in | std::ios_base::binary) == 0)
+                      std::ios_base::in | std::ios_base::binary) == NULL)
             throw t_initialize_failure();
         int size = file.pubseekoff(0, std::ios_base::end);
         file.pubseekoff(0, std::ios_base::beg);
@@ -137,7 +137,7 @@ t_initializer::t_initializer(void* instance, void* hwnd)
         file.sgetn(project.get(), size);
     } catch (t_initialize_failure) {
         LODFile* resource = ResourceManager::PointToBitmapResource(shadowProjectName);
-        if (resource == 0)
+        if (resource == NULL)
             throw t_initialize_failure();
         int size = ResourceManager::GetBitmapResourceSize(shadowProjectName);
         project = std::auto_ptr<char>(new char[size]);
@@ -210,12 +210,12 @@ VA_COMPGEN(0x004B7330, 0xA3, TREE_CONST_ITERATOR_INC, CImmEnclosure)
 VA(0x004b69f0, 0x5B)
 unsigned char playImmEffect(const char* effectName, int count)
 {
-    if (g_immProject == 0)
+    if (g_immProject == NULL)
         return 0;
-    if (g_immEffect != 0)
+    if (g_immEffect != NULL)
         g_immProject->DestroyEffect(g_immEffect);
-    g_immEffect = g_immProject->CreateEffect(effectName, 0, 0);
-    return g_immEffect != 0 && g_immEffect->Start(count, 0) != 0;
+    g_immEffect = g_immProject->CreateEffect(effectName, NULL, 0);
+    return g_immEffect != NULL && g_immEffect->Start(count, 0) != 0;
 }
 
 // One tracked enclosure. `new CImmEnclosure` lands in the auto_ptr member
@@ -231,7 +231,7 @@ force_feedback::t_enclosure::t_enclosure(const RECT* rect, long a,
     RECT bounds = *rect;
     OffsetRect(&bounds, g_immWindowOrigin.x, g_immWindowOrigin.y);
     if (!m_enclosure->Initialize(g_immDevice, &bounds, a, a, b, b, c, c,
-                                 (d ? 0x66 : 0) | (e ? 0x99 : 0), 0, 0, 0, 0))
+                                 (d ? 0x66 : 0) | (e ? 0x99 : 0), 0, NULL, 0, 0))
         throw t_create_failure();
     g_immEffectEntries.insert(std::make_pair(m_enclosure.get(), bounds));
 }

@@ -23,7 +23,7 @@ void InitializeGameResourceTypeTraitsTable()
 {
     DATA_COMPGEN_GUARD(0x0059e438, resourceNamesGuard, pNames)
     VA_COMPGEN(0x0043d572, 0x16, STATIC_DTOR, pNames)
-    DATA(0x0059e430) static TAutoArrayPtr<char> pNames(0);
+    DATA(0x0059e430) static TAutoArrayPtr<char> pNames(NULL);
     TResourcePtr<TTextResource> pTextResource(ResourceManager::GetText("restypes.txt"));
     if (!pTextResource.get())
         throw TRuntimeError();

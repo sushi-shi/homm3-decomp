@@ -304,20 +304,20 @@ void TCampaignBrief::addBonusIcons()
         611, 454, 60, 66, 234, g_systemPalette->Palette[45], 0x400);
 
     m_bitmapBonusImages[0] = new bitmapBorder(
-        476, 455, 58, 64, 226, 0, 0x800);
+        476, 455, 58, 64, 226, NULL, 0x800);
     m_bitmapBonusImages[1] = new bitmapBorder(
-        544, 455, 58, 64, 227, 0, 0x800);
+        544, 455, 58, 64, 227, NULL, 0x800);
     m_bitmapBonusImages[2] = new bitmapBorder(
-        612, 455, 58, 64, 228, 0, 0x800);
+        612, 455, 58, 64, 228, NULL, 0x800);
 
     m_spriteBonusImages[0] = new iconWidget(
-        476, 455, 58, 64, 229, 0, 0, 0, 0, 0,
+        476, 455, 58, 64, 229, NULL, 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
     m_spriteBonusImages[1] = new iconWidget(
-        544, 455, 58, 64, 230, 0, 0, 0, 0, 0,
+        544, 455, 58, 64, 230, NULL, 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
     m_spriteBonusImages[2] = new iconWidget(
-        612, 455, 58, 64, 231, 0, 0, 0, 0, 0,
+        612, 455, 58, 64, 231, NULL, 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
 
     for (i = 0; i < 3; ++i) {
@@ -364,8 +364,8 @@ void TCampaignBrief::addBonusIcons()
         font::WHITE, -1, 5, 0, 8));
 
     if (g_campaignBriefViewFromGame) {
-        m_difficultyDecrButton = 0;
-        m_difficultyIncrButton = 0;
+        m_difficultyDecrButton = NULL;
+        m_difficultyIncrButton = NULL;
         return;
     }
 
@@ -565,7 +565,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             break;
         }
         delete m_campaign;
-        m_campaign = 0;
+        m_campaign = NULL;
         return;
     }
 
@@ -588,7 +588,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                 m_campaign->loadScenario(i, &mapHeader);
                 g_game->setupOrigData();
                 g_game->initNewGame(
-                    scenario->m_difficulty, i, &mapHeader, 0);
+                    scenario->m_difficulty, i, &mapHeader, NULL);
             }
             static_cast<NewSMapHeader&>(preview) = g_game->m_mapHeader;
             preview.m_gameSetup = g_game->m_setup;
@@ -905,7 +905,7 @@ TCampaignBrief::~TCampaignBrief()
             g_terrainMusicIds[g_advManager->m_lastTerrain]);
         backupGameHeaders(g_game, g_saveHeader);
         delete g_saveHeader;
-        g_saveHeader = 0;
+        g_saveHeader = NULL;
         g_advManager->redrawAdvScreen(1, 0);
     }
 

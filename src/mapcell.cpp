@@ -329,17 +329,17 @@ NewmapCell* NewmapCell::getTriggerCell()
 
     if (m_type == NOTHING || m_type == ANCHOR_POINT || m_type == EVENT
         || m_type == HOLY_GRAIL)
-        return 0;
+        return NULL;
 
     if (m_objectTypeIndex < 0
         || m_objectTypeIndex >= g_game->m_worldMap.m_objects.size())
-        return 0;
+        return NULL;
 
     CObject* object = &g_game->m_worldMap.m_objects[m_objectTypeIndex];
     type_point location = object->getTrigger();
 
     if (location.m_x < 0)
-        return 0;
+        return NULL;
     return g_game->getCell(location);
 }
 
@@ -493,7 +493,7 @@ VA(0x004fd060, 0x15C)
 DC_ADDRESS(0x0ec4fc, 0x1a8)
 MAC_ADDRESS(0x11e880, 0x19c)
 NewfullMap::NewfullMap()
-    : m_cellData(0)
+    : m_cellData(NULL)
 {
 }
 
@@ -526,7 +526,7 @@ void NewfullMap::close()
 {
     if (m_cellData) {
         delete[] m_cellData;
-        m_cellData = 0;
+        m_cellData = NULL;
     }
 
     for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
@@ -3685,12 +3685,12 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
 
     unsigned char usedDefaultMask = 0;
     LODFile* maskFile = ResourceManager::PointToSpriteResource(imageName);
-    if (maskFile == 0) {
+    if (maskFile == NULL) {
         usedDefaultMask = 1;
         maskFile = ResourceManager::PointToSpriteResource(
             DATA_COMPGEN(0x0067fb3c, readObjectTypeDefaultMask,
                          "default.msk"));
-        if (maskFile == 0)
+        if (maskFile == NULL)
             return -1;
     }
 
@@ -4394,8 +4394,8 @@ DC_ADDRESS(0x0f42f0, 0xf6)
 MAC_ADDRESS(0x128408, 0x104)
 void NewfullMap::calculateCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
 {
-    hero* obscuringHero = 0;
-    boat* obscuringBoat = 0;
+    hero* obscuringHero = NULL;
+    boat* obscuringBoat = NULL;
     unsigned char restoreHero = 0;
     unsigned char restoreBoat = 0;
     TAdventureObjectType visibleType = thisCell->getMapObject();

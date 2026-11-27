@@ -40,10 +40,10 @@ static const unsigned int kCellWidth = 32;
 // Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:67
 DC_ADDRESS(0x074600, 0x64)
 CSpriteFrame::CSpriteFrame()
-    : resource(0, RESOURCE_TYPE_NONE),
+    : resource(NULL, RESOURCE_TYPE_NONE),
       DataSize(0), ImageSize(0), EncodingMethod(eEncodeRaw),
       Width(0), Height(0), CroppedWidth(0), CroppedHeight(0),
-      CroppedX(0), CroppedY(0), Pitch(0), map(0)
+      CroppedX(0), CroppedY(0), Pitch(0), map(NULL)
 {
 }
 
@@ -91,7 +91,7 @@ CSpriteFrame::CSpriteFrame(const char* name, bool cropped)
     : resource(name, RESOURCE_TYPE_SPRITE),
       DataSize(0), ImageSize(0), EncodingMethod(eEncodeRaw),
       Width(0), Height(0), CroppedWidth(0), CroppedHeight(0),
-      CroppedX(0), CroppedY(0), Pitch(0), map(0)
+      CroppedX(0), CroppedY(0), Pitch(0), map(NULL)
 {
     if (!cropped)
         importPCXFile(name);
@@ -140,7 +140,7 @@ void CSpriteFrame::clear()
     EncodingMethod = eEncodeRaw;
     if (map) {
         delete[] map;
-        map = 0;
+        map = NULL;
     }
 }
 

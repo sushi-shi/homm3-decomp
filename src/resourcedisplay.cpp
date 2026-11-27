@@ -63,7 +63,7 @@ TResourceDisplay::TResourceDisplay(heroWindow* parent, bool isSmall)
     int borderId = 0x3f1;
     for (int i = 0; i < NUM_RESOURCES; ++i) {
         m_resourceWidgets[i] = new textWidget(
-            textX, 3, 0x32, 0x12, 0, "smalfont.fnt", font::WHITE,
+            textX, 3, 0x32, 0x12, NULL, "smalfont.fnt", font::WHITE,
             textId, 0, 0, 8);
         addWidget(m_resourceWidgets[i], -1);
         m_resourceIconWidgets[i] = new border(
@@ -77,11 +77,11 @@ TResourceDisplay::TResourceDisplay(heroWindow* parent, bool isSmall)
 
     if (isSmall) {
         m_dayWidget = new textWidget(
-            0x22b, 3, 0xb2, 0x12, 0, "smalfont.fnt", font::WHITE,
+            0x22b, 3, 0xb2, 0x12, NULL, "smalfont.fnt", font::WHITE,
             0x3f0, 1, 0, 8);
     } else {
         m_dayWidget = new textWidget(
-            0x25f, 3, 0xb4, 0x12, 0, "smalfont.fnt", font::WHITE,
+            0x25f, 3, 0xb4, 0x12, NULL, "smalfont.fnt", font::WHITE,
             0x3f0, 1, 0, 8);
     }
     addWidget(m_dayWidget, -1);
@@ -104,7 +104,7 @@ TResourceDisplay::~TResourceDisplay()
     }
     if (m_dayWidget) {
         delete m_dayWidget;
-        m_dayWidget = 0;
+        m_dayWidget = NULL;
     }
 }
 

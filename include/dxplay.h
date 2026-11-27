@@ -164,7 +164,7 @@ public:
     DC_ADDRESS(0x08bda8, 0xa)
     CDPlayMsg()
     {
-        m_data = 0;
+        m_data = NULL;
         m_dataSize = 0;
     }
 
@@ -197,7 +197,7 @@ public:
         if (!m_data)
             return 0;
         delete m_data;
-        m_data = 0;
+        m_data = NULL;
         m_dataSize = 0;
         return 1;
     }

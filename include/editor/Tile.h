@@ -23,7 +23,7 @@ struct TGroundTilesetTraits {
 
     TGroundTilesetTraits(bool bAnimated, unsigned int numTiles,
                          const TTileTraits* pTileTraits)
-        : m_pSprite(0),
+        : m_pSprite(NULL),
           m_bAnimated(bAnimated),
           m_numTiles(numTiles),
           m_pTileTraits(pTileTraits)

@@ -30,7 +30,7 @@ army* hexcell::getArmy() const
     // Dreamcast hexcell.cpp:39 calls the canonical HexCell.h helper.
     if (hasArmy())
         return &g_combatManager->m_armies[m_armySide][m_armySlot];
-    return 0;
+    return NULL;
 }
 
 VA(0x004e71b0, 0x4D)
@@ -39,6 +39,6 @@ MAC_ADDRESS(0x108238, 0x44)
 army* hexcell::getDeadArmy(int i) const
 {
     if (m_deadArmySide[i] < 0)
-        return 0;
+        return NULL;
     return &g_combatManager->m_armies[m_deadArmySide[i]][m_deadArmySlot[i]];
 }

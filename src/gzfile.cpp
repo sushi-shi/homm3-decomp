@@ -29,7 +29,7 @@ MAC_ADDRESS(0x221b9c, 0x7c)
 TGzFile::TGzFile(const char* path, const char* mode)
     : m_file(gzopen(path, mode))
 {
-    if (m_file == 0)
+    if (m_file == NULL)
         throw TOpenFailure();
 }
 

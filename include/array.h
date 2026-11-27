@@ -34,7 +34,7 @@ public:
         m_step = 25;
         m_size = 0;
         m_allocSize = 0;
-        m_array = 0;
+        m_array = NULL;
     }
 
     // Mac retains this CDPlayPlayer instantiation of destroy;
@@ -67,7 +67,7 @@ public:
 
         if (m_array)
             delete [] m_array;
-        m_array = 0;
+        m_array = NULL;
         m_size = m_allocSize = 0;
     }
 
@@ -102,7 +102,7 @@ public:
     virtual T* get(unsigned long elementNbr)
     {
         if (elementNbr >= m_size)
-            return 0;
+            return NULL;
         return m_array[elementNbr];
     }
 

@@ -34,9 +34,9 @@ TTownGateWindow::TTownGateWindow(bool adventureSpell)
     g_townGateWindow = this;
 
     const char* title = m_adventureSpell
-        ? akSpellTraits[SPELL_TOWN_PORTAL].m_name : 0;
+        ? akSpellTraits[SPELL_TOWN_PORTAL].m_name : NULL;
     const char* selectTown = m_adventureSpell
-        ? g_generalText->GetText(GENERAL_TEXT_SELECT_DESTINATION) : 0;
+        ? g_generalText->GetText(GENERAL_TEXT_SELECT_DESTINATION) : NULL;
 
     m_towns.reserve(72 * g_game->getNumAllies(g_netLocalGamePos));
     m_widgets.reserve(17);
@@ -50,31 +50,31 @@ TTownGateWindow::TTownGateWindow(bool adventureSpell)
         14, 125, 262, 20, selectTown, "smalfont.fnt", font::PRIMARY,
         SELECT_TEXT_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        14, 155, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
+        14, 155, 262, 20, NULL, "smalfont.fnt", font::PRIMARY,
         TOWN_0_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        14, 180, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
+        14, 180, 262, 20, NULL, "smalfont.fnt", font::PRIMARY,
         TOWN_1_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        14, 205, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
+        14, 205, 262, 20, NULL, "smalfont.fnt", font::PRIMARY,
         TOWN_2_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        14, 230, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
+        14, 230, 262, 20, NULL, "smalfont.fnt", font::PRIMARY,
         TOWN_3_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        14, 255, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
+        14, 255, 262, 20, NULL, "smalfont.fnt", font::PRIMARY,
         TOWN_4_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        14, 280, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
+        14, 280, 262, 20, NULL, "smalfont.fnt", font::PRIMARY,
         TOWN_5_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        14, 305, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
+        14, 305, 262, 20, NULL, "smalfont.fnt", font::PRIMARY,
         TOWN_6_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        14, 330, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
+        14, 330, 262, 20, NULL, "smalfont.fnt", font::PRIMARY,
         TOWN_7_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        14, 355, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
+        14, 355, 262, 20, NULL, "smalfont.fnt", font::PRIMARY,
         TOWN_8_ID, 1, 0, 8));
     m_widgets.push_back(new bitmapBorder(
         14, 151, 262, 24, SELECTOR_ID, "TPGateS.pcx", 0x800));

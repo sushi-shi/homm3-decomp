@@ -1685,7 +1685,7 @@ public:
     hero* getHero(int which)
     {
         if (which == -1)
-            return 0;
+            return NULL;
         else
             return &m_heroes[which];
     }
@@ -1711,7 +1711,7 @@ public:
     {
         if (getCurrHeroId() != -1)
             return &m_heroes[getCurrHeroId()];
-        return 0;
+        return NULL;
     }
 
     // DC-attested inline Game.h member, inlined in CheckCastSpell.
@@ -1726,7 +1726,7 @@ public:
     town* getTown(int townId)
     {
         if (townId == -1)
-            return 0;
+            return NULL;
         return &m_towns[townId];
     }
 
@@ -1741,7 +1741,7 @@ public:
     {
         if (getCurrTownId() != -1)
             return &m_towns[getCurrTownId()];
-        return 0;
+        return NULL;
     }
 
     // Original: game::GetCurrTownId; game.h:1024
@@ -1954,7 +1954,7 @@ MAC_ADDRESS(0x0cfc34, 0x3a4)
 inline int SavedGameHeader::load(TAbstractFile* infile)
 {
     std::string openedName;
-    unsigned char inputWasProvided = infile != 0;
+    unsigned char inputWasProvided = infile != NULL;
     std::auto_ptr<TAbstractFile> ownedInput;
     int count;
 

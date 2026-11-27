@@ -24,7 +24,7 @@ void InitializeSkillMasteryTraitsTable()
 {
     DATA_COMPGEN_GUARD(0x005a3108, skillMasteryNamesGuard, pNames)
     VA_COMPGEN(0x004b91ef, 0x16, STATIC_DTOR, pNames)
-    DATA(0x005a3100) static TAutoArrayPtr<char> pNames(0);
+    DATA(0x005a3100) static TAutoArrayPtr<char> pNames(NULL);
     TResourcePtr<TTextResource> pTextResource(ResourceManager::GetText("skilllev.txt"));
     if (!pTextResource.get())
         throw TRuntimeError();

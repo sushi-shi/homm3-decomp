@@ -165,7 +165,7 @@ public:
     T* m_resource;
 
 public:
-    TResourceHandle() { m_resource = 0; }
+    TResourceHandle() { m_resource = NULL; }
     TResourceHandle(const TResourceHandle& that)
     {
         m_resource = that.m_resource;
@@ -1193,7 +1193,7 @@ inline int army::offsetToFront(int direction) const
 DC_ADDRESS(0x027ccc, 0x16)
 inline void army::clearAIValues()
     {
-        AI_target = 0;
+        AI_target = NULL;
         AI_target_value = 0;
         AI_possible_targets = 0;
         AI_target_distance = 0;
