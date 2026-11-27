@@ -556,7 +556,7 @@ advManager::advManager()
     m_debugViewAll = 0;
     m_heroMoving = 0;
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < kNumTerrainTypes; i++) {
         m_groundTileset[i] = 0;
         cursorSamples[i] = 0;
     }

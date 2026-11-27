@@ -252,7 +252,7 @@ int TPuzzleWindow::updatePuzzle(int full)
 
     for (int i = 0; i < TPuzzleWindow::PUZZLE_PIECE_COUNT; ++i) {
         if (full || !g_puzzlePiecesRemoved[i]) {
-            int piece = g_puzzlePieceOrder[m_puzWhich * 48 + i];
+            int piece = g_puzzlePieceOrder[m_puzWhich * TPuzzleWindow::PUZZLE_PIECE_COUNT + i];
             Bitmap816* bitmap = m_puzzlePieces[piece];
             const short* xCoordinate = g_puzzleCoordinates[m_puzWhich].m_x;
             const short* yCoordinate = g_puzzleCoordinates[m_puzWhich].m_y;
@@ -424,7 +424,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
     for (int i = 0; i < TPuzzleWindow::PUZZLE_PIECE_COUNT; ++i) {
         if (g_puzzlePiecesRemoved[i])
             continue;
-        int piece = g_puzzlePieceOrder[puzzle * 48 + i];
+        int piece = g_puzzlePieceOrder[puzzle * TPuzzleWindow::PUZZLE_PIECE_COUNT + i];
         Bitmap816* bitmap = getPuzzleBitmap(puzzle, piece);
         const short* xCoordinate = g_puzzleCoordinates[puzzle].m_x;
         const short* yCoordinate = g_puzzleCoordinates[puzzle].m_y;
