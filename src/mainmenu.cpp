@@ -166,9 +166,9 @@ static int mainMenuHandler(message& msg)
 
         g_mainMenu->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                WINDOW_ALL_WIDGETS_HIGH);
-        if (g_cdDriveNumber == CD_DRIVE_NUMBER_5 ||
-            g_cdDriveNumber == CD_DRIVE_NUMBER_6) {
-            const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
+        if (g_cdDriveNumber == CD_ROM_RESTORATION_OF_ERATHIA_DISC ||
+            g_cdDriveNumber == CD_ROM_ARMAGEDDONS_BLADE_DISC) {
+            const char* drive = g_cdDriveNumber == CD_ROM_RESTORATION_OF_ERATHIA_DISC
                 ? (*g_generalText)[GENERAL_TEXT_RESTORATION_OF_ERATHIA]
                 : (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
             normalDialog(formatString(

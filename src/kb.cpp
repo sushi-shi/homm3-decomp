@@ -459,13 +459,13 @@ int earlySetup()
                 i = 0;
                 while (1) {
                     if (i >= g_videoCount3) {
-                        g_cdDriveNumber = 5;
+                        g_cdDriveNumber = CD_ROM_RESTORATION_OF_ERATHIA_DISC;
                         break;
                     }
                     if (!strcmpi(g_videoHeader3[i].m_name,
                                   DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
                                       "h3abab1.smk"))) {
-                        g_cdDriveNumber = 6;
+                        g_cdDriveNumber = CD_ROM_ARMAGEDDONS_BLADE_DISC;
                         break;
                     }
                     i++;
@@ -707,7 +707,7 @@ static void setupCDRom()
     int oldNoSound = g_noSound;
 
     switch (g_cdDriveNumber) {
-    case CD_DRIVE_NUMBER_1:
+    case CD_ROM_DRIVE_UNAVAILABLE:
         g_mouseManager->showPointer(false);
         g_noSound = 1;
         if (g_tcpHostStatus)
@@ -716,21 +716,21 @@ static void setupCDRom()
         g_noCdRom = 1;
         break;
 
-    case CD_DRIVE_NUMBER_2:
-    case CD_DRIVE_NUMBER_5:
-    case CD_DRIVE_NUMBER_6:
+    case CD_ROM_DISC_MISSING:
+    case CD_ROM_RESTORATION_OF_ERATHIA_DISC:
+    case CD_ROM_ARMAGEDDONS_BLADE_DISC:
         g_mouseManager->showPointer(false);
         g_noSound = 1;
         g_noCdRom = 1;
         break;
 
-    case CD_DRIVE_NUMBER_3:
+    case CD_ROM_GAME_DIRECTORY_MISSING:
         earlyShutdown(
             DATA_COMPGEN(0x0067f728, oldMainStartupError, "Startup error"),
             (*g_generalText)[GENERAL_TEXT_GAME_DIRECTORY_CHANGE_ERROR]);
         exit(0);
 
-    case CD_DRIVE_NUMBER_4:
+    case CD_ROM_DATA_FILES_MISSING:
         earlyShutdown(
             DATA_COMPGEN(0x0067f728, oldMainStartupError, "Startup error"),
             (*g_generalText)[GENERAL_TEXT_GAME_DATA_NOT_FOUND]);

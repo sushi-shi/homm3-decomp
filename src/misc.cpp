@@ -730,7 +730,7 @@ DC_ADDRESS(0x0fe064, 0x4)
 MAC_ADDRESS(0x13137c, 0x114)
 int setupCDDrive()
 {
-    return CD_DRIVE_NUMBER_NO_CD_REQUIRED;
+    return CD_ROM_NOT_REQUIRED;
 }
 
 VA(0x0050c5a0, 0x49)
