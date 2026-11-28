@@ -5129,7 +5129,8 @@ void type_random_map_generator::traceZoneBoundary(
         from = clipRmgBoundaryPoint(originalFrom, originalTo, bounds);
         to = clipRmgBoundaryPoint(originalTo, originalFrom, bounds);
         if (from.m_x >= bounds.m_minimumX && from.m_x < bounds.m_maximumX
-            && from.m_y >= bounds.m_minimumY && from.m_y < bounds.m_maximumY && from != to) {
+            && from.m_y >= bounds.m_minimumY && from.m_y < bounds.m_maximumY
+            && from != to) {
             found = true;
             break;
         }
@@ -5184,7 +5185,7 @@ void type_random_map_generator::traceZoneBoundary(
                 originalTo = next->m_vertex;
                 to = clipRmgBoundaryPoint(originalFrom, originalTo, bounds);
                 if (to.m_x >= bounds.m_minimumX && to.m_x < bounds.m_maximumX
-            && to.m_y >= bounds.m_minimumY && to.m_y < bounds.m_maximumY)
+                    && to.m_y >= bounds.m_minimumY && to.m_y < bounds.m_maximumY)
                     found = true;
                 else
                     vertex = next;
