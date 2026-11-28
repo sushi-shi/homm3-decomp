@@ -8261,6 +8261,11 @@ void type_random_map_generator::carveBranchingPaths()
 // Mac 0x247954..0x247b78 clamps a separate cell position in place (x, y and
 // the level stored first) and scans with it; that spelling costs the game
 // two register choices in the clamps (100 -> 98.84) and the editor 1.2%.
+// The zone index is read through getTemplateZone(), as fillZoneArea and the
+// gate and water passes read it: the editor then keeps the prologue's zero
+// in edx and the template pointer in ecx, as retail does (97.37 -> 100);
+// the game is exact either way. Reading the index before the level position
+// is lower (98.17).
 VA(0x005443A0, 0x2F5)
 MAC_ADDRESS(0x247800, 0x59c)
 VA_AT(h3maped, 0x004a8722, 0x2b8)
@@ -8269,7 +8274,7 @@ void type_random_map_generator::connectJunctionEntrance(TRmgPoint from, TRmgPoin
 {
     std::vector<TRmgPoint> pending;
     TRmgMapPosition position = zone->getLevelPosition();
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
+    int zoneIndex = zone->getTemplateZone()->m_zoneIndex;
     int roughness = zone->m_scaledSize;
     pending.push_back(to);
     while (pending.size() > 0) {
