@@ -5598,7 +5598,19 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
         break;
     }
 
-    unsigned char playerBit = g_mapVisibilityBit;
+    // Dreamcast records `int playerBit` (sp+0xe8, initialized at line 7120
+    // after the origin switch). Retail zero-extends the byte global into EBX,
+    // homes it as a dword at [ebp-0x44] and tests it against the masked
+    // getMapExtra word (`and eax,0xffff / test ecx,eax`). An unsigned char
+    // local scores higher (98.96 against 97.62) but keeps a byte home at
+    // [ebp-1] and a byte test, and shifts every other frame slot by four.
+    // With the int local the frame agrees slot for slot; what remains is one
+    // scratch choice at the hero's z compare (ours DX, evicting the cached
+    // zero that retail keeps in EDX for the two-thirds stores, retail CX).
+    // Flat or worse: the two-thirds declarations in either order, on one
+    // line, chained, or ahead of the hero lookup (96.22..97.13), and the z
+    // compare's operand order.
+    int playerBit = g_mapVisibilityBit;
     for (int y = ulY; y <= brY; y++) {
         curRadar = radarRowStart + xOffset;
         // DC's row pointer is unsigned short*, advanced by the byte pitch
