@@ -32,6 +32,15 @@ address corrected - is admitted by hand in
 `config/matching/banked-waivers.tsv` with its reason, the same shape as the
 VA-claim backlog.
 
+ONE WITHDRAWAL NEEDS NO WAIVER: `status update` retires a missing row whose
+RVA the census classifies as platform library code (`update_rows`), because a
+library body is verified against its pinned member outside the scores and a
+game label banked there was a misplacement. The gate reads the same census
+set and does not report those RVAs: two tools that disagree about one row
+leave the build red with no source to fix (h3maped's four `artifact`
+overflow_error rows on LIBCPMT ios.obj, 2026-11-25). Git history keeps the
+peak by RVA should the body rejoin the reconstruction targets.
+
 Runs its embedded negative control on every invocation: the gate proves
 it can still detect a deliberately removed row before it judges the tree.
 """
@@ -40,7 +49,8 @@ from __future__ import annotations
 import sys
 
 from homm3.core import common
-from homm3.match.status import MatchRow, load_baseline, baseline_history
+from homm3.match.status import (MatchRow, load_baseline, baseline_history,
+                                census_universe)
 
 WAIVERS = common.HOMM3_DIR / "config/matching/banked-waivers.tsv"
 
@@ -79,12 +89,26 @@ def parse_history(patch_text: str) -> dict[int, tuple[float, str, str]]:
 
 def missing_rows(history: dict[int, tuple[float, str, str]],
                  current: dict[tuple[str, str], MatchRow],
-                 waived: set[int]) -> list[tuple[int, float, str, str]]:
-    """Historically banked RVAs with no row left in the current baseline."""
+                 waived: set[int],
+                 library: frozenset[int] | set[int] = frozenset()
+                 ) -> list[tuple[int, float, str, str]]:
+    """Historically banked RVAs with no row left in the current baseline.
+
+    `library` is the census's platform library code: `status update`
+    retires a missing row there on purpose, so it is not a loss.
+    """
     present = {row.rva for row in current.values() if row.rva is not None}
     return sorted((rva, best, unit, label)
                   for rva, (best, unit, label) in history.items()
-                  if best > 0.0 and rva not in present and rva not in waived)
+                  if best > 0.0 and rva not in present and rva not in waived
+                  and rva not in library)
+
+
+def library_rvas() -> set[int]:
+    """The RVAs `status update` retires missing rows from; empty without
+    a census (the game image before its first census, or a bare checkout)."""
+    census = census_universe()
+    return set() if census is None else census[1]
 
 
 def history_from_git(patch: str | None = None) -> dict[int, tuple[float, str, str]]:
@@ -156,6 +180,13 @@ def selftest() -> list[str]:
         failures.append("waiver did not silence the row")
     if not missing_rows(history, kept, {0x12345}):
         failures.append("unrelated waiver wrongly silenced the row")
+
+    # 5. NEGATIVE CONTROL D - a row retired from library code is not a
+    #    loss, and library code elsewhere excuses nothing.
+    if missing_rows(history, kept, set(), {0x428F0}):
+        failures.append("library-owned retirement wrongly reported as a loss")
+    if not missing_rows(history, kept, set(), {0x12345}):
+        failures.append("unrelated library code wrongly silenced the row")
     return failures
 
 
@@ -169,7 +200,9 @@ def run_gate(*, history_patch: str | None = None) -> list[str]:
         print("[build] banked-rows: no tracked baseline history - skipped")
         return []
     waivers = load_waivers()
-    lost = missing_rows(history, load_baseline(), set(waivers))
+    library = library_rvas()
+    current = load_baseline()
+    lost = missing_rows(history, current, set(waivers), library)
     if lost:
         fatal = ["banked-rows: a previously banked function left the ledger "
                  "without its RVA being reclaimed:"]
@@ -183,6 +216,9 @@ def run_gate(*, history_patch: str | None = None) -> list[str]:
     summary = f"[build] banked-rows: {banked} historically banked RVA(s)"
     if waivers:
         summary += f", {len(waivers)} waived"
+    retired = len(missing_rows(history, current, set(waivers))) - len(lost)
+    if retired:
+        summary += f", {retired} retired with library code"
     print(summary + " - none lost")
     return []
 
