@@ -331,7 +331,7 @@ public:
 // type_map_dwelling_def <- type_flaggable_def <- type_treasure_def.
 class type_flaggable_def : public type_treasure_def {
 public:
-    type_flaggable_def(int subtype);
+    type_flaggable_def(int objectType, int subtype, int value, int density);
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
@@ -684,12 +684,6 @@ struct TRmgZoneBounds {
     int m_minimumY;
     int m_maximumX;
     int m_maximumY;
-
-    bool contains(const TRmgPoint& point) const
-    {
-        return point.m_x >= m_minimumX && point.m_x < m_maximumX &&
-            point.m_y >= m_minimumY && point.m_y < m_maximumY;
-    }
 };
 
 TRmgPoint clipRmgBoundaryPoint(

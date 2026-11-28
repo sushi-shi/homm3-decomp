@@ -2516,9 +2516,11 @@ type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* proper
     return object;
 }
 
+// Mac 0x2322ac forwards r4..r7 to the treasure constructor untouched; its
+// only caller 0x232334 (the dwelling constructor) loads 17, subtype, -1, 40.
 MAC_ADDRESS(0x2322ac, 0x38)
-type_flaggable_def::type_flaggable_def(int subtype)
-    : type_treasure_def(17, subtype, -1, 40)
+type_flaggable_def::type_flaggable_def(int objectType, int subtype, int value, int density)
+    : type_treasure_def(objectType, subtype, value, density)
 {
 }
 
@@ -2533,7 +2535,7 @@ type_object* type_flaggable_def::generate(TRmgObjectPropertiesRef* properties,
 
 MAC_ADDRESS(0x232334, 0x48)
 type_map_dwelling_def::type_map_dwelling_def(int subtype)
-    : type_flaggable_def(subtype)
+    : type_flaggable_def(17, subtype, -1, 40)
 {
 }
 
@@ -3743,9 +3745,7 @@ static const int g_rmgDecorationTypes[45] = {
 // Mac 0x23603c..0x236084 expands the byte-valued land predicate before
 // clearing the obstacle-fill mark. Keep those shared cell operations.
 // Both images destroy the four candidate vectors separately on the
-// no-candidate path, so it is an early continue. Reading the clipped
-// neighbourhood's map extents through getWidth()/getHeight() (one of the
-// solver's free-site leads) lowers the game to 74.54; not adopted. Mac 0x235bf0..0x235c18 and
+// no-candidate path, so it is an early continue. Mac 0x235bf0..0x235c18 and
 // both Windows images reread the prototype type for each version test, so
 // the tests are spelled in place; a single-use static type/version
 // predicate given the prototype lowers the game.
@@ -3760,14 +3760,25 @@ static const int g_rmgDecorationTypes[45] = {
 // (add, then +0x38). Mac reuses that index register for the weighted
 // selection and writes properties/candidatePosition to the same slots in
 // both phases, so they share one declaration; both Windows frames then
-// shrink by the 0x1c of a second bounds/position pair. Game residual: the
-// positions/weights push_backs expand insert(P, x) one level deeper than
-// retail, the pending destructor keeps _Destroy, and the first bounds'
-// y/z register homes differ. Editor residual: the positions push_back stays
-// a call and the second lookup's height*z operand order. A reference to
-// m_objectPrototypes[type], a pointer-walked table, z before the bounds,
-// x-then-y bounds order, a hoisted score and reusing item for the
-// neighbour lookup are lower or flat.
+// shrink by the 0x1c of a second bounds/position pair.
+// The footprint bounds are set bottom first, then top, left and right, the
+// order traceZoneBoundary's bounds use: retail stores the bottom before the
+// right edge (0x537587, 0x53758a) and Mac loads the height before the
+// position's y (0x235c20, 0x235c24), which CodeWarrior does only for that
+// order (compiled; top-first loads y first). Left-first orders leave the
+// game's y and z in each other's registers (99.43).
+// The clipped neighbourhood reads the map extents through getWidth() and
+// getHeight(). Inline budget (replay): the positions and weights appends
+// keep insert(P, x) as a call, which needs budget / remaining sites below
+// 64 at both (it was 64 at each). The two accessors are two more sites
+// after them (1797 over 30 and 29 sites: 59 and 61); the 128 the unexpanded
+// inserts leave also expands _Destroy in the pending vector's destructor,
+// as retail does. Both images are exact with them; with the fields the
+// game expands both inserts and the editor keeps the positions append a
+// call.
+// A reference to m_objectPrototypes[type], a pointer-walked table, z before
+// the bounds, a hoisted score and reusing item for the neighbour lookup are
+// lower or flat.
 // Candidate anchors put the start cell S under each blocked
 // footprint cell in turn. For a fully blocked 3x2 object they
 // are S and each o; North is up:
@@ -3817,10 +3828,10 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
                     continue;
                 if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE && prototype->getType() >= MAX_EVENT_TYPE)
                     continue;
-                bounds.m_minimumX = position.m_x;
-                bounds.m_minimumY = position.m_y;
-                bounds.m_maximumX = position.m_x + prototype->getWidth();
                 bounds.m_maximumY = position.m_y + prototype->getHeight();
+                bounds.m_minimumY = position.m_y;
+                bounds.m_minimumX = position.m_x;
+                bounds.m_maximumX = position.m_x + prototype->getWidth();
                 candidatePosition.m_z = position.m_z;
                 for (candidatePosition.m_y = bounds.m_minimumY;
                     candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
@@ -3854,8 +3865,8 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
         addObject(new type_object(properties), candidatePosition);
         bounds.m_minimumX = max(candidatePosition.m_x - prototype->getWidth(), 0);
         bounds.m_minimumY = max(candidatePosition.m_y - prototype->getHeight(), 0);
-        bounds.m_maximumX = min(candidatePosition.m_x + 2, m_map.m_mapWidth);
-        bounds.m_maximumY = min(candidatePosition.m_y + 2, m_map.m_mapHeight);
+        bounds.m_maximumX = min(candidatePosition.m_x + 2, m_map.getWidth());
+        bounds.m_maximumY = min(candidatePosition.m_y + 2, m_map.getHeight());
         candidatePosition.m_z = position.m_z;
         for (candidatePosition.m_y = bounds.m_minimumY;
             candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
@@ -4348,37 +4359,34 @@ void readRmgTemplateZones(
 // three manually selected overloads.  The four loops below are likewise the
 // only repeated structures present in retail; every other registration is an
 // unrolled source statement.
-// Loop/construction and pointer/container lifetime searches found a
-// scoped-base-pointer candidate that trades the two tail calls for two early
-// spell-box base-constructor calls; it is not adopted. The original final
-// quest append crosses C2's separate
-// 35000 running cap, blocking begin() and the next treasure constructor.
-// Eight base/derived initializer-list controls do not change these call
-// streams; base member initialization also contradicts its exact vptr order.
-// Inline-replay probe: most retail "insert" differences are ICF labels
-// (vector<widget>/vector<int> twins), so the solver's per-symbol target is
-// wrong here. Read per site, both images first diverge at the
-// treasure_def(7) append right after the key-tent loop (retail keeps
-// insert(pos, value) in both), and the game's whole pattern (expanded
-// inserts flip at appends 27/69/70/82/83/97 and the tail) is reproduced at
-// the current root cost only by ~70 more budget spent in the key-tent loop,
-// e.g. a charged cost-70..73 site where `m_disabledKeyTents[color] = 0`
-// stands (h3maped accepts the same). Mac shows only MSL vector<bool>
-// resize/set there; VC6's std::vector<bool> is the byte vector with the
-// same inline costs (compiled), so no evidenced source change is known.
+// The retained calls follow C2's budget rule exactly (inline replay): the
+// nested insert(pos, value) expands while budget / remaining sites >= 64,
+// and nothing expands once the running size reaches 35000 (the tail's
+// push_back calls). These source facts set that budget in both images:
+// - Mac 0x232334 loads 17, the subtype, -1 and 40 and calls 0x2322ac, which
+//   forwards its four arguments unchanged: type_flaggable_def takes the
+//   whole treasure tuple and type_map_dwelling_def supplies the constants
+//   (callee costs 48 + 54 instead of 42 + 48).
+// - Mac counts the first creature loop, the key tents and the dwellings in
+//   r30 but the seer-hut creature loop in r27. CodeWarrior gives one shared
+//   counter r27 in both loops (compiled) and r30/r27 for two declarations:
+//   the seer-hut loop declares its own counter.
+// - The root's cost must be 8011..8013 for the game's pattern (replay), two
+//   more than the statements above give. A compound statement costs two;
+//   the braced dwelling loop body is one spelling that supplies it, and a
+//   block around the first creature loop measures the same in both images.
 // Both creature loops assign the count with if/else straight into the loop
 // counter: Mac branches to two separate count loads (unlike the dwelling
 // loop's one-armed overwrite), and the retail loop entries (mov/dec/test)
-// of both images reject the former ternary-plus-copy local, which compared
-// against zero instead. Root cb 8006 -> 8010 then expands the last spell
-// box's base constructor in both images (h3maped 90.25 -> 99.37, game
-// 99.51 -> 99.53). Residual: h3maped expands one seer-area push_back that
-// retail keeps as a call; the game keeps insert(pos, 1, value) at two
-// sites where retail calls insert(pos, value). Measured: reading the seer
-// count into a shadowing local is identical; keeping the creature scope
-// block (cb 8012) gives 99.32 / 99.28; unbracing the key-tent block too
-// gives 88.32 / 99.36; one loop alone gives 88.32 / 96.75; braced if/else
-// arms (cb 8020..8024) give up to 99.87 / 99.05.
+// of both images reject a ternary-plus-copy local. m_disabledKeyTents is an
+// MSL vector<bool> on Mac; VC6's std::vector<bool> is the byte vector with
+// the same inline costs (compiled).
+// Retail calls vector<type_treasure_def*>::insert(pos, n, value) at 0x54d120,
+// the pointer-vector body recruit.cpp labels for widget; `homm3 delink`
+// admits that fold once this caller matches.
+// Residual (h3maped 99.87): the fourth key tent's inlined constructor stores
+// subtype, value, type, density; ours stores type first, as retail does at
+// the other four sites.
 VA(0x00538B10, 0x2241)
 MAC_ADDRESS(0x2375f0, 0x4880)
 void type_random_map_generator::initializeObjectGenerators()
@@ -4453,8 +4461,9 @@ void type_random_map_generator::initializeObjectGenerators()
     int dwelling = 80;
     if (m_mapVersion < 1)
         dwelling = 58;
-    for (; dwelling--;)
+    for (; dwelling--;) {
         m_objectGenerators.push_back(new type_map_dwelling_def(dwelling));
+    }
 
     m_objectGenerators.push_back(new type_treasure_def(22, 0, 500, 100));
     m_objectGenerators.push_back(new type_treasure_def(23, 0, 1500, 100));
@@ -4508,6 +4517,7 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(82, 0, 1500, 500));
 
     for (int seerSubtype = 0; seerSubtype < m_objectPrototypes[83].size(); ++seerSubtype) {
+        int creature;
         if (m_mapVersion >= 1)
             creature = 145;
         else
@@ -4601,27 +4611,24 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 // placed and its 12-byte position vector. Retail samples offsets around
 // the center and appends positions accepted by canPlaceZone. Provisional
 // role name; Complete-only, no Dreamcast counterpart.
-// Exposing the ordinary position-constructor body in this TU, together
-// with constructed candidates, the named Y temporary and middle zone setter,
-// this restores all retail insertion call boundaries; with the constructor
-// hidden in support they are lost.
-// The opposite-level probe stores the center's x/y and the new level
-// straight into the zone, as Mac 0x23c0f0..0x23c104 and the editor
-// (0x4a18f7..0x4a1913) do, with no candidate temporary or setter copy.
+// Each probe stores its coordinates straight into the zone: Mac 0x23c09c..
+// 0x23c0a4 and 0x23c1ec..0x23c1f4 write the two converted values and the
+// level to zone+0x10/0x14/0x18 with no constructed position between, as the
+// opposite-level probe does (Mac 0x23c0f0..0x23c104, editor 0x4a18f7..
+// 0x4a1913). Retail converts y before x (0x53aeda sines, 0x53aee9 cosines)
+// and keeps y on the stack across the second conversion, so y is a local
+// formed first. The center's position is copied from the member (Mac
+// 0x23bff8..0x23c004 loads the three fields) and each accepted position is
+// read back through getLevelPosition(), which preserves the snapshot even
+// if the predicate changes the zone.
 // Retail stores x and y before it computes the new level (0x53af56..
 // 0x53af61), so the level is formed after those two stores.
-// The temporary reference spelling is provisional
-// source ownership, not recovered DC text. Three post-predicate getter reads
-// preserve accepted-position snapshots even if a predicate changes the zone.
-// Construction/update/lifetime forms with canonical getSize/max calls
-// expanded vector helpers too far before that ownership recovery. Retain
-// real helpers and ordinary calls.
-// Residual (game): the last loop's expanded insert calls the ternary's
-// second size() where retail expands it. The inline trace gives this caller
-// cb 517 (budget 1034); retail's decision needs cb 559..600, so the second
-// size() gets 42 instead of 84. A max() radius, plain int Y temporaries,
-// loop-scoped constructed candidates and TRmgZone::getSize() reads (cb 512)
-// are all lower; getNumberLevels() is flat.
+// Inline budget (replay): the last push_back's insert(pos, n, value) expands
+// two of its size() calls, which needs 701..784 left there. This body sits
+// at the 1000 floor and charges three getLevelPosition() copies and two
+// inserts (728). A fourth accessor copy for the center leaves 680, and the
+// former constructed candidates (two more charged constructors) 618; both
+// are byte-identical elsewhere and expand one size() only.
 VA(0x0053AE80, 0x36A)
 MAC_ADDRESS(0x23bfbc, 0x28c) // anchor-callee 0x53bab9/0x53bb23; thiscall, ret 0xc
 VA_AT(h3maped, 0x004a17f5, 0x172)
@@ -4629,16 +4636,13 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
     TRmgZone* zone, std::vector<TRmgMapPosition>& candidates)
 {
     int radius = center->m_templateZone->m_size + zone->m_templateZone->m_size;
-    TRmgMapPosition position = center->getLevelPosition();
-    TRmgMapPosition candidate;
+    TRmgMapPosition position = center->m_levelPosition;
     for (int direction = 0; direction < 32; ++direction) {
-        const int& y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
-        candidate = TRmgMapPosition(
-            static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]),
-            y, position.m_z);
-        zone->m_levelPosition.m_x = candidate.m_x;
-        zone->m_levelPosition.m_y = candidate.m_y;
-        zone->m_levelPosition.m_z = candidate.m_z;
+        int y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        zone->m_levelPosition.m_x =
+            static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
+        zone->m_levelPosition.m_y = y;
+        zone->m_levelPosition.m_z = position.m_z;
         if (canPlaceZone(zone))
             candidates.push_back(zone->getLevelPosition());
     }
@@ -4654,13 +4658,11 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
     if (radius < zone->m_templateZone->m_size)
         radius = zone->m_templateZone->m_size;
     for (direction = 0; direction < 32; ++direction) {
-        const int& y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
-        candidate = TRmgMapPosition(
-            static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]),
-            y, level);
-        zone->m_levelPosition.m_x = candidate.m_x;
-        zone->m_levelPosition.m_y = candidate.m_y;
-        zone->m_levelPosition.m_z = candidate.m_z;
+        int y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        zone->m_levelPosition.m_x =
+            static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
+        zone->m_levelPosition.m_y = y;
+        zone->m_levelPosition.m_z = level;
         if (canPlaceZone(zone))
             candidates.push_back(zone->getLevelPosition());
     }
@@ -5079,14 +5081,23 @@ void type_random_map_generator::drawStraightZoneBoundary(
 // Mac 0x23de80..0x23deec builds the two left corners, then assigns the
 // existing from/to endpoints to the right corners. Mac 0x23e11c..0x23e1b4
 // also resets the search flag and refreshes both endpoint snapshots before
-// clipping. Retain that complete search phase: the editor is exact, and
-// omitting the inner snapshots/flag would raise the game only by dropping
-// that evidence. Shared/local flags and pre/post-tested loops are flat.
-// Game residual: 93 blocks on both sides; two vector copies still choose
-// _Ufill/_Destroy expansion. The inliner's cumulative budget responds to the
-// coordinate accessors: reading the NPC corners through getX()/getY() (as
-// fillZoneArea reads its position) is what lets both _Ucopy copies expand.
-// Account for cross-type ICF before treating a template name as a new call.
+// clipping. Retain that complete search phase.
+// Both bounds tests are written out: Mac branches on each of the four
+// comparisons (0x23ddf4..0x23de28, 0x23e16c..0x23e1a0), where CodeWarrior
+// materializes an inline predicate's result as it does operator!= just
+// below (0x23de30..0x23de4c). The corner loop reads the point fields: Mac
+// compares from's coordinate with the bound (cmpw r4,r7 at 0x23e1c0) and
+// loads from before to in the loop test (0x23e2d0), CodeWarrior's order for
+// fields; getX()/getY() give the reverse of both (compiled). The zone's
+// position is copied from the member, as appendZonePositions copies its
+// center; retail keeps the whole 12-byte copy (0x53c3b2..0x53c3ca).
+// Inline budget (replay): the corner append expands _Ucopy and _Ufill, the
+// final append _Ucopy, _Ufill, _Ucopy and _Destroy but not the fourth
+// size(), which needs 2034..2093 left at the corner append. This body has
+// 2046. An accessor copy of the position (-48), a contains() helper (-74 at
+// each site, less the written test's 27 of root cost) and coordinate
+// accessors (+6 of root cost each) all move it; the former
+// accessor-everywhere body had 1874.
 // Follow the map border clockwise, one corner at a time.
 // North is up:  upperLeft -> upperRight
 //                   ^             v
@@ -5099,7 +5110,7 @@ void type_random_map_generator::traceZoneBoundary(
     TRmgHalfEdge* vertex = first;
     TRmgZone* zone = vertex->getZone();
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
-    TRmgMapPosition zonePosition = zone->getLevelPosition();
+    TRmgMapPosition zonePosition = zone->m_levelPosition;
     TRmgZoneBounds bounds;
     bounds.m_maximumY = m_map.getHeight();
     bounds.m_minimumX = bounds.m_minimumY = 0;
@@ -5117,7 +5128,8 @@ void type_random_map_generator::traceZoneBoundary(
         originalTo = next->m_vertex;
         from = clipRmgBoundaryPoint(originalFrom, originalTo, bounds);
         to = clipRmgBoundaryPoint(originalTo, originalFrom, bounds);
-        if (bounds.contains(from) && from != to) {
+        if (from.m_x >= bounds.m_minimumX && from.m_x < bounds.m_maximumX
+            && from.m_y >= bounds.m_minimumY && from.m_y < bounds.m_maximumY && from != to) {
             found = true;
             break;
         }
@@ -5171,18 +5183,19 @@ void type_random_map_generator::traceZoneBoundary(
                 originalFrom = vertex->m_vertex;
                 originalTo = next->m_vertex;
                 to = clipRmgBoundaryPoint(originalFrom, originalTo, bounds);
-                if (bounds.contains(to))
+                if (to.m_x >= bounds.m_minimumX && to.m_x < bounds.m_maximumX
+            && to.m_y >= bounds.m_minimumY && to.m_y < bounds.m_maximumY)
                     found = true;
                 else
                     vertex = next;
             } while (!found);
-            while (from.getX() != to.getX() && from.getY() != to.getY()) {
+            while (from.m_x != to.m_x && from.m_y != to.m_y) {
                 TRmgPoint corner;
-                if (from.getX() == bounds.m_minimumX && from.getY() != bounds.m_minimumY)
+                if (from.m_x == bounds.m_minimumX && from.m_y != bounds.m_minimumY)
                     corner = TRmgPoint(bounds.m_minimumX, bounds.m_minimumY);
-                else if (from.getY() == bounds.m_minimumY && from.getX() != bounds.m_maximumX - 1)
+                else if (from.m_y == bounds.m_minimumY && from.m_x != bounds.m_maximumX - 1)
                     corner = TRmgPoint(bounds.m_maximumX - 1, bounds.m_minimumY);
-                else if (from.getX() == bounds.m_maximumX - 1 && from.getY() != bounds.m_maximumY - 1)
+                else if (from.m_x == bounds.m_maximumX - 1 && from.m_y != bounds.m_maximumY - 1)
                     corner = TRmgPoint(bounds.m_maximumX - 1, bounds.m_maximumY - 1);
                 else
                     corner = TRmgPoint(bounds.m_minimumX, bounds.m_maximumY - 1);
@@ -5199,15 +5212,17 @@ void type_random_map_generator::traceZoneBoundary(
 // The bounds follow both by-value points: editor EBP+0x1c, and retail Mac
 // 0x23d1dc receives point in r4/r5, toward in r6/r7 and bounds in r8.
 // The game's fastcall passes the bounds in EDX with either source order.
-// Mac residual: CodeWarrior gives this leaf a frame and materializes the
-// inlined contains() result as a byte where retail branches directly.
+// The containment test is written out: retail Mac branches on each of its
+// four comparisons, where an inline predicate's result is materialized as a
+// byte. Mac residual: CodeWarrior gives this leaf a frame.
 VA(0x0053CAC0, 0x266)
-MAC_ADDRESS(0x23d1dc, 0x4a8) // MAC_ABSTRACTION_FROM(tokens1:5f4b0d9c9ca8,21.4765): retail Mac's own argument registers (point r4/r5, toward r6/r7, bounds r8) and the editor's stack slots fix this parameter order; the earlier bounds-first order scored higher only by token alignment. Mac comparison scores 19.3792.
+MAC_ADDRESS(0x23d1dc, 0x4a8) // MAC_ABSTRACTION_FROM(tokens1:3cd178d8ffc7,19.3792): the bounds test is written out because retail Mac branches on each comparison (0x23d1f0..0x23d224), and CodeWarrior now emits those 19 instructions word for word; its frame (stwu) still shifts every later instruction, so the positional score falls to 12.8356.
 VA_AT(h3maped, 0x004a2b33, 0x1a9)
 TRmgPoint clipRmgBoundaryPoint(
     TRmgPoint point, TRmgPoint toward, const TRmgZoneBounds& bounds)
 {
-    if (bounds.contains(point))
+    if (point.m_x >= bounds.m_minimumX && point.m_x < bounds.m_maximumX
+        && point.m_y >= bounds.m_minimumY && point.m_y < bounds.m_maximumY)
         return point;
 
     TRmgVector delta = toward - point;
@@ -5452,15 +5467,23 @@ int TRmgZone::getBoundaryCount() const
 // The scan reads the cursor through the point accessors: three free /Ob2
 // sites after the pop_back take erase's body budget under std::copy's cost,
 // which retail calls; every call matches.
-// Residual: retail retains copy and _Destroy inside seed erasure, where VC6
-// expands them and retains an extra size call in the final lower-span
-// insertion.
+// Statement order follows both images' instruction order: the editor loads
+// the first edge before it stores the -1 sentinel (0x4a32b2) and zeroes the
+// two span flags together inside the row lookup (0x4a33de); both images
+// store the clip bounds top, left, bottom, right (game 0x53d49d..0x53d4a9),
+// the order getInitialZoneBounds returns them in, where an aggregate
+// initializer stores left first. The clearance is narrowed one comparison
+// per statement: the nested call gave the three by-value operand pairs
+// different frame homes in the game and loaded y after the first result in
+// the editor. The zone index is read through getTemplateZone(), which puts
+// the pending vector's allocator byte in dl ahead of it as retail has; a
+// named slot pointer is equal.
 VA(0x0053D380, 0x551)
 MAC_ADDRESS(0x23ed74, 0x4a4) // anchor-caller 0x53e050; Complete-only, thiscall ret 8
 VA_AT(h3maped, 0x004a325d, 0x2f7)
 void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first)
 {
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
+    int zoneIndex = zone->getTemplateZone()->m_zoneIndex;
     std::vector<TRmgMapPosition> pending;
     TRmgMapPosition position;
     position = zone->getLevelPosition();
@@ -5470,16 +5493,16 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
         || position.m_y < 0 || position.m_y >= m_map.getHeight()) {
         int bestClearance = 0;
         TRmgPoint best;
-        best.m_x = -1;
         TRmgHalfEdge* edge = first;
+        best.m_x = -1;
         do {
             edge = edge->m_next;
             TRmgPoint point = edge->m_twin->m_sitePosition;
             if (point.m_x >= 1 && point.m_x < m_map.getWidth() - 1
                 && point.m_y >= 1 && point.m_y < m_map.getHeight() - 1) {
-                int clearance = min(min(min(point.m_x,
-                    m_map.getWidth() - point.m_x - 1), point.m_y),
-                    m_map.getHeight() - point.m_y - 1);
+                int clearance = min(point.m_x, m_map.getWidth() - point.m_x - 1);
+                clearance = min(clearance, point.m_y);
+                clearance = min(clearance, m_map.getHeight() - point.m_y - 1);
                 if (clearance > bestClearance) {
                     bestClearance = clearance;
                     best = point;
@@ -5488,7 +5511,11 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
         } while (edge != first);
         if (best.m_x < 0)
             return;
-        TRmgZoneBounds bounds = {0, 0, m_map.getWidth(), m_map.getHeight()};
+        TRmgZoneBounds bounds;
+        bounds.m_minimumY = 0;
+        bounds.m_minimumX = 0;
+        bounds.m_maximumY = m_map.getHeight();
+        bounds.m_maximumX = m_map.getWidth();
         TRmgPoint clipped = clipRmgBoundaryPoint(
             TRmgPoint(position.m_x, position.m_y), best, bounds);
         position.m_x = clipped.m_x;
@@ -5498,9 +5525,9 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
     while (pending.size() > 0) {
         position = pending.back();
         pending.pop_back();
-        TRmgMapItem* item = m_map.getMapItem(position);
         unsigned char upperSpan = 0;
         unsigned char lowerSpan = 0;
+        TRmgMapItem* item = m_map.getMapItem(position);
         while (position.getX() > 0 && (item - 1)->m_zoneState.m_zone == -1) {
             --item;
             --position.m_x;
@@ -5657,11 +5684,23 @@ VA_COMPGEN_AT(h3maped, 0x004ae1eb, 0x12, VECTOR_SIZE, Short)
 // do-while edge walk, halfEdge accessors, local template pointers, a copied
 // reverse connection.
 // Residual: the remaining game call difference is inside the fourth
-// connection insertion (its _Destroy and one _Ucopy stay calls; the inline
-// solver fits root cb 1100..1155 against our 995, or a getLevelPosition cb
-// at most 40, whose direct return costs fillIslandInterior and others). The
-// editor frame stays four bytes short of retail's separate index + 1 home.
-// Preserve the canonical helpers.
+// connection insertion (its _Destroy and one _Ucopy stay calls). Replay: the
+// last push_back needs 1439..1550 left and has 1230; the charged sites
+// before it are four m_zones.size() (42), six getLevelPosition() (48), three
+// inserts (64) and initializeDistances (112). Retail does make all six
+// by-value position copies (0x53db1e..0x53db33, 0x53db68..0x53db89), so
+// either they are free here or the root is 105..160 larger. With a
+// direct-return getter (cost 32) this body compiles to retail's 504
+// instructions, calls and blocks, leaving only six scalar frame homes
+// permuted (99.91), but positionZone's second append then expands its
+// insert in both images (it needs 76 charged before it, and Mac 0x23cacc..
+// 0x23cb1c stores the coordinates straight into the zone, so no constructor
+// supplies that), as do fillIslandInterior and four later connection
+// functions. One getter cannot cost 48 there and nothing here; no second
+// copy operation is evidenced. The && and field spellings of the clip test
+// are byte-equal apart from that budget (90.71).
+// The editor frame stays four bytes short of retail's separate index + 1
+// home. Preserve the canonical helpers.
 VA(0x0053DAD0, 0x57F)
 MAC_ADDRESS(0x23f518, 0x40c) // anchor-callee buildZoneBoundaries; Complete-only, ret 8
 VA_AT(h3maped, 0x004a3710, 0x2f3)
@@ -6223,13 +6262,18 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
 // twice before the map formula (0x241438..0x241464), the generator lookup;
 // its reset, scan and selection lookups copy once (m_map). Keep the reset and
 // selected-cell pointers: dropping either lowers both images.
-// Residual: both scans' level*height imul operands are swapped; the game
-// interleaves the bounds, index and position copies that retail emits in
-// sequence (MAX 97.16 with the earlier position-first order, 96.61 here),
-// plus an EDX/ECX swap in the perimeter clamps. Construction/loop/getter,
-// selection/scan/upper-limit, named scan cells/insert iterators, ADD-negative
-// limit forms, getBounds, assigned/copy-initialized full positions and
-// position-before-index orders do not recover it.
+// The zone index is read through getTemplateZone(), as fillZoneArea reads
+// it: retail copies the bounds, then the index, then the position, in
+// sequence, where the direct member chain interleaved the three and swapped
+// EDX/ECX in the perimeter clamps (96.61 -> 99.94).
+// Residual, the same in both images: the candidate scan's lookup multiplies
+// level by height (mov eax,[level]; imul eax,[height], game 0x53f6c4,
+// editor 0x4a4b1a) where the reset and selection lookups multiply height
+// by level, as all three do here. The editor also adds the cell base to
+// the index there instead of indexing off it. A named scan cell gives the
+// editor that add (99.93) but takes the game's base register (96.65); the
+// three-coordinate overload, either operand spelling of its product, the
+// generator's forwarder and a cost accessor are byte-equal to this form.
 VA(0x0053F470, 0x409)
 MAC_ADDRESS(0x24123c, 0x638)
 VA_AT(h3maped, 0x004a4913, 0x37b)
@@ -6238,7 +6282,7 @@ void type_random_map_generator::populateWaterZoneIslands(TRmgZone* zone)
     if (zone->m_terrain != eTerrainWater)
         return;
     TRmgZoneBounds bounds = zone->m_bounds;
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
+    int zoneIndex = zone->getTemplateZone()->m_zoneIndex;
     TRmgMapPosition position;
     position.m_z = zone->getLevelPosition().m_z;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
@@ -6297,11 +6341,21 @@ void type_random_map_generator::populateWaterZoneIslands(TRmgZone* zone)
 // dry cell of another zone is seen (0x241a54..0x241a68), and derives the
 // cell rectangle (position - radius + 1 .. position + radius) and the
 // clearance rectangle (position - radius .. position + radius + 1) from it.
-// Residual: rectangle/zone register homes and extra reload blocks; the editor
-// also swaps the position and nearby frame slots. Swapping their declarations,
-// scoping nearby to the cell, hoisting bounds, reordering the zone lookup or
-// nesting the skips leaves both images flat; a separate clearance rectangle
-// lowers the game 92.63 -> 92.55. Native
+// The zone's template is read through getTemplateZone(): the editor passes
+// the neighbour's zone in edx and keeps the second scan's row in ebx only
+// with the accessor (93.51 -> 99.92; the game is byte-equal either way).
+// Editor residual: the third scan's lookup multiplies height by level
+// (0x4a4f34) where this build multiplies level by height; the generator's
+// forwarder and the map's own lookup are byte-equal at all three scans.
+// Game residual (92.63): retail homes the cell's zone index in ebx and the
+// row width in edi; here the width takes ebx and the index stays on the
+// stack, which permutes the rectangle registers through all three scans.
+// Swapping the position/nearby declarations, scoping nearby to the cell,
+// bounds declared at function scope (four positions), reordering the zone
+// lookup, a bool flag, radius before the flag and nesting the skips leave
+// both images flat; a separate clearance rectangle lowers the game to 92.55.
+// The former blocks around the three bounds groups were byte-inert and are
+// gone. Native
 // flat-cell tests cover the three scan phases and connection policies.
 // Preserve the two separate connection-policy tests at 0x53fa3f..0x53fa58;
 // the ordinary findConnection helper and progress call remain canonical.
@@ -6320,12 +6374,10 @@ void type_random_map_generator::markZoneBoundaryObstacles()
                 if (zoneIndex < 0 || current->getLandType() == eTerrainWater)
                     continue;
                 TRmgZoneBounds bounds;
-                {
-                    bounds.m_minimumY = max(position.m_y - 1, 0);
-                    bounds.m_minimumX = max(position.m_x - 1, 0);
-                    bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
-                    bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
-                }
+                bounds.m_minimumY = max(position.m_y - 1, 0);
+                bounds.m_minimumX = max(position.m_x - 1, 0);
+                bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
+                bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
                 TRmgZone* zone = m_zones[zoneIndex];
                 unsigned char found = 0;
                 int radius = 1;
@@ -6340,7 +6392,7 @@ void type_random_map_generator::markZoneBoundaryObstacles()
                         } else if (otherZone != zoneIndex) {
                             if (item->getLandType() != eTerrainWater)
                                 radius = 1;
-                            TRmgZoneConnection* connection = zone->m_templateZone->findConnection(otherZone);
+                            TRmgZoneConnection* connection = zone->getTemplateZone()->findConnection(otherZone);
                             if (!connection || position.m_z == 1)
                                 found = 1;
                             if (connection && !connection->m_unguarded)
@@ -6351,12 +6403,10 @@ void type_random_map_generator::markZoneBoundaryObstacles()
                 if (!found)
                     continue;
                 current->setObstacleFill(1);
-                {
-                    bounds.m_minimumY = max(position.m_y - radius + 1, 0);
-                    bounds.m_minimumX = max(position.m_x - radius + 1, 0);
-                    bounds.m_maximumY = min(position.m_y + radius, m_map.m_mapHeight);
-                    bounds.m_maximumX = min(position.m_x + radius, m_map.m_mapWidth);
-                }
+                bounds.m_minimumY = max(position.m_y - radius + 1, 0);
+                bounds.m_minimumX = max(position.m_x - radius + 1, 0);
+                bounds.m_maximumY = min(position.m_y + radius, m_map.m_mapHeight);
+                bounds.m_maximumX = min(position.m_x + radius, m_map.m_mapWidth);
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = getMapItem(nearby);
@@ -6365,12 +6415,10 @@ void type_random_map_generator::markZoneBoundaryObstacles()
                             item->setObstacleFill(1);
                     }
                 }
-                {
-                    bounds.m_minimumY = max(position.m_y - radius, 0);
-                    bounds.m_minimumX = max(position.m_x - radius, 0);
-                    bounds.m_maximumY = min(position.m_y + radius + 1, m_map.m_mapHeight);
-                    bounds.m_maximumX = min(position.m_x + radius + 1, m_map.m_mapWidth);
-                }
+                bounds.m_minimumY = max(position.m_y - radius, 0);
+                bounds.m_minimumX = max(position.m_x - radius, 0);
+                bounds.m_maximumY = min(position.m_y + radius + 1, m_map.m_mapHeight);
+                bounds.m_maximumX = min(position.m_x + radius + 1, m_map.m_mapWidth);
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = getMapItem(nearby);
