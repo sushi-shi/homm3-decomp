@@ -298,18 +298,26 @@ void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusSpellScroll& b
 // that value to the formatter (a named quantity, removed as unevidenced),
 // and walks the second loop with separate pointer and offset inductions.
 // Reading bonus.getSkills() at each use: 78.2%.
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): review remark 2's
+// while (true) scan with a named quantity, read through getSkills(); the
+// plain while-condition scan measures 76.54%.
 VA(0x0042e6d0, 0x127)
 void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusPrimarySkill& bonus)
 {
-    const TArray<unsigned int, kNumPrimarySkills>& quantities = bonus.getSkills();
     CString skills;
     unsigned int skill = 0;
-    while (quantities[skill] <= 0)
+    unsigned int quantity;
+    while (true) {
+        quantity = bonus.getSkills()[skill];
+        if (quantity > 0)
+            break;
         ++skill;
-    skills = TFormattedString("+%d %s", quantities[skill], akHeroPrimarySkillTraits[skill].m_name);
-    for (skill++; skill < kNumPrimarySkills; skill++) {
-        if (quantities[skill] > 0)
-            skills += TFormattedString(", +%d %s", quantities[skill], akHeroPrimarySkillTraits[skill].m_name);
+    }
+    skills = TFormattedString("+%d %s", quantity, akHeroPrimarySkillTraits[skill].m_name);
+    for (++skill; skill < kNumPrimarySkills; ++skill) {
+        quantity = bonus.getSkills()[skill];
+        if (quantity > 0)
+            skills += TFormattedString(", +%d %s", quantity, akHeroPrimarySkillTraits[skill].m_name);
     }
     _m_name.Format(kGiveBonusFmtStr, (const char*)skills, _getHeroName(bonus));
 }
