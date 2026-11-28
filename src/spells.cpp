@@ -218,12 +218,15 @@ static int updateSpellTargetFromMouse()
     return updateSpellTarget(g_combatManager->getGridIndex(x, y));
 }
 
-// Retail calls getMagicMirrorChance before random in the reflection test;
-// VC6 calls random first for both operand orders, fused or nested (re-tested
-// 2026-11-24). Only a separate `int mirrorChance = ...;` statement before
-// the roll reaches retail's order (95.60), but Mac 0x18facc/0x18fad8 calls
-// random first, which that statement order contradicts; not adopted.
-// Residual (99.46%): that order only. The closing `default: break;` (DC
+// Retail calls getMagicMirrorChance before random in the reflection test.
+// In one comparison VC6 calls the heavier operand first, so random(1, 100)
+// precedes the argument-free member call for both operand orders, negated
+// or not, as its own nested if, and through an inline wrapper of either call
+// (standalone probes at this unit's flags); only a named chance read before
+// the roll gives retail's order, and it is exact. Mac 0x18facc/0x18fad8 calls random first, which one comparison
+// would give CodeWarrior and this statement order cannot: the two builds'
+// sources differ here, and Windows bytes decide the Windows source.
+// The closing `default: break;` (DC
 // 498..505 unrecorded before 506) flips VC6's cross-jump so the Frost
 // Ring/Force Field and Remove Obstacle/Clone shared tails keep the earlier
 // copy as retail does (95.07 -> 99.46).
@@ -339,18 +342,20 @@ void combatManager::initiateSpell(ESpellId spellToCast, int creatureSpell)
                                              m_nextActionGridIndex, 1, 0);
             if (target && spellToCast != SPELL_DISPEL
                     && target->getOwningSide() != m_currentSide
-                    && !target->is(creatureImmobilized)
-                    && target->getMagicMirrorChance() >= random(1, 100)) {
-                TPickANumber picker(0, m_numArmies[m_currentSide] - 1);
-                int picked;
-                // Both retail builds test creature type (+0x34), not hex (+0x38).
-                do {
-                    picked = picker.pick();
-                } while (picked >= 0
-                         && (m_armies[m_currentSide][picked].is(creatureImmobilized)
-                             || m_armies[m_currentSide][picked].m_creatureType
-                                    == army::ARMY_CREATURE_ARROW_TOWER));
-                m_nextActionGridIndex2 = m_armies[m_currentSide][picked].m_gridIndex;
+                    && !target->is(creatureImmobilized)) {
+                int mirrorChance = target->getMagicMirrorChance();
+                if (mirrorChance >= random(1, 100)) {
+                    TPickANumber picker(0, m_numArmies[m_currentSide] - 1);
+                    int picked;
+                    // Both retail builds test creature type (+0x34), not hex (+0x38).
+                    do {
+                        picked = picker.pick();
+                    } while (picked >= 0
+                             && (m_armies[m_currentSide][picked].is(creatureImmobilized)
+                                 || m_armies[m_currentSide][picked].m_creatureType
+                                        == army::ARMY_CREATURE_ARROW_TOWER));
+                    m_nextActionGridIndex2 = m_armies[m_currentSide][picked].m_gridIndex;
+                }
             }
         }
         break;
