@@ -6879,23 +6879,21 @@ void townManager::moveHero(town* fromTown, town* toTown)
 // folded body GetText (99.94 by name only). Left for the owner's decision.
 // Two edits each remove enough units to close this root (measured 100%):
 // town::hasBuilding as one conditional return (cb 62 -> 54), and dropping
-// the del_Spr_from_Cache call below (4 root units plus the empty body's
-// 12). The first is refuted elsewhere: that helper form lowers
-// hero::getLuck, hero::getMoraleDescription, aiEnterTown,
-// town::buildBuilding and town::giveEventReward, which all need cb 62.
-// The second removes a Dreamcast-recorded call (8256), so it is not
-// applied here; removing all 31 such calls in the image changes no other
-// function's bytes.
+// the del_Spr_from_Cache call (4 root units plus the empty body's 12).
+// The first is refuted elsewhere: that helper form lowers hero::getLuck,
+// hero::getMoraleDescription, aiEnterTown, town::buildBuilding and
+// town::giveEventReward, which all need cb 62. The second is applied:
+// removing all 31 such calls in the image changes no other function's bytes.
 VA(0x005d86f0, 0x445A)
 DC_ADDRESS(0x17b48c, 0x3c68)
 MAC_ADDRESS(0x1d6668, 0xa4e0)
 TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:8256
-    // DC 8257 initializes the removed scroll_offset (+0x58), not a size
-    // check. Mac 0x1d66b8..0x1d66d4 goes from base/vtable setup to reserve.
-    // Removing the formerly assumed release VERIFY is byte-flat at 95.6830%.
+    // DC 8256 calls ResourceManager::del_Spr_from_Cache and 8257 initializes
+    // scroll_offset (+0x58). Complete has neither: the member is gone, and
+    // the call's 16 inline-cost units put this root past retail's budget.
+    // Mac 0x1d66b8..0x1d66d4 goes from base/vtable setup to reserve.
     m_widgets.reserve(156);
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
