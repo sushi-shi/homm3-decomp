@@ -1595,11 +1595,10 @@ static int doCampaignWindow(bool newGame, int campaignSet)
 // (0x111108, 0x111130, 0x111158). Each cancellation reopens the campaign
 // video after the helper returns; keep that caller operation separate.
 // Retail's set-window object occupies 0x50 bytes: the modal object sits at
-// [ebp-0x60], its declared 0x4c-byte class ends at [ebp-0x15], and the four
-// bytes above it ([ebp-0x14..-0x11]) are touched by no instruction, so the
-// retail class carries one trailing dword that every carved body leaves
-// unread. Model that proven extent with a local record; the member keeps
-// TCampaignSetWindow's own constructor, doModal and destructor calls.
+// [ebp-0x60], heroWindow's 0x4c bytes end at [ebp-0x15], and the four bytes
+// above it ([ebp-0x14..-0x11]) are touched by no instruction. The class
+// declares that trailing dword (include/campaign.h); int/bool exitCampaigns
+// (99.77/99.89%) and a named switch selector are flat or lower.
 VA(0x004f00a0, 0x3EE)
 MAC_ADDRESS(0x111028, 0x264)
 static unsigned char doCampaignWindow()
@@ -1612,11 +1611,8 @@ static unsigned char doCampaignWindow()
 
     while (1) {
         {
-            struct CampaignSetRecord {
-                TCampaignSetWindow m_window;
-                int m_unusedTail;
-            } campaignSetWindow;
-            campaignSetWindow.m_window.doModal();
+            TCampaignSetWindow campaignSetWindow;
+            campaignSetWindow.doModal();
         }
 
         switch (g_windowManager->m_dialogReturn) {
