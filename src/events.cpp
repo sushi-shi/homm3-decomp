@@ -1158,9 +1158,14 @@ static void addReward(std::string& text, const std::string& alternate,
 // and this body keeps every other header inline (is_in_spellbook, size,
 // c_str, Dismiss) as a call, so the skill tests index m_skillLevel. With
 // showRewards' implicit threshold conversion, retail's sixth addReward now
-// expands its showRewards: 97.79 -> 99.37%. Residual: the post-spell
-// showRewards still expands erase (budget 69 against cost 69); a root cb
-// of 2332..2336 (now 2344) would keep the call. Flat probes: function-wide
+// expands its showRewards: 97.79 -> 99.37%. The post-spell showRewards
+// then still expanded erase (budget 69 against cost 69); a root cb of
+// 2332..2336 (then 2344) keeps the call. Dreamcast's scope depths supply
+// it: a guarded statement sits one level below its test when unbraced and
+// two when braced. The reward calls at lines 868, 880, 913, 941, 1002,
+// 1006 and 1024 are unbraced and the join dialog at 1098 is braced; each
+// brace pair is two cb units, so the root lands on 2332 and the body is
+// exact. Flat probes: function-wide
 // for (int i ...), split or function-scope skill/level, function-scope
 // amount, operator[] or GetText at every text, DC's mana reload and per-arm
 // amount, bool skillGiven, DC's if (skillGiven) block, true literals; a
@@ -1184,19 +1189,17 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     if (blackBox->m_experienceBonus > 0) {
         experienceGained = currentHero->getExperienceBonusFactor()
               * blackBox->m_experienceBonus;
-        if (humanPlayer) {
+        if (humanPlayer)
             addReward(msg, alternate, rewards, RES_EXPERIENCE, experienceGained);
-        }
         rewardGiven = true;
     }
 
     for (i = 0; i < kNumPrimarySkills; i++) {
         if (blackBox->m_primarySkillBonus[i] > 0) {
-            if (humanPlayer) {
+            if (humanPlayer)
                 addReward(msg, alternate, rewards,
                           EGameResource(RES_PRIMARY_SKILL_ATTACK + i),
                            blackBox->m_primarySkillBonus[i]);
-            }
             currentHero->adjustPrimarySkill(i, blackBox->m_primarySkillBonus[i]);
             rewardGiven = true;
         }
@@ -1218,10 +1221,9 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         }
         if (!skillGiven)
             continue;
-        if (humanPlayer) {
+        if (humanPlayer)
             addReward(msg, alternate, rewards, RES_SECONDARY_SKILL,
                        skill * 3 + level + 2);
-        }
         rewardGiven = true;
     }
 
@@ -1237,9 +1239,8 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
             alternate = formatString(g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_MANA_FORMAT),
                                       currentHero->m_name);
         }
-        if (humanPlayer && amount != 0) {
+        if (humanPlayer && amount != 0)
             addReward(msg, alternate, rewards, RES_MANA, amount);
-        }
         currentHero->m_mana += amount;
         rewardGiven = true;
     }
@@ -1284,17 +1285,16 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     for (i = 0; i < NUM_RESOURCES; i++) {
         if (blackBox->m_resQty[i] != 0) {
             if (humanPlayer) {
-                if (blackBox->m_resQty[i] > 0) {
+                if (blackBox->m_resQty[i] > 0)
                     addReward(msg, formatString(
                         g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
                         currentHero->m_name), rewards, EGameResource(i),
                                blackBox->m_resQty[i]);
-                } else {
+                else
                     addReward(msg, formatString(
                         g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_TREASURE_FORMAT),
                         currentHero->m_name), rewards, EGameResource(i),
                                blackBox->m_resQty[i] - 100000);
-                }
             }
             currentHero->giveResource(i, blackBox->m_resQty[i]);
             rewardGiven = true;
@@ -1305,12 +1305,11 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     type_artifact artifact(ARTIFACT_NONE);
     for (i = 0; i < blackBox->m_artifacts.size(); i++) {
         if (currentHero->getNumberInBackpack(true) < HERO_BACKPACK_CAPACITY) {
-            if (humanPlayer) {
+            if (humanPlayer)
                 addReward(msg, formatString(
                     g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
                     currentHero->m_name), rewards, RES_ARTIFACT,
                            blackBox->m_artifacts[i]);
-            }
             artifact.m_artifactId = blackBox->m_artifacts[i];
             currentHero->giveArtifact(artifact, 1, 1);
             if (!humanPlayer)
@@ -1387,8 +1386,9 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         if (msg.length() > 0)
             extendedDialog(msg.c_str(), rewards, -1, -1, 0);
     }
-    if (joinDialogNeeded)
+    if (joinDialogNeeded) {
         doMonsterJoinDialog(currentHero, &newCreatures, 0);
+    }
     if (experienceGained > 0)
         currentHero->giveExperience(experienceGained, 1, true);
     if (humanPlayer)
