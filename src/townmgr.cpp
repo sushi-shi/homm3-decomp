@@ -4723,6 +4723,13 @@ void townManager::drawTown(int update, int incFrame, bool drawHotspots)
 // retail's two 64-bit AND register forms (unchanged by those names, by a
 // function-top `building`; a ternary chain drops to 99.06%), and the
 // resource-border help row resolves as g_spellEffectTraits+0xa4 in retail.
+// Retail's rule in every chain is that the cached mask is the AND's
+// destination: copied while a later test still needs it (hall tests one and
+// two here), loaded or overwritten otherwise. Ours makes the bit the
+// destination in the hall chain and copies the mask in the castle chain's
+// first test. hasBuilding with an unbraced arm, an implicit bool return, an
+// if/else pair of `return true` tests (its own body 99.41%) or one
+// conditional return leaves both chains unchanged.
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)
 DC_ADDRESS(0x175160, 0x14d2)
@@ -5918,9 +5925,16 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
 // ResourceManager::Dispose wrapper after adding the last icon.
 // Derived widget locals reproduce retail's widget* conversion temporaries
 // for vector insertion, its extra frame slot and nested construction call.
-// Residual at 99.9819%: the loop back edge reloads width/window in the
-// opposite order. Combining GetSprite/GetWidth in one full expression
-// (DC row 7403) is byte-flat; preserve the ordinary helper calls.
+// Residual at 99.9819%: after the icon loop retail re-enters three live
+// ranges in the order sprite (eax), window (esi), numResources (ebx); the
+// zero-trip branch at 0x5d6279 skips all three. This compile emits window
+// first. Combining GetSprite/GetWidth in one full expression (DC row 7403)
+// is byte-flat; preserve the ordinary helper calls. Also byte-flat: the
+// sprite and width declared at the top, a for-init counter, numResources and
+// window declared at the top, pre-increment, const locals, Dispose through
+// the resource* overload or nested in the CSprite* one, and the sprite and
+// width assigned in the for-init after the counter (before it: 99.66%).
+// `message msg` at the top lowers it to 97.73%.
 VA(0x005d5f30, 0x8DA)
 DC_ADDRESS(0x1793b4, 0x54a)
 MAC_ADDRESS(0x1d35a4, 0x53c)  // arity(ret 0xc, 3 args) + anchor-callee TBuyBuildWindow ctor
@@ -6863,6 +6877,15 @@ void townManager::moveHero(town* fromTown, town* toTown)
 // That spelling is cb-flat (16017) and leaves the same residual; its 54
 // retained calls then name ??ATTextResource where the target labels the
 // folded body GetText (99.94 by name only). Left for the owner's decision.
+// Two edits each remove enough units to close this root (measured 100%):
+// town::hasBuilding as one conditional return (cb 62 -> 54), and dropping
+// the del_Spr_from_Cache call below (4 root units plus the empty body's
+// 12). The first is refuted elsewhere: that helper form lowers
+// hero::getLuck, hero::getMoraleDescription, aiEnterTown,
+// town::buildBuilding and town::giveEventReward, which all need cb 62.
+// The second removes a Dreamcast-recorded call (8256), so it is not
+// applied here; removing all 31 such calls in the image changes no other
+// function's bytes.
 VA(0x005d86f0, 0x445A)
 DC_ADDRESS(0x17b48c, 0x3c68)
 MAC_ADDRESS(0x1d6668, 0xa4e0)

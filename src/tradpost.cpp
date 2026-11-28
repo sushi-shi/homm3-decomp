@@ -1788,6 +1788,12 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // command fields. Restoring them raises Windows98.73 ->99.10 (2026-09-27).
 // Mac 0x1f6148..0x1f6164 and 0x1f6230..0x1f624c assign each resource
 // widget ID before its status mask (99.78% Windows). All 54 named calls agree.
+// The one differing statement is the sell arm's g_currentPlayer->m_resources[i]:
+// both builds walk g_resourceValueWidgetY with one pointer p and keep
+// delta = 0x9c - &g_resourceValueWidgetY in a frame slot, but retail adds
+// (delta + p) and then indexes by the player pointer, ours adds
+// (delta + player) and indexes by p. Byte-flat: post-increment, a long
+// counter, and a function-scope counter.
 // Earlier word-order controls were flat; volatile scratch aliases remain unsupported.
 // DC 1174..1177 and 1223..1226 select each m_codeX with if/else (score-neutral).
 // DC line 1208 calls the ordinary private ComputeTradeRatios
