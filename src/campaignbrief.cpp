@@ -966,6 +966,13 @@ void TCampaignBrief::doModal()
 // Native region-text assignment is now represented. The remaining constructor/
 // destructor expansions belong to NewSMapHeader's canonical header body;
 // preserve those boundaries rather than flattening or pinning library calls.
+// Both scenario lookups go through the header's accessor: Mac 0x67cd8 and
+// 0x67fa4 retain the vector storage call one accessor level leaves, as in
+// updateAllyEnemyFlags (67 calls on both sides, against 65 with direct
+// m_scenarios[]). The hover lookup's retained call is the const storage
+// accessor (0x8100), which no spelling here reproduces yet. Windows 91.05 ->
+// 91.03%: the start path's NewSMapHeader constructor/destructor expansions
+// still take different inline decisions, with no single root-cost window.
 VA(0x0045b1e0, 0x8DB)
 DC_ADDRESS(0x05a324, 0x824)
 MAC_ADDRESS(0x0679f0, 0x838)  // DoModal address-take + full retail CFG
@@ -1041,7 +1048,7 @@ static int campaignBriefHandler(message& msg)
                         // 86.3865 -> 91.0541 in the current source context;
                         // old 82.12% assignment probes used an earlier context.
                         std::string text;
-                        text = brief->m_campaign->m_scenarios[helpID]
+                        text = brief->m_campaign->getScenario(helpID)
                                 ->getRegionDescription();
                         normalDialog(text.c_str(), 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
@@ -1194,8 +1201,8 @@ static int campaignBriefHandler(message& msg)
         memset(g_newMapStartingBonus, 3, sizeof(g_newMapStartingBonus));
         incProgressBar(true);
 
-        int gamePos = brief->m_campaign->m_scenarios[selected]
-                          ->getStartOptions()->getPlayer(choice);
+        int gamePos = brief->m_campaign->getScenario(selected)
+                          ->getStartOptionPlayer(choice);
         strcpy(g_game->m_players[gamePos].m_name, g_config.m_networkDefaultName);
         g_localGamePos = gamePos;
         brief->m_campaign->startScenario(selected, choice);
