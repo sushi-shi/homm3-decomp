@@ -1101,9 +1101,11 @@ void type_random_map::markObstacleFillPatch(TRmgMapPosition position)
 // short, and scalar assignments and whole-position copies do not recover the
 // combined lifetime. Mac can keep the trivial trigger copy in registers
 // rather than a separate stack slot.
-// Editor residual: the shared false-return block, which retail puts after
-// the first placement query and this build near the end. Keep the native
-// direct returns.
+// The water-membership test is one more early failure return: the map
+// editor's /O1 copy then keeps the shared false-return block after the first
+// placement query, as retail does (93.79% -> 100%; the game is exact either
+// way). Returning the comparison, directly or through a byte local, leaves
+// that block at the end.
 VA(0x00531CF0, 0x1A5)
 MAC_ADDRESS(0x22e6a8, 0x270) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
 unsigned char type_random_map::canPlaceObject(
@@ -1139,8 +1141,9 @@ unsigned char type_random_map::canPlaceObject(
         if (!akAdvObjectTypeTraits[entranceType].m_clearedOnVisit)
             return 0;
     }
-    unsigned char result = (item->getLandType() == eTerrainWater) == (zone->m_terrain == eTerrainWater);
-    return result;
+    if ((item->getLandType() == eTerrainWater) != (zone->m_terrain == eTerrainWater))
+        return 0;
+    return 1;
 }
 
 // Treasure fill and guard placement pass a map in ECX, followed by an
