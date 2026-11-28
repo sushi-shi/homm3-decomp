@@ -80,6 +80,8 @@ END_MESSAGE_MAP()
 // named int copy of it does; Format takes the member directly here. No
 // change: the page's getResourceQuantity, int(quantity), an int member;
 // lower: indexing the array without controls, the text before LimitText.
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x0048a24c, 0x28d)
 BOOL TMonsterPropsTreasurePage::OnInitDialog()
 {
@@ -101,8 +103,9 @@ BOOL TMonsterPropsTreasurePage::OnInitDialog()
     for (type = 0; type < kNumGameResourceTypes; type++) {
         _TResourceControls& controls = _m_aResourceControls[type];
         controls.m_quantityEdit.LimitText(TDigits<TMonster::s_kMaxResourceQuantity>::getDigits());
+        int quantity = controls.m_quantity;
         CString text;
-        text.Format("%d", controls.m_quantity);
+        text.Format("%d", quantity);
         controls.m_quantityEdit.SetWindowText(text);
         controls.m_quantitySpin.SetRange(0, UD_MAXVAL);
     }

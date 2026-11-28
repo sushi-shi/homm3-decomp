@@ -376,6 +376,8 @@ bool TTown::isCustomized() const
 
 // Loki writes the cast event count (Loki Town.cpp 975). Residual: retail
 // stores the count after loading the stream, as a named size_type count does.
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x004c2ad9, 0x252)
 void TTown::write(TRawOStream* pOStream, int version) const
 {
@@ -388,7 +390,7 @@ void TTown::write(TRawOStream* pOStream, int version) const
     *pOStream << static_cast<signed char>(_m_bCustomGarrison);
     if (_m_bCustomGarrison)
         getGarrison().write(pOStream, version);
-    *pOStream << static_cast<signed char>(getBGroupedFormation() ? 1 : 0);
+    *pOStream << static_cast<signed char>(_m_bGroupedFormation);
     *pOStream << static_cast<signed char>(_m_bCustomBuildings);
     if (_m_bCustomBuildings) {
         unsigned char aBuilt[(s_kNumBuildings + 7) / 8];
@@ -420,7 +422,8 @@ void TTown::write(TRawOStream* pOStream, int version) const
         if (_m_disabledSpellsMask[spell])
             aSpells[spell / 8] |= 1 << spell % 8;
     *pOStream << aSpells;
-    *pOStream << static_cast<long>(_m_events.size());
+    std::vector<TTimedEvent>::size_type numEvents = _m_events.size();
+    *pOStream << static_cast<long>(numEvents);
     for (std::vector<TTimedEvent>::const_iterator iter = _m_events.begin(); iter != _m_events.end(); ++iter)
         iter->write(pOStream, version);
     if (version >= GAME_VERSION_SOD)

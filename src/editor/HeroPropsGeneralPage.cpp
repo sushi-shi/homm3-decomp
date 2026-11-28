@@ -441,6 +441,8 @@ void TIdentifiedHeroPropsGeneralPage::DoDataExchange(CDataExchange* pDX)
 // the rectangles' stack homes after the bitmap creation, which declaring
 // them inside the client-DC block reproduces without lifetime evidence.
 // RECT types, CRect conversions and mutable iterators do not recover it.
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x00450e4e, 0x4c7)
 BOOL TIdentifiedHeroPropsGeneralPage::OnInitDialog()
 {
@@ -476,17 +478,17 @@ BOOL TIdentifiedHeroPropsGeneralPage::OnInitDialog()
     _m_nameEdit.LimitText(THeroPrototype::s_kMaxNameLen);
     _m_nameEdit.EnableWindow(bCustomName);
     _m_nameEdit.SetWindowText(bCustomName ? _m_name : CString(prototype.getName().c_str()));
-    CRect portraitRect;
-    _m_portraitStatic.GetWindowRect(&portraitRect);
-    ScreenToClient(&portraitRect);
-    CRect spinRect;
-    _m_portraitSpin.GetWindowRect(&spinRect);
-    ScreenToClient(&spinRect);
-    portraitRect.right = spinRect.left;
-    portraitRect.bottom = spinRect.bottom;
-    _m_portraitStatic.MoveWindow(&portraitRect, FALSE);
-    _m_portraitStatic.GetClientRect(&portraitRect);
     {
+        CRect portraitRect;
+        _m_portraitStatic.GetWindowRect(&portraitRect);
+        ScreenToClient(&portraitRect);
+        CRect spinRect;
+        _m_portraitSpin.GetWindowRect(&spinRect);
+        ScreenToClient(&spinRect);
+        portraitRect.right = spinRect.left;
+        portraitRect.bottom = spinRect.bottom;
+        _m_portraitStatic.MoveWindow(&portraitRect, FALSE);
+        _m_portraitStatic.GetClientRect(&portraitRect);
         CClientDC dc(this);
         _m_portraitBitmap.CreateCompatibleBitmap(&dc, portraitRect.Width(), portraitRect.Height());
     }

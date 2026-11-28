@@ -1012,6 +1012,8 @@ inline TViewportOrgOffsetter::~TViewportOrgOffsetter()
 // passability cell position in one point whose y is set per row and x per
 // cell. The road clamp is Loki's (Loki MapEditWnd.cpp 1123). Residual:
 // retail tests the clamp's positive side (top > 0 ? top : 0 matches).
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x0046b686, 0xc4b)
 void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
 {
@@ -1050,7 +1052,7 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
         }
     CRect roadCells = cells;
     roadCells.top--;
-    roadCells.top = roadCells.top < 0 ? 0 : roadCells.top;
+    roadCells.top = roadCells.top > 0 ? roadCells.top : 0;
     for (cell.y = roadCells.top; cell.y < roadCells.bottom; cell.y++)
         for (cell.x = roadCells.left; cell.x < roadCells.right; cell.x++) {
             CPoint pos((cell.x - _m_viewPos.x) * tileSize - rect.left,

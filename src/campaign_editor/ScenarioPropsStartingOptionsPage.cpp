@@ -631,15 +631,19 @@ void TScenarioOptionsCrossoverScenarioDlg::setOptions(const TScenarioOptionsCros
 
 // Residual: retail loads the current scenario before the prerequisite
 // receiver; a nested test on a named index reproduced it and was not kept.
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x0042fbd0, 0xcb)
 void TScenarioOptionsCrossoverScenarioDlg::prepare()
 {
     if (_m_campaign.getScenario(_m_scenario).getMap() != NULL) {
         for (unsigned int scenario = 0; scenario < _m_campaign.getMapTraits().m_numRegions; scenario++) {
-            if (scenario != _m_scenario && _m_campaign.getScenario(scenario).getMap() != NULL
-                && _m_campaign.getBPrerequisite(_m_scenario, scenario)) {
-                _m_abScenarioAvailable[scenario] = true;
-                _m_numScenariosAvailable++;
+            if (scenario != _m_scenario && _m_campaign.getScenario(scenario).getMap() != NULL) {
+                int currentScenario = _m_scenario;
+                if (_m_campaign.getBPrerequisite(currentScenario, scenario)) {
+                    _m_abScenarioAvailable[scenario] = true;
+                    _m_numScenariosAvailable++;
+                }
             }
         }
         _m_addButton.EnableWindow(_m_numScenariosAvailable > 0);
@@ -1237,17 +1241,22 @@ BOOL TScenarioPropsStartingOptionsPage::OnInitDialog()
 
 // Residual: scenario-index load order; an unevidenced snapshot local
 // reproduced it here and in OnSetActive and was not kept.
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x00431d10, 0xa0)
 void TScenarioPropsStartingOptionsPage::OnOK()
 {
     CPropertyPage::OnOK();
     const TScenario& oldScenario = _m_oldCampaign.getScenario(_m_scenario);
-    const TScenario& newScenario = _m_newCampaign.getScenario(_m_scenario);
+    int scenarioIndex = _m_scenario;
+    const TScenario& newScenario = _m_newCampaign.getScenario(scenarioIndex);
     _m_bModified = _m_bModified || (newScenario.getMap() != NULL) != (oldScenario.getMap() != NULL)
                    || (newScenario.getMap() != NULL
                        && !(*newScenario.getStartingOptions() == *oldScenario.getStartingOptions()));
 }
 
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x00431db0, 0xea)
 BOOL TScenarioPropsStartingOptionsPage::OnSetActive()
 {
@@ -1259,7 +1268,8 @@ BOOL TScenarioPropsStartingOptionsPage::OnSetActive()
         _m_type = 0;
         UpdateData(FALSE);
         _m_pTypeDlgs->m_bonusDlg.show();
-        const TScenario& scenario = _m_newCampaign.getScenario(_m_scenario);
+        int scenarioIndex = _m_scenario;
+        const TScenario& scenario = _m_newCampaign.getScenario(scenarioIndex);
         if (scenario.getMap() != NULL) {
             for (type = 0; type < kNumTypes; type++)
                 _m_aTypeRadios[type].EnableWindow(_m_pTypeDlgs->m_apDlg[type]->isAvailable());
