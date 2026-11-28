@@ -809,7 +809,13 @@ inline void computeAdjacentDirs(
 // accessors for the signed loop-point origin, or its converting
 // constructor, are lower. The solver fits a root one tuple lighter (or a
 // callee 1..6 heavier); Loki's direct getCell(adjPt).getTerrainType() test
-// in place of isPaintTerrain drops the game to 90.23.
+// in place of isPaintTerrain drops the game to 90.23. Declaring the loop's
+// direction ahead of the loop (block or function scope) or dropping the
+// frame block meets that window: all 56 calls then agree with retail, but
+// the offset walk takes ebx where retail uses edx and its x/y sums swap
+// registers (99.09, stable over 16 declaration offsets); the converting
+// constructor (90.57), point + offset (90.52), accessor origin (93.57) and
+// a named offset reference (back to 99.62) do not fix that.
 VA_AT(h3maped, 0x004bb74b, 0x2c8)
 VA(0x005b4b20, 0x5cb)
 MAC_ADDRESS(0x256014, 0x580) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4

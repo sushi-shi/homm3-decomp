@@ -262,18 +262,22 @@ void TRmgHalfEdge::flip()
 // field and keeps dx in a register. The edge's own fields, not its
 // accessors, keep this ordinary member's cost (185 with them) under C1XX's
 // 175 auto-inline save limit, so the game's addSite still expands it.
-// The edge length is computed first, as retail does (editor 59.01 -> 62.51).
-// Editor residual: retail forward-substitutes the endpoint distances at their
-// tests and keeps the opposite x in edx; this compile spills more. A by-value
-// origin or opposite reference, dy before dx, are lower.
+// The edge length is computed first, as retail does (editor 59.01 -> 62.51),
+// and each endpoint distance is formed in its own test: retail computes the
+// second only after the first test fails (editor 62.51 -> 87.12; the game's
+// addSite is exact either way). Mac 0x25c3ec instead computes both endpoint
+// distances, then the edge, before either compare (GG's t1, t2, t3); that
+// order as locals stays at 62.51.
+// Editor residual: register homes in the distance prologue (retail org.y in
+// esi, opposite x in edx, org.x in edi copied to ebx). A by-value origin
+// (74.32) or opposite reference (72.32) are lower.
 MAC_ADDRESS(0x25c3ec, 0xf8)
 unsigned char TRmgHalfEdge::isPointOnSegment(TRmgPoint point) const
 {
     TRmgPoint opposite = m_twin->m_sitePosition;
     s32 edgeDistance = getRmgSquaredDistance(m_sitePosition, opposite);
-    s32 firstDistance = getRmgSquaredDistance(point, m_sitePosition);
-    s32 secondDistance = getRmgSquaredDistance(point, opposite);
-    if (firstDistance > edgeDistance || secondDistance > edgeDistance)
+    if (getRmgSquaredDistance(point, m_sitePosition) > edgeDistance
+        || getRmgSquaredDistance(point, opposite) > edgeDistance)
         return 0;
     const TRmgPoint& origin = m_sitePosition;
     s32 dx = opposite.m_x - origin.m_x;

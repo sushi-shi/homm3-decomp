@@ -1101,9 +1101,11 @@ void type_random_map::markObstacleFillPatch(TRmgMapPosition position)
 // short, and scalar assignments and whole-position copies do not recover the
 // combined lifetime. Mac can keep the trivial trigger copy in registers
 // rather than a separate stack slot.
-// Editor residual: the shared false-return block, which retail puts after
-// the first placement query and this build near the end. Keep the native
-// direct returns.
+// The water-membership test is one more early failure return: the map
+// editor's /O1 copy then keeps the shared false-return block after the first
+// placement query, as retail does (93.79% -> 100%; the game is exact either
+// way). Returning the comparison, directly or through a byte local, leaves
+// that block at the end.
 VA(0x00531CF0, 0x1A5)
 MAC_ADDRESS(0x22e6a8, 0x270) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
 unsigned char type_random_map::canPlaceObject(
@@ -1139,8 +1141,9 @@ unsigned char type_random_map::canPlaceObject(
         if (!akAdvObjectTypeTraits[entranceType].m_clearedOnVisit)
             return 0;
     }
-    unsigned char result = (item->getLandType() == eTerrainWater) == (zone->m_terrain == eTerrainWater);
-    return result;
+    if ((item->getLandType() == eTerrainWater) != (zone->m_terrain == eTerrainWater))
+        return 0;
+    return 1;
 }
 
 // Treasure fill and guard placement pass a map in ECX, followed by an
@@ -7269,10 +7272,13 @@ void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 // retail's coordinate value homes) and the shared exit on border success.
 // Capture strength before requested value: either input alone leaves the
 // table calculation's registers wrong.
-// Editor residual: retail pushes both guard inputs straight from memory and
-// loads the map height before copying the scanned position. Passing the
-// fields directly, as the other three callers do, raises the editor
-// 97.80 -> 98.31 but lowers the game 100 -> 97.00.
+// The row-below test reads the map height through getHeight(): the editor
+// then loads it before copying the scanned position, as retail does
+// (97.80 -> 99.05; the game is exact either way).
+// Editor residual: retail pushes both guard inputs straight from memory.
+// Passing both fields directly, as the other three callers do, closes the
+// editor (100) but lowers the game 100 -> 97.00; the strength local alone
+// gives the same pair, the value local alone 99.52 / 98.52.
 VA(0x00541AD0, 0x5B0)
 MAC_ADDRESS(0x2446ac, 0x55c) // anchor-callee connectZones; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::createShipyardConnection(
@@ -7306,7 +7312,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
                         return 1;
                     if (item->getLandType() != eTerrainWater) {
                         nearby = position;
-                        if (position.m_y + 1 < m_map.m_mapHeight) {
+                        if (position.m_y + 1 < m_map.getHeight()) {
                             for (nearby.m_x = position.m_x;
                                  nearby.m_x <= position.m_x + 2; ++nearby.m_x) {
                                 if (m_map.canPlaceObject(properties, nearby, source)
@@ -8258,6 +8264,11 @@ void type_random_map_generator::carveBranchingPaths()
 // Mac 0x247954..0x247b78 clamps a separate cell position in place (x, y and
 // the level stored first) and scans with it; that spelling costs the game
 // two register choices in the clamps (100 -> 98.84) and the editor 1.2%.
+// The zone index is read through getTemplateZone(), as fillZoneArea and the
+// gate and water passes read it: the editor then keeps the prologue's zero
+// in edx and the template pointer in ecx, as retail does (97.37 -> 100);
+// the game is exact either way. Reading the index before the level position
+// is lower (98.17).
 VA(0x005443A0, 0x2F5)
 MAC_ADDRESS(0x247800, 0x59c)
 VA_AT(h3maped, 0x004a8722, 0x2b8)
@@ -8266,7 +8277,7 @@ void type_random_map_generator::connectJunctionEntrance(TRmgPoint from, TRmgPoin
 {
     std::vector<TRmgPoint> pending;
     TRmgMapPosition position = zone->getLevelPosition();
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
+    int zoneIndex = zone->getTemplateZone()->m_zoneIndex;
     int roughness = zone->m_scaledSize;
     pending.push_back(to);
     while (pending.size() > 0) {
@@ -8747,10 +8758,13 @@ int type_random_map_generator::getZoneGuardValue(const TRmgZone* zone, int value
 // cursor level before buildOutline and makes the game copy exact.
 // The trigger reads go through TPoint's x()/y(); with the extra helper
 // expansion that caller mass keeps the editor's third clear() a call.
-// Residual (editor): only the zero register (retail ebx, here ecx) and the
-// ranking-initializer stores in the prologue are scheduled differently.
-// Moving zoneIndex or the ranking locals around the anchor block selects
-// ebx there (up to 96.78) but costs the exact game copy 1-2%.
+// Mac 0x249274..0x249298 copies the zone bounds and then reads the zone's
+// template index; reading it there, through getTemplateZone() as the other
+// zone passes do, gives the editor retail's ebx zero register (93.92 ->
+// 98.35) and keeps the game exact. The direct member chain at that point is
+// 93.62, and the index first 93.08 (game 96.58); distance before the
+// fill count is 97.87 (game 99.99).
+// Residual (editor): the ranking-initializer stores in the prologue.
 // Mac's outline loop (0x249438..0x249518) translates through
 // operator+(TRmgMapPosition, TRmgPoint) and looks the cell up by position;
 // that expansion costs the editor 104 inline budget, so its third clear()
@@ -8766,9 +8780,9 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
     TObjectType* prototype = properties->m_prototype;
     std::vector<TRmgMapPosition> candidates;
     TRmgZoneBounds bounds = zone->m_bounds;
+    int zoneIndex = zone->getTemplateZone()->m_zoneIndex;
     int bestObstacleFillCount = 0;
     int bestDistance = 40000;
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     // Compare candidate anchors after translating the town entrance by the mine trigger.
     TRmgMapPosition targetAnchor;
     if (startingMine) {
@@ -9176,11 +9190,15 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
 // accepted values accumulate until the target or a small remainder stops us.
 // Exact with the native group->addObject boundary (Mac call 0x24a670);
 // flattening that helper leaves centering loads and insertion scheduling
-// different. Keep distinct first/later object lifetimes and the third failed
-// fit's deletion/null-selection exit; duplicate bounds updates change CFG.
-// A counted fit loop that clears the deleted selection, with each creation
-// loop's unspecified position declared inside it, closes the editor's /O1
-// schedule (97.84% -> 100%) but drops Mac 0x24a584 from 55.40% to 22.12%.
+// different. Keep distinct first/later object lifetimes; duplicate bounds
+// updates change CFG.
+// FLAGGED FOR CLEANUP (lever, owner's 2026-11-28 rule): the counted fit loop
+// that clears the deleted selection, with each creation loop's unspecified
+// position declared inside it, closes the editor's /O1 schedule
+// (97.84% -> 100%; game stays 100%) against Mac 0x24a584, which keeps the
+// third failed fit's deletion and null-selection exit and one shared
+// unspecified position (Mac 55.40% with that form, 22.12% with this one).
+// The best Mac-supported form scores editor 97.84%.
 VA(0x00546520, 0x1B6)
 MAC_ADDRESS(0x24a584, 0x22c) // anchor-callee 0x54678a; thiscall, ret 0x10
 VA_AT(h3maped, 0x004aa1db, 0x179)
@@ -9192,13 +9210,13 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
     int total;
     {
         type_object* selected;
-        TRmgMapPosition position;
-        position.m_x = -1;
-        position.m_y = -1;
-        position.m_z = -1;
         for (attempts = 0; attempts < RMG_TREASURE_ATTEMPTS; ++attempts) {
+            TRmgMapPosition unspecified;
+            unspecified.m_x = -1;
+            unspecified.m_y = -1;
+            unspecified.m_z = -1;
             selected = createTreasureObject(zone, value / 4, value, &objectValue,
-                1, 1, compact, position);
+                1, 1, compact, unspecified);
             if (selected)
                 break;
         }
@@ -9206,6 +9224,7 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
             return 0;
         TObjectType* prototype = selected->m_properties->m_prototype;
         type_object* object = selected;
+        TRmgMapPosition position;
         position.m_x = (group->m_map.m_mapWidth + static_cast<unsigned>(prototype->getWidth())) / 2;
         position.m_y = (group->m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
         position.m_z = 0;
@@ -9217,7 +9236,7 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
         if (remainder < RMG_TREASURE_MINIMUM_REMAINDER && remainder < total / 2)
             break;
         type_object* nextObject;
-        for (attempts = 0; ; ) {
+        for (attempts = 0; attempts < RMG_TREASURE_ATTEMPTS; ++attempts) {
             int creationAttempts;
             for (creationAttempts = 0; creationAttempts < RMG_TREASURE_ATTEMPTS;
                  ++creationAttempts) {
@@ -9236,10 +9255,7 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
                 break;
             nextObject->releaseReservation();
             delete nextObject;
-            if (++attempts >= RMG_TREASURE_ATTEMPTS) {
-                nextObject = NULL;
-                break;
-            }
+            nextObject = NULL;
         }
         if (!nextObject)
             break;
