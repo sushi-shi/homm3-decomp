@@ -938,7 +938,9 @@ TScenarioCrossover::TScenarioCrossover()
     setBRetained(eRetainExperience, true);
     setBRetained(eRetainPrimarySkills, true);
     setBRetained(eRetainSecondarySkills, true);
-    setBRetained(eRetainSpells, true);
+    // FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the last bit is
+    // set directly; four setBRetained calls keep the spells call (84.07%).
+    m_retained.set(eRetainSpells, true);
 }
 
 // readBitset's mask test is retail's (each expansion tests the byte against
