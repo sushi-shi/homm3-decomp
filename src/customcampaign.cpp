@@ -2262,6 +2262,8 @@ static int getCampaignRegionCount(int regionMap)
 // decisions at root cb 765..780 (ours 840), or with every readValue site
 // charged (cb above 40); readMapPlayerSlot's replay offers the same second
 // fit. No native record shows a heavier reader.
+// 2026-11-28: staging the four header scalars through named buffers with
+// direct stream calls scores 82.01%; the value readers stay.
 VA(0x00488880, 0x5D6)
 MAC_ADDRESS(0x096df0, 0x5ac)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::load()
