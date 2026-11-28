@@ -1944,10 +1944,7 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 
 // The three lists do not read alike, and the asymmetry is retail's:
 // secondary skills and spells come in as SIGNED bytes through checked
-// reads, while each artifact is an UNCHECKED unsigned byte. Mac 0x122a38
-// reads its separate +0x5c byte slot and uses lbz. VC6 widens this byte-local
-// access to a dword load and and 0xff, as retail does; those instructions
-// do not require an int local. The byte spelling retains Windows 91.4115%.
+// reads, while each artifact is an UNCHECKED unsigned byte.
 
 // DC records the BlackBoxData reference and function-scope
 // int_buffer, short_buffer, char_buffer, count (read status), number (list
@@ -1957,22 +1954,15 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // Every checked read stores its status in count and tests it in the next
 // statement: Dreamcast's unoptimized body writes count (@r14) after each
 // gzread, from 0xef17c on, with the comparison on the following source line.
-// That proven form measures 91.45%. Spelling the reads as fused
-// `if (read(...) < size)` tests, with count stored at the first read only or
-// nowhere, is 96.14% (the two are byte-identical): the lighter body moves the
-// three list resizes' inline expansions toward retail's. That is a budget
-// effect, not a retail contradiction of the stored status, so the Dreamcast
-// statements are kept. Each artifact byte is read into intBuffer and
-// narrowed through unsigned char, which is retail's dword load + and 0xff; an
-// int local read with sizeof(int) also scores higher but would read four
-// bytes per artifact. Flat probes: resize argument forms (number, charBuffer,
-// int(number)), number as int, declaration order, signed charBuffer, raw enum
-// casts instead of H3_ENUM_DECODE, the artifact mask / static_cast spellings.
-// Residual: retail keeps the list length in ebx and the vector in edi across
-// the resize/erase expansions.
-// Secondary-skill resize expands erase into copy/_Destroy where retail
-// retains erase. Routing every read through readValue lowers the caller to
-// 83.58% through vector inlining.
+// The unchecked artifact byte is the value reader, like the creature id's:
+// Mac 0x122a38 gives it a byte slot of its own (+0x5c, lbz) apart from the
+// shared buffers, and VC6 widens the returned unsigned char with retail's
+// dword load and `and 0xff`. As a root inline candidate it also lowers the
+// secondary-skill resize's share so that erase stays a call, as in retail;
+// reading the byte into intBuffer through the stream expanded erase into
+// copy/_Destroy (91.45%). With the reader: 100%.
+// Retail's std::copy<SecondarySkillData> at 0x50adb0 is the const-iterator
+// instantiation: BlackBoxData's assignment (0x50a543) is its only caller.
 VA(0x00500430, 0x478)
 DC_ADDRESS(0x0ef158, 0x484)
 MAC_ADDRESS(0x122720, 0x49c)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic)
@@ -2051,8 +2041,7 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
     number = charBuffer;
     thisBox.m_artifacts.resize(number);
     for (x = 0; x < number; ++x) {
-        infile->read(&intBuffer, sizeof(unsigned char));
-        thisBox.m_artifacts[x] = (TArtifact)(unsigned char)intBuffer;
+        thisBox.m_artifacts[x] = TArtifact(readValue<unsigned char>(infile));
     }
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
