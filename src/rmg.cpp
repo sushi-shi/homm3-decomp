@@ -9507,12 +9507,14 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
 // queries the translated position: the canonical addition, called directly.
 // Native controls cover ordered lookups, live post-fit score reads, cached
 // bounds/zone identity and random tie order.
-// Residual: the 0x48 frame agrees, but the vector/coordinate stack homes and
-// entry-load order differ; X, not Y, occupies EBX across the scan, removing
-// the retail outer-loop bound-reload block (17 versus 18 blocks). Resize(0)
-// calls size/erase instead of copy/_Destroy; a separate candidate count,
-// named erase ranges or addition result, bounds binding, equivalent filter
-// guards and hoisted value declarations do not help.
+// Retail +0x20..+0x28 forms the zone index through one register, the
+// getTemplateZone() result. After rand() it keeps the count from the empty
+// test but reloads the candidate base (+0x22f): a named unsigned selection,
+// as in the town placers. The translated centre is a named position, which
+// gives the lookup retail's height-times-level operand order (+0xf7); the
+// unnamed temporary multiplies level by height.
+// The game is exact. Editor residual (98.58%): the scan X lives in EAX
+// rather than EDI across the inner loop head.
 // A candidate position is where the group map's origin O lands, so group cell
 // g goes to position + g. Its occupied bounds (#) must fit the zone bounds,
 // and the object distance under their centre c must reach the spacing.
@@ -9527,7 +9529,7 @@ VA_AT(h3maped, 0x004aa9b7, 0x1c7)
 unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     TRmgZone* zone, int spacing)
 {
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
+    int zoneIndex = zone->getTemplateZone()->m_zoneIndex;
     std::vector<TRmgMapPosition> candidates;
     TRmgZoneBounds bounds = zone->m_bounds;
     TRmgZoneBounds groupBounds = group->m_bounds;
@@ -9542,7 +9544,8 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
     center.m_y = (groupBounds.m_maximumY + groupBounds.m_minimumY) / 2;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
-            TRmgMapItem* item = m_map.getMapItem(position + center);
+            TRmgMapPosition centerPosition = position + center;
+            TRmgMapItem* item = m_map.getMapItem(centerPosition);
             if (item->m_zoneState.m_zone == zoneIndex && item->m_zoneState.m_objectDistance >= spacing
                 && canPlaceTreasureGroup(group, position, zone)) {
                 if (item->m_zoneState.m_objectDistance > spacing) {
@@ -9555,7 +9558,8 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
     }
     if (candidates.size() == 0)
         return 0;
-    position = candidates[rand() % candidates.size()];
+    unsigned int selected = rand() % candidates.size();
+    position = candidates[selected];
     commitTreasureGroup(group, position);
     return 1;
 }
