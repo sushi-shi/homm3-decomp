@@ -97,6 +97,11 @@ public:
         TRmgTerrainFlip requestedFlip,
         TRmgTerrainFlip& selectedFlip,
         s32 oldFrame);
+
+private:
+    // Loki TNormalTerrainTypeTraits::_getGroundShape(unsigned int) const
+    // (0x08183574), called by pickFullTile and pickTransitionTile.
+    s32 _getGroundShape(s32 frame) const { return m_entries[frame].m_transition; }
 };
 
 // Vtable 0x642cb0 is the stateless, table-backed rock traits, whose remaining
@@ -188,7 +193,7 @@ VA(0x005b3890, 0x58)
 MAC_ADDRESS(0x254d08, 0xc8)
 s32 TNormalTerrainTypeTraits::pickFullTile(s32 strength, s32 oldFrame)
 {
-    if (oldFrame == -1 || m_entries[oldFrame].m_transition != 0) {
+    if (oldFrame == -1 || _getGroundShape(oldFrame) != 0) {
         TRmgTerrainPatternRange* range;
         if (m_ranges[SHAPE_FILL][1].m_frameCount > 0) {
             u32 chance =
@@ -217,7 +222,7 @@ s32 TNormalTerrainTypeTraits::pickTransitionTile(
     s32 oldFrame)
 {
     s32 frame;
-    if (oldFrame == -1 || m_entries[oldFrame].m_transition != transition) {
+    if (oldFrame == -1 || _getGroundShape(oldFrame) != transition) {
         TRmgTerrainPatternRange& range = m_ranges[transition][0];
         frame = rand() % range.m_frameCount + range.m_firstFrame;
     } else
@@ -285,8 +290,9 @@ s32 TRockTraits::pickFullTile(s32, s32 oldFrame)
 {
     if (oldFrame == -1
         || g_rmgTerrainPatterns[oldFrame].m_transition != 0) {
-        oldFrame = rand() % g_rmgTerrainPatternRanges.m_ranges[SHAPE_FILL][0][0].m_frameCount
-            + g_rmgTerrainPatternRanges.m_ranges[SHAPE_FILL][0][0].m_firstFrame;
+        const TRmgTerrainPatternRange& range =
+            g_rmgTerrainPatternRanges.getSubsetProps(SHAPE_FILL, TRmgTerrainFlip(false, false));
+        oldFrame = rand() % range.m_frameCount + range.m_firstFrame;
     }
     return oldFrame;
 }
@@ -301,8 +307,8 @@ s32 TRockTraits::pickTransitionTile(
         || g_rmgTerrainPatterns[oldFrame].m_transition != transition
         || g_rmgTerrainPatterns[oldFrame].m_flipX != requestedFlip.m_flipX
         || g_rmgTerrainPatterns[oldFrame].m_flipY != requestedFlip.m_flipY) {
-        TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges.m_ranges[
-            transition][requestedFlip.m_flipX][requestedFlip.m_flipY];
+        const TRmgTerrainPatternRange& range =
+            g_rmgTerrainPatternRanges.getSubsetProps(transition, requestedFlip);
         oldFrame = rand() % range.m_frameCount + range.m_firstFrame;
     }
     selectedFlip = TRmgTerrainFlip(0, 0);

@@ -166,6 +166,13 @@ extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 struct TRmgTerrainPatternTable {
     TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT][2][2];  // [shape][flipX][flipY]
     TRmgTerrainPatternTable();
+    // Loki TRockTraits::_TGroundShapeMap::getSubsetProps(TGroundShape,
+    // TFlippedState) const (0x0836cd70): both TRockTraits pickers read the
+    // table through it; the constructor indexes the array itself.
+    const TRmgTerrainPatternRange& getSubsetProps(s32 shape, TRmgTerrainFlip flip) const
+    {
+        return m_ranges[shape][flip.m_flipX][flip.m_flipY];
+    }
 };
 DATA(0x006a4158)
 extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
