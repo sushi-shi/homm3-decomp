@@ -268,28 +268,35 @@ void TCampaignBrief::updateAllyEnemyFlags()
     }
 }
 
+// E:\gamedcs\campaignbrief.cpp:584. Dreamcast proves the initial label,
+// three-choice widget groups, visibility changes, help-text calls and the
+// two major lexical branches. Complete replaces the generated bitmap-name
+// table with fixed PC controls: three frames, three bitmap choices, three
+// sprite highlights, five difficulty buttons, and two optional arrows.
+// Retail independently fixes every constructor argument and array extent.
+// DC line 585 calls TTextResource::operator[] for the bonus label.
+// Residual (98.83%): 130/132 CFG blocks and all 68 branches agree. The sole
+// call difference is the final pointer-vector insertion: this compile retains
+// the empty `_Destroy` helper (cb 49) while retail expands it away, shifting
+// 29 tail instructions. It is an /Ob2 budget difference: this root's cb is
+// 1587 (budget 3174), which leaves that depth-4 site a budget of 21; retail's
+// decisions need a root cb of 1615..1621 (`predict-inline --cb-window`), so
+// retail's body carries 28..34 more IL units than this source and the missing
+// statements or operands are unidentified. Fourteen to seventeen no-op
+// statements of any kind (`static_cast<void>(sizeof(int));` adds two units)
+// reach 100%; that is padding, not source, and is not kept.
+// Measured and rejected: two-argument `insert(end(), value)` on the first
+// arrow (72.43%), second arrow (71.91%), or both (76.12%), and
+// three-argument `insert(end(), 1, value)` on the second arrow (77.52%); each
+// changes the whole /Ob2 frontier and destroys the otherwise exact CFG.
+// Naming m_widgets as one reference across all eight appends likewise moves
+// the inline frontier and scores 98.26%, so the member accesses stay direct.
 VA(0x00458120, 0xC1C)
 DC_ADDRESS(0x058dac, 0x554)
 MAC_ADDRESS(0x064720, 0x984)  // anchor-caller(TCampaignBrief ctor)
 void TCampaignBrief::addBonusIcons()
 {
     int i;
-
-    static_cast<void>(sizeof(m_startBonusBorders));
-    static_cast<void>(sizeof(m_bitmapBonusImages));
-    static_cast<void>(sizeof(m_spriteBonusImages));
-    static_cast<void>(sizeof(m_difficultyButtons));
-    static_cast<void>(sizeof(m_difficultyDecrButton));
-    static_cast<void>(sizeof(m_difficultyIncrButton));
-    static_cast<void>(sizeof(m_widgets));
-    static_cast<void>(sizeof(coloredBorderFrame));
-    static_cast<void>(sizeof(bitmapBorder));
-    static_cast<void>(sizeof(iconWidget));
-    static_cast<void>(sizeof(button));
-    static_cast<void>(sizeof(type_func_button));
-    static_cast<void>(sizeof(textWidget));
-    static_cast<void>(sizeof(widget));
-    static_cast<void>(sizeof(message));
 
     m_widgets.push_back(new textWidget(
         476, 425, 194, 30, (*g_generalText)[GENERAL_TEXT_CAMPAIGN_CHOOSE_BONUS],
