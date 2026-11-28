@@ -61,12 +61,6 @@ SIZE(TRmgLinePatternTable, 0x50);
 extern TRmgLinePatternTable g_rmgRiverPatternTable;
 extern TRmgLinePatternTable g_rmgRoadPatternTable;
 
-// Loki LinePlacement.cpp computeLineShape; the RoE form writes through
-// pointers and reads a tileset-traits table.
-void computeLineShape(
-    const bool* neighbours, const TRmgLinePatternTable* table,
-    int& pattern, bool& flipX, bool& flipY);
-
 struct TRmgLinePainterTile;
 
 // Both painter constructors pass their first base to the same retained walker
@@ -131,12 +125,6 @@ struct TRmgGridRectangle {
     TRmgGridRectangle(const TTilePoint& origin, const TTilePoint& size);
 };
 SIZE(TRmgGridRectangle, 0x10);
-
-// Shared fastcall refresh reached by the rectangle clear and point walker
-// (Loki LinePlacement.cpp recalcLineShape, which also returns whether the
-// cell changed).
-void recalcLineShape(TMapLineFilter* painter, const TTilePoint& point);
-void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rectangle);
 
 // RTTI (h3maped): TMapLineFilter is not a public base (attributes 9);
 // protected, as the placement and erase operations hand themselves to

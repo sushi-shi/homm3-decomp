@@ -901,7 +901,11 @@ void TMapEditWnd::_drawBrush(CDC* pDC)
     }
 }
 
+namespace {
+
 inline void drawCellHatchedRect(CDC* pDC, CPen* pPen, CBrush* pBrush, const CPoint& pos, TZoom zoom);
+
+}  // namespace
 
 // Draws the layer into the back buffer, the floating object and the panner
 // over it, and blits the rectangle to the DC; the back buffer then gets back
@@ -1211,8 +1215,12 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
     }
 }
 
+namespace {
+
 // A cell's tile rectangle drawn with the pen and brush (the passability
-// overlay's frames; Loki's hatches the cell instead).
+// overlay's frames; Loki's hatches the cell instead). Loki defines it inline
+// in MapEditWnd.cpp's anonymous namespace (h3maped 0x8380c20,
+// drawCellHatchedRect__31_GLOBAL_.N.MapEditWnd.cpp...).
 VA(0x0046c309, 0x7d)
 inline void drawCellHatchedRect(CDC* pDC, CPen* pPen, CBrush* pBrush, const CPoint& pos, TZoom zoom)
 {
@@ -1221,6 +1229,8 @@ inline void drawCellHatchedRect(CDC* pDC, CPen* pPen, CBrush* pBrush, const CPoi
     unsigned int tileSize = akZoomTraits[zoom].m_tileSize;
     pDC->Rectangle(CRect(pos, CSize(tileSize, tileSize)));
 }
+
+}  // namespace
 
 VA(0x0046c386, 0xfe)
 void TMapEditWnd::_generateMouseMove()
