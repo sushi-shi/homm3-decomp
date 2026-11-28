@@ -1887,6 +1887,10 @@ int game::setupPuzzlePieces(int whichPlayer, int countOnly)
 
     piecesRemoved = getNumObelisks(whichPlayer);
     extraPieces = g_obeliskCount - m_numObelisks;
+    // FLAGGED FOR CLEANUP: `volatile` is a codegen lever here; nothing
+    // shares the value. The natural form, static_cast<float>(
+    // getNumObelisks(whichPlayer)) / m_numObelisks, scores 98.9637%;
+    // Dreamcast names only the two float locals declared above.
     volatile float foundObelisks =
         static_cast<float>(getNumObelisks(whichPlayer));
     percentObelisksFound = foundObelisks / m_numObelisks;

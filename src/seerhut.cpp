@@ -599,6 +599,11 @@ std::string type_skill_quest::skillRequirementText(
 // the indexed row local) is restored here as its own inlined helper. Its
 // emitted row computation is identical; the two locals make the inlined
 // callee cost > 40, which is what starves the second assign in retail.
+// FLAGGED FOR CLEANUP: a duplicated helper. This is a second body of
+// type_quest::questTexts whose two locals steer setDefaultText's inline
+// budget (100%). Calling questTexts() scores 49.3134%; Mac 0x165390 names
+// no such helper, and the shared edit to questTexts cost four exact
+// functions (2026-10-10).
 static inline const TSeerHutQuestText& skillQuestTexts(type_quest& quest)
 {
     const TSeerHutTextColumn* column = quest.getTextColumn();
