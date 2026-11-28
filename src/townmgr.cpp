@@ -1166,7 +1166,7 @@ void townManager::setupExtraStuff()
     if (g_buildAllBuildings) {
         for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
             if (!(m_townToView->hasBuilding(i, true))
-                && (g_townEligibleBuildMask[m_townToView->m_type] & g_bitNumber[i]))
+                && (g_townEligibleBuildMask[m_townToView->m_type] & bitNumber[i]))
                 m_townToView->buildBuilding(i, false, true);
         }
     } else {
@@ -5849,13 +5849,13 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
     __int64 mask = g_hierarchyMask[currentTown->m_type][building];
 
     if (g_game->m_isTutorial && building == DWELLING_2_ID && currentTown->m_type == 0)
-        mask &= ~g_bitNumber[BLACKSMITH_ID];
+        mask &= ~bitNumber[BLACKSMITH_ID];
 
     // DC line 7281 retains this header helper.
     mask &= ~currentTown->getBuildingMask();
 
     for (int i = 0; i < MAX_BUILDING_TYPE; ++i) {
-        if ((g_bitNumber[i] & mask) != 0 && i != HORDE_ID && i != HORDE_2_ID)
+        if ((bitNumber[i] & mask) != 0 && i != HORDE_ID && i != HORDE_2_ID)
             mask &= ~town::s_includedBuildings[currentTown->m_type][i];
     }
 
@@ -5863,7 +5863,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
     char* namePos = g_text;
     font* currentFont = m_rolloverText->m_font;
     for (int j = 0; j < MAX_BUILDING_TYPE; ++j) {
-        if ((g_bitNumber[j] & mask) != 0) {
+        if ((bitNumber[j] & mask) != 0) {
             if (count == 0) {
                 strcpy(g_text, (*g_generalText)[GENERAL_TEXT_REQUIRES]);
                 strcat(g_text, DATA_COMPGEN(0x006603bc, quickInfoNewLine, "\n"));

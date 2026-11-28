@@ -112,7 +112,7 @@ DATA(0x006888c0) int g_eventBuildingIds[TOWN_TYPE_COUNT][TOWN_EVENT_BUILDING_SLO
     43
 }
 };
-DATA(0x0066cd98) __int64 g_bitNumber[64] = {
+DATA(0x0066cd98) __int64 bitNumber[64] = {
     0x0000000000000001i64, 0x0000000000000002i64, 0x0000000000000004i64, 0x0000000000000008i64, 0x0000000000000010i64, 0x0000000000000020i64, 0x0000000000000040i64, 0x0000000000000080i64,
     0x0000000000000100i64, 0x0000000000000200i64, 0x0000000000000400i64, 0x0000000000000800i64, 0x0000000000001000i64, 0x0000000000002000i64, 0x0000000000004000i64, 0x0000000000008000i64,
     0x0000000000010000i64, 0x0000000000020000i64, 0x0000000000040000i64, 0x0000000000080000i64, 0x0000000000100000i64, 0x0000000000200000i64, 0x0000000000400000i64, 0x0000000000800000i64,
@@ -598,7 +598,7 @@ town::town()
     m_mapY = 0;
     m_mapZ = 0;
     m_visitingHeroId = -1;
-    m_populationMask = g_bitNumber[HALL_VILLAGE_ID];
+    m_populationMask = bitNumber[HALL_VILLAGE_ID];
     m_fullBuildingMask = m_populationMask;
     m_mageLevel = 0;
     m_owner = -1;
@@ -907,27 +907,27 @@ type_building_id town::createBuilding(type_building_id building)
     // Dreamcast CodeView names this short local `dwelling`.
     short dwelling;
     type_building_id built = building;
-    m_populationMask |= g_bitNumber[building];
+    m_populationMask |= bitNumber[building];
     m_populationMask &= ~s_includedBuildings[m_type][building];
 
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
         dwelling = s_constHordeEffects[m_type][slot].m_dwelling;
         if (building == g_hordeBuildings[slot]) {
-            m_populationMask &= ~g_bitNumber[DWELLING_0_ID + dwelling];
+            m_populationMask &= ~bitNumber[DWELLING_0_ID + dwelling];
             if (dwelling < TOWN_DWELLING_COUNT
                 && hasBuilding(DWELLING_0_UPG_ID + dwelling, false)) {
-                m_populationMask &= ~g_bitNumber[building];
-                m_populationMask &= ~g_bitNumber[DWELLING_0_UPG_ID + dwelling];
+                m_populationMask &= ~bitNumber[building];
+                m_populationMask &= ~bitNumber[DWELLING_0_UPG_ID + dwelling];
                 built = g_hordeBuildings[slot + 1];
-                m_populationMask |= g_bitNumber[built];
+                m_populationMask |= bitNumber[built];
             }
         }
         if (hasBuilding(g_hordeBuildings[slot], false)) {
             if (building == DWELLING_0_UPG_ID + dwelling) {
-                m_populationMask &= ~g_bitNumber[building];
-                m_populationMask &= ~g_bitNumber[g_hordeBuildings[slot]];
+                m_populationMask &= ~bitNumber[building];
+                m_populationMask &= ~bitNumber[g_hordeBuildings[slot]];
                 built = g_hordeBuildings[slot + 1];
-                m_populationMask |= g_bitNumber[built];
+                m_populationMask |= bitNumber[built];
             }
         }
     }
@@ -977,9 +977,9 @@ void town::destroyExtraCapitol()
             if (townId != m_id) {
                 town* otherTown = g_game->getTown(townId);
                 if (otherTown->isCapitol()) {
-                    m_populationMask &= ~g_bitNumber[HALL_CAPITOL_ID];
-                    m_populationMask |= g_bitNumber[HALL_CITY_ID];
-                    m_fullBuildingMask &= ~g_bitNumber[HALL_CAPITOL_ID];
+                    m_populationMask &= ~bitNumber[HALL_CAPITOL_ID];
+                    m_populationMask |= bitNumber[HALL_CITY_ID];
+                    m_fullBuildingMask &= ~bitNumber[HALL_CAPITOL_ID];
 
                     NewmapCell* cell =
                         g_game->m_worldMap.cell(m_mapX, m_mapY, m_mapZ);
@@ -1100,7 +1100,7 @@ void town::updateShipyard()
         if (!cell->m_isTrigger
             || (cell->m_type != BOAT && cell->m_type != HERO)) {
             if (hasBuilding(DOCK_WITH_BOAT_ID, false)) {
-                m_populationMask &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
+                m_populationMask &= ~bitNumber[DOCK_WITH_BOAT_ID];
                 updateFullBuildingMask();
             }
         } else if (!(hasBuilding(DOCK_WITH_BOAT_ID, true))) {
@@ -1477,25 +1477,25 @@ void town::giveEventReward(const TTownEvent& thisEvent)
     __int64 mask = getBuildingMask();
     int i;
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (thisEvent.m_buildBuildings & g_bitNumber[i])
-            grantable |= g_bitNumber[g_eventBuildingIds[m_type][i]];
+        if (thisEvent.m_buildBuildings & bitNumber[i])
+            grantable |= bitNumber[g_eventBuildingIds[m_type][i]];
     }
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (g_townEligibleBuildMask[m_type] & g_bitNumber[i]) {
-            if (grantable & g_bitNumber[i])
+        if (g_townEligibleBuildMask[m_type] & bitNumber[i]) {
+            if (grantable & bitNumber[i])
                 mask |= s_includedBuildings[m_type][i];
         } else {
-            mask |= g_bitNumber[i];
+            mask |= bitNumber[i];
         }
     }
     if (boatX == TOWN_DOCK_SITE_NONE)
-        mask |= g_bitNumber[DOCK_ID];
+        mask |= bitNumber[DOCK_ID];
     grantable &= ~mask;
 
     std::vector<type_dialog_resource> rewards;
     type_dialog_resource reward;
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (grantable & g_bitNumber[i]) {
+        if (grantable & bitNumber[i]) {
             buildBuilding(i, false, true);
             reward.m_resource = m_type + 0x16;
             reward.m_qualifier = i;
@@ -1551,44 +1551,44 @@ static void initializeBuildings(town* currentTown, const TownExtra* townSetup)
     if (g_game->m_mapHeader.m_victoryCondition.m_type
             == VICTORY_CONDITION_BUILD_GRAIL
         && !g_game->m_mapHeader.m_victoryCondition.isGrailTarget(currentTown))
-        disabledBuildings = g_bitNumber[HOLY_GRAIL_ID];
+        disabledBuildings = bitNumber[HOLY_GRAIL_ID];
 
     currentTown->boatX = -1;
     currentTown->boatY = -1;
-    if (!(g_townEligibleBuildMask[currentTown->m_type] & g_bitNumber[DOCK_ID])
+    if (!(g_townEligibleBuildMask[currentTown->m_type] & bitNumber[DOCK_ID])
         || (!checkShipyardSquare(currentTown, currentTown->m_mapX - 1,
                                    currentTown->m_mapY + 2)
             && !checkShipyardSquare(currentTown, currentTown->m_mapX + 1,
                                       currentTown->m_mapY + 2)))
-        disabledBuildings |= g_bitNumber[DOCK_ID];
+        disabledBuildings |= bitNumber[DOCK_ID];
 
     if (townSetup->m_customBuildings) {
         // Editor masks have 41 columns; canonical building masks have 44.
         for (i = 0; i < TOWN_EVENT_BUILDING_SLOTS; i++) {
-            if (townSetup->m_buildingDisabledMask & g_bitNumber[i])
-                disabledBuildings |= g_bitNumber[
+            if (townSetup->m_buildingDisabledMask & bitNumber[i])
+                disabledBuildings |= bitNumber[
                     g_eventBuildingIds[currentTown->m_type][i]];
         }
-        if (disabledBuildings & g_bitNumber[HORDE_ID])
-            disabledBuildings |= g_bitNumber[HORDE_UPG_ID];
-        if (disabledBuildings & g_bitNumber[HORDE_2_ID])
-            disabledBuildings |= g_bitNumber[HORDE_2_UPG_ID];
+        if (disabledBuildings & bitNumber[HORDE_ID])
+            disabledBuildings |= bitNumber[HORDE_UPG_ID];
+        if (disabledBuildings & bitNumber[HORDE_2_ID])
+            disabledBuildings |= bitNumber[HORDE_2_UPG_ID];
         currentTown->setLegalBuildings(disabledBuildings);
 
         __int64 builtMask = 0;
         for (i = 0; i < TOWN_EVENT_BUILDING_SLOTS; i++) {
-            if (townSetup->m_buildingBuiltMask & g_bitNumber[i])
+            if (townSetup->m_buildingBuiltMask & bitNumber[i])
                 builtMask |= town::s_includedBuildings[currentTown->m_type][
                         g_eventBuildingIds[currentTown->m_type][i]]
-                    | g_bitNumber[g_eventBuildingIds[currentTown->m_type][i]];
+                    | bitNumber[g_eventBuildingIds[currentTown->m_type][i]];
         }
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-            if ((builtMask & g_bitNumber[i])
+            if ((builtMask & bitNumber[i])
                 && !currentTown->isLegalBuilding(type_building_id(i)))
-                builtMask &= ~g_bitNumber[i];
+                builtMask &= ~bitNumber[i];
         }
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-            if (builtMask & g_bitNumber[i])
+            if (builtMask & bitNumber[i])
                 currentTown->createBuilding(type_building_id(i));
         }
         return;
@@ -1739,8 +1739,8 @@ bool town::canBuild(short buildingId) const
             __int64 buildingMask = getBuildingMask();
             if (g_game->m_isTutorial && buildingId == DWELLING_2_ID
                 && townType == TOWN_CASTLE)
-                requirements &= ~g_bitNumber[BLACKSMITH_ID];
-            if (!(buildingMask & g_bitNumber[buildingId])
+                requirements &= ~bitNumber[BLACKSMITH_ID];
+            if (!(buildingMask & bitNumber[buildingId])
                 && (buildingMask & requirements) == requirements)
                 return true;
         }
@@ -1782,16 +1782,16 @@ __int64 town::getBuildableMask() const
         __int64 requirements = g_hierarchyMask[m_type][building];
         if (g_game->m_isTutorial && building == DWELLING_2_ID
             && m_type == TOWN_CASTLE)
-            requirements &= ~g_bitNumber[BLACKSMITH_ID];
-        if (!(activeMask & g_bitNumber[building])
+            requirements &= ~bitNumber[BLACKSMITH_ID];
+        if (!(activeMask & bitNumber[building])
             && (activeMask & requirements) == requirements)
-            mask |= g_bitNumber[building];
+            mask |= bitNumber[building];
     }
     mask &= m_legalBuildings;
     if (!canBuildDock())
-        mask &= ~g_bitNumber[DOCK_ID];
+        mask &= ~bitNumber[DOCK_ID];
     if (g_game->m_players[m_owner].hasCapitol())
-        mask &= ~g_bitNumber[HALL_CAPITOL_ID];
+        mask &= ~bitNumber[HALL_CAPITOL_ID];
     return mask;
 }
 
@@ -1862,7 +1862,7 @@ DC_ADDRESS(0x1689ec, 0x22)
 MAC_ADDRESS(0x1b6de0, 0x40)
 bool town::isLegalBuilding(type_building_id building) const
 {
-    return (g_bitNumber[building] & m_legalBuildings) != 0;
+    return (bitNumber[building] & m_legalBuildings) != 0;
 }
 
 // Original: town::set_legal_buildings; town.cpp:2291
@@ -1879,7 +1879,7 @@ bool town::isDisabled(type_building_id building) const
 {
     if (isLegalBuilding(building))
         return false;
-    return (g_townEligibleBuildMask[m_type] & g_bitNumber[building]) != 0;
+    return (g_townEligibleBuildMask[m_type] & bitNumber[building]) != 0;
 }
 
 // Dreamcast town.cpp:2328 calls town::PlaceInMap. Complete's recruit

@@ -122,7 +122,7 @@ Where each of the 18 functions' address constants are created:
 | `initializeGameData` | `town::s_includedBuildings`, `g_townEligibleBuildMask`, `g_hierarchyMask` (`town.h`); 19 file statics (`initialize.cpp`) |
 | `combatManager::getCommand` | `s_wallTargets` (`cmbtmgr.h`) |
 | `CEnterNameEdit::onEnter`/`onKeyPress`/`onKillFocus` | `g_config` (`prefs.h`, the first include); `basic_string::_Nullstr`'s local static (instantiated at the end of the TU) |
-| `aiEnterTown`, `town::initializeSpells` | `g_bitNumber` (and `g_mageGuildBaseSpellCounts`) (`town.h`) |
+| `aiEnterTown`, `town::initializeSpells` | `bitNumber` (and `g_mageGuildBaseSpellCounts`) (`town.h`) |
 | `doAttack`, `monstersSellOut`, `recruitUnit::update` | `g_text` (`kb.h`) plus string literals |
 | `transmitSaveGame`, `oldmain`, `loadTemplates`, `writeMapHeader`, `createArtifactWidgets` | mostly string literals (created at first use, often in the function itself) |
 | `doCombat` | five globals from `remote.h`, `events.h`, `cmbtmgr.h`, `advmgr.h` |

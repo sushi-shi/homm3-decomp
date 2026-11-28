@@ -399,8 +399,10 @@ SIZE(type_horde_effect, 8);
 // declaration changes initialize_game_data, the include-set canary).
 class TTownEvent;
 
+// Original spelling: Dreamcast's decorated data symbol ?bitNumber@@3PA_JA.
+// Formerly g_bitNumber under the project's global prefix convention.
 DATA(0x0066cd98)
-extern __int64 g_bitNumber[];
+extern __int64 bitNumber[];
 
 class town {
 public:
@@ -569,9 +571,9 @@ public:
     bool hasBuilding(int buildingId, bool checkIncluded) const
     {
         if (checkIncluded) {
-            return (m_fullBuildingMask & g_bitNumber[buildingId]) != 0;
+            return (m_fullBuildingMask & bitNumber[buildingId]) != 0;
         }
-        return (m_populationMask & g_bitNumber[buildingId]) != 0;
+        return (m_populationMask & bitNumber[buildingId]) != 0;
     }
 
     // Original: town::set_mask; Town.h:331
