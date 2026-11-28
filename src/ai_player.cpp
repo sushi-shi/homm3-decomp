@@ -4447,8 +4447,12 @@ static long valueOfHiring(town* currentTown, hero* candidate,
     unsigned int i;
     for (i = 0; i < destinations.size(); ++i) {
         destination = destinations[i];
-        pathCell* cell = currentSearchArray.getCell(destination, false);
-        NewmapCell* mapCell = g_advManager->getCell(destination);
+        // LEVER (owner decision): no native evidence for this alias; it only
+        // keeps the implicit HeroDestination-to-type_point slice out of the
+        // two by-value arguments.
+        const type_point& point = destination;
+        pathCell* cell = currentSearchArray.getCell(point, false);
+        NewmapCell* mapCell = g_advManager->getCell(point);
         if (mapCell->m_type == HERO && mapCell->m_isTrigger
             && g_game->getHero(mapCell->m_extraInfo)->m_owner == playerId) {
             cell->m_barrierValue = destination.m_value;

@@ -361,8 +361,10 @@ bool combatManager::aiCheckRetreat()
         threshold -= 0.06f;
     if (threshold > 0.16)
         threshold = 0.16f;
+    // LEVER (owner decision): embedded assignment, as in getTurnAIVars.
+    float ourValue;
     float ratio =
-        static_cast<float>(fightValues[m_currentSide])
+        (ourValue = static_cast<float>(fightValues[m_currentSide]))
         / static_cast<float>(fightValues[0]
                              + fightValues[1]);
     if (ratio < threshold)
