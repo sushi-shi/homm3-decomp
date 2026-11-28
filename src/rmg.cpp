@@ -6341,11 +6341,21 @@ void type_random_map_generator::populateWaterZoneIslands(TRmgZone* zone)
 // dry cell of another zone is seen (0x241a54..0x241a68), and derives the
 // cell rectangle (position - radius + 1 .. position + radius) and the
 // clearance rectangle (position - radius .. position + radius + 1) from it.
-// Residual: rectangle/zone register homes and extra reload blocks; the editor
-// also swaps the position and nearby frame slots. Swapping their declarations,
-// scoping nearby to the cell, hoisting bounds, reordering the zone lookup or
-// nesting the skips leaves both images flat; a separate clearance rectangle
-// lowers the game 92.63 -> 92.55. Native
+// The zone's template is read through getTemplateZone(): the editor passes
+// the neighbour's zone in edx and keeps the second scan's row in ebx only
+// with the accessor (93.51 -> 99.92; the game is byte-equal either way).
+// Editor residual: the third scan's lookup multiplies height by level
+// (0x4a4f34) where this build multiplies level by height; the generator's
+// forwarder and the map's own lookup are byte-equal at all three scans.
+// Game residual (92.63): retail homes the cell's zone index in ebx and the
+// row width in edi; here the width takes ebx and the index stays on the
+// stack, which permutes the rectangle registers through all three scans.
+// Swapping the position/nearby declarations, scoping nearby to the cell,
+// bounds declared at function scope (four positions), reordering the zone
+// lookup, a bool flag, radius before the flag and nesting the skips leave
+// both images flat; a separate clearance rectangle lowers the game to 92.55.
+// The former blocks around the three bounds groups were byte-inert and are
+// gone. Native
 // flat-cell tests cover the three scan phases and connection policies.
 // Preserve the two separate connection-policy tests at 0x53fa3f..0x53fa58;
 // the ordinary findConnection helper and progress call remain canonical.
@@ -6364,12 +6374,10 @@ void type_random_map_generator::markZoneBoundaryObstacles()
                 if (zoneIndex < 0 || current->getLandType() == eTerrainWater)
                     continue;
                 TRmgZoneBounds bounds;
-                {
-                    bounds.m_minimumY = max(position.m_y - 1, 0);
-                    bounds.m_minimumX = max(position.m_x - 1, 0);
-                    bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
-                    bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
-                }
+                bounds.m_minimumY = max(position.m_y - 1, 0);
+                bounds.m_minimumX = max(position.m_x - 1, 0);
+                bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
+                bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
                 TRmgZone* zone = m_zones[zoneIndex];
                 unsigned char found = 0;
                 int radius = 1;
@@ -6384,7 +6392,7 @@ void type_random_map_generator::markZoneBoundaryObstacles()
                         } else if (otherZone != zoneIndex) {
                             if (item->getLandType() != eTerrainWater)
                                 radius = 1;
-                            TRmgZoneConnection* connection = zone->m_templateZone->findConnection(otherZone);
+                            TRmgZoneConnection* connection = zone->getTemplateZone()->findConnection(otherZone);
                             if (!connection || position.m_z == 1)
                                 found = 1;
                             if (connection && !connection->m_unguarded)
@@ -6395,12 +6403,10 @@ void type_random_map_generator::markZoneBoundaryObstacles()
                 if (!found)
                     continue;
                 current->setObstacleFill(1);
-                {
-                    bounds.m_minimumY = max(position.m_y - radius + 1, 0);
-                    bounds.m_minimumX = max(position.m_x - radius + 1, 0);
-                    bounds.m_maximumY = min(position.m_y + radius, m_map.m_mapHeight);
-                    bounds.m_maximumX = min(position.m_x + radius, m_map.m_mapWidth);
-                }
+                bounds.m_minimumY = max(position.m_y - radius + 1, 0);
+                bounds.m_minimumX = max(position.m_x - radius + 1, 0);
+                bounds.m_maximumY = min(position.m_y + radius, m_map.m_mapHeight);
+                bounds.m_maximumX = min(position.m_x + radius, m_map.m_mapWidth);
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = getMapItem(nearby);
@@ -6409,12 +6415,10 @@ void type_random_map_generator::markZoneBoundaryObstacles()
                             item->setObstacleFill(1);
                     }
                 }
-                {
-                    bounds.m_minimumY = max(position.m_y - radius, 0);
-                    bounds.m_minimumX = max(position.m_x - radius, 0);
-                    bounds.m_maximumY = min(position.m_y + radius + 1, m_map.m_mapHeight);
-                    bounds.m_maximumX = min(position.m_x + radius + 1, m_map.m_mapWidth);
-                }
+                bounds.m_minimumY = max(position.m_y - radius, 0);
+                bounds.m_minimumX = max(position.m_x - radius, 0);
+                bounds.m_maximumY = min(position.m_y + radius + 1, m_map.m_mapHeight);
+                bounds.m_maximumX = min(position.m_x + radius + 1, m_map.m_mapWidth);
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = getMapItem(nearby);
