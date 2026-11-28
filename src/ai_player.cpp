@@ -4060,17 +4060,23 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
         if (attemptTeleport(currentHero, path, step))
             return;
 
-        if (path[step].m_flying
-            && !checkMoveSpell(currentHero, path, step, SPELL_FLY,
-                                 currentHero->isFlying(false)))
-            return;
+        // Dreamcast nests both move-spell tests under braced flag tests
+        // (lines 4246/4247 and 4254/4255 sit at scope depths 6 and 7). The
+        // final path destructor still stays a call: retail expands it, which
+        // needs a root cb of 1165..1188 against 1111 here (1097 before).
+        if (path[step].m_flying) {
+            if (!checkMoveSpell(currentHero, path, step, SPELL_FLY,
+                                  currentHero->isFlying(false)))
+                return;
+        }
 
-        if (path[step].m_waterWalking
-            && !checkMoveSpell(
-                currentHero, path, step, SPELL_WATER_WALK,
-                currentHero->isFlying(false)
-                    || currentHero->canWalkOnWater(false)))
-            return;
+        if (path[step].m_waterWalking) {
+            if (!checkMoveSpell(
+                    currentHero, path, step, SPELL_WATER_WALK,
+                    currentHero->isFlying(false)
+                        || currentHero->canWalkOnWater(false)))
+                return;
+        }
 
         if (step + 1 >= path.size()
             || static_cast<long>(path[step + 1].m_cost) - totalCost
