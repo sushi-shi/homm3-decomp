@@ -5072,14 +5072,23 @@ void type_random_map_generator::drawStraightZoneBoundary(
 // Mac 0x23de80..0x23deec builds the two left corners, then assigns the
 // existing from/to endpoints to the right corners. Mac 0x23e11c..0x23e1b4
 // also resets the search flag and refreshes both endpoint snapshots before
-// clipping. Retain that complete search phase: the editor is exact, and
-// omitting the inner snapshots/flag would raise the game only by dropping
-// that evidence. Shared/local flags and pre/post-tested loops are flat.
-// Game residual: 93 blocks on both sides; two vector copies still choose
-// _Ufill/_Destroy expansion. The inliner's cumulative budget responds to the
-// coordinate accessors: reading the NPC corners through getX()/getY() (as
-// fillZoneArea reads its position) is what lets both _Ucopy copies expand.
-// Account for cross-type ICF before treating a template name as a new call.
+// clipping. Retain that complete search phase.
+// Both bounds tests are written out: Mac branches on each of the four
+// comparisons (0x23ddf4..0x23de28, 0x23e16c..0x23e1a0), where CodeWarrior
+// materializes an inline predicate's result as it does operator!= just
+// below (0x23de30..0x23de4c). The corner loop reads the point fields: Mac
+// compares from's coordinate with the bound (cmpw r4,r7 at 0x23e1c0) and
+// loads from before to in the loop test (0x23e2d0), CodeWarrior's order for
+// fields; getX()/getY() give the reverse of both (compiled). The zone's
+// position is copied from the member, as appendZonePositions copies its
+// center; retail keeps the whole 12-byte copy (0x53c3b2..0x53c3ca).
+// Inline budget (replay): the corner append expands _Ucopy and _Ufill, the
+// final append _Ucopy, _Ufill, _Ucopy and _Destroy but not the fourth
+// size(), which needs 2034..2093 left at the corner append. This body has
+// 2046. An accessor copy of the position (-48), a contains() helper (-74 at
+// each site, less the written test's 27 of root cost) and coordinate
+// accessors (+6 of root cost each) all move it; the former
+// accessor-everywhere body had 1874.
 // Follow the map border clockwise, one corner at a time.
 // North is up:  upperLeft -> upperRight
 //                   ^             v
@@ -5092,7 +5101,7 @@ void type_random_map_generator::traceZoneBoundary(
     TRmgHalfEdge* vertex = first;
     TRmgZone* zone = vertex->getZone();
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
-    TRmgMapPosition zonePosition = zone->getLevelPosition();
+    TRmgMapPosition zonePosition = zone->m_levelPosition;
     TRmgZoneBounds bounds;
     bounds.m_maximumY = m_map.getHeight();
     bounds.m_minimumX = bounds.m_minimumY = 0;
@@ -5110,7 +5119,8 @@ void type_random_map_generator::traceZoneBoundary(
         originalTo = next->m_vertex;
         from = clipRmgBoundaryPoint(originalFrom, originalTo, bounds);
         to = clipRmgBoundaryPoint(originalTo, originalFrom, bounds);
-        if (bounds.contains(from) && from != to) {
+        if (from.m_x >= bounds.m_minimumX && from.m_x < bounds.m_maximumX
+            && from.m_y >= bounds.m_minimumY && from.m_y < bounds.m_maximumY && from != to) {
             found = true;
             break;
         }
@@ -5164,18 +5174,19 @@ void type_random_map_generator::traceZoneBoundary(
                 originalFrom = vertex->m_vertex;
                 originalTo = next->m_vertex;
                 to = clipRmgBoundaryPoint(originalFrom, originalTo, bounds);
-                if (bounds.contains(to))
+                if (to.m_x >= bounds.m_minimumX && to.m_x < bounds.m_maximumX
+            && to.m_y >= bounds.m_minimumY && to.m_y < bounds.m_maximumY)
                     found = true;
                 else
                     vertex = next;
             } while (!found);
-            while (from.getX() != to.getX() && from.getY() != to.getY()) {
+            while (from.m_x != to.m_x && from.m_y != to.m_y) {
                 TRmgPoint corner;
-                if (from.getX() == bounds.m_minimumX && from.getY() != bounds.m_minimumY)
+                if (from.m_x == bounds.m_minimumX && from.m_y != bounds.m_minimumY)
                     corner = TRmgPoint(bounds.m_minimumX, bounds.m_minimumY);
-                else if (from.getY() == bounds.m_minimumY && from.getX() != bounds.m_maximumX - 1)
+                else if (from.m_y == bounds.m_minimumY && from.m_x != bounds.m_maximumX - 1)
                     corner = TRmgPoint(bounds.m_maximumX - 1, bounds.m_minimumY);
-                else if (from.getX() == bounds.m_maximumX - 1 && from.getY() != bounds.m_maximumY - 1)
+                else if (from.m_x == bounds.m_maximumX - 1 && from.m_y != bounds.m_maximumY - 1)
                     corner = TRmgPoint(bounds.m_maximumX - 1, bounds.m_maximumY - 1);
                 else
                     corner = TRmgPoint(bounds.m_minimumX, bounds.m_maximumY - 1);
@@ -5192,15 +5203,17 @@ void type_random_map_generator::traceZoneBoundary(
 // The bounds follow both by-value points: editor EBP+0x1c, and retail Mac
 // 0x23d1dc receives point in r4/r5, toward in r6/r7 and bounds in r8.
 // The game's fastcall passes the bounds in EDX with either source order.
-// Mac residual: CodeWarrior gives this leaf a frame and materializes the
-// inlined contains() result as a byte where retail branches directly.
+// The containment test is written out: retail Mac branches on each of its
+// four comparisons, where an inline predicate's result is materialized as a
+// byte. Mac residual: CodeWarrior gives this leaf a frame.
 VA(0x0053CAC0, 0x266)
-MAC_ADDRESS(0x23d1dc, 0x4a8) // MAC_ABSTRACTION_FROM(tokens1:5f4b0d9c9ca8,21.4765): retail Mac's own argument registers (point r4/r5, toward r6/r7, bounds r8) and the editor's stack slots fix this parameter order; the earlier bounds-first order scored higher only by token alignment. Mac comparison scores 19.3792.
+MAC_ADDRESS(0x23d1dc, 0x4a8) // MAC_ABSTRACTION_FROM(tokens1:3cd178d8ffc7,19.3792): the bounds test is written out because retail Mac branches on each comparison (0x23d1f0..0x23d224), and CodeWarrior now emits those 19 instructions word for word; its frame (stwu) still shifts every later instruction, so the positional score falls to 12.8356.
 VA_AT(h3maped, 0x004a2b33, 0x1a9)
 TRmgPoint clipRmgBoundaryPoint(
     TRmgPoint point, TRmgPoint toward, const TRmgZoneBounds& bounds)
 {
-    if (bounds.contains(point))
+    if (point.m_x >= bounds.m_minimumX && point.m_x < bounds.m_maximumX
+        && point.m_y >= bounds.m_minimumY && point.m_y < bounds.m_maximumY)
         return point;
 
     TRmgVector delta = toward - point;

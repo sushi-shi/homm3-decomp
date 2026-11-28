@@ -684,12 +684,6 @@ struct TRmgZoneBounds {
     int m_minimumY;
     int m_maximumX;
     int m_maximumY;
-
-    bool contains(const TRmgPoint& point) const
-    {
-        return point.m_x >= m_minimumX && point.m_x < m_maximumX &&
-            point.m_y >= m_minimumY && point.m_y < m_maximumY;
-    }
 };
 
 TRmgPoint clipRmgBoundaryPoint(
