@@ -260,14 +260,8 @@ VA(0x0056cf70, 0xCD)
 MAC_ADDRESS(0x16438c, 0x180)
 void type_quest::save(TAbstractFile* file)
 {
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
+    writeValue<unsigned char>(file, m_seerHut);
+    writeValue<unsigned char>(file, static_cast<unsigned char>(m_textVariant));
     {
         int extra = m_limit;
         writeLittleEndianValue(file, extra);
@@ -735,10 +729,7 @@ void type_defeat_hero_quest::save(TAbstractFile* file)
 {
     short id = m_defeatedHero;
     file->write(&id, sizeof(id));
-    {
-        unsigned char mask = static_cast<unsigned char>(m_satisfiedMask);
-        file->write(&mask, sizeof(mask));
-    }
+    writeValue<unsigned char>(file, static_cast<unsigned char>(m_satisfiedMask));
 
     type_quest::save(file);
 }
@@ -884,14 +875,8 @@ MAC_ADDRESS(0x165fa0, 0xac)
 void type_monster_quest::save(TAbstractFile* file)
 {
     file->write(&m_position, sizeof(m_position));
-    {
-        short id = m_monsterId;
-        file->write(&id, sizeof(id));
-    }
-    {
-        unsigned char killer = static_cast<unsigned char>(m_defeatedBy);
-        file->write(&killer, sizeof(killer));
-    }
+    writeValue<short>(file, m_monsterId);
+    writeValue<unsigned char>(file, static_cast<unsigned char>(m_defeatedBy));
 
     type_quest::save(file);
 }
@@ -2347,7 +2332,7 @@ int TSeerReward::getRewardExtra(const hero* thisHero)
 
 VA(0x00573fd0, 0x91)
 DC_ADDRESS(0x12d8c0, 0x22)
-MAC_ADDRESS(0x16a588, 0x13c)
+MAC_ADDRESS(0x16a588, 0x13c)  // MAC_ABSTRACTION_FROM(tokens1:c67872b5021d,99.0506): the braced staging scalars are the canonical inline writeValue (Windows byte-identical); CodeWarrior gives the expanded helper's local a different stack slot.
 int TSeerHut::save(TAbstractFile* outfile)
 {
     if (!m_quest) {
@@ -2362,14 +2347,8 @@ int TSeerHut::save(TAbstractFile* outfile)
 
     outfile->write(&m_reward, sizeof(m_reward));
 
-    {
-        unsigned char value = m_completedByPlayer;
-        outfile->write(&value, sizeof(value));
-    }
-    {
-        unsigned char value = m_visitedPlayers;
-        outfile->write(&value, sizeof(value));
-    }
+    writeValue<unsigned char>(outfile, m_completedByPlayer);
+    writeValue<unsigned char>(outfile, m_visitedPlayers);
     {
         unsigned char value = m_nameIndex;
         return outfile->write(&value, sizeof(value));
