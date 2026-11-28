@@ -4002,39 +4002,34 @@ DC_ADDRESS(0x0e52b8, 0x6a8)
 MAC_ADDRESS(0x1167a0, 0xa80)  // linkorder + anchor-callee
 void type_dialog_icon::set(EGameResource resource, long qualifier)
 {
-    // Residual (99.5366%): all 133 CFG blocks and all 64 branches agree.
     // Dreamcast 4938/4952/5027 has text lookups and 5086 calls
-    // ResourceManager::Dispose. Restoring the latter canonical call raises
-    // Windows from 99.1667%; retail now retains one more nested
-    // basic_string::_Eos call in RES_EXPERIENCE (85 calls versus our 84).
-    // Mac's linked byte score is unavailable due to an unresolved native
-    // vector specialization.
-    // The probes below describe the earlier two-call plateau.
-    // Statement-scoped inline_depth(0) is not the missing boundary: it also
-    // de-inlines operator=, grows the CFG to 135 blocks, and scores 94.9238%.
-    // The predictor's depth-1 midpoint, explicit assign(const char*), and
-    // branch-local const-char-pointer lifetimes are all byte-flat at 99.1667%.
-    // A fresh nine-state receiver/result family produced eight objects and
-    // reproduced all eight elites without improving either nested _Eos site.
-    // DC5089/5090's empty-label scope closes before max and both text
-    // loops. The two-state early-return control reproduces identical bytes
-    // and preserves that scope; it does not change either _Eos decision.
-    // DC5106 groups character width, increment and accumulation. Twelve
-    // increment/accumulation/word-width-lifetime states emitted two objects;
-    // both reproduced elites failed to improve the two _Eos sites. The
-    // postincrement argument with an outer width local fell to 98.6218%.
-    // Eight morale/luck frame-before-name negative controls emitted eight
-    // objects (96.3289..98.5486%); none preserves the current 99.1667% peak.
-    // DC5046/5051/5056 loads the filename, not the frame. Keep name before
-    // frame; the following shared string assignments precede frame stores.
-    // Eight sprite pointer/reference and signed line-count type/declaration
-    // states emitted one reproduced object, still 99.1667%. The verified
-    // inline trace leaves both EXPERIENCE _Eos sites at budget 47/cost 46;
-    // these result lifetimes do not recover the retained retail calls.
-    // Rejected source families: signed/unsigned relational count tests,
-    // zero-first monster arms, repeated direct LOWORD/HIWORD expressions,
-    // and division-based high-word extraction. The quantity-first unsigned
-    // local plus a nonzero test is the sole exact monster-arm lowering.
+    // ResourceManager::Dispose; restoring that canonical call gave the
+    // retail call set (85 calls) and left one residual at 99.95%: the
+    // operand order of the `_Ptr + _Len` terminator address in the eight
+    // inlined `_Eos` copies from RES_MANA on (retail pointer-first at the
+    // first three, length-first at the last five; a `creature` local gave
+    // length-first, then pointer-first seven times).
+    // RES_MONSTER closes it. Dreamcast 0xe561c/0xe5632/0xe5660 and Mac
+    // 0x116c74/0x116c90/0x116d08 cache only the count and read the creature
+    // id from m_qualifier again at each getArmyName call; VC6 folds the
+    // re-reads to the same bytes, but without the local C2's expression
+    // symbols differ, and with them that operand order. They raise cb from 2094 to
+    // 2099, outside the 2070..2094 window in which the /Ob2 replay keeps
+    // RES_EXPERIENCE's two `_Eos` calls out of line (99.58%). Dreamcast's
+    // line table supplies the difference: the resource, small-gold and
+    // primary-skill chains occupy consecutive lines (4931..4938, 4945..4952,
+    // 4982..4988) and so have no braces, while RES_MONSTER and
+    // RES_EXPERIENCE record every other line (4996..5002, 5025..5035).
+    // Those three brace-less chains give cb 2077 and every retail byte.
+    // Controls: braces removed everywhere go below the window (97.28%);
+    // the re-reads with all braces kept are 99.58%.
+    // Earlier probes on the two-call plateau, all byte-flat or worse:
+    // statement-scoped inline_depth(0) (94.92%), explicit assign(const
+    // char*), const-char-pointer lifetimes, receiver/result families,
+    // DC5106's width grouping, morale/luck frame-before-name
+    // (96.33..98.55%), sprite pointer/reference and line-count types,
+    // signed/unsigned count tests, zero-first monster arms and
+    // division-based high-word extraction.
     m_resource = resource;
     m_qualifier = qualifier;
     m_textWidth = 0;
@@ -4068,38 +4063,36 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     case CRYSTAL:
     case GEMS:
     case GOLD:
-        if (m_qualifier > 0) {
+        if (m_qualifier > 0)
             m_text = formatString(
                 DATA_COMPGEN(0x00660a1c, dialogDecimalFormat, "%d"),
                 m_qualifier);
-        } else if (m_qualifier == 0) {
+        else if (m_qualifier == 0)
             m_text = DATA_COMPGEN(0x00691210, dialogEmptyText, "");
-        } else if (m_qualifier < -100000) {
+        else if (m_qualifier < -100000)
             m_text = formatString(
                 DATA_COMPGEN(0x00660a1c, dialogDecimalFormat, "%d"),
                 m_qualifier + 100000);
-        } else {
+        else
             m_text = formatString(g_generalText->GetText(GENERAL_TEXT_PER_DAY_FORMAT), -m_qualifier);
-        }
         m_spriteName = DATA_COMPGEN(
             0x00660114, dialogResourceSprite, "resour82.def");
         m_spriteFrameIndex = m_resource;
         break;
 
     case RES_SMALL_GOLD:
-        if (m_qualifier > 0) {
+        if (m_qualifier > 0)
             m_text = formatString(
                 DATA_COMPGEN(0x00660a1c, dialogDecimalFormat, "%d"),
                 m_qualifier);
-        } else if (m_qualifier == 0) {
+        else if (m_qualifier == 0)
             m_text = DATA_COMPGEN(0x00691210, dialogEmptyText, "");
-        } else if (m_qualifier < -100000) {
+        else if (m_qualifier < -100000)
             m_text = formatString(
                 DATA_COMPGEN(0x00660a1c, dialogDecimalFormat, "%d"),
                 m_qualifier + 100000);
-        } else {
+        else
             m_text = formatString(g_generalText->GetText(GENERAL_TEXT_PER_DAY_FORMAT), -m_qualifier);
-        }
         m_spriteName = DATA_COMPGEN(
             0x00660224, dialogSmallGoldSprite, "resource.def");
         m_spriteFrameIndex = GOLD;
@@ -4133,30 +4126,28 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
         m_spriteName = DATA_COMPGEN(
             0x006601f0, dialogPrimarySkillSprite, "pskill.def");
         m_spriteFrameIndex = m_resource - RES_PRIMARY_SKILL_ATTACK;
-        if (m_qualifier == 0) {
+        if (m_qualifier == 0)
             m_text = DATA_COMPGEN(0x00691210, dialogEmptyText, "");
-        } else if (HIWORD(m_qualifier) == 1) {
+        else if (HIWORD(m_qualifier) == 1)
             m_text = formatString(
                 DATA_COMPGEN(0x006778a4, dialogQuantityFormat, "%d %s"),
                 static_cast<unsigned short>(m_qualifier),
                 g_statNames[m_spriteFrameIndex]);
-        } else {
+        else
             m_text = formatString(
                 DATA_COMPGEN(0x00677278, dialogBonusFormat, "+%d %s"),
                 m_qualifier, g_statNames[m_spriteFrameIndex]);
-        }
         break;
 
     case RES_MONSTER: {
         unsigned long count = HIWORD(m_qualifier);
-        int creature = LOWORD(m_qualifier);
-        m_spriteFrameIndex = creature + 2;
+        m_spriteFrameIndex = LOWORD(m_qualifier) + 2;
         if (count != 0) {
             m_text = formatString(
                 DATA_COMPGEN(0x006778a4, dialogQuantityFormat, "%d %s"),
-                count, getArmyName(creature, count));
+                count, getArmyName(LOWORD(m_qualifier), count));
         } else {
-            m_text = getArmyName(creature, 2);
+            m_text = getArmyName(LOWORD(m_qualifier), 2);
         }
         m_spriteName = DATA_COMPGEN(
             0x006601e0, dialogCreatureSprite, "twcrport.def");
