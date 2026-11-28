@@ -6717,16 +6717,13 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     TCreatureType upgradeToType = CREATURE_NONE;
 
     if (thisTown && getAlignment(armyType) == thisTown->m_type) {
-        int i = DWELLING_0_ID;
-        for (;;) {
+        for (int i = DWELLING_0_ID; i <= DWELLING_6_ID; ++i) {
             if (g_dwellingType[thisTown->m_type][i - DWELLING_0_ID]
                     == armyType
                 && thisTown->hasBuilding(town::upgradedDwellingID(i), true)) {
                 upgradeToType = upgradedCreatureType(armyType);
                 break;
             }
-            if (++i > DWELLING_6_ID)
-                break;
         }
     }
 

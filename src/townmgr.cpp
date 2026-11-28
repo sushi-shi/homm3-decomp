@@ -4467,12 +4467,11 @@ static char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char
     } else if (buildingId < DWELLING_0_ID) {
         strcpy(buffer, g_buildingInfoSpecial[type][buildingId - 17]);
         if (type == 1 && extended) {
-            for (;;) {
-                if (buildingId == EXTRA_0_ID) {
-                    strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
-                    strcat(buffer, g_buildingInfoSpecial[1][0]);
-                } else if (buildingId != SPECIAL_BUILDING_ID)
-                    break;
+            if (buildingId == EXTRA_0_ID) {
+                strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
+                strcat(buffer, g_buildingInfoSpecial[1][0]);
+            }
+            if (buildingId == EXTRA_0_ID || buildingId == SPECIAL_BUILDING_ID) {
                 strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
                 if (thisTown->m_pondAmount == 0) {
                     strcat(buffer, g_generalText->GetText(GENERAL_TEXT_MYSTIC_POND_EMPTY));
@@ -4483,7 +4482,6 @@ static char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char
                                        g_resourceNames[thisTown->m_pondResource])
                                        .c_str());
                 }
-                break;
             }
         }
     } else {

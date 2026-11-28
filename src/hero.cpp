@@ -4786,9 +4786,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                 break;
             }
             ++slot;
-            if (--remaining == 0)
-                break;
-        } while (1);
+        } while (--remaining != 0);
     }
     if (found)
         return 1;
