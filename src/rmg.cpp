@@ -3745,9 +3745,7 @@ static const int g_rmgDecorationTypes[45] = {
 // Mac 0x23603c..0x236084 expands the byte-valued land predicate before
 // clearing the obstacle-fill mark. Keep those shared cell operations.
 // Both images destroy the four candidate vectors separately on the
-// no-candidate path, so it is an early continue. Reading the clipped
-// neighbourhood's map extents through getWidth()/getHeight() (one of the
-// solver's free-site leads) lowers the game to 74.54; not adopted. Mac 0x235bf0..0x235c18 and
+// no-candidate path, so it is an early continue. Mac 0x235bf0..0x235c18 and
 // both Windows images reread the prototype type for each version test, so
 // the tests are spelled in place; a single-use static type/version
 // predicate given the prototype lowers the game.
@@ -3762,14 +3760,25 @@ static const int g_rmgDecorationTypes[45] = {
 // (add, then +0x38). Mac reuses that index register for the weighted
 // selection and writes properties/candidatePosition to the same slots in
 // both phases, so they share one declaration; both Windows frames then
-// shrink by the 0x1c of a second bounds/position pair. Game residual: the
-// positions/weights push_backs expand insert(P, x) one level deeper than
-// retail, the pending destructor keeps _Destroy, and the first bounds'
-// y/z register homes differ. Editor residual: the positions push_back stays
-// a call and the second lookup's height*z operand order. A reference to
-// m_objectPrototypes[type], a pointer-walked table, z before the bounds,
-// x-then-y bounds order, a hoisted score and reusing item for the
-// neighbour lookup are lower or flat.
+// shrink by the 0x1c of a second bounds/position pair.
+// The footprint bounds are set bottom first, then top, left and right, the
+// order traceZoneBoundary's bounds use: retail stores the bottom before the
+// right edge (0x537587, 0x53758a) and Mac loads the height before the
+// position's y (0x235c20, 0x235c24), which CodeWarrior does only for that
+// order (compiled; top-first loads y first). Left-first orders leave the
+// game's y and z in each other's registers (99.43).
+// The clipped neighbourhood reads the map extents through getWidth() and
+// getHeight(). Inline budget (replay): the positions and weights appends
+// keep insert(P, x) as a call, which needs budget / remaining sites below
+// 64 at both (it was 64 at each). The two accessors are two more sites
+// after them (1797 over 30 and 29 sites: 59 and 61); the 128 the unexpanded
+// inserts leave also expands _Destroy in the pending vector's destructor,
+// as retail does. Both images are exact with them; with the fields the
+// game expands both inserts and the editor keeps the positions append a
+// call.
+// A reference to m_objectPrototypes[type], a pointer-walked table, z before
+// the bounds, a hoisted score and reusing item for the neighbour lookup are
+// lower or flat.
 // Candidate anchors put the start cell S under each blocked
 // footprint cell in turn. For a fully blocked 3x2 object they
 // are S and each o; North is up:
@@ -3819,10 +3828,10 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
                     continue;
                 if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE && prototype->getType() >= MAX_EVENT_TYPE)
                     continue;
-                bounds.m_minimumX = position.m_x;
-                bounds.m_minimumY = position.m_y;
-                bounds.m_maximumX = position.m_x + prototype->getWidth();
                 bounds.m_maximumY = position.m_y + prototype->getHeight();
+                bounds.m_minimumY = position.m_y;
+                bounds.m_minimumX = position.m_x;
+                bounds.m_maximumX = position.m_x + prototype->getWidth();
                 candidatePosition.m_z = position.m_z;
                 for (candidatePosition.m_y = bounds.m_minimumY;
                     candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
@@ -3856,8 +3865,8 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
         addObject(new type_object(properties), candidatePosition);
         bounds.m_minimumX = max(candidatePosition.m_x - prototype->getWidth(), 0);
         bounds.m_minimumY = max(candidatePosition.m_y - prototype->getHeight(), 0);
-        bounds.m_maximumX = min(candidatePosition.m_x + 2, m_map.m_mapWidth);
-        bounds.m_maximumY = min(candidatePosition.m_y + 2, m_map.m_mapHeight);
+        bounds.m_maximumX = min(candidatePosition.m_x + 2, m_map.getWidth());
+        bounds.m_maximumY = min(candidatePosition.m_y + 2, m_map.getHeight());
         candidatePosition.m_z = position.m_z;
         for (candidatePosition.m_y = bounds.m_minimumY;
             candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
