@@ -632,15 +632,15 @@ DATA(0x0065f67c) const char* g_boatFrothIconNames[3] = { "abm01_.def", "abm02_.d
 // reaches 75.2428 unpinned; the coupled bottom-view calls are load-bearing.
 // Restoring the DC 962..965 sound-pointer clearing loop instead of memset
 // recovers the store scheduling and raises the unpinned body to 99.9601.
-// Residual: temporary slots -0x10/-0x14, plus distinct cache-arm pointer homes.
-// Direct appends, shared DC counters and a reused filename buffer were flat
-// before that loop recovery. With it, sharing a resource pointer scores
-// 99.9475 per iteration / 99.9366 per cache batch, so direct appends remain.
-// The register model cannot classify this slot residual: retail shares one
-// slot between both cache arms' push_back temporaries, while this compile
-// gives the bitmap arm its own. Declaring i/j at the cache loop, unbraced
-// arms and explicit resource* casts are all byte-flat. The two insert-call
-// name differences are resource*/widget* pointer-vector ICF aliases.
+// The last residual was the cache arms' frame slots: retail keeps both arms'
+// appended pointer in [ebp-0x10], shared with the allocation temporaries, and
+// the cache counter in [ebp-0x14]. Direct push_back calls give each arm's
+// reference temporary its own slot (99.9601); arm-scoped resource* locals are
+// byte-identical to that, and one loop-scoped pointer assigned in both arms
+// scores 99.9475. Passing the pointer by value to advManager::cacheGraphic
+// reproduces the shared slot and the whole frame.
+// The two insert-call name differences are resource*/widget* pointer-vector
+// ICF aliases.
 // The adventure screen setup. Retail's grouping is preserved: the route
 // array and the map window are allocated lazily with MemError guards,
 // the cached-graphics list reverses each name and picks GetSprite for
@@ -700,9 +700,9 @@ int advManager::open(int newPriority)
         if (strnicmp(reversed,
                       DATA_COMPGEN(0x00660328, defExtensionReversed, "fed"),
                       3) == 0) {
-            m_cachedGraphics.push_back(ResourceManager::GetSprite(g_advCachedGraphicNames[cacheIndex]));
+            cacheGraphic(ResourceManager::GetSprite(g_advCachedGraphicNames[cacheIndex]));
         } else {
-            m_cachedGraphics.push_back(ResourceManager::GetBitmap816(g_advCachedGraphicNames[cacheIndex]));
+            cacheGraphic(ResourceManager::GetBitmap816(g_advCachedGraphicNames[cacheIndex]));
         }
         if (cacheIndex == CACHED_GRAPHIC_TICK)
             incProgressBar(true);
