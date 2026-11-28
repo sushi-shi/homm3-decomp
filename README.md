@@ -19,7 +19,7 @@ executables.
 | :---- | --------------: | -------: | :--------------------------------------------- |
 | CUR   |           4,662 |   99.53% | last measured score                            |
 | MAX   |           4,676 |   99.56% | best result for each function's current source |
-| HIST  |           4,683 |   99.63% | all-time peak across source revisions          |
+| HIST  |           4,683 |   99.64% | all-time peak across source revisions          |
 
 MAX by module:
 
