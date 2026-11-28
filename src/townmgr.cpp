@@ -4767,14 +4767,13 @@ int townManager::main(message& msg)
         }
     }
 
-    // Retail reads Get() before g_timers[0] (elapsedSince(g_timers[0])
-    // loads the timer first), so the two halves are spelled out.
+    // DC 5917 calls Get on its own line at function scope; 5918 and 5920
+    // each subtract the timer from it again, so the difference is unnamed.
     unsigned long now = GameTime::get();
-    int delta = GameTime::elapsed(now, g_timers[0]);
-    if (delta >= 0) {
+    if (GameTime::elapsed(now, g_timers[0]) >= 0) {
         // DC townmgr.cpp:5920 calls max; retail 0x5d33c2 selects
         // the larger interval, keeping panorama updates 150 ms apart.
-        g_timers[0] += max(150, delta);
+        g_timers[0] += max(150, GameTime::elapsed(now, g_timers[0]));
         drawTown(1, 1, false);
     }
 
