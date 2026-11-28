@@ -110,7 +110,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0000afc0	0x18	func	??C?$TRefCountingPtr@V_TImpl@TCampaign@@@@QAEPAV_TImpl@TCampaign@@XZ	Campaign	external	referenced by ?setScenarioMap@TCampaign@@QAEXHV?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z at +0x42
 0x0000afe0	0x63	func	??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z	Campaign	external	masked body (99 bytes, 1 relocations) unique at a census start
 0x0000b050	0x16	func	??0?$auto_ptr@D@std@@QAE@ABV01@@Z	CampaignDoc	external	masked body (22 bytes, 0 relocations) unique at a census start; ICF-folded with 3 identical bodies
-0x0000b070	0x20	func	??1?$auto_ptr@VTScenarioPrologue@@@std@@QAE@XZ	Campaign	external	referenced by ?importText@_TImpl@TCampaign@@QAEXAAV?$basic_istream@DU?$char_traits@D@std@@@std@@H@Z at +0xa19
+0x0000b070	0x20	func	??1?$auto_ptr@VTScenarioPrologue@@@std@@QAE@XZ	Campaign	external	referenced by ??0_TImpl@TCampaign@@QAE@H@Z at +0x13c
 0x0000b090	0x18	func	??C?$TRefCountingPtr@V_TImpl@TScenario@@@@QAEPAV_TImpl@TScenario@@XZ	Campaign	external	referenced by ?setPrologue@TScenario@@QAEXV?$auto_ptr@VTScenarioPrologue@@@std@@@Z at +0x3d
 0x0000b0b0	0x4d	func	??1?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAE@XZ	Campaign	external	masked body (77 bytes, 1 relocations) unique at a census start
 0x0000b170	0x38	func	??1?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@QAE@XZ	Campaign	external	masked body (56 bytes, 2 relocations) unique at a census start
@@ -180,7 +180,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0000e680	0x74	func	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	resourcemanager	external	masked body (116 bytes, 1 relocations) unique at a census start
 0x0000e700	0x28a	func	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@D@Z	Campaign	external	masked body (650 bytes, 10 relocations) unique at a census start
 0x0000e990	0xc2	func	??0?$TRefCountingAutoPtr@VTCampaignScenarioMap@@@@QAE@V?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z	Campaign	external	masked body (194 bytes, 11 relocations) unique at a census start
-0x0000ea60	0x25	func	??1?$TRefCountingAutoPtr@VTCampaignScenarioMap@@@@QAE@XZ	Campaign	external	masked body (37 bytes, 2 relocations) at 3 census starts; its referents agree with retail's at this one only
+0x0000ea60	0x25	func	??1?$TRefCountingAutoPtr@VTCampaignScenarioMap@@@@QAE@XZ	Campaign	external	referenced by ??0_TImpl@TCampaign@@QAE@H@Z at +0x171
 0x0000ea90	0x59	func	?copy@std@@YAPAVTScenario@@PAV2@00@Z	Campaign	external	masked body (89 bytes, 2 relocations) unique at a census start
 0x0000eaf0	0x1a	func	?_Construct@std@@YAXPAV?$auto_ptr@VTScenarioStartingBonus@@@1@ABV21@@Z	Campaign	external	masked body (26 bytes, 0 relocations) unique at a census start
 0x0000eb10	0x17	func	?_Construct@std@@YAXPAUTChoice@TScenarioOptionsCrossoverScenario@@ABU23@@Z	Campaign	external	masked body (23 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
@@ -3668,7 +3668,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000b75d0	0xb	data	??_C@_0L@JML@cpkman?4def?$AA@	creaturetype	external	referenced by 0x000b2488 at +0xc
 0x000b75dc	0x5	data	??_C@_04KIIN@pike?$AA@	creaturetype	external	referenced by 0x000b2488 at +0x8
 0x000b75e4	0xd	data	??_C@_0N@LPEN@crtraits?4txt?$AA@	creaturetype	external	referenced by ?InitializeCreatureTypeTraitsTable@@YAEXZ at +0x2
-0x000b76b0	0x8	data	??_C@_07DAJE@?$CFs?5?9?5?$CFs?$AA@	EditCrossoverScenarioOptionDlg	external	string literal referenced by ?OnInitDialog@TEditCrossoverScenarioOptionDlg@@MAEHXZ
+0x000b76b0	0x8	data	??_C@_07DAJE@?$CFs?5?9?5?$CFs?$AA@	EditCrossoverScenarioOptionDlg	external	referenced by ?OnInitDialog@TEditCrossoverScenarioOptionDlg@@MAEHXZ at +0x12e
 0x000b7858	0x3	data	??_C@_02MECO@?$CFd?$AA@	EditStartingBonusDlg	external	referenced by 0x0001e990 at +0x9f
 0x000b785c	0x2	data	??_C@_01FBAH@1?$AA@	EditStartingBonusDlg	external	referenced by 0x0001eb90 at +0x8a
 0x000b7b2c	0x11	data	??_C@_0BB@PHAF@?$CFs?0?5?$CFs?0?5?$CFs?5?$CFs?5?$CFs?$AA@	EditStartingBonusDlg	external	referenced by 0x000207d0 at +0x10c
