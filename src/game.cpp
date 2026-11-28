@@ -5833,6 +5833,12 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
 // -54..-126, or every readValue site charged); a single-exit readHeroId body
 // gives 96.06%. The feature index is GAME_VERSION_AB, as the Loki editor's
 // g_gameContextFeatures[g_videoGameState].test(GAME_VERSION_AB) spells it.
+// 2026-11-28: staging every scalar through named char/uchar/short buffers
+// with direct stream calls, as Dreamcast's Read does for the fields it
+// shares, scores 86.87% here: retail homes each one-byte read in the dead
+// infile slot byte [ebp+0xb], which the per-call value temporaries give and
+// one named buffer does not, and resize's expansions change with the site
+// count (std::copy<type_map_hero_identity> is no longer emitted).
 VA(0x004c3ef0, 0x498)
 MAC_ADDRESS(0x0da6b4, 0x478)  // sole NewSMapHeader::Read caller + slot stride/layout
 void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
@@ -6156,6 +6162,10 @@ void game::applyMapHeaderAvailability()
 // alignment and name length as owned values, which keep writeValue; the
 // setup key and portrait reuse enumBuffer like the other enum writes
 // (95.51%; writeValue<char> for those two gives 78.12%).
+// 2026-11-28: staging the remaining Complete-only bytes directly is no
+// gain: m_maxHeroLevel through a char buffer (Dreamcast records an unused
+// char_buffer local) is byte-flat, the setup count through ucharBuffer
+// 95.43%.
 VA(0x004c4f10, 0x71D)
 DC_ADDRESS(0x0b0188, 0x5cc)
 MAC_ADDRESS(0x0db804, 0x6f0)  // game::Save caller + DC identity + stream-write order

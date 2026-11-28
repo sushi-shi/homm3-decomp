@@ -2258,6 +2258,8 @@ static int getCampaignRegionCount(int regionMap)
 // m_scenarios.size() statements with no native support (Mac's vector calls
 // belong to readScenario's push_back); they only steered the inline budget
 // and were removed (94.38 -> 88.80% expected).
+// 2026-11-28: staging the four header scalars through named buffers with
+// direct stream calls scores 82.01%; the value readers stay.
 VA(0x00488880, 0x5D6)
 MAC_ADDRESS(0x096df0, 0x5ac)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::load()
