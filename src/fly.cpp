@@ -52,9 +52,9 @@ bool army::findFlyerAttackCell(int start, int target) const
         if (adjacent >= 0 && combatManager::validHex(hex)
                 && combatManager::getDistance(start, adjacent) <= getSpeed()
                 && canFit(hex, 0, NULL))
-            return 1;
+            return true;
     }
-    return 0;
+    return false;
 }
 
 // E:\gamedcs\fly.cpp:58
@@ -63,11 +63,11 @@ MAC_ADDRESS(0x0c7fe8, 0x88)
 bool army::findFlyerAttackCell(int target) const
 {
     if (findFlyerAttackCell(m_gridIndex, target))
-        return 1;
+        return true;
     if (is(creatureDoubleWide)
             && findFlyerAttackCell(getSecondGridIndex(), target))
-        return 1;
-    return 0;
+        return true;
+    return false;
 }
 
 VA(0x004b46c0, 0x2F9)
@@ -76,14 +76,14 @@ MAC_ADDRESS(0x0c8070, 0x14c)
 bool army::validFlight(int destIndex, bool literalTest) const
 {
     if (!combatManager::validHex(destIndex))
-        return 0;
+        return false;
 
     if (literalTest || groupToAttack == -1 || indexToAttack == -1) {
         if (combatManager::getDistance(m_gridIndex, destIndex) > getSpeed()
                 && !g_combatManager->m_creaturePlacement)
-            return 0;
+            return false;
         if (!canFit(destIndex, 0, NULL))
-            return 0;
+            return false;
     } else {
         const army* enemy = &g_combatManager->m_armies[groupToAttack][indexToAttack];
         long enemyHex = enemy->m_gridIndex;
@@ -91,10 +91,10 @@ bool army::validFlight(int destIndex, bool literalTest) const
             if (!enemy->is(creatureDoubleWide)
                     || !findFlyerAttackCell(
                     enemy->getSecondGridIndex()))
-                return 0;
+                return false;
         }
     }
-    return 1;
+    return true;
 }
 
 VA(0x004b49c0, 0x76)
@@ -109,9 +109,9 @@ int army::flyTo(int destIndex, bool restoreFacing)
         fly(destIndex);
         addAura();
         if (m_facing != oldFacing && restoreFacing)
-            this->turn(1);
+            this->turn(true);
         playAnimation(2, 1, 0);
-        checkObstacleAttacks(0);
+        checkObstacleAttacks(false);
         g_combatManager->testRaiseDoor();
     }
     return 0;
@@ -147,7 +147,7 @@ int army::fly(int destIndex)
     if (g_combatManager->shouldLowerDoor(this, destIndex)) {
         m_currFrameType = 2;
         m_currFrameIndex = 0;
-        g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
+        g_combatManager->drawFrame(true, false, false, 0, true, false);
         g_combatManager->lowerDoor();
     }
 
@@ -156,7 +156,7 @@ int army::fly(int destIndex)
 
     setupAnimation();
     if (turn)
-        this->turn(1);
+        this->turn(true);
 
     int startX = g_combatManager->m_cells[m_gridIndex].m_refX;
     long startY = g_combatManager->m_cells[m_gridIndex].m_refY;
@@ -211,9 +211,9 @@ int army::fly(int destIndex)
                            g_windowManager->m_screenBitmap->GetPitch(),
                            false);
                 g_combatManager->m_extent = heroWindowManager::s_nullLimits;
-                g_combatManager->m_saveBiggestExtent = 1;
+                g_combatManager->m_saveBiggestExtent = true;
                 drawToBuffer(static_cast<int>(x), static_cast<int>(y), 0);
-                g_combatManager->m_saveBiggestExtent = 0;
+                g_combatManager->m_saveBiggestExtent = false;
                 bool scrolled = g_combatManager->scrollTo(
                     g_combatManager->m_extent, true, true, true);
                 ttlExtent.include(g_combatManager->m_extent);
@@ -252,9 +252,9 @@ int army::teleportTo(int destIndex, bool restoreFacing)
         teleport(destIndex);
         addAura();
         if (m_facing != oldFacing && restoreFacing)
-            this->turn(1);
+            this->turn(true);
         playAnimation(2, 1, 0);
-        checkObstacleAttacks(0);
+        checkObstacleAttacks(false);
         g_combatManager->testRaiseDoor();
     }
     return 0;
@@ -281,7 +281,7 @@ int army::teleport(int destIndex)
 
     setupAnimation();
     if (turn)
-        this->turn(1);
+        this->turn(true);
 
     if (!g_combatManager->isQuickCombat()) {
         playSample(PRE_WALK_SAMPLE);

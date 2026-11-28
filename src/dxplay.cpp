@@ -45,7 +45,7 @@ CDPlay::CDPlay()
     m_lpDP = NULL;
     m_connected = 0;
     m_inSession = 0;
-    m_isHost = 0;
+    m_isHost = false;
     m_hRes = 0;
     m_guid = GUID_NULL;
     m_pSessionArray = NULL;
@@ -88,7 +88,7 @@ DC_ADDRESS(0x08a120, 0x34)
 bool CDPlay::InitConnection(CDPlayConnection* connection)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     m_hRes = m_lpDP->InitializeConnection(connection->m_connection, 0);
     bool ok = m_hRes >= 0;
     return ok;
@@ -100,7 +100,7 @@ bool CDPlay::HostSession(char* sessionName, unsigned long flags,
                                   unsigned long maxPlayers, char* password)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     DPSESSIONDESC2 desc;
     memset(&desc, 0, sizeof(desc));
     desc.dwSize = sizeof(desc);
@@ -113,10 +113,10 @@ bool CDPlay::HostSession(char* sessionName, unsigned long flags,
         desc.guidApplication = m_guid;
     m_hRes = m_lpDP->Open(&desc, 2);
     if (m_hRes < 0)
-        return 0;
-    m_isHost = 1;
-    GetCaps(&m_caps, 1);
-    return 1;
+        return false;
+    m_isHost = true;
+    GetCaps(&m_caps, true);
+    return true;
 }
 
 VA(0x00496e60, 0xB8)
@@ -124,7 +124,7 @@ DC_ADDRESS(0x08a158, 0x4)
 bool CDPlay::JoinSession(GUID* sessionGuid, char* password)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     DPSESSIONDESC2 desc;
     memset(&desc, 0, sizeof(desc));
     desc.dwSize = sizeof(desc);
@@ -135,10 +135,10 @@ bool CDPlay::JoinSession(GUID* sessionGuid, char* password)
         desc.guidApplication = m_guid;
     m_hRes = m_lpDP->Open(&desc, 1);
     if (m_hRes < 0)
-        return 0;
-    m_isHost = 0;
-    GetCaps(&m_caps, 1);
-    return 1;
+        return false;
+    m_isHost = false;
+    GetCaps(&m_caps, true);
+    return true;
 }
 
 VA(0x00496f20, 0x6D)
@@ -193,7 +193,7 @@ DC_ADDRESS(0x08a28c, 0x2e)
 bool CDPlay::DestroyPlayer(unsigned long playerId)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     m_hRes = m_lpDP->DestroyPlayer(playerId);
     bool ok = m_hRes >= 0;
     return ok;
@@ -240,7 +240,7 @@ DC_ADDRESS(0x08a378, 0x2a)
 bool CDPlay::DestroyGroup(unsigned long groupId)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     m_hRes = m_lpDP->DestroyGroup(groupId);
     return m_hRes >= 0;
 }
@@ -259,7 +259,7 @@ DC_ADDRESS(0x08a3cc, 0x46)
 bool CDPlay::EnumConnections(CAutoArray<CDPlayConnection>* connectionArray)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     m_pConnectionArray = connectionArray;
     connectionArray->destroy(1);
     m_hRes = m_lpDP->EnumConnections(NULL, enumConnectionsCallback, this, 1);
@@ -272,7 +272,7 @@ DC_ADDRESS(0x08a414, 0x42)
 bool CDPlay::StartSession(unsigned long groupId)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     m_hRes = m_lpDP->StartSession(0, groupId);
     return m_hRes >= 0;
 }
@@ -282,7 +282,7 @@ DC_ADDRESS(0x08a458, 0x2a)
 bool CDPlay::CloseSession()
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     m_hRes = m_lpDP->Close();
     return m_hRes >= 0;
 }
@@ -325,7 +325,7 @@ DC_ADDRESS(0x08a558, 0x84)
 bool CDPlay::EnumSessions(CAutoArray<CDPlaySession>* sessionArray, unsigned long timeOut, unsigned long flags)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     m_pSessionArray = sessionArray;
     m_pSessionArray->destroy(1);
     DPSESSIONDESC2 desc;
@@ -342,7 +342,7 @@ DC_ADDRESS(0x08a5dc, 0x46)
 bool CDPlay::SendChat(char* msg, unsigned long idFrom, unsigned long idTo)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     DPCHAT chat;
     chat.dwSize = sizeof(DPCHAT);
     chat.dwFlags = 0;
@@ -357,7 +357,7 @@ DC_ADDRESS(0x08a624, 0x54)
 bool CDPlay::Send(void* data, unsigned long size, unsigned long idFrom, unsigned long idTo, bool guaranteed)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     unsigned long flags = 1;
     if (!guaranteed)
         flags = 0;
@@ -371,12 +371,12 @@ DC_ADDRESS(0x08a678, 0xcc)
 bool CDPlay::Receive(unsigned long* fromID, unsigned long* toID, CDPlayMsg* msg, unsigned long flags)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     unsigned long buffSize = msg->m_dataSize;
     m_hRes = m_lpDP->Receive(fromID, toID, flags, msg->m_data, &buffSize);
     for (;;) {
         if (m_hRes == DPERR_NOMESSAGES)
-            return 0;
+            return false;
         if (m_hRes != DPERR_BUFFERTOOSMALL)
             break;
         msg->AllocSize(buffSize);
@@ -385,7 +385,7 @@ bool CDPlay::Receive(unsigned long* fromID, unsigned long* toID, CDPlayMsg* msg,
         m_hRes = m_lpDP->Receive(fromID, toID, flags, msg->m_data, &buffSize);
     }
     if (m_hRes < 0)
-        return 0;
+        return false;
     if (!*fromID)
         return ReceiveSystemMsg(*toID, msg);
     return ReceiveMsg(*fromID, *toID, msg);
@@ -404,15 +404,15 @@ bool CDPlay::FlushReceiveQueue()
         m_hRes = m_lpDP->Receive(
             &from, &to, 1, msg.m_data, &buffSize);
         if (m_hRes == DPERR_NOMESSAGES)
-            return 1;
+            return true;
         if (m_hRes == DPERR_BUFFERTOOSMALL)
             msg.AllocSize(buffSize);
         if (m_hRes != DPERR_BUFFERTOOSMALL && m_hRes != 0)
             break;
     }
     if (m_hRes < 0)
-        return 0;
-    return 1;
+        return false;
+    return true;
 }
 
 VA(0x004977c0, 0x144)
@@ -420,10 +420,10 @@ DC_ADDRESS(0x08a7e0, 0x48)
 bool CDPlay::AddSessionEnum(const DPSESSIONDESC2* dpSessionDesc, unsigned long flags)
 {
     if (flags & 1)
-        return 0;
+        return false;
     CDPlaySession* session = new CDPlaySession(dpSessionDesc);
     m_pSessionArray->add(session);
-    return 1;
+    return true;
 }
 
 VA(0x00497910, 0x180)
@@ -462,7 +462,7 @@ bool CDPlay::ReceiveSystemMsg(unsigned long toID, CDPlayMsg* msg)
     case DPLAY_SYSMSG_SETPLAYERORGROUPNAME:
         return SysMsgSetPlayerOrGroupName(static_cast<DPMSG_SETPLAYERORGROUPNAME*>(static_cast<void*>(generic)), toID);
     }
-    return 1;
+    return true;
 }
 
 VA(0x00497a90, 0x6B)
@@ -471,7 +471,7 @@ bool CDPlay::AddGroupEnum(unsigned long dpid, const DPNAME* name, unsigned long 
 {
     CDPlayGroup* group = new CDPlayGroup(name->lpszShortNameA, dpid);
     m_pGroupArray->add(group);
-    return 1;
+    return true;
 }
 
 VA(0x00497b00, 0x6B)
@@ -480,7 +480,7 @@ bool CDPlay::AddPlayerEnum(unsigned long dpid, const DPNAME* name, unsigned long
 {
     CDPlayPlayer* player = new CDPlayPlayer(name->lpszShortNameA, dpid);
     m_pPlayerArray->add(player);
-    return 1;
+    return true;
 }
 
 VA(0x00497b70, 0xDF)
@@ -490,7 +490,7 @@ bool CDPlay::AddConnectionEnum(const GUID* lpguidSP, void* connection, unsigned 
     CDPlayConnection* conn = new CDPlayConnection(lpguidSP, connectionSize,
         connection, name->lpszShortNameA);
     m_pConnectionArray->add(conn);
-    return 1;
+    return true;
 }
 
 VA(0x00497c50, 0x57B)
@@ -681,15 +681,15 @@ VA(0x004981d0, 0x8)
 DC_ADDRESS(0x08af3c, 0xa)
 bool CDPlay::SysMsgHost(DPMSG_GENERIC* sysMsg, unsigned long toID)
 {
-    m_isHost = 1;
-    return 1;
+    m_isHost = true;
+    return true;
 }
 
 VA(0x004981e0, 0x5)
 DC_ADDRESS(0x08af48, 0x4)
 bool CDPlay::SysMsgCreatePlayerOrGroup(DPMSG_CREATEPLAYERORGROUP* sysMsg, unsigned long toID)
 {
-    return 1;
+    return true;
 }
 
 // Original: CDPlay::SysMsgDestroyPlayerOrGroup; dxplay.cpp:890
@@ -698,7 +698,7 @@ DC_ADDRESS(0x08af4c, 0x4)
 bool CDPlay::SysMsgDestroyPlayerOrGroup(
     DPMSG_DESTROYPLAYERORGROUP* sysMsg, unsigned long toID)
 {
-    return 1;
+    return true;
 }
 
 VA(0x004981f0, 0x24)
@@ -744,12 +744,12 @@ bool CDPlay::GetPlayerName(unsigned long playerId, char* shortName, int maxShort
     unsigned long size = 0;
     m_hRes = m_lpDP->GetPlayerName(playerId, NULL, &size);
     if (m_hRes != DPERR_BUFFERTOOSMALL)
-        return 0;
+        return false;
     name.AllocSize(size + 1);
     DPNAME* dpName = static_cast<DPNAME*>(static_cast<void*>(name.m_data));
     m_hRes = m_lpDP->GetPlayerName(playerId, dpName, &size);
     if (m_hRes < 0)
-        return 0;
+        return false;
     if (shortName) {
         if (dpName->lpszShortNameA)
             strncpy(shortName, dpName->lpszShortNameA, maxShort);
@@ -762,7 +762,7 @@ bool CDPlay::GetPlayerName(unsigned long playerId, char* shortName, int maxShort
         else
             longName[0] = 0;
     }
-    return 1;
+    return true;
 }
 
 VA(0x004983c0, 0x2C)
@@ -826,12 +826,12 @@ bool CDPlay::GetGroupName(unsigned long groupId, char* shortName, int maxShort, 
     unsigned long size = 0;
     m_hRes = m_lpDP->GetGroupName(groupId, NULL, &size);
     if (m_hRes != DPERR_BUFFERTOOSMALL)
-        return 0;
+        return false;
     name.AllocSize(size + 1);
     DPNAME* dpName = static_cast<DPNAME*>(static_cast<void*>(name.m_data));
     m_hRes = m_lpDP->GetGroupName(groupId, dpName, &size);
     if (m_hRes < 0)
-        return 0;
+        return false;
     if (shortName) {
         if (dpName->lpszShortNameA)
             strncpy(shortName, dpName->lpszShortNameA, maxShort);
@@ -844,7 +844,7 @@ bool CDPlay::GetGroupName(unsigned long groupId, char* shortName, int maxShort, 
         else
             longName[0] = 0;
     }
-    return 1;
+    return true;
 }
 
 VA(0x00498620, 0x2C)
@@ -961,7 +961,7 @@ DC_ADDRESS(0x08b60c, 0x4)
 bool CDPlayLobby::RegisterApp(char* appName, char* fileName, char* commandLine, GUID appGuid, char* executableName)
 {
     if (!m_lpLobby)
-        return 0;
+        return false;
     char curDir[0x105];
     DPAPPLICATIONDESC2 desc;
     desc.dwSize = sizeof(desc);
@@ -970,7 +970,7 @@ bool CDPlayLobby::RegisterApp(char* appName, char* fileName, char* commandLine, 
     desc.lpszDescriptionA = NULL;
     desc.lpszDescriptionW = NULL;
     if (!GetCurrentDirectoryA(0x105, curDir))
-        return 0;
+        return false;
     desc.lpszPathA = curDir;
     desc.lpszCurrentDirectoryA = curDir;
     desc.lpszFilenameA = fileName;
@@ -987,7 +987,7 @@ DC_ADDRESS(0x08b610, 0x4)
 bool CDPlayLobby::Init()
 {
     if (!CDPlay::Init())
-        return 0;
+        return false;
     if (m_lpLobby) {
         m_lpLobby->Release();
         m_lpLobby = NULL;
@@ -1038,14 +1038,14 @@ bool CDPlayLobby::TestLobbied()
     unsigned long size;
     m_hRes = m_lpLobby->GetConnectionSettings(0, NULL, &size);
     if (m_hRes != DPERR_BUFFERTOOSMALL)
-        return 0;
+        return false;
     DPLCONNECTION* connection =
         static_cast<DPLCONNECTION*>(GlobalLock(GlobalAlloc(GHND, size)));
     if (!connection)
-        return 0;
+        return false;
     m_hRes = m_lpLobby->GetConnectionSettings(0, connection, &size);
     if (m_hRes < 0)
-        return 0;
+        return false;
     if (connection->dwFlags & DPLCONNECTION_CREATESESSION)
         return DPLCONNECTION_CREATESESSION;
     return DPLCONNECTION_JOINSESSION;
@@ -1056,7 +1056,7 @@ DC_ADDRESS(0x08b6a0, 0x3a)
 bool CDPlayLobby::SetConnectionSettings(unsigned long appId, DPLCONNECTION* connection)
 {
     if (!m_lpLobby)
-        return 0;
+        return false;
     m_hRes = m_lpLobby->SetConnectionSettings(0, appId, connection);
     bool ok = m_hRes >= 0;
     return ok;
@@ -1094,9 +1094,9 @@ bool CDPlayLobby::Connect()
 {
     DPLCONNECTION* conn = getConnectionSettings(0, NULL);
     if (conn->dwFlags & DPLAY_CONNECTION_CREATE_SESSION)
-        m_isHost = 1;
+        m_isHost = true;
     else
-        m_isHost = 0;
+        m_isHost = false;
     ::operator delete(conn);
     if (m_lpDP) {
         m_lpDP->Release();
@@ -1117,12 +1117,12 @@ bool CDPlayLobby::SendStandardLobbyMsg(
     unsigned long appId, void* data, unsigned long size)
 {
     if (!m_lpLobby)
-        return 0;
+        return false;
     m_hRes = m_lpLobby->SendLobbyMessage(
         DPLMSG_STANDARD, appId, data, size);
     if (m_hRes < 0)
-        return 0;
-    return 1;
+        return false;
+    return true;
 }
 
 // Original: CDPlayLobby::SendLobbyMsg; dxplay.cpp:1490
@@ -1131,12 +1131,12 @@ bool CDPlayLobby::SendLobbyMsg(
     unsigned long appId, void* data, unsigned long size)
 {
     if (!m_lpLobby)
-        return 0;
+        return false;
     m_hRes = m_lpLobby->SendLobbyMessage(
         0, appId, data, size);
     if (m_hRes < 0)
-        return 0;
-    return 1;
+        return false;
+    return true;
 }
 
 // Original: CDPlayLobby::ReceiveLobbyMsg; dxplay.cpp:1503
@@ -1147,18 +1147,18 @@ bool CDPlayLobby::ReceiveLobbyMsg(unsigned long appId, CDPlayMsg* msg)
 {
     unsigned long flags;
     if (!m_lpLobby)
-        return 0;
+        return false;
     do {
         m_hRes = m_lpLobby->ReceiveLobbyMessage(
             0, appId, &flags, msg->m_data, &msg->m_dataSize);
         if (m_hRes == DPERR_BUFFERTOOSMALL)
             msg->AllocSize(msg->m_dataSize);
         else if (m_hRes < 0)
-            return 0;
+            return false;
     } while (m_hRes == DPERR_BUFFERTOOSMALL);
     if (flags == DPLMSG_SYSTEM || flags == DPLMSG_STANDARD)
         return !HandleSystemLobbyMsg(appId, msg);
-    return 1;
+    return true;
 }
 
 VA(0x00498d80, 0x3C9)
@@ -1316,7 +1316,7 @@ CDPlayConnection* CDPlayLobby::createSerialConnection(char* name, _DPCOMPORTADDR
 DC_ADDRESS(0x08b960, 0x4)
 bool CDPlayLobby::HandleSystemLobbyMsg(unsigned long appId, CDPlayMsg* msg)
 {
-    return 1;
+    return true;
 }
 
 VA(0x00499900, 0x97)
@@ -1324,7 +1324,7 @@ DC_ADDRESS(0x08b964, 0x4)
 bool CDPlayLobby::EnumLobbyConnections(CAutoArray<CDPlayConnection>* connectionArray)
 {
     if (!m_lpDP)
-        return 0;
+        return false;
     m_pConnectionArray = connectionArray;
     connectionArray->destroy(1);
     m_hRes = m_lpDP->EnumConnections(&m_guid, enumConnectionsCallback, this, 2);
@@ -1382,7 +1382,7 @@ bool CDPlayLobby::AddAddressEnum(const GUID* guid, unsigned long dataSize, const
 {
     CDPlayAddressElement* element = new CDPlayAddressElement(guid, data, dataSize);
     m_pAddressArray->add(element);
-    return 1;
+    return true;
 }
 
 VA(0x00499c60, 0x1B8)
@@ -1393,7 +1393,7 @@ bool CDPlayLobby::GetIPAddress(unsigned long dpid, char* ipAddress)
     unsigned long size;
     unsigned char* buf = getPlayerAddress(dpid, &size);
     if (!buf)
-        return 0;
+        return false;
     CAutoArray<CDPlayAddressElement> addresses;
     EnumAddress(buf, size, &addresses);
     for (unsigned long i = 0; i < addresses.getCount(); ++i) {
@@ -1405,8 +1405,8 @@ bool CDPlayLobby::GetIPAddress(unsigned long dpid, char* ipAddress)
     }
     ::operator delete(buf);
     if (!ipAddress[0])
-        return 0;
-    return 1;
+        return false;
+    return true;
 }
 
 VA(0x00499e20, 0x23)

@@ -74,10 +74,10 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new iconWidget(141, 457, 32, 32, 3,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(429, 457, 32, 32, 11,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new textWidget(124, 497, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
@@ -93,41 +93,41 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
 
     m_widgets.push_back(new button(306, 520, 64, 32, 5,
         DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(18, 521, 64, 32, 17,
         DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(18, 451, 64, 32, 18,
         DATA_COMPGEN(0x0068c510, marketButton2Sprite, "TPMrkBu2.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(515, 451, 64, 32, 20,
         DATA_COMPGEN(0x0068c500, marketButton4Sprite, "TPMrkBu4.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(228, 520, 64, 32, 7,
         DATA_COMPGEN(0x0068c4f0, marketButton6Sprite, "TPMrkBu6.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
 
     m_widgets.push_back(new iconWidget(58, 190, 32, 32, 21,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(141, 190, 32, 32, 22,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        1, 0, 0, 0, 0x10));
+        1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(223, 190, 32, 32, 23,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        2, 0, 0, 0, 0x10));
+        2, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(58, 269, 32, 32, 24,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        3, 0, 0, 0, 0x10));
+        3, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(141, 269, 32, 32, 25,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        4, 0, 0, 0, 0x10));
+        4, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(223, 269, 32, 32, 26,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        5, 0, 0, 0, 0x10));
+        5, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(141, 348, 32, 32, 27,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, 0x10));
+        6, 0, false, 0, 0x10));
 
     m_widgets.push_back(new textWidget(41, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -170,25 +170,25 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
 
     m_widgets.push_back(new iconWidget(346, 190, 32, 32, 42,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(429, 190, 32, 32, 43,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        1, 0, 0, 0, 0x10));
+        1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(512, 190, 32, 32, 44,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        2, 0, 0, 0, 0x10));
+        2, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(346, 269, 32, 32, 45,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        3, 0, 0, 0, 0x10));
+        3, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(429, 269, 32, 32, 46,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        4, 0, 0, 0, 0x10));
+        4, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(512, 269, 32, 32, 47,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        5, 0, 0, 0, 0x10));
+        5, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(429, 348, 32, 32, 48,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, 0x10));
+        6, 0, false, 0, 0x10));
 
     m_widgets.push_back(new textWidget(328, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -230,7 +230,7 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
         DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
 
     m_resourceSlider = new slider(231, 490, 137, 16, 6, 11,
-        tradeResourceSlider, slider::BROWN, 0, 0);
+        tradeResourceSlider, slider::BROWN, 0, false);
     m_widgets.push_back(m_resourceSlider);
 
     m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
@@ -241,7 +241,7 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
 
     button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
         DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
-        0, 1, 1, 28, 2);
+        0, 1, true, 28, 2);
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
@@ -259,7 +259,7 @@ MAC_ADDRESS(0x1e3560, 0x30)
 static void tradeResourceSlider(int state, heroWindow* parentWindow)
 {
     g_rightAmount = state;
-    g_tradeWindow->update(1);
+    g_tradeWindow->update(true);
 }
 
 VA_COMPGEN(0x005e1620, 0x21, SCALAR_DELETING_DTOR, TTradeResourceWindow)
@@ -295,10 +295,10 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new iconWidget(141, 457, 32, 32, 3,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(416, 451, 58, 64, 13,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new textWidget(124, 497, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
@@ -314,38 +314,38 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
 
     m_widgets.push_back(new button(306, 520, 64, 32, 5,
         DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(515, 451, 64, 32, 16,
         DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(18, 451, 64, 32, 18,
         DATA_COMPGEN(0x0068c510, marketButton2Sprite, "TPMrkBu2.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(228, 520, 64, 32, 7,
         DATA_COMPGEN(0x0068c4f0, marketButton6Sprite, "TPMrkBu6.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
 
     m_widgets.push_back(new iconWidget(58, 190, 32, 32, 21,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(141, 190, 32, 32, 22,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        1, 0, 0, 0, 0x10));
+        1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(223, 190, 32, 32, 23,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        2, 0, 0, 0, 0x10));
+        2, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(58, 269, 32, 32, 24,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        3, 0, 0, 0, 0x10));
+        3, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(141, 269, 32, 32, 25,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        4, 0, 0, 0, 0x10));
+        4, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(223, 269, 32, 32, 26,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        5, 0, 0, 0, 0x10));
+        5, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(141, 348, 32, 32, 27,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, 0x10));
+        6, 0, false, 0, 0x10));
 
     m_widgets.push_back(new textWidget(41, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -388,25 +388,25 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
 
     m_widgets.push_back(new iconWidget(333, 84, 58, 64, 49,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(416, 84, 58, 64, 50,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
-        1, 0, 0, 0, 0x10));
+        1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(499, 84, 58, 64, 51,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
-        2, 0, 0, 0, 0x10));
+        2, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(333, 202, 58, 64, 52,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
-        3, 0, 0, 0, 0x10));
+        3, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(416, 202, 58, 64, 53,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
-        4, 0, 0, 0, 0x10));
+        4, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(499, 202, 58, 64, 54,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
-        5, 0, 0, 0, 0x10));
+        5, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(416, 320, 58, 64, 55,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
-        6, 0, 0, 0, 0x10));
+        6, 0, false, 0, 0x10));
 
     m_widgets.push_back(new textWidget(328, 151, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -453,7 +453,7 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
         DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
 
     m_resourceSlider = new slider(231, 490, 137, 16, 6, 11,
-        giveResourceSlider, slider::BROWN, 0, 0);
+        giveResourceSlider, slider::BROWN, 0, false);
     m_widgets.push_back(m_resourceSlider);
 
     m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
@@ -464,7 +464,7 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
 
     button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
         DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
-        0, 1, 1, 28, 2);
+        0, 1, true, 28, 2);
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
@@ -482,7 +482,7 @@ MAC_ADDRESS(0x1e3590, 0x30)
 static void giveResourceSlider(int state, heroWindow* parentWindow)
 {
     g_rightAmount = state;
-    g_giveWindow->update(1);
+    g_giveWindow->update(true);
 }
 
 VA_COMPGEN(0x005e3690, 0x21, SCALAR_DELETING_DTOR, TGiveResourceWindow)
@@ -518,10 +518,10 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new iconWidget(141, 457, 32, 32, 3,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(424, 448, 44, 44, 8,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new textWidget(124, 497, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
@@ -537,38 +537,38 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
 
     m_widgets.push_back(new button(268, 520, 64, 32, 5,
         DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(515, 451, 64, 32, 16,
         DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(18, 521, 64, 32, 17,
         DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(18, 451, 64, 32, 19,
         DATA_COMPGEN(0x0068c57c, marketButton3Sprite, "TPMrkBu3.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
 
     m_widgets.push_back(new iconWidget(58, 190, 32, 32, 21,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(141, 190, 32, 32, 22,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        1, 0, 0, 0, 0x10));
+        1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(223, 190, 32, 32, 23,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        2, 0, 0, 0, 0x10));
+        2, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(58, 269, 32, 32, 24,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        3, 0, 0, 0, 0x10));
+        3, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(141, 269, 32, 32, 25,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        4, 0, 0, 0, 0x10));
+        4, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(223, 269, 32, 32, 26,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        5, 0, 0, 0, 0x10));
+        5, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(141, 348, 32, 32, 27,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, 0x10));
+        6, 0, false, 0, 0x10));
 
     m_widgets.push_back(new textWidget(41, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -611,25 +611,25 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
 
     m_widgets.push_back(new iconWidget(341, 182, 44, 44, 56,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(424, 182, 44, 44, 57,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(506, 182, 44, 44, 58,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(341, 261, 44, 44, 59,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(424, 261, 44, 44, 60,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(506, 261, 44, 44, 61,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(424, 340, 44, 44, 62,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
 
     m_widgets.push_back(new textWidget(328, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -683,7 +683,7 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
 
     button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
         DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
-        0, 1, 1, 28, 2);
+        0, 1, true, 28, 2);
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
@@ -728,10 +728,10 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new iconWidget(429, 480, 32, 32, 11,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(135, 469, 44, 44, 9,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new textWidget(124, 519, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
@@ -747,38 +747,38 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
 
     m_widgets.push_back(new button(268, 520, 64, 32, 5,
         DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(515, 471, 64, 32, 16,
         DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(18, 521, 64, 32, 17,
         DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(18, 471, 64, 32, 18,
         DATA_COMPGEN(0x0068c510, marketButton2Sprite, "TPMrkBu2.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
 
     m_widgets.push_back(new iconWidget(346, 190, 32, 32, 42,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(429, 190, 32, 32, 43,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        1, 0, 0, 0, 0x10));
+        1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(512, 190, 32, 32, 44,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        2, 0, 0, 0, 0x10));
+        2, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(346, 269, 32, 32, 45,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        3, 0, 0, 0, 0x10));
+        3, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(429, 269, 32, 32, 46,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        4, 0, 0, 0, 0x10));
+        4, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(512, 269, 32, 32, 47,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        5, 0, 0, 0, 0x10));
+        5, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(429, 348, 32, 32, 48,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, 0x10));
+        6, 0, false, 0, 0x10));
 
     m_widgets.push_back(new textWidget(328, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -821,82 +821,82 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
 
     m_widgets.push_back(new iconWidget(148, 76, 44, 44, 84,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(207, 288, 44, 44, 85,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(148, 126, 44, 44, 86,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(22, 115, 44, 44, 87,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(201, 230, 44, 44, 88,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(148, 177, 44, 44, 89,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(70, 115, 44, 44, 90,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(249, 230, 44, 44, 91,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(154, 341, 44, 44, 92,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(22, 189, 44, 44, 93,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(38, 239, 44, 44, 94,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(54, 290, 44, 44, 95,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(70, 341, 44, 44, 96,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(203, 76, 44, 44, 97,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(249, 76, 44, 44, 98,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(249, 122, 44, 44, 99,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(249, 168, 44, 44, 100,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(249, 357, 44, 44, 101,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(42, 411, 44, 44, 102,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(88, 411, 44, 44, 103,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(134, 411, 44, 44, 104,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(180, 411, 44, 44, 105,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(226, 411, 44, 44, 106,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
 
     m_widgets.push_back(new button(18, 410, 22, 46,
         MARKET_ARTIFACT_LEFT_ARROW_ID,
         DATA_COMPGEN(0x00679d48, heroScreenLeftArrowSprite, "hsbtns3.def"),
-        0, 1, 0, 75, 2));
+        0, 1, false, 75, 2));
     m_widgets.push_back(new button(271, 410, 22, 46,
         MARKET_ARTIFACT_RIGHT_ARROW_ID,
         DATA_COMPGEN(0x00679d3c, heroScreenRightArrowSprite, "hsbtns5.def"),
-        0, 1, 0, 77, 2));
+        0, 1, false, 77, 2));
 
     m_widgets.push_back(new bitmapBorder(146, 74, 48, 48,
         MARKET_ARTIFACT_SLOT_00_ID,
@@ -976,7 +976,7 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
 
     button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
         DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
-        0, 1, 1, 28, 2);
+        0, 1, true, 28, 2);
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
@@ -1021,11 +1021,11 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new iconWidget(429, 457, 32, 32, 11,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(128, 450, 58, 64, 10,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new textWidget(124, 518, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
@@ -1041,16 +1041,16 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
 
     m_widgets.push_back(new button(306, 520, 64, 32, 5,
         DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(515, 451, 64, 32, 16,
         DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(18, 521, 64, 32, 17,
         DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(228, 520, 64, 32, 7,
         DATA_COMPGEN(0x0068c4f0, marketButton6Sprite, "TPMrkBu6.def"),
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
 
     m_widgets.push_back(new textWidget(41, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -1076,25 +1076,25 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
 
     m_widgets.push_back(new iconWidget(346, 190, 32, 32, 42,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(429, 190, 32, 32, 43,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        1, 0, 0, 0, 0x10));
+        1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(512, 190, 32, 32, 44,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        2, 0, 0, 0, 0x10));
+        2, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(346, 269, 32, 32, 45,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        3, 0, 0, 0, 0x10));
+        3, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(429, 269, 32, 32, 46,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        4, 0, 0, 0, 0x10));
+        4, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(512, 269, 32, 32, 47,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        5, 0, 0, 0, 0x10));
+        5, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(429, 348, 32, 32, 48,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, 0x10));
+        6, 0, false, 0, 0x10));
 
     m_widgets.push_back(new textWidget(328, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
@@ -1138,31 +1138,31 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
     m_widgets.push_back(new iconWidget(45, 123, 58, 64, 132,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(128, 123, 58, 64, 133,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(211, 123, 58, 64, 134,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(45, 221, 58, 64, 135,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(128, 221, 58, 64, 136,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(211, 221, 58, 64, 137,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(128, 319, 58, 64, 138,
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
 
     m_widgets.push_back(new bitmapBorder(38, 120, 72, 90, MARKET_CREATURE_SLOT_0_ID,
         DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
@@ -1193,7 +1193,7 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
         0x800));
 
     m_creatureSlider = new slider(231, 490, 137, 16, 6, 11,
-        sellCreatureSlider, slider::BROWN, 0, 0);
+        sellCreatureSlider, slider::BROWN, 0, false);
     m_widgets.push_back(m_creatureSlider);
 
     m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
@@ -1204,7 +1204,7 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
 
     button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
         DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
-        0, 1, 1, 28, 2);
+        0, 1, true, 28, 2);
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
@@ -1222,7 +1222,7 @@ MAC_ADDRESS(0x1e35c0, 0x30)
 static void sellCreatureSlider(int state, heroWindow* parentWindow)
 {
     g_rightAmount = state;
-    g_sellCreatureWindow->update(1);
+    g_sellCreatureWindow->update(true);
 }
 
 VA_COMPGEN(0x005e9c80, 0x21, SCALAR_DELETING_DTOR, TSellCreatureWindow)
@@ -1486,7 +1486,7 @@ static void doMarket()
     g_marketWindowX = 0x64;
     g_marketWindowY = 3;
     g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-    g_mouseManager->showPointer(1);
+    g_mouseManager->showPointer(true);
 
     while (g_marketWindow != MARKET_COMMAND_ID) {
         switch (g_marketWindow) {
@@ -1504,8 +1504,8 @@ static void doMarket()
             g_selectedArtifact = -1;
             g_leftResource = -1;
             g_rightAmount = 0;
-            g_tradeWindow->update(0);
-            g_tradeWindow->doModal(0);
+            g_tradeWindow->update(false);
+            g_tradeWindow->doModal(false);
             delete g_tradeWindow;
             g_marketWindow = g_windowManager->m_dialogReturn;
             break;
@@ -1531,8 +1531,8 @@ static void doMarket()
                     ++g_giveWindow->m_recipientCount;
                 }
             }
-            g_giveWindow->update(0);
-            g_giveWindow->doModal(0);
+            g_giveWindow->update(false);
+            g_giveWindow->doModal(false);
             delete g_giveWindow;
             g_marketWindow = g_windowManager->m_dialogReturn;
             break;
@@ -1552,8 +1552,8 @@ static void doMarket()
             g_selectedArtifact = -1;
             g_leftResource = -1;
             g_rightAmount = 0;
-            g_buyWindow->update(0);
-            g_buyWindow->doModal(0);
+            g_buyWindow->update(false);
+            g_buyWindow->doModal(false);
             delete g_buyWindow;
             g_marketWindow = g_windowManager->m_dialogReturn;
             break;
@@ -1572,8 +1572,8 @@ static void doMarket()
             g_selectedArtifact = -1;
             g_leftResource = -1;
             g_rightAmount = 0;
-            g_sellArtWindow->update(0);
-            g_sellArtWindow->doModal(0);
+            g_sellArtWindow->update(false);
+            g_sellArtWindow->doModal(false);
             delete g_sellArtWindow;
             g_marketWindow = g_windowManager->m_dialogReturn;
             break;
@@ -1592,8 +1592,8 @@ static void doMarket()
             g_selectedArtifact = -1;
             g_leftResource = -1;
             g_rightAmount = 0;
-            g_sellCreatureWindow->update(0);
-            g_sellCreatureWindow->doModal(0);
+            g_sellCreatureWindow->update(false);
+            g_sellCreatureWindow->doModal(false);
             delete g_sellCreatureWindow;
             g_marketWindow = g_windowManager->m_dialogReturn;
             break;
@@ -1614,7 +1614,7 @@ void TSellArtifactWindow::updateSellArtifactWidget(message& msg, long i)
     if (i < 18) {
         art = g_marketHero->getArtifact(TArtifactSlot(i));
     } else {
-        long numInBackpack = g_marketHero->getNumberInBackpack(1);
+        long numInBackpack = g_marketHero->getNumberInBackpack(true);
         if (numInBackpack < 6)
             art = g_marketHero->getBackpack(i - 18);
         else
@@ -2006,7 +2006,7 @@ void TTradeResourceWindow::update(bool update)
     }
 
     if (update)
-        drawWindow(1, 0xffff0001, 0xffff);
+        drawWindow(true, 0xffff0001, 0xffff);
 }
 
 VA(0x005eaf50, 0x744)
@@ -2197,7 +2197,7 @@ void TGiveResourceWindow::update(bool update)
     }
 
     if (update)
-        drawWindow(1, -65535, 65535);
+        drawWindow(true, -65535, 65535);
 }
 
 // E:\gamedcs\tradpost.cpp:1466
@@ -2395,7 +2395,7 @@ void TBuyArtifactWindow::update(bool update)
     }
 
     if (update)
-        drawWindow(1, 0xffff0001, 0xffff);
+        drawWindow(true, 0xffff0001, 0xffff);
 }
 
 VA(0x005ebe80, 0x6cb)
@@ -2421,7 +2421,7 @@ void TSellArtifactWindow::update(bool update)
         } else {
             art = g_marketHero->getBackpack(
                 (g_backpackStart + g_selectedArtifact - 18)
-                % g_marketHero->getNumberInBackpack(1)).m_artifactId;
+                % g_marketHero->getNumberInBackpack(true)).m_artifactId;
         }
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_TRADE_RESOURCE_FOR_ARTIFACT_FORMAT),
                 rightQty,
@@ -2467,7 +2467,7 @@ void TSellArtifactWindow::update(bool update)
         setWidgetOff(9);
     }
 
-    if (g_marketHero->getNumberInBackpack(1) < 6) {
+    if (g_marketHero->getNumberInBackpack(true) < 6) {
         setWidgetDisabled(MARKET_ARTIFACT_LEFT_ARROW_ID);
         setWidgetDisabled(MARKET_ARTIFACT_RIGHT_ARROW_ID);
     }
@@ -2483,7 +2483,7 @@ void TSellArtifactWindow::update(bool update)
                 } else {
                     msg.m_extra = g_marketHero->getBackpack(
                         (g_backpackStart + g_selectedArtifact - 18)
-                        % g_marketHero->getNumberInBackpack(1)).m_artifactId;
+                        % g_marketHero->getNumberInBackpack(true)).m_artifactId;
                 }
                 broadcastMessage(msg);
                 msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -2555,7 +2555,7 @@ void TSellArtifactWindow::update(bool update)
     }
 
     if (update)
-        drawWindow(1, 0xffff0001, 0xffff);
+        drawWindow(true, 0xffff0001, 0xffff);
 }
 
 // E:\gamedcs\tradpost.cpp:1920
@@ -2786,7 +2786,7 @@ void TSellCreatureWindow::update(bool update)
     }
 
     if (update)
-        drawWindow(1, -65535, 65535);
+        drawWindow(true, -65535, 65535);
 }
 
 // Every DC tradpost.obj caller indexes the ushort table itself; the trade
@@ -3011,7 +3011,7 @@ DC_ADDRESS(0x18b414, 0x76)
 MAC_ADDRESS(0x1f892c, 0xf4)
 void TSellArtifactWindow::updateMarketBackpack()
 {
-    long numInBackpack = g_marketHero->getNumberInBackpack(1);
+    long numInBackpack = g_marketHero->getNumberInBackpack(true);
     message icon;
     icon.m_id = MESSAGE_WIDGET;
     icon.m_codeX = widget::WIDGET_SET_ICON_FRAME;
@@ -3028,7 +3028,7 @@ DC_ADDRESS(0x18b48c, 0x3a)
 MAC_ADDRESS(0x1f8a20, 0x60)
 void TSellArtifactWindow::incrementBackpackStart()
 {
-    long numInBackpack = g_marketHero->getNumberInBackpack(1);
+    long numInBackpack = g_marketHero->getNumberInBackpack(true);
     if (numInBackpack > 5) {
         g_backpackStart = static_cast<unsigned char>(
             ((g_backpackStart & 0xff) + 1) % numInBackpack);
@@ -3041,7 +3041,7 @@ DC_ADDRESS(0x18b4c8, 0x78)
 MAC_ADDRESS(0x1f8a80, 0x64)
 void TSellArtifactWindow::decrementBackpackStart()
 {
-    long numInBackpack = g_marketHero->getNumberInBackpack(1);
+    long numInBackpack = g_marketHero->getNumberInBackpack(true);
     if (numInBackpack > 5) {
         g_backpackStart = static_cast<unsigned char>(
             ((g_backpackStart & 0xff) + numInBackpack - 1) % numInBackpack);
@@ -3145,7 +3145,7 @@ int TTradeResourceWindow::windowHandler(message& msg)
         return 1;
     }
 
-    update(1);
+    update(true);
     if (exit) {
         msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
         return 2;
@@ -3190,7 +3190,7 @@ void TTradeResourceWindow::setRolloverText(int codeY)
     message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
-    drawWindow(0, 0x92, 0x93);
+    drawWindow(false, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
 }
 
@@ -3309,7 +3309,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
     }
 
     if (updateFlag)
-        update(1);
+        update(true);
     if (exit) {
         msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
         return 2;
@@ -3346,7 +3346,7 @@ void TGiveResourceWindow::setRolloverText(int codeY)
     message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
-    drawWindow(0, 0x92, 0x93);
+    drawWindow(false, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
 }
 
@@ -3509,7 +3509,7 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
     message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
-    drawWindow(0, 0x92, 0x93);
+    drawWindow(false, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
 }
 
@@ -3614,7 +3614,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
                 else
                     artifact = g_marketHero->getBackpack(
                         ((g_backpackStart & 0xff) + artifactSlot - 18)
-                        % g_marketHero->getNumberInBackpack(1));
+                        % g_marketHero->getNumberInBackpack(true));
                 g_marketHero->viewArtifact(artifact, 1);
                 break;
             }
@@ -3634,7 +3634,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
                     else
                         g_marketHero->removeBackpackArtifact(
                             ((g_backpackStart & 0xff) + g_selectedArtifact - 18)
-                            % g_marketHero->getNumberInBackpack(1));
+                            % g_marketHero->getNumberInBackpack(true));
                 }
                 g_leftDenominated = 1;
                 g_leftResource = -1;
@@ -3729,7 +3729,7 @@ void TSellArtifactWindow::setRolloverText(int codeY)
             artifact = g_marketHero->getArtifact(TArtifactSlot(slot));
         } else {
             long backpackIndex = ((g_backpackStart & 0xff) + slot - 18)
-                                 % g_marketHero->getNumberInBackpack(1);
+                                 % g_marketHero->getNumberInBackpack(true);
             artifact = g_marketHero->getBackpack(backpackIndex);
         }
         strcpy(g_text, akArtifactTraits[artifact.m_artifactId].m_name);
@@ -3740,7 +3740,7 @@ void TSellArtifactWindow::setRolloverText(int codeY)
     message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
-    drawWindow(0, 0x92, 0x93);
+    drawWindow(false, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
 }
 
@@ -3768,7 +3768,7 @@ int TSellCreatureWindow::windowHandler(message& msg)
                 g_game->viewArmy(
                     g_marketHero->m_army,
                     msg.m_codeY - MARKET_CREATURE_SLOT_0_ID,
-                    g_marketHero, NULL, 0x77, 0x14, 0, 1);
+                    g_marketHero, NULL, 0x77, 0x14, false, true);
                 return MESSAGE_DISPATCH_CONSUME;
             }
             return MESSAGE_DISPATCH_CONSUME;
@@ -3918,6 +3918,6 @@ void TSellCreatureWindow::setRolloverText(int codeY)
     message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
-    drawWindow(0, 0x92, 0x93);
+    drawWindow(false, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
 }

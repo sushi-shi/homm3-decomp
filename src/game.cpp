@@ -401,11 +401,11 @@ bool generator::load(TAbstractFile* infile)
 {
     if (infile->read(&m_playerOwner, sizeof(m_playerOwner)) !=
         sizeof(m_playerOwner))
-        return 0;
+        return false;
     if (infile->read(&m_genClass, sizeof(m_genClass)) != sizeof(m_genClass))
-        return 0;
+        return false;
     if (infile->read(&m_genType, sizeof(m_genType)) != sizeof(m_genType))
-        return 0;
+        return false;
 
     for (int slot = 0; slot < 4; slot++) {
         m_type[slot] = TCreatureType(readValue<unsigned char>(infile));
@@ -414,15 +414,15 @@ bool generator::load(TAbstractFile* infile)
     }
 
     if (infile->read(m_population, sizeof(m_population)) != sizeof(m_population))
-        return 0;
+        return false;
     if (infile->read(&m_mapX, sizeof(m_mapX)) != sizeof(m_mapX))
-        return 0;
+        return false;
     if (infile->read(&m_mapY, sizeof(m_mapY)) != sizeof(m_mapY))
-        return 0;
+        return false;
     if (infile->read(&m_mapZ, sizeof(m_mapZ)) != sizeof(m_mapZ))
-        return 0;
+        return false;
     if (m_guards.load(infile) == -1)
-        return 0;
+        return false;
 
     bool success =
         infile->read(&m_townId, sizeof(m_townId)) == sizeof(m_townId);
@@ -667,7 +667,7 @@ void game::calculateProduction()
             g_productionArtifactOre);
         production[CRYSTAL] += cornucopias + currentPlayer.numOfGivenArtifact(
             g_productionArtifactCrystal);
-        production[GOLD] += computeDailyGold(playerId, 0);
+        production[GOLD] += computeDailyGold(playerId, false);
     }
 
     for (i = 0; i < HERO_COUNT; ++i) {
@@ -2587,13 +2587,13 @@ bool loadObjectVector(TAbstractFile* infile, std::vector<T>& destVector)
 {
     short count;
     if (readValue(infile, count) < sizeof(count))
-        return 0;
+        return false;
     destVector.resize(count);
     for (long i = 0; i < count; ++i) {
         if (!destVector[i].load(infile))
-            return 0;
+            return false;
     }
-    return 1;
+    return true;
 }
 
 // Original: save_object_vector; game.cpp:2754.
@@ -2606,12 +2606,12 @@ bool saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 {
     short count = srcVector.size();
     if (outfile->write(&count, sizeof(count)) < sizeof(count))
-        return 0;
+        return false;
     for (long i = 0; i < count; ++i) {
         if (!srcVector[i].save(outfile))
-            return 0;
+            return false;
     }
-    return 1;
+    return true;
 }
 
 // E:\gamedcs\game.cpp:2774
@@ -2625,15 +2625,15 @@ bool type_creature_bank::load(void* input)
     TAbstractFile* infile = static_cast<TAbstractFile*>(input);
 
     if (infile->read(&m_guards, sizeof(m_guards)) != sizeof(m_guards))
-        return 0;
+        return false;
     if (infile->read(m_resources, sizeof(m_resources)) != sizeof(m_resources))
-        return 0;
+        return false;
     if (infile->read(&m_rewardCreature, sizeof(m_rewardCreature)) !=
         sizeof(m_rewardCreature))
-        return 0;
+        return false;
     if (infile->read(&m_rewardCreatures, sizeof(m_rewardCreatures)) !=
         sizeof(m_rewardCreatures))
-        return 0;
+        return false;
     return loadVector(infile, m_artifacts);
 }
 
@@ -3308,7 +3308,7 @@ bool game::saveGame(const char* filename, bool determineSuffix,
 
     saveGameTimer.start();
     if (!campaignWinMode)
-        g_advManager->demobilizeCurrHero(0, 1);
+        g_advManager->demobilizeCurrHero(false, true);
 
     if (determineSuffix) {
         strcpy(nameNoExtension, filename);
@@ -3360,14 +3360,14 @@ bool game::saveGame(const char* filename, bool determineSuffix,
             save(&outfile);
         }
         saveGameTimer.stop();
-        return 1;
+        return true;
     } catch (const TGzFile::TOpenFailure&) {
         normalDialog(
             formatString(
                 g_generalText->GetText(g_saveGameFailureGeneralText),
                 filename).c_str(),
             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return 0;
+        return false;
     }
 }
 
@@ -3801,7 +3801,7 @@ void game::newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
     m_week = 1;
     setRecruits();
 
-    validateVictoryLossConditions(1);
+    validateVictoryLossConditions(true);
 
     if (g_inCampaign && m_campaign.m_currentCampaign == GAME_CAMPAIGN_14) {
         hero* campaignHero = getHero(45);
@@ -4778,7 +4778,7 @@ void game::randomizeEvents()
                             m_worldMap.cell(x - 1, y, z)->m_extraInfo;
                     }
                     else {
-                        tempCell->setMagicSpring(numMagicSpring, 1);
+                        tempCell->setMagicSpring(numMagicSpring, true);
                         ++numMagicSpring;
                     }
                     break;
@@ -5409,7 +5409,7 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
     }
     }
 
-    g_game->validateVictoryLossConditions(0);
+    g_game->validateVictoryLossConditions(false);
     return 0;
 }
 
@@ -5983,7 +5983,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
     m_lossCondition.m_type = x;
-    m_lossCondition.m_gameLost = 0;
+    m_lossCondition.m_gameLost = false;
     m_lossCondition.m_playerLoser = -1;
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         readLossCondition(x, infile);
@@ -6421,7 +6421,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
     m_lossCondition.m_type = x;
-    m_lossCondition.m_gameLost = 0;
+    m_lossCondition.m_gameLost = false;
     m_lossCondition.m_playerLoser = -1;
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         loadLossCondition(x, infile, saveVersion);
@@ -6855,18 +6855,18 @@ void game::nextPlayer()
         }
         g_advManager->drawRolloverText(
             const_cast<char*>((*g_generalText)[GENERAL_TEXT_AUTOSAVING]));
-        saveGame((*g_generalText)[GENERAL_TEXT_AUTOSAVE_NAME], 1, 0, 1, 0);
+        saveGame((*g_generalText)[GENERAL_TEXT_AUTOSAVE_NAME], true, false, true, false);
         g_advManager->drawRolloverText(
             DATA_COMPGEN(0x00691210, nextPlayerEmptyRollover, ""));
     }
 
     if (g_game->m_players[g_netLocalGamePos].m_deathCountDown > 0)
         --g_game->m_players[g_netLocalGamePos].m_deathCountDown;
-    g_advManager->deactivateCurrTown(0);
-    g_advManager->deactivateCurrHero(0);
+    g_advManager->deactivateCurrTown(false);
+    g_advManager->deactivateCurrHero(false);
 
     lastWasHuman = m_players[g_netLocalGamePos].isHuman();
-    weekSave = 0;
+    weekSave = false;
     do {
         while (++g_netLocalGamePos < g_mapHeaderPlayerCount) {
             if (!m_playerDisabled[g_netLocalGamePos]
@@ -6878,7 +6878,7 @@ void game::nextPlayer()
         if (g_netLocalGamePos == g_mapHeaderPlayerCount) {
             lastWasHuman = !lastWasHuman;
             if (lastWasHuman) {
-                weekSave = 1;
+                weekSave = true;
                 perDay();
                 if (g_remoteOn) {
                     m_mapHeader.m_lossCondition.checkForTimeLimitExpired();
@@ -6895,23 +6895,23 @@ void game::nextPlayer()
         && (!g_remoteOn || g_numHumanPlayers == 1)) {
         g_advManager->drawRolloverText(
             const_cast<char*>((*g_generalText)[GENERAL_TEXT_AUTOSAVING]));
-        saveGame((*g_generalText)[GENERAL_TEXT_AUTOSAVE_NAME], 1, 0, 1, 0);
+        saveGame((*g_generalText)[GENERAL_TEXT_AUTOSAVE_NAME], true, false, true, false);
         g_advManager->drawRolloverText(
             DATA_COMPGEN(0x00691210, nextPlayerSoloEmptyRollover, ""));
 
         int save = g_remoteOn;
         g_remoteOn = 1;
-        g_goSolo = 0;
+        g_goSolo = false;
         normalDialogTimeOut((*g_generalText)[GENERAL_TEXT_PRESS_ESC_TO_CANCEL_SOLO_MODE], 2, 2000,
                             -1, -1, -1, 0, -1, 0, -1, -1, 0);
         g_remoteOn = save;
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE) {
             g_game->m_players[g_soloPos].m_isHuman = 1;
             g_game->m_players[g_soloPos].m_isLocal = 1;
-            g_goSolo = 0;
+            g_goSolo = false;
             g_mapVisibilityBit = 1 << g_soloPos;
         } else {
-            g_goSolo = 1;
+            g_goSolo = true;
         }
     }
 
@@ -6953,7 +6953,7 @@ void game::nextPlayer()
         g_completeDrawEnabled = 0;
 
         if (g_remoteOn && isHuman(g_netLocalGamePos)) {
-            bool makeOrig = 0;
+            bool makeOrig = false;
             g_thisNetGotAdventureControl = 0;
             toWho = g_netLocalGamePos;
             if (g_playerDrop) {
@@ -6963,9 +6963,9 @@ void game::nextPlayer()
             if (g_game->isLastHuman(g_game->getLocalPlayerGamePos())) {
                 toWho = 0x7f;
                 g_playerDrop = 0;
-                makeOrig = 1;
+                makeOrig = true;
             }
-            int save = g_game->transmitSaveGame(toWho, 0, 1, makeOrig);
+            int save = g_game->transmitSaveGame(toWho, 0, true, makeOrig);
             if (!save && g_playerDrop) {
                 g_netLocalGamePos = giCurPlayerSave;
                 g_playerDrop = 0;
@@ -6974,7 +6974,7 @@ void game::nextPlayer()
                 nextPlayer();
                 return;
             }
-            g_advManager->updateRadar(1, 1, 0, 0, 0);
+            g_advManager->updateRadar(true, true, false, false, false);
             g_playerTurn = g_netLocalGamePos;
         }
         g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, -1);
@@ -7351,7 +7351,7 @@ void game::setWeeklyRecruits(int playerPos)
         }
 
         newHero->m_mana = static_cast<short>(newHero->getMaxMana());
-        setRandomHeroArmies(heroId, 0, 0);
+        setRandomHeroArmies(heroId, 0, false);
     }
 }
 
@@ -7366,12 +7366,12 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
         otherClass = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
     }
 
-    HeroId heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
+    HeroId heroId = getNewHeroId(playerPos, otherClass, false, kNumHeroClasses);
     player->m_recruits[recruitSlot] = heroId;
     if (heroId != -1) {
         m_heroAvailability[heroId] = 64;
         m_heroes[heroId].m_mana = static_cast<short>(m_heroes[heroId].getMaxMana());
-        setRandomHeroArmies(heroId, 0, 1);
+        setRandomHeroArmies(heroId, 0, true);
     }
 }
 
@@ -7504,7 +7504,7 @@ void game::perWeek()
 
                 switch (mapCell->m_type) {
                 case MAGIC_SPRING:
-                    mapCell->fillMagicSpring(1);
+                    mapCell->fillMagicSpring(true);
                     break;
 
                 case MONSTER: {
@@ -7648,7 +7648,7 @@ void game::perMonth()
     }
 
     setMarketArtifacts();
-    g_advManager->completeDraw(0);
+    g_advManager->completeDraw(false);
 }
 
 // E:\gamedcs\game.cpp:8707
@@ -7842,7 +7842,7 @@ void game::randomizeHeroPool()
     int heroIndex;
     for (heroIndex = 0; heroIndex < HERO_COUNT; ++heroIndex) {
         m_heroes[heroIndex].m_experience = random(0, 50) + 40;
-        setRandomHeroArmies(heroIndex, 0, 0);
+        setRandomHeroArmies(heroIndex, 0, false);
         int mobility = m_heroes[heroIndex].getMobility();
         m_heroes[heroIndex].m_movePoints = mobility;
         m_heroes[heroIndex].m_maxMovePoints = mobility;
@@ -8188,7 +8188,7 @@ void game::createTownHeroes(HeroId* startingHeroIds)
         if (m_setup.m_startingHero[i] == -1)
             m_setup.m_startingHero[i] = heroId;
         m_heroAvailability[heroId] = static_cast<signed char>(i);
-        thisTown->placeInMap(heroId, i, 1);
+        thisTown->placeInMap(heroId, i, true);
         thisTown->giveSpells(NULL);
 
         if (g_inCampaign
@@ -8197,7 +8197,7 @@ void game::createTownHeroes(HeroId* startingHeroIds)
             m_heroes[heroId].giveExperience(
                 hero::getExperience(g_game->getHero(g_startLevelHeroId)->m_level
                                     + g_startLevelBonus),
-                1, 0);
+                1, false);
     }
 }
 
@@ -8305,7 +8305,7 @@ MAC_ADDRESS(0x0e19d4, 0x50)
 void game::cancelComputerScreen()
 {
     g_completeDrawEnabled = 1;
-    g_advManager->updateRadar(1, 1, 0, 0, 0);
+    g_advManager->updateRadar(true, true, false, false, false);
     setComputerScreenWidgetsEnabled(1);
 }
 
@@ -8320,23 +8320,23 @@ void game::showComputerScreen()
         unsigned char wasLocalHuman = g_currentPlayer->isLocalHuman();
         g_currentPlayer->m_isLocal = 1;
         g_completeDrawAllCells = 1;
-        g_advManager->completeDraw(1);
-        g_advManager->m_advWindow->updateHeroLocators(-1, 1, 0);
-        g_advManager->m_advWindow->updateTownLocators(-1, 1, 0);
-        g_advManager->m_advWindow->updateQuestLogButton(1);
+        g_advManager->completeDraw(true);
+        g_advManager->m_advWindow->updateHeroLocators(-1, true, false);
+        g_advManager->m_advWindow->updateTownLocators(-1, true, false);
+        g_advManager->m_advWindow->updateQuestLogButton(true);
         g_advManager->updBottomView(1, 1, 1);
-        g_advManager->m_advWindow->updateResourceDisplay(1, 1);
+        g_advManager->m_advWindow->updateResourceDisplay(true, true);
         g_advManager->updateScreen(0, 1);
         g_completeDrawAllCells = 0;
         g_currentPlayer->m_isLocal = wasLocalHuman;
     } else {
-        g_advManager->m_advWindow->updateHeroLocators(-1, 1, 0);
-        g_advManager->m_advWindow->updateTownLocators(-1, 1, 0);
-        g_advManager->m_advWindow->updateQuestLogButton(1);
+        g_advManager->m_advWindow->updateHeroLocators(-1, true, false);
+        g_advManager->m_advWindow->updateTownLocators(-1, true, false);
+        g_advManager->m_advWindow->updateQuestLogButton(true);
         g_advManager->updBottomView(1, 1, 1);
-        g_advManager->m_advWindow->updateResourceDisplay(1, 1);
+        g_advManager->m_advWindow->updateResourceDisplay(true, true);
         g_advManager->m_advWindow->drawWindow(
-            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         g_windowManager->updateScreen(
             0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
     }
@@ -8398,11 +8398,11 @@ void game::waitForPlayer(char* text, int playerId)
     SAMPLE2 sample2 = loadPlaySample(
         DATA_COMPGEN(0x00677ec8, newWeekSample, "NewWeek.wav"));
 
-    g_advManager->completeDraw(1);
-    g_advManager->m_advWindow->updateHeroLocators(0, 1, 0);
-    g_advManager->m_advWindow->updateTownLocators(0, 1, 0);
-    g_advManager->m_advWindow->updateQuestLogButton(1);
-    g_advManager->m_advWindow->updateButtons(1, 0);
+    g_advManager->completeDraw(true);
+    g_advManager->m_advWindow->updateHeroLocators(0, true, false);
+    g_advManager->m_advWindow->updateTownLocators(0, true, false);
+    g_advManager->m_advWindow->updateQuestLogButton(true);
+    g_advManager->m_advWindow->updateButtons(true, false);
     g_advManager->m_advWindow->m_resourceDisplay->clear();
     showHeroesLogo();
     g_windowManager->updateScreen(0, 0, 800, 600);
@@ -8412,9 +8412,9 @@ void game::waitForPlayer(char* text, int playerId)
                  -1, 0, -1, 0, -1, 0);
     waitEndSample(sample2, -1);
 
-    g_advManager->m_advWindow->updateHeroLocators(0, 1, 0);
-    g_advManager->m_advWindow->updateTownLocators(0, 1, 0);
-    g_advManager->m_advWindow->updateQuestLogButton(1);
+    g_advManager->m_advWindow->updateHeroLocators(0, true, false);
+    g_advManager->m_advWindow->updateTownLocators(0, true, false);
+    g_advManager->m_advWindow->updateQuestLogButton(true);
 }
 
 // Original: game::SetupTowns; game.cpp:9798
@@ -8658,7 +8658,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
         g_advManager->bvMessage(g_generalText->GetText(GENERAL_TEXT_SENDING_GAME));
 
-    saveGame(g_config.m_scFile, 0, 0, !inGame, 1);
+    saveGame(g_config.m_scFile, false, false, !inGame, true);
 
     char fileName[351];
     sprintf(fileName,
@@ -8705,13 +8705,13 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             }
             delete diff;
             strcpy(fileName, diffFilename);
-            isDiff = 1;
+            isDiff = true;
         }
     }
 
     if (makeOrig)
         saveGame(DATA_COMPGEN(0x00660410, remoteOriginalSaveName,
-                             "orig.dat"), 0, 0, 0, 1);
+                             "orig.dat"), false, false, false, true);
 
     int fileSize = ::fileSize(fileName);
     int handle = open(fileName, _O_BINARY);
@@ -8756,7 +8756,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
         dlg.setup(DATA_COMPGEN(0x00691210,
                               adventureRolloverEmptyText, ""),
                   g_mediumFont);
-        dlg.open(0, 1);
+        dlg.open(0, true);
         transferSmack = &dlg.m_smack;
     }
 
@@ -8813,7 +8813,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     while (!done) {
         pollSound();
         checkDoMain(0, 1);
-        pConfirmMsg = GetRemoteData(1, NULL);
+        pConfirmMsg = GetRemoteData(true, NULL);
         CMessageKill kill(pConfirmMsg);
 
         if (!pConfirmMsg && GameTime::elapsedSince(dataTimeOutStart)
@@ -8933,7 +8933,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                 CChatMsg* receivedMsg = static_cast<CChatMsg*>(pConfirmMsg);
                 receiveChat(receivedMsg->m_text, receivedMsg->m_from);
                 if (inGame) {
-                    g_advManager->completeDraw(0);
+                    g_advManager->completeDraw(false);
                     g_advManager->updateScreen(0, 0);
                 }
                 break;
@@ -9004,7 +9004,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
         dlg.setup(DATA_COMPGEN(0x00691210,
                               adventureRolloverEmptyText, ""),
                   g_mediumFont);
-        dlg.open(0, 1);
+        dlg.open(0, true);
         transferSmack = &dlg.m_smack;
     }
     transferSmack->start();
@@ -9054,7 +9054,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             destroyMsg(netMsg);
             netMsg = NULL;
         }
-        netMsg = GetRemoteData(1, NULL);
+        netMsg = GetRemoteData(true, NULL);
 
         if (netMsg) {
             lastDataReceiveTime = GameTime::get();
@@ -9176,7 +9176,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                 CChatMsg* receivedMsg = static_cast<CChatMsg*>(netMsg);
                 receiveChat(receivedMsg->m_text, receivedMsg->m_from);
                 if (inGame) {
-                    g_advManager->completeDraw(0);
+                    g_advManager->completeDraw(false);
                     g_advManager->updateScreen(0, 0);
                 }
                 break;
@@ -9318,7 +9318,7 @@ void game::doNewTurn()
 
     if (g_currentPlayer->isLocalHuman())
         g_soundManager->m_playSounds = 1;
-    g_advManager->m_advWindow->updateResourceDisplay(1, 1);
+    g_advManager->m_advWindow->updateResourceDisplay(true, true);
     g_advManager->setInitialMapOrigin();
     g_advManager->redrawAdvScreen(0, 0);
     g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_1, -1);
@@ -9341,12 +9341,12 @@ void game::doNewTurn()
         }
     }
 
-    g_advManager->deactivateCurrHero(0);
+    g_advManager->deactivateCurrHero(false);
     newHero = g_currentPlayer->nextHero();
     if (newHero >= 0) {
-        g_advManager->setHeroContext(newHero, 0, 0, 1);
+        g_advManager->setHeroContext(newHero, 0, false, true);
     } else if (g_currentPlayer->m_numTowns > 0) {
-        g_advManager->setTownContext(g_currentPlayer->m_townIds[0], 0, 1);
+        g_advManager->setTownContext(g_currentPlayer->m_townIds[0], false, true);
     }
     g_advManager->checkDimNextHeroBut();
 
@@ -9738,7 +9738,7 @@ void game::giveTimeEventReward(const TTimedEvent* thisEvent)
     }
 
     if (g_currentPlayer->isLocalHuman()) {
-        g_advManager->m_advWindow->updateResourceDisplay(1, 1);
+        g_advManager->m_advWindow->updateResourceDisplay(true, true);
         extendedDialog(thisEvent->Message.c_str(), rewards, -1, -1, 0);
 
         if (g_inCampaign) {
@@ -9967,7 +9967,7 @@ game::game()
     m_cartographerMask[2] = 0x40;
     initializeGameData();
     std::fill_n(m_rumourState, sizeof(m_rumourState), static_cast<char>(0));
-    m_isTutorial = 0;
+    m_isTutorial = false;
     m_grailAsked = 0;
 }
 

@@ -235,7 +235,7 @@ void iconBackedTextWidget::draw() const
     int drawY = m_y + m_parentWindow->m_y;
     m_background->DrawInterface(m_backgroundFrame, 0, 0,
         m_background->GetWidth(), m_background->GetHeight(),
-        g_windowManager->m_screenBitmap, drawX, drawY, 0);
+        g_windowManager->m_screenBitmap, drawX, drawY, false);
     textWidget::draw();
 }
 
@@ -294,6 +294,6 @@ void bitmapBackedTextWidget::draw() const
     int blitWidth = min(m_image->GetWidth(), m_width);
     int blitHeight = min(m_image->GetHeight(), m_height);
     m_image->Draw(0, 0, blitWidth, blitHeight,
-                g_windowManager->m_screenBitmap, drawX, drawY, 0);
+                g_windowManager->m_screenBitmap, drawX, drawY, false);
     textWidget::draw();
 }

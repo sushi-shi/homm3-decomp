@@ -69,10 +69,10 @@ TQuestLogWindow::TQuestLogWindow()
 
     m_widgets.push_back(new slider(
         335, 112, 16, 343, 17, 10, questSliderCallback,
-        slider::BROWN, 16, 0));
+        slider::BROWN, 16, false));
     m_widgets.push_back(new button(
         324, 470, 32, 32, DIALOG_RETURN_OK, "QLexit.def",
-        0, 1, 1, 28, 2));
+        0, 1, true, 28, 2));
 
     for (std::vector<widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
@@ -91,7 +91,7 @@ static void questSliderCallback(int state, heroWindow* parentWindow)
     g_questLogWindow->m_firstVisibleQuest = state;
     g_questLogWindow->updateQuestLocators();
     g_questLogWindow->drawWindow(
-        1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 VA_COMPGEN(0x0052e1b0, 0x21, SCALAR_DELETING_DTOR, TQuestLogWindow)
@@ -195,6 +195,6 @@ void doQuestLog(int player)
     g_questLogWindow->broadcastMessage(msg);
 
     g_questLogWindow->updateQuestLocators();
-    g_questLogWindow->doModal(0);
+    g_questLogWindow->doModal(false);
     delete g_questLogWindow;
 }

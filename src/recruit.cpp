@@ -82,8 +82,8 @@ void recruitSliderCallback(int state, heroWindow* parentWindow)
 {
     g_recruitWindow->m_recruitInfo->m_numberToBuy = state;
     g_recruitWindow->m_acceptButton->enable(state != 0);
-    g_recruitWindow->m_recruitInfo->update(0, -1);
-    g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+    g_recruitWindow->m_recruitInfo->update(false, -1);
+    g_recruitWindow->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                                 WINDOW_ALL_WIDGETS_HIGH);
 }
 
@@ -145,10 +145,10 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
     m_widgets.push_back(new iconWidget(xShift + 0x4a, 0xf3,
         0x20, 0x20, 0x1f8,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        6, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
     m_widgets.push_back(new iconWidget(0x7a, 0xf3, 0x20, 0x20, 0x1fc,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        6, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
     m_widgets.push_back(new textWidget(xShift + 0x42, 0x117,
         0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
@@ -185,7 +185,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         textEntryWidget::READ_TYPE_INSET, 0, 0));
 
     m_quantitySlider = new slider(0xb0, 0x117, 0x87, 0x10, 0x22f, 0xa,
-        recruitSliderCallback, slider::BROWN, 0, 0);
+        recruitSliderCallback, slider::BROWN, 0, false);
     m_widgets.push_back(m_quantitySlider);
 
     m_widgets.push_back(new textWidget(0x144, 0xe0, 0x5f, 0x11,
@@ -196,10 +196,10 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
     m_widgets.push_back(new iconWidget(xShift + 0x14c, 0xf3,
         0x20, 0x20, 0x210,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        6, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
     m_widgets.push_back(new iconWidget(0x17c, 0xf3, 0x20, 0x20, 0x211,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
-        6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+        6, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
     m_widgets.push_back(new textWidget(xShift + 0x144, 0x117,
         0x30, 0x11,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
@@ -224,7 +224,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         0x800));
     m_maximumButton = new button(0x86, 0x139, 0x40, 0x20, RECRUIT_MAXIMUM_ID,
         DATA_COMPGEN(0x006829ec, recruitMaximumButton, "ircbtns.def"),
-        0, 1, 0, 0x32, 2);
+        0, 1, false, 0x32, 2);
     m_widgets.push_back(m_maximumButton);
 
     m_widgets.push_back(new bitmapBorder(0xd3, 0x138, 0x42,
@@ -233,7 +233,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         0x800));
     m_acceptButton = new button(0xd4, 0x139, 0x40, 0x20, RECRUIT_ACCEPT_ID,
         DATA_COMPGEN(0x006829e0, recruitAcceptButton, "iBY6432.def"),
-        0, 1, 0, 0x1c, 2);
+        0, 1, false, 0x1c, 2);
     m_widgets.push_back(m_acceptButton);
 
     m_widgets.push_back(new bitmapBorder(0x121, 0x138, 0x42,
@@ -243,7 +243,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
     m_widgets.push_back(new button(0x122, 0x139, 0x40, 0x20,
         RECRUIT_CANCEL_ID,
         DATA_COMPGEN(0x006829d4, recruitCancelButton, "iCN6432.def"),
-        0, 1, 0, 1, 2));
+        0, 1, false, 1, 2));
 
     for (int i = 0; i < 4; i++)
         m_creatureWidgets[i] = NULL;
@@ -313,7 +313,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
 
     m_creatureWidgets[slot] = new iconWidget(startX, startY, 100, 130,
         slot + 0x216, akCreatureTypeTraits[creature].m_sprite_name,
-        0, 2, 0, 0, iconWidget::ICON_STYLE_CREATURE);
+        0, 2, false, 0, iconWidget::ICON_STYLE_CREATURE);
     m_widgets.push_back(m_creatureWidgets[slot]);
 
     m_widgets.push_back(new coloredBorderFrame(startX - 1, startY - 1,
@@ -408,13 +408,13 @@ int recruitUnit::open(int newPriority)
 
     for (int slot = 3; slot >= 0; slot--) {
         if (g_recruitWindow->m_creatureWidgets[slot])
-            update(1, slot);
+            update(true, slot);
     }
 
     g_windowManager->broadcastMessage(MESSAGE_WIDGET,
         widget::WIDGET_SET_STATUS, 0x7800,
         widget::WIDGET_DIMMED | widget::WIDGET_UPDATE);
-    g_windowManager->addWindow(g_recruitWindow, -1, 1);
+    g_windowManager->addWindow(g_recruitWindow, -1, true);
 
     g_recruitWindow->m_quantitySlider->setResolution(m_maxAvail + 1);
     m_updateNeeded = 0;
@@ -458,7 +458,7 @@ void recruitUnit::close()
         0x7800, widget::WIDGET_DIMMED | widget::WIDGET_UPDATE);
     if (m_type == RECRUIT_SOURCE_TOWN && m_updateNeeded && m_inTownMainScreen) {
         g_townManager->resetStrips();
-        g_townManager->m_resourceDisplay->update(1, 0);
+        g_townManager->m_resourceDisplay->update(true, false);
     }
     m_status = 0;
     kbChangeMenu(g_recruitSavedMenu);
@@ -707,7 +707,7 @@ inline void recruitUnit::setRolloverText(int codeY)
     // also calls that overload, with no recorded caller message operation.
     g_recruitWindow->broadcastMessage(MESSAGE_WIDGET,
         widget::WIDGET_SET_TEXT, 0x231, reinterpret_cast<int>(g_text));
-    g_recruitWindow->drawWindow(0, 0x230, 0x231);
+    g_recruitWindow->drawWindow(false, 0x230, 0x231);
     g_windowManager->updateScreen(g_recruitWindow->m_x + 8,
         g_recruitWindow->m_y + 0x172, 0x1d4, 0x12);
 }
@@ -784,7 +784,7 @@ int recruitUnit::main(message& msg)
         if (handler) {
             handler->checkHandleNet(1, &msgReceived);
             if (msgReceived && handler->getAbortPopupMsg())
-                abortDialog = 1;
+                abortDialog = true;
         }
     }
 
@@ -810,7 +810,7 @@ int recruitUnit::main(message& msg)
                         ->nextRandomFrame();
             }
         }
-        g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+        g_recruitWindow->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                                     WINDOW_ALL_WIDGETS_HIGH);
     }
 
@@ -833,7 +833,7 @@ int recruitUnit::main(message& msg)
                     m_numberToBuy = m_maxAvail;
                 g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
                 g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                update(0, -1);
+                update(false, -1);
                 break;
 
             case RECRUIT_CREATURE_0_ID:
@@ -843,7 +843,7 @@ int recruitUnit::main(message& msg)
                     m_numberToBuy = 0;
                     g_recruitWindow->m_quantitySlider->setState(0);
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 0);
+                    update(true, 0);
                 } else {
                     TViewArmyWindow view_army_window(
                         m_monType1, 0x77, 0x20, !exitFlag);
@@ -861,7 +861,7 @@ int recruitUnit::main(message& msg)
                     m_numberToBuy = 0;
                     g_recruitWindow->m_quantitySlider->setState(0);
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 1);
+                    update(true, 1);
                 } else {
                     TViewArmyWindow view_army_window(
                         m_monType2, 0x77, 0x20, !exitFlag);
@@ -879,7 +879,7 @@ int recruitUnit::main(message& msg)
                     m_numberToBuy = 0;
                     g_recruitWindow->m_quantitySlider->setState(0);
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 2);
+                    update(true, 2);
                 } else {
                     TViewArmyWindow view_army_window(
                         m_monType3, 0x77, 0x20, !exitFlag);
@@ -897,7 +897,7 @@ int recruitUnit::main(message& msg)
                     m_numberToBuy = 0;
                     g_recruitWindow->m_quantitySlider->setState(0);
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 3);
+                    update(true, 3);
                 } else {
                     TViewArmyWindow view_army_window(
                         m_monType4, 0x77, 0x20, !exitFlag);
@@ -908,7 +908,7 @@ int recruitUnit::main(message& msg)
                 }
                 break;
             }
-            g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+            g_recruitWindow->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                                         WINDOW_ALL_WIDGETS_HIGH);
             break;
 
@@ -920,8 +920,8 @@ int recruitUnit::main(message& msg)
                 m_numberToBuy = m_maxAvail;
                 g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
                 g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                update(0, -1);
-                g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                update(false, -1);
+                g_recruitWindow->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                                             WINDOW_ALL_WIDGETS_HIGH);
                 break;
 
@@ -933,7 +933,7 @@ int recruitUnit::main(message& msg)
 
                 if (akCreatureTypeTraits[m_monsterType].attributes
                     & g_ctaSiegeWeapon) {
-                    if (m_thisHero->getNumberInBackpack(1) + m_numberToBuy
+                    if (m_thisHero->getNumberInBackpack(true) + m_numberToBuy
                         > 64) {
                         normalDialog((*g_generalText)[GENERAL_TEXT_RECRUIT_BACKPACK_FULL],
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -979,9 +979,9 @@ int recruitUnit::main(message& msg)
                     || m_type == RECRUIT_SOURCE_TOWN)
                     return finishRecruitUnit(msg);
 
-                update(1, m_selectedPosition);
+                update(true, m_selectedPosition);
                 g_advManager->updBottomView(1, 1, 1);
-                g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                g_recruitWindow->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                                             WINDOW_ALL_WIDGETS_HIGH);
                 break;
 
@@ -1225,7 +1225,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         0x800), -1);
     recruitWindow->addWidget(new iconWidget(30, 44, 100, 130, 0x216,
         akCreatureTypeTraits[monType].m_sprite_name,
-        0, 2, 0, 0, iconWidget::ICON_STYLE_CREATURE), -1);
+        0, 2, false, 0, iconWidget::ICON_STYLE_CREATURE), -1);
 
     sprintf(g_text,
         DATA_COMPGEN(0x00660c98, quickRecruitAvailabilityFormat, "%s %d"),
@@ -1244,12 +1244,12 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         0x1f8,
         DATA_COMPGEN(0x00660224, quickRecruitResourceSprite,
             "resource.def"),
-        6, 0, 0, 0,
+        6, 0, false, 0,
         iconWidget::ICON_STYLE_PLAIN), -1);
     recruitWindow->addWidget(new iconWidget(90, 238, 32, 32, 0x1fc,
         DATA_COMPGEN(0x00660224, quickRecruitResourceSprite,
             "resource.def"),
-        6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN), -1);
+        6, 0, false, 0, iconWidget::ICON_STYLE_PLAIN), -1);
     recruitWindow->addWidget(new textWidget(resourceX + 40, 273, 32, 17,
         DATA_COMPGEN(0x00691210, quickRecruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),

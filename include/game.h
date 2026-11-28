@@ -1519,7 +1519,7 @@ public:
     bool onSameTeam(int player1, int player2) const
     {
         if (player1 < 0 || player2 < 0)
-            return 0;
+            return false;
         return m_mapHeader.m_teamInfo[player1] == m_mapHeader.m_teamInfo[player2];
     }
     // Own the retained inline body here with the game interface. The selected
@@ -1580,7 +1580,7 @@ bool isHumanTeam(int teamNum) const
     inline bool isComputerTeam(int teamNum) const
     {
         if (teamNum < 0)
-            return 0;
+            return false;
         return !isHumanTeam(teamNum);
     }
 
@@ -1653,7 +1653,7 @@ int getTeam(int playerNum) const
     bool getInfoFlag(enum GlobalInfoFlags flag, const int playerNum) const
     {
         if (playerNum < 0 || playerNum >= NUM_PLAYERS)
-            return 0;
+            return false;
         return (m_globalInfoFlags[flag] & (1 << playerNum)) != 0;
     }
     void playRecordedEvents();

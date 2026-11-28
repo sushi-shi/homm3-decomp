@@ -44,18 +44,18 @@ void checkCombatCheatCode(std::string& chatString)
     DATA(0x0063d4a8) static const char allSpellsCode[] = "ajpgurervfabfcbba";
     hero* currentHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
-    bool recognized = 0;
+    bool recognized = false;
     TCheatCode code(chatString.c_str());
 
     if (code.compare(bluePillCode)) {
-        recognized = 1;
+        recognized = true;
         g_combatManager->cheatKillSide(g_combatManager->m_currentSide);
     } else if (code.compare(redPillCode)) {
-        recognized = 1;
+        recognized = true;
         g_combatManager->cheatKillSide(1 - g_combatManager->m_currentSide);
     } else if (code.compare(allSpellsCode)
                && currentHero) {
-        recognized = 1;
+        recognized = true;
         currentHero->m_mana = 999;
         if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
             // DC line82 constructs the artifact in the GiveArtifact call.
@@ -160,7 +160,7 @@ int CCombatChatEdit::onKeyPress(message* msg)
     if (getCharPressed(msg) == KEYCODE_TAB) {
         g_combatWindow->onChatActivate(1);
         m_activated = 1;
-        setFocus(1);
+        setFocus(true);
         m_parentWindow->setFocus(m_id);
         draw();
         g_windowManager->updateScreen(
@@ -184,7 +184,7 @@ void CCombatChatEdit::sendChat(const char* chat, int toWho)
     m_activated = 0;
     ::sendChat(chatString.c_str(), toWho);
     m_parentWindow->setFocus(-1);
-    setFocus(0);
+    setFocus(false);
 
     g_combatWindow->onChatActivate(0);
 }
@@ -196,7 +196,7 @@ int CCombatChatEdit::onEscape(message msg)
 {
     m_activated = 0;
     m_parentWindow->setFocus(-1);
-    setFocus(0);
+    setFocus(false);
     draw();
 
     g_combatWindow->onChatActivate(0);
@@ -341,7 +341,7 @@ void TCombatWindow::clearCombatMessages()
         && GameTime::elapsedSince(m_combatMessageTime) >= 3000) {
         m_combatMessageCount = 0;
         combatMessage(
-            DATA_COMPGEN(0x00691210, combatRolloverEmptyText, ""), 0, 0);
+            DATA_COMPGEN(0x00691210, combatRolloverEmptyText, ""), false, false);
     }
 }
 
@@ -470,7 +470,7 @@ void TCombatWindow::endPlacementPhase()
         m_controlSubWindow = NULL;
     }
     m_controlSubWindow = new TCombatControlSubWindow(this);
-    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    drawWindow(true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     g_windowManager->updateScreen();
 }
 
@@ -480,7 +480,7 @@ MAC_ADDRESS(0x081208, 0x8c)
 void TCombatWindow::drawChatText(unsigned char update)
 {
     if (m_chatWidget) {
-        g_chatMan.updateWidget(m_chatWidget, 1, 20);
+        g_chatMan.updateWidget(m_chatWidget, true, 20);
         m_chatWidget->draw();
         if (update) {
             g_windowManager->updateScreen(

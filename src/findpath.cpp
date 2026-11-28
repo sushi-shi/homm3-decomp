@@ -1037,15 +1037,15 @@ void searchArray::setMoat(const army* currentArmy)
         return;
     if (g_combatManager->m_moatOn) {
         { for (int hex = 0; hex < 11; ++hex) {
-            m_isMoatSlowed[g_moatHexes[hex]] = 1;
+            m_isMoatSlowed[g_moatHexes[hex]] = true;
             if (g_combatManager->m_moatIsWide)
-                m_isMoatSlowed[g_innerMoatHexes[hex]] = 1;
+                m_isMoatSlowed[g_innerMoatHexes[hex]] = true;
         } }
         if (g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP
                 || currentArmy->getControllingSide() == 1) {
-            m_isMoatSlowed[g_moatHexes[5]] = 0;
+            m_isMoatSlowed[g_moatHexes[5]] = false;
             if (g_combatManager->m_moatIsWide)
-                m_isMoatSlowed[g_innerMoatHexes[5]] = 0;
+                m_isMoatSlowed[g_innerMoatHexes[5]] = false;
         }
     }
     { for (int cell = 0; cell < COMBAT_GRID_CELLS; ++cell) {
@@ -1053,12 +1053,12 @@ void searchArray::setMoat(const army* currentArmy)
             const combatManager::TObstacle* obstacle =
                 &g_combatManager->getObstacle(g_combatManager->m_cells[cell].m_obstacleIndex);
             if (obstacle->isVisible(currentArmy->getOwningSide()))
-                m_isMoatSlowed[cell] = 1;
+                m_isMoatSlowed[cell] = true;
         }
     } }
-    m_isMoatSlowed[currentArmy->m_gridIndex] = 0;
+    m_isMoatSlowed[currentArmy->m_gridIndex] = false;
     if (currentArmy->is(creatureDoubleWide))
-        m_isMoatSlowed[currentArmy->getSecondGridIndex()] = 0;
+        m_isMoatSlowed[currentArmy->getSecondGridIndex()] = false;
 }
 
 // E:\gamedcs\findpath.cpp:1136. DC 1143/1165 test the result vector's own
@@ -1070,12 +1070,12 @@ bool searchArray::buildCombatPath(const army* currentArmy,
                                  int startHex, int endHex, int destination)
 {
     if (!combatManager::validHex(destination))
-        return 0;
+        return false;
     if (currentArmy->groupToAttack != -1) {
         if (m_result.size() == 0)
-            return 0;
+            return false;
     } else if (endHex != destination) {
-        return 0;
+        return false;
     }
 
     while (endHex != startHex) {
@@ -1110,12 +1110,12 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
                                   long currentGroup, long destination)
 {
     if (!combatManager::validHex(hex))
-        return 0;
+        return false;
     const army* enemy = g_combatManager->m_cells[hex].getArmy();
     if (enemy == NULL)
-        return 0;
+        return false;
     if (enemy->getOwningSide() == currentGroup)
-        return 0;
+        return false;
 
     markEnemy(enemy->m_gridIndex, cost);
     if (enemy->is(creatureDoubleWide))
@@ -1148,7 +1148,7 @@ bool searchArray::findCombatPath(const army* currentArmy,
                                           long limit, long baseSpeed)
 {
     if (currentArmy == NULL)
-        return 0;
+        return false;
 
     unsigned char siegePressure = 0;
     if (g_combatManager->m_defendingTown != NULL
@@ -1156,12 +1156,12 @@ bool searchArray::findCombatPath(const army* currentArmy,
         if (currentGroup == 1
                 || g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP)
             siegePressure = 1;
-        if (currentArmy->getTotalHitPoints(0)
+        if (currentArmy->getTotalHitPoints(false)
                 <= g_moatDamage[
                         g_combatManager->m_defendingTown->m_type] * 4)
             siegePressure = 1;
         if (siegePressure
-                && currentArmy->getTotalHitPoints(0)
+                && currentArmy->getTotalHitPoints(false)
                     > g_moatDamage[
                             g_combatManager->m_defendingTown->m_type] * 40)
             siegePressure = 0;
@@ -1345,8 +1345,8 @@ DC_ADDRESS(0x0a10b0, 0x12)
 MAC_ADDRESS(0x0c772c, 0x18)
 void searchArray::lowerDoor()
 {
-    m_isMoatSlowed[0x5f] = 0;
-    m_isMoatSlowed[0x5e] = 0;
+    m_isMoatSlowed[0x5f] = false;
+    m_isMoatSlowed[0x5e] = false;
 }
 
 // Dreamcast findpath.cpp:1436 calls get_hex before computing the time.

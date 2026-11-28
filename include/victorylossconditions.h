@@ -140,7 +140,7 @@ public:
     VA(0x0045bac0, 0xE)  // retained retail body
     DC_ADDRESS(0x0bccfc, 0x22)
     LossConditionStruct()
-      : m_type(-1), m_gameLost(0), m_playerLoser(-1) {}
+      : m_type(-1), m_gameLost(false), m_playerLoser(-1) {}
     bool checkForDefeatedHeroLoss(const hero* loser);
     unsigned char heroKilled(const hero* loser);
     bool checkForDefeatedTownLoss(int oldOwner,

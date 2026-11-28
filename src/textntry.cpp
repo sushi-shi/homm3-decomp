@@ -391,9 +391,9 @@ int textEntryWidget::main(message& msg)
                 case WIDGET_SET_FOCUS:
                     if (msg.m_codeY == m_id) {
                         if (!m_hasFocus)
-                            setFocus(1);
+                            setFocus(true);
                     } else if (m_hasFocus) {
-                        setFocus(0);
+                        setFocus(false);
                     }
                     return 0;
             }
@@ -418,7 +418,7 @@ void textEntryWidget::draw() const
     if (m_textBack) {
         m_textBack->Draw(0, 0, m_boxWidth, m_boxHeight,
             g_windowManager->m_screenBitmap,
-            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 0);
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, false);
     } else if (m_saveBack) {
         if (!m_saveBack->isSaved())
             saveBackground();
@@ -522,7 +522,7 @@ DC_ADDRESS(0x163620, 0x16)
 MAC_ADDRESS(0x1b07d0, 0x30)
 void textEntryWidget::onSetFocus()
 {
-    setFocus(1);
+    setFocus(true);
 }
 
 VA(0x005bba60, 0x8)
@@ -530,7 +530,7 @@ DC_ADDRESS(0x163638, 0x16)
 MAC_ADDRESS(0x1b0800, 0x30)
 void textEntryWidget::onKillFocus()
 {
-    setFocus(0);
+    setFocus(false);
 }
 
 VA(0x005bba70, 0x44)

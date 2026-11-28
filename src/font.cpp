@@ -162,14 +162,14 @@ void font::DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
         return;
     }
 
-    highlighted = 0;
+    highlighted = false;
     currPos = 0;
     while (count > 0) {
         c = *text;
         if (c == '{') {
-            highlighted = 1;
+            highlighted = true;
         } else if (c == '}') {
-            highlighted = 0;
+            highlighted = false;
         } else {
             if (x + GetCharacterWidth(c) > clipX + clipWidth)
                 break;

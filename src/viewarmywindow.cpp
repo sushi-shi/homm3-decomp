@@ -126,9 +126,9 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // the call. VC6 restores the retail call prefix (97.01 -> 97.20).
     bool shooting = thisArmy->canShoot(NULL);
     int attack = thisArmy->getAdjustedAttack(NULL, shooting);
-    int defense = thisArmy->getAdjustedDefense(NULL, 1);
+    int defense = thisArmy->getAdjustedDefense(NULL, true);
     if (shooting) {
-        attack = max(attack, thisArmy->getAdjustedAttack(NULL, 0));
+        attack = max(attack, thisArmy->getAdjustedAttack(NULL, false));
     }
 
     m_widgets.reserve(NWIDGETS);
@@ -466,7 +466,7 @@ void TViewArmyWindow::doModal()
         if (action)
             action->enable(0);
     }
-    heroWindow::doModal(0);
+    heroWindow::doModal(false);
 }
 
 // The widget id the rollover strip was last built for, so a mouse move
@@ -629,7 +629,7 @@ int TViewArmyWindow::windowHandler(message& msg)
                 g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
             }
             m_rolloverWidget->setText(rollover);
-            drawWindow(0, ROLLOVER_ID, ROLLOVER_ID);
+            drawWindow(false, ROLLOVER_ID, ROLLOVER_ID);
             g_windowManager->updateScreen(m_x + m_rolloverWidget->m_x,
                                           m_y + m_rolloverWidget->m_y,
                                           m_rolloverWidget->m_width,
@@ -651,7 +651,7 @@ int TViewArmyWindow::windowHandler(message& msg)
         } else {
             m_spriteWidget->nextRandomFrame();
         }
-        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        drawWindow(true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
             GameTime::nextFrameTime(
                 g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT],
@@ -728,7 +728,7 @@ void TViewArmyWindow::createPortraitWidget(const char* spriteName,
         0x800));
 
     m_spriteWidget = new iconWidget(
-        21, 48, 100, 130, SPRITE_ID, spriteName, 0, 2, 0, 0, 0x12);
+        21, 48, 100, 130, SPRITE_ID, spriteName, 0, 2, false, 0, 0x12);
     m_widgets.push_back(m_spriteWidget);
 
     if (count > 0) {
@@ -921,7 +921,7 @@ void TViewArmyWindow::createMoraleWidget(int newMorale)
     m_widgets.push_back(new iconWidget(
         23, 189, 42, 38, MORALE_ID,
         DATA_COMPGEN(0x0068c68c, viewArmyMoraleIcons, "imrl42.def"),
-        limit(-3, m_morale, 3) + 3, 0, 0, 0, 0x10));
+        limit(-3, m_morale, 3) + 3, 0, false, 0, 0x10));
 }
 
 // DC shows the same store-then-reload ownership as createMoraleWidget.
@@ -933,7 +933,7 @@ void TViewArmyWindow::createLuckWidget(int newLuck)
     m_widgets.push_back(new iconWidget(
         77, 189, 42, 38, LUCK_ID,
         DATA_COMPGEN(0x0068c680, viewArmyLuckIcons, "ilck42.def"),
-        limit(-3, m_luck, 3) + 3, 0, 0, 0, 0x10));
+        limit(-3, m_luck, 3) + 3, 0, false, 0, 0x10));
 }
 
 // DC lines 849--862 prove an xp-controlled three-slot loop, natural deque
@@ -957,7 +957,7 @@ void TViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
             m_widgets.push_back(new iconWidget(
                 x, 186, 48, 36, widgetId,
                 DATA_COMPGEN(0x006700a4, viewArmySpellIcons, "spellint.def"),
-                m_influence[xp] + 1, 0, 0, 0, 0x10));
+                m_influence[xp] + 1, 0, false, 0, 0x10));
         } else {
             m_influence[xp] = -1;
         }
@@ -980,7 +980,7 @@ void TViewArmyWindow::createOkWidget()
     button* accept = new button(
         216, 238, 64, 30, ACCEPT_ID,
         DATA_COMPGEN(0x0068c6ac, viewArmyOkButton, "iOKAY.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     accept->setHotkey(1);
     accept->setHotkey(28);
     m_widgets.push_back(accept);
@@ -999,7 +999,7 @@ void TViewArmyWindow::createUpgradeWidget()
     button* upgrade = new button(
         75, 237, 46, 32, UPGRADE_ID,
         DATA_COMPGEN(0x00660134, viewArmyUpgradeButton, "iViewCr.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     upgrade->setHotkey(22);
     m_widgets.push_back(upgrade);
 }
@@ -1017,7 +1017,7 @@ void TViewArmyWindow::createDismissWidget()
     button* dismiss = new button(
         20, 237, 46, 32, DISMISS_ID,
         DATA_COMPGEN(0x00660124, viewArmyDismissButton, "iViewCr2.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     dismiss->setHotkey(32);
     m_widgets.push_back(dismiss);
 }

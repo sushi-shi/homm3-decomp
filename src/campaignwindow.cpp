@@ -84,7 +84,7 @@ void TCampaignWindow::openPreview(int campaignIndex)
     SCampaignPreview* preview = &g_campaignPreviews[campaignIndex];
 
     videoOpen(preview->m_video, preview->m_x, preview->m_y, PREVIEW_WIDTH,
-              PREVIEW_HEIGHT, 1, 0, 1);
+              PREVIEW_HEIGHT, 1, false, true);
     BinkManager::g_playingBink.m_paused = 0;
     BinkPause(BinkManager::g_playingBink.m_bink, 0);
     memcpy(&preview->m_binkState, &BinkManager::g_playingBink,
@@ -236,7 +236,7 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
         newCampaign == CAMPAIGN_SET_SOD ? "campbkx2.pcx" : "campback.pcx",
         0x800));
     m_widgets.push_back(new button(658, 480, 132, 106, DIALOG_RETURN_CANCEL,
-        "cmpscan.def", 0, 1, 0, 0, 2));
+        "cmpscan.def", 0, 1, false, 0, 2));
 
     for (int row = 0; row < 20; ++row) {
         if (m_campaignAvailable[row])
@@ -357,7 +357,7 @@ static int campaignWindowHandler(message& msg)
     int exitFlag = 0;
 
     if (BinkManager::g_needsUpdate) {
-        g_campaignWindow->drawWindow(0, 0x80, 0x86);
+        g_campaignWindow->drawWindow(false, 0x80, 0x86);
         g_windowManager->updateScreen(BinkManager::g_playingBink.m_x, BinkManager::g_playingBink.m_y,
             BinkManager::g_playingBink.m_w, BinkManager::g_playingBink.m_h);
     }
@@ -438,7 +438,7 @@ static int campaignWindowHandler(message& msg)
             else
                 g_campaignWindow->getWidget(DIALOG_RETURN_CANCEL)->sendMessage(
                     widget::WIDGET_CLEAR_STATUS, widget::WIDGET_HIGHLIGHTED);
-            g_campaignWindow->drawWindow(0, 0xffff0001, 0xffff);
+            g_campaignWindow->drawWindow(false, 0xffff0001, 0xffff);
             g_windowManager->updateScreen();
         }
     }

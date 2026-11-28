@@ -24,7 +24,7 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
     m_widgets.reserve(m_widgets.size() + 3);
 
     m_widgets.push_back(new iconWidget(
-        99, 26, 58, 64, 1000, "TwCrPort.def", id + 2, 0, 0, 0, 0x10));
+        99, 26, 58, 64, 1000, "TwCrPort.def", id + 2, 0, false, 0, 0x10));
     addWidget(m_widgets.back(), -1);
 
     if (viewLevel == ViewAll) {

@@ -78,7 +78,7 @@ int border::main(message& msg)
                     m_status |= WIDGET_SELECTED;
                     msg.m_codeX = WIDGET_SELECT;
                 }
-                if (handleClick(1, msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN))
+                if (handleClick(true, msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN))
                     return 1;
                 msg.m_id = MESSAGE_WIDGET;
                 msg.m_codeY = m_id;
@@ -94,7 +94,7 @@ int border::main(message& msg)
         case MESSAGE_RIGHT_BUTTON_UP:
             if (m_status & WIDGET_SELECTED) {
                 m_status &= ~WIDGET_SELECTED;
-                if (handleClick(0, msg.m_id == MESSAGE_RIGHT_BUTTON_UP))
+                if (handleClick(false, msg.m_id == MESSAGE_RIGHT_BUTTON_UP))
                     return 1;
                 msg.m_id = MESSAGE_WIDGET;
                 msg.m_codeX = WIDGET_DESELECT;
@@ -263,7 +263,7 @@ void bitmapBorder::draw() const
 {
     if (m_image)
         m_image->Draw(0, 0, m_width, m_height, g_windowManager->m_screenBitmap,
-            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 1);
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, true);
 }
 
 // Original: bitmapBorder::SetPalette; border.cpp:323

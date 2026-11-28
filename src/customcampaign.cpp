@@ -518,7 +518,7 @@ void TCampaignBuildingBonus::apply(int whichPlayer) const
         && m_building == 0) {
         for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
             town* each = g_game->getTown(player->m_townIds[townIndex]);
-            each->buildBuilding(m_building, 0, 0);
+            each->buildBuilding(m_building, false, false);
         }
         return;
     }
@@ -532,8 +532,8 @@ void TCampaignBuildingBonus::apply(int whichPlayer) const
     if (target == NULL)
         target = g_game->getTown(player->m_townIds[0]);
     if (m_building >= g_buildingBonusFirstUpgrade)
-        target->buildBuilding(m_building - g_buildingBonusUpgradeStride, 0, 0);
-    target->buildBuilding(m_building, 0, 0);
+        target->buildBuilding(m_building - g_buildingBonusUpgradeStride, false, false);
+    target->buildBuilding(m_building, false, false);
 }
 
 VA(0x004847a0, 0x3C)
@@ -1336,7 +1336,7 @@ void game::rehomeCampaignHeroSetup(int heroId)
         return;
 
     THeroClass heroClass = akHeroTraits[heroId].m_class;
-    int newHeroId = getNewHeroId(setup.m_owner, kNumHeroClasses, 1, heroClass);
+    int newHeroId = getNewHeroId(setup.m_owner, kNumHeroClasses, true, heroClass);
     if (newHeroId == -1) {
         setup.m_location.m_x = -1;
         return;
@@ -1495,7 +1495,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
     }
     if (currentHero->m_army.getCreatureTotal() == 0)
-        g_game->setRandomHeroArmies(currentHero->m_id, 0, 0);
+        g_game->setRandomHeroArmies(currentHero->m_id, 0, false);
 
     if (m_retainSpellbook) {
         currentHero->clearSpells();
@@ -1524,7 +1524,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->equipArtifact(artifact, slot);
         }
-        while (currentHero->getNumberInBackpack(1) > 0) {
+        while (currentHero->getNumberInBackpack(true) > 0) {
             currentHero->removeBackpackArtifact(
                 static_cast<short>(currentHero->getLastBackpackIndex()));
         }
@@ -1633,7 +1633,7 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     currentHero->m_y = static_cast<short>(triggerY);
     currentHero->m_z = object->m_z;
     currentHero->m_owner = static_cast<signed char>(placeholder->m_owner);
-    g_game->setRandomHeroArmies(currentHero->m_id, 0, 0);
+    g_game->setRandomHeroArmies(currentHero->m_id, 0, false);
     currentHero->m_maxMovePoints = currentHero->m_movePoints
         = currentHero->getMobility();
 
@@ -2400,7 +2400,7 @@ void TCampaignBrief::MapTextStruct::play()
         videoY = g_campaignVideoLoweredY;
 
     videoOpen(g_campaignVideoIds[m_video], 0, videoY, 0, 0,
-              m_video != g_campaignVideoNoFade, 0, 1);
+              m_video != g_campaignVideoNoFade, false, true);
 
     unsigned char finished = 0;
     unsigned char speechStarted = 0;
@@ -2694,9 +2694,9 @@ bool SCampaign::campaignComplete()
 {
     for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
         if (!m_mapScores[i].m_completed)
-            return 0;
+            return false;
     }
-    return 1;
+    return true;
 }
 
 // Mac 0x986e8..0x98798 expands getHero for the player and garrison lists;

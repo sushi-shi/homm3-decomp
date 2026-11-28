@@ -1184,43 +1184,43 @@ TViewWorldWindow::TViewWorldWindow()
 
     int firstFrame = g_game->getLocalPlayerGamePos() * 19;
     m_widgets.push_back(new iconWidget(
-        612, 254, 32, 32, 21, "VWsymbol.def", firstFrame, 0, 0, 0, 16));
+        612, 254, 32, 32, 21, "VWsymbol.def", firstFrame, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        612, 274, 32, 32, 21, "VWsymbol.def", firstFrame + 1, 0, 0, 0, 16));
+        612, 274, 32, 32, 21, "VWsymbol.def", firstFrame + 1, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        612, 294, 32, 32, 21, "VWsymbol.def", firstFrame + 2, 0, 0, 0, 16));
+        612, 294, 32, 32, 21, "VWsymbol.def", firstFrame + 2, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        612, 314, 32, 32, 21, "VWsymbol.def", firstFrame + 3, 0, 0, 0, 16));
+        612, 314, 32, 32, 21, "VWsymbol.def", firstFrame + 3, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        612, 334, 32, 32, 21, "VWsymbol.def", firstFrame + 4, 0, 0, 0, 16));
+        612, 334, 32, 32, 21, "VWsymbol.def", firstFrame + 4, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        612, 378, 32, 32, 21, "VWsymbol.def", firstFrame + 5, 0, 0, 0, 16));
+        612, 378, 32, 32, 21, "VWsymbol.def", firstFrame + 5, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        612, 398, 32, 32, 21, "VWsymbol.def", firstFrame + 6, 0, 0, 0, 16));
+        612, 398, 32, 32, 21, "VWsymbol.def", firstFrame + 6, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        612, 418, 32, 32, 21, "VWsymbol.def", firstFrame + 7, 0, 0, 0, 16));
+        612, 418, 32, 32, 21, "VWsymbol.def", firstFrame + 7, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        612, 438, 32, 32, 21, "VWsymbol.def", firstFrame + 8, 0, 0, 0, 16));
+        612, 438, 32, 32, 21, "VWsymbol.def", firstFrame + 8, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        612, 458, 32, 32, 21, "VWsymbol.def", firstFrame + 9, 0, 0, 0, 16));
+        612, 458, 32, 32, 21, "VWsymbol.def", firstFrame + 9, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        612, 478, 32, 32, 21, "VWsymbol.def", firstFrame + 10, 0, 0, 0, 16));
+        612, 478, 32, 32, 21, "VWsymbol.def", firstFrame + 10, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        612, 498, 32, 32, 21, "VWsymbol.def", firstFrame + 11, 0, 0, 0, 16));
+        612, 498, 32, 32, 21, "VWsymbol.def", firstFrame + 11, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        761, 378, 32, 32, 21, "VWsymbol.def", firstFrame + 12, 0, 0, 0, 16));
+        761, 378, 32, 32, 21, "VWsymbol.def", firstFrame + 12, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        761, 398, 32, 32, 21, "VWsymbol.def", firstFrame + 13, 0, 0, 0, 16));
+        761, 398, 32, 32, 21, "VWsymbol.def", firstFrame + 13, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        761, 418, 32, 32, 21, "VWsymbol.def", firstFrame + 14, 0, 0, 0, 16));
+        761, 418, 32, 32, 21, "VWsymbol.def", firstFrame + 14, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        761, 438, 32, 32, 21, "VWsymbol.def", firstFrame + 15, 0, 0, 0, 16));
+        761, 438, 32, 32, 21, "VWsymbol.def", firstFrame + 15, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        761, 458, 32, 32, 21, "VWsymbol.def", firstFrame + 16, 0, 0, 0, 16));
+        761, 458, 32, 32, 21, "VWsymbol.def", firstFrame + 16, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        761, 478, 32, 32, 21, "VWsymbol.def", firstFrame + 17, 0, 0, 0, 16));
+        761, 478, 32, 32, 21, "VWsymbol.def", firstFrame + 17, 0, false, 0, 16));
     m_widgets.push_back(new iconWidget(
-        761, 498, 32, 32, 21, "VWsymbol.def", firstFrame + 18, 0, 0, 0, 16));
+        761, 498, 32, 32, 21, "VWsymbol.def", firstFrame + 18, 0, false, 0, 16));
 
     m_widgets.push_back(new textWidget(
         650, 260, 130, 20, g_generalText->GetText(GENERAL_TEXT_VIEW_WORLD_TOWN), "Calli10R.fnt",
@@ -1266,18 +1266,18 @@ TViewWorldWindow::TViewWorldWindow()
         font::PRIMARY, 5, 5, 0, 8));
 
     m_widgets.push_back(new button(
-        608, 218, 60, 32, 16, "VWMag1.def", 0, 1, 0, 2, 2));
+        608, 218, 60, 32, 16, "VWMag1.def", 0, 1, false, 2, 2));
     m_widgets.push_back(new button(
-        671, 218, 60, 32, 17, "VWMag2.def", 0, 1, 0, 3, 2));
+        671, 218, 60, 32, 17, "VWMag2.def", 0, 1, false, 3, 2));
     m_widgets.push_back(new button(
-        735, 218, 60, 32, 18, "VWMag4.def", 0, 1, 0, 5, 2));
+        735, 218, 60, 32, 18, "VWMag4.def", 0, 1, false, 5, 2));
 
     m_widgets.push_back(new bitmapBorder(
         611, 537, 68, 34, -1, "box66x32.pcx", 0x800));
     // Dreamcast 0x1952b8 proves the ordered widget append family; Complete
     // adds this puzzle row.
     m_widgets.push_back(new button(
-        612, 538, 66, 32, 19, "VWPuz.def", 0, 1, 0, 25, 2));
+        612, 538, 66, 32, 19, "VWPuz.def", 0, 1, false, 25, 2));
 
     m_undergroundButton = new type_func_button(
         686, 538, 32, 32, -1, "iam010.def",
@@ -1295,7 +1295,7 @@ TViewWorldWindow::TViewWorldWindow()
     m_widgets.push_back(new bitmapBorder(
         725, 537, 68, 34, -1, "box66x32.pcx", 0x800));
     button* ok = new button(
-        726, 538, 66, 32, 0x7802, "iOkay32.def", 0, 1, 0, 1, 2);
+        726, 538, 66, 32, 0x7802, "iOkay32.def", 0, 1, false, 1, 2);
     ok->setHotkey(28);
     m_widgets.push_back(ok);
 
@@ -1366,7 +1366,7 @@ int viewWorldSurfaceHandler(message& msg)
     window->m_undergroundButton->show();
     window->m_undergroundButton->draw();
     window->drawWindow();
-    g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
+    g_advManager->updateRadar(window->m_origin, true, true, g_viewMines, g_viewHeroes,
                               g_viewTowns);
     g_windowManager->updateScreen();
     return 1;
@@ -1387,7 +1387,7 @@ int viewWorldUndergroundHandler(message& msg)
     window->m_undergroundButton->hide();
     window->m_surfaceButton->draw();
     window->drawWindow();
-    g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
+    g_advManager->updateRadar(window->m_origin, true, true, g_viewMines, g_viewHeroes,
                               g_viewTowns);
     g_windowManager->updateScreen();
     return 1;
@@ -1399,43 +1399,43 @@ MAC_ADDRESS(0x209020, 0x27c)
 void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 {
     g_inViewWorld = 1;
-    g_viewArtifacts = 0;
-    g_viewTowns = 0;
-    g_viewHeroes = 0;
-    g_viewResources = 0;
-    g_vwTerrains = 0;
-    g_viewMines = 0;
+    g_viewArtifacts = false;
+    g_viewTowns = false;
+    g_viewHeroes = false;
+    g_viewResources = false;
+    g_vwTerrains = false;
+    g_viewMines = false;
 
     switch (whatToDraw) {
     case SPELL_VIEW_EARTH:
         switch (level) {
         case eMasteryAdvanced:
-            g_viewMines = 1;
-            g_viewResources = 1;
+            g_viewMines = true;
+            g_viewResources = true;
             break;
         case eMasteryExpert:
-            g_vwTerrains = 1;
-            g_viewMines = 1;
-            g_viewResources = 1;
+            g_vwTerrains = true;
+            g_viewMines = true;
+            g_viewResources = true;
             break;
         default:
-            g_viewResources = 1;
+            g_viewResources = true;
             break;
         }
         break;
     case SPELL_VIEW_AIR:
         switch (level) {
         case eMasteryAdvanced:
-            g_viewHeroes = 1;
-            g_viewArtifacts = 1;
+            g_viewHeroes = true;
+            g_viewArtifacts = true;
             break;
         case eMasteryExpert:
-            g_viewTowns = 1;
-            g_viewHeroes = 1;
-            g_viewArtifacts = 1;
+            g_viewTowns = true;
+            g_viewHeroes = true;
+            g_viewArtifacts = true;
             break;
         default:
-            g_viewArtifacts = 1;
+            g_viewArtifacts = true;
             break;
         }
         break;
@@ -1445,20 +1445,20 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
     g_viewWorldScale = 11;
     g_csVwIcons = ResourceManager::GetSprite("VWsymbol.def");
     g_memoryBuffer = new Bitmap16Bit(64, 64);
-    g_advManager->demobilizeCurrHero(0, 1);
+    g_advManager->demobilizeCurrHero(false, true);
     g_windowManager->m_colorCyclingOn = 0;
     g_combatActive = 2;
     {
         TViewWorldWindow viewWorldWindow;
         type_point mapCenter = getMapCenter();
 
-        viewWorldWindow.init(mapCenter, 0);
+        viewWorldWindow.init(mapCenter, false);
         viewWorldWindow.drawWindow();
         g_windowManager->m_colorCyclingOn = 1;
-        viewWorldWindow.doModal(0);
+        viewWorldWindow.doModal(false);
     }
     g_inViewWorld = 0;
-    updateRadar(0, 1, g_viewMines, g_viewHeroes, g_viewTowns);
+    updateRadar(false, true, g_viewMines, g_viewHeroes, g_viewTowns);
     g_windowManager->m_colorCyclingOn = 0;
     redrawAdvScreen(1, 0);
     g_combatActive = 0;
@@ -1514,7 +1514,7 @@ void TViewWorldWindow::init(type_point newCenter, bool updateFlag)
     g_vwCenterOffsetW = (608 - m_viewableWidth * g_viewWorldScale) >> 1;
     g_vwCenterOffsetH = (544 - m_viewableHeight * g_viewWorldScale) >> 1;
     g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-    g_advManager->updateRadar(m_origin, updateFlag, 1, g_viewMines, g_viewHeroes,
+    g_advManager->updateRadar(m_origin, updateFlag, true, g_viewMines, g_viewHeroes,
                               g_viewTowns);
     if (g_game->getNumMapLevels() > 1) {
         if (m_origin.m_z == 1) {
@@ -1612,9 +1612,9 @@ void TViewWorldWindow::updateViewWorld(message& msg)
     type_point center(m_origin.m_x + g_viewHalfWidth,
                       m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
 
-    init(center, 1);
+    init(center, true);
     drawWindow();
-    drawWindow(1, 0xffff0001, 0xffff);
+    drawWindow(true, 0xffff0001, 0xffff);
     g_windowManager->updateScreen();
 }
 
@@ -1647,7 +1647,7 @@ void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
     m_origin.m_y = min(static_cast<int>(m_origin.m_y),
                         g_mapHeight - m_viewableHeight);
 
-    g_advManager->updateRadar(m_origin, 1, 1, g_viewMines, g_viewHeroes,
+    g_advManager->updateRadar(m_origin, true, true, g_viewMines, g_viewHeroes,
                               g_viewTowns);
     drawWindow();
     g_windowManager->updateScreen(8, 8, 592, 544);
@@ -1745,10 +1745,10 @@ int TViewWorldWindow::windowHandler(message& msg)
                 g_advManager->viewPuzzle();
                 g_windowManager->fadeScreen(1, 4, 0);
                 g_advManager->redrawAdvScreen(0, 0);
-                drawWindow(0, 0xffff0001, 0xffff);
+                drawWindow(false, 0xffff0001, 0xffff);
                 center = type_point(m_origin.m_x + g_viewHalfWidth,
                                     m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
-                init(center, 0);
+                init(center, false);
                 drawWindow();
                 g_windowManager->updateScreen();
                 return MESSAGE_DISPATCH_CONSUME;

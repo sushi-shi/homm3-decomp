@@ -348,8 +348,8 @@ public:
     bool isHuman()
     {
         if (m_dpid)
-            return 1;
-        return 0;
+            return true;
+        return false;
     }
 
     // E:\gamedcs\SingleSelectionWindow.h:130

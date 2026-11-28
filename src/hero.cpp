@@ -526,9 +526,9 @@ void type_obscuring_object::initialize()
     m_x = -1;
     m_y = -1;
     m_z = -1;
-    m_valid = 0;
+    m_valid = false;
     m_obscuredType = NOTHING;
-    m_wasTrigger = 0;
+    m_wasTrigger = false;
     m_extraInfo = 0;
 }
 
@@ -539,22 +539,22 @@ bool type_obscuring_object::load(void* inputHandle)
 {
     TAbstractFile* infile = static_cast<TAbstractFile*>(inputHandle);
     if (infile->read(&m_x, sizeof(m_x)) < sizeof(m_x))
-        return 0;
+        return false;
     if (infile->read(&m_y, sizeof(m_y)) < sizeof(m_y))
-        return 0;
+        return false;
     if (infile->read(&m_z, sizeof(m_z)) < sizeof(m_z))
-        return 0;
+        return false;
     if (infile->read(&m_valid, sizeof(m_valid)) < sizeof(m_valid))
-        return 0;
+        return false;
     if (infile->read(&m_obscuredLocation, sizeof(m_obscuredLocation))
             < sizeof(m_obscuredLocation))
-        return 0;
+        return false;
     if (infile->read(&m_obscuredType, sizeof(m_obscuredType))
             < sizeof(m_obscuredType))
-        return 0;
+        return false;
     if (infile->read(&m_wasTrigger, sizeof(m_wasTrigger))
             < sizeof(m_wasTrigger))
-        return 0;
+        return false;
     bool success = infile->read(&m_extraInfo, sizeof(m_extraInfo))
         >= sizeof(m_extraInfo);
     return success;
@@ -569,7 +569,7 @@ void type_obscuring_object::obscureCell(TAdventureObjectType newType, long id)
     if (!m_valid) {
         m_obscuredLocation = getLocation();
         NewmapCell* cell = g_game->getCell(m_obscuredLocation);
-        m_valid = 1;
+        m_valid = true;
         m_obscuredType = cell->m_type;
         m_wasTrigger = cell->m_isTrigger;
         m_extraInfo = cell->m_extraInfo;
@@ -590,7 +590,7 @@ void type_obscuring_object::restoreCell()
 {
     if (m_valid) {
         NewmapCell* cell = g_game->getCell(m_obscuredLocation);
-        m_valid = 0;
+        m_valid = false;
         cell->m_type = m_obscuredType;
         cell->m_isTrigger = m_wasTrigger;
         cell->m_extraInfo = m_extraInfo;
@@ -607,22 +607,22 @@ bool type_obscuring_object::save(void* outputHandle)
 {
     TAbstractFile* outfile = static_cast<TAbstractFile*>(outputHandle);
     if (outfile->write(&m_x, sizeof(m_x)) < sizeof(m_x))
-        return 0;
+        return false;
     if (outfile->write(&m_y, sizeof(m_y)) < sizeof(m_y))
-        return 0;
+        return false;
     if (outfile->write(&m_z, sizeof(m_z)) < sizeof(m_z))
-        return 0;
+        return false;
     if (outfile->write(&m_valid, sizeof(m_valid)) < sizeof(m_valid))
-        return 0;
+        return false;
     if (outfile->write(&m_obscuredLocation, sizeof(m_obscuredLocation))
             < sizeof(m_obscuredLocation))
-        return 0;
+        return false;
     if (outfile->write(&m_obscuredType, sizeof(m_obscuredType))
             < sizeof(m_obscuredType))
-        return 0;
+        return false;
     if (outfile->write(&m_wasTrigger, sizeof(m_wasTrigger))
             < sizeof(m_wasTrigger))
-        return 0;
+        return false;
     bool success = outfile->write(&m_extraInfo, sizeof(m_extraInfo))
         >= sizeof(m_extraInfo);
     return success;
@@ -640,7 +640,7 @@ void hero::hire(int playerId, type_point point)
 
     player->m_resources[GOLD] =
         player->m_resources[GOLD] - g_heroGoldCost;
-    placeInMap(playerId, point, 1);
+    placeInMap(playerId, point, true);
     g_game->replaceRecruit(playerId, recruitSlot);
 }
 
@@ -1131,7 +1131,7 @@ void hero::initialize(const HeroExtra* setup)
                        + g_startLevelBonus;
             amount = getExperience(level);
         }
-        giveExperience(amount, 1, 0);
+        giveExperience(amount, 1, false);
         checkLevel();
     }
 
@@ -1335,7 +1335,7 @@ void hero::useSpell(int cost)
     m_mana = remainingMana;
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE &&
         g_currentPlayer->isLocalHuman())
-        g_advManager->m_advWindow->updateHeroLocator(-1, 1, 1);
+        g_advManager->m_advWindow->updateHeroLocator(-1, true, true);
 }
 
 VA(0x004d9330, 0x1A)
@@ -1465,7 +1465,7 @@ void THeroScreenWindow::heroMessageUpdate(char* text)
     msg.m_codeY = STATUS_BAR_ID;
     msg.m_extraText = text;
     broadcastMessage(msg);
-    drawWindow(1, STATUS_BAR_BORDER_ID, STATUS_BAR_ID);
+    drawWindow(true, STATUS_BAR_BORDER_ID, STATUS_BAR_ID);
 }
 
 // Original: hero::HeroScreenUpdate; hero.cpp:1606
@@ -1489,7 +1489,7 @@ void hero::heroScreenUpdate()
             THeroScreenWindow::MIXED_ARMY_ID,
             widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
     }
-    g_heroScreenWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+    g_heroScreenWindow->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                                   WINDOW_ALL_WIDGETS_HIGH);
 }
 
@@ -1665,12 +1665,12 @@ void hero::deallocate(bool gameLoaded, bool remoteMove)
     int oldOwner = m_owner;
     playerData* player = &g_game->m_players[oldOwner];
     if (gameLoaded) {
-        g_advManager->mobilizeCurrHero(0, 0, 1);
+        g_advManager->mobilizeCurrHero(0, false, true);
         g_advManager->hideRoute(0, 0, 0);
     }
 
     if (m_flags & 0x40000) {
-        g_game->getHeroBoat(m_id, 1)->m_allocated = 0;
+        g_game->getHeroBoat(m_id, true)->m_allocated = 0;
         m_flags &= 0xfffbffff;
     }
 
@@ -1695,7 +1695,7 @@ void hero::deallocate(bool gameLoaded, bool remoteMove)
         if (oldOwner == g_netLocalGamePos)
             g_advManager->m_curHeroMobile = 0;
     }
-    g_advManager->m_advWindow->updateHeroLocators(0, 1, 1);
+    g_advManager->m_advWindow->updateHeroLocators(0, true, true);
     g_game->m_heroAvailability[m_id] = -1;
 
     if (g_combatRetreated || g_combatSurrendered) {
@@ -1737,7 +1737,7 @@ void hero::deallocate(bool gameLoaded, bool remoteMove)
     }
 
     if (!g_combatSurrendered)
-        g_game->setRandomHeroArmies(m_id, 0, 1);
+        g_game->setRandomHeroArmies(m_id, 0, true);
 }
 
 VA(0x004da3a0, 0x76)
@@ -1979,7 +1979,7 @@ void hero::checkLevel()
                     if (g_game->isMultiplayer() &&
                         g_turnDuration.isExpired())
                         g_dialogDeadline = 15000;
-                    window.doModal(0);
+                    window.doModal(false);
                 } else if (skills[1] == eSecSkillNone) {
                     TLevelUpWindow window(
                         this, stat,
@@ -1987,7 +1987,7 @@ void hero::checkLevel()
                     if (g_game->isMultiplayer() &&
                         g_turnDuration.isExpired())
                         g_dialogDeadline = 15000;
-                    window.doModal(0);
+                    window.doModal(false);
                     giveSS(skills[0], 1);
                 } else {
                     sprintf(text,
@@ -2005,7 +2005,7 @@ void hero::checkLevel()
                         if (g_game->isMultiplayer() &&
                             g_turnDuration.isExpired())
                             g_dialogDeadline = 15000;
-                        window.doModal(0);
+                        window.doModal(false);
                     }
                     if (g_windowManager->m_dialogReturn ==
                         DIALOG_RETURN_TIMEOUT) {
@@ -2370,18 +2370,18 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
         break;
 
     case MORALE_ID:
-        if (g_currentHero->getMorale(NULL, 0, 1) > 0)
+        if (g_currentHero->getMorale(NULL, false, true) > 0)
             strcpy(g_text, g_heroScreen[3]);
-        else if (g_currentHero->getMorale(NULL, 0, 1) == 0)
+        else if (g_currentHero->getMorale(NULL, false, true) == 0)
             strcpy(g_text, g_heroScreen[4]);
         else
             strcpy(g_text, g_heroScreen[5]);
         break;
 
     case LUCK_ID:
-        if (g_currentHero->getLuck(NULL, 0, 1) > 0)
+        if (g_currentHero->getLuck(NULL, false, true) > 0)
             strcpy(g_text, g_heroScreen[6]);
-        else if (g_currentHero->getLuck(NULL, 0, 1) == 0)
+        else if (g_currentHero->getLuck(NULL, false, true) == 0)
             strcpy(g_text, g_heroScreen[7]);
         else
             strcpy(g_text, g_heroScreen[8]);
@@ -2575,7 +2575,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                             g_currentHero->disassembleCombinationArtifact(slot);
                             g_currentHero->updateStats();
                             g_heroScreenWindow->updateAllSlots();
-                            g_heroScreenWindow->drawWindow(1, 0xffff0001,
+                            g_heroScreenWindow->drawWindow(true, 0xffff0001,
                                                            0xffff);
                         }
                         return;
@@ -2592,7 +2592,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                                 g_currentHero->updateStats();
                                 g_heroScreenWindow->updateAllSlots();
                                 g_heroScreenWindow->drawWindow(
-                                    1, 0xffff0001, 0xffff);
+                                    true, 0xffff0001, 0xffff);
                             }
                             return;
                         }
@@ -2605,7 +2605,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                 TSpellbookWindow spellBookWindow(
                     *g_currentHero, NULL, TSpellbookWindow::eContextNeither,
                     g_currentHero->getSpecialTerrain());
-                spellBookWindow.doModal(0);
+                spellBookWindow.doModal(false);
             } else if (slot == hero::EQUIPPED_SLOT_WAR_MACHINE_4) {
                 normalDialog(g_generalText->GetText(GENERAL_TEXT_CATAPULT_MUST_BE_EQUIPPED), 1, -1, -1, 8, 3,
                              -1, 0, -1, 0, -1, 0);
@@ -2614,7 +2614,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                 g_currentHero->removeArtifact(slot);
                 g_currentHero->updateStats();
                 g_heroScreenWindow->updateAllSlots();
-                g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+                g_heroScreenWindow->drawWindow(true, 0xffff0001, 0xffff);
                 g_mouseManager->setPointer(
                     g_heroScreenDraggedArtifact.m_artifactId,
                     mouseManager::ARTIFACT_SET);
@@ -2630,7 +2630,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
             g_currentHero->updateStats();
             g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
             g_heroScreenWindow->updateAllSlots();
-            g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+            g_heroScreenWindow->drawWindow(true, 0xffff0001, 0xffff);
             g_mouseManager->setPointer(0,
                                        mouseManager::DEFAULT_SET);
         } else {
@@ -2642,7 +2642,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
             g_currentHero->updateStats();
             g_heroScreenDraggedArtifact = oldArtifact;
             g_heroScreenWindow->updateAllSlots();
-            g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+            g_heroScreenWindow->drawWindow(true, 0xffff0001, 0xffff);
             g_mouseManager->setPointer(
                 g_heroScreenDraggedArtifact.m_artifactId,
                 mouseManager::ARTIFACT_SET);
@@ -2914,7 +2914,7 @@ std::string hero::getMoraleDescription() const
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:2989 names town::HasBuilding here.
-            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1)
+            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true)
                 && ownedTown->m_type == TOWN_CASTLE) {
                 // An explicit LF preserves Mac retail's 0a byte; CodeWarrior
                 // interprets an ordinary \n escape as Mac CR here.
@@ -2927,7 +2927,7 @@ std::string hero::getMoraleDescription() const
         }
     }
 
-    int effectiveMorale = this->getMorale(NULL, 0, 0);
+    int effectiveMorale = this->getMorale(NULL, false, false);
     if (effectiveMorale - morale < 0)
         result += formatString(g_moraleInfo[24], abs(effectiveMorale - morale));
     else if (effectiveMorale - morale > 0)
@@ -3044,7 +3044,7 @@ std::string hero::getLuckDescription() const
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:3149 names town::HasBuilding here.
-            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1)
+            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true)
                 && ownedTown->m_type == TOWN_RAMPART) {
                 // An explicit LF, as in the shared Mac Grail format.
                 result += formatString(
@@ -3056,7 +3056,7 @@ std::string hero::getLuckDescription() const
         }
     }
 
-    int otherModifier = this->getLuck(NULL, 0, 0) - luck;
+    int otherModifier = this->getLuck(NULL, false, false) - luck;
     if (otherModifier < 0)
         result += formatString(g_luckInfo[19], abs(otherModifier));
     else if (otherModifier > 0)
@@ -3093,7 +3093,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
         g_currentHero->removeBackpackArtifact(static_cast<short>(index));
         updateBackpack();
         g_heroScreenWindow->updateAllSlots();
-        g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+        g_heroScreenWindow->drawWindow(true, 0xffff0001, 0xffff);
         g_mouseManager->setPointer(
             g_heroScreenDraggedArtifact.m_artifactId,
             mouseManager::ARTIFACT_SET);
@@ -3111,7 +3111,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
         updateBackpack();
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
         g_heroScreenWindow->updateAllSlots();
-        g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+        g_heroScreenWindow->drawWindow(true, 0xffff0001, 0xffff);
         g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
         return;
     }
@@ -3340,9 +3340,9 @@ int THeroScreenWindow::windowHandler(message& msg)
     playerData* localPlayer = g_game->getLocalPlayer();
     bool rightMouse;
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
-        rightMouse = 1;
+        rightMouse = true;
     else
-        rightMouse = 0;
+        rightMouse = false;
 
     if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         g_windowManager->convertToHover(msg);
@@ -3385,32 +3385,32 @@ int THeroScreenWindow::windowHandler(message& msg)
         case BACKPACK_SCROLL_LEFT_ID:
             g_currentHero->rotateBackpackLeft();
             updateBackpack();
-            drawWindow(1, 0xffff0001, 0xffff);
+            drawWindow(true, 0xffff0001, 0xffff);
             break;
         case BACKPACK_SCROLL_RIGHT_ID:
             g_currentHero->rotateBackpackRight();
             updateBackpack();
-            drawWindow(1, 0xffff0001, 0xffff);
+            drawWindow(true, 0xffff0001, 0xffff);
             break;
         case MIXED_ARMY_ID:
             g_heroScreenArmyStripLive = 1;
             g_currentHero->updateArmies();
-            drawWindow(1, 0xffff0001, 0xffff);
+            drawWindow(true, 0xffff0001, 0xffff);
             break;
         case WIDGET_7A_ID:
             g_currentHero->m_formation &= ~HERO_FORMATION_TIGHT;
             setupHeroView();
-            drawWindow(1, 0xffff0001, 0xffff);
+            drawWindow(true, 0xffff0001, 0xffff);
             break;
         case WIDGET_7C_ID:
             g_currentHero->m_formation |= HERO_FORMATION_TIGHT;
             setupHeroView();
-            drawWindow(1, 0xffff0001, 0xffff);
+            drawWindow(true, 0xffff0001, 0xffff);
             break;
         case FORMATION_ID:
             g_currentHero->m_formation ^= HERO_FORMATION_GROUPED;
             setupHeroView();
-            drawWindow(1, 0xffff0001, 0xffff);
+            drawWindow(true, 0xffff0001, 0xffff);
             break;
         case WIDGET_80_ID:
             doQuestLog(g_currentHero->m_owner);
@@ -3527,7 +3527,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                     if (!rightMouse)
                         g_heroScreenArmySlot = HERO_SCREEN_NO_ARMY_SLOT;
                     setupHeroView();
-                    drawWindow(1, 0xffff0001, 0xffff);
+                    drawWindow(true, 0xffff0001, 0xffff);
                 } else if (!rightMouse && g_castleOpen) {
                     if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE) {
                         g_heroScreenArmySlot = slot;
@@ -3609,7 +3609,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             g_currentHero =
                 g_game->getHero(localPlayer->m_heroes[g_heroScreenHeroPosition]);
             setupHeroView();
-            drawWindow(1, 0xffff0001, 0xffff);
+            drawWindow(true, 0xffff0001, 0xffff);
             break;
 
         case WIDGET_80_ID:
@@ -3759,25 +3759,25 @@ THeroScreenWindow::THeroScreenWindow()
         font::PRIMARY, 0x31, 0x1, 0, 0x8));
     m_widgets.push_back(new iconWidget(
         0xf, 0x1e5, 0x3a, 0x40, 0x36, "twcrport.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x51, 0x1e5, 0x3a, 0x40, 0x37, "twcrport.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x93, 0x1e5, 0x3a, 0x40, 0x38, "twcrport.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xd5, 0x1e5, 0x3a, 0x40, 0x39, "twcrport.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x117, 0x1e5, 0x3a, 0x40, 0x3a, "twcrport.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x159, 0x1e5, 0x3a, 0x40, 0x3b, "twcrport.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x19b, 0x1e5, 0x3a, 0x40, 0x3c, "twcrport.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new textWidget(
         0xf, 0x216, 0x3a, 0x12, NULL, "Verd10B.fnt",
         font::PRIMARY, 0x3d, 0x2, 0, 0x8));
@@ -3801,61 +3801,61 @@ THeroScreenWindow::THeroScreenWindow()
         font::PRIMARY, 0x43, 0x2, 0, 0x8));
     m_widgets.push_back(new iconWidget(
         0x20, 0x6f, 0x2a, 0x2a, 0x32, "pskil42.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x66, 0x6f, 0x2a, 0x2a, 0x33, "pskil42.def",
-        0x1, 0, 0, 0, 0x10));
+        0x1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xac, 0x6f, 0x2a, 0x2a, 0x34, "pskil42.def",
-        0x2, 0, 0, 0, 0x10));
+        0x2, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xf2, 0x6f, 0x2a, 0x2a, 0x35, "pskil42.def",
-        0x5, 0, 0, 0, 0x10));
+        0x5, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xf, 0x1e5, 0x3a, 0x40, 0x44, "twcrport.def",
-        0x1, 0, 0, 0, 0x10));
+        0x1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x51, 0x1e5, 0x3a, 0x40, 0x45, "twcrport.def",
-        0x1, 0, 0, 0, 0x10));
+        0x1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x93, 0x1e5, 0x3a, 0x40, 0x46, "twcrport.def",
-        0x1, 0, 0, 0, 0x10));
+        0x1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xd5, 0x1e5, 0x3a, 0x40, 0x47, "twcrport.def",
-        0x1, 0, 0, 0, 0x10));
+        0x1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x117, 0x1e5, 0x3a, 0x40, 0x48, "twcrport.def",
-        0x1, 0, 0, 0, 0x10));
+        0x1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x159, 0x1e5, 0x3a, 0x40, 0x49, "twcrport.def",
-        0x1, 0, 0, 0, 0x10));
+        0x1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x19b, 0x1e5, 0x3a, 0x40, 0x4a, "twcrport.def",
-        0x1, 0, 0, 0, 0x10));
+        0x1, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x12, 0x114, 0x2c, 0x2c, 0x4f, "secskill.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xa1, 0x114, 0x2c, 0x2c, 0x50, "secskill.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x12, 0x144, 0x2c, 0x2c, 0x51, "secskill.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xa1, 0x144, 0x2c, 0x2c, 0x52, "secskill.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x12, 0x174, 0x2c, 0x2c, 0x53, "secskill.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xa1, 0x174, 0x2c, 0x2c, 0x54, "secskill.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x12, 0x1a4, 0x2c, 0x2c, 0x55, "secskill.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xa1, 0x1a4, 0x2c, 0x2c, 0x56, "secskill.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new textWidget(
         0x44, 0x12c, 0x5a, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x57, 0, 0, 0x8));
@@ -3906,153 +3906,153 @@ THeroScreenWindow::THeroScreenWindow()
         font::PRIMARY, 0x66, 0, 0, 0x8));
     m_widgets.push_back(new iconWidget(
         0x1bc, 0x16, 0x2c, 0x2c, 0x15, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1f7, 0xea, 0x2c, 0x2c, 0x16, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1bc, 0x48, 0x2c, 0x2c, 0x17, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x13e, 0x3d, 0x2c, 0x2c, 0x18, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1f1, 0xb0, 0x2c, 0x2c, 0x19, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1bc, 0x7b, 0x2c, 0x2c, 0x1a, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x16e, 0x3d, 0x2c, 0x2c, 0x1b, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x221, 0xb0, 0x2c, 0x2c, 0x1c, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1c2, 0x11f, 0x2c, 0x2c, 0x1d, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x13e, 0x87, 0x2c, 0x2c, 0x1e, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x14e, 0xb9, 0x2c, 0x2c, 0x1f, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x15e, 0xec, 0x2c, 0x2c, 0x20, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x16e, 0x11f, 0x2c, 0x2c, 0x21, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1f3, 0x16, 0x2c, 0x2c, 0x22, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x221, 0x16, 0x2c, 0x2c, 0x23, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x221, 0x44, 0x2c, 0x2c, 0x24, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x221, 0x72, 0x2c, 0x2c, 0x25, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x221, 0x12f, 0x2c, 0x2c, 0x26, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     if (g_game->m_gameVersion >= 2)
         m_widgets.push_back(new iconWidget(
             0x13c, 0x11f, 0x2c, 0x2c, 0x27, "artifact.def",
-            0, 0, 0, 0, 0x10));
+            0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1bc, 0x16, 0x2c, 0x2c, 0x2, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1f7, 0xea, 0x2c, 0x2c, 0x3, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1bc, 0x48, 0x2c, 0x2c, 0x4, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x13e, 0x3d, 0x2c, 0x2c, 0x5, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1f1, 0xb0, 0x2c, 0x2c, 0x6, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1bc, 0x7b, 0x2c, 0x2c, 0x7, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x16e, 0x3d, 0x2c, 0x2c, 0x8, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x221, 0xb0, 0x2c, 0x2c, 0x9, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1c2, 0x11f, 0x2c, 0x2c, 0xa, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x13e, 0x87, 0x2c, 0x2c, 0xb, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x14e, 0xb9, 0x2c, 0x2c, 0xc, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x15e, 0xec, 0x2c, 0x2c, 0xd, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x16e, 0x11f, 0x2c, 0x2c, 0xe, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1f3, 0x16, 0x2c, 0x2c, 0xf, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x221, 0x16, 0x2c, 0x2c, 0x10, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x221, 0x44, 0x2c, 0x2c, 0x11, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x221, 0x72, 0x2c, 0x2c, 0x12, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x221, 0x12f, 0x2c, 0x2c, 0x13, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     if (g_game->m_gameVersion >= 2)
         m_widgets.push_back(new iconWidget(
             0x13c, 0x11f, 0x2c, 0x2c, 0x14, "artifact.def",
-            0, 0, 0, 0, 0x10));
+            0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x152, 0x165, 0x2c, 0x2c, 0x28, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x180, 0x165, 0x2c, 0x2c, 0x29, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1ae, 0x165, 0x2c, 0x2c, 0x2a, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x1dc, 0x165, 0x2c, 0x2c, 0x2b, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x20a, 0x165, 0x2c, 0x2c, 0x2c, "artifact.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xb6, 0xb8, 0x2c, 0x2c, 0x74, "imrlb.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xf0, 0xb8, 0x2c, 0x2c, 0x75, "ilckb.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x12, 0xb4, 0x2c, 0x2c, 0x76, "un44.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x13, 0xe5, 0x2a, 0x2a, 0x77, "pskil42.def",
-        0x4, 0, 0, 0, 0x10));
+        0x4, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0xa2, 0xe5, 0x2a, 0x2a, 0x78, "pskil42.def",
-        0x3, 0, 0, 0, 0x10));
+        0x3, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         0x25d, 0x7, 0x3a, 0x40, 0x8d, "crest58.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new bitmapBorder(
         0x263, 0x57, 0x30, 0x20, 0x82, NULL, 0x800));
     m_widgets.push_back(new bitmapBorder(
@@ -4087,33 +4087,33 @@ THeroScreenWindow::THeroScreenWindow()
         font::PRIMARY, 0x71, 0, 0, 0x8));
     m_widgets.push_back(new button(
         0x21b, 0x207, 0x36, 0x20, 0x7f, "hsbtns9.def",
-        0, 0x1, 0, 0, 0x2));
+        0, 0x1, false, 0, 0x2));
     m_widgets.push_back(new button(
         0x13b, 0x1ae, 0x34, 0x24, 0x80, "hsbtns4.def",
-        0, 0x1, 0, 0x10, 0x2));
+        0, 0x1, false, 0x10, 0x2));
     m_widgets.push_back(new button(
         0x1c6, 0x1ae, 0x34, 0x24, 0x81, "hsbtns2.def",
-        0, 0x1, 0, 0x20, 0x2));
+        0, 0x1, false, 0x20, 0x2));
     button* exitButton = new button(
         0x262, 0x204, 0x34, 0x24, 0x7800, "hsbtns.def",
-        0, 0x1, 0x1, 0x1c, 0x2);
+        0, 0x1, true, 0x1c, 0x2);
     exitButton->setHotkey(1);
     m_widgets.push_back(exitButton);
     m_widgets.push_back(new button(
         0x13a, 0x164, 0x16, 0x2e, 0x4d, "hsbtns3.def",
-        0, 0x1, 0, 0x4b, 0x2));
+        0, 0x1, false, 0x4b, 0x2));
     m_widgets.push_back(new button(
         0x237, 0x164, 0x16, 0x2e, 0x4e, "hsbtns5.def",
-        0, 0x1, 0, 0x4d, 0x2));
+        0, 0x1, false, 0x4d, 0x2));
     m_widgets.push_back(new button(
         0x1e1, 0x1e3, 0x36, 0x20, 0x7a, "hsbtns6.def",
-        0, 0x1, 0, 0x26, 0x2));
+        0, 0x1, false, 0x26, 0x2));
     m_widgets.push_back(new button(
         0x1e1, 0x207, 0x36, 0x20, 0x7c, "hsbtns7.def",
-        0, 0x1, 0, 0x14, 0x2));
+        0, 0x1, false, 0x14, 0x2));
     m_widgets.push_back(new button(
         0x21b, 0x1e3, 0x36, 0x20, 0x7e, "hsbtns8.def",
-        0, 0x1, 0, 0x30, 0x2));
+        0, 0x1, false, 0x30, 0x2));
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -4204,13 +4204,13 @@ void hero::updateStats()
         g_heroScreenWindow->broadcastMessage(msg);
     }
 
-    int luckFrame = limit(-3, getLuck(NULL, 0, 1), 3) + 3;
+    int luckFrame = limit(-3, getLuck(NULL, false, true), 3) + 3;
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 0x75;
     msg.m_extra = luckFrame;
     g_heroScreenWindow->broadcastMessage(msg);
 
-    int moraleFrame = limit(-3, getMorale(NULL, 0, 1), 3) + 3;
+    int moraleFrame = limit(-3, getMorale(NULL, false, true), 3) + 3;
     msg.m_codeY = 0x74;
     msg.m_extra = moraleFrame;
     g_heroScreenWindow->broadcastMessage(msg);
@@ -4239,7 +4239,7 @@ int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickVie
         type_point position = g_currentHero->getLocation();
         NewmapCell* cell = g_advManager->getCell(position);
         if (cell->m_type != HERO || !cell->m_isTrigger)
-            g_advManager->demobilizeCurrHero(0, 0);
+            g_advManager->demobilizeCurrHero(false, false);
     }
 
     playerData* localPlayer = g_game->getLocalPlayer();
@@ -4249,17 +4249,17 @@ int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickVie
     if (quickView) {
         g_windowManager->doQuickView(g_heroScreenWindow);
     } else {
-        g_heroScreenWindow->doModal(0);
+        g_heroScreenWindow->doModal(false);
         g_advManager->reseed(0, 0);
     }
     delete g_heroScreenWindow;
 
     if (g_windowManager->m_dialogReturn == g_dialogReturnDismissHero) {
-        g_currentHero->deallocate(1, 0);
+        g_currentHero->deallocate(true, false);
         if (!alreadyFaded) {
             g_advManager->fizzleCenter(0);
-            g_advManager->updateRadar(1, 1, 0, 0, 0);
-            g_advManager->m_advWindow->updateHeroLocators(-1, 1, 1);
+            g_advManager->updateRadar(true, true, false, false, false);
+            g_advManager->m_advWindow->updateHeroLocators(-1, true, true);
         }
         return 1;
     }
@@ -4835,14 +4835,14 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
         slot = 0;
         while (1) {
             if (slot >= kNumArtifactSlots + 1)
-                return 0;
+                return false;
             if (canEquipArtifactInEmptySlot(artifact.m_artifactId, slot))
                 break;
             ++slot;
         }
     } else {
         if (!canEquipArtifactInEmptySlot(artifact.m_artifactId, slot))
-            return 0;
+            return false;
     }
 
     m_equipped[slot].m_artifactId = artifact.m_artifactId;
@@ -4888,7 +4888,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
     if (updateSpells
         || akArtifactTraits[artifact.m_artifactId].m_givesSpells)
         updateSpellList();
-    return 1;
+    return true;
 }
 
 // E:\gamedcs\hero.cpp:4919
@@ -4968,22 +4968,22 @@ MAC_ADDRESS(0x103b04, 0xd4)
 bool hero::removeArtifact(TArtifact artifact)
 {
     if (artifact == ARTIFACT_SPELL_SCROLL)
-        return 0;
+        return false;
     long last = getLastBackpackIndex();
     short slot;
     for (slot = 0; slot <= last; slot++) {
         if (m_backpack[slot].m_artifactId == artifact) {
             removeBackpackArtifact(slot);
-            return 1;
+            return true;
         }
     }
     for (slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         if (m_equipped[slot].m_artifactId == artifact) {
             removeArtifact(slot);
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 VA(0x004e2ed0, 0xB2)
@@ -5007,12 +5007,12 @@ MAC_ADDRESS(0x103c74, 0x134)
 bool hero::addToBackpack(const type_artifact& artifact, long slot)
 {
     if (m_backpackCount >= HERO_BACKPACK_CAPACITY)
-        return 0;
+        return false;
     if (artifact.m_artifactId == ARTIFACT_CATAPULT ||
         artifact.m_artifactId == ARTIFACT_BALLISTA ||
         artifact.m_artifactId == ARTIFACT_AMMO_CART ||
         artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
-        return 0;
+        return false;
     if (slot < 0) {
         for (slot = 0; slot < HERO_BACKPACK_CAPACITY; slot++) {
             if (m_backpack[slot].m_artifactId == -1)
@@ -5026,7 +5026,7 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
     }
     m_backpack[slot] = artifact;
     m_backpackCount++;
-    return 1;
+    return true;
 }
 
 // E:\gamedcs\hero.cpp:5044
@@ -5221,7 +5221,7 @@ void hero::giveResource(int whichRes, int howMuch)
 
     if (&g_game->m_players[m_owner] == g_currentPlayer
         && g_advManager->m_status == baseManager::STATUS_ACTIVE)
-        g_advManager->m_advWindow->updateResourceDisplay(1, 1);
+        g_advManager->m_advWindow->updateResourceDisplay(true, true);
 
     g_game->isHuman(m_owner);
 }
@@ -5954,7 +5954,7 @@ DC_ADDRESS(0x0d519c, 0xb0)
 MAC_ADDRESS(0x106508, 0x10c)
 boat* hero::findSummonableBoat() const
 {
-    boat* result = g_game->getHeroBoat(m_id, 0);
+    boat* result = g_game->getHeroBoat(m_id, false);
     if (result)
         return result;
 
@@ -6107,13 +6107,13 @@ bool hero::canLand() const
     NewmapCell* cell = g_game->getCell(getLocation());
     if ((cell->m_groundSet == eTerrainWater)
         == ((m_flags & 0x40000) == 0)) {
-        return 0;
+        return false;
     }
     if (!(cell->m_flags0011 & 0x40))
-        return 0;
+        return false;
     if (cell->m_isTrigger && akAdvObjectTypeTraits[cell->m_type].m_blocksLanding)
-        return 0;
-    return 1;
+        return false;
+    return true;
 }
 
 VA(0x004e5dd0, 0x10)

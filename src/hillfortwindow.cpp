@@ -99,7 +99,7 @@ THillFortWindow::THillFortWindow()
     button* okay = new button(
         0x126, 0x113, 0x40, 0x1e, DIALOG_RETURN_OK,
         DATA_COMPGEN(0x00670160, hillFortOkayButton, "iOkay.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     okay->setHotkey(1);
     okay->setHotkey(0x1c);
     m_widgets.push_back(okay);
@@ -119,7 +119,7 @@ THillFortWindow::THillFortWindow()
             x + 3, 0x3c, 0x3a, 0x40, id,
             DATA_COMPGEN(0x006601e0, hillFortCreatureSprite,
                          "twcrport.def"),
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
         m_widgets.push_back(new textWidget(
             x + 3, numY, 0x3a, 0x40, "",
             DATA_COMPGEN(0x006700b4, hillFortCountFont, "Verd10B.fnt"),
@@ -128,7 +128,7 @@ THillFortWindow::THillFortWindow()
             x, 0x80, 0x3e, 0x12, goldIconId,
             DATA_COMPGEN(0x00660cd4, hillFortResourceSprite,
                          "smalres.def"),
-            6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            6, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
         m_widgets.push_back(new textWidget(
             x, 0x80, 0x3e, 0x12, "",
             DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
@@ -137,7 +137,7 @@ THillFortWindow::THillFortWindow()
             x, 0x94, 0x3e, 0x12, resIconId,
             DATA_COMPGEN(0x00660cd4, hillFortResourceSprite,
                          "smalres.def"),
-            6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            6, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
         m_widgets.push_back(new textWidget(
             x, 0x94, 0x3e, 0x12, "",
             DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
@@ -150,7 +150,7 @@ THillFortWindow::THillFortWindow()
             x, 0xed, 0x3e, 0x14, TOTAL_RES_ICON_1_ID + i,
             DATA_COMPGEN(0x00660cd4, hillFortResourceSprite,
                          "smalres.def"),
-            i, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
+            i, 0, false, 0, iconWidget::ICON_STYLE_PLAIN));
         m_widgets.push_back(new textWidget(
             x, 0xed, 0x3e, 0x14, "",
             DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
@@ -162,7 +162,7 @@ THillFortWindow::THillFortWindow()
     for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; x += 0x4c, ++i) {
         button* upgrade = new button(
             x, 0xab, 0x3a, 0x1d, UPGRADE_BUTTON_1_ID + i,
-            g_aszUpgradeIcons[UPGRADE_STATE_TOO_EXPENSIVE], 0, 1, 0, 0, 2);
+            g_aszUpgradeIcons[UPGRADE_STATE_TOO_EXPENSIVE], 0, 1, false, 0, 2);
         upgrade->setHotkey(i + 2);
         m_widgets.push_back(upgrade);
     }
@@ -170,7 +170,7 @@ THillFortWindow::THillFortWindow()
     button* upgradeAll = new button(
         0x1e, 0xe8, 0x3a, 0x1d, UPGRADE_ALL_BUTTON_ID,
         DATA_COMPGEN(0x0067f1a0, hillFortUpgradeAllButton, "aphlf4y.def"),
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     upgradeAll->setHotkey(0x1e);
     m_widgets.push_back(upgradeAll);
 
@@ -225,9 +225,9 @@ inline bool canAfford(const long* cost, const long* playerRes)
 {
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         if (cost[i] > playerRes[i])
-            return 0;
+            return false;
     }
-    return 1;
+    return true;
 }
 
 // E:\gamedcs\hillfortwindow.cpp:203
@@ -558,7 +558,7 @@ MAC_ADDRESS(0x10a0c8, 0x32c)  // DoModal address-take
 static int hillFortWindowHandler(message& msg)
 {
     pollSound();
-    bool closeWindow = 0;
+    bool closeWindow = false;
 
     if (msg.m_id == MESSAGE_KEY_DOWN) {
     } else if (msg.m_id == MESSAGE_WIDGET) {
@@ -569,9 +569,9 @@ static int hillFortWindowHandler(message& msg)
             break;
         case widget::WIDGET_DESELECT:
             if (msg.m_codeY == DIALOG_RETURN_OK) {
-                closeWindow = 1;
+                closeWindow = true;
             } else {
-                bool refreshWindow = 0;
+                bool refreshWindow = false;
                 switch (msg.m_codeY) {
                 case THillFortWindow::UPGRADE_BUTTON_1_ID:
                 case THillFortWindow::UPGRADE_BUTTON_2_ID:
@@ -582,12 +582,12 @@ static int hillFortWindowHandler(message& msg)
                 case THillFortWindow::UPGRADE_BUTTON_7_ID:
                     g_hillFortWindow->upgradeSlot(
                         msg.m_codeY - THillFortWindow::UPGRADE_BUTTON_1_ID, 1);
-                    refreshWindow = 1;
+                    refreshWindow = true;
                     break;
 
                 case THillFortWindow::UPGRADE_ALL_BUTTON_ID:
                     g_hillFortWindow->upgradeAll();
-                    refreshWindow = 1;
+                    refreshWindow = true;
                     break;
 
                 default:
@@ -654,7 +654,7 @@ static int hillFortWindowHandler(message& msg)
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = THillFortWindow::ROLLOVER_ID;
         g_hillFortWindow->broadcastMessage(msg);
-        g_hillFortWindow->drawWindow(1, THillFortWindow::ROLLOVER_ID,
+        g_hillFortWindow->drawWindow(true, THillFortWindow::ROLLOVER_ID,
                                      THillFortWindow::ROLLOVER_ID);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -686,7 +686,7 @@ static void updateHillFort(unsigned char firstUpdate)
         g_hillFortWindow->broadcastMessage(msg);
     } else {
         g_hillFortWindow->recalculate(1);
-        g_hillFortWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+        g_hillFortWindow->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                                      WINDOW_ALL_WIDGETS_HIGH);
     }
 }

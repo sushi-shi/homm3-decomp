@@ -267,7 +267,7 @@ void soundManager::close()
 {
     if (m_status == STATUS_ACTIVE) {
         g_soundManager->m_playSounds = 1;
-        g_goSolo = 0;
+        g_goSolo = false;
         videoShutDown();
 
         if (!g_noSound) {

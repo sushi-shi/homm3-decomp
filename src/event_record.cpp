@@ -66,8 +66,8 @@ MAC_ADDRESS(0x0bf050, 0xa8)
 static void setPlayer(char newPlayer)
 {
     if (g_netLocalGamePos != newPlayer) {
-        g_advManager->deactivateCurrTown(0);
-        g_advManager->deactivateCurrHero(0);
+        g_advManager->deactivateCurrTown(false);
+        g_advManager->deactivateCurrHero(false);
     }
     g_netLocalGamePos = newPlayer;
     g_currentPlayer = &g_game->m_players[newPlayer];
@@ -134,15 +134,15 @@ MAC_ADDRESS(0x0bf1f8, 0x148)
 bool type_record_move_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
-        return 0;
+        return false;
     int heroId;
     if (infile->read(&heroId, sizeof(heroId)) != sizeof(heroId))
-        return 0;
+        return false;
     m_currentHero = g_game->getHero(heroId);
     if (infile->read(&m_direction, 1) != 1)
-        return 0;
+        return false;
     if (infile->read(&m_source, sizeof(m_source)) != sizeof(m_source))
-        return 0;
+        return false;
     bool ok = infile->read(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
     return ok;
 }
@@ -170,7 +170,7 @@ void type_record_move_hero::replay(bool draw)
 
     if (g_currentPlayer->m_currHeroId != m_currentHero->m_id
         || !g_advManager->m_curHeroMobile) {
-        g_advManager->setHeroContext(m_currentHero->m_id, 1, 0, draw);
+        g_advManager->setHeroContext(m_currentHero->m_id, 1, false, draw);
     }
 
     m_currentHero->m_facing = m_direction;
@@ -239,7 +239,7 @@ void type_record_teleport::replay(bool draw)
 {
     setPlayer(m_playerId);
 
-    g_advManager->teleportTo(m_currentHero, m_destination, NULL, 0, draw, 1);
+    g_advManager->teleportTo(m_currentHero, m_destination, NULL, false, draw, true);
 }
 
 // E:\gamedcs\event_record.cpp:237
@@ -279,11 +279,11 @@ MAC_ADDRESS(0x0bf840, 0xec)
 bool type_record_claim_mine::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
-        return 0;
+        return false;
     if (infile->read(&m_id, sizeof(m_id)) != sizeof(m_id))
-        return 0;
+        return false;
     if (infile->read(&m_oldOwner, 1) != 1)
-        return 0;
+        return false;
     bool ok = infile->read(&m_newOwner, 1) == 1;
     return ok;
 }
@@ -310,7 +310,7 @@ void type_record_claim_mine::replay(bool draw)
         mine& claimed = *g_game->getMine(m_id);
         if (getMapExtra(claimed.m_mapX, claimed.m_mapY, claimed.m_mapZ)
             & g_mapVisibilityBit) {
-            g_advManager->completeDraw(0);
+            g_advManager->completeDraw(false);
             g_advManager->updateScreen(0, 0);
         }
     }
@@ -375,7 +375,7 @@ void type_record_claim_town::replay(bool draw)
         town& claimed = g_game->m_towns[m_id];
         if (getMapExtra(claimed.m_mapX, claimed.m_mapY, claimed.m_mapZ)
             & g_mapVisibilityBit) {
-            g_advManager->completeDraw(0);
+            g_advManager->completeDraw(false);
             g_advManager->updateScreen(0, 0);
         }
     }
@@ -428,10 +428,10 @@ MAC_ADDRESS(0x0bfdb0, 0x1c0)  // MAC_ABSTRACTION_FROM(tokens1:9dd849be89a9,45.08
 bool type_record_hide_boat::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
-        return 0;
+        return false;
     signed char boatId;
     if (infile->read(&boatId, 1) != 1)
-        return 0;
+        return false;
     if (version >= 0x12 && version != g_saveVersionBoatFieldsAbsent
         && (version <= 0x1e || version >= 0x23)) {
         m_previousOccupied = readValue<char>(infile) != 0;
@@ -445,7 +445,7 @@ bool type_record_hide_boat::load(TAbstractFile* infile, int version)
         m_occupyingHero = -1;
     }
     m_currentBoat = g_game->getBoat(boatId);
-    return 1;
+    return true;
 }
 
 VA(0x0049adf0, 0x8A)
@@ -455,12 +455,12 @@ bool type_record_hide_boat::save(TAbstractFile* outfile)
 {
     type_event_record::save(outfile);
     if (outfile->write(&m_currentBoat->m_id, 1) != 1)
-        return 0;
+        return false;
     writeValue<unsigned char>(outfile, m_previousOccupied);
     writeValue<unsigned char>(outfile, m_occupied);
     writeValue<short>(outfile, m_previousOccupyingHero);
     writeValue<short>(outfile, m_occupyingHero);
-    return 1;
+    return true;
 }
 
 VA(0x0049ae80, 0x44)
@@ -472,7 +472,7 @@ void type_record_hide_boat::replay(bool draw)
     m_currentBoat->m_occupyingHero = m_occupyingHero;
     m_currentBoat->restoreCell();
     if (draw) {
-        g_advManager->completeDraw(0);
+        g_advManager->completeDraw(false);
         g_advManager->updateScreen(0, 0);
     }
 }
@@ -522,9 +522,9 @@ MAC_ADDRESS(0x0c0294, 0xa8)
 bool type_record_show_boat::load(TAbstractFile* infile, int version)
 {
     if (!type_record_hide_boat::load(infile, version))
-        return 0;
+        return false;
     if (infile->read(&m_location, sizeof(m_location)) != sizeof(m_location))
-        return 0;
+        return false;
     bool ok = infile->read(&m_previousLocation, sizeof(m_previousLocation))
                        == sizeof(m_previousLocation);
     return ok;
@@ -554,7 +554,7 @@ void type_record_show_boat::replay(bool draw)
     m_currentBoat->obscureCell();
     if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
                  & g_mapVisibilityBit)) {
-        g_advManager->completeDraw(0);
+        g_advManager->completeDraw(false);
         g_advManager->updateScreen(0, 0);
     }
 }
@@ -608,13 +608,13 @@ MAC_ADDRESS(0x0c05f8, 0x118)
 bool type_record_erase::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
-        return 0;
+        return false;
     if (infile->read(&m_location, sizeof(m_location)) != sizeof(m_location))
-        return 0;
+        return false;
     if (infile->read(&m_objectId, sizeof(m_objectId)) != sizeof(m_objectId))
-        return 0;
+        return false;
     if (infile->read(&m_extraInfo, sizeof(m_extraInfo)) != sizeof(m_extraInfo))
-        return 0;
+        return false;
     bool ok = infile->read(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
     return ok;
 }
@@ -638,14 +638,14 @@ MAC_ADDRESS(0x0c07e8, 0x144)
 void type_record_erase::replay(bool draw)
 {
     NewmapCell* cell = g_game->getCell(m_location);
-    g_advManager->mobilizeCurrHero(1, 0, draw);
-    g_advManager->eraseObj(cell, m_location, 0);
+    g_advManager->mobilizeCurrHero(1, false, draw);
+    g_advManager->eraseObj(cell, m_location, false);
     if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
                  & g_mapVisibilityBit)) {
-        g_advManager->completeDraw(0);
+        g_advManager->completeDraw(false);
         g_advManager->updateScreen(0, 0);
     }
-    g_advManager->demobilizeCurrHero(0, draw);
+    g_advManager->demobilizeCurrHero(false, draw);
 }
 
 VA(0x0049b370, 0x83)
@@ -694,22 +694,22 @@ MAC_ADDRESS(0x0c0aac, 0x150)
 bool type_record_hide_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
-        return 0;
+        return false;
     int heroId;
     if (infile->read(&heroId, sizeof(heroId)) != sizeof(heroId))
-        return 0;
+        return false;
     m_currentHero = g_game->getHero(heroId);
     if (infile->read(&m_newOwner, 1) != 1)
-        return 0;
+        return false;
     if (infile->read(&m_prevOwner, 1) != 1)
-        return 0;
+        return false;
     if (m_prevOwner < 0) {
         m_townGarrison = 0;
     } else {
         m_townGarrison = (static_cast<unsigned>(m_prevOwner) >> 6) & 1;
         m_prevOwner &= 0x3f;
     }
-    return 1;
+    return true;
 }
 
 VA(0x0049b500, 0x61)
@@ -738,7 +738,7 @@ void type_record_hide_hero::replay(bool draw)
         if (g_netLocalGamePos == m_prevOwner) {
             if (g_currentPlayer->m_currHeroId != m_currentHero->m_id
                 || !g_advManager->m_curHeroMobile) {
-                g_advManager->setHeroContext(m_currentHero->m_id, 1, 0, draw);
+                g_advManager->setHeroContext(m_currentHero->m_id, 1, false, draw);
             }
         }
         m_currentHero->restoreCell();
@@ -751,7 +751,7 @@ void type_record_hide_hero::replay(bool draw)
         g_advManager->m_curHeroMobile = 0;
     }
     if (draw) {
-        g_advManager->completeDraw(0);
+        g_advManager->completeDraw(false);
         g_advManager->updateScreen(0, 0);
     }
 }
@@ -802,13 +802,13 @@ MAC_ADDRESS(0x0c0fbc, 0x100)
 bool type_record_show_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_record_hide_hero::load(infile, version))
-        return 0;
+        return false;
     if (infile->read(&m_location, sizeof(m_location)) != sizeof(m_location))
-        return 0;
+        return false;
     if (infile->read(&m_previousLocation, sizeof(m_previousLocation)) != sizeof(m_previousLocation))
-        return 0;
+        return false;
     if (infile->read(&m_onBoat, 1) != 1)
-        return 0;
+        return false;
     bool ok = infile->read(&m_previousBoat, 1) == 1;
     return ok;
 }
@@ -847,9 +847,9 @@ void type_record_show_hero::replay(bool draw)
                  & g_mapVisibilityBit)) {
         if (g_currentPlayer->m_currHeroId != m_currentHero->m_id
             || !g_advManager->m_curHeroMobile) {
-            g_advManager->setHeroContext(m_currentHero->m_id, 1, 0, draw);
+            g_advManager->setHeroContext(m_currentHero->m_id, 1, false, draw);
         }
-        g_advManager->completeDraw(0);
+        g_advManager->completeDraw(false);
         g_advManager->updateScreen(0, 0);
     }
 }
@@ -904,7 +904,7 @@ MAC_ADDRESS(0x0c1424, 0x94)
 bool type_record_player_death::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
-        return 0;
+        return false;
     bool ok = infile->read(&m_extra, 1) == 1;
     return ok;
 }
@@ -972,11 +972,11 @@ MAC_ADDRESS(0x0c16e0, 0xf4)
 bool type_record_shroud::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))
-        return 0;
+        return false;
 
     short count;
     if (infile->read(&count, sizeof(count)) != sizeof(count))
-        return 0;
+        return false;
 
     type_shroud_change change;
     m_changes.clear();
@@ -984,10 +984,10 @@ bool type_record_shroud::load(TAbstractFile* infile, int version)
 
     while (count--) {
         if (infile->read(&change, sizeof(change)) != sizeof(change))
-            return 0;
+            return false;
         m_changes.push_back(change);
     }
-    return 1;
+    return true;
 }
 
 VA(0x0049bdf0, 0x66)
@@ -1000,7 +1000,7 @@ bool type_record_shroud::save(TAbstractFile* outfile)
     outfile->write(&count, sizeof(count));
     for (int i = 0; i < count; ++i)
         outfile->write(&m_changes[i], sizeof(type_shroud_change));
-    return 1;
+    return true;
 }
 
 // E:\gamedcs\event_record.cpp:978
@@ -1036,7 +1036,7 @@ void type_record_shroud::replay(bool draw)
         *getMapExtraPtr(change.m_x, change.m_y, change.m_z) = change.m_newValue;
     }
     if (draw && changed) {
-        g_advManager->completeDraw(0);
+        g_advManager->completeDraw(false);
         g_advManager->updateScreen(0, 0);
     }
 }
@@ -1315,7 +1315,7 @@ void game::playRecordedEvents()
     while (size--)
         m_eventRecords[size]->undo();
 
-    g_advManager->completeDraw(0);
+    g_advManager->completeDraw(false);
     g_advManager->updateScreen(0, 0);
 
     size = m_eventRecords.size();
@@ -1350,13 +1350,13 @@ void game::playRecordedEvents()
     setPlayer(savedPlayer);
 
     if (currHero != NULL)
-        g_advManager->setHeroContext(currHero->m_id, 0, 0, 1);
+        g_advManager->setHeroContext(currHero->m_id, 0, false, true);
     if (currTown != NULL)
-        g_advManager->setTownContext(currTown->m_id, 0, 1);
+        g_advManager->setTownContext(currTown->m_id, false, true);
 
     g_config.m_walkSpeed[0] = savedWalkSpeed;
     g_config.m_blackoutComputer = savedSuppress;
-    g_advManager->completeDraw(0);
+    g_advManager->completeDraw(false);
     g_advManager->updateScreen(0, 0);
 }
 
@@ -1399,7 +1399,7 @@ bool game::loadRecordedEvents(TAbstractFile* infile, int version)
 {
     long count;
     if (infile->read(&count, sizeof(count)) != sizeof(count))
-        return 0;
+        return false;
 
     clearEventRecords();
     m_eventRecords.reserve(count);
@@ -1408,15 +1408,15 @@ bool game::loadRecordedEvents(TAbstractFile* infile, int version)
     type_event_record* record;
     while (count--) {
         if (infile->read(&type, 1) != 1)
-            return 0;
+            return false;
         if (type <= 0 || type > RECORD_SHROUD)
-            return 0;
+            return false;
         record = (*g_recordCreators[type])();
         if (!record->load(infile, version))
-            return 0;
+            return false;
         m_eventRecords.push_back(record);
     }
-    return 1;
+    return true;
 }
 
 VA(0x0049dc60, 0x8C)
@@ -1430,7 +1430,7 @@ bool game::saveRecordedEvents(TAbstractFile* outfile)
         char type = m_eventRecords[i]->getType();
         outfile->write(&type, 1);
         if (!m_eventRecords[i]->save(outfile))
-            return 0;
+            return false;
     }
-    return 1;
+    return true;
 }

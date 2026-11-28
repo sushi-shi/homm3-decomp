@@ -590,7 +590,7 @@ combatManager::combatManager()
     m_actingSlot = -1;
     m_currentSide = 1;
     m_highlighterIndex = -1;
-    m_saveBiggestExtent = 0;
+    m_saveBiggestExtent = false;
     m_limitToExtent = 0;
     m_computeExtentOnly = 0;
     m_lastMovedArmy = NULL;
@@ -699,7 +699,7 @@ int combatManager::open(int newPriority)
     m_creaturePlacement = m_placementBoundaryDepth != 0 && !m_isSurrounded;
     if (m_creaturePlacement && !isQuickCombat() && IsHuman[tacticsSide]
             && !(m_heroes[tacticsSide]->m_formation & 2))
-        m_creaturePlacement = 0;
+        m_creaturePlacement = false;
 
     m_turnNumber = 0;
     m_currentSide = 1;
@@ -714,7 +714,7 @@ int combatManager::open(int newPriority)
         m_combatWindow = new TCombatWindow(m_creaturePlacement);
         if (!m_combatWindow)
             memError();
-        g_windowManager->addWindow(m_combatWindow, -1, 1);
+        g_windowManager->addWindow(m_combatWindow, -1, true);
     }
 
     updateArmyLuckAndMorale();
@@ -730,8 +730,8 @@ int combatManager::open(int newPriority)
     }
 
     if (!isQuickCombat()) {
-        drawFrame(1, 0, 0, 0, 1, 0);
-        m_combatWindow->drawWindow(1, -65535, 65535);
+        drawFrame(true, false, false, 0, true, false);
+        m_combatWindow->drawWindow(true, -65535, 65535);
         g_timers[0] = GameTime::get();
         kbChangeMenu(g_gameMenu);
         CheckMenuItem(g_activeMenu, 0xb798, 0);
@@ -741,7 +741,7 @@ int combatManager::open(int newPriority)
         g_config.m_showCombatMouseHex = savedShowMouseHex;
         g_mouseManager->m_noChangePointer = 0;
         g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
-        g_mouseManager->showPointer(0);
+        g_mouseManager->showPointer(false);
         g_windowManager->fadeScreen(0, 4, 0);
         waitEndSample(sample, 10000);
 
@@ -1224,7 +1224,7 @@ void combatManager::initNonVisualVars()
     m_sideRetreated[1] = 0;
     m_winner = 3;
     m_lastMovedArmy = NULL;
-    turnOffHighlighter(0);
+    turnOffHighlighter(false);
 
     setupAdjacencyArray();
     generateMap();
@@ -1561,14 +1561,14 @@ void combatManager::checkApplyGoodMorale(int group, int index)
     if (!isQuickCombat()) {
         SAMPLE2 sample = loadPlaySample(
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
-        spellEffect(20, stack, 100, 0);
+        spellEffect(20, stack, 100, false);
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_GOOD_MORALE_FORMAT),
             stack->getName());
-        m_combatWindow->combatMessage(g_text, 1, 0);
+        m_combatWindow->combatMessage(g_text, true, false);
         waitEndSample(sample, -1);
     }
     updateGrid(0, 1);
-    drawFrame(1, 0, 0, 0, 1, 0);
+    drawFrame(true, false, false, 0, true, false);
 }
 
 VA(0x00464b40, 0x1FB)
@@ -1587,8 +1587,8 @@ int combatManager::checkApplyBadMorale(int group, int index)
                     sprintf(g_text,
                         g_generalText->GetText(GENERAL_TEXT_BAD_MORALE_FORMAT),
                         stack->getName());
-                    m_combatWindow->combatMessage(g_text, 1, 0);
-                    spellEffect(30, stack, 100, 1);
+                    m_combatWindow->combatMessage(g_text, true, false);
+                    spellEffect(30, stack, 100, true);
                     waitEndSample(sample, -1);
                 }
                 return 1;
@@ -1629,8 +1629,8 @@ unsigned char combatManager::applyAzureDragonFear(army* selected)
                 g_generalText->GetText(GENERAL_TEXT_COMBAT_FEAR_FORMAT),
                 getArmyName(CREATURE_AZURE_DRAGON, azureDragons),
                 selected->getName());
-        m_combatWindow->combatMessage(g_text, 1, 0);
-        spellEffect(15, selected, 100, 1);
+        m_combatWindow->combatMessage(g_text, true, false);
+        spellEffect(15, selected, 100, true);
         waitEndSample(sample, -1);
     }
     return 1;
@@ -1786,18 +1786,18 @@ void combatManager::setNextArmy(int group, int index)
             if (castingHero) {
                 if (castingHero->isWieldingArtifact(
                         ARTIFACT_ANGELIC_ALLIANCE)) {
-                    if (hasValidSpellTarget(SPELL_PRAYER, eMasteryExpert, m_currentSide, 1, 2))
+                    if (hasValidSpellTarget(SPELL_PRAYER, eMasteryExpert, m_currentSide, true, 2))
                         castSpell(SPELL_PRAYER, -1, 2, -1, eMasteryExpert, 10);
                 }
                 if (castingHero->isWieldingArtifact(
                         ARTIFACT_ARMOR_OF_THE_DAMNED)) {
-                    if (hasValidSpellTarget(SPELL_SLOW, eMasteryExpert, m_currentSide, 1, 2))
+                    if (hasValidSpellTarget(SPELL_SLOW, eMasteryExpert, m_currentSide, true, 2))
                         castSpell(SPELL_SLOW, -1, 2, -1, eMasteryExpert, 50);
-                    if (hasValidSpellTarget(SPELL_CURSE, eMasteryExpert, m_currentSide, 1, 2))
+                    if (hasValidSpellTarget(SPELL_CURSE, eMasteryExpert, m_currentSide, true, 2))
                         castSpell(SPELL_CURSE, -1, 2, -1, eMasteryExpert, 50);
-                    if (hasValidSpellTarget(SPELL_WEAKNESS, eMasteryExpert, m_currentSide, 1, 2))
+                    if (hasValidSpellTarget(SPELL_WEAKNESS, eMasteryExpert, m_currentSide, true, 2))
                         castSpell(SPELL_WEAKNESS, -1, 2, -1, eMasteryExpert, 50);
-                    if (hasValidSpellTarget(SPELL_MISFORTUNE, eMasteryExpert, m_currentSide, 1, 2))
+                    if (hasValidSpellTarget(SPELL_MISFORTUNE, eMasteryExpert, m_currentSide, true, 2))
                         castSpell(SPELL_MISFORTUNE, -1, 2, -1, eMasteryExpert, 50);
                 }
             }
@@ -1834,8 +1834,8 @@ void combatManager::setNextArmy(int group, int index)
                             stack->getName(),
                             drained->m_name);
                     if (m_combatWindow)
-                        m_combatWindow->combatMessage(result.c_str(), 1, 0);
-                    spellEffect(77, stack, 100, 0);
+                        m_combatWindow->combatMessage(result.c_str(), true, false);
+                    spellEffect(77, stack, 100, false);
                     waitEndSample(sample, -1);
                 }
             }
@@ -1888,7 +1888,7 @@ unsigned char combatManager::isWinner(int thisSide) const
 {
     const int otherSide = 1 - thisSide;
     int other;
-    bool noStacks = 1;
+    bool noStacks = true;
     for (int slot = 0; slot < 20; slot++) {
         const army& a = m_armies[thisSide][slot];
         if (a.m_creatureType == -1)
@@ -1898,7 +1898,7 @@ unsigned char combatManager::isWinner(int thisSide) const
         if (a.is(creatureSiegeWeapon))
             continue;
         if (!a.is(creatureImmobilized)) {
-            noStacks = 0;
+            noStacks = false;
             break;
         }
     }
@@ -2069,7 +2069,7 @@ void combatManager::keepAttack(int towerPos)
         m_archerEffect[archerIndex] = 1;
         for (archer->m_frame = 0; archer->m_frame < frames;
                 archer->m_frame++)
-            drawFrame(1, 1, 0, delay, 1, 1);
+            drawFrame(true, true, false, delay, true, true);
         if (archer->m_frame > 0)
             archer->m_frame--;
 
@@ -2088,7 +2088,7 @@ void combatManager::keepAttack(int towerPos)
         scaledDamage / target->computeDefenderDamageReduction(1));
 #else
     damage = static_cast<int>(
-        scaledDamage * target->computeDefenderDamageReduction(1));
+        scaledDamage * target->computeDefenderDamageReduction(true));
 #endif
     if (damage <= 0)
         damage = 1;
@@ -2104,13 +2104,13 @@ void combatManager::keepAttack(int towerPos)
         while (archer->m_frame
                 < archer->m_sprite->GetNumFrames(armyDir) - 1) {
             archer->m_frame++;
-            drawFrame(1, 1, 0, delay, 1, 1);
+            drawFrame(true, true, false, delay, true, true);
         }
     }
     archer->m_facing = 0;
     archer->m_sequence = cs_wait;
     archer->m_frame = 0;
-    drawFrame(1, 0, 0, 0, 1, 0);
+    drawFrame(true, false, false, 0, true, false);
 
     if (!isQuickCombat())
         waitEndSample(sample, -1);
@@ -2595,7 +2595,7 @@ void combatManager::makeCreaturesVanish()
 
     if (!isQuickCombat()) {
         g_windowManager->saveFizzleSourceX(x, y, width, height);
-        drawFrame(0, 0, 1, 0, 1, 0);
+        drawFrame(false, false, true, 0, true, false);
         g_windowManager->fizzleForwardX(
             x, y, width, height,
             static_cast<int>(
@@ -2638,7 +2638,7 @@ void combatManager::lowerDoor()
     m_extent = combatManager::s_drawbridgeLimits;
     for (int state = DRAWBRIDGE_UP; state >= DRAWBRIDGE_DOWN; state--) {
         m_drawbridgeState = state;
-        drawFrame(1, 0, 1, 100, 1, 1);
+        drawFrame(true, false, true, 100, true, true);
     }
     g_searchArray->lowerDoor();
     waitEndSample(sample, -1);
@@ -2659,7 +2659,7 @@ void combatManager::raiseDoor()
     m_extent = combatManager::s_drawbridgeLimits;
     for (int state = DRAWBRIDGE_DOWN; state <= DRAWBRIDGE_UP; state++) {
         m_drawbridgeState = state;
-        drawFrame(1, 0, 1, 100, 1, 1);
+        drawFrame(true, false, true, 100, true, true);
     }
     waitEndSample(sample, -1);
 }
@@ -2714,10 +2714,10 @@ bool combatManager::isAdjacent(int first, int second) const
     if (validHex(first) && validHex(second)) {
         for (int i = 0; i < COMBAT_DIRECTION_COUNT; i++) {
             if (m_adjacentCells[first][i] == second)
-                return 1;
+                return true;
         }
     }
-    return 0;
+    return false;
 }
 
 VA(0x00467510, 0xEA)
@@ -2753,19 +2753,19 @@ bool combatManager::shotIsNotOptimal(const army* attacker, const army* defender)
             && (m_heroes[side]->isWieldingArtifact(ARTIFACT_GOLDEN_BOW)
                 || m_heroes[side]->isWieldingArtifact(
                     ARTIFACT_BOW_OF_THE_SHARPSHOOTER)))
-        return 0;
+        return false;
     if (attacker->m_creatureType == CREATURE_ARROW_TOWER
             || attacker->m_creatureType == CREATURE_SHARPSHOOTER)
-        return 0;
+        return false;
 
     int source = attacker->m_gridIndex;
     int dest = defender->m_gridIndex;
     if (attacker->is(creatureDoubleWide))
         source = attacker->getSecondGridIndex();
     if (getDistance(source, dest) <= 10)
-        return 0;
+        return false;
     if (!defender->is(creatureDoubleWide))
-        return 1;
+        return true;
     dest = defender->getSecondGridIndex();
     return getDistance(source, dest) > 10;
 }
@@ -2777,14 +2777,14 @@ MAC_ADDRESS(0x0739c0, 0x284)
 bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 {
     if (!m_fortificationLevel)
-        return 1;
+        return true;
 
     int sourceX = gridX(sourceIndex);
     int sourceY = gridY(sourceIndex);
     int deltaX = gridX(destIndex) - sourceX;
     int deltaY = gridY(destIndex) - sourceY;
     if (deltaY == 0 && deltaX == 0)
-        return 1;
+        return true;
     int sample;
     int absY = abs(deltaY);
     int absX = abs(deltaX);
@@ -2812,17 +2812,17 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
         int hex = getHexIndex(static_cast<int>(x), static_cast<int>(y));
         if (hex == COMBAT_HEX_GATE) {
             if (m_drawbridgeState == DRAWBRIDGE_UP)
-                return 0;
+                return false;
         } else {
             for (int wall = 0; wall < 11; wall++) {
                 if (hex == g_castleWallColumns[wall]) {
                     if (m_cells[g_castleWallColumns[wall]].m_attributes & hexcell::blocked)
-                        return 0;
+                        return false;
                 }
             }
         }
     }
-    return 1;
+    return true;
 }
 
 // THE THREE MISSILE ANIMATORS. All three retain the shared bitmap, sprite
@@ -2978,7 +2978,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 
     Bitmap16Bit saved(width, height);
     SLimitData updateArea = heroWindowManager::s_nullLimits;
-    drawFrame(0, 0, 0, 0, 1, 0);
+    drawFrame(false, false, false, 0, true, false);
     const int arrowDelay = static_cast<int>(
         combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 33.0f);
 
@@ -2995,7 +2995,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         }
         saved.Grab(g_windowManager->m_screenBitmap, x, y);
         missile->Draw(0, frame, 0, 0, width, height,
-                      g_windowManager->m_screenBitmap, x, y, flipped, 1);
+                      g_windowManager->m_screenBitmap, x, y, flipped, true);
         scrollTo(x, y, x + width - 1, y + height - 1,
                  true, true, true);  // DC 3865
         updateArea.include(SLimitData(
@@ -3092,7 +3092,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
 
     Bitmap16Bit saved(width, height);
     SLimitData updateArea = heroWindowManager::s_nullLimits;
-    drawFrame(0, 0, 0, 0, 1, 0);
+    drawFrame(false, false, false, 0, true, false);
     const int arrowDelay = static_cast<int>(
         combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 33.0f);
 
@@ -3108,7 +3108,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         saved.Grab(g_windowManager->m_screenBitmap, x, y);
         // DC cmbtmgr.cpp:4008 calls the const bitmap-forwarding overload.
         missile->Draw(0, frame, 0, 0, width, height,
-                      g_windowManager->m_screenBitmap, x, y, flipped, 1);
+                      g_windowManager->m_screenBitmap, x, y, flipped, true);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
         scrollTo(x, y, x + width - 1, y + height - 1,
                  true, true, true);  // DC 4016
@@ -3131,7 +3131,7 @@ void combatManager::combatSystemOptions()
     options.doModal();
     m_backgroundDrawn = 0;
     updateGrid(0, 1);
-    drawFrame(1, 0, 0, 0, 1, 0);
+    drawFrame(true, false, false, 0, true, false);
 }
 
 VA(0x00468730, 0x8E)
@@ -3370,7 +3370,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                     && frameCount < m_powSprite->GetNumFrames(0))
                 m_powFrameIndex = frameCount;
 
-            drawFrame(0, 1, 0, 100, 1, 1);
+            drawFrame(false, true, false, 100, true, true);
             // DC cmbtmgr.cpp:4389 retains this rectangle helper.
             updateCombatArea(m_extent);
         }
@@ -3410,7 +3410,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                 }
             }
             if (framesChanged)
-                drawFrame(1, 1, 0, 100, 1, 1);
+                drawFrame(true, true, false, 100, true, true);
         }
         if (resetLimitCreature)
             this->resetLimitCreature();
@@ -3442,7 +3442,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
             stack.m_numTroopsToShowOverride = -1;
         }
     }
-    drawFrame(1, 0, 0, 0, 1, 0);
+    drawFrame(true, false, false, 0, true, false);
 }
 
 VA(0x004693a0, 0x9F)
@@ -3450,7 +3450,7 @@ MAC_ADDRESS(0x075a1c, 0xc0)
 void combatManager::cheatKillSide(int side)
 {
     markGameAsCheated();
-    turnOffHighlighter(1);
+    turnOffHighlighter(true);
 
     army* stack = &m_armies[side][0];
     for (int slot = 0; slot < m_numArmies[side]; slot++, stack++) {
@@ -3491,7 +3491,7 @@ void combatManager::checkRebirth()
             if (!isQuickCombat())
                 launchSample(akSpellTraits[SPELL_RESURRECTION].m_sample,
                               -1, 3);
-            resurrect(stack, stack->m_monInfo.hitPoints * resurrected, 0);
+            resurrect(stack, stack->m_monInfo.hitPoints * resurrected, false);
         }
     }
 }
@@ -3508,10 +3508,10 @@ bool combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
         if (hex >= 0) {
             army* a = m_cells[hex].getArmy();
             if (currentArmy->isEnemy(a) && a != excluded)
-                return 1;
+                return true;
         }
     }
-    return 0;
+    return false;
 }
 
 VA(0x00469670, 0xD2)
@@ -3642,10 +3642,10 @@ bool combatManager::hexIsBlocked(int index) const
     if (m_fortificationLevel > 0
             && (index == COMBAT_HEX_GATE || index == COMBAT_HEX_GATE_MOAT)) {
         if (m_drawbridgeState == DRAWBRIDGE_UP && !doorCanBeLowered())
-            return 1;
+            return true;
     } else if (m_cells[index].m_attributes & hexcell::blocked)
-        return 1;
-    return 0;
+        return true;
+    return false;
 }
 
 VA(0x00469a90, 0x324)
@@ -3696,7 +3696,7 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
         message += deathText;
     }
 
-    m_combatWindow->combatMessage(message.c_str(), 1, 0);
+    m_combatWindow->combatMessage(message.c_str(), true, false);
 }
 
 // Original ?IsInMoat@combatManager@@QAA_NHPAH@Z proves the bool result.
@@ -3712,7 +3712,7 @@ bool combatManager::isInMoat(int hex, int* index)
                         || hex != COMBAT_HEX_GATE_MOAT)) {
                 if (index)
                     *index = row;
-                return 1;
+                return true;
             }
         }
         if (m_defendingTown->m_type == TOWN_FORTRESS) {
@@ -3722,14 +3722,14 @@ bool combatManager::isInMoat(int hex, int* index)
                             || hex != COMBAT_HEX_OUTER_MOAT)) {
                     if (index)
                         *index = row;
-                    return 1;
+                    return true;
                 }
             }
         }
     }
     if (index)
         *index = -1;
-    return 0;
+    return false;
 }
 
 VA(0x00469e50, 0xC1)
@@ -3924,12 +3924,12 @@ bool combatManager::checkObstacleAttacks(army* thisArmy, bool isWalking)
     if (!m_obstacleAttackVisited[hex]) {
         m_obstacleAttackVisited[hex] = 1;
         if (checkFireWall(hex, thisArmy, isWalking))
-            attacked = 1;
+            attacked = true;
         if (checkLandmine(hex, thisArmy, isWalking))
-            attacked = 1;
+            attacked = true;
         if (applyMoatDamage(hex, thisArmy, isWalking)) {
-            attacked = 1;
-            moatAttacked = 1;
+            attacked = true;
+            moatAttacked = true;
         }
     }
 
@@ -3938,12 +3938,12 @@ bool combatManager::checkObstacleAttacks(army* thisArmy, bool isWalking)
         if (!m_obstacleAttackVisited[hex]) {
             m_obstacleAttackVisited[hex] = 1;
             if (checkFireWall(hex, thisArmy, isWalking))
-                attacked = 1;
+                attacked = true;
             if (checkLandmine(hex, thisArmy, isWalking))
-                attacked = 1;
+                attacked = true;
             if (!moatAttacked
                     && applyMoatDamage(hex, thisArmy, isWalking))
-                attacked = 1;
+                attacked = true;
         }
     }
     return attacked;

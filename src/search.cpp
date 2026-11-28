@@ -593,8 +593,8 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
     m_canCastTeleport = 0;
     m_canCastFlight = 0;
     m_canCastWaterWalk = 0;
-    m_landMovement = currentHero->getMobility(0);
-    m_seaMovement = currentHero->getMobility(1);
+    m_landMovement = currentHero->getMobility(false);
+    m_seaMovement = currentHero->getMobility(true);
     m_flightLevel = currentHero->m_flightLevel;
     m_waterWalkLevel = currentHero->m_waterWalkLevel;
 
@@ -693,7 +693,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
 
         // Complete adds terrain-aware stopping here. Use the canonical
         // Hero.h helpers (checkTerrain=1), which own the private canLand call.
-        if (currentHero->isFlying(1) || currentHero->canWalkOnWater(1))
+        if (currentHero->isFlying(true) || currentHero->canWalkOnWater(true))
             cell.m_canStop = 0;
 
         // Complete inserts the can-land rule before materializing this value;

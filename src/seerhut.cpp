@@ -118,10 +118,10 @@ bool initializeSeerHutText()
     TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00683214, seerHutSpreadsheetName, "seerhut.txt"));
     if (!sheet)
-        return 0;
+        return false;
 
     if (sheet->GetNumberOfRows() < 60)
-        return 0;
+        return false;
 
     for (int c = 0; c < 3; ++c) {
         loadSeerHutTextColumn(sheet, &g_seerHutTextB[c], c + 1);
@@ -136,7 +136,7 @@ bool initializeSeerHutText()
     }
 
     ResourceManager::Dispose(sheet);
-    return 1;
+    return true;
 }
 
 VA_COMPGEN(0x0056cbe0, 0x21, SCALAR_DELETING_DTOR, type_quest)
@@ -1877,7 +1877,7 @@ type_artifact_quest::type_artifact_quest(bool flags)
 // to the base constructor; both legacy reader call sites use this overload.
 MAC_ADDRESS(0x1665b8, 0xb8)
 type_artifact_quest::type_artifact_quest(TArtifact artifact, int textRow)
-    : type_quest(1)
+    : type_quest(true)
 {
     m_artifacts.push_back(artifact);
     m_textVariant = textRow;
@@ -1919,7 +1919,7 @@ int TQuestGuard::load(TAbstractFile* infile, int saveVersion)
     {
         unsigned char questType;
         infile->read(&questType, sizeof(questType));
-        m_quest = createQuest(questType, 0);
+        m_quest = createQuest(questType, false);
         if (m_quest)
             m_quest->load(infile, saveVersion);
     }
@@ -1943,7 +1943,7 @@ void TQuestGuard::read(TAbstractFile* infile)
     unsigned char questType;
 
     infile->read(&questType, sizeof(questType));
-    m_quest = createQuest(questType, 0);
+    m_quest = createQuest(questType, false);
     if (m_quest)
         m_quest->loadFromMap(infile);
 }
@@ -2179,7 +2179,7 @@ int TSeerReward::getValue(const hero* currentHero)
             m_value.m_secondarySkill.m_skillType, m_value.m_secondarySkill.m_bonus);
 
     case eRewardArtifact: {
-        if (const_cast<hero*>(currentHero)->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
+        if (const_cast<hero*>(currentHero)->getNumberInBackpack(true) >= HERO_BACKPACK_CAPACITY)
             return 0;
         return aiGetValueOfArtifact(
             type_artifact(static_cast<TArtifact>(m_value.m_dwords[0]) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */),
@@ -2209,7 +2209,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     case eRewardExperience:
         currentHero->giveExperience(static_cast<int>(
             currentHero->getExperienceBonusFactor() * m_value.m_dwords[0]),
-            1, 1);
+            1, true);
         break;
 
     case eRewardMana:
@@ -2261,7 +2261,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     }
 
     case eRewardArtifact:
-        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
+        if (currentHero->getNumberInBackpack(true) < HERO_BACKPACK_CAPACITY) {
             // Mac 0x16a2cc initializes both fields to -1, then replaces the ID.
             type_artifact artifact;
             artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);
@@ -2466,7 +2466,7 @@ void TSeerHut::read(TAbstractFile* infile)
                 static_cast<TArtifact>(artifact), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
     } else {
-        m_quest = readQuestFromMap(infile, 1);
+        m_quest = readQuestFromMap(infile, true);
     }
 
     m_completedByPlayer = 0;
@@ -2597,7 +2597,7 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
             m_quest = new type_artifact_quest(
                 static_cast<TArtifact>(intBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
     } else {
-        type_quest* newQuest = createQuest(readValue<unsigned char>(infile), 1);
+        type_quest* newQuest = createQuest(readValue<unsigned char>(infile), true);
         m_quest = newQuest;
         if (newQuest)
             newQuest->load(infile, saveVersion);

@@ -23,7 +23,7 @@ iconWidget::iconWidget() : widget(0, 0, 0, 0, 0, 0)
     m_frame = 0;
     m_seqId = 0;
     m_backColor = 0;
-    m_isFlipped = 0;
+    m_isFlipped = false;
 }
 
 VA_COMPGEN(0x004ea6f0, 0x21, SCALAR_DELETING_DTOR, iconWidget)
@@ -196,7 +196,7 @@ DC_ADDRESS(0x0d96b8, 0x4)
 MAC_ADDRESS(0x10c850, 0x8)  // anchor-vtable (slot 13 of 0x63ec48)
 bool iconWidget::handleClick(bool downClick, bool rightClick)
 {
-    return 0;
+    return false;
 }
 
 VA(0x004eab20, 0x7)
@@ -234,7 +234,7 @@ void iconWidget::draw() const
         switch (m_sprite->get_resType()) {
         case RESOURCE_TYPE_SPRITE:
             m_sprite->Draw(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
-                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 1);
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, true);
             break;
         case RESOURCE_TYPE_CREATURE:
             m_sprite->DrawCreature(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(),
@@ -252,7 +252,7 @@ void iconWidget::draw() const
             break;
         case RESOURCE_TYPE_TILESET:
             m_sprite->DrawTile(m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
-                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 0);
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, false);
             break;
         case RESOURCE_TYPE_POINTER:
             m_sprite->DrawPointer(m_frame, g_windowManager->m_screenBitmap,
@@ -279,7 +279,7 @@ void iconWidget::draw() const
         switch (m_sprite->get_resType()) {
         case RESOURCE_TYPE_SPRITE:
             m_sprite->Draw(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
-                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 1);
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, true);
             break;
         case RESOURCE_TYPE_CREATURE:
             m_sprite->DrawCreature(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(),
@@ -297,7 +297,7 @@ void iconWidget::draw() const
             break;
         case RESOURCE_TYPE_TILESET:
             m_sprite->DrawTile(m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
-                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 0);
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, false);
             break;
         case RESOURCE_TYPE_POINTER:
             m_sprite->DrawPointer(m_frame, g_windowManager->m_screenBitmap,
@@ -345,7 +345,7 @@ void iconWidget::draw() const
         if (offY + sh > m_height)
             sh = m_height - offY;
         m_sprite->DrawCreature(m_seqId, m_frame, sx, sy, sw, sh,
-            g_windowManager->m_screenBitmap, offX + drawX, offY + drawY, 0, 0);
+            g_windowManager->m_screenBitmap, offX + drawX, offY + drawY, false, 0);
         break;
     }
 

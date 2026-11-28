@@ -163,7 +163,7 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
     g_playingBink.m_screen = g_windowManager->m_screenBitmap->GetMap(x, y);
     g_playingBink.m_pitch = g_windowManager->m_screenBitmap->GetPitch();
     g_playingBink.m_height = g_windowManager->m_screenBitmap->GetHeight();
-    g_playingBinkActive = 1;
+    g_playingBinkActive = true;
 }
 
 // smackmgr.cpp's VideoDrawCurrentFrame uses this namespace-qualified call.
@@ -272,8 +272,8 @@ void BinkManager::closeBink()
     g_playingBink.m_bink2 = NULL;
     g_playingBink.m_bink = NULL;
     g_playingBink.m_paused = 0;
-    g_playingBinkActive = 0;
-    g_needsUpdate = 0;
+    g_playingBinkActive = false;
+    g_needsUpdate = false;
 }
 
 // E:\gamedcs\binkmanager.cpp:376 is a platform stub.
@@ -293,7 +293,7 @@ int BinkManager::playBink(int id, int x, int y, int w, int h)
     g_soundManager->m_playSounds = 1;
     unsigned char result = playBinkCore(id, x, y, w, h);
     g_playingBink.m_paused = 0;
-    g_playingBinkActive = 0;
+    g_playingBinkActive = false;
     return result;
 }
 
@@ -311,7 +311,7 @@ static unsigned char playBinkCore(int id, int x, int y, int w, int h)
 
     vh = h;
     vw = w;
-    BinkManager::openBink(id, x, y, vw, vh, 0, 0);
+    BinkManager::openBink(id, x, y, vw, vh, 0, false);
     if (!g_playingBink.m_bink) {
         result = 0;
     } else {
@@ -364,7 +364,7 @@ static unsigned char playBinkCore(int id, int x, int y, int w, int h)
             g_windowManager->fadeScreen(1, 4, 0);
         else
             g_windowManager->updateScreen(updateX, updateY, vw, vh);
-        g_mouseManager->showPointer(0);
+        g_mouseManager->showPointer(false);
         result = !aborted;
     }
     return result;

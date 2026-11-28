@@ -465,7 +465,7 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
             ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))) {
         if (ownerGroup) {
             value = ownerGroup->getLuck(
-                ownerHero, ownerTown, otherHero, otherGroup, 0, 0);
+                ownerHero, ownerTown, otherHero, otherGroup, false, false);
         }
         if (m_spellInfluence[51])
             value += m_luckBonus;
@@ -497,8 +497,8 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
     if (magicTerrain != MAGIC_TERRAIN_CURSED_GROUND && !is(creatureNoMorale)) {
         if (ownerGroup) {
             value = ownerGroup->getMorale(
-                ownerHero, ownerTown, otherHero, otherGroup, 0,
-                groupAlignments, 0);
+                ownerHero, ownerTown, otherHero, otherGroup, false,
+                groupAlignments, false);
         }
         if (m_spellInfluence[49])
             value += m_moraleBonus;
@@ -1019,7 +1019,7 @@ void army::animateMissile(army* armyToAttack)
         frames = m_stdIcon->GetNumFrames(m_currFrameType);
     long delay = m_monFrameInfo.m_attackStartCycleTime / frames;
     for (m_currFrameIndex = 0; m_currFrameIndex < frames; m_currFrameIndex++) {
-        g_combatManager->drawFrame(1, 1, 0, delay, 1, 1);
+        g_combatManager->drawFrame(true, true, false, delay, true, true);
     }
     m_currFrameIndex--;
 
@@ -1089,7 +1089,7 @@ void army::animateMissile(army* armyToAttack)
                 saved.Grab(g_windowManager->m_screenBitmap, x, y);
                 m_missileIcon->Draw(0, missileFrame, 0, 0, width, height,
                                   g_windowManager->m_screenBitmap, x, y,
-                                  targetX < startX, 1);
+                                  targetX < startX, true);
                 // DC army.cpp:1326-1327: Include, then Clip.
                 updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
                 updateArea.clip(combatManager::s_combatAreaLimits);
@@ -1145,13 +1145,13 @@ void army::rangeAttack(army* armyToAttack)
             long y = armyToAttack->midY() - spr->GetHeight() / 2;
             g_combatManager->scrollTo(
                 x + spr->GetWidth() / 2,
-                y + spr->GetHeight() / 2, 1, 1, 1);
+                y + spr->GetHeight() / 2, true, true, true);
             for (long frame = 0; frame < spr->GetNumFrames(0); frame++) {
-                g_combatManager->drawFrame(0, 0, 0, 50, 1, 1);
-                g_combatManager->drawSpellEffect(spr, frame, x, y, 0, 0);
+                g_combatManager->drawFrame(false, false, false, 50, true, true);
+                g_combatManager->drawSpellEffect(spr, frame, x, y, false, false);
                 g_combatManager->updateCombatArea();
             }
-            g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
+            g_combatManager->drawFrame(true, false, false, 0, true, false);
             ResourceManager::Dispose(spr);
         }
         g_combatManager->clearEffects();
@@ -1175,12 +1175,12 @@ void army::rangeAttack(army* armyToAttack)
             army* a = cell->getArmy();
             if (g_combatManager->m_effected[side][slot] != 0)
                 continue;
-            g_combatManager->m_effected[side][slot] = 1;
+            g_combatManager->m_effected[side][slot] = true;
             if (first == NULL)
                 first = a;
             else if (first->m_creatureType != a->m_creatureType)
                 multiple = 1;
-            damageEnemy(a, &dmg, &killedNow, 1);
+            damageEnemy(a, &dmg, &killedNow, true);
             damage += dmg;
             killed += killedNow;
         }
@@ -1205,11 +1205,11 @@ void army::rangeAttack(army* armyToAttack)
             long x = armyToAttack->midX() - spr->GetWidth() / 2;
             long y = armyToAttack->midY() - spr->GetHeight() / 2;
             for (long frame = 0; frame < spr->GetNumFrames(0); frame++) {
-                g_combatManager->drawFrame(0, 0, 0, 100, 1, 1);
-                g_combatManager->drawSpellEffect(spr, frame, x, y, 0, 0);
+                g_combatManager->drawFrame(false, false, false, 100, true, true);
+                g_combatManager->drawSpellEffect(spr, frame, x, y, false, false);
                 g_combatManager->updateCombatArea();
             }
-            g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
+            g_combatManager->drawFrame(true, false, false, 0, true, false);
             ResourceManager::Dispose(spr);
         }
         g_combatManager->clearEffects();
@@ -1235,8 +1235,8 @@ void army::rangeAttack(army* armyToAttack)
                 continue;
             if (g_combatManager->m_effected[side][slot] != 0)
                 continue;
-            g_combatManager->m_effected[side][slot] = 1;
-            damageEnemy(a, &dmg, &killedNow, 1);
+            g_combatManager->m_effected[side][slot] = true;
+            damageEnemy(a, &dmg, &killedNow, true);
             damage += dmg;
             killed += killedNow;
             if (first == NULL)
@@ -1255,7 +1255,7 @@ void army::rangeAttack(army* armyToAttack)
     } else {
         int killed;
         int damage;
-        damageEnemy(armyToAttack, &damage, &killed, 1);
+        damageEnemy(armyToAttack, &damage, &killed, true);
         g_combatManager->powEffect(eSpellEffectNone, 0);
         g_combatManager->damageMessage(getName(), m_numTroops, damage,
                                         armyToAttack, killed);
@@ -1288,11 +1288,11 @@ void army::rangeAttack()
     long oldFacing = m_facing;
     if (targetX > ourX && m_facing != FACING_DEFENDER) {
         setupAnimation();
-        turn(1);
+        turn(true);
     }
     if (targetX < ourX && m_facing != FACING_ATTACKER) {
         setupAnimation();
-        turn(1);
+        turn(true);
     }
     rangeAttack(target);
     if (is(creatureTwoAttacks) && target->m_numTroops > 0)
@@ -1305,7 +1305,7 @@ void army::rangeAttack()
     }
     if (m_facing != oldFacing) {
         setupAnimation();
-        turn(1);
+        turn(true);
     }
     cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
 }
@@ -1357,7 +1357,7 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
         army* target = g_combatManager->m_cells[hex].getArmy();
         if (!target || target->m_hitByCreature)
             continue;
-        long tempFire = damageEnemy(target, &tempDamage, &tempKilled, 0);
+        long tempFire = damageEnemy(target, &tempDamage, &tempKilled, false);
         if (tempFire > 0) {
             target->m_showFireShield = 1;
             *fireDamage += tempFire;
@@ -1401,43 +1401,43 @@ bool army::checkSpecialAttack(army* target)
             && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_AGE,
                                                getControllingSide(),
-                                               target, 1, 1))
+                                               target, true, 1))
             target->m_postPowSpellToCast = SPELL_AGE;
-        return 0;
+        return false;
     case CREATURE_ZOMBIE:
         if (target->is(creatureAlive) && sRandom(1, 100) <= 20
             && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_DISEASE,
                                                getControllingSide(),
-                                               target, 1, 1))
+                                               target, true, 1))
             target->m_postPowSpellToCast = SPELL_DISEASE;
-        return 0;
+        return false;
     case ARMY_CREATURE_UNICORN:
     case ARMY_CREATURE_WAR_UNICORN:
         if (sRandom(1, 100) <= 20 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_BLIND,
                                                getControllingSide(),
-                                               target, 1, 1)) {
+                                               target, true, 1)) {
             target->m_postPowSpellToCast = SPELL_BLIND;
-            return 1;
+            return true;
         }
-        return 0;
+        return false;
     case CREATURE_DENDROID_GUARD:
     case CREATURE_DENDROID_SOLDIER:
         if (!addItem(target->m_binders, this))
-            return 0;
+            return false;
         target->m_postPowSpellToCast = SPELL_BIND;
         addItem(m_boundArmies, target);
-        return 0;
+        return false;
     case CREATURE_BLACK_KNIGHT:
     case CREATURE_DREAD_KNIGHT:
     case CREATURE_MUMMY:
         if (sRandom(1, 100) <= 25 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_CURSE,
                                                getControllingSide(),
-                                               target, 1, 1))
+                                               target, true, 1))
             target->m_postPowSpellToCast = SPELL_CURSE;
-        return 0;
+        return false;
     case CREATURE_MEDUSA:
     case CREATURE_MEDUSA_QUEEN:
     case CREATURE_BASILISK:
@@ -1445,34 +1445,34 @@ bool army::checkSpecialAttack(army* target)
         if (sRandom(1, 100) <= 20 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_STONE,
                                                getControllingSide(),
-                                               target, 1, 1)) {
+                                               target, true, 1)) {
             target->m_postPowSpellToCast = SPELL_STONE;
-            return 1;
+            return true;
         }
-        return 0;
+        return false;
     case CREATURE_RUST_DRAGON:
         if (target->m_numTroops > 0 && target->m_monInfo.defenseSkill > 0)
             target->m_postPowSpellToCast = SPELL_ACID_BREATH_DEFENSE;
-        return 0;
+        return false;
     case CREATURE_WYVERN_MONARCH:
         if (target->is(creatureAlive) && sRandom(1, 100) <= 30
             && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_POISON,
                                                getControllingSide(),
-                                               target, 1, 1))
+                                               target, true, 1))
             target->m_postPowSpellToCast = SPELL_POISON;
-        return 0;
+        return false;
     case CREATURE_SCORPICORE:
         if (sRandom(1, 100) <= 20 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_PARALYZE,
                                                getControllingSide(),
-                                               target, 1, 1)) {
+                                               target, true, 1)) {
             target->m_postPowSpellToCast = SPELL_PARALYZE;
-            return 1;
+            return true;
         }
-        return 0;
+        return false;
     }
-    return 0;
+    return false;
 }
 
 // The retaliation a Fire Shield charges the attacker, and the one body
@@ -1571,11 +1571,11 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                 }
                 if (!g_combatManager->isQuickCombat()) {
                     g_combatManager->m_combatWindow->combatMessage(
-                        text.c_str(), 1, 0);
+                        text.c_str(), true, false);
                     SAMPLE2 sample = loadPlaySample(
                         DATA_COMPGEN(0x00660a40, drainLifeSampleName,
                                      "DrainLif.wav"));
-                    g_combatManager->spellEffect(74, this, 100, 0);
+                    g_combatManager->spellEffect(74, this, 100, false);
                     waitEndSample(sample, -1);
                 }
             }
@@ -1607,10 +1607,10 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                 SAMPLE2 sample;
                 if (!g_combatManager->isQuickCombat()) {
                     g_combatManager->m_combatWindow->combatMessage(
-                        text.c_str(), 1, 0);
+                        text.c_str(), true, false);
                     sample = loadPlaySample(
                         akSpellTraits[SPELL_DEATH_STARE].m_sample);
-                    g_combatManager->spellEffect(80, target, 100, 0);
+                    g_combatManager->spellEffect(80, target, 100, false);
                 }
                 target->damage(damage);
                 g_combatManager->powEffect(eSpellEffectNone, 1);
@@ -1625,7 +1625,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
         if (target->m_numTroops > 0 && sRandom(1, 100) <= 20) {
             if (g_combatManager->spellCastWorks(SPELL_LIGHTNING_BOLT,
                                                 getControllingSide(),
-                                                target, 1, 1)) {
+                                                target, true, 1)) {
                 long damage = m_numTroops * 10;
                 damage = g_combatManager->modifySpellDamage(
                     damage, SPELL_LIGHTNING_BOLT, NULL, NULL, target, 0);
@@ -1637,12 +1637,12 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                             g_generalText->GetText(GENERAL_TEXT_LIGHTNING_STRIKE_FORMAT),
                             target->getName());
                         g_combatManager->m_combatWindow->combatMessage(
-                            text.c_str(), 1, 0);
+                            text.c_str(), true, false);
                         sample = loadPlaySample(
                             DATA_COMPGEN(0x00660a30,
                                          lightningBoltSampleName,
                                          "LightBlt.wav"));
-                        g_combatManager->spellEffect(1, target, 10, 0);
+                        g_combatManager->spellEffect(1, target, 10, false);
                     }
                     long killed = target->damage(damage);
                     g_combatManager->damageMessage(
@@ -1662,7 +1662,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
         if (target->m_numTroops > 0) {
             if (g_combatManager->spellCastWorks(SPELL_DISPEL_HELPFUL,
                                                 getControllingSide(),
-                                                target, 1, 1))
+                                                target, true, 1))
                 g_combatManager->castSpell(SPELL_DISPEL_HELPFUL,
                                            target->m_gridIndex, 1, -1, eMasteryNone,
                                            3);
@@ -1670,7 +1670,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                 && target->m_spellInfluence[SPELL_WEAKNESS] == 0) {
                 if (g_combatManager->spellCastWorks(
                         SPELL_WEAKNESS, getControllingSide(), target,
-                        1, 1))
+                        true, 1))
                     g_combatManager->castSpell(SPELL_WEAKNESS,
                                                target->m_gridIndex, 1, -1,
                                                eMasteryAdvanced, 3);
@@ -1693,7 +1693,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                     akSpellTraits[SPELL_ACID_BREATH_DEFENSE].m_name, 1,
                     damage, target, killed);
                 if (!g_combatManager->isQuickCombat()) {
-                    g_combatManager->spellEffect(81, target, 100, 0);
+                    g_combatManager->spellEffect(81, target, 100, false);
                     waitEndSample(sample, -1);
                 }
                 g_combatManager->powEffect(eSpellEffectNone, 1);
@@ -1788,12 +1788,12 @@ bool army::doAttack(army* armyToAttack, int direction)
         armyToAttack->markForEffect();
         if (behind)
             behind->markForEffect();
-        totalLife = armyToAttack->getTotalHitPoints(0);
-        fireDamage = damageEnemy(armyToAttack, &damage, &killed, 0);
+        totalLife = armyToAttack->getTotalHitPoints(false);
+        fireDamage = damageEnemy(armyToAttack, &damage, &killed, false);
         if (fireDamage > 0)
             armyToAttack->m_showFireShield = 1;
         if (behind)
-            damageEnemy(behind, &nextDamage, &nextKilled, 0);
+            damageEnemy(behind, &nextDamage, &nextKilled, false);
     }
     g_combatManager->computeMaxExtent();
     m_showAttackFrames = 1;
@@ -1843,7 +1843,7 @@ bool army::doAttack(army* armyToAttack, int direction)
     if (fireDamage > 0)
         doFireShield(fireDamage);
     if (armyToAttack->m_residualBlindness && armyToAttack->m_blindFactor == 0.0)
-        return 1;
+        return true;
     else
         return special;
 }
@@ -1871,7 +1871,7 @@ void army::doAttack(int direction)
         g_combatManager->m_actingSide = armyToAttack->group;
         g_combatManager->m_actingSlot = armyToAttack->index;
         armyToAttack->setupAnimation();
-        armyToAttack->turn(1);
+        armyToAttack->turn(true);
         g_combatManager->m_actingSide = savedSide;
         g_combatManager->m_actingSlot = savedSlot;
     }
@@ -1905,7 +1905,7 @@ void army::doAttack(int direction)
             g_combatManager->m_actingSide = armyToAttack->group;
             g_combatManager->m_actingSlot = armyToAttack->index;
             armyToAttack->setupAnimation();
-            armyToAttack->turn(1);
+            armyToAttack->turn(true);
             g_combatManager->m_actingSide = savedSide;
             g_combatManager->m_actingSlot = savedSlot;
         }
@@ -1924,7 +1924,7 @@ MAC_ADDRESS(0x04dc2c, 0x44)
 bool army::checkObstacleAttacks(bool isWalking)
 {
     if (m_creatureType == ARMY_CREATURE_ARROW_TOWER)
-        return 0;
+        return false;
     return g_combatManager->checkObstacleAttacks(this, isWalking);
 }
 
@@ -1948,7 +1948,7 @@ bool army::walkTo(int destIndex, bool restoreFacing)
 {
     groupToAttack = indexToAttack = -1;
     if (!findPath(destIndex, getSpeed(), 0, 0))
-        return 0;
+        return false;
     int saveFacing = m_facing;
     removeAura();
     removeBinding();
@@ -1973,18 +1973,18 @@ bool army::walkTo(int destIndex, bool restoreFacing)
                 endWalk();
                 m_currFrameType = cs_wait;
                 m_currFrameIndex = 0;
-                g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
+                g_combatManager->drawFrame(true, false, false, 0, true, false);
             }
             g_combatManager->lowerDoor();
             g_combatManager->m_extent = heroWindowManager::s_nullLimits;
-            initialWalk = 1;
+            initialWalk = true;
         }
         if (g_searchArray->isMoat(static_cast<short>(nextCell))) {
             stop = i;
-            succeeded = 0;
+            succeeded = false;
         } else if (g_combatManager->m_cells[nextCell].m_attributes & hexcell::quicksand) {
             stop = i;
-            succeeded = 0;
+            succeeded = false;
             g_combatManager->getObstacle(
                 g_combatManager->m_cells[nextCell].m_obstacleIndex)
                 .m_isVisible = 1;
@@ -1995,33 +1995,33 @@ bool army::walkTo(int destIndex, bool restoreFacing)
             if (g_searchArray
                     ->isMoat(static_cast<short>(nextCell))) {
                 stop = i;
-                succeeded = 0;
+                succeeded = false;
             } else if (g_combatManager->m_cells[nextCell].m_attributes & hexcell::quicksand) {
                 stop = i;
-                succeeded = 0;
+                succeeded = false;
                 g_combatManager->getObstacle(
                     g_combatManager->m_cells[nextCell].m_obstacleIndex)
                     .m_isVisible = 1;
             }
         }
         walk(g_searchArray->getStep(i), i == stop, initialWalk);
-        initialWalk = 0;
+        initialWalk = false;
         checkObstacleAttacks(i != stop);
         if (m_numTroops <= 0) {
-            succeeded = 0;
+            succeeded = false;
             break;
         }
     }
     if (m_numTroops > 0) {
         if (m_facing != saveFacing && restoreFacing)
-            turn(1);
+            turn(true);
         addAura();
         m_currFrameType = cs_wait;
         m_currFrameIndex = 0;
     }
     m_isMoving = 0;
     cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_MOVE);
-    g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
+    g_combatManager->drawFrame(true, false, false, 0, true, false);
     g_combatManager->testRaiseDoor();
     return succeeded;
 }
@@ -2041,9 +2041,9 @@ inline void army::checkLuck()
                                            "goodluck.82m"),
                               -1, 3);
                 sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_GOOD_LUCK_FORMAT), getName());
-                g_combatManager->m_combatWindow->combatMessage(g_text, 1, 0);
+                g_combatManager->m_combatWindow->combatMessage(g_text, true, false);
                 g_combatManager->spellEffect(
-                    eSpellEffectFortune, this, 100, 0);
+                    eSpellEffectFortune, this, 100, false);
             }
         }
     }
@@ -2078,7 +2078,7 @@ long army::getAdjustedAttack(const army* enemy,
     }
     if (m_spellInfluence[56])
         return static_cast<long>(
-            getAdjustedDefense(enemy, 0) * m_frenzyFactor + attack);
+            getAdjustedDefense(enemy, false) * m_frenzyFactor + attack);
     return attack;
 }
 
@@ -2130,7 +2130,7 @@ DC_ADDRESS(0x0478c8, 0x32)
 MAC_ADDRESS(0x04e498, 0x50)
 long army::getDefenseModifier() const
 {
-    long adjusted = getAdjustedDefense(NULL, 1);
+    long adjusted = getAdjustedDefense(NULL, true);
     return adjusted - akCreatureTypeTraits[m_creatureType].defenseSkill;
 }
 
@@ -2212,8 +2212,8 @@ long army::getAverageDamage(const army& enemy, bool rangedAttack, long amount, b
     double average = getAverageDamage();
     long damage = adjustDamage(const_cast<army*>(&enemy),
                                 static_cast<long>(amount * average),
-                                rangedAttack, 1, distance, NULL);
-    long totalLife = enemy.getTotalHitPoints(0);
+                                rangedAttack, true, distance, NULL);
+    long totalLife = enemy.getTotalHitPoints(false);
     if (damage < 1)
         damage = 1;
     if (rangedAttack && is(creatureTwoAttacks))
@@ -2230,12 +2230,12 @@ MAC_ADDRESS(0x04e7d0, 0x70)
 bool army::isEnemy(const army* arg) const
 {
     if (!arg)
-        return 0;
+        return false;
     if (this == arg)
-        return 0;
+        return false;
     if (!m_spellInfluence[59] && !arg->m_spellInfluence[59])
         return getControllingSide() != arg->getOwningSide();
-    return 1;
+    return true;
 }
 
 // DC public ?can_shoot@army@@QBA_NPBV1@@Z proves a native bool result. DC
@@ -2248,9 +2248,9 @@ bool army::canShoot(const army* excluded) const
 {
     if (m_creatureType == ARMY_CREATURE_BALLISTA
         || m_creatureType == ARMY_CREATURE_ARROW_TOWER)
-        return 1;
+        return true;
     if (!is(creatureShootingArmy) || m_monInfo.numShots <= 0)
-        return 0;
+        return false;
     hero* controller = getController();
     return ((controller
              && controller->isWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER))
@@ -2265,11 +2265,11 @@ MAC_ADDRESS(0x04e958, 0x94)
 bool army::enemyIsAdjacent(const army* excluded) const
 {
     if (g_combatManager->enemyIsAdjacent(this, m_gridIndex, excluded))
-        return 1;
+        return true;
     if (is(creatureDoubleWide))
         return g_combatManager->enemyIsAdjacent(
             this, getSecondGridIndex(), excluded);
-    return 0;
+    return false;
 }
 
 // The Artillery multipliers get_unit_combat_value's ballista arm
@@ -2299,7 +2299,7 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     double defense = computeDefenderDamageReduction(ranged);
     defense = (defenseDiff * 0.05 + 1.0) * defense;
     if (ranged && !canShoot(NULL))
-        ranged = 0;
+        ranged = false;
     double attack = attackDiff * 0.05 + 1.0;
     if (!ranged && is(creatureShootingArmy))
         attack = attack * 0.5;
@@ -2325,13 +2325,13 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     double result = sqrt(attack * defense)
                     * akCreatureTypeTraits[m_creatureType].baseFightValue;
     if (is(creatureSiegeWeapon | creatureSummoned)) {
-        long total = getTotalHitPoints(0);
+        long total = getTotalHitPoints(false);
         long sum = 0;
         army* stack = g_combatManager->m_armies[group];
         for (long i = 0; i < g_combatManager->m_numArmies[group];
              i++, stack++) {
             if (!stack->is(creatureSiegeWeapon | creatureImmobilized | creatureSummoned)) {
-                sum += stack->getTotalHitPoints(0);
+                sum += stack->getTotalHitPoints(false);
             }
         }
         if (total == 0)
@@ -2360,7 +2360,7 @@ long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
                                          ranged, NULL);
     if (is(creatureClone))
         return static_cast<long>(m_numTroops * value / 5.0);
-    return static_cast<long>(getTotalHitPoints(0)
+    return static_cast<long>(getTotalHitPoints(false)
                              * value / m_monInfo.hitPoints);
 }
 
@@ -2406,7 +2406,7 @@ DC_ADDRESS(0x0484a0, 0x2e)
 MAC_ADDRESS(0x04efa0, 0x5c)
 void army::setAIExpectedDamage(long arg)
 {
-    AI_expected_damage = min(arg, getTotalHitPoints(0));
+    AI_expected_damage = min(arg, getTotalHitPoints(false));
 }
 
 VA(0x00443130, 0x25)
@@ -2484,7 +2484,7 @@ int army::computeAttackerBonus(int baseDamage, bool isShooting,
         bonus += baseDamage;
 
     long attack = getAdjustedAttack(defender, isShooting);
-    long defense = defender->getAdjustedDefense(this, 1);
+    long defense = defender->getAdjustedDefense(this, true);
     if (attack >= defense) {
         double factor = (attack - defense) * 0.05;
         if (factor > 3.0)
@@ -2538,7 +2538,7 @@ int army::computeAttackerBonus(int baseDamage, bool isShooting,
                             getName(),
                             defender->getName());
                     g_combatManager->m_combatWindow->combatMessage(
-                        text.c_str(), 1, 0);
+                        text.c_str(), true, false);
                 }
             }
         }
@@ -2600,7 +2600,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                 text = formatString((*g_generalText)[GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT],
                                      creatureName);
                 g_combatManager->m_combatWindow->combatMessage(
-                    text.c_str(), 1, 0);
+                    text.c_str(), true, false);
             }
         }
         break;
@@ -2618,13 +2618,13 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                     text = formatString((*g_generalText)[GENERAL_TEXT_DOUBLE_DAMAGE_MANY_FORMAT],
                                          getName());
                 g_combatManager->m_combatWindow->combatMessage(
-                    text.c_str(), 1, 0);
+                    text.c_str(), true, false);
                 SAMPLE2 sample = loadPlaySample(
                     DATA_COMPGEN(0x00660a50, deathBlowSampleName,
                                  "Deathblo.wav"));
                 g_combatManager->spellEffect(
                     eSpellEffectDeathBlow, defender, 100,
-                    0);
+                    false);
                 waitEndSample(sample, -1);
             }
         }
@@ -2651,7 +2651,7 @@ double army::computeAttackerDamageReduction(const army* defender,
 {
     double reduction = 1.0;
     long attack = getAdjustedAttack(defender, isShooting);
-    long defense = defender->getAdjustedDefense(this, 1);
+    long defense = defender->getAdjustedDefense(this, true);
     if (defense > attack) {
         double factor = 1.0 - (defense - attack) * 0.025;
         if (factor < 0.3)
@@ -2722,7 +2722,7 @@ long army::getEstimatedDamage(const army* target, long amount,
     if (!target)
         return 0;
     long damage = amount + computeAttackerBonus(
-        amount, ranged, const_cast<army*>(target), 0, distance);
+        amount, ranged, const_cast<army*>(target), false, distance);
     damage += target->computeDefenderDamageBonuses(amount);
     damage = static_cast<long>(
         computeAttackerDamageReduction(target, ranged) * damage);
@@ -2752,7 +2752,7 @@ long army::adjustDamage(army* enemy, long baseDamage, bool isShot,
         + enemy->computeDefenderDamageBonuses(baseDamage);
     if (fireDamage) {
         *fireDamage = g_combatManager->computeFireShieldDamage(
-            totalDamage, this, enemy, enemy->getTotalHitPoints(0));
+            totalDamage, this, enemy, enemy->getTotalHitPoints(false));
     }
     totalDamage = static_cast<long>(
         totalDamage * computeAttackerDamageReduction(enemy, isShot));
@@ -2774,7 +2774,7 @@ inline long army::damageEnemy(army* enemy, int* damageOut, int* killed,
     if (!enemy)
         return 0;
     long damage = computeBaseDamage(0);
-    *damageOut = adjustDamage(enemy, damage, isShot, 0, m_joustBonus,
+    *damageOut = adjustDamage(enemy, damage, isShot, false, m_joustBonus,
                              &fireDamage);
     *killed = enemy->damage(*damageOut);
     m_luckStatus = 0;
@@ -3275,7 +3275,7 @@ void army::getBerserkTargets(std::vector<army*>& armies) const
         canShootTarget = 1;
     } else {
         canShootTarget = 0;
-        g_searchArray->seedCombatPosition(this, -1, 127, 0, -1);
+        g_searchArray->seedCombatPosition(this, -1, 127, false, -1);
     }
     for (int side = 0; side < 2; side++) {
         target = g_combatManager->m_armies[side];
@@ -3388,27 +3388,27 @@ bool army::simpleMove(int hex, bool restoreFacing)
     groupToAttack = -1;
     indexToAttack = -1;
     if (!g_combatManager->validHex(hex))
-        return 0;
+        return false;
     if (!canFit(hex, 0, NULL))
-        return 0;
+        return false;
     g_combatManager->m_lastMovedArmy = NULL;
-    g_combatManager->turnOffHighlighter(1);
+    g_combatManager->turnOffHighlighter(true);
     g_combatManager->beginObstacleTraversal(this);
     bool moved;
     if (is(creatureFlyingArmy)) {
         targetCellIndex = hex;
-        moved = validFlight(hex, 0);
+        moved = validFlight(hex, false);
         if (moved) {
             flyTo(targetCellIndex, restoreFacing);
-            moved = 1;
+            moved = true;
         }
     } else if (m_creatureType == CREATURE_DEVIL
                || m_creatureType == CREATURE_ARCH_DEVIL) {
         targetCellIndex = hex;
-        moved = validFlight(hex, 0);
+        moved = validFlight(hex, false);
         if (moved) {
             teleportTo(targetCellIndex, restoreFacing);
-            moved = 1;
+            moved = true;
         }
     } else {
         moved = walkTo(hex, restoreFacing);
@@ -3430,13 +3430,13 @@ bool army::attackHex(int hex, bool restoreFacing)
     groupToAttack = -1;
     indexToAttack = -1;
     if (!g_combatManager->validHex(hex))
-        return 0;
+        return false;
     hexcell* cell = &g_combatManager->m_cells[hex];
     army* target = cell->getArmy();
     if (!target || target == this)
-        return 0;
+        return false;
     g_combatManager->m_lastMovedArmy = NULL;
-    g_combatManager->turnOffHighlighter(1);
+    g_combatManager->turnOffHighlighter(true);
     groupToAttack = cell->m_armySide;
     indexToAttack = cell->m_armySlot;
     targetCellIndex = hex;
@@ -3448,21 +3448,21 @@ bool army::attackHex(int hex, bool restoreFacing)
             bool turned;
             if (needToTurn(direction)) {
                 setupAnimation();
-                turn(1);
+                turn(true);
                 turned = restoreFacing;
             } else {
-                turned = 0;
+                turned = false;
             }
             doAttack(direction);
             if (!is(creatureImmobilized) && turned) {
                 setupAnimation();
-                turn(1);
+                turn(true);
             }
         }
     }
     g_combatManager->m_lastMovedArmy = this;
     g_combatManager->checkRebirth();
-    return 1;
+    return true;
 }
 
 #if 0  // @carcass
@@ -3548,7 +3548,7 @@ MAC_ADDRESS(0x051d54, 0x13c)
 void army::attackWall(int targetGridIndex)
 {
     g_combatManager->m_lastMovedArmy = NULL;
-    g_combatManager->turnOffHighlighter(1);
+    g_combatManager->turnOffHighlighter(true);
     TWallTargetId wall;
     // GetTargetWallIndex returns int in Complete and an enum in Dreamcast.
     wall = TWallTargetId(combatManager::getTargetWallIndex(targetGridIndex));
@@ -3714,7 +3714,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
                            : m_monFrameInfo.m_attackFrames;
     long delay = m_monFrameInfo.m_attackStartCycleTime / numFrames;
     for (m_currFrameIndex = 0; m_currFrameIndex < numFrames; m_currFrameIndex++) {
-        g_combatManager->drawFrame(1, 1, 0, delay, 1, 1);
+        g_combatManager->drawFrame(true, true, false, delay, true, true);
     }
 
     m_currFrameType = cs_wait;
@@ -3738,13 +3738,13 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         if (frame == combatManager::WALL_EXPLOSION_HIT_FRAME
             && levelsDestroyed != 0)
             g_combatManager->damageWall(wall, levelsDestroyed);
-        g_combatManager->drawFrame(0, 0, 1, 100, 0, 1);
+        g_combatManager->drawFrame(false, false, true, 100, false, true);
         explosion->Draw(0, frame, 0, 0,
                         g_combatManager->m_extent.width(),
                         g_combatManager->m_extent.height(),
                         g_windowManager->m_screenBitmap,
                         destX - explosion->GetWidth() / 2,
-                        destY - explosion->GetHeight() / 2, 0, 1);
+                        destY - explosion->GetHeight() / 2, false, true);
         // DC army.cpp:4719/4720: the fixed-viewport scroll and area update.
         if (!g_combatManager->scrollTo(g_combatManager->m_extent,
                                        true, true, true))
@@ -3752,7 +3752,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
                 g_combatManager->m_extent);
     }
     ResourceManager::Dispose(explosion);
-    g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
+    g_combatManager->drawFrame(true, false, false, 0, true, false);
     g_soundManager->waitSample(shootSample, -1);
     g_soundManager->waitSample(hitSample, -1);
     if (sample2b)
@@ -3883,12 +3883,12 @@ MAC_ADDRESS(0x0528ac, 0x8c)
 bool army::isAdjacent(int hex) const
 {
     if (g_combatManager->isAdjacent(m_gridIndex, hex))
-        return 1;
+        return true;
     if (is(creatureDoubleWide)) {
         int secondHex = getSecondGridIndex();
         return g_combatManager->isAdjacent(secondHex, hex);
     }
-    return 0;
+    return false;
 }
 
 // Original: army::is_adjacent; army.cpp:4864
@@ -3896,10 +3896,10 @@ DC_ADDRESS(0x04b3e8, 0x3e)
 bool army::isAdjacent(const army& otherArmy) const
 {
     if (isAdjacent(otherArmy.m_gridIndex))
-        return 1;
+        return true;
     if (otherArmy.is(creatureDoubleWide))
         return isAdjacent(otherArmy.getSecondGridIndex());
-    return 0;
+    return false;
 }
 
 // Original: army::OtherArmyAdjacent; army.cpp:4881
@@ -3956,13 +3956,13 @@ void army::setupAnimation()
         return;
     hexcell* cell = &g_combatManager->m_cells[m_gridIndex];
     g_combatManager->m_extent = heroWindowManager::s_nullLimits;
-    g_combatManager->m_saveBiggestExtent = 1;
+    g_combatManager->m_saveBiggestExtent = true;
     g_combatManager->m_computeExtentOnly = 1;
     drawToBuffer(cell->m_refX, cell->m_refY, 0);
     g_combatManager->m_computeExtentOnly = 0;
-    g_combatManager->m_saveBiggestExtent = 0;
+    g_combatManager->m_saveBiggestExtent = false;
     m_letsPretendImNotHere = 1;
-    g_combatManager->drawFrame(0, 0, 0, 0, 1, 0);
+    g_combatManager->drawFrame(false, false, false, 0, true, false);
     m_letsPretendImNotHere = 0;
     g_windowManager->m_screenBitmap->Draw(
         0, 0, 800, 600, g_combatManager->m_saveScreenPostGrid, 0, 0, false);
@@ -4007,12 +4007,12 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
             frame.m_minX, frame.m_minY, false);
 
         g_combatManager->m_extent = heroWindowManager::s_nullLimits;
-        g_combatManager->m_saveBiggestExtent = 1;
+        g_combatManager->m_saveBiggestExtent = true;
         g_combatManager->m_computeExtentOnly = 1;
         drawToBuffer(g_combatManager->m_cells[m_gridIndex].m_refX,
                      g_combatManager->m_cells[m_gridIndex].m_refY, 0);
         g_combatManager->m_computeExtentOnly = 0;
-        g_combatManager->m_saveBiggestExtent = 0;
+        g_combatManager->m_saveBiggestExtent = false;
 
         g_combatManager->m_extent.m_minX -= 17;
         g_combatManager->m_extent.m_maxX += 17;
@@ -4021,7 +4021,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
         g_combatManager->m_extent = frame;
 
         g_combatManager->m_limitToExtent = 1;
-        g_combatManager->drawFrame(0, 0, 0, 0, 0, 0);
+        g_combatManager->drawFrame(false, false, false, 0, false, false);
         g_combatManager->m_limitToExtent = 0;
         GameTime::delayTil(g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]);
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]
@@ -4147,10 +4147,10 @@ void army::newTurn()
                         (*g_generalText)[GENERAL_TEXT_REGENERATION_MANY_FORMAT],
                         getName());
                 g_combatManager->m_combatWindow->combatMessage(
-                    text.c_str(), 1, 0);
+                    text.c_str(), true, false);
                 g_combatManager->spellEffect(
                     eSpellEffectRegeneration, this, 100,
-                    0);
+                    false);
                 waitEndSample(sample, -1);
             }
         }
@@ -4232,17 +4232,17 @@ MAC_ADDRESS(0x0538f8, 0x144)
 bool army::canCastResurrect(long hex) const
 {
     if (!canCastResurrect())
-        return 0;
+        return false;
     long side = getControllingSide();
-    if (!g_combatManager->canCastSpells(side, 0))
-        return 0;
+    if (!g_combatManager->canCastSpells(side, false))
+        return false;
     army* target;
     if (m_creatureType == ARMY_CREATURE_PIT_LORD)
         target = g_combatManager->findDemonicResurrectionTarget(side, hex);
     else
         target = g_combatManager->findResurrectionTarget(side, hex, 1);
     if (!target)
-        return 0;
+        return false;
     return getResurrectionSize(target) > 0;
 }
 
@@ -4297,7 +4297,7 @@ void army::chooseFaerieDragonSpell()
             formatString(fmt, getName(),
                           akSpellTraits[m_faerieDragonSpell].m_name)
                 .c_str(),
-            1, 0);
+            true, false);
     }
 }
 
@@ -4308,11 +4308,11 @@ MAC_ADDRESS(0x053bc8, 0x338)
 bool army::canCastSpell(long hex) const
 {
     if (m_monInfo.m_hasSpell == 0)
-        return 0;
-    if (!g_combatManager->canCastSpells(getControllingSide(), 0))
-        return 0;
+        return false;
+    if (!g_combatManager->canCastSpells(getControllingSide(), false))
+        return false;
     if (!combatManager::validHex(hex))
-        return 0;
+        return false;
     army* target = g_combatManager->m_cells[hex].getArmy();
     switch (m_creatureType) {
     case CREATURE_ARCHANGEL:
@@ -4323,29 +4323,29 @@ bool army::canCastSpell(long hex) const
     case CREATURE_FAERIE_DRAGON:
         return target != NULL
             && g_combatManager->validSpellTargetArmy(
-                m_faerieDragonSpell, getControllingSide(), target, 1, 1);
+                m_faerieDragonSpell, getControllingSide(), target, true, 1);
     case CREATURE_STORM_ELEMENTAL:
         return target != NULL
             && g_combatManager->validSpellTargetArmy(
-                SPELL_PROTECTION_FROM_AIR, getControllingSide(), target, 1, 1);
+                SPELL_PROTECTION_FROM_AIR, getControllingSide(), target, true, 1);
     case CREATURE_ICE_ELEMENTAL:
         return target != NULL
             && g_combatManager->validSpellTargetArmy(
-                SPELL_PROTECTION_FROM_WATER, getControllingSide(), target, 1, 1);
+                SPELL_PROTECTION_FROM_WATER, getControllingSide(), target, true, 1);
     case CREATURE_ENERGY_ELEMENTAL:
         return target != NULL
             && g_combatManager->validSpellTargetArmy(
-                SPELL_PROTECTION_FROM_FIRE, getControllingSide(), target, 1, 1);
+                SPELL_PROTECTION_FROM_FIRE, getControllingSide(), target, true, 1);
     case CREATURE_MAGMA_ELEMENTAL:
         return target != NULL
             && g_combatManager->validSpellTargetArmy(
-                SPELL_PROTECTION_FROM_EARTH, getControllingSide(), target, 1, 1);
+                SPELL_PROTECTION_FROM_EARTH, getControllingSide(), target, true, 1);
     case CREATURE_OGRE_MAGE:
         return target != NULL
             && g_combatManager->validSpellTargetArmy(
-                SPELL_BLOODLUST, getControllingSide(), target, 1, 1);
+                SPELL_BLOODLUST, getControllingSide(), target, true, 1);
     }
-    return 0;
+    return false;
 }
 
 // Original: army::cast_resurrect; army.cpp:5396
@@ -4362,7 +4362,7 @@ void army::castResurrect(long hex)
     if (!g_combatManager->isQuickCombat())
         sound = loadPlaySample(DATA_COMPGEN(
             0x00660af4, resurrectSampleName, "Resurect.wav"));
-    g_combatManager->resurrect(target, m_numTroops * 100, 0);
+    g_combatManager->resurrect(target, m_numTroops * 100, false);
     if (!g_combatManager->isQuickCombat())
         waitEndSample(sound, -1);
 }
@@ -4390,9 +4390,9 @@ static bool groupHasMelee(long group)
     while (i-- > 0) {
         army* enemy = &g_combatManager->m_armies[group][i];
         if (!enemy->cannotAttack() && !enemy->canShoot(NULL))
-            return 1;
+            return true;
     }
-    return 0;
+    return false;
 }
 
 // Original: group_has_shooters; army.cpp:5451
@@ -4404,9 +4404,9 @@ static bool groupHasShooters(long group)
     while (i-- > 0) {
         army* enemy = &g_combatManager->m_armies[group][i];
         if (!enemy->cannotAttack() && enemy->canShoot(NULL))
-            return 1;
+            return true;
     }
-    return 0;
+    return false;
 }
 
 // Original: group_has_dragons; army.cpp:5469
@@ -4418,9 +4418,9 @@ static bool groupHasDragons(long group)
     while (i-- > 0) {
         army* enemy = &g_combatManager->m_armies[group][i];
         if (enemy->is(creatureKing1))
-            return 1;
+            return true;
     }
-    return 0;
+    return false;
 }
 
 // Complete's shared spell-validity worker is a desktop addition: the
@@ -4432,10 +4432,10 @@ MAC_ADDRESS(0x0542f0, 0x17c)  // anchor-callee (four call sites, one of them the
 bool isCreatureSpellUsefulOnTarget(int spell, const army* target)
 {
     if (target->getSpellTime(spell))
-        return 0;
+        return false;
     long side = g_combatManager->m_currentSide;
-    if (!g_combatManager->validSpellTargetArmy(spell, side, target, 1, 1))
-        return 0;
+    if (!g_combatManager->validSpellTargetArmy(spell, side, target, true, 1))
+        return false;
     switch (spell) {
     case SPELL_PROTECTION_FROM_AIR:
     case SPELL_PROTECTION_FROM_FIRE:
@@ -4463,7 +4463,7 @@ bool isCreatureSpellUsefulOnTarget(int spell, const army* target)
     case SPELL_BLOODLUST:
         return !target->canShoot(NULL);
     }
-    return 1;
+    return true;
 }
 
 // Mac retains this helper; the Enchanter calls it twice. Its name is
@@ -4478,9 +4478,9 @@ static bool enchanterSpellHasTarget(int spell)
     long n = g_combatManager->m_numArmies[side];
     while (n-- != 0) {
         if (isCreatureSpellUsefulOnTarget(spell, targets))
-            return 1;
+            return true;
     }
-    return 0;
+    return false;
 }
 
 // DC public ?is_valid_caliph_spell@@YA_NW4SpellID@@PBVarmy@@@Z proves bool.
@@ -4490,7 +4490,7 @@ MAC_ADDRESS(0x054518, 0x44)
 bool isValidCaliphSpell(SpellID spell, const army* target)
 {
     if (!(akSpellTraits[spell].m_flags & 0x800))
-        return 0;
+        return false;
     return isCreatureSpellUsefulOnTarget(spell, target);
 }
 
@@ -4571,7 +4571,7 @@ MAC_ADDRESS(0x054700, 0x1f4)
 unsigned char army::castEnchanterSpell()
 {
     if (!g_combatManager->canCastSpells(g_combatManager->m_currentSide,
-                                          0))
+                                          false))
         return 0;
 
     long total = 0;
@@ -4629,7 +4629,7 @@ void army::castSpell(long hex)
         if (targetX > myX && m_facing == 0)
             shouldTurn = 1;
         if ((targetX < myX && m_facing == 1) || shouldTurn)
-            turn(1);
+            turn(true);
         g_combatManager->resetLimitCreature();
         // Direct side read: DC CastSpell has no get_owning_side call.
         g_combatManager->markCreatureEffect(group, index);
@@ -4667,7 +4667,7 @@ void army::castSpell(long hex)
         long delay = m_monFrameInfo.m_attackStartCycleTime / frames;
         for (m_currFrameIndex = 0; m_currFrameIndex < frames;
              m_currFrameIndex++) {
-            g_combatManager->drawFrame(1, 1, 0, delay, 1, 1);
+            g_combatManager->drawFrame(true, true, false, delay, true, true);
         }
         m_currFrameIndex = frames - 1;
     }
@@ -4709,7 +4709,7 @@ void army::castSpell(long hex)
     g_combatManager->m_extent = heroWindowManager::s_nullLimits;
     if (originalFacing != m_facing
         && !g_combatManager->isQuickCombat())
-        turn(1);
+        turn(true);
 }
 
 VA(0x004487f0, 0x43)

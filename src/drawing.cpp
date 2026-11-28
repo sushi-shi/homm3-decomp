@@ -168,9 +168,9 @@ static std::string getEstimatedDamage(const army* currentArmy,
         high *= controller->getPrimarySkill(0) + 1;
     }
 
-    low = currentArmy->adjustDamage(targetArmy, low, ranged, 1,
+    low = currentArmy->adjustDamage(targetArmy, low, ranged, true,
                                      distance, NULL);
-    high = currentArmy->adjustDamage(targetArmy, high, ranged, 1,
+    high = currentArmy->adjustDamage(targetArmy, high, ranged, true,
                                       distance, NULL);
     if (low == high) {
         result = formatRounded(high, high);
@@ -351,35 +351,35 @@ void combatManager::combatMessage(int command)
         distance = getDistance(currentArmy->m_gridIndex, m_lastMoveToIndex);
         if (g_config.m_combatArmyInfoLevel) {
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_ATTACK_DAMAGE_FORMAT), targetArmy->getName(),
-                    getEstimatedDamage(currentArmy, targetArmy, 0,
+                    getEstimatedDamage(currentArmy, targetArmy, false,
                                          distance).c_str());
         } else {
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_ATTACK_FORMAT), targetArmy->getName());
         }
-        priority = 1;
+        priority = true;
         break;
 
     case SELECT_SPECIAL_ATTACK:
     case SELECT_SPECIAL_ATTACK_BROKEN: {
         distance = getDistance(currentArmy->m_gridIndex,
                                 targetArmy->m_gridIndex);
-        long targetHits = targetArmy->getTotalHitPoints(0);
-        long currentHits = currentArmy->getTotalHitPoints(0);
-        long expectedDamage = aiGetAttackDamage(*(currentArmy), currentHits, *(targetArmy), 1, distance);
+        long targetHits = targetArmy->getTotalHitPoints(false);
+        long currentHits = currentArmy->getTotalHitPoints(false);
+        long expectedDamage = aiGetAttackDamage(*(currentArmy), currentHits, *(targetArmy), true, distance);
         if (!g_config.m_combatArmyInfoLevel) {
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_ATTACK_FORMAT), targetArmy->getName());
         } else if (currentArmy->m_monInfo.numShots == 1) {
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_SHOOT_LAST_SHOT_FORMAT), targetArmy->getName(),
-                    getEstimatedDamage(currentArmy, targetArmy, 1,
+                    getEstimatedDamage(currentArmy, targetArmy, true,
                                          distance).c_str());
         } else {
             // Text row 297.
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_SHOOT_CURSOR_FORMAT), targetArmy->getName(),
                     currentArmy->m_monInfo.numShots,
-                    getEstimatedDamage(currentArmy, targetArmy, 1,
+                    getEstimatedDamage(currentArmy, targetArmy, true,
                                          distance).c_str());
         }
-        priority = 1;
+        priority = true;
         break;
     }
 
@@ -441,9 +441,9 @@ void combatManager::combatMessage(int command)
             || command == SELECT_FLY
             || command == SELECT_ARMY_INFO) {
         if (showCreatureSpellError(g_text, currentArmy))
-            priority = 1;
+            priority = true;
     }
-    m_combatWindow->combatMessage(g_text, 0, priority);
+    m_combatWindow->combatMessage(g_text, false, priority);
 }
 
 VA(0x004933d0, 0x27A)
@@ -898,7 +898,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
         m_extent.width(), m_extent.height(),
         g_windowManager->m_screenBitmap,
         m_extent.m_minX, m_extent.m_minY, false);
-    drawFrame(0, 0, 0, 0, 1, 0);
+    drawFrame(false, false, false, 0, true, false);
     updateCombatArea(m_extent);
 
     m_extent = saveExtent;
@@ -1035,18 +1035,18 @@ void combatManager::drawFrame(bool update,
     if (m_heroes[0]) {
         drawCombatHero(cmbtHeroFlag[0], 0, cmbtHeroFlagFrame[0],
                        29, 20,
-                       &sCmbtHeroFlagLimitData[0], 0);
+                       &sCmbtHeroFlagLimitData[0], false);
         drawCombatHero(cmbtHero[0], cmbtHeroFrameType[0], cmbtHeroFrameIndex[0],
                        -43, -19,
-                       &sCmbtHeroLimitData[0], 0);
+                       &sCmbtHeroLimitData[0], false);
     }
     if (m_heroes[1]) {
         drawCombatHero(cmbtHeroFlag[1], 0, cmbtHeroFlagFrame[1],
                        755, 20,
-                       &sCmbtHeroFlagLimitData[1], 0);
+                       &sCmbtHeroFlagLimitData[1], false);
         drawCombatHero(cmbtHero[1], cmbtHeroFrameType[1], cmbtHeroFrameIndex[1],
                        693, -19,
-                       &sCmbtHeroLimitData[1], 1);
+                       &sCmbtHeroLimitData[1], true);
     }
 
     if (m_fortificationLevel > eFortificationNone)
@@ -1549,7 +1549,7 @@ int combatManager::drawObstacle(const hexcell& cell)
     return drawSpriteObject(
         obstacle.m_sprite,
         m_obstacleAnimationFrame % obstacle.m_sprite->GetNumFrames(0),
-        cell.m_hexUlx, cell.m_hexUly - yOffset, 0);
+        cell.m_hexUlx, cell.m_hexUly - yOffset, false);
 }
 
 VA(0x004957b0, 0x125)
@@ -1669,13 +1669,13 @@ void combatManager::computeMaxExtent()
     for (side = 0; side < 2; side++) {
         for (int slot = 0; slot < 20; slot++) {
             if (m_creatureEffect[side][slot]) {
-                m_saveBiggestExtent = 1;
+                m_saveBiggestExtent = true;
                 m_computeExtentOnly = 1;
                 m_armies[side][slot].drawToBuffer(
                     m_cells[m_armies[side][slot].m_gridIndex].m_refX,
                     m_cells[m_armies[side][slot].m_gridIndex].m_refY, 0);
                 m_computeExtentOnly = 0;
-                m_saveBiggestExtent = 0;
+                m_saveBiggestExtent = false;
             }
         }
     }
@@ -1684,11 +1684,11 @@ void combatManager::computeMaxExtent()
         if (m_heroEffect[side] || m_flagEffect[side]) {
             computeExtent(cmbtHero[side], cmbtHeroFrameType[side],
                           cmbtHeroFrameIndex[side], side ? 693 : -43, -19,
-                          &sCmbtHeroLimitData[side], side != 0, 1);
+                          &sCmbtHeroLimitData[side], side != 0, true);
             computeExtent(cmbtHeroFlag[side], 0,
                           cmbtHeroFlagFrame[side],
                           side ? 755 : 29, 20,
-                          &sCmbtHeroFlagLimitData[side], 0, 1);
+                          &sCmbtHeroFlagLimitData[side], 0, true);
         }
     }
 
@@ -1702,14 +1702,14 @@ void combatManager::computeMaxExtent()
                     sprite, 0, m_obstacleAnimationFrame % sprite->GetNumFrames(0),
                     m_cells[obstacle->m_hex].m_hexUlx,
                     m_cells[obstacle->m_hex].m_hexUly - yOffset,
-                    NULL, 0, 1);
+                    NULL, 0, true);
             }
         }
     }
 
     for (int archerIndex = 0; archerIndex < kNumArchers; archerIndex++) {
         if (m_archerEffect[archerIndex] && m_archers[archerIndex].m_sprite) {
-            m_saveBiggestExtent = 1;
+            m_saveBiggestExtent = true;
             m_computeExtentOnly = 1;
             TArcher& archer = m_archers[archerIndex];
             int drawX;
@@ -1733,7 +1733,7 @@ void combatManager::computeMaxExtent()
                        drawX, archer.m_y - COMBAT_ARCHER_Y_BIAS, NULL,
                        !archer.m_facing, 0);
             m_computeExtentOnly = 0;
-            m_saveBiggestExtent = 0;
+            m_saveBiggestExtent = false;
         }
     }
 
@@ -1945,7 +1945,7 @@ void combatManager::cycleCombatScreen()
     m_obstacleAnimationFrame++;
     g_systemPalette->Cycle(96, 103, -1);
     g_systemPalette->Cycle(112, 119, -1);
-    drawFrame(1, 1, 0, 0, 1, 0);
+    drawFrame(true, true, false, 0, true, false);
     GameTime::get();
     g_timers[8] =
         GameTime::nextFrameTime(g_timers[8], 100);
@@ -1969,7 +1969,7 @@ void combatManager::spellEffect(int effect, army* targetArmy, int delay,
         return;
 
     if (targetArmy->m_currFrameType == cs_wince)
-        doWince = 0;
+        doWince = false;
 
     if (loadSpellEffect(effect))
         targetArmy->m_showPowEffect = 1;
@@ -1983,23 +1983,23 @@ void combatManager::spellEffect(int effect, army* targetArmy, int delay,
                 m_powFrameIndex = frame;
             else
                 m_powFrameIndex = m_powSprite->GetNumFrames(cs_walk);
-            drawFrame(1, 0, 0, 100, 1, 1);
+            drawFrame(true, false, false, 100, true, true);
             frame++;
         }
         targetArmy->m_currFrameType = cs_wait;
         targetArmy->m_currFrameIndex = 0;
         if (frame >= m_powSprite->GetNumFrames(cs_walk))
-            drawFrame(1, 0, 0, 0, 1, 0);
+            drawFrame(true, false, false, 0, true, false);
     }
 
     playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
     while (frame < m_powSprite->GetNumFrames(cs_walk)) {
         m_powFrameIndex = frame;
-        drawFrame(1, 0, 0, delay, 1, 1);
+        drawFrame(true, false, false, delay, true, true);
         frame++;
     }
     targetArmy->m_showPowEffect = 0;
-    drawFrame(1, 0, 0, delay, 1, 1);
+    drawFrame(true, false, false, delay, true, true);
 }
 
 VA(0x00496a10, 0x23d)
@@ -2042,7 +2042,7 @@ void combatManager::spellEffect(int effect, int hex, int delay,
 
     playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
     for (int frame = 0; frame < m_powSprite->GetNumFrames(cs_walk); frame++) {
-        drawFrame(0, 0, 0, delay, 1, 1);
+        drawFrame(false, false, false, delay, true, true);
 
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
         m_powSprite->DrawSpellEffect(
@@ -2056,7 +2056,7 @@ void combatManager::spellEffect(int effect, int hex, int delay,
     }
 
     if (!leaveLastFrame)
-        drawFrame(1, 0, 0, delay, 1, 1);
+        drawFrame(true, false, false, delay, true, true);
 }
 
 #if 0  // @carcass

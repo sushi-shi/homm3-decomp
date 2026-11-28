@@ -24,7 +24,7 @@ struct TRmgTerrainTile {
 
     TRmgTerrainTile() {}
     TRmgTerrainTile(s32 newTerrain, s32 newFrame)
-        : m_terrain(newTerrain), m_frame(newFrame), m_flipX(0), m_flipY(0) {}
+        : m_terrain(newTerrain), m_frame(newFrame), m_flipX(false), m_flipY(false) {}
     // Frame and flip accessors: the line refresh compares the current tile
     // through them so its neighbour helper keeps retail's three retained
     // calls; the painters' own copies still use the fields.

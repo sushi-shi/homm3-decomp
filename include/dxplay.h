@@ -103,20 +103,20 @@ public:
     bool IsJoinDisabled()
     {
         if (m_flags & 0x20)
-            return 1;
+            return true;
         if (m_flags & 1)
-            return 1;
+            return true;
         if (m_playerCount == m_maxPlayers)
-            return 1;
-        return 0;
+            return true;
+        return false;
     }
 
     DC_ADDRESS(0x101d84, 0x14)
     bool IsPasswordProtected()
     {
         if (m_flags & 0x400)
-            return 1;
-        return 0;
+            return true;
+        return false;
     }
 };
 SIZE(CDPlaySession, 0x10c);
@@ -183,23 +183,23 @@ public:
     bool AllocSize(unsigned long dSize)
     {
         if (dSize < m_dataSize)
-            return 1;
+            return true;
         if (m_data)
             delete m_data;
         m_data = new unsigned char[dSize];
         m_dataSize = dSize;
-        return 1;
+        return true;
     }
 
     DC_ADDRESS(0x08be0c, 0x2c)
     bool Destroy()
     {
         if (!m_data)
-            return 0;
+            return false;
         delete m_data;
         m_data = NULL;
         m_dataSize = 0;
-        return 1;
+        return true;
     }
 
     // Original: CDPlayMsg::GetId; dxplay.h:177
@@ -411,7 +411,7 @@ protected:
     DC_ADDRESS(0x08bf14, 0x4)
     virtual bool ReceiveMsg(unsigned long from, unsigned long to, CDPlayMsg* msg)
     {
-        return 1;
+        return true;
     }
     virtual bool ReceiveSystemMsg(
         unsigned long toID, CDPlayMsg* msg);
@@ -420,7 +420,7 @@ protected:
     DC_ADDRESS(0x08bf18, 0x4)
     virtual bool SysMsgAddGroupToGroup(DPMSG_ADDGROUPTOGROUP* sysMsg, unsigned long toID)
     {
-        return 1;
+        return true;
     }
 
     // These Complete base/lobby vtable slots share one return-true body;
@@ -430,7 +430,7 @@ protected:
     virtual bool SysMsgAddPlayerToGroup(
         DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId)
     {
-        return 1;
+        return true;
     }
 
     // Original: CDPlay::SysMsgChat; dxplay.h:442
@@ -438,7 +438,7 @@ protected:
     virtual bool SysMsgChat(
         DPMSG_CHAT* message, unsigned long toId)
     {
-        return 1;
+        return true;
     }
 
     // Original: CDPlay::SysMsgDeleteGroupFromGroup; dxplay.h:443
@@ -446,7 +446,7 @@ protected:
     virtual bool SysMsgDeleteGroupFromGroup(
         DPMSG_ADDGROUPTOGROUP* message, unsigned long toId)
     {
-        return 1;
+        return true;
     }
 
     // Original: CDPlay::SysMsgDeletePlayerFromGroup; dxplay.h:444
@@ -454,7 +454,7 @@ protected:
     virtual bool SysMsgDeletePlayerFromGroup(
         DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId)
     {
-        return 1;
+        return true;
     }
 
     // Original: CDPlay::SysMsgSecureMessage; dxplay.h:445
@@ -462,7 +462,7 @@ protected:
     virtual bool SysMsgSecureMessage(
         DPMSG_SECUREMESSAGE* message, unsigned long toId)
     {
-        return 1;
+        return true;
     }
 
     // Original: CDPlay::SysMsgSessionLost; dxplay.h:446
@@ -470,7 +470,7 @@ protected:
     virtual bool SysMsgSessionLost(
         DPMSG_GENERIC* message, unsigned long toId)
     {
-        return 1;
+        return true;
     }
 
     // Original: CDPlay::SysMsgSetPlayerOrGroupData; dxplay.h:447
@@ -478,7 +478,7 @@ protected:
     virtual bool SysMsgSetPlayerOrGroupData(
         DPMSG_SETPLAYERORGROUPDATA* message, unsigned long toId)
     {
-        return 1;
+        return true;
     }
 
     // Original: CDPlay::SysMsgSetPlayerOrGroupName; dxplay.h:448
@@ -486,7 +486,7 @@ protected:
     virtual bool SysMsgSetPlayerOrGroupName(
         DPMSG_SETPLAYERORGROUPNAME* message, unsigned long toId)
     {
-        return 1;
+        return true;
     }
 
     // Original: CDPlay::SysMsgSetSessionDesc; dxplay.h:449
@@ -494,7 +494,7 @@ protected:
     virtual bool SysMsgSetSessionDesc(
         DPMSG_SETSESSIONDESC* message, unsigned long toId)
     {
-        return 1;
+        return true;
     }
 
     // Original: CDPlay::SysMsgStartSession; dxplay.h:450
@@ -502,7 +502,7 @@ protected:
     virtual bool SysMsgStartSession(
         DPMSG_STARTSESSION* message, unsigned long toId)
     {
-        return 1;
+        return true;
     }
     virtual bool SysMsgHost(
         DPMSG_GENERIC* sysMsg, unsigned long toID);

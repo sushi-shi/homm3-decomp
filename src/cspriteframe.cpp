@@ -929,7 +929,7 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
 
     if (EncodingMethod == eEncodeTilesetRLE || EncodingMethod == eEncodeRaw) {
         DrawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
-                 pal, hflip, 0);
+                 pal, hflip, false);
         return;
     }
     else if (EncodingMethod == eEncodeAdvObjRLE) {
@@ -943,7 +943,7 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
     DATA_COMPGEN_GUARD(0x006968b7, drawOpaqueRunCodeGuard, kOpaqueRunCode)
     DATA(0x0069689c)
     static const unsigned char kOpaqueRunCode = kGeneralRLEOpaqueRunCode;
-    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, false);
 
     if (sw <= 0 || sh <= 0)
         return;
@@ -1101,7 +1101,7 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
         if (EncodingMethod == eEncodeTilesetRLE ||
             EncodingMethod == eEncodeRaw) {
             DrawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
-                     pal, hflip, 0);
+                     pal, hflip, false);
             return;
         }
         if (EncodingMethod == eEncodeAdvObjRLE) {
@@ -1118,7 +1118,7 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
     DATA_COMPGEN_GUARD(0x006968b4, creatureOpaqueRunCodeGuard, kOpaqueRunCode)
     DATA(0x006968b5)
     static const unsigned char kOpaqueRunCode = kGeneralRLEOpaqueRunCode;
-    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, false);
 
     if (sw > 0 && sh > 0) {
         lineOffset =
@@ -1387,12 +1387,12 @@ void CSpriteFrame::DrawAdvObjImpl(int sx, int sy, int sw, int sh,
         return;
     }
     if (EncodingMethod == eEncodeTilesetRLE || EncodingMethod == eEncodeRaw) {
-        DrawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 0);
+        DrawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, false);
         return;
     }
 
     assert(EncodingMethod == eEncodeAdvObjRLE);
-    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, false);
     if (sw > 0) {
         if (sh > 0) {
 
@@ -1572,7 +1572,7 @@ void CSpriteFrame::DrawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
     const TOffset* cellOffset;
 
     assert(EncodingMethod == eEncodeAdvObjRLE);
-    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, false);
     if (sw > 0) {
         if (sh > 0) {
 
@@ -1765,7 +1765,7 @@ void CSpriteFrame::DrawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
     const TOffset* cellOffset;
 
     assert(EncodingMethod == eEncodeAdvObjRLE);
-    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, false);
     if (sw > 0) {
         if (sh > 0) {
 
@@ -1954,7 +1954,7 @@ void CSpriteFrame::DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
     static const unsigned char kOpaqueRunCode = ePackedRleLiteral;
 
     if (EncodingMethod == eEncodeGeneralRLE) {
-        Draw(sw, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hFlipped, 1);
+        Draw(sw, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hFlipped, true);
         return;
     }
     if (EncodingMethod == eEncodeAdvObjRLE) {
@@ -2729,13 +2729,13 @@ void CSpriteFrame::DrawSpellEffect(int sx, int sy, int sw, int sh,
     typedef unsigned short TDstPixel;
 
     if (!alpha) {
-        Draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
+        Draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, true);
         return;
     }
 
     if (EncodingMethod == eEncodeTilesetRLE || EncodingMethod == eEncodeRaw) {
         DrawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
-                 pal, hflip, 0);
+                 pal, hflip, false);
         return;
     }
     else if (EncodingMethod == eEncodeAdvObjRLE) {
@@ -2751,7 +2751,7 @@ void CSpriteFrame::DrawSpellEffect(int sx, int sy, int sw, int sh,
     DATA_COMPGEN_GUARD(0x006968a7, spellEffectOpaqueRunCodeGuard, kOpaqueRunCode)
     DATA(0x006968b6)
     static const unsigned char kOpaqueRunCode = kGeneralRLEOpaqueRunCode;
-    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
+    Clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, false);
 
     if (sw > 0 && sh > 0) {
         lineOffset =

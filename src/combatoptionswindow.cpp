@@ -41,65 +41,65 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     m_widgets.push_back(background);
 
     m_widgets.push_back(new button(
-        246, 359, 100, 48, DEFAULT_ID, "codefaul.def", 1, 0, 0, 0, 2));
+        246, 359, 100, 48, DEFAULT_ID, "codefaul.def", 1, 0, false, 0, 2));
 
     button* accept = new button(
         357, 359, 100, 48, DIALOG_RETURN_SPLIT_ACCEPT, "soretrn.def",
-        1, 0, 0, 28, 2);
+        1, 0, false, 28, 2);
     accept->setHotkey(1);
     m_widgets.push_back(accept);
 
     for (int musicSlot = 0; musicSlot < 10; ++musicSlot)
         m_widgets.push_back(new iconWidget(
             29 + musicSlot * 19, 303, 18, 36,
-            musicSlot + MUSIC_VOLUME_0_ID, "syslb.def", 0, 0, 0, 0, 0x10));
+            musicSlot + MUSIC_VOLUME_0_ID, "syslb.def", 0, 0, false, 0, 0x10));
 
     for (int effectsSlot = 0; effectsSlot < 10; ++effectsSlot)
         m_widgets.push_back(new iconWidget(
             29 + effectsSlot * 19, 369, 18, 36,
             effectsSlot + EFFECTS_VOLUME_0_ID, "syslb.def",
-            0, 0, 0, 0, 0x10));
+            0, 0, false, 0, 0x10));
 
     m_widgets.push_back(new button(
-        28, 225, 62, 32, COMBAT_SPEED_0_ID, "sysopb9.def", 0, 1, 0, 0, 2));
+        28, 225, 62, 32, COMBAT_SPEED_0_ID, "sysopb9.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(
         92, 225, 62, 32, COMBAT_SPEED_0_ID + 1, "sysob10.def",
-        0, 1, 0, 0, 2));
+        0, 1, false, 0, 2));
     m_widgets.push_back(new button(
-        156, 225, 62, 32, COMBAT_SPEED_2_ID, "sysob11.def", 0, 1, 0, 0, 2));
+        156, 225, 62, 32, COMBAT_SPEED_2_ID, "sysob11.def", 0, 1, false, 0, 2));
 
     m_widgets.push_back(new iconWidget(
         246, 84, 32, 24, AUTO_CREATURES_ID, "sysopchk.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         246, 114, 32, 24, AUTO_SPELLS_ID, "sysopchk.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         246, 144, 32, 24, AUTO_CATAPULT_ID, "sysopchk.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         246, 174, 32, 24, AUTO_BALLISTA_ID, "sysopchk.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         246, 204, 32, 24, AUTO_FIRST_AID_TENT_ID, "sysopchk.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         246, 283, 32, 24, CREATURE_INFO_VERBOSE_ID, "sysopchk.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         246, 313, 32, 24, CREATURE_INFO_COMPACT_ID, "sysopchk.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
-        24, 55, 32, 24, SHOW_GRID_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
+        24, 55, 32, 24, SHOW_GRID_ID, "sysopchk.def", 0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         24, 88, 32, 24, MOVEMENT_SHADOW_ID, "sysopchk.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         24, 122, 32, 24, MOUSE_SHADOW_ID, "sysopchk.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(
         24, 154, 32, 24, ANIMATE_SPELLBOOK_ID, "sysopchk.def",
-        0, 0, 0, 0, 0x10));
+        0, 0, false, 0, 0x10));
 
     m_widgets.push_back(new textWidget(
         26, 19, 432, 28, g_generalText->GetText(GENERAL_TEXT_COMBAT_OPTIONS), "bigfont.fnt",
@@ -613,7 +613,7 @@ MAC_ADDRESS(0x07dd74, 0x4c)
 static void updateCombatOptions(int firstUpdate)
 {
     if (!firstUpdate) {
-        g_combatOptionsWindow->drawWindow(1, 0xffff0001, 0xffff);
+        g_combatOptionsWindow->drawWindow(true, 0xffff0001, 0xffff);
     }
 }
 

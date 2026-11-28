@@ -150,7 +150,7 @@ MAC_ADDRESS(0x16bcb0, 0x2a4)
 bool CBonusDlg::createWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description)
 {
     if (!setup(300, 225, 200, 150))
-        return 0;
+        return false;
     add(new textWidget(10, 26, m_width - 20, 36, title, "medfont.fnt",
         font::PRIMARY, -1, 1, 0, 8));
     add(new CSpriteWidget((m_width - sprite->GetWidth()) / 2, 60, sprite, frame));
@@ -158,7 +158,7 @@ bool CBonusDlg::createWin(const char* title, CSprite* sprite, int frame, const c
         font::PRIMARY, -1, 1, 0, 8));
     add(new textWidget(15, 120, m_width - 30, m_height - 120, description,
         "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
-    return 1;
+    return true;
 }
 
 // ============================================================================
@@ -171,7 +171,7 @@ void CSpriteWidget::draw() const
 {
     m_sprite->Draw(0, m_frame, 0, 0, m_width, m_height,
         g_windowManager->m_screenBitmap, m_x + m_parentWindow->m_x,
-        m_y + m_parentWindow->m_y, 0, 1);
+        m_y + m_parentWindow->m_y, false, true);
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:47 - inlined into every CreateWin
@@ -204,7 +204,7 @@ MAC_ADDRESS(0x16bf54, 0x25c)
 bool CBonusDlg::createWin(const char* title, Bitmap816* image, const char* botTitle, const char* description)
 {
     if (!setup(300, 225, 200, 150))
-        return 0;
+        return false;
     add(new textWidget(10, 26, m_width - 20, 36, title, "medfont.fnt",
         font::PRIMARY, -1, 1, 0, 8));
     add(new CBitmapWidget((m_width - image->GetWidth()) / 2, 60, image));
@@ -212,7 +212,7 @@ bool CBonusDlg::createWin(const char* title, Bitmap816* image, const char* botTi
         font::PRIMARY, -1, 1, 0, 8));
     add(new textWidget(15, 120, m_width - 30, m_height - 120, description,
         "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
-    return 1;
+    return true;
 }
 
 VA(0x00575a10, 0x10)
@@ -233,7 +233,7 @@ void CBitmapWidget::draw() const
 {
     m_image->Draw(0, 0, m_image->GetWidth(), m_image->GetHeight(),
         g_windowManager->m_screenBitmap, m_x + m_parentWindow->m_x,
-        m_y + m_parentWindow->m_y, 1);
+        m_y + m_parentWindow->m_y, true);
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:82 - inlined into the bitmap
@@ -285,7 +285,7 @@ bool CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSprite* spe
     char tempText[256];
 
     if (!setup(250, 172, 300, 256))
-        return 0;
+        return false;
 
     add(new textWidget(30, 26, m_width - 60, 36,
         g_generalText->GetText(GENERAL_TEXT_SCENARIO_STARTING_HERO_CAPTION), "medfont.fnt", font::PRIMARY,
@@ -304,7 +304,7 @@ bool CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSprite* spe
         specialtyIcon, frame));
     add(new textWidget(30, specialtyIcon->GetHeight() + 151, m_width - 60, 36,
         specialtyName, "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
-    return 1;
+    return true;
 }
 
 // ============================================================================
@@ -338,7 +338,7 @@ MAC_ADDRESS(0x16c63c, 0x52c)  // anchor-vtable CTownDlg::CreateWin inlines CSpri
 bool CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 {
     if (!setup(272, 140, 256, 320))
-        return 0;
+        return false;
 
     add(new textWidget(10, 26, m_width - 20, 36,
         g_generalText->GetText(GENERAL_TEXT_SCENARIO_TOWN_ALIGNMENT_CAPTION), "medfont.fnt", font::PRIMARY,
@@ -360,7 +360,7 @@ bool CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
         TCreatureType creature = GetBaseCreature(townType, slot);
         iconWidget* portrait = new iconWidget(
             iconX, iconY, 32, 32, slot, "cprsmall.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN);
         add(portrait);
         portrait->setIconFrame(creature + 2);
         add(new textWidget(iconX - 10, textY, 52, 32,
@@ -376,7 +376,7 @@ bool CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
         TCreatureType creature = GetBaseCreature(townType, slot);
         iconWidget* portrait = new iconWidget(
             iconX, iconY, 32, 32, slot, "cprsmall.def",
-            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+            0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN);
         add(portrait);
         portrait->setIconFrame(creature + 2);
         add(new textWidget(iconX - 10, textY, 52, 32,
@@ -384,7 +384,7 @@ bool CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
             font::PRIMARY, -1, 1, 0, 8));
         iconX += 52;
     }
-    return 1;
+    return true;
 }
 
 // ============================================================================
@@ -422,7 +422,7 @@ bool CTeamAlignmentDlg::createWin()
     char tempText[256];
     int dialogHeight = ((m_numTeams * 50 + 56) / 64 + 1) * 64;
     if (!setup(272, (600 - dialogHeight) / 2, 256, dialogHeight))
-        return 0;
+        return false;
 
     add(new textWidget(10, 20, m_width - 20, 36,
         g_generalText->GetText(GENERAL_TEXT_TEAM_ALIGNMENTS_CAPTION), "medfont.fnt", font::PRIMARY,
@@ -441,14 +441,14 @@ bool CTeamAlignmentDlg::createWin()
             if (m_teamMasks[team] & (1 << player)) {
                 iconWidget* flag = new iconWidget(
                     xStart + xOffset * 18, y + 20, 15, 20, -1, "itgflags.def",
-                    0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                    0, 0, false, 0, iconWidget::ICON_STYLE_PLAIN);
                 flag->sendMessage(widget::WIDGET_SET_ICON_FRAME, player);
                 add(flag);
                 ++xOffset;
             }
         }
     }
-    return 1;
+    return true;
 }
 
 DC_ADDRESS(0x12ed7c, 0x58)
@@ -523,7 +523,7 @@ TRandomMapProgress::TRandomMapProgress(int totalSteps)
 
     for (unsigned int i = 0; i < m_widgets.size(); i++)
         m_window->addWidget(m_widgets[i], -1);
-    g_windowManager->addWindow(m_window, -1, 1);
+    g_windowManager->addWindow(m_window, -1, true);
     updateProgressBar();
     g_windowManager->updateScreen();
 }
@@ -558,7 +558,7 @@ void TRandomMapProgress::updateProgressBar()
         return;
     m_drawnPosition = position;
     int partialRow = position % 16;
-    m_window->drawWindow(0, 0xffff0001, 0xffff);
+    m_window->drawWindow(false, 0xffff0001, 0xffff);
 
     for (int i = 0; i < fullRow; i++) {
         m_barSprite->Draw(0, i, 0, 0, m_barSprite->GetWidth(), m_barSprite->GetHeight(),

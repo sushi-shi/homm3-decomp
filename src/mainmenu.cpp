@@ -67,23 +67,23 @@ TMainMenu::TMainMenu()
     m_widgets.push_back(new button(
         g_mainMenuButtonRects[0].m_x, g_mainMenuButtonRects[0].m_y,
         g_mainMenuButtonRects[0].m_width, g_mainMenuButtonRects[0].m_height,
-        NEW_GAME_ID, "mmenung.def", 0, 1, 0, 49, 2));
+        NEW_GAME_ID, "mmenung.def", 0, 1, false, 49, 2));
     m_widgets.push_back(new button(
         g_mainMenuButtonRects[1].m_x, g_mainMenuButtonRects[1].m_y,
         g_mainMenuButtonRects[1].m_width, g_mainMenuButtonRects[1].m_height,
-        LOAD_GAME_ID, "mmenulg.def", 0, 1, 0, 38, 2));
+        LOAD_GAME_ID, "mmenulg.def", 0, 1, false, 38, 2));
     m_widgets.push_back(new button(
         g_mainMenuButtonRects[2].m_x, g_mainMenuButtonRects[2].m_y,
         g_mainMenuButtonRects[2].m_width, g_mainMenuButtonRects[2].m_height,
-        HIGH_SCORE_ID, "mmenuhs.def", 0, 1, 0, 35, 2));
+        HIGH_SCORE_ID, "mmenuhs.def", 0, 1, false, 35, 2));
     m_widgets.push_back(new button(
         g_mainMenuButtonRects[3].m_x, g_mainMenuButtonRects[3].m_y,
         g_mainMenuButtonRects[3].m_width, g_mainMenuButtonRects[3].m_height,
-        CREDITS_ID, "mmenucr.def", 0, 1, 0, 46, 2));
+        CREDITS_ID, "mmenucr.def", 0, 1, false, 46, 2));
     m_widgets.push_back(new button(
         g_mainMenuButtonRects[4].m_x, g_mainMenuButtonRects[4].m_y,
         g_mainMenuButtonRects[4].m_width, g_mainMenuButtonRects[4].m_height,
-        QUIT_ID, "mmenuqt.def", 0, 1, 0, 1, 2));
+        QUIT_ID, "mmenuqt.def", 0, 1, false, 1, 2));
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -164,7 +164,7 @@ static int mainMenuHandler(message& msg)
     if (g_mainMenu->m_showCdMessage && !updatePlease) {
         const char* fill = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
 
-        g_mainMenu->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+        g_mainMenu->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
                                WINDOW_ALL_WIDGETS_HIGH);
         if (g_cdRomErr == CD_ROM_RESTORATION_OF_ERATHIA_DISC ||
             g_cdRomErr == CD_ROM_ARMAGEDDONS_BLADE_DISC) {
@@ -211,7 +211,7 @@ static int mainMenuHandler(message& msg)
             return 0;
 
         if (msg.m_codeX == widget::WIDGET_DESELECT) {
-            bool confirmed = 1;
+            bool confirmed = true;
             if (msg.m_codeY == TMainMenu::QUIT_ID) {
                 videoPause();
                 if (!g_lobbyLaunched) {
@@ -221,7 +221,7 @@ static int mainMenuHandler(message& msg)
                     videoResume();
                     if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
                         updatePlease = 0;
-                        confirmed = 0;
+                        confirmed = false;
                     }
                 }
             }
@@ -250,7 +250,7 @@ static int mainMenuHandler(message& msg)
     }
 
     if (videoNeedsUpdate() || hoverChanged) {
-        g_mainMenu->drawWindow(0, TMainMenu::NEW_GAME_ID,
+        g_mainMenu->drawWindow(false, TMainMenu::NEW_GAME_ID,
                                TMainMenu::QUIT_ID);
         g_windowManager->updateScreen(520, 4, 250, 567);
         videoDrawRects();

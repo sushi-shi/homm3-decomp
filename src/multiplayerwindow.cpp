@@ -281,9 +281,9 @@ inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     m_widgets.push_back(m_header1);
     m_widgets.push_back(m_header2);
     m_widgets.push_back(new button(26, 143, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
-                                 0, 28, 2));
+                                 false, 28, 2));
     m_widgets.push_back(new button(142, 143, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
-                                 0, 1, 2));
+                                 false, 1, 2));
 
     m_rollover = new textWidget(8, 186, 216, 18, NULL, "smalfont.fnt", font::PRIMARY,
                               ROLLOVER_ID, 1, 32, 8);
@@ -293,8 +293,8 @@ inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     setFocus(m_field1->m_id);
     m_field1->setAutoDraw(1);
     m_field2->setAutoDraw(1);
-    getWidget(OKAY_ID)->setHelpText(g_mpHelp[2].m_text, NULL, 0);
-    getWidget(BACK_ID)->setHelpText(g_mpHelp[3].m_text, NULL, 0);
+    getWidget(OKAY_ID)->setHelpText(g_mpHelp[2].m_text, NULL, false);
+    getWidget(BACK_ID)->setHelpText(g_mpHelp[3].m_text, NULL, false);
 }
 
 // DC keeps this source helper out of line and OnWidgetDeselect calls it;
@@ -325,7 +325,7 @@ DC_ADDRESS(0x102cc8, 0x30)
 void CHotSeatDlg::onKillFocus(int id)
 {
     updateOK();
-    drawWindow(1, 0xffff0001, 0xffff);
+    drawWindow(true, 0xffff0001, 0xffff);
 }
 
 DC_ADDRESS(0x102cf8, 0x54)
@@ -402,7 +402,7 @@ int CHotSeatEdit::onKeyPress(message* msg)
     int handled = CMPEdit::onKeyPress(msg);
 
     static_cast<CHotSeatDlg*>(m_parentWindow)->updateOK();
-    static_cast<CHotSeatDlg*>(m_parentWindow)->drawWindow(1, 0xffff0001,
+    static_cast<CHotSeatDlg*>(m_parentWindow)->drawWindow(true, 0xffff0001,
                                                           0xffff);
     return handled;
 }
@@ -433,21 +433,21 @@ TMultiPlayerWindow::TMultiPlayerWindow()
 
     m_hotSeat = NULL;
     if (!g_noCdRom)
-        m_hotSeat = new button(373, 78, 64, 48, HOT_SEAT_ID, "muBhot.def", 0, 1, 0, 0, 2);
+        m_hotSeat = new button(373, 78, 64, 48, HOT_SEAT_ID, "muBhot.def", 0, 1, false, 0, 2);
 
-    m_ipx = new button(373, 135, 64, 48, IPX_ID, "muBipx.def", 0, 1, 0, 0, 2);
-    m_tcp = new button(373, 192, 64, 48, TCP_ID, "muBtcp.def", 0, 1, 0, 0, 2);
-    m_modem = new button(373, 249, 64, 48, MODEM_ID, "muBmodm.def", 0, 1, 0, 0, 2);
-    m_direct = new button(373, 306, 64, 48, DIRECT_ID, "muBdrct.def", 0, 1, 0, 0, 2);
-    m_online = new button(373, 363, 64, 48, ONLINE_ID, "mubonl.def", 0, 1, 0, 0, 2);
+    m_ipx = new button(373, 135, 64, 48, IPX_ID, "muBipx.def", 0, 1, false, 0, 2);
+    m_tcp = new button(373, 192, 64, 48, TCP_ID, "muBtcp.def", 0, 1, false, 0, 2);
+    m_modem = new button(373, 249, 64, 48, MODEM_ID, "muBmodm.def", 0, 1, false, 0, 2);
+    m_direct = new button(373, 306, 64, 48, DIRECT_ID, "muBdrct.def", 0, 1, false, 0, 2);
+    m_online = new button(373, 363, 64, 48, ONLINE_ID, "mubonl.def", 0, 1, false, 0, 2);
 
     m_host = NULL;
     if (!g_noCdRom)
-        m_host = new button(373, 78, 64, 48, HOST_ID, "muBhost.def", 0, 1, 0, 0, 2);
+        m_host = new button(373, 78, 64, 48, HOST_ID, "muBhost.def", 0, 1, false, 0, 2);
 
-    m_join = new button(373, 135, 64, 48, JOIN_ID, "muBjoin.def", 0, 1, 0, 0, 2);
-    m_search = new button(373, 192, 64, 48, SEARCH_ID, "muBsrch.def", 0, 1, 0, 0, 2);
-    m_cancel = new button(373, 424, 64, 48, BACK_ID, "muBcanc.def", 0, 1, 0, 1, 2);
+    m_join = new button(373, 135, 64, 48, JOIN_ID, "muBjoin.def", 0, 1, false, 0, 2);
+    m_search = new button(373, 192, 64, 48, SEARCH_ID, "muBsrch.def", 0, 1, false, 0, 2);
+    m_cancel = new button(373, 424, 64, 48, BACK_ID, "muBcanc.def", 0, 1, false, 1, 2);
 
     m_sessNameHeader = new textWidget(216 - m_x, 146 - m_y, 127, 18,
                                     g_generalText->GetText(GENERAL_TEXT_SESSION_NAME), "smalfont.fnt",
@@ -481,7 +481,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_widgets.push_back(m_rolloverWidget);
 
     m_gameSlider = new slider(337, 81, 16, 330, SLIDER_ID, 10, sliderGames,
-                              slider::BLUE, 0, 0);
+                              slider::BLUE, 0, false);
     m_widgets.push_back(m_gameSlider);
 
     // DC line 956 retains 112 + i * 25.
@@ -506,11 +506,11 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_currentIndex = 0;
     m_currentGame = 0;
 
-    setHelpText(g_multiSelectionHelp + 1, ONLINE_ID, GAMENAME_1_ID, 0);
+    setHelpText(g_multiSelectionHelp + 1, ONLINE_ID, GAMENAME_1_ID, false);
     m_gameSlider->setHelpText(g_multiSelectionHelp[22].m_text,
-                              g_multiSelectionHelp[22].m_rclick, 0);
+                              g_multiSelectionHelp[22].m_rclick, false);
     m_cancel->setHelpText(g_multiSelectionHelp[24].m_text,
-                          g_multiSelectionHelp[24].m_rclick, 0);
+                          g_multiSelectionHelp[24].m_rclick, false);
 
     deleteTempSaveGame(g_config.m_scFile);
 
@@ -547,7 +547,7 @@ MAC_ADDRESS(0x21ab24, 0x54)
 static void sliderGames(int state, heroWindow* parentWindow)
 {
     g_multiPlayerWindow->m_currentIndex = state;
-    g_multiPlayerWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_multiPlayerWindow->drawWindow(false, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     g_multiPlayerWindow->update();
 }
 
@@ -638,7 +638,7 @@ void TMultiPlayerWindow::update()
 
     if (!m_showSplash) {
         if (count > 0) {
-            drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            drawWindow(false, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
             if (count >= 12)
                 count = 12;
             for (int row = 0; row < count; ++row) {
@@ -660,7 +660,7 @@ void TMultiPlayerWindow::update()
                                 g_multiPlayerWindow->m_gameState->GetWidth(),
                                 g_multiPlayerWindow->m_gameState->GetHeight(),
                                 g_windowManager->m_screenBitmap, wx + 0x12,
-                                rowY, 0, 1);
+                                rowY, false, true);
                 int fontColor = isSelected ? 5 : 1;
                 g_smallFont->DrawBoundedString(
                     nameBuf, g_windowManager->m_screenBitmap, wx + 0x2b, rowY,
@@ -690,7 +690,7 @@ void TMultiPlayerWindow::update()
                 m_join->enable(0);
             if (m_host)
                 m_host->enable(haveName);
-            drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            drawWindow(false, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         }
     } else {
         if (m_hostJoinScreen) {
@@ -705,7 +705,7 @@ void TMultiPlayerWindow::update()
             m_modem->enable(haveName);
             m_direct->enable(haveName);
         }
-        drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        drawWindow(false, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
 
     g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
@@ -745,7 +745,7 @@ bool TMultiPlayerWindow::onModemHost()
     if (!initRemote(g_mpNetProtocol, NULL, NULL)) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_MODEM_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        return 0;
+        return false;
     }
 
     g_mpExtendedType = 1;
@@ -755,10 +755,10 @@ bool TMultiPlayerWindow::onModemHost()
         ShowCursor(0);
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         remoteCleanup();
-        return 0;
+        return false;
     }
     ShowCursor(0);
-    return 1;
+    return true;
 }
 
 // DC retains these three member helpers and OnWidgetDeselect calls them.
@@ -771,7 +771,7 @@ inline bool TMultiPlayerWindow::onIPX()
     if (::initRemote(MP_IPX, m_playerName->getText()) &&
         initConnection(NULL, NULL)) {
         DPCAPS caps;
-        g_dPlay->GetCaps(&caps, 1);
+        g_dPlay->GetCaps(&caps, true);
         m_sessionRefreshTimeout = caps.dwTimeout + 100;
         if (g_mpNetProtocol == MP_TCP)
             m_sessionRefreshTimeout = 1000;
@@ -781,12 +781,12 @@ inline bool TMultiPlayerWindow::onIPX()
         m_join->show();
         m_join->enable(0);
         RefreshSessions();
-        return 1;
+        return true;
     }
 
     normalDialog(g_generalText->GetText(GENERAL_TEXT_IPX_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                  -1, 0, -1, 0, -1, 0, -1, 0);
-    return 0;
+    return false;
 }
 
 DC_ADDRESS(0x101c4c, 0x56)
@@ -801,7 +801,7 @@ inline bool TMultiPlayerWindow::onModem()
     m_join->show();
     m_join->enable(1);
     update();
-    return 1;
+    return true;
 }
 
 // DC 1197..1297 fixes every arm's shape: CANCEL tests m_inSessionList
@@ -818,10 +818,10 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         if (m_inSessionList) {
             remoteCleanup();
             goMainMenu();
-            drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            drawWindow(true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
             update();
         } else {
-            exitFlag = 1;
+            exitFlag = true;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
             remoteCleanup();
         }
@@ -830,7 +830,7 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
     case IPX_ID:
         goSessionList();
         if (!onIPX()) {
-            exitFlag = 1;
+            exitFlag = true;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
             remoteCleanup();
         }
@@ -840,7 +840,7 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         goSessionList();
         if (!onTCP()) {
             remoteCleanup();
-            exitFlag = 1;
+            exitFlag = true;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         }
         break;
@@ -849,7 +849,7 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         goSessionList();
         if (!onModem()) {
             remoteCleanup();
-            exitFlag = 1;
+            exitFlag = true;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         }
         break;
@@ -858,7 +858,7 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         goSessionList();
         if (!onDirect()) {
             remoteCleanup();
-            exitFlag = 1;
+            exitFlag = true;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         }
         break;
@@ -874,28 +874,28 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
             if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL) {
                 g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
                 remoteCleanup();
-                exitFlag = 1;
+                exitFlag = true;
             } else {
                 if (m_hostJoinScreen) {
                     remoteCleanup();
                     goMainMenu();
-                    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+                    drawWindow(true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
                     update();
                 }
             }
         } else {
-            exitFlag = 1;
+            exitFlag = true;
         }
         break;
 
     case JOIN_ID:
         if (onJoin()) {
-            exitFlag = 1;
+            exitFlag = true;
         } else {
             if (m_hostJoinScreen) {
                 remoteCleanup();
                 goMainMenu();
-                drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+                drawWindow(true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
                 update();
             }
         }
@@ -903,13 +903,13 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 
     case SEARCH_ID:
         if (OnSearch()) {
-            exitFlag = 1;
+            exitFlag = true;
         }
         break;
 
     case HOT_SEAT_ID:
         if (onHotSeat()) {
-            exitFlag = 1;
+            exitFlag = true;
         }
         break;
 
@@ -960,7 +960,7 @@ bool TMultiPlayerWindow::joinSession(CDPlaySession* session, const char* passwor
 {
     if (!g_dPlay->JoinSession(&session->m_guidInstance,
                              const_cast<char*>(password)))
-        return 0;
+        return false;
 
     int version = g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
@@ -969,10 +969,10 @@ bool TMultiPlayerWindow::joinSession(CDPlaySession* session, const char* passwor
     g_thisNetPlayerInfo.m_version = version;
 
     if (g_dPlay->getLastError())
-        return 0;
+        return false;
 
     m_sessTimer = 0;
-    return 1;
+    return true;
 }
 
 // Mac calls initRemote, then its Mac transport setup; Windows hosts through
@@ -995,13 +995,13 @@ bool TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
 
     if (!g_dPlay->HostSession(fullName, flags, 8,
                              const_cast<char*>(password)))
-        return 0;
+        return false;
 
     int version = g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
         g_config.m_networkDefaultName, &version, sizeof(version), NULL);
     if (!g_thisNetPlayerInfo.m_dpid)
-        return 0;
+        return false;
 
     strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
     g_thisNetPlayerInfo.m_version = version;
@@ -1009,7 +1009,7 @@ bool TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
     if (g_mpNetProtocol == MP_TCP)
         g_dPlay->GetIPAddress(g_thisNetPlayerInfo.m_dpid, m_localIpAddress);
 
-    return 1;
+    return true;
 }
 
 VA(0x0050fbc0, 0x86)
@@ -1020,15 +1020,15 @@ bool TMultiPlayerWindow::initRemote(eNetGameType netGameType, const char* extra,
 
     g_mpNetProtocol = netGameType;
     if (!::initRemote(netGameType, m_playerName->getText()))
-        return 0;
+        return false;
     if (!initConnection(const_cast<char*>(extra), comportInfo))
-        return 0;
+        return false;
 
-    g_dPlay->GetCaps(&dpCaps, 1);
+    g_dPlay->GetCaps(&dpCaps, true);
     m_sessionRefreshTimeout = dpCaps.dwTimeout + 100;
     if (g_mpNetProtocol == MP_TCP)
         m_sessionRefreshTimeout = 1000;
-    return 1;
+    return true;
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:2043
@@ -1043,7 +1043,7 @@ inline bool TMultiPlayerWindow::onDirect()
     m_join->show();
     m_join->enable(1);
     update();
-    return 1;
+    return true;
 }
 
 VA(0x0050fc50, 0x14F)
@@ -1053,7 +1053,7 @@ bool TMultiPlayerWindow::onDirectHost()
     if (!initRemote(MP_SERIAL, NULL, NULL)) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_SERIAL_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        return 0;
+        return false;
     }
 
     g_mpExtendedType = 1;
@@ -1067,11 +1067,11 @@ bool TMultiPlayerWindow::onDirectHost()
                          -1, 0, -1, 0, -1, 0, -1, 0);
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         remoteCleanup();
-        return 0;
+        return false;
     }
 
     ShowCursor(0);
-    return 1;
+    return true;
 }
 
 VA(0x0050fda0, 0x2B7)
@@ -1093,19 +1093,19 @@ bool TMultiPlayerWindow::onHost()
     sessDlg.m_field1->setText(g_generalText->GetText(GENERAL_TEXT_MY_GAME));
     sessDlg.m_header1->setText(g_mpHelp[6].m_text);
     sessDlg.m_header2->setText(g_generalText->GetText(GENERAL_TEXT_PASSWORD));
-    sessDlg.m_field1->setHelpText(g_mpHelp[4].m_text, NULL, 0);
-    sessDlg.m_field2->setHelpText(g_mpHelp[5].m_text, NULL, 0);
-    sessDlg.doModal(0);
+    sessDlg.m_field1->setHelpText(g_mpHelp[4].m_text, NULL, false);
+    sessDlg.m_field2->setHelpText(g_mpHelp[5].m_text, NULL, false);
+    sessDlg.doModal(false);
 
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
-        return 0;
+        return false;
 
     const char* password = sessDlg.m_field2->getText();
     if (!strlen(password))
         password = NULL;
     if (!hostSession(sessDlg.m_field1->getText(), password))
-        return 0;
-    return 1;
+        return false;
+    return true;
 }
 
 VA(0x00510760, 0x62)
@@ -1187,14 +1187,14 @@ int CMPInputDlg::onWidgetDeselect(int id, bool& exitFlag)
     switch (id) {
     case OKAY_ID:
         if (onOK()) {
-            exitFlag = 1;
+            exitFlag = true;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
             return 1;
         }
         break;
 
     case BACK_ID:
-        exitFlag = 1;
+        exitFlag = true;
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         return 1;
     }
@@ -1220,7 +1220,7 @@ void CMPInputDlg::updateOK()
             getWidget(OKAY_ID)->enable(0);
         else
             getWidget(OKAY_ID)->enable(1);
-        drawWindow(1, 0xffff0001, 0xffff);
+        drawWindow(true, 0xffff0001, 0xffff);
     }
 }
 
@@ -1234,7 +1234,7 @@ bool TMultiPlayerWindow::onModemJoin()
         if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
             normalDialog(g_generalText->GetText(GENERAL_TEXT_MODEM_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
-        return 0;
+        return false;
     }
 
     ShowCursor(1);
@@ -1254,7 +1254,7 @@ bool TMultiPlayerWindow::onModemJoin()
         if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
             normalDialog(g_generalText->GetText(GENERAL_TEXT_NETWORK_NO_SESSIONS_FOUND), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
-        return 0;
+        return false;
     }
 
     ShowCursor(0);
@@ -1264,9 +1264,9 @@ bool TMultiPlayerWindow::onModemJoin()
         if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
             normalDialog(g_generalText->GetText(GENERAL_TEXT_SESSION_CONNECTION_ERROR), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
-        return 0;
+        return false;
     }
-    return 1;
+    return true;
 }
 
 VA(0x00510cb0, 0x282)
@@ -1276,7 +1276,7 @@ bool TMultiPlayerWindow::onDirectJoin()
     if (!initRemote(MP_SERIAL, NULL, NULL)) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_SERIAL_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        return 0;
+        return false;
     }
 
     m_sessions->destroy();
@@ -1302,7 +1302,7 @@ bool TMultiPlayerWindow::onDirectJoin()
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
         g_mpNetProtocol = MP_SERIAL;
-        return 0;
+        return false;
     }
 
     ShowCursor(0);
@@ -1310,9 +1310,9 @@ bool TMultiPlayerWindow::onDirectJoin()
     if (!joinSession(session, NULL)) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_SESSION_CONNECTION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        return 0;
+        return false;
     }
-    return 1;
+    return true;
 }
 
 VA(0x00510f40, 0x380)
@@ -1338,11 +1338,11 @@ bool TMultiPlayerWindow::onJoin()
     if (!m_sessions->getSessionInfo(static_cast<unsigned long>(m_currentGame),
                                    sessName, userName,
                                    numPlayers, status))
-        return 0;
+        return false;
 
     CDPlaySession* session = m_sessions->get(m_currentGame);
     if (!session)
-        return 0;
+        return false;
 
     const char* password = NULL;
     CMPInputDlg dlg(20, 20);
@@ -1351,25 +1351,25 @@ bool TMultiPlayerWindow::onJoin()
         dlg.m_header2->setText(g_generalText->GetText(GENERAL_TEXT_PASSWORD));
         dlg.m_field1->enable(0);
         dlg.m_field1->setText(sessName);
-        dlg.drawWindow(1, 0xffff0001, 0xffff);
+        dlg.drawWindow(true, 0xffff0001, 0xffff);
         dlg.setFocus(dlg.m_field2->m_id);
-        dlg.m_field1->setHelpText(g_mpHelp[6].m_text, NULL, 0);
-        dlg.m_field2->setHelpText(g_mpHelp[5].m_text, NULL, 0);
-        dlg.doModal(0);
+        dlg.m_field1->setHelpText(g_mpHelp[6].m_text, NULL, false);
+        dlg.m_field2->setHelpText(g_mpHelp[5].m_text, NULL, false);
+        dlg.doModal(false);
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
-            return 0;
+            return false;
         password = dlg.m_field2->getText();
     }
 
     if (joinSession(session, password))
-        return 1;
+        return true;
 
     const char* errorText = g_generalText->GetText(GENERAL_TEXT_SESSION_CONNECTION_ERROR);
     if (g_dPlay->getLastError() == static_cast<long>(0x88770154))
         errorText = g_generalText->GetText(GENERAL_TEXT_INVALID_PASSWORD);
     normalDialog(errorText, 1, -1, -1,
                  -1, 0, -1, 0, -1, 0, -1, 0);
-    return 0;
+    return false;
 }
 
 VA(0x005112e0, 0x101)
@@ -1418,7 +1418,7 @@ bool TMultiPlayerWindow::onTCP()
     if (!initRemote(MP_TCP, NULL, NULL)) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_TCP_IP_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        return 0;
+        return false;
     }
 
     if (m_host)
@@ -1447,7 +1447,7 @@ bool TMultiPlayerWindow::onTCP()
     m_gameSlider->updateResolution(
         m_sessions->getCount() - 12);
     update();
-    return 1;
+    return true;
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:1944
@@ -1467,22 +1467,22 @@ bool TMultiPlayerWindow::OnSearch()
     CMPInputDlg searchDlg(20, 20);
     searchDlg.m_header1->setText(g_generalText->GetText(GENERAL_TEXT_NETWORK_HOST_ADDRESS_PROMPT));
     searchDlg.m_header2->setText(g_generalText->GetText(GENERAL_TEXT_PASSWORD_OPTIONAL));
-    searchDlg.m_field1->setHelpText(g_mpHelp[7].m_text, NULL, 0);
-    searchDlg.m_field2->setHelpText(g_mpHelp[5].m_text, NULL, 0);
+    searchDlg.m_field1->setHelpText(g_mpHelp[7].m_text, NULL, false);
+    searchDlg.m_field2->setHelpText(g_mpHelp[5].m_text, NULL, false);
     searchDlg.disableOK();
-    searchDlg.doModal(0);
+    searchDlg.doModal(false);
 
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
-        return 0;
+        return false;
 
     remoteCleanup();
     if (!initRemote(MP_TCP, searchDlg.m_field1->getText(), NULL)) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_TCP_IP_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        return 0;
+        return false;
     }
 
-    CHourGlass hourGlass(1);
+    CHourGlass hourGlass(true);
     m_sessions->destroy();
     g_dPlay->EnumSessions(m_sessions, 5000, 0x42);
 
@@ -1491,7 +1491,7 @@ bool TMultiPlayerWindow::OnSearch()
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
         initRemote(MP_TCP, NULL, NULL);
-        return 0;
+        return false;
     }
 
     // Join the first (only) enumerated session.
@@ -1507,9 +1507,9 @@ bool TMultiPlayerWindow::OnSearch()
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
         initRemote(MP_TCP, NULL, NULL);
-        return 0;
+        return false;
     }
-    return 1;
+    return true;
 }
 
 VA(0x00511d40, 0xD1)
@@ -1518,11 +1518,11 @@ MAC_ADDRESS(0x21c710, 0x55c)
 bool TMultiPlayerWindow::onHotSeat()
 {
     CHotSeatDlg dlg;
-    dlg.doModal(0);
+    dlg.doModal(false);
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
-        return 0;
+        return false;
     g_mpNetProtocol = MP_HOTSEAT;
-    return 1;
+    return true;
 }
 
 // Original: TMultiPlayerWindow::IsNT; multiplayerwindow.cpp:2061
@@ -1563,7 +1563,7 @@ CHotSeatDlg::CHotSeatDlg()
         m_edit[i] = new CHotSeatEdit(277 - m_x, sy - m_y, 281, 18, 21, "",
                                    "smalfont.fnt", font::WHITE, 0, NULL, 0,
                                    FIRST_EDIT_ID + i, 0x100, 0, 7, 5);
-        m_edit[i]->setHelpText(g_mpHelp[1].m_text, g_mpHelp[1].m_rclick, 0);
+        m_edit[i]->setHelpText(g_mpHelp[1].m_text, g_mpHelp[1].m_rclick, false);
         m_widgets.push_back(m_edit[i]);
         sy += 30;
     }
@@ -1577,9 +1577,9 @@ CHotSeatDlg::CHotSeatDlg()
     m_edit[7]->setNextEdit(m_edit[0]);
 
     m_widgets.push_back(new button(95, 338, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
-                                 0, 28, 2));
+                                 false, 28, 2));
     m_widgets.push_back(new button(205, 338, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
-                                 0, 1, 2));
+                                 false, 1, 2));
 
     m_rollover = new textWidget(10, 382, m_width - 20, 18, NULL, "smalfont.fnt",
                                 font::PRIMARY, ROLLOVER_ID, 1, 32, 8);
@@ -1591,10 +1591,10 @@ CHotSeatDlg::CHotSeatDlg()
     for (j = 0; j < 8; j++)
         m_edit[j]->setAutoDraw(1);
     widget* w = getWidget(OKAY_ID);
-    w->setHelpText(g_mpHelp[2].m_text, NULL, 0);
+    w->setHelpText(g_mpHelp[2].m_text, NULL, false);
     w->enable(0);
     w = getWidget(BACK_ID);
-    w->setHelpText(g_mpHelp[3].m_text, NULL, 0);
+    w->setHelpText(g_mpHelp[3].m_text, NULL, false);
 }
 
 VA(0x005123d0, 0x4E)
@@ -1613,13 +1613,13 @@ int CHotSeatDlg::onWidgetDeselect(int id, bool& exitFlag)
     switch (id) {
     case OKAY_ID:
         if (onOK()) {
-            exitFlag = 1;
+            exitFlag = true;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
         }
         break;
 
     case BACK_ID:
-        exitFlag = 1;
+        exitFlag = true;
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         return 1;
     }

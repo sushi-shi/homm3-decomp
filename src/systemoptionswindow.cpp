@@ -58,70 +58,70 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     m_widgets.push_back(background);
 
     m_widgets.push_back(new button(246, 298, 100, 48,
-        TMainMenu::LOAD_GAME_ID, "soload.def", 1, 0, 0, 38, 2));
+        TMainMenu::LOAD_GAME_ID, "soload.def", 1, 0, false, 38, 2));
     m_widgets.push_back(new button(357, 298, 100, 48,
-        TMainMenu::SAVE_GAME_ID, "sosave.def", 1, 0, 0, 31, 2));
+        TMainMenu::SAVE_GAME_ID, "sosave.def", 1, 0, false, 31, 2));
     m_widgets.push_back(new button(246, 357, 100, 48,
-        TMainMenu::RESTART_ID, "sorstrt.def", 1, 0, 0, 19, 2));
+        TMainMenu::RESTART_ID, "sorstrt.def", 1, 0, false, 19, 2));
     m_widgets.push_back(new button(357, 357, 100, 48,
-        TMainMenu::MAIN_MENU_ID, "somain.def", 1, 0, 0, 50, 2));
+        TMainMenu::MAIN_MENU_ID, "somain.def", 1, 0, false, 50, 2));
     m_widgets.push_back(new button(246, 415, 100, 48,
-        TMainMenu::QUIT_ID, "soquit.def", 1, 0, 0, 16, 2));
+        TMainMenu::QUIT_ID, "soquit.def", 1, 0, false, 16, 2));
     m_widgets.push_back(new button(357, 415, 100, 48,
-        DIALOG_RETURN_SPLIT_ACCEPT, "soretrn.def", 1, 0, 0, 1, 2));
+        DIALOG_RETURN_SPLIT_ACCEPT, "soretrn.def", 1, 0, false, 1, 2));
 
     // Retail indexes both slider rows by slot and derives the x coordinate.
     for (int musicSlot = 0; musicSlot < 10; musicSlot++) {
         m_widgets.push_back(new iconWidget(
             29 + musicSlot * 19, 359, 18, 36, musicSlot + MUSIC_VOLUME_0_ID, "syslb.def",
-            0, 0, 0, 0, 0x10));
+            0, 0, false, 0, 0x10));
     }
 
     for (int effectsSlot = 0; effectsSlot < 10; effectsSlot++) {
         m_widgets.push_back(new iconWidget(
             29 + effectsSlot * 19, 425, 18, 36, effectsSlot + EFFECTS_VOLUME_0_ID,
-            "syslb.def", 0, 0, 0, 0, 0x10));
+            "syslb.def", 0, 0, false, 0, 0x10));
     }
 
     m_widgets.push_back(new button(28, 77, 46, 32,
-        HERO_SPEED_WALK_ID, "sysopb1.def", 0, 1, 0, 0, 2));
+        HERO_SPEED_WALK_ID, "sysopb1.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(76, 77, 46, 32,
-        HERO_SPEED_CANTER_ID, "sysopb2.def", 0, 1, 0, 0, 2));
+        HERO_SPEED_CANTER_ID, "sysopb2.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(124, 77, 46, 32,
-        HERO_SPEED_GALLOP_ID, "sysopb3.def", 0, 1, 0, 0, 2));
+        HERO_SPEED_GALLOP_ID, "sysopb3.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(172, 77, 46, 32,
-        HERO_SPEED_JUMP_ID, "sysopb4.def", 0, 1, 0, 0, 2));
+        HERO_SPEED_JUMP_ID, "sysopb4.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(28, 144, 46, 32,
-        AI_SPEED_CANTER_ID, "sysopb5.def", 0, 1, 0, 0, 2));
+        AI_SPEED_CANTER_ID, "sysopb5.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(76, 144, 46, 32,
-        AI_SPEED_GALLOP_ID, "sysopb6.def", 0, 1, 0, 0, 2));
+        AI_SPEED_GALLOP_ID, "sysopb6.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(124, 144, 46, 32,
-        AI_SPEED_JUMP_ID, "sysopb7.def", 0, 1, 0, 0, 2));
+        AI_SPEED_JUMP_ID, "sysopb7.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(172, 144, 46, 32,
-        AI_SPEED_NONE_ID, "sysopb8.def", 0, 1, 0, 0, 2));
+        AI_SPEED_NONE_ID, "sysopb8.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(28, 210, 62, 32,
-        WINDOW_SCROLL_SLOW, "sysopb9.def", 0, 1, 0, 0, 2));
+        WINDOW_SCROLL_SLOW, "sysopb9.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(92, 210, 62, 32,
-        WINDOW_SCROLL_MEDIUM, "sysob10.def", 0, 1, 0, 0, 2));
+        WINDOW_SCROLL_MEDIUM, "sysob10.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(156, 210, 62, 32,
-        WINDOW_SCROLL_FAST, "sysob11.def", 0, 1, 0, 0, 2));
+        WINDOW_SCROLL_FAST, "sysob11.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(28, 276, 94, 32,
-        VIDEO_QUALITY_HIGH, "sysob12.def", 0, 1, 0, 0, 2));
+        VIDEO_QUALITY_HIGH, "sysob12.def", 0, 1, false, 0, 2));
     m_widgets.push_back(new button(124, 276, 94, 32,
-        VIDEO_QUALITY_LOW, "sysob13.def", 0, 1, 0, 0, 2));
+        VIDEO_QUALITY_LOW, "sysob13.def", 0, 1, false, 0, 2));
 
     m_widgets.push_back(new iconWidget(246, 55, 32, 24,
-        SHOW_PATH_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
+        SHOW_PATH_ID, "sysopchk.def", 0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(246, 87, 32, 24,
-        MOVE_REMINDER_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
+        MOVE_REMINDER_ID, "sysopchk.def", 0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(246, 119, 32, 24,
-        QUICK_COMBAT_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
+        QUICK_COMBAT_ID, "sysopchk.def", 0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(246, 151, 32, 24,
-        VIDEO_SUBTITLES_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
+        VIDEO_SUBTITLES_ID, "sysopchk.def", 0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(246, 183, 32, 24,
-        TOWN_OUTLINES_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
+        TOWN_OUTLINES_ID, "sysopchk.def", 0, 0, false, 0, 0x10));
     m_widgets.push_back(new iconWidget(246, 215, 32, 24,
-        ANIMATE_SPELLBOOK_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
+        ANIMATE_SPELLBOOK_ID, "sysopchk.def", 0, 0, false, 0, 0x10));
 
     m_widgets.push_back(new textWidget(
         26, 19, 432, 28, (*g_generalText)[GENERAL_TEXT_SYSTEM_OPTIONS], "bigfont.fnt",
@@ -299,7 +299,7 @@ MAC_ADDRESS(0x1ac964, 0xcc)
 void TSystemOptionsWindow::doModal()
 {
     m_prefsChanged = 0;
-    heroWindow::doModal(0);
+    heroWindow::doModal(false);
 
     if (m_prefsChanged) {
         if (g_remoteOn
@@ -307,7 +307,7 @@ void TSystemOptionsWindow::doModal()
             g_game->getLocalPlayer()->m_quickCombat =
                 g_config.m_quickCombat;
             CCombatTypeMsg msg(g_config.m_quickCombat);
-            transmitRemoteData(&msg, 0x7f, 0, 1);
+            transmitRemoteData(&msg, 0x7f, false, true);
         }
         writePrefs();
     }
@@ -334,7 +334,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
 
     pollSound();
 
-    bool exitFlag = 0;
+    bool exitFlag = false;
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
     {
         if (msg.m_codeX == widget::WIDGET_SELECT ||
@@ -377,15 +377,15 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         (*g_generalText)[GENERAL_TEXT_UNSAVED_GAME_COMMAND_CONFIRM],
                         2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
-                        exitFlag = 1;
+                        exitFlag = true;
                 }
                 else if (id == TMainMenu::SAVE_GAME_ID || id == TMainMenu::RESTART_ID ||
                          id == DIALOG_RETURN_SPLIT_ACCEPT)
-                    exitFlag = 1;
+                    exitFlag = true;
 
                 else
                 {
-                    bool prefsChanged = 0;
+                    bool prefsChanged = false;
                     switch (id)
                     {
                     case VIDEO_QUALITY_LOW:
@@ -398,7 +398,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         getWidget(g_config.m_binkVideo + VIDEO_QUALITY_LOW)
                             ->sendMessage(widget::WIDGET_SET_STATUS,
                                           widget::WIDGET_DIMMED);
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
                     }
@@ -415,7 +415,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                                   WINDOW_SCROLL_SLOW)
                             ->sendMessage(widget::WIDGET_SET_STATUS,
                                           widget::WIDGET_DIMMED);
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
                     }
@@ -432,7 +432,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         getWidget(g_config.m_walkSpeed[1] + MUSIC_TYPE_MIDI_ID)
                             ->sendMessage(widget::WIDGET_SET_STATUS,
                                           widget::WIDGET_DIMMED);
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
                     }
@@ -453,7 +453,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                                   HERO_SPEED_GALLOP_ID)
                             ->sendMessage(widget::WIDGET_SET_STATUS,
                                           widget::WIDGET_DIMMED);
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
                     }
@@ -489,7 +489,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         g_soundManager->m_playSounds = MESSAGE_DISPATCH_CONSUME;
                         g_soundManager->adjustMusicVolumes();
                         g_soundManager->m_playSounds = save;
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
                     }
@@ -527,7 +527,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         g_soundManager->m_playSounds = MESSAGE_DISPATCH_CONSUME;
                         g_soundManager->adjustSoundVolumes();
                         g_soundManager->m_playSounds = save;
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
                     }
@@ -537,7 +537,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         getWidget(SHOW_PATH_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
                                           g_config.m_showRoute);
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
                     case MOVE_REMINDER_ID:
@@ -545,7 +545,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         getWidget(MOVE_REMINDER_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
                                           g_config.m_moveReminder);
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
                     case QUICK_COMBAT_ID:
@@ -553,7 +553,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         getWidget(QUICK_COMBAT_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
                                           g_config.m_quickCombat);
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
                     case TOWN_OUTLINES_ID:
@@ -561,7 +561,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         getWidget(TOWN_OUTLINES_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
                                           g_config.m_townOutlines);
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
                     case VIDEO_SUBTITLES_ID:
@@ -569,7 +569,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         getWidget(VIDEO_SUBTITLES_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
                                           g_config.m_videoSubtitles);
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
                     case ANIMATE_SPELLBOOK_ID:
@@ -577,7 +577,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         getWidget(ANIMATE_SPELLBOOK_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
                                           g_config.m_animateSpellBook);
-                        prefsChanged = 1;
+                        prefsChanged = true;
                         m_prefsChanged = 1;
                         break;
 
@@ -630,7 +630,7 @@ void TSystemOptionsWindow::updateSystemOptions(bool firstUpdate)
         broadcastMessage(msg);
     }
     if (!firstUpdate)
-        drawWindow(1, 0xffff0001, 0xffff);
+        drawWindow(true, 0xffff0001, 0xffff);
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:194

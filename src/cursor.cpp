@@ -93,7 +93,7 @@ void advManager::drawCursor(int cellX, int cellY)
     hero* curr = g_game->getCurrHero();
     if (curr) {
         if (curr->m_flags & 0x40000) {
-            boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
+            boat* currBoat = g_game->getHeroBoat(curr->m_id, true);
 
             if (!getCell(curr->getLocation())->m_isBeachBorder) {
                 m_boatFrothIcons[currBoat->m_type]->DrawHero(
@@ -145,7 +145,7 @@ void advManager::drawCursorShadow(int cellX, int cellY)
     hero* curr = g_game->getCurrHero();
     if (curr) {
         if (curr->m_flags & 0x40000) {
-            boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
+            boat* currBoat = g_game->getHeroBoat(curr->m_id, true);
             m_boatIcons[currBoat->m_type]->DrawHeroShadow(
                 m_cursorSequence, m_cursorFrameCount,
                 cellX * 32, cellY * 32, 32, 32,
@@ -192,7 +192,7 @@ void advManager::drawCursorAlpha()
             hero* curr = g_game->getCurrHero();
 
             if (curr->m_flags & 0x40000) {
-                boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
+                boat* currBoat = g_game->getHeroBoat(curr->m_id, true);
                 m_boatFlagIcons[currBoat->m_type][curr->m_owner]->DrawHeroAlpha(
                     m_cursorSequence, (m_animCtr + m_cursorFrameCount) % 8,
                     clipx, clipy, 96 - rightClip - clipx,
@@ -239,7 +239,7 @@ MAC_ADDRESS(0x08ef50, 0x28)
 void advManager::turnTo(int newDirection)
 {
     m_cursorDirection = newDirection;
-    stopCursor(0);
+    stopCursor(false);
 }
 
 VA(0x00480000, 0x84)
@@ -269,7 +269,7 @@ DC_ADDRESS(0x07a4d0, 0x1f4)
 MAC_ADDRESS(0x08f048, 0x268)
 NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, bool isRemoteMove, long origX, long origY, bool standEnd, int* foughtBattle)
 {
-    updateRadar(1, 1, 0, 0, 0);
+    updateRadar(true, true, false, false, false);
 
     if (!isRemoteMove
         && (origX != curr->m_x || origY != curr->m_y)) {
@@ -277,7 +277,7 @@ NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, bool isR
               && returnCell && returnCell->m_type == ANCHOR_POINT)
             && (getMapExtra(curr->m_x, curr->m_y, curr->m_z) & 0x100)
             && (!returnCell || returnCell->m_type != BOAT)) {
-            if (!curr->isFlying(0) || standEnd
+            if (!curr->isFlying(false) || standEnd
                 || curr->getTarget() == curr->getLocation())
                 checkAdjacentMon(foughtBattle);
 
@@ -297,7 +297,7 @@ DC_ADDRESS(0x07a6c4, 0x130)
 MAC_ADDRESS(0x08f2b0, 0x108)
 NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, bool isRemoteMove, bool standEnd, int* foughtBattle, long curMoveCost, long nextMoveMinCost)
 {
-    stopCursor(1);
+    stopCursor(true);
 
     if (g_completeDrawEnabled) {
         m_radarOrigin.m_x = curr->m_x - 9;
@@ -306,13 +306,13 @@ NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, bo
     }
 
     curr->m_pathTargetX = curr->m_pathTargetY = -1;
-    completeDraw(0);
+    completeDraw(false);
     updateScreen(0, 0);
 
     curr->m_movePoints -= curMoveCost;
     if (curr->m_movePoints < nextMoveMinCost) {
         curr->m_movePoints = 0;
-        standEnd = 1;
+        standEnd = true;
     }
 
     return endMoveHero(curr, destCell, isRemoteMove,
@@ -345,7 +345,7 @@ void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
         m_forceCompleteDraw = 1;
 
         if (speedIndex == CURSOR_INSTANT_WALK_SPEED) {
-            completeDraw(0);
+            completeDraw(false);
             g_windowManager->updateScreen(0, 8, 608, 544);
         } else {
             int walkSpeed;
@@ -373,7 +373,7 @@ void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
                     m_scrollY -= yInc * walkSpeed;
                 }
 
-                completeDraw(0);
+                completeDraw(false);
                 g_windowManager->updateScreen(0, 8, 608, 544);
                 GameTime::delayTil(nextFrameTime);
             }
@@ -468,12 +468,12 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
     if (!isRemoteMove && curr->m_movePoints < curMoveCost) {
         *noMove = 1;
         curr->m_movePoints = 0;
-        stopCursor(1);
-        return endMoveHero(curr, NULL, 0, origX, origY, standEnd,
+        stopCursor(true);
+        return endMoveHero(curr, NULL, false, origX, origY, standEnd,
                              foughtBattle);
     }
 
-    mobilizeCurrHero(0, 0, 1);
+    mobilizeCurrHero(0, false, true);
     if (g_completeDrawEnabled)
         m_drawCursor = 1;
     if (m_cursorDirection != direction)
@@ -481,7 +481,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
     curr->m_facing = direction;
 
     if ((curr->m_flags & 0x40000) && destCell->m_type == ANCHOR_POINT) {
-        oldBoat = g_game->getHeroBoat(curr->m_id, 1);
+        oldBoat = g_game->getHeroBoat(curr->m_id, true);
         getCell(curr->getLocation());
 
         if (g_remoteOn && isRemoteMove) {
@@ -501,8 +501,8 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         oldBoat->m_occupied = 0;
         m_drawCursor = 0;
         becameBoat = 1;
-        stopCursor(1);
-        completeDraw(0);
+        stopCursor(true);
+        completeDraw(false);
         updateScreen(0, 0);
     }
 
@@ -510,7 +510,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         *getRouteArrayPtr(curr->m_x + xInc, curr->m_y + yInc, curr->m_z) = 0;
 
     enteredBoat = 0;
-    if ((!curr->isFlying(0) || curr->getTarget() == triggerPoint)
+    if ((!curr->isFlying(false) || curr->getTarget() == triggerPoint)
         && destCell->m_isTrigger
         && g_advManager->validMoveWithEvent(curr, direction)) {
         switch (destCell->m_type) {
@@ -532,7 +532,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
                     curr->restoreCell();
                     enteredBoat = 1;
                 } else {
-                    stopCursor(1);
+                    stopCursor(true);
                     m_drawCursor = 0;
                     fizzleCenter(0);
                 }
@@ -547,7 +547,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
                                          origX, origY, standEnd,
                                          foughtBattle);
             }
-            if (!curr->isFlying(1))
+            if (!curr->isFlying(true))
                 return handleStopOnTrigger(
                     curr, destCell, isRemoteMove, standEnd,
                     foughtBattle, curMoveCost, nextMoveMinCost);
@@ -575,7 +575,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
 
         default:
             if (akAdvObjectTypeTraits[destCell->m_type].m_blocksLanding
-                && (!curr->isFlying(1)))
+                && (!curr->isFlying(true)))
                 return handleStopOnTrigger(
                     curr, destCell, isRemoteMove, standEnd,
                     foughtBattle, curMoveCost, nextMoveMinCost);
@@ -583,10 +583,10 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         }
     }
 
-    if (!isRemoteMove && !validMove(curr, direction, 0, 0)) {
+    if (!isRemoteMove && !validMove(curr, direction, 0, false)) {
         if (computerMove)
             curr->m_movePoints = 0;
-        return endMoveHero(curr, NULL, 0, origX, origY, standEnd,
+        return endMoveHero(curr, NULL, false, origX, origY, standEnd,
                              foughtBattle);
     }
 
@@ -607,7 +607,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
     if (g_remoteOn && isRemoteMove
         && (g_game->getTeamMask(curr->m_owner)
             & (1 << g_game->getLocalPlayerGamePos())))
-        updateRadar(1, 1, 0, 0, 0);
+        updateRadar(true, true, false, false, false);
 
     m_forceCompleteDraw = 1;
     if (g_remoteOn && !g_followPlayerMode
@@ -616,7 +616,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         curr->m_y += yInc;
         if (enteredBoat)
             doEventBoat(curr, destCell);
-        demobilizeCurrHero(0, 1);
+        demobilizeCurrHero(false, true);
         return NULL;
     }
 
@@ -625,15 +625,15 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
     curr->m_movePoints -= curMoveCost;
     if (curr->m_movePoints < nextMoveMinCost) {
         curr->m_movePoints = 0;
-        standEnd = 1;
+        standEnd = true;
     }
 
     unsigned char hasEvent = !isRemoteMove && destCell->hasTriggerableEvent();
     if (!computerMove && hasEvent)
-        standEnd = 1;
+        standEnd = true;
     stopCursor(standEnd);
     if (computerMove && standEnd && g_completeDrawEnabled) {
-        completeDraw(0);
+        completeDraw(false);
         updateScreen(0, 0);
     }
 
@@ -645,7 +645,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
 
         sample* walkSample = cursorSamples[
             getCell(curr->getLocation())->m_groundSet];
-        if (curr->isFlying(0))
+        if (curr->isFlying(false))
             walkSample = cursorSamples[10];
         walkSample->memSample.memLooping = 0;
         if (m_cursorFrameCount) {
@@ -665,10 +665,10 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
     if (eventCell->m_isTrigger
         || ((curr->m_flags & 0x40000)
             && eventCell->m_type == ANCHOR_POINT)) {
-        if ((!curr->isFlying(0)
+        if ((!curr->isFlying(false)
              || curr->getTarget() == triggerPoint)
             && (!akAdvObjectTypeTraits[eventCell->m_type].m_blocksLanding
-                || !curr->isFlying(1)
+                || !curr->isFlying(true)
                 || eventCell->m_type == BOAT))
             returnCell = eventCell;
 
@@ -714,7 +714,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
                                origX, origY, standEnd, foughtBattle);
     if (hasEvent) {
         g_heroMoveTriggeredEvent = 1;
-        stopCursor(1);
+        stopCursor(true);
         handleMapEvent(curr, destCell, triggerPoint, !computerMove);
     }
     return returnCell;
@@ -743,10 +743,10 @@ void advManager::checkAdjacentMon(int* foughtBattle)
     type_point monster(0xff, 0xff, 0xff);
 
     if (findAdjacentMonster(location, monster, monster)) {
-        stopCursor(1);
+        stopCursor(true);
         curr->m_pathTargetY = -1;
         curr->m_pathTargetX = -1;
-        completeDraw(0);
+        completeDraw(false);
         updateScreen(0, 0);
 
         NewmapCell* monsterCell = getCell(monster);
@@ -772,7 +772,7 @@ int advManager::validMoveWithEvent(hero* who, int direction)
 
     NewmapCell* destCell = m_fullMap->cell(destX, destY, who->m_z);
     if (destCell->m_type != HERO)
-        return validMove(who, direction, 1, 0);
+        return validMove(who, direction, 1, false);
 
     if (who->m_flags & 0x40000) {
         hero* occupant = g_game->getHero(destCell->m_extraInfo);
@@ -801,7 +801,7 @@ int advManager::validMove(const hero* currentHero, int direction, int withEvent,
     if (destX < 0 || destX >= g_mapWidth || destY < 0 || destY >= g_mapWidth)
         return 0;
 
-    if (currentHero->isFlying(0) && !normalMoveOnly)
+    if (currentHero->isFlying(false) && !normalMoveOnly)
         return 1;
 
     NewmapCell* destCell = m_fullMap->cell(destX, destY, currentHero->m_z);
@@ -812,7 +812,7 @@ int advManager::validMove(const hero* currentHero, int direction, int withEvent,
 
     if (destCell->m_groundSet == eTerrainWater) {
         if (!(currentHero->m_flags & 0x40000)
-                && !(currentHero->canWalkOnWater(0) && !normalMoveOnly)) {
+                && !(currentHero->canWalkOnWater(false) && !normalMoveOnly)) {
             if (!(destCell->m_type == BOAT && destCell->m_isTrigger)
                     && !(destCell->m_type == SHIPWRECK
                          && destCell->m_isTrigger))
@@ -820,7 +820,7 @@ int advManager::validMove(const hero* currentHero, int direction, int withEvent,
         }
 
         if (srcCell->m_groundSet == eTerrainWater && stepX && stepY
-                && !(currentHero->canWalkOnWater(0) && !normalMoveOnly)) {
+                && !(currentHero->canWalkOnWater(false) && !normalMoveOnly)) {
             if (m_fullMap->cell(srcX + stepX, srcY, currentHero->m_z)->m_groundSet
                     != eTerrainWater)
                 return 0;
@@ -870,11 +870,11 @@ void advManager::onMoveHero(CMapChange* mapChange)
     if (currentHero->getLocation() != change->m_point)
         return;
 
-    g_advManager->setHeroContext(change->m_heroId, 0, 0, 1);
+    g_advManager->setHeroContext(change->m_heroId, 0, false, true);
     type_point triggerPoint;
     NewmapCell* eventCell = moveHero(
         change->m_dir, change->m_standEnd != 0, triggerPoint, &dummy1,
-        1, &dummy2, 1);
+        true, &dummy2, true);
     if (eventCell && (eventCell->m_type == ANCHOR_POINT
                        || eventCell->m_type == BOAT))
         doAIEvent(eventCell, currentHero, triggerPoint);
@@ -887,7 +887,7 @@ void advManager::onTeleportHero(CMapChange* mapChange)
 {
     CMCTeleportHero* change = static_cast<CMCTeleportHero*>(mapChange);
     hero* currentHero = g_game->getHero(change->m_heroId);
-    teleportTo(currentHero, change->m_point, NULL, 1, 1, 0);
+    teleportTo(currentHero, change->m_point, NULL, true, true, false);
 }
 
 // E:\gamedcs\cursor.cpp:1167
@@ -898,7 +898,7 @@ void advManager::onClaimMine(CMapChange* mapChange)
     CMCClaimMine* change = static_cast<CMCClaimMine*>(mapChange);
     g_game->claimMine(change->m_mineId, change->m_playerPos,
                       const_remote_action);
-    completeDraw(0);
+    completeDraw(false);
     updateScreen(0, 0);
 }
 
@@ -908,8 +908,8 @@ MAC_ADDRESS(0x091468, 0x68)
 void advManager::onClaimTown(CMapChange* mapChange)
 {
     CMCClaimTown* change = static_cast<CMCClaimTown*>(mapChange);
-    g_game->claimTown(change->m_townId, change->m_playerPos, 1, 1);
-    completeDraw(0);
+    g_game->claimTown(change->m_townId, change->m_playerPos, true, true);
+    completeDraw(false);
     updateScreen(0, 0);
 }
 
@@ -920,8 +920,8 @@ void advManager::onBuildBoat(CMapChange* mapChange)
 {
     CMCBuildBoat* change = static_cast<CMCBuildBoat*>(mapChange);
     g_game->createBoat(change->m_point.m_x, change->m_point.m_y, change->m_point.m_z,
-                       change->m_playerPos, 1, 1);
-    completeDraw(0);
+                       change->m_playerPos, true, 1);
+    completeDraw(false);
     updateScreen(0, 0);
 }
 
@@ -932,8 +932,8 @@ void advManager::onEraseObject(CMapChange* mapChange)
 {
     CMCEraseObject* change = static_cast<CMCEraseObject*>(mapChange);
     NewmapCell* cell = getCell(change->m_point);
-    eraseObj(cell, change->m_point, 0);
-    completeDraw(0);
+    eraseObj(cell, change->m_point, false);
+    completeDraw(false);
     updateScreen(0, 0);
 }
 
@@ -946,8 +946,8 @@ void advManager::onDeadHero(CMapChange* mapChange)
     hero* currentHero = g_game->getHero(change->m_heroId);
     if (currentHero->getLocation() != change->m_point)
         return;
-    currentHero->deallocate(1, 1);
-    completeDraw(0);
+    currentHero->deallocate(true, true);
+    completeDraw(false);
     updateScreen(0, 0);
 }
 

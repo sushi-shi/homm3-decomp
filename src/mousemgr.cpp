@@ -247,7 +247,7 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
     }
     loadFrame(m_set == SPELL_SET ? 0 : newFrame);
     enable();
-    update(1);
+    update(true);
     m_busy--;
     g_mouseSetPointerBusy = 0;
 }
@@ -496,7 +496,7 @@ void mouseManager::hidePointer()
 {
     TCSLock lock(&m_sectionMouse);
     if (++m_hideCount == 1 && !IsIconic(g_hwndApp))
-        update(1);
+        update(true);
 }
 
 VA(0x0050d5b0, 0xD0)
@@ -511,7 +511,7 @@ void mouseManager::showPointer(bool force)
         m_busy++;
         getPointerPosition();
         if (!IsIconic(g_hwndApp))
-            update(1);
+            update(true);
         m_busy--;
     }
 }
@@ -549,17 +549,17 @@ void mouseManager::checkUpdate()
         return;
     if (GameTime::isPast(updateTime) && !isBusy()) {
         updateTime = GameTime::nextFrameTime(updateTime, 33);
-        update(0);
+        update(false);
         if (GetWindowThreadProcessId(g_hwndApp, NULL) == GetCurrentThreadId()) {
             if (m_currentX < 0 || m_currentX >= 800
                 || m_currentY < 0 || m_currentY >= 600) {
                 if (!m_systemPointerIsOn) {
-                    showSystemCursor(1);
+                    showSystemCursor(true);
                     m_systemPointerIsOn = 1;
                 }
             } else {
                 if (m_systemPointerIsOn) {
-                    showSystemCursor(0);
+                    showSystemCursor(false);
                     m_systemPointerIsOn = 0;
                 }
             }
@@ -569,7 +569,7 @@ void mouseManager::checkUpdate()
         animateTime = GameTime::nextFrameTime(animateTime, 100);
         if (m_set == SPELL_SET) {
             loadFrame((m_frame + 1) % m_sprite->GetNumFrames(0));
-            update(1);
+            update(true);
         }
     }
 }
@@ -619,7 +619,7 @@ void mouseManager::showSystemCursor(bool showIt)
         ShowCursor(1);
         hidePointer();
     } else {
-        showPointer(0);
+        showPointer(false);
         ShowCursor(0);
     }
 }

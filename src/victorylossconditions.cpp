@@ -9,7 +9,7 @@
 inline void LossConditionStruct::recordLoss(signed char player)
 {
     m_playerLoser = player;
-    m_gameLost = 1;
+    m_gameLost = true;
 }
 
 // The canonical team helper, with its nested isHuman call; the caller
@@ -59,7 +59,7 @@ bool VictoryConditionStruct::checkForArtifactWin()
                 || campaign.m_currentMap
                     == g_angelicAllianceSecondMap))) {
         if (!g_currentPlayer->isHuman())
-            return 0;
+            return false;
 
         // These artifact constants are taken by reference; the original type
         // spelling is unknown.
@@ -91,19 +91,19 @@ bool VictoryConditionStruct::checkForArtifactWin()
             if (pieces.empty()) {
                 m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
                 m_gameWon = 1;
-                return 1;
+                return true;
             }
         }
-        return 0;
+        return false;
     }
 
     if (m_type != VICTORY_CONDITION_ARTIFACT) {
-        return 0;
+        return false;
     }
     if (!g_currentPlayer)
-        return 0;
+        return false;
     if (g_game->m_playerDisabled[g_netLocalGamePos])
-        return 0;
+        return false;
 
     int team = g_game->getTeam(g_netLocalGamePos);
     if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
@@ -113,12 +113,12 @@ bool VictoryConditionStruct::checkForArtifactWin()
                     ->hasArtifact(m_artifactNum)) {
                 m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
                 m_gameWon = 1;
-                return 1;
+                return true;
             }
         }
         int comboIdx = akArtifactTraits[m_artifactNum].m_comboType;
         if (comboIdx == -1)
-            return 0;
+            return false;
 
         const std::bitset<ARTIFACT_COUNT>& components =
             g_combinationArtifacts[comboIdx].m_components;
@@ -135,13 +135,13 @@ bool VictoryConditionStruct::checkForArtifactWin()
                         m_playerWinner =
                             static_cast<signed char>(g_netLocalGamePos);
                         m_gameWon = 1;
-                        return 1;
+                        return true;
                     }
                 }
             }
         }
     }
-    return 0;
+    return false;
 }
 
 VA(0x005f1b10, 0x169)
@@ -311,7 +311,7 @@ MAC_ADDRESS(0x1fe2a8, 0x6c)
 bool VictoryConditionStruct::isTownCaptureTarget(town* thisTown)
 {
     if (m_type != VICTORY_CONDITION_CAPTURE_TOWN)
-        return 0;
+        return false;
 
     if (thisTown->m_id != g_game->getTownId(m_townX, m_townY, m_townZ))
         return false;
@@ -356,13 +356,13 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
                     NewmapCell* cell = g_game->getCell(pos);
                     if (cell->m_isTrigger && cell->m_type == MONSTER) {
                         if (!(pos == monsterLoc))
-                            return 0;
+                            return false;
                     }
                 }
             }
         }
         m_gameWon = 1;
-        return 1;
+        return true;
     }
     if (m_type == VICTORY_CONDITION_DEFEAT_MONSTER
         && g_currentPlayer
@@ -371,10 +371,10 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
         if (monsterLoc == pos) {
             m_playerWinner = thisHero->m_owner;
             m_gameWon = 1;
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 VA(0x005f2600, 0x117)
@@ -555,35 +555,35 @@ bool LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
             if (campaign.m_currentMap == g_map2
                 && (loser->m_id == g_lossHero4
                     || loser->m_portrait == g_lossPortrait146))
-                return 1;
+                return true;
             break;
         case g_lossCampaign7:
             if ((campaign.m_currentMap == g_map6
                  || campaign.m_currentMap == g_map7)
                 && (loser->m_id == g_lossHero148 || loser->m_id == g_lossHero152
                     || loser->m_id == g_lossHero146))
-                return 1;
+                return true;
             break;
         case g_lossCampaign10:
             if (loser->m_id == g_lossHero149)
-                return 1;
+                return true;
             if ((campaign.m_currentMap == 1
                  || campaign.m_currentMap == g_map2)
                 && (loser->m_id == g_lossHero104 || loser->m_id == g_lossHero97
                     || loser->m_id == g_lossHero110))
-                return 1;
+                return true;
             break;
         case g_lossCampaign12:
             if (loser->m_id == g_lossHero145)
-                return 1;
+                return true;
             break;
         case g_lossCampaign9:
             if (loser->m_id == g_lossHero147)
-                return 1;
+                return true;
             break;
         case g_lossCampaign14: {
             if (loser->m_id == g_lossHero45)
-                return 1;
+                return true;
             map = campaign.m_currentMap;
             if (map == g_map2) {
                 if (loser->hasArtifact(ARTIFACT_ORB_OF_THE_FIRMAMENT)
@@ -592,17 +592,17 @@ bool LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
                     || loser->hasArtifact(ARTIFACT_ORB_OF_TEMPESTUOUS_FIRE)
                     || loser->hasArtifact(ARTIFACT_ORB_OF_INHIBITION)
                     || loser->hasArtifact(ARTIFACT_SWORD_OF_HELLFIRE))
-                    return 1;
+                    return true;
             }
             if (map == g_map2 || map == g_map3 || map == g_map4) {
                 if (loser->hasArtifact(ARTIFACT_ANGELIC_ALLIANCE))
-                    return 1;
+                    return true;
                 const std::bitset<ARTIFACT_COUNT>& components =
                     g_combinationArtifacts[0].m_components;
                 for (int i = 0; i < ARTIFACT_COUNT; ++i) {
                     if (components.test(i)
                         && loser->hasArtifact(i))
-                        return 1;
+                        return true;
                 }
             }
             break;
@@ -610,56 +610,56 @@ bool LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
         case g_lossCampaign15:
             map = campaign.m_currentMap;
             if (map == 1 && loser->m_id == g_lossHero22)
-                return 1;
+                return true;
             if (map == g_map2
                 && (loser->m_id == g_lossHero22
                     || loser->hasArtifact(ARTIFACT_VAMPIRES_COWL)))
-                return 1;
+                return true;
             if (map == g_map3
                 && (loser->m_id == g_lossHero22
                     || loser->hasArtifact(ARTIFACT_DEAD_MANS_BOOTS)))
-                return 1;
+                return true;
             break;
         case g_lossCampaign17:
             if ((campaign.m_currentMap == g_map2
                  || campaign.m_currentMap == g_map3)
                 && (loser->m_id == g_lossHero74 || loser->m_id == g_lossHero76))
-                return 1;
+                return true;
             break;
         case g_lossCampaign18:
             map = campaign.m_currentMap;
             if (map == g_map4) {
                 if (loser->m_id == g_lossHero96)
-                    return 1;
+                    return true;
             } else if (map == g_map5) {
                 if (loser->m_id == g_lossHero148)
-                    return 1;
+                    return true;
             } else if (map == g_map8) {
                 if (loser->m_id == g_lossHero27 || loser->m_id == g_lossHero148)
-                    return 1;
+                    return true;
             } else if (map == g_map9) {
                 if (loser->m_id == g_lossHero96 || loser->m_id == g_lossHero102)
-                    return 1;
+                    return true;
             } else if (map == g_map10 || map == g_map11) {
                 if (loser->m_id == g_lossHero27 || loser->m_id == g_lossHero148
                     || loser->m_id == g_lossHero102
                     || loser->m_id == g_lossHero96)
-                    return 1;
+                    return true;
             }
             break;
         case g_lossCampaign19:
             if ((campaign.m_currentMap == 0
                  || campaign.m_currentMap == g_map2)
                 && loser->m_id == g_lossHero74)
-                return 1;
+                return true;
             break;
         }
     }
     if (m_type != LOSS_CONDITION_LOSE_HERO)
-        return 0;
+        return false;
     if (loser->m_id == m_heroId)
-        return 1;
-    return 0;
+        return true;
+    return false;
 }
 
 VA(0x005f2e10, 0x2F)
@@ -669,7 +669,7 @@ unsigned char LossConditionStruct::heroKilled(const hero* loser)
     if (checkForDefeatedHeroLoss(loser)) {
         m_type = LOSS_CONDITION_LOSE_HERO;
         m_heroId = loser->m_id;
-        m_gameLost = 1;
+        m_gameLost = true;
         return 1;
     }
     return 0;
@@ -686,14 +686,14 @@ bool LossConditionStruct::checkForDefeatedTownLoss(
     const int oldOwner, const town* lostTown)
 {
     if (m_type != LOSS_CONDITION_LOSE_TOWN)
-        return 0;
+        return false;
 
     type_point target(m_townX, m_townY, m_townZ);
     if (target == lostTown->getLocation()) {
         recordLoss(static_cast<signed char>(oldOwner));
         return m_gameLost;
     }
-    return 0;
+    return false;
 }
 
 VA(0x005f2f20, 0x50)
@@ -711,10 +711,10 @@ bool LossConditionStruct::checkForTimeLimitExpired()
           + g_game->m_day;
         if (days > m_numDays) {
             recordLoss(static_cast<signed char>(g_netLocalGamePos));
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 // COMDAT pairing: basic_string<char>::basic_string(const char*, const

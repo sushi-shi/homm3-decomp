@@ -85,7 +85,7 @@ void strip::drawIcons(unsigned char update, TCreatureType divideCreature)
     if (divideCreature == CREATURE_NONE && m_current > -2)
         drawSelector(m_current + 1);
     if (update)
-        m_win->drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        m_win->drawWindow(false, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\strip.cpp:124

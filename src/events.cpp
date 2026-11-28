@@ -594,7 +594,7 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
 
     completeDraw(false);
     updateScreen(0, 0);
-    eraseObj(eventCell, point, 1);
+    eraseObj(eventCell, point, true);
     fizzleCenter(fizzleSound);
 
     m_animCtrPaused = savedPause;
@@ -612,7 +612,7 @@ DC_ADDRESS(0x0903b4, 0x2a4)
 MAC_ADDRESS(0x0a9580, 0x400)  // dc-bracket forced, ret 0xc=p4
 void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned char humanPlayer)
 {
-    mobilizeCurrHero(0, 0, 1);
+    mobilizeCurrHero(0, false, true);
 
     if (!g_game->onSameTeam(cell->m_shipyardInfo.owner, g_netLocalGamePos))
         g_game->claimShipyard(point, g_netLocalGamePos);
@@ -660,7 +660,7 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
         && g_game->createBoat(
                cell->m_shipyardInfo.boatX,
                cell->m_shipyardInfo.boatY,
-               point.m_z, g_netLocalGamePos, 0, 1) != -1) {
+               point.m_z, g_netLocalGamePos, false, 1) != -1) {
         g_game->m_players[g_netLocalGamePos].m_resources[GOLD] -= 1000;
         g_game->m_players[g_netLocalGamePos].m_resources[WOOD] -= 10;
     }
@@ -677,14 +677,14 @@ void advManager::doEventAnchor(hero* currentHero, bool humanPlayer)
             if (currentHero->isWieldingArtifact(ARTIFACT_ADMIRALS_HAT)) {
                 int oldMaxMovePoints = currentHero->m_maxMovePoints;
                 int oldMovePoints = currentHero->m_movePoints;
-                int newMaxMovePoints = currentHero->getMobility(0);
+                int newMaxMovePoints = currentHero->getMobility(false);
                 currentHero->m_maxMovePoints = newMaxMovePoints;
                 currentHero->m_movePoints =
                     newMaxMovePoints * oldMovePoints / oldMaxMovePoints;
             } else {
                 currentHero->m_movePoints = 0;
             }
-            m_advWindow->updateHeroLocator(-1, 1, 1);
+            m_advWindow->updateHeroLocator(-1, true, true);
         }
 
         currentHero->m_facing = m_cursorDirection;
@@ -966,7 +966,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
         }
 
         if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
-                     &treasure->m_guardians, -1, 1, 0))
+                     &treasure->m_guardians, -1, true, false))
             return;
         currentHero->checkLevel();
         if (humanPlayer) {
@@ -1023,7 +1023,7 @@ MAC_ADDRESS(0x0aa91c, 0x260)  // anchor-callee DoCustomArtifact+FightForArtifact
 void advManager::doEventArtifact(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
-    if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY) {
+    if (currentHero->getNumberInBackpack(true) >= HERO_BACKPACK_CAPACITY) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BACKPACK_FULL],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -1183,7 +1183,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         if (humanPlayer) {
             addReward(msg, alternate, rewards, RES_EXPERIENCE, experienceGained);
         }
-        rewardGiven = 1;
+        rewardGiven = true;
     }
 
     for (i = 0; i < kNumPrimarySkills; i++) {
@@ -1194,7 +1194,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                            blackBox->m_primarySkillBonus[i]);
             }
             currentHero->adjustPrimarySkill(i, blackBox->m_primarySkillBonus[i]);
-            rewardGiven = 1;
+            rewardGiven = true;
         }
     }
 
@@ -1218,7 +1218,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
             addReward(msg, alternate, rewards, RES_SECONDARY_SKILL,
                        skill * 3 + level + 2);
         }
-        rewardGiven = 1;
+        rewardGiven = true;
     }
 
     long amount = blackBox->m_manaBonus;
@@ -1237,7 +1237,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
             addReward(msg, alternate, rewards, RES_MANA, amount);
         }
         currentHero->m_mana += amount;
-        rewardGiven = 1;
+        rewardGiven = true;
     }
 
     if (blackBox->m_moraleBonus != 0) {
@@ -1255,7 +1255,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
             }
         }
         currentHero->m_moraleBonus += blackBox->m_moraleBonus;
-        rewardGiven = 1;
+        rewardGiven = true;
     }
 
     if (blackBox->m_luckBonus != 0) {
@@ -1273,7 +1273,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
             }
         }
         currentHero->m_luckBonus += blackBox->m_luckBonus;
-        rewardGiven = 1;
+        rewardGiven = true;
     }
     showRewards(msg, rewards, 1);
 
@@ -1293,14 +1293,14 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                 }
             }
             currentHero->giveResource(i, blackBox->m_resQty[i]);
-            rewardGiven = 1;
+            rewardGiven = true;
         }
     }
     showRewards(msg, rewards, 1);
 
     type_artifact artifact(ARTIFACT_NONE);
     for (i = 0; i < blackBox->m_artifacts.size(); i++) {
-        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
+        if (currentHero->getNumberInBackpack(true) < HERO_BACKPACK_CAPACITY) {
             if (humanPlayer) {
                 addReward(msg, formatString(
                     g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
@@ -1311,7 +1311,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
             currentHero->giveArtifact(artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
-            rewardGiven = 1;
+            rewardGiven = true;
         }
     }
     showRewards(msg, rewards, 1);
@@ -1337,7 +1337,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                                blackBox->m_spells[i]);
                 }
                 currentHero->addSpell(blackBox->m_spells[i]);
-                rewardGiven = 1;
+                rewardGiven = true;
             }
         }
     }
@@ -1372,11 +1372,11 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         if (currentHero->m_army.add(type, amount, -1)) {
             newCreatures.dismiss(i);
         } else if (humanPlayer) {
-            joinDialogNeeded = 1;
+            joinDialogNeeded = true;
         } else {
             aiJoinDecision(currentHero, type, amount);
         }
-        rewardGiven = 1;
+        rewardGiven = true;
     }
 
     if (humanPlayer) {
@@ -1386,9 +1386,9 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     if (joinDialogNeeded)
         doMonsterJoinDialog(currentHero, &newCreatures, 0);
     if (experienceGained > 0)
-        currentHero->giveExperience(experienceGained, 1, 1);
+        currentHero->giveExperience(experienceGained, 1, true);
     if (humanPlayer)
-        m_advWindow->updateHeroLocators(-1, 1, 1);
+        m_advWindow->updateHeroLocators(-1, true, true);
     updBottomView(1, 1, 1);
     return rewardGiven;
 }
@@ -1434,7 +1434,7 @@ void advManager::doEventBlackBox(hero* currentHero, NewmapCell* cell,
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BLACK_BOX_GUARDED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
-                     &blackBox->m_guardians, -1, 1, 0))
+                     &blackBox->m_guardians, -1, true, false))
             return;
         currentHero->checkLevel();
     }
@@ -1472,7 +1472,7 @@ void advManager::handleMapEvent(hero* currentHero, NewmapCell* cell,
             }
         }
         if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
-                     &blackBox->m_guardians, -1, 1, 0))
+                     &blackBox->m_guardians, -1, true, false))
             return;
         currentHero->checkLevel();
     }
@@ -1511,14 +1511,14 @@ void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
         if (currentHero->isWieldingArtifact(ARTIFACT_ADMIRALS_HAT)) {
             int oldMaxMovePoints = currentHero->m_maxMovePoints;
             int oldMovePoints = currentHero->m_movePoints;
-            int newMaxMovePoints = currentHero->getMobility(1);
+            int newMaxMovePoints = currentHero->getMobility(true);
             currentHero->m_maxMovePoints = newMaxMovePoints;
             currentHero->m_movePoints =
                 newMaxMovePoints * oldMovePoints / oldMaxMovePoints;
         } else {
             currentHero->m_movePoints = 0;
         }
-        m_advWindow->updateHeroLocator(-1, 1, 1);
+        m_advWindow->updateHeroLocator(-1, true, true);
     }
 
     heroBoat->m_occupyingHero = currentHero->m_id;
@@ -1531,7 +1531,7 @@ void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
         m_cursorBaseFrame = 0;
         m_cursorSequence = heroBoat->getStandSequence();
         m_drawCursor = 1;
-        completeDraw(0);
+        completeDraw(false);
         updateScreen(0, 0);
     }
 }
@@ -1611,11 +1611,11 @@ void advManager::doEventCoverOfDarkness(NewmapCell* cell, type_point point,
 
     if (g_remoteOn) {
         CResetVisibilityMsg message(point, g_netLocalGamePos, 20);
-        transmitRemoteData(&message, 0x7f, 0, 1);
+        transmitRemoteData(&message, 0x7f, false, true);
     }
     g_game->resetVisibility(point.m_x, point.m_y, point.m_z, g_netLocalGamePos, 20);
     g_game->resetAllPlayerVisibility();
-    completeDraw(0);
+    completeDraw(false);
     updateScreen(0, 0);
 }
 
@@ -1710,7 +1710,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                 return;
             }
             if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
-                         &currentGenerator.m_guards, -1, 1, 0))
+                         &currentGenerator.m_guards, -1, true, false))
                 return;
         }
     }
@@ -1938,7 +1938,7 @@ void advManager::doEventFountainOfYouth(hero* currentHero, NewmapCell* cell,
     currentHero->m_maxMovePoints += 400;
     currentHero->m_movePoints += 400;
     if (humanPlayer)
-        m_advWindow->updateHeroLocators(-1, 1, 1);
+        m_advWindow->updateHeroLocators(-1, true, true);
 }
 
 VA(0x004a2710, 0xE4)
@@ -2123,7 +2123,7 @@ MAC_ADDRESS(0x0aeab8, 0x1c0)
 void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
                                type_point point, bool humanPlayer)
 {
-    demobilizeCurrHero(0, 1);
+    demobilizeCurrHero(false, true);
 
     hero* otherHero = g_game->getHero(cell->m_extraInfo);
     if (humanPlayer || otherHero->belongsToHuman()) {
@@ -2146,7 +2146,7 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
     }
 
     doCombat(point, currentHero, &currentHero->m_army, otherHero->m_owner, NULL,
-             otherHero, &otherHero->m_army, -1, 1, 0);
+             otherHero, &otherHero->m_army, -1, true, false);
 }
 
 // E:\gamedcs\events.cpp:1898. Allied heroes exchange every spell the other
@@ -2422,10 +2422,10 @@ void advManager::doEventMagicSpring(hero* currentHero, ExtraInfoUnion* cell,
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MAGIC_SPRING],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         currentHero->m_mana = cap;
-        cell->fillMagicSpring(0);
+        cell->fillMagicSpring(false);
     }
     if (humanPlayer)
-        m_advWindow->updateHeroLocators(-1, 1, 1);
+        m_advWindow->updateHeroLocators(-1, true, true);
     updBottomView(1, 1, 1);
 }
 
@@ -2458,7 +2458,7 @@ void advManager::doEventMagicWell(hero* currentHero, ExtraInfoUnion* cell,
     game* g = g_game;
     g->setInfoFlag(MagicWellInfo, g_netLocalGamePos);
     if (humanPlayer)
-        m_advWindow->updateHeroLocators(-1, 1, 1);
+        m_advWindow->updateHeroLocators(-1, true, true);
     updBottomView(1, 1, 1);
 }
 
@@ -2531,7 +2531,7 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else if (doCombat(point, currentHero, &currentHero->m_army,
                             currentMine->m_playerOwner, NULL, NULL,
-                            &currentMine->m_guards, -1, 1, 0)) {
+                            &currentMine->m_guards, -1, true, false)) {
             return;
         }
         currentHero->restoreCell();
@@ -2594,7 +2594,7 @@ void advManager::doEventOasis(hero* currentHero, NewmapCell* cell,
     currentHero->m_maxMovePoints += 800;
     currentHero->m_movePoints += 800;
     if (humanPlayer)
-        m_advWindow->updateHeroLocators(-1, 1, 1);
+        m_advWindow->updateHeroLocators(-1, true, true);
 }
 
 VA(0x004a3dc0, 0xE4)
@@ -2652,16 +2652,16 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
     g_colorCyclingEnabled = 0;
     unsigned char oldAnimCtrPaused = m_animCtrPaused;
     m_animCtrPaused = 1;
-    completeDraw(0);
+    completeDraw(false);
     updateScreen(0, 0);
-    eraseObj(cell, point, 1);
+    eraseObj(cell, point, true);
 
     // The hero pool is indexed directly, with no getHero sentinel guard.
     hero* prisoner = &g_game->m_heroes[heroID];
     g_game->recordShowHero(prisoner, currentHero->m_owner, point, 0);
     prisoner->m_owner = currentHero->m_owner;
     g_game->m_heroAvailability[heroID] = currentHero->m_owner;
-    g_game->m_heroPoolMap[heroID][currentHero->m_owner] = 1;
+    g_game->m_heroPoolMap[heroID][currentHero->m_owner] = true;
     g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] =
         static_cast<HeroId>(heroID);
     ++g_currentPlayer->m_numHeroes;
@@ -2682,7 +2682,7 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
 
     CMCRecruitHero change(heroID, point, g_netLocalGamePos);
     sendMapChange(&change);
-    m_advWindow->updateHeroLocators(-1, 1, 1);
+    m_advWindow->updateHeroLocators(-1, true, true);
 }
 
 // The spell is written back BEFORE the hero is asked whether he can carry
@@ -2731,7 +2731,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
     sprintf(text, DATA_COMPGEN(0x00677750, quotedNameFormat, "%s'%s'."),
             g_adventureEventText->GetText(ADV_EVENT_TEXT_PYRAMID_SPELL_PREFIX),
             akSpellTraits[spell].m_name);
-    cell->setPyramid(0, ESpellId(spell));
+    cell->setPyramid(false, ESpellId(spell));
 
     if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         if (humanPlayer) {
@@ -2776,9 +2776,9 @@ void advManager::doEventRallyFlag(hero* currentHero, NewmapCell* cell,
     currentHero->m_luckBonus++;
     currentHero->m_maxMovePoints += 400;
     currentHero->m_movePoints += 400;
-    m_advWindow->updateHeroLocators(-1, 0, 0);
+    m_advWindow->updateHeroLocators(-1, false, false);
     if (humanPlayer)
-        m_advWindow->updateHeroLocators(-1, 1, 1);
+        m_advWindow->updateHeroLocators(-1, true, true);
     updBottomView(1, 1, 1);
 }
 
@@ -2841,7 +2841,7 @@ void advManager::doCustomResource(NewmapCell* cell, hero* currentHero,
         }
 
         if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
-                     &treasure->m_guardians, -1, 1, 0))
+                     &treasure->m_guardians, -1, true, false))
             return;
         currentHero->checkLevel();
         currentHero->giveResource(type, amount);
@@ -2969,7 +2969,7 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
     type_artifact artifact;
     int reward = cell->getSeaChestReward();
     if (reward == const_sea_chest_artifact
-        && currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
+        && currentHero->getNumberInBackpack(true) >= HERO_BACKPACK_CAPACITY)
         reward = const_sea_chest_gold;
 
     switch (reward) {
@@ -3009,7 +3009,7 @@ MAC_ADDRESS(0x0b1bbc, 0x174)
 void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
-    if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
+    if (currentHero->getNumberInBackpack(true) < HERO_BACKPACK_CAPACITY) {
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_SHIPWRECK_SURVIVOR_ARTIFACT_FORMAT],
@@ -3042,7 +3042,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
                                  bool humanPlayer)
 {
     if (cell->skeletonHasTreasure()) {
-        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
+        if (currentHero->getNumberInBackpack(true) < HERO_BACKPACK_CAPACITY) {
             type_artifact artifact(TArtifact(cell->getSkeletonArtifact()));
             if (humanPlayer) {
                 sprintf(g_text,
@@ -3065,7 +3065,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
             }
             currentHero->giveResource(GOLD, 1000);
         }
-        cell->setSkeleton(cell->getItemId(), 0, -1);
+        cell->setSkeleton(cell->getItemId(), false, -1);
     } else {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_SKELETON_EMPTY],
@@ -3151,7 +3151,7 @@ void advManager::doEventSiren(hero* currentHero, NewmapCell* cell,
                     experience);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-        currentHero->giveExperience(experience, 1, 1);
+        currentHero->giveExperience(experience, 1, true);
     } else {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_SIRENS_NO_LOSS],
@@ -3185,7 +3185,7 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
         }
 
         if (doCombat(point, currentHero, &currentHero->m_army, -1, NULL, NULL,
-                     &treasure->m_guardians, -1, 1, 0))
+                     &treasure->m_guardians, -1, true, false))
             return;
         currentHero->checkLevel();
         if (humanPlayer) {
@@ -3225,7 +3225,7 @@ MAC_ADDRESS(0x0b2824, 0x190)
 void advManager::doEventSpellScroll(hero* currentHero, NewmapCell* cell,
                                     type_point point, bool humanPlayer)
 {
-    if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY) {
+    if (currentHero->getNumberInBackpack(true) >= HERO_BACKPACK_CAPACITY) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BACKPACK_FULL],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -3266,7 +3266,7 @@ void advManager::doEventStables(hero* currentHero, NewmapCell* cell,
         currentHero->m_maxMovePoints += g_stablesMovementBonus;
         currentHero->m_movePoints += g_stablesMovementBonus;
         if (humanPlayer)
-            m_advWindow->updateHeroLocators(-1, 1, 1);
+            m_advWindow->updateHeroLocators(-1, true, true);
         granted = STABLES_MOVEMENT;
     }
     // 10 and 11 are the Cavalier and its Champion upgrade; the reward
@@ -3347,7 +3347,7 @@ void advManager::doEventTrainingGrounds(hero* currentHero, NewmapCell* cell,
     if (humanPlayer)
         normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_TRAINING_GROUNDS],
                      1, -1, -1, 0x11, amount, -1, 0, -1, 0, -1, 0);
-    currentHero->giveExperience(amount, 0, 1);
+    currentHero->giveExperience(amount, 0, true);
     currentHero->m_trainingGroundsFlags |= 1 << cell->m_extraInfo;
     // The `game* g` spelling, as in do_event_watering_hole.
     game* g = g_game;
@@ -3388,7 +3388,7 @@ void advManager::doTreasureDialog(hero* currentHero, int amount,
     if (takeGold)
         currentHero->giveResource(GOLD, amount);
     else
-        currentHero->giveExperience(experience, 0, 1);
+        currentHero->giveExperience(experience, 0, true);
 }
 
 // The chest is the only object in this file that ends with CheckLevel -
@@ -3401,7 +3401,7 @@ void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
     if (cell->treasureIsArtifact()) {
-        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
+        if (currentHero->getNumberInBackpack(true) < HERO_BACKPACK_CAPACITY) {
             type_artifact artifact(cell->getTreasureArtifact());
             if (humanPlayer) {
                 sprintf(g_text,
@@ -3490,7 +3490,7 @@ void advManager::doEventTreeOfKnowledge(hero* currentHero,
         break;
     }
 
-    currentHero->giveExperience(experience, 0, 1);
+    currentHero->giveExperience(experience, 0, true);
     currentHero->m_treeOfKnowledgeFlags |= visited;
     currentHero->checkLevel();
 }
@@ -3510,7 +3510,7 @@ void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
     }
 
     if (cell->wagonHasArtifact()
-        && currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
+        && currentHero->getNumberInBackpack(true) < HERO_BACKPACK_CAPACITY) {
         type_artifact artifact(cell->getWagonArtifact());
         if (humanPlayer) {
             sprintf(g_text,
@@ -3550,7 +3550,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
 
     MonsterData* reward = &m_fullMap->m_customMonsterList[cell->getCustomIndex()];
     if (reward->m_artifact != ARTIFACT_NONE) {
-        if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY) {
+        if (currentHero->getNumberInBackpack(true) >= HERO_BACKPACK_CAPACITY) {
             if (humanPlayer)
                 normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BACKPACK_FULL], 1, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
@@ -3751,7 +3751,7 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
 
     monstersGiveReward(currentHero, cell, humanPlayer);
     if (humanPlayer) {
-        m_advWindow->updateResourceDisplay(1, 1);
+        m_advWindow->updateResourceDisplay(true, true);
         updBottomView(1, 1, 1);
     }
 
@@ -3972,11 +3972,11 @@ void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
     } else {
         if (cell->playerKnowsCell(g_netLocalGamePos))
             return;
-        if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
+        if (currentHero->getNumberInBackpack(true) >= HERO_BACKPACK_CAPACITY)
             return;
     }
 
-    if (cell->tombIsFull() && currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
+    if (cell->tombIsFull() && currentHero->getNumberInBackpack(true) < HERO_BACKPACK_CAPACITY) {
         type_artifact artifact(cell->getTombArtifact());
         if (humanPlayer) {
             sprintf(g_text,
@@ -4051,7 +4051,7 @@ void advManager::doEventWateringHole(hero* currentHero, NewmapCell* cell,
     currentHero->m_maxMovePoints += 400;
     currentHero->m_movePoints += 400;
     if (humanPlayer)
-        m_advWindow->updateHeroLocators(-1, 1, 1);
+        m_advWindow->updateHeroLocators(-1, true, true);
 }
 
 VA(0x004a7fc0, 0xBD)
@@ -4147,7 +4147,7 @@ void advManager::doEventLithOneWay(hero* currentHero, NewmapCell* cell,
     if (exitCell->m_type == HERO) {
         if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 1);
-            transmitRemoteData(&message, 0x7f, 0, 1);
+            transmitRemoteData(&message, 0x7f, false, true);
         }
         g_game->setVisibility(point.m_x, point.m_y, point.m_z,
                               g_netLocalGamePos, 1, 0);
@@ -4156,11 +4156,11 @@ void advManager::doEventLithOneWay(hero* currentHero, NewmapCell* cell,
             return;
     }
 
-    stopCursor(1);
+    stopCursor(true);
     teleportTo(currentHero, point,
                DATA_COMPGEN(0x0067775c, teleportOutSampleName,
                             "telptout.wav"),
-               0, 1, 0);
+               false, true, false);
 }
 
 VA(0x004a8390, 0x155)
@@ -4177,7 +4177,7 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
     if (exitCell->m_type == HERO) {
         if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 1);
-            transmitRemoteData(&message, 0x7f, 0, 1);
+            transmitRemoteData(&message, 0x7f, false, true);
         }
         g_game->setVisibility(point.m_x, point.m_y, point.m_z,
                               g_netLocalGamePos, 1, 0);
@@ -4186,8 +4186,8 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
             return;
     }
 
-    stopCursor(1);
-    g_advManager->teleportTo(currentHero, point, "telptout.wav", 0, 1, 0);
+    stopCursor(true);
+    g_advManager->teleportTo(currentHero, point, "telptout.wav", false, true, false);
 }
 
 // NewmapCell has its CodeView-proven ExtraInfoUnion base; event handlers
@@ -4237,8 +4237,8 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
 {
     type_point exitPoint;
     if (g_game->getRandomWhirlpool(cell->m_extraInfo, exitPoint)) {
-        stopCursor(1);
-        g_advManager->teleportTo(currentHero, exitPoint, NULL, 0, 1, 0);
+        stopCursor(true);
+        g_advManager->teleportTo(currentHero, exitPoint, NULL, false, true, false);
     }
 }
 
@@ -4273,18 +4273,18 @@ MAC_ADDRESS(0x0b5b24, 0x1f6c)  // anchor-callee cell->type jump table + ret 0x10
 void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point point, bool humanPlayer)
 {
     int eventType = cell->m_type;
-    mobilizeCurrHero(1, 0, 0);
+    mobilizeCurrHero(1, false, false);
 
     switch (eventType) {
     case ALTAR_OF_SACRIFICE:
         if (humanPlayer) {
             g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-            g_mouseManager->showPointer(1);
+            g_mouseManager->showPointer(true);
             {
                 type_sacrifice_window sacrificeWindow(
                     currentHero, g_game->getLocalPlayerGamePos());
                 sacrificeWindow.centerWindow(-1, -1);
-                sacrificeWindow.doModal(0);
+                sacrificeWindow.doModal(false);
                 reseed(0, 0);
             }
             g_game->setInfoFlag(const_sacrifice_info, g_netLocalGamePos);
@@ -4435,14 +4435,14 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case GARRISON: {
         g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-        g_mouseManager->showPointer(1);
+        g_mouseManager->showPointer(true);
         garrison* thisGarrison = g_game->getGarrison(cell->m_extraInfo);
         if (!g_game->onSameTeam(thisGarrison->m_playerOwner,
                                 g_netLocalGamePos)) {
             if (thisGarrison->m_garrisonArmy.hasCreatures()) {
                 if (doCombat(point, currentHero, &currentHero->m_army,
                              thisGarrison->m_playerOwner, NULL, NULL,
-                             &thisGarrison->m_garrisonArmy, -1, 1, 0))
+                             &thisGarrison->m_garrisonArmy, -1, true, false))
                     break;
             }
             g_game->claimGarrison(cell->m_extraInfo, g_netLocalGamePos);
@@ -4462,7 +4462,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             aiVisitHillFort(currentHero);
         } else {
             g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-            g_mouseManager->showPointer(1);
+            g_mouseManager->showPointer(true);
             THillFortWindow hillFortWindow;
             hillFortWindow.centerWindow(-1, -1);
             hillFortWindow.doModal();
@@ -4481,7 +4481,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                 handler->setInPopup(0);
         }
         type_point savedOrigin = m_radarOrigin;
-        demobilizeCurrHero(0, 1);
+        demobilizeCurrHero(false, true);
         for (int z = 0; z < g_game->getNumMapLevels(); z++) {
             for (int x = 0; x < g_mapWidth; x++) {
                 for (int y = 0; y < g_mapHeight; y++) {
@@ -4496,7 +4496,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                             m_radarOrigin.m_y = y - 8;
                             m_radarOrigin.m_z = z;
                             completeDraw(false);
-                            updateRadar(1, 1, 0, 0, 0);
+                            updateRadar(true, true, false, false, false);
                             updateScreen(0, 0);
                             GameTime::delayTil(GameTime::get() + 2000);
                         }
@@ -4591,7 +4591,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 20);
-            transmitRemoteData(&message, 0x7f, 0, 1);
+            transmitRemoteData(&message, 0x7f, false, true);
         }
         g_game->setVisibility(point.m_x, point.m_y, point.m_z,
                               g_netLocalGamePos, 20, 0);
@@ -4607,7 +4607,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 20);
-            transmitRemoteData(&message, 0x7f, 0, 1);
+            transmitRemoteData(&message, 0x7f, false, true);
         }
         g_game->setVisibility(point.m_x, point.m_y, point.m_z,
                               g_netLocalGamePos, 20, 0);
@@ -4691,7 +4691,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case SHIPYARD:
         g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-        g_mouseManager->showPointer(1);
+        g_mouseManager->showPointer(true);
         doEventShipyard(cell, point, humanPlayer);
         break;
     case SHRINE1:
@@ -4739,9 +4739,9 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         type_point heroPos = currentHero->getLocation();
         if (heroPos != point) {
             g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-            g_mouseManager->showPointer(1);
+            g_mouseManager->showPointer(true);
             doMapTavern(point);
-            m_advWindow->updateHeroLocators(-1, 1, 1);
+            m_advWindow->updateHeroLocators(-1, true, true);
         }
         break;
     }
@@ -4752,7 +4752,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         if (!humanPlayer)
             break;
         g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-        g_mouseManager->showPointer(1);
+        g_mouseManager->showPointer(true);
         normalDialog((*g_adventureEventText)[
                          ADV_EVENT_TEXT_THIEVES_DEN],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -4760,7 +4760,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             new TThievesGuildWindow(99);
         if (!guildWindow)
             memError();
-        guildWindow->doModal(0);
+        guildWindow->doModal(false);
         if (guildWindow)
             delete guildWindow;
         redrawAdvScreen(1, 0);
@@ -4768,7 +4768,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
     }
     case TOWN:
         g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-        g_mouseManager->showPointer(1);
+        g_mouseManager->showPointer(true);
         townEvent(cell, point, humanPlayer);
         break;
     case TRADING_POST:
@@ -4798,7 +4798,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         if (exitCell->m_type == HERO) {
             if (g_remoteOn) {
                 CSetVisibilityMsg message(exitPoint, g_netLocalGamePos, 1);
-                transmitRemoteData(&message, 0x7f, 0, 1);
+                transmitRemoteData(&message, 0x7f, false, true);
             }
             g_game->setVisibility(exitPoint.m_x, exitPoint.m_y, exitPoint.m_z,
                                   g_netLocalGamePos, 1, 0);
@@ -4807,7 +4807,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                 break;
         }
         if (exitCell->m_type == UNDERGROUND_GATE)
-            g_advManager->teleportTo(currentHero, exitPoint, NULL, 0, 1, 0);
+            g_advManager->teleportTo(currentHero, exitPoint, NULL, false, true, false);
         break;
     }
     case UNIVERSITY:
@@ -4816,12 +4816,12 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                                 cell->getUniversity());
         } else {
             g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-            g_mouseManager->showPointer(1);
+            g_mouseManager->showPointer(true);
             {
                 type_university_window universityWindow(
                     currentHero, cell->getUniversity(), 0);
                 universityWindow.centerWindow(-1, -1);
-                universityWindow.doModal(0);
+                universityWindow.doModal(false);
             }
             g_game->setInfoFlag(UniversityInfo, g_netLocalGamePos);
         }
@@ -4882,16 +4882,16 @@ void advManager::doEvent(NewmapCell* eventCell, type_point point)
 
     reseed(0, 0);
     eventSound(eventCell);
-    dispatchEvent(currentHero, eventCell, point, 1);
+    dispatchEvent(currentHero, eventCell, point, true);
 
-    updateRadar(1, 1, 0, 0, 0);
-    m_advWindow->updateHeroLocators(-1, 1, 0);
-    m_advWindow->updateTownLocators(-1, 1, 0);
-    m_advWindow->updateQuestLogButton(1);
+    updateRadar(true, true, false, false, false);
+    m_advWindow->updateHeroLocators(-1, true, false);
+    m_advWindow->updateTownLocators(-1, true, false);
+    m_advWindow->updateQuestLogButton(true);
     m_advWindow->updateSpellButton(currentHero);
     m_advWindow->updateSleepButton(currentHero);
     updBottomView(1, 1, 1);
-    m_advWindow->updateResourceDisplay(1, 1);
+    m_advWindow->updateResourceDisplay(true, true);
 
     if (!g_soundManager->m_mp3Playing)
         g_soundManager->resumeStream();
@@ -4974,7 +4974,7 @@ void advManager::heroSwap(hero* leftHero, hero* rightHero)
         && rightHero->m_owner != leftHero->m_owner)
     {
         CTradeRequestMsg message(leftHero, rightHero);
-        transmitRemoteData(&message, rightHero->m_owner, 1, 1);
+        transmitRemoteData(&message, rightHero->m_owner, true, true);
     }
 
     g_executive->doDialog(manager);
@@ -4993,7 +4993,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
     hero* currentHero = g_game->getCurrHero();
     int oldOwner = thisTown->m_owner;
 
-    demobilizeCurrHero(0, 1);
+    demobilizeCurrHero(false, true);
 
     if (g_game->onSameTeam(thisTown->m_owner, g_netLocalGamePos)) {
         if (thisTown->m_owner == g_netLocalGamePos
@@ -5014,16 +5014,16 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
             heroLoses(g_game->getHero(thisTown->m_garrisonHeroId), -1);
             thisTown->m_garrisonHeroId = -1;
         }
-        g_game->claimTown(thisTown->m_id, g_netLocalGamePos, 0, 1);
+        g_game->claimTown(thisTown->m_id, g_netLocalGamePos, false, true);
         thisTown->destroyExtraCapitol();
         g_game->m_mapHeader.m_lossCondition.checkForDefeatedTownLoss(oldOwner,
                                                                  thisTown);
         checkEndGame(0);
         if (g_gameOver)
             return;
-        updateRadar(1, 1, 0, 0, 0);
-        m_advWindow->updateHeroLocators(-1, 1, 1);
-        m_advWindow->updateTownLocators(-1, 1, 1);
+        updateRadar(true, true, false, false, false);
+        m_advWindow->updateHeroLocators(-1, true, true);
+        m_advWindow->updateTownLocators(-1, true, true);
         if (g_game->m_mapHeader.m_victoryCondition
                 .checkForArtifactTransportWin(currentHero, point))
         {
@@ -5043,7 +5043,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
             if (thisTown->m_garrisonHeroId >= 0) {
                 doCombat(point, currentHero, &currentHero->m_army,
                          defender->m_owner, NULL, defender, &defender->m_army,
-                         -1, 1, 0);
+                         -1, true, false);
                 currentHero->checkLevel();
                 checkEndGame(0);
                 return;
@@ -5060,18 +5060,18 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
 
         if (doCombat(point, currentHero, &currentHero->m_army,
                      thisTown->m_owner, thisTown, defender, defendingArmy,
-                     -1, 1, 0) == 0) {
+                     -1, true, false) == 0) {
             thisTown->m_garrisonHeroId = -1;
-            g_game->claimTown(thisTown->m_id, g_netLocalGamePos, 0, 1);
+            g_game->claimTown(thisTown->m_id, g_netLocalGamePos, false, true);
             thisTown->destroyExtraCapitol();
             if (g_game->m_mapHeader.m_lossCondition.checkForDefeatedTownLoss(
                     oldOwner, thisTown))
                 checkEndGame(0);
             if (g_gameOver)
                 return;
-            updateRadar(1, 1, 0, 0, 0);
-            m_advWindow->updateHeroLocators(-1, 1, 1);
-            m_advWindow->updateTownLocators(-1, 1, 1);
+            updateRadar(true, true, false, false, false);
+            m_advWindow->updateHeroLocators(-1, true, true);
+            m_advWindow->updateTownLocators(-1, true, true);
         }
     }
 
@@ -5346,13 +5346,13 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
         }
     }
 
-    demobilizeCurrHero(0, 1);
+    demobilizeCurrHero(false, true);
     int seed = point.m_y * 0x36814 + point.m_z * 0x3d0b5 + point.m_x * 0x29875
                + 0x14075;
     sRand(seed);
     int winner = doCombat(point, who, &who->m_army, -1, NULL, NULL, &bank.m_guards,
-                          seed, 1, 1);
-    mobilizeCurrHero(0, 0, 1);
+                          seed, true, true);
+    mobilizeCurrHero(0, false, true);
     if (winner)
         return 0;
 
@@ -5557,7 +5557,7 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
         }
     };
 
-    demobilizeCurrHero(0, 1);
+    demobilizeCurrHero(false, true);
 
     const int eventSeed = point.m_x * 0x3c907 + point.m_z * 0x4bb5f
                      + point.m_y * 0x4386d + 0x25ea7;
@@ -5657,9 +5657,9 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
     }
 
     int result = doCombat(point, who, &who->m_army, -1, NULL, NULL,
-                          &armyGroupForCombat, eventSeed, 1, 0);
+                          &armyGroupForCombat, eventSeed, true, false);
     *numMons = armyGroupForCombat.getCreatureTotal(monType);
-    mobilizeCurrHero(0, 0, 1);
+    mobilizeCurrHero(0, false, true);
     return result;
 }
 
@@ -5679,11 +5679,11 @@ void advManager::heroLoses(hero* who, int vanishSound)
     updateScreen(0, 0);
 
     int owner = who->m_owner;
-    who->deallocate(1, 0);
+    who->deallocate(true, false);
     fizzleCenter(vanishSound);
 
-    updateRadar(1, 1, 0, 0, 0);
-    m_advWindow->updateHeroLocators(-1, 1, 1);
+    updateRadar(true, true, false, false, false);
+    m_advWindow->updateHeroLocators(-1, true, true);
     if (g_game->m_mapHeader.m_lossCondition.heroKilled(who)) {
         g_game->m_mapHeader.m_lossCondition.m_playerLoser = owner;
         checkEndGame(0);
@@ -5764,7 +5764,7 @@ void advManager::doAIEvent(NewmapCell* cell, hero* currentHero, type_point point
         currentHero->m_pathTargetX = currentHero->m_pathTargetY = -1;
 
     currentHero->m_movePoints = max(--currentHero->m_movePoints, 0);
-    dispatchEvent(currentHero, cell, point, 0);
+    dispatchEvent(currentHero, cell, point, false);
 
     if (currentHero->m_owner != -1)
         currentHero->checkLevel();
@@ -5806,13 +5806,13 @@ int advManager::doNetCombat(CNetMsg* netMsg)
     int leftPlayer = leftHero->m_owner;
     if (g_remoteOn && !g_thisNetGotAdventureControl) {
         if (rightHero)
-            setHeroContext(rightHero->m_id, 0, 1, 1);
+            setHeroContext(rightHero->m_id, 0, true, true);
         else if (rightTown)
-            setTownContext(rightTown->m_id, 1, 1);
+            setTownContext(rightTown->m_id, true, true);
     }
 
     winner = doCombat(point, leftHero, leftArmyGroup, rightPlayer,
-                      rightTown, rightHero, rightArmyGroup, seed, 0, 0);
+                      rightTown, rightHero, rightArmyGroup, seed, false, false);
 
     if (!g_game->isHuman(leftPlayer))
         sendHeroTownData(point, leftHero, leftArmyGroup, rightPlayer,
@@ -6070,7 +6070,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     unsigned char leftHuman = leftPlayer >= 0 && g_game->isHuman(leftPlayer);
     if (seed == -1)
         seed = random(1, 1000);
-    demobilizeCurrHero(0, 1);
+    demobilizeCurrHero(false, true);
     reseed(0, 0);
 
     unsigned char replay = 0;
@@ -6104,12 +6104,12 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                     winningPlayer, loser))
                 checkEndGame(0);
         }
-        mobilizeCurrHero(0, 0, 1);
+        mobilizeCurrHero(0, false, true);
         return winner;
     }
 
     g_mouseManager->setPointer(2, mouseManager::DEFAULT_SET);
-    g_mouseManager->showPointer(1);
+    g_mouseManager->showPointer(true);
     g_adventureCombatActive = 1;
     int savePlayer = g_netLocalGamePos;
     int saveShowIt = g_completeDrawEnabled;
@@ -6199,7 +6199,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
         g_adventureGraphicsPreserveMode = 1;
     g_executive->callManager(g_combatManager);
     g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-    g_mouseManager->showPointer(1);
+    g_mouseManager->showPointer(true);
     g_adventureGraphicsPreserveMode = 0;
     if (leftHero)
         leftHero->checkLevel();
@@ -6210,7 +6210,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                 rightHero->checkLevel();
                 CHeroLevelUpdateMsg msg(rightHero->m_id, rightHero->m_skillCount,
                                         rightHero->m_skillLevel, rightHero->m_stats);
-                transmitRemoteData(&msg, g_netLocalGamePos, 0, 1);
+                transmitRemoteData(&msg, g_netLocalGamePos, false, true);
             } else {
                 CLevelPickWaitDlg dlg2;
                 dlg2.waitForLevels(rightHero->m_owner);
@@ -6305,13 +6305,13 @@ combatFinished:
     } else {
         setNoDialogMenus(1);
     }
-    mobilizeCurrHero(0, 0, 1);
+    mobilizeCurrHero(0, false, true);
     if (finishHeroes) {
         g_combatRetreated = 0;
         g_combatSurrendered = 0;
     }
     g_adventureCombatActive = 0;
-    g_mouseManager->showPointer(1);
+    g_mouseManager->showPointer(true);
     checkEndGame(0);
     return g_combatManager->m_winner;
 }
@@ -6355,7 +6355,7 @@ void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* l
     if (rightHero)
         combatInitMsg.m_rightHeroData = *rightHero;
 
-    int result = combatInitMsg.send(toWhoNetPos, 0, 1);
+    int result = combatInitMsg.send(toWhoNetPos, false, true);
     if (!result)
         shutDown(NULL);
 }

@@ -35,7 +35,7 @@ DC_ADDRESS(0x071f78, 0x4e)
 int CSequence::AddFrame(const char* name)
 {
     if (numFrames < allocatedFrames) {
-        f[numFrames++] = new CSpriteFrame(name, 0);
+        f[numFrames++] = new CSpriteFrame(name, false);
         return numFrames;
     }
     return 0;

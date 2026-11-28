@@ -201,7 +201,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             "smalfont.fnt", font::WHITE, ATTACKER_NAME, 0, 0, 8));
         m_widgets.push_back(new iconWidget(
             21, 38, 58, 64, ATTACKER_PORTRAIT, "TwCrPort.def",
-            0, 0, 0, 0, 0x10));
+            0, 0, false, 0, 0x10));
         static_cast<iconWidget*>(m_widgets.back())->setIconFrame(
             g_combatManager->m_armies[0][type].m_creatureType + 2);
     }
@@ -241,7 +241,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             "smalfont.fnt", font::WHITE, DEFENDER_NAME, 2, 0, 8));
         m_widgets.push_back(new iconWidget(
             392, 38, 58, 64, DEFENDER_PORTRAIT, "TwCrPort.def",
-            0, 0, 1, 0, 0x10));
+            0, 0, true, 0, 0x10));
         static_cast<iconWidget*>(m_widgets.back())->setIconFrame(
             g_combatManager->m_armies[1][type].m_creatureType + 2);
     }
@@ -378,7 +378,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             int x = firstX + 42 * row;
             m_widgets.push_back(new iconWidget(
                 x, rowY, 32, 32, BACKGROUND_ID, "cprsmall.def",
-                deadArmyTypes[lossSide][row] + 2, 0, 0, 0, 0x10));
+                deadArmyTypes[lossSide][row] + 2, 0, false, 0, 0x10));
             sprintf(text, "%d", deadArmyNumTroops[lossSide][row]);
             m_widgets.push_back(new textWidget(
                 x - 5, rowY + 38, 32, 32, text, "smalfont.fnt",
@@ -391,7 +391,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 
     button* accept = new button(
         385, 507, 64, 30, DIALOG_RETURN_SPLIT_ACCEPT, "iOkay.def",
-        0, 1, 0, 0, 2);
+        0, 1, false, 0, 2);
     accept->setHotkey(28);
     accept->setHotkey(1);
     m_widgets.push_back(accept);
@@ -403,7 +403,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             memError();
     }
 
-    videoOpen(videoId, 272, 89, 0, 0, 1, 1, 1);
+    videoOpen(videoId, 272, 89, 0, 0, 1, true, true);
 }
 
 VA_COMPGEN(0x00471a40, 0x21, SCALAR_DELETING_DTOR, TCombatResultsWindow)
@@ -425,8 +425,8 @@ DC_ADDRESS(0x069200, 0x44)
 MAC_ADDRESS(0x07fb20, 0x98)  // MAC_ABSTRACTION_FROM(tokens1:331cdd680fdd,100.0000): DC-proven bool update and the full-screen updateScreen facade; same instructions, but the canonical call grows the CW frame by 16 bytes.
 int TCombatResultsWindow::open(int newPriority, bool update)
 {
-    int result = heroWindow::open(newPriority, 0);
-    drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    int result = heroWindow::open(newPriority, false);
+    drawWindow(false, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     videoDrawCurrentFrame();
     if (update)
         g_windowManager->updateScreen();

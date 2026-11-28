@@ -66,7 +66,7 @@ int TDimensionDoorWindow::windowHandler(message& msg)
 
     unsigned long lastFrame = g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (GameTime::elapsedSince(lastFrame) > 0) {
-        g_advManager->completeDraw(0);
+        g_advManager->completeDraw(false);
         g_advManager->updateScreen(0, 0);
     }
 
@@ -203,7 +203,7 @@ int TSkuttleBoatWindow::windowHandler(message& msg)
 
     unsigned long lastFrame = g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (GameTime::elapsedSince(lastFrame) > 0) {
-        g_advManager->completeDraw(0);
+        g_advManager->completeDraw(false);
         g_advManager->updateScreen(0, 0);
     }
 

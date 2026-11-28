@@ -30,8 +30,8 @@ void advManager::checkCastSpell()
     if (g_game->getCurrHeroId() == -1)
         return;
 
-    mobilizeCurrHero(0, 0, 1);
-    completeDraw(0);
+    mobilizeCurrHero(0, false, true);
+    completeDraw(false);
     updateScreen(0, 0);
     g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
 
@@ -40,7 +40,7 @@ void advManager::checkCastSpell()
         TSpellbookWindow spellBookWindow(*currentHero, NULL,
                                    TSpellbookWindow::eContextAdventure,
                                    currentHero->getSpecialTerrain());
-        spellBookWindow.doModal(0);
+        spellBookWindow.doModal(false);
     }
 
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
@@ -201,7 +201,7 @@ void advManager::summonBoat(TSkillMastery level)
                                       32 * ((theBoat->m_x - m_radarOrigin.m_x) + 3), 32 * ((theBoat->m_y - m_radarOrigin.m_y) + 2));
                 boatLimits.clip(g_advMapViewLimits);
                 g_windowManager->saveFizzleSourceX(boatLimits);
-                completeDraw(0);
+                completeDraw(false);
                 g_windowManager->fizzleForwardX(boatLimits, -1);
             }
             theBoat->m_x = x;
@@ -210,7 +210,7 @@ void advManager::summonBoat(TSkillMastery level)
             theBoat->obscureCell();
         } else {
             if (level < eMasteryAdvanced
-                || g_game->createBoat(x, y, who->m_z, who->m_owner, 0, 0)
+                || g_game->createBoat(x, y, who->m_z, who->m_owner, false, 0)
                        < 0) {
                 if (g_game->isLocalHuman(who->m_owner)) {
                     normalDialog(
@@ -227,7 +227,7 @@ void advManager::summonBoat(TSkillMastery level)
 
         SAMPLE2 sample = loadPlaySample(traits.m_sample);
         g_windowManager->saveFizzleSourceX(boatLimits);
-        completeDraw(0);
+        completeDraw(false);
         g_windowManager->fizzleForwardX(boatLimits, -1);
         updateScreen(0, 0);
         reseed(0, 0);
@@ -252,7 +252,7 @@ void advManager::skuttleBoat(TSkillMastery level)
 
     {
         TSkuttleBoatWindow skuttleWindow;
-        skuttleWindow.doModal(0);
+        skuttleWindow.doModal(false);
     }
 
     if (g_windowManager->m_dialogReturn == 0) {
@@ -285,7 +285,7 @@ void advManager::skuttleBoat(TSkillMastery level)
 
         SAMPLE2 sample = loadPlaySample(traits.m_sample);
         g_windowManager->saveFizzleSourceX(boatLimits);
-        completeDraw(0);
+        completeDraw(false);
         g_windowManager->fizzleForwardX(boatLimits, -1);
         theBoat.m_allocated = 0;
         reseed(0, 0);
@@ -339,7 +339,7 @@ void advManager::dimensionDoor(TSkillMastery level)
 
     {
         TDimensionDoorWindow doorWin;
-        doorWin.doModal(0);
+        doorWin.doModal(false);
     }
 
     type_point destination = get_mouse_map_point();
@@ -354,21 +354,21 @@ void advManager::dimensionDoor(TSkillMastery level)
                     (*g_generalText)[GENERAL_TEXT_DIMENSION_DOOR_BLOCKED],
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
-            updateRadar(1, 1, 0, 0, 0);
+            updateRadar(true, true, false, false, false);
         } else {
-            teleportTo(who, destination, traits.m_sample, 0, 1, 0);
+            teleportTo(who, destination, traits.m_sample, false, true, false);
         }
         who->m_movePoints -= level == eMasteryExpert ? 200 : 300;
         if (who->m_movePoints < 0)
             who->m_movePoints = 0;
         who->useSpell(who->getManaCost(SPELL_DIMENSION_DOOR));
-        m_advWindow->updateHeroLocator(-1, 1, 1);
+        m_advWindow->updateHeroLocator(-1, true, true);
         reseed(0, 0);
         ++who->m_dWalkSpellsCast;
         return;
     }
 
-    updateRadar(1, 1, 0, 0, 0);
+    updateRadar(true, true, false, false, false);
     normalDialog(
         g_generalText->GetText(GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET),
         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -440,7 +440,7 @@ void advManager::townGate(TSkillMastery level)
 
     int selectedTown;
     if (level >= eMasteryAdvanced) {
-        TTownGateWindow tgWindow(1);
+        TTownGateWindow tgWindow(true);
         for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
             if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
                 if (g_game->getTown(i)->m_visitingHeroId == -1) {
@@ -481,12 +481,12 @@ void advManager::townGate(TSkillMastery level)
         return;
     }
 
-    teleportTo(who, destination->getLocation(), traits.m_sample, 0, 1, 0);
+    teleportTo(who, destination->getLocation(), traits.m_sample, false, true, false);
     destination->giveSpells(NULL);
     who->m_movePoints -= cost;
     who->m_movePoints = ::max(who->m_movePoints, 0);
     who->useSpell(who->getManaCost(SPELL_TOWN_PORTAL));
-    m_advWindow->updateHeroLocator(-1, 1, 1);
+    m_advWindow->updateHeroLocator(-1, true, true);
     if (g_game->m_mapHeader.m_victoryCondition.checkForArtifactTransportWin(
             who, destination->getLocation())) {
         checkEndGame(0);
@@ -521,7 +521,7 @@ void advManager::waterWalk(TSkillMastery level)
 {
     const TSpellTraits* traits = &akSpellTraits[SPELL_WATER_WALK];
     hero* who = g_game->getCurrHero();
-    if (who->canWalkOnWater(0))
+    if (who->canWalkOnWater(false))
         return;
 
     SAMPLE2 sample = loadPlaySample(traits->m_sample);
@@ -555,7 +555,7 @@ void advManager::flight(TSkillMastery level)
 {
     const TSpellTraits* traits = &akSpellTraits[SPELL_FLY];
     hero* who = g_game->getCurrHero();
-    if (who->isFlying(0))
+    if (who->isFlying(false))
         return;
 
     if ((who->m_flags & 0x40000) != 0) {
@@ -599,13 +599,13 @@ void advManager::teleportTo(hero* who, type_point destination,
     getCell(who->getLocation());
 
     unsigned char wasMobilized = m_curHeroMobile;
-    setHeroContext(who->m_id, 0, 0, drawChanges);
+    setHeroContext(who->m_id, 0, false, drawChanges);
 
     SAMPLE2 teleportSample;
     teleportSample.m_playSample = NULL;
     if (drawChanges || g_currentPlayer->isLocalHuman()) {
         teleportSample = loadPlaySample(sampleName);
-        completeDraw(0);
+        completeDraw(false);
         if (drawChanges && !g_currentPlayer->isLocalHuman()) {
             if ((g_config.m_blackoutComputer == 0
                  && mapExtraPosAndAdjacentsSet(who->m_x, who->m_y, who->m_z,
@@ -658,7 +658,7 @@ void advManager::teleportTo(hero* who, type_point destination,
     }
 
     if (!wasMobilized)
-        demobilizeCurrHero(0, drawChanges);
+        demobilizeCurrHero(false, drawChanges);
 
     if (g_completeDrawEnabled) {
         setEnvironmentOrigin(getMapCenter(), 1);
@@ -671,8 +671,8 @@ void advManager::teleportTo(hero* who, type_point destination,
 
     reseed(0, 0);
     if (g_completeDrawEnabled) {
-        updateRadar(1, 1, 0, 0, 0);
-        completeDraw(0);
+        updateRadar(true, true, false, false, false);
+        completeDraw(false);
         forceNewHover();
     }
 

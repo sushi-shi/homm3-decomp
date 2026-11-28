@@ -85,7 +85,7 @@ static const s32 g_rmgLineReflectedNeighbours[2][2][TILE_DIR_COUNT] = {
 
 DATA(0x0063ff1c)
 static const bool g_rmgLineReflections[4][2] = {
-    {0, 0}, {0, 1}, {1, 0}, {1, 1}
+    {false, false}, {false, true}, {true, false}, {true, true}
 };
 
 // Loki's LinePlacement.cpp defines computeAdjacentLines, computeLineShape,
@@ -105,36 +105,36 @@ void computeLineShape(
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_EAST]
         && neighbours[TILE_DIR_SOUTH] && neighbours[TILE_DIR_WEST]) {
         pattern = LINE_CROSS;
-        flipX = 0;
-        flipY = 0;
+        flipX = false;
+        flipY = false;
         return;
     }
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_SOUTH]) {
         if (neighbours[TILE_DIR_EAST]) {
             pattern = LINE_NES;
-            flipX = 0;
+            flipX = false;
         } else if (neighbours[TILE_DIR_WEST]) {
             pattern = LINE_NES;
-            flipX = 1;
+            flipX = true;
         } else {
             pattern = LINE_NS;
-            flipX = 0;
+            flipX = false;
         }
-        flipY = 0;
+        flipY = false;
         return;
     }
     if (neighbours[TILE_DIR_EAST] && neighbours[TILE_DIR_WEST]) {
         if (neighbours[TILE_DIR_SOUTH]) {
             pattern = LINE_ESW;
-            flipY = 0;
+            flipY = false;
         } else if (neighbours[TILE_DIR_NORTH]) {
             pattern = LINE_ESW;
-            flipY = 1;
+            flipY = true;
         } else {
             pattern = LINE_EW;
-            flipY = 0;
+            flipY = false;
         }
-        flipX = 0;
+        flipX = false;
         return;
     }
     b8 hasCornerVariant = table->m_ranges[LINE_SE_VARIANT].m_frameCount > 0;
@@ -155,22 +155,22 @@ void computeLineShape(
         if (neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST]) {
             pattern = LINE_END_E;
             flipX = neighbours[TILE_DIR_WEST];
-            flipY = 0;
+            flipY = false;
         } else {
             if (neighbours[TILE_DIR_SOUTH]) {
                 pattern = LINE_END_S;
-                flipX = 0;
-                flipY = 0;
+                flipX = false;
+                flipY = false;
             } else {
                 pattern = LINE_END_S;
-                flipX = 0;
-                flipY = 1;
+                flipX = false;
+                flipY = true;
             }
         }
     } else {
         pattern = neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST] ? LINE_EW : LINE_NS;
-        flipX = 0;
-        flipY = 0;
+        flipX = false;
+        flipY = false;
     }
 }
 
