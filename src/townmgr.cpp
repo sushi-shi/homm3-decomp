@@ -6842,6 +6842,14 @@ void townManager::moveHero(town* fromTown, town* toTown)
 // 0x31 text widget stays a call where retail expands it; the inline replay
 // puts this root at cb 16017 against retail's window 15917..16003. Loop
 // spelling (iterator type, post-increment, unbraced body) is cb-flat.
+// The trace puts the miss at the running total: 35013 when that begin is
+// tested against the 35000 limit, 35077 at the next push_back, so 13..76
+// fewer units before it reproduce retail.
+// Mac retail keeps vector operator[] (0x2a0c) at all 54 text sites and DC
+// records TTextResource::operator[] there, i.e. `(*g_generalText)[id]`.
+// That spelling is cb-flat (16017) and leaves the same residual; its 54
+// retained calls then name ??ATTextResource where the target labels the
+// folded body GetText (99.94 by name only). Left for the owner's decision.
 VA(0x005d86f0, 0x445A)
 DC_ADDRESS(0x17b48c, 0x3c68)
 MAC_ADDRESS(0x1d6668, 0xa4e0)
