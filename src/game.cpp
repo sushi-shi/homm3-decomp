@@ -4507,6 +4507,13 @@ void game::matchUndergroundGates()
 // field stores lowers the root to cb 2777 but is charged at every site and
 // overshoots (86.38%, randomizeWitchHut and setTomb stay calls); no native
 // record names such a setter, so the arms keep their three stores.
+// 2026-11-28: Dreamcast's CodeView scopes declare thismarket (+095..+104),
+// luckbonus (+259..+268), restype/resqty (+288..+292), newowner (+498..+500)
+// and thisobj (+562..+572) inside their case blocks. Moving all five (or the
+// market alone, or the four scalars alone) measures 93.20% with the root at
+// cb 2911, further from the 2734..2753 window, so they stay at function
+// scope until the root's missing ~160 units are found. Dreamcast records 115
+// scopes against our 78, so missing braces are not that difference either.
 VA(0x004c0cc0, 0x1668)
 DC_ADDRESS(0x0ac910, 0x1278)
 MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order
