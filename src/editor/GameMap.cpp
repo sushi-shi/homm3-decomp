@@ -3090,7 +3090,17 @@ TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TTown* pT
             else
                 pTown->setVisitingHero(NULL);
         }
-        _assignUniqueLinkID(pVisitingHero);
+        // FLAGGED FOR CLEANUP (lever, owner's 2026-11-28 rule): the visitor's
+        // _assignUniqueLinkID(pVisitingHero) is written out through a const
+        // view of the implementation, as retail expands it here; the natural
+        // helper call scores 77.02%.
+        const TGameMap::_TImpl* pConstThis = this;
+        map<unsigned int, TMapObjectRef>::const_iterator pObjRef =
+            pConstThis->_m_paLinkableObjectRef->find(pVisitingHero->getLinkID());
+        while (pObjRef != pConstThis->_m_paLinkableObjectRef->end()) {
+            pVisitingHero->assignNewLinkID();
+            pObjRef = pConstThis->_m_paLinkableObjectRef->find(pVisitingHero->getLinkID());
+        }
     }
     _assignUniqueLinkID(pTown);
     return _placeNewObject(bSecondLayer, static_cast<TPlayableObject*>(pTown), loc, pUpdatedExtent);
