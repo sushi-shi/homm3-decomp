@@ -4401,7 +4401,11 @@ static bool considerHiring(long playerId, hero* candidate)
 // directly (no get_location call, unlike AI_choose_destination); byte-flat.
 // The cast on either getCell call alone gives the same 99.95. DC line 4373
 // reads destination.value between the two cell lookups; a `long value`
-// local there is byte-flat (98.19) and cancels the cast's gain.
+// local there is byte-flat (98.19) and cancels the cast's gain. A named
+// `type_point point = destination` or `const type_point& point` passed to
+// both lookups also gives 99.95 and is cancelled the same way; Mac
+// 0x35300/0x35370 reads both arguments from destination's own storage, so
+// neither local is adopted.
 VA(0x00431bd0, 0x64b)
 DC_ADDRESS(0x034fb8, 0x446)
 MAC_ADDRESS(0x035070, 0x770)  // anchor-callee (consider_hiring 0x432bce + AI_arrange_army 0x431d9d)

@@ -2010,6 +2010,9 @@ total`, unary plus, double negation, `double(double(total))`, a `long
 double` operand, a bound const reference and a named double numerator keep
 the ordinary order. The developer spelling that leaves such a node is still
 unknown; none of the folding forms is kept in source.
+`combatManager::aiCheckRetreat` (0x41e570) ends on a seventh site, in single
+precision: `float(fightValues[side]) / float(fightValues[0] +
+fightValues[1])` (Dreamcast ai.cpp:324, one statement).
 
 ### Stack-bin priorities have unstable ties
 
