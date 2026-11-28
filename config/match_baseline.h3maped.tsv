@@ -5837,7 +5837,7 @@ rmg	?calculateQuestZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	
 rmg	?calculateZoneBounds@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xa2105	tokens1:dcf1d933fba7
 rmg	?canConnect@TRmgZone@@QBEEPBU1@@Z	100.0000	100.0000	100.0000	0x9b6e2	-
 rmg	?canFitObject@TRmgTreasureGroup@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x9d2e0	-
-rmg	?canPlaceObject@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@PAUTRmgZone@@@Z	93.7903	93.7903	93.7903	0x9aa93	-
+rmg	?canPlaceObject@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9aa93	-
 rmg	?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0xa6795	-
 rmg	?canPlaceTreasureGroup@type_random_map_generator@@QAEEPAUTRmgTreasureGroup@@UTRmgMapPosition@@PAUTRmgZone@@@Z	99.8415	99.8415	99.8415	0xaa603	tokens1:5a3f2b15f00e
 rmg	?canPlaceZone@type_random_map_generator@@QAEEPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0xa1701	tokens1:8ad56ef3f976
@@ -5854,7 +5854,7 @@ rmg	?commitTreasureGroup@type_random_map_generator@@QAEXPAUTRmgTreasureGroup@@UT
 rmg	?completePlacement@t_quest_artifact@@UAEEXZ	100.0000	100.0000	100.0000	0x9c0a6	-
 rmg	?completePlacement@type_key_tent@@UAEEXZ	100.0000	100.0000	100.0000	0x9c019	-
 rmg	?completePlacement@type_object@@UAEEXZ	100.0000	100.0000	100.0000	0x9baf5	-
-rmg	?connectJunctionEntrance@type_random_map_generator@@QAEXUTRmgPoint@@0PAUTRmgZone@@@Z	97.3705	97.3705	97.3705	0xa8722	tokens1:88c4a5ff2bdb
+rmg	?connectJunctionEntrance@type_random_map_generator@@QAEXUTRmgPoint@@0PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0xa8722	tokens1:72a05dc5bca9
 rmg	?connectZones@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xa79a3	-
 rmg	?copy@std@@YA?AV?$bitset_iterator@$0IB@@@V?$bitset_iterator@$0JA@@@0V2@@Z	100.0000	100.0000	100.0000	0xaef12	-
 rmg	?countPlacedZoneConnections@type_random_map_generator@@QBEHPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0xa1967	-
@@ -5867,7 +5867,7 @@ rmg	?createRiverToJoin@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	100.0
 rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	90.5335	96.4704	96.4704	0xabd5f	-
 rmg	?createRivers@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xac4ae	-
 rmg	?createRoads@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xab52a	-
-rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	97.7959	97.7959	97.7959	0xa696b	-
+rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	99.0503	99.0503	99.0503	0xa696b	-
 rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	99.7140	99.7140	99.7140	0xa6cf2	-
 rmg	?createTreasureObject@type_random_map_generator@@QAEPAVtype_object@@PAUTRmgZone@@HHPAHEEEUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0xa9f1c	-
 rmg	?createWaterZoneIsland@type_random_map_generator@@QAEXABUTRmgZoneBounds@@H@Z	100.0000	100.0000	100.0000	0xa4522	tokens1:d1f936bd986a
@@ -5891,7 +5891,7 @@ rmg	?erase@?$vector@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@QAEPAUTRmgP
 rmg	?erase@?$vector@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@QAEPAUTRmgPoint@@PAU3@@Z	100.0000	100.0000	100.0000	0xafaea	-
 rmg	?extendBounds@TRmgZone@@QAEXUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x9b66d	tokens1:ac4da77e49c8
 rmg	?fillIslandInterior@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0xa2ec3	tokens1:b3e210ec8b02
-rmg	?fillTreasureGroup@type_random_map_generator@@QAEHPAUTRmgZone@@PAUTRmgTreasureGroup@@EH@Z	97.8378	97.8378	100.0000	0xaa1db	tokens1:379e4c9a77a0
+rmg	?fillTreasureGroup@type_random_map_generator@@QAEHPAUTRmgZone@@PAUTRmgTreasureGroup@@EH@Z	100.0000	100.0000	100.0000	0xaa1db	tokens1:0aed5ad64860
 rmg	?fillZoneArea@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgHalfEdge@@@Z	100.0000	100.0000	100.0000	0xa325d	tokens1:4c95e860f68b
 rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@H@Z	98.7419	100.0000	100.0000	0xa1ad8	-
 rmg	?findConnection@TRmgTemplateZone@@QAEPAUTRmgZoneConnection@@H@Z	100.0000	100.0000	100.0000	0x9b3fb	-
@@ -5987,7 +5987,7 @@ rmg	?placeBorderGuard@type_random_map_generator@@QAEHUTRmgMapPosition@@HPAUTRmgZ
 rmg	?placeExtraMines@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0xa9c7c	-
 rmg	?placeGuard@type_random_map_generator@@QAEXHUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0xa5e03	-
 rmg	?placeKeyTentGuard@type_random_map_generator@@QAEEPAVtype_object@@H@Z	100.0000	100.0000	100.0000	0xadb72	-
-rmg	?placeMineSite@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@EH@Z	93.9167	93.9167	94.1191	0xa9641	tokens1:df50379d318f
+rmg	?placeMineSite@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@EH@Z	98.3452	98.3452	98.3452	0xa9641	tokens1:5b1ddb646570
 rmg	?placeMines@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xa9d6a	-
 rmg	?placeMonolithBorderGuard@type_random_map_generator@@QAEEUTRmgMapPosition@@PAUTRmgZone@@@Z	99.4771	99.4771	99.4771	0xa746b	-
 rmg	?placeObjectInZone@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0xa7312	-
@@ -6217,7 +6217,7 @@ rmg_voronoi	?connectEdges@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@PAU2@0@Z	100.0000	100
 rmg_voronoi	?createEdge@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTRmgPoint@@PAUTRmgZone@@01@Z	100.0000	100.0000	100.0000	0xcc955	-
 rmg_voronoi	?detach@TRmgHalfEdge@@QAEXXZ	100.0000	100.0000	100.0000	0xcc670	-
 rmg_voronoi	?flip@TRmgHalfEdge@@QAEXXZ	100.0000	100.0000	100.0000	0xcc68e	-
-rmg_voronoi	?isPointOnSegment@TRmgHalfEdge@@QBEEUTRmgPoint@@@Z	62.5147	62.5147	62.5147	0xcc6f2	-
+rmg_voronoi	?isPointOnSegment@TRmgHalfEdge@@QBEEUTRmgPoint@@@Z	87.1176	87.1176	87.1176	0xcc6f2	-
 rmg_voronoi	?isRmgPointInsideCircle@@YAEUTRmgPoint@@000@Z	100.0000	100.0000	100.0000	0xccc7a	tokens1:94f67e5ec1fe
 rmg_voronoi	?length@TRmgVector@@QBEHXZ	100.0000	100.0000	100.0000	0xcc5ad	-
 rmg_voronoi	?locate@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTRmgPoint@@@Z	100.0000	100.0000	100.0000	0xcca55	-
