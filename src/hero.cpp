@@ -5071,12 +5071,9 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // Windows body and make VC6 retain `bitset<144>::any` in this expanded caller.
 // Mac's placed-result join and repeated trait lookup after owner checks then
 // yield a 752-byte candidate (retail 752) with all 17 named calls aligned.
-// Current Windows giveArtifact is 95.9069%, with 42 versus 39 CFG blocks.
-// The expanded combination scan retains proxy assignment instead of set;
-// getPlayer repeats its owner guard and isHuman remains a separate call.
 // Moving player acquisition before the scan falls to 85.0445%. A header
-// isHuman body reaches 96.5547%, but removes its retained game body and
-// expands town::buyBuilding's retained call: visibility remains unresolved.
+// isHuman body removes its retained game body and expands
+// town::buyBuilding's retained call.
 // Prompt copy and destructor order agree on Mac; retain their lifetime.
 // Original public ?GiveArtifact@hero@@QAAXABUtype_artifact@@H_N@Z proves
 // the artifact reference independently of the older return/flag contracts.
@@ -5085,25 +5082,23 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // a placement result and uses its two byte flags for assembly announcements
 // and victory checking. DC instead names int bCheckEnd and bool equip_it;
 // retain the desktop result and flag behavior while restoring the reference.
-// With both placement helpers returning bool, a bool placed local still
-// lowers Windows 95.9069% to 95.3968%; it does not close the caller's residual.
-// Retail indexes g_game->m_players[m_owner] here without getPlayer's guard and
-// reads the human byte inline; that direct row reproduces the guard-free
-// block (94.67%, 95.32% with the byte read) but moves the bitset range-check
-// out_of_range expansion, so the guarded helper call is kept for now.
-// DC 0x0d3e18 nests two lexical scopes around CheckEndGame: the end check is
-// a braced guard inside a braced checkEnd test. That raises this body's cb
-// from 518 to 527, so the bitset reference::operator= inside
-// hasCombinationArtifactComponents expands as retail (95.91 -> 96.54%).
-// The remaining difference is the first bitset<12>::_Xran's out_of_range
-// constructor (cb 58), refused at 50 where retail expands it. The replay
-// needs a caller cb of 539..544 for that alone; a comboType local lowers
-// cb to 520. Mac retail calls neither getPlayer nor isHuman here, matching
-// Windows' guard-free row and inline byte; that direct form (95.32%) needs
-// cb 515..517 instead (it measures 531), so the window is missed either way.
+// Retail and Mac index g_game->m_players[m_owner] without get_player's guard
+// and test the human byte in place: Mac 0x103f74 is `lbz; cmplwi; bne`, not
+// its retained playerData::isHuman body (0xcdbf0, which normalizes), and
+// neither compiler can expand that out-of-line function across units, so
+// both builds read the field here.
+// DC 5049..5052 is one braced `if (CheckForArtifactWin())` with no
+// bCheckEnd test (scope depth 1 at the if, 3 inside its braces, against
+// 1 -> 2 for line 5046's unbraced arm); Complete's flag joins that guard.
+// Mac 0x104010..0x104034 reloads the artifact's combination type after the
+// owner tests, so the store repeats the trait read instead of naming it.
+// The component test joins the owner condition. With the guard-free row
+// the replay needs caller cb 515..518 for the first bitset<12>::_Xran's
+// out_of_range constructor to expand as retail does; this form measures 517
+// (531 with the component test nested and both guards braced separately).
 VA(0x004e3070, 0x339)
 DC_ADDRESS(0x0d3de4, 0x5c)
-MAC_ADDRESS(0x103da8, 0x2f0)  // MAC_ABSTRACTION_FROM(tokens1:3d82fe0d0468,25.0000): Restore the canonical playerData::isHuman call for Mac's expanded human-query byte body at 0x103f74.
+MAC_ADDRESS(0x103da8, 0x2f0)
 unsigned char hero::giveArtifact(const type_artifact& artifact,
                                  unsigned char announce,
                                  unsigned char checkEnd)
@@ -5114,30 +5109,27 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
         if (g_game->getGameVersion() >= 2) {
             int targetCombo =
                 akArtifactTraits[artifact.m_artifactId].m_targetCombo;
-            if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
-                if (hasCombinationArtifactComponents(targetCombo)) {
-                    playerData& player = *getPlayer();
-                    if (announce) {
-                        if (m_owner == g_game->getLocalPlayerGamePos() &&
-                            !player.m_assembledCombinations[targetCombo]) {
-                            int assembled =
-                                g_combinationArtifacts[targetCombo].m_artifactId;
-                            std::string prompt = formatString(
-                                (*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
-                                akArtifactTraits[assembled].m_name);
-                            normalDialog(prompt.c_str(), 2, -1, -1, 8,
-                                         assembled, -1, 0, -1, 0, -1, 0);
-                            if (g_windowManager->m_dialogReturn ==
-                                DIALOG_RETURN_ACCEPT)
-                                assembleCombinationArtifact(targetCombo, -1);
-                        } else if (!player.isHuman()) {
-                            // Mac 0x103f74 expands the canonical human-query byte body.
-                            // Keep its helper and the guarded owner lookup.
+            if (targetCombo != -1 && m_owner >= 0 && m_owner < 8
+                && hasCombinationArtifactComponents(targetCombo)) {
+                playerData& player = g_game->m_players[m_owner];
+                if (announce) {
+                    if (m_owner == g_game->getLocalPlayerGamePos() &&
+                        !player.m_assembledCombinations[targetCombo]) {
+                        int assembled =
+                            g_combinationArtifacts[targetCombo].m_artifactId;
+                        std::string prompt = formatString(
+                            (*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
+                            akArtifactTraits[assembled].m_name);
+                        normalDialog(prompt.c_str(), 2, -1, -1, 8,
+                                     assembled, -1, 0, -1, 0, -1, 0);
+                        if (g_windowManager->m_dialogReturn ==
+                            DIALOG_RETURN_ACCEPT)
                             assembleCombinationArtifact(targetCombo, -1);
-                        }
+                    } else if (!player.m_isHuman) {
+                        assembleCombinationArtifact(targetCombo, -1);
                     }
-                    player.m_assembledCombinations[targetCombo] = true;
                 }
+                player.m_assembledCombinations[targetCombo] = true;
             }
         }
     } else {
@@ -5151,10 +5143,9 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
         g_game->m_players[m_owner].m_assembledCombinations[
             akArtifactTraits[artifact.m_artifactId].m_comboType] = true;
 
-    if (checkEnd) {
-        if (g_game->m_mapHeader.m_victoryCondition.checkForArtifactWin()) {
-            checkEndGame(0);
-        }
+    if (checkEnd
+        && g_game->m_mapHeader.m_victoryCondition.checkForArtifactWin()) {
+        checkEndGame(0);
     }
     return 1;
 }
