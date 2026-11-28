@@ -51,7 +51,7 @@ private:
 SIZE(TPuzzleWindow, 0x12c);
 
 extern std::bitset<TPuzzleWindow::PUZZLE_PIECE_COUNT> g_puzzlePiecesRemoved;
-extern short g_puzzlePieceOrder[];
+extern short g_puzzlePieceOrder[][TPuzzleWindow::PUZZLE_PIECE_COUNT];
 // Retail UpdatePuzzle (0x52c6c0) and AI_attempt_puzzle_guess (0x52c9b0)
 // read signed words at 2 * (puzzle * 96 + piece). DC UpdatePuzzle also
 // reads word coordinates (its scaling differs); these are short tables,
