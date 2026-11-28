@@ -2626,6 +2626,14 @@ void aiSetHeroBonuses(hero* ourHero)
 // the count after the call (91.59) or after the constructor (95.74), and
 // hoisting the totals above the hero loop (81.06). This is the open x87
 // rounding-temporary order of docs/vc6/regalloc.md.
+// A dividend the back end still has to fold when it orders the division is
+// exact (100%): `total + 0.0`, `total - 0.0`, `total / 1.0`, a comma
+// operand, a zero double local added to the total, and the embedded
+// assignment. None is a developer spelling, so none is kept. Flat at 97.87:
+// `1.0 * total`, unary plus, double negation, a double cast of the double
+// cast, long double on either side, a bound const reference, and a double
+// local assigned from the total. `float(total)` as the dividend interleaves
+// but rounds through a dword (99.67).
 VA(0x00527960, 0x140)
 DC_ADDRESS(0x110018, 0x15a)
 MAC_ADDRESS(0x141bf8, 0x1a0)  // anchor-callee

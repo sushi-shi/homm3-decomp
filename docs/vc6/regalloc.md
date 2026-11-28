@@ -1997,6 +1997,20 @@ named numerator and denominator locals, an int first statement, and ten
 calls of eight inline conversion, division and setter helpers (by value, by
 reference, and returning the assigned reference).
 
+`philAI::getTurnAIVars` (0x527960) is a sixth site and narrows the cause.
+Its dividend and divisor temporaries do not share a bin (`fstp qword
+[ebp-8]; fld qword [ebp-8]; fild [ebp-0xc]; fstp qword [ebp-0x10]; fdiv
+qword [ebp-0x10]`), so slot reuse follows from the order and does not force
+it. The interleaved order appears whenever the dividend is not a bare
+rounded conversion at the moment the division is ordered, even when the
+wrapper later folds away: `total + 0.0`, `total - 0.0`, `total / 1.0`,
+`(0, double(total))` and a zero-initialized double local added to the total
+all give retail's bytes there, as the embedded assignment does. `1.0 *
+total`, unary plus, double negation, `double(double(total))`, a `long
+double` operand, a bound const reference and a named double numerator keep
+the ordinary order. The developer spelling that leaves such a node is still
+unknown; none of the folding forms is kept in source.
+
 ### Stack-bin priorities have unstable ties
 
 For frames exceeding 128 bytes, the pinned backend sorts the movable stack
