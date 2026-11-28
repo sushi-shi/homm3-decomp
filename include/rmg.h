@@ -224,6 +224,8 @@ public:
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
     virtual unsigned char requiresLinkedPlacement();
+    int getObjectType() const { return m_objectType; }
+    int getSubtype() const { return m_subtype; }
     int getDensity() const { return m_density; }
 
     int m_objectType;
