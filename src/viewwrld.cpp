@@ -506,9 +506,15 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
+
     // Retail, Dreamcast and Mac all keep the raw mask (no 0/1 normalization).
-    // A second mask local reaches 98.62% but has no native support.
-    playerBit &= getMapExtra(srcX, srcY, z);
+    // The masked bits are a second local: Dreamcast lines 586 and 588 leave
+    // 1 << pos in r13, which dies at once, and the masked value in r8, which
+    // every later test reads; retail likewise keeps the bit in edi and
+    // stores `and eax, edi` to a separate home. Its name is not recorded
+    // (register locals are absent from CodeView); `explored` is the
+    // project's. One reassigned playerBit measures 96.50%, this 98.62%.
+    int explored = getMapExtra(srcX, srcY, z) & playerBit;
 
     int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW,
         baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
@@ -544,7 +550,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 unsigned short objectTypeIndex =
                     m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex;
 
-                if (!playerBit
+                if (!explored
                     && (!g_vwTerrains
                         || !akAdvObjectTypeTraits[objType->m_objectType].m_isDecoration))
                     continue;
@@ -585,7 +591,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 }
             }
 
-            if (foundHero && playerBit) {
+            if (foundHero && explored) {
                 int part;
                 int partHigh;
                 int partLow;
@@ -608,7 +614,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 }
             }
 
-            if (foundBoat && playerBit) {
+            if (foundBoat && explored) {
                 int boatPart;
                 int boatPartHigh;
                 int boatPartLow;
@@ -656,7 +662,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
             }
         }
     } else {
-        if (foundHero && playerBit) {
+        if (foundHero && explored) {
             int fallbackHeroPart;
             for (fallbackHeroPart = 0; fallbackHeroPart <= 5;
                  ++fallbackHeroPart) {
@@ -669,7 +675,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
             }
         }
 
-        if (foundBoat && playerBit) {
+        if (foundBoat && explored) {
             int fallbackBoatPart;
             for (fallbackBoatPart = 0; fallbackBoatPart <= 5;
                  ++fallbackBoatPart) {
@@ -682,7 +688,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
             }
         }
 
-        if (destY == CURSOR_DEST_Y0 && this->m_drawCursor && playerBit) {
+        if (destY == CURSOR_DEST_Y0 && this->m_drawCursor && explored) {
             if (destX == CURSOR_DEST_X0)
                 this->drawCursor(0, 0);
             if (destX == CURSOR_DEST_X1)
@@ -690,7 +696,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
             if (destX == CURSOR_DEST_X2)
                 this->drawCursor(2, 0);
         }
-        if (destY == CURSOR_DEST_Y1 && this->m_drawCursor && playerBit) {
+        if (destY == CURSOR_DEST_Y1 && this->m_drawCursor && explored) {
             if (destX == CURSOR_DEST_X0)
                 this->drawCursor(0, 1);
             if (destX == CURSOR_DEST_X1)
@@ -720,9 +726,14 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // worth 83.9809 -> 87.0563 and also fixes the prologue (retail loads srcX
 // before `push ebx`) and srcX's register. Mac 0x204f54/0x204f6c
 // calls getLocalPlayerGamePos before getMapExtra; CodeWarrior evaluates the
-// joined `(1 << pos) & getMapExtra(...)` the other way round, so playerBit
-// uses VWDrawAdvObj's two-statement form (VC6 CUR 86.82 -> 87.65% in the
-// 2026-10-07 TU state, below the older 89.04% peak). MEASURED AND REJECTED:
+// joined `(1 << pos) & getMapExtra(...)` the other way round, so the mask
+// uses VWDrawAdvObj's two-statement form. As there, the masked bits are a
+// second local: Dreamcast writes 1 << pos to playerBit's CodeView home
+// (sp+0x48, read back once) and keeps the masked value in r9 for all five
+// later tests; retail holds the bit in edi and stores `and eax, edi`
+// (87.65 -> 88.69%; one reassigned playerBit gives `and esi, eax`). With the
+// second local, Dreamcast's baseX-first order (lines 835, 836) is 85.04% as a
+// comma declaration or as two statements. MEASURED AND REJECTED:
 // the same baseY-first swap in VWDrawAdvObj itself (byte-flat, 96.4955). What is left is srcX/srcY:
 // retail RE-READS both parameter homes for the inlined type_point
 // (`mov ecx,[ebp+8] / mov esi,[ebp+0xc]` between the two bitfield words)
@@ -762,7 +773,8 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 
     NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
     int playerBit = 1 << g_game->getLocalPlayerGamePos();
-    playerBit &= getMapExtra(srcX, srcY, z);
+
+    int explored = getMapExtra(srcX, srcY, z) & playerBit;
 
     int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH,
         baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
@@ -787,7 +799,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
         CSprite* sprPtr = m_fullMap->m_sprites[
             m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
 
-        if (!playerBit
+        if (!explored
             && (!g_vwTerrains
                 || !akAdvObjectTypeTraits[objType->m_objectType].m_isDecoration))
             continue;
@@ -809,7 +821,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 
     // DC 874..895 and Mac 0x2051d4..0x205298 test both cursor rows and each
     // column independently, not as else-if chains.
-    if (destY == CURSOR_DEST_Y0 && m_drawCursor && playerBit) {
+    if (destY == CURSOR_DEST_Y0 && m_drawCursor && explored) {
         if (destX == CURSOR_DEST_X0)
             drawCursorShadow(0, 0);
         if (destX == CURSOR_DEST_X1)
@@ -817,7 +829,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
         if (destX == CURSOR_DEST_X2)
             drawCursorShadow(2, 0);
     }
-    if (destY == CURSOR_DEST_Y1 && m_drawCursor && playerBit) {
+    if (destY == CURSOR_DEST_Y1 && m_drawCursor && explored) {
         if (destX == CURSOR_DEST_X0)
             drawCursorShadow(0, 1);
         if (destX == CURSOR_DEST_X1)
@@ -826,7 +838,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
             drawCursorShadow(2, 1);
     }
 
-    if (foundHero && playerBit) {
+    if (foundHero && explored) {
         for (int part = 0; part <= 5; ++part) {
             if (heroParts[part].m_isValid) {
                 drewSomething = 1;
@@ -836,7 +848,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
         }
     }
 
-    if (foundBoat && playerBit) {
+    if (foundBoat && explored) {
         for (int boatPart = 0; boatPart <= 5; ++boatPart) {
             if (boatParts[boatPart].m_isValid) {
                 drewSomething = 1;

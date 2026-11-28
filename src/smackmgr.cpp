@@ -470,6 +470,15 @@ bool videoPlaying()
 // the Windows Smack/Bink union-loop locals or DirectDraw frame.
 // Naming Unlock's HRESULT at branch/function scope is likewise byte-flat
 // or worse; it does not recover the missing union-loop register homes.
+// 2026-11-28: retail's frame argues for arm-local scalars over this shared
+// rectangle. [ebp-4] is x in the Smack arm (w at -8, h at -0xc, y in EDI) but
+// w in the Bink arm (h at -8, the loop count at -0xc, x in EBX), and POINT
+// sits at -0x10, below exactly two arm-scope dwords and overlapping the
+// count. `int x, y, w, h;` in each arm with POINT, both RECTs and the
+// surface description in the overlay block reproduces the 0x9c frame and
+// measures 89.63% (89.36% assigning x, w, h, y in retail's load order):
+// EBX then holds the Smack arm's x, where retail keeps x, w and h all in
+// memory and only forwards them through EBX.
 VA(0x005979d0, 0x294)
 DC_ADDRESS(0x14ac60, 0x4)
 MAC_ADDRESS(0x25ea64, 0x26c)  // anchor-global
