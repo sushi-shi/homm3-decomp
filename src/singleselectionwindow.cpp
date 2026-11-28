@@ -4172,8 +4172,7 @@ void TSingleSelectionWindow::updateGameVars()
     // duplicates the complete transfer here and returns before the original
     // currentMap path rather than sharing a lowered tail.
     if (m_randomMapSelected) {
-        GameSelectionHeadersStruct* localHeader = &m_localHeader;
-        applyHeaderToGame(localHeader);
+        applyHeaderToGame(&m_localHeader);
         return;
     }
 
