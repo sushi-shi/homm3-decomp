@@ -111,6 +111,13 @@ public:
     std::string m_campaignFilename;
     std::string getCampaignFileName() const;
     unsigned char m_campaignCompleted[21];
+    // TCampaignWindow's constructor (0x45ea40), the only reader outside
+    // this class, needs its thirteen tests to be inline candidates for
+    // retail's ~vector<MapScore> call. Inferred accessor; name unproven.
+    unsigned char isCampaignCompleted(int campaign) const
+    {
+        return m_campaignCompleted[campaign];
+    }
 
 private:
     // +0x3c / +0x4c: the carry-over hero pools and the artifact pools
