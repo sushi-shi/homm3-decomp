@@ -2755,9 +2755,10 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             g_curWatchPlayer, DATA_COMPGEN(0x00660330, rolloverSpaceSeparator, " "), 0);
         break;
     case QUEST_GUARD: {
+        TQuestGuard& thisGuard =
+            m_fullMap->m_questGuardList[testCell->m_extraInfo];
         strcpy(g_text,
-            m_fullMap->m_questGuardList[testCell->m_extraInfo]
-                .getRolloverText(g_curWatchPlayer).c_str());
+               thisGuard.getRolloverText(g_curWatchPlayer).c_str());
         break;
     }
     case FAERIE_RING: {
@@ -5973,9 +5974,12 @@ void advManager::updateRadar(bool updateFlag, bool partialUpdate,
 // front end 236 units (cb 6736 -> 6972) without code, which lets both string
 // appends expand as retail (+0x29f: _Xlen/_Grow/_Eos inline): 91.77 -> 93.13.
 // DC's per-call format literals, its three initial dead stores and the
-// double-indexed lighthouse mine are adopted (byte-flat at 93.13). A
-// named quest-guard reference reaches 93.25, but DC lists no such local
-// (only the seer's thisHut), so it is not adopted.
+// double-indexed lighthouse mine are adopted (byte-flat at 93.13). The
+// quest guard is named through a reference like the seer's thisHut: the
+// Dreamcast build has no quest guards to list a local for, and retail
+// computes the guard's address before it loads the watching player
+// (0x4141a2, then 0x4141a8), which the unnamed element expression does not
+// (98.04 -> 98.21; setRolloverText 97.89 -> 98.14).
 // The inline wall remains: a padding probe shows root cb 7510..7720 makes
 // every retained call agree (zCell only on getCell's invalid branch, both
 // assign _Eos and the diggable append expand, the quest _Tidy expands) and
@@ -6286,9 +6290,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     g_curWatchPlayer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"), 1);
                 break;
             case QUEST_GUARD: {
+                TQuestGuard& thisGuard =
+                    m_fullMap->m_questGuardList[testCell->m_extraInfo];
                 strcpy(g_text,
-                    m_fullMap->m_questGuardList[testCell->m_extraInfo]
-                        .getQuickInfoText(g_curWatchPlayer).c_str());
+                       thisGuard.getQuickInfoText(g_curWatchPlayer).c_str());
                 break;
             }
             case FAERIE_RING: {
