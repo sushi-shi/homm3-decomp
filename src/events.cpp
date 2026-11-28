@@ -4273,18 +4273,18 @@ MAC_ADDRESS(0x0b5b24, 0x1f6c)  // anchor-callee cell->type jump table + ret 0x10
 void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point point, bool humanPlayer)
 {
     int eventType = cell->m_type;
-    mobilizeCurrHero(1, false, false);
+    mobilizeCurrHero(1, 0, 0);
 
     switch (eventType) {
     case ALTAR_OF_SACRIFICE:
         if (humanPlayer) {
-            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-            g_mouseManager->showPointer(true);
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->showPointer(1);
             {
                 type_sacrifice_window sacrificeWindow(
                     currentHero, g_game->getLocalPlayerGamePos());
                 sacrificeWindow.centerWindow(-1, -1);
-                sacrificeWindow.doModal(false);
+                sacrificeWindow.doModal(0);
                 reseed(0, 0);
             }
             g_game->setInfoFlag(const_sacrifice_info, g_netLocalGamePos);
@@ -4434,15 +4434,15 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventGarden(currentHero, cell, humanPlayer);
         break;
     case GARRISON: {
-        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-        g_mouseManager->showPointer(true);
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->showPointer(1);
         garrison* thisGarrison = g_game->getGarrison(cell->m_extraInfo);
         if (!g_game->onSameTeam(thisGarrison->m_playerOwner,
                                 g_netLocalGamePos)) {
             if (thisGarrison->m_garrisonArmy.hasCreatures()) {
                 if (doCombat(point, currentHero, &currentHero->m_army,
-                             thisGarrison->m_playerOwner, NULL, NULL,
-                             &thisGarrison->m_garrisonArmy, -1, true, false))
+                             thisGarrison->m_playerOwner, 0, 0,
+                             &thisGarrison->m_garrisonArmy, -1, 1, 0))
                     break;
             }
             g_game->claimGarrison(cell->m_extraInfo, g_netLocalGamePos);
@@ -4461,8 +4461,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         if (!humanPlayer) {
             aiVisitHillFort(currentHero);
         } else {
-            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-            g_mouseManager->showPointer(true);
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->showPointer(1);
             THillFortWindow hillFortWindow;
             hillFortWindow.centerWindow(-1, -1);
             hillFortWindow.doModal();
@@ -4481,7 +4481,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                 handler->setInPopup(0);
         }
         type_point savedOrigin = m_radarOrigin;
-        demobilizeCurrHero(false, true);
+        demobilizeCurrHero(0, 1);
         for (int z = 0; z < g_game->getNumMapLevels(); z++) {
             for (int x = 0; x < g_mapWidth; x++) {
                 for (int y = 0; y < g_mapHeight; y++) {
@@ -4496,7 +4496,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                             m_radarOrigin.m_y = y - 8;
                             m_radarOrigin.m_z = z;
                             completeDraw(false);
-                            updateRadar(true, true, false, false, false);
+                            updateRadar(1, 1, 0, 0, 0);
                             updateScreen(0, 0);
                             GameTime::delayTil(GameTime::get() + 2000);
                         }
@@ -4591,7 +4591,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 20);
-            transmitRemoteData(&message, 0x7f, false, true);
+            transmitRemoteData(&message, 0x7f, 0, 1);
         }
         g_game->setVisibility(point.m_x, point.m_y, point.m_z,
                               g_netLocalGamePos, 20, 0);
@@ -4607,7 +4607,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 20);
-            transmitRemoteData(&message, 0x7f, false, true);
+            transmitRemoteData(&message, 0x7f, 0, 1);
         }
         g_game->setVisibility(point.m_x, point.m_y, point.m_z,
                               g_netLocalGamePos, 20, 0);
@@ -4690,8 +4690,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventSurvivor(currentHero, cell, point, humanPlayer);
         break;
     case SHIPYARD:
-        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-        g_mouseManager->showPointer(true);
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->showPointer(1);
         doEventShipyard(cell, point, humanPlayer);
         break;
     case SHRINE1:
@@ -4738,10 +4738,10 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             break;
         type_point heroPos = currentHero->getLocation();
         if (heroPos != point) {
-            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-            g_mouseManager->showPointer(true);
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->showPointer(1);
             doMapTavern(point);
-            m_advWindow->updateHeroLocators(-1, true, true);
+            m_advWindow->updateHeroLocators(-1, 1, 1);
         }
         break;
     }
@@ -4751,8 +4751,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
     case THIEVES_DEN: {
         if (!humanPlayer)
             break;
-        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-        g_mouseManager->showPointer(true);
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->showPointer(1);
         normalDialog((*g_adventureEventText)[
                          ADV_EVENT_TEXT_THIEVES_DEN],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -4760,15 +4760,15 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             new TThievesGuildWindow(99);
         if (!guildWindow)
             memError();
-        guildWindow->doModal(false);
+        guildWindow->doModal(0);
         if (guildWindow)
             delete guildWindow;
         redrawAdvScreen(1, 0);
         break;
     }
     case TOWN:
-        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-        g_mouseManager->showPointer(true);
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->showPointer(1);
         townEvent(cell, point, humanPlayer);
         break;
     case TRADING_POST:
@@ -4798,7 +4798,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         if (exitCell->m_type == HERO) {
             if (g_remoteOn) {
                 CSetVisibilityMsg message(exitPoint, g_netLocalGamePos, 1);
-                transmitRemoteData(&message, 0x7f, false, true);
+                transmitRemoteData(&message, 0x7f, 0, 1);
             }
             g_game->setVisibility(exitPoint.m_x, exitPoint.m_y, exitPoint.m_z,
                                   g_netLocalGamePos, 1, 0);
@@ -4807,7 +4807,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                 break;
         }
         if (exitCell->m_type == UNDERGROUND_GATE)
-            g_advManager->teleportTo(currentHero, exitPoint, NULL, false, true, false);
+            g_advManager->teleportTo(currentHero, exitPoint, 0, 0, 1, 0);
         break;
     }
     case UNIVERSITY:
@@ -4815,13 +4815,13 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             aiVisitUniversity(currentHero,
                                 cell->getUniversity());
         } else {
-            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
-            g_mouseManager->showPointer(true);
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->showPointer(1);
             {
                 type_university_window universityWindow(
                     currentHero, cell->getUniversity(), 0);
                 universityWindow.centerWindow(-1, -1);
-                universityWindow.doModal(false);
+                universityWindow.doModal(0);
             }
             g_game->setInfoFlag(UniversityInfo, g_netLocalGamePos);
         }
@@ -4842,7 +4842,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             recruitUnit* unitRecruiter = new recruitUnit(
                 currentHero, CREATURE_BALLISTA, &quantity,
                 CREATURE_FIRST_AID_TENT, &quantity,
-                CREATURE_AMMO_CART, &quantity, CREATURE_NONE, NULL);
+                CREATURE_AMMO_CART, &quantity, CREATURE_NONE, 0);
             if (!unitRecruiter)
                 memError();
             g_executive->doDialog(unitRecruiter);
