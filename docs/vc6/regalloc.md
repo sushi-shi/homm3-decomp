@@ -1963,6 +1963,42 @@ The private capture/replay preserved all 77,868 object bytes outside the COFF
 timestamp, replayed overwritten instructions and flags, and restored its clean
 shim. This validates this observation, not a complete stack-allocator model.
 
+### The last-created memory local does not join an earlier bin
+
+`mainMenuHandler` (0x4fb710) builds one `formatString` temporary in each arm
+of an if/else. Retail keeps both at `[ebp-0x20]` (frame 0x14) and drops the
+inlined destructor's three `_Tidy` zeroing stores in both arms. The same
+source compiled here gave two slots (frame 0x24), kept the zeroing stores of
+the arm that is laid out first, and cached zero in ESI for them. Thirty
+source shapes measured on that function give one rule:
+
+* With N class temporaries of one size, the first N-1 in source order share
+  one bin and the last one gets its own. Two arms: no sharing. An
+  if / else-if / else chain or three sequential `if`s: the first two share.
+  Four arms: the first three share. Which arm calls which overload, braces,
+  named `std::string` locals, a `switch`, a ternary and else-if nesting do
+  not change this.
+* Any later local that reaches C2 as a stack-memory symbol lets all N share:
+  another class temporary, a `RECT` filled through its address (the frame
+  grows by its own 16 bytes only), an `auto_ptr` (promoted to registers, so
+  the frame stays 0x14), or a later scalar local whose address is taken once
+  (a pointer or reference bound to it; the scalar is promoted again and no
+  code changes). With such a local the function is 100%.
+* These do not count: an unused local of any type, a function-local static,
+  a later byte flag that is only spilled, and the address of a local
+  declared before the temporaries.
+
+So C2 never puts the last-created stack-memory symbol of a function into an
+earlier bin, and the symbols before it share when their arms exclude each
+other. Read a retail frame that is one aggregate smaller than the candidate's
+as "a later address-taken local is missing from the source model", and look
+for an output argument, a reference parameter of an inline helper or a small
+aggregate near the end of the function. In `mainMenuHandler` neither
+Dreamcast nor Mac shows which local that was, so the exact form is kept off
+the main branch. `matchPuzzle` (0x52cf10, frame 0x80 against 0x84) does not
+respond to the same probe; its unshared pair is an inlined `max` argument
+copy and a later bitfield scratch.
+
 ### x87 rounding temporaries: retail's rare shared bin
 
 Under `/Op`, `float(a) / float(b)` rounds each integer conversion through a
