@@ -5078,6 +5078,9 @@ VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 // 95.24 -> 99.99%. Residual: the combo-trait compare addresses
 // [eax + esi + 0x14] where this CL emits [esi + eax + 0x14]; inlining the
 // local, `-1 !=`, a traits reference, const and bitset::set did not help.
+// 2026-11-28: also flat or lower: pointer-plus-index, index[array], a
+// traits pointer local, an unsigned index, an own loop counter, the test
+// folded into the store, set(i, v) (93.90%) and set(i) under an if (98.35%).
 VA(0x004c2450, 0x88E)
 DC_ADDRESS(0x0adb88, 0x3b0)
 MAC_ADDRESS(0x0d82cc, 0xbcc)  // sole NewMap caller + full stream/callee sequence
