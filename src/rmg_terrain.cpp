@@ -80,7 +80,7 @@ public:
     s32 m_specialFrameChance;                  // +0x08: percentage at strength 8
     u32 m_entryCount;                  // +0x0c
     const TRmgTerrainPatternEntry* m_entries;   // +0x10
-    TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2];        // +0x14
+    TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT][2];         // +0x14, [shape][special]
 
     TNormalTerrainTypeTraits(b8 blendsWithOtherTerrain,
         b8 allowsSeparatedNeighbours, s32 specialFrameChance,
@@ -137,17 +137,14 @@ TNormalTerrainTypeTraits::TNormalTerrainTypeTraits(
 {
     s32 transition = m_entries[0].m_transition;
     b8 special = m_entries[0].m_special;
-    s32 range = transition * 2 + special;
-    ++m_ranges[range].m_frameCount;
+    ++m_ranges[transition][special].m_frameCount;
     for (u32 index = 1; index < m_entryCount; ++index) {
-        const TRmgTerrainPatternEntry& entry = m_entries[index];
-        if (entry.m_transition != transition || entry.m_special != special) {
-            transition = entry.m_transition;
-            special = entry.m_special;
-            range = transition * 2 + special;
-            m_ranges[range].m_firstFrame = index;
+        if (m_entries[index].m_transition != transition || m_entries[index].m_special != special) {
+            transition = m_entries[index].m_transition;
+            special = m_entries[index].m_special;
+            m_ranges[transition][special].m_firstFrame = index;
         }
-        ++m_ranges[range].m_frameCount;
+        ++m_ranges[transition][special].m_frameCount;
     }
 }
 
@@ -157,7 +154,7 @@ VA(0x005b3840, 0x0c)
 MAC_ADDRESS(0x259dac, 0x14)  // Complete-only pattern terrain rule
 b8 TNormalTerrainTypeTraits::hasSpecialTiles()
 {
-    return 0 < m_ranges[1].m_frameCount;
+    return 0 < m_ranges[SHAPE_FILL][1].m_frameCount;
 }
 
 VA(0x005b3850, 0x07)
@@ -193,15 +190,15 @@ s32 TNormalTerrainTypeTraits::pickFullTile(s32 strength, s32 oldFrame)
 {
     if (oldFrame == -1 || m_entries[oldFrame].m_transition != 0) {
         TRmgTerrainPatternRange* range;
-        if (m_ranges[1].m_frameCount > 0) {
+        if (m_ranges[SHAPE_FILL][1].m_frameCount > 0) {
             u32 chance =
                 static_cast<u32>(m_specialFrameChance * strength) / 8;
             if (static_cast<u32>(rand() % 100) < chance)
-                range = &m_ranges[1];
+                range = &m_ranges[SHAPE_FILL][1];
             else
-                range = &m_ranges[0];
+                range = &m_ranges[SHAPE_FILL][0];
         } else {
-            range = &m_ranges[0];
+            range = &m_ranges[SHAPE_FILL][0];
         }
         oldFrame = rand() % range->m_frameCount + range->m_firstFrame;
     }
@@ -221,7 +218,7 @@ s32 TNormalTerrainTypeTraits::pickTransitionTile(
 {
     s32 frame;
     if (oldFrame == -1 || m_entries[oldFrame].m_transition != transition) {
-        TRmgTerrainPatternRange& range = m_ranges[transition * 2];
+        TRmgTerrainPatternRange& range = m_ranges[transition][0];
         frame = rand() % range.m_frameCount + range.m_firstFrame;
     } else
         frame = oldFrame;
@@ -240,7 +237,7 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
     b8 flipX = g_rmgTerrainPatterns[0].m_flipX;
     b8 flipY = g_rmgTerrainPatterns[0].m_flipY;
     TRmgTerrainPatternRange* range =
-        &m_ranges[(transition * 2 + flipX) * 2 + flipY];
+        &m_ranges[transition][flipX][flipY];
     ++range->m_frameCount;
     for (u32 index = 1; index < 48; ++index) {
         if (g_rmgTerrainPatterns[index].m_transition != transition || g_rmgTerrainPatterns[index].m_flipX != flipX
@@ -248,7 +245,7 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
             transition = g_rmgTerrainPatterns[index].m_transition;
             flipX = g_rmgTerrainPatterns[index].m_flipX;
             flipY = g_rmgTerrainPatterns[index].m_flipY;
-            range = &m_ranges[(transition * 2 + flipX) * 2 + flipY];
+            range = &m_ranges[transition][flipX][flipY];
             range->m_firstFrame = index;
         }
         ++range->m_frameCount;
@@ -288,8 +285,8 @@ s32 TRockTraits::pickFullTile(s32, s32 oldFrame)
 {
     if (oldFrame == -1
         || g_rmgTerrainPatterns[oldFrame].m_transition != 0) {
-        oldFrame = rand() % g_rmgTerrainPatternRanges.m_ranges[0].m_frameCount
-            + g_rmgTerrainPatternRanges.m_ranges[0].m_firstFrame;
+        oldFrame = rand() % g_rmgTerrainPatternRanges.m_ranges[SHAPE_FILL][0][0].m_frameCount
+            + g_rmgTerrainPatternRanges.m_ranges[SHAPE_FILL][0][0].m_firstFrame;
     }
     return oldFrame;
 }
@@ -305,7 +302,7 @@ s32 TRockTraits::pickTransitionTile(
         || g_rmgTerrainPatterns[oldFrame].m_flipX != requestedFlip.m_flipX
         || g_rmgTerrainPatterns[oldFrame].m_flipY != requestedFlip.m_flipY) {
         TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges.m_ranges[
-            (transition * 2 + requestedFlip.m_flipX) * 2 + requestedFlip.m_flipY];
+            transition][requestedFlip.m_flipX][requestedFlip.m_flipY];
         oldFrame = rand() % range.m_frameCount + range.m_firstFrame;
     }
     selectedFlip = TRmgTerrainFlip(0, 0);

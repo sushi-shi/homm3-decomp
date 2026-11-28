@@ -164,7 +164,7 @@ extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 // The static initializer at 0x5b3a10 passes this complete global as `this`.
 // Complete-only owner spelling is provisional.
 struct TRmgTerrainPatternTable {
-    TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT * 2 * 2];
+    TRmgTerrainPatternRange m_ranges[RMG_TERRAIN_SHAPE_COUNT][2][2];  // [shape][flipX][flipY]
     TRmgTerrainPatternTable();
 };
 DATA(0x006a4158)
