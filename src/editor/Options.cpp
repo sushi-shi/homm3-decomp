@@ -39,7 +39,10 @@ DATA(0x005a23d8) extern std::bitset<10> g_rockMask;
 
 // The registry names sit in this object's .rdata (0x53fb3c..0x53fb94, in
 // this order and 4-aligned), while the map editor's string literals sit in
-// .data: they are named constant arrays that load and save share.
+// .data (/O1 implies /Gf: 933 of the image's 934 placed literals; the last
+// was Colors.cpp's palette name, an array too): they are named constant
+// arrays that load and save share. The names are ours: Loki's Gtk port
+// has no registry code, so nothing spells them.
 namespace {
 DATA(0x0053fb3c) const char kSection[] = "Settings";
 DATA(0x0053fb48) const char kZoomEntry[] = "Zoom";

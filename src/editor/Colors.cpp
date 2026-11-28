@@ -13,11 +13,18 @@
 
 // Palette entries: each ground tileset's sprite keeps its mini-map colours
 // of open ground and of obstacles at 8 and 9; game.pal keeps the player
-// colours from 63 on (Loki Colors.cpp). Retail pushes "game.pal" as a
-// string literal, so the palette name stays one here.
+// colours from 63 on. The four objects are proven, their names are not:
+// Loki's Colors.o ends its .rodata with three one-byte objects 8, 9, 63
+// and the array "game.pal" (image 0x34f91c), which g++ 2.95 -O0 emits for
+// file-scope constants, but constants with internal linkage leave no
+// symbol and no assert names them. The spellings follow Loki's proven
+// k-prefixed constants (kNumPlayers, kNumTerrainTypes) and are ours.
+// VC6 folds the three integers. It keeps the array: retail pushes .rdata
+// 0x531cb8, where a string literal of this unit would sit in .data.
 const unsigned char kGroundColorIndex = 8;
 const unsigned char kObstacleColorIndex = 9;
 const unsigned char kFirstPlayerColorIndex = 63;
+DATA(0x00531cb8) const char kPlayerPaletteName[] = "game.pal";
 
 namespace {
 DATA(0x0059a6f4) TTerrainColors aTerrainColorsImp[10];
@@ -39,7 +46,7 @@ void initColors()
         aTerrainColorsImp[tilesetNum].m_color = aColors[kGroundColorIndex];
         aTerrainColorsImp[tilesetNum].m_obstacleColor = aColors[kObstacleColorIndex];
     }
-    TPalette16* pPalette = ResourceManager::GetPalette("game.pal");
+    TPalette16* pPalette = ResourceManager::GetPalette(kPlayerPaletteName);
     if (!pPalette)
         throw TRuntimeError();
     for (unsigned int i = 0; i < 9; i++)

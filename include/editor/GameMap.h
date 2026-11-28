@@ -389,6 +389,11 @@ public:
     static void streamObject(std::streambuf* pStreamBuf, const TGameObject& obj);
 
     void importText(std::istream* pIStream);
+    // Layers are numbered, not named: Loki's asserts spell them
+    // `num < 1 || ( _m_bTwoLayer && num < 2 )` and
+    // `_m_aLayer.size() == ( _m_bTwoLayer ? 2 : 1 )`, callers pass
+    // `bool bSecondLayer`, and Loki's getPLayer(bool) bodies
+    // (getPLayer__8TGameMapb, -O0) branch on the flag to push 1 or 0.
     TLayer* getPLayer(unsigned int num);
     TLayer* getPLayer(bool bSecondLayer) { return getPLayer(bSecondLayer ? 1U : 0U); }
     void setName(const std::string& newName);
