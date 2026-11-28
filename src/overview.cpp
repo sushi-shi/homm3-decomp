@@ -136,6 +136,11 @@ static void updateBackpack(int slot);
 // creature declared in the dwelling loop; an unsigned m_extra constant.
 // Worse: lookup as an upgraded if/else (96.77 -> 96.38). `lookup +=
 // TOWN_DWELLING_COUNT` is +0.01 but Mac 0x134420 adds 7 to item.
+// In the dwelling loop retail stores both halves of the full mask to the
+// frame at the first test and reloads them for the upgrade test; this
+// compile keeps them in eax:ecx. The upgrade id spelled from DWELLING_0_ID
+// or from lookup is byte-flat; assigning lookup before the first test is
+// 96.58%. The hall and fort chains above already have retail's form.
 // E:\gamedcs\overview.cpp:220
 // DC records `iOffsetToSS` at sp+0x54 in the hero-row scope. Its
 // pixel offset is recovered below as item * 36 + 433 (DC 0x1061f2).
