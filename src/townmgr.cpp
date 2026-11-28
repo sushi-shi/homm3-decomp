@@ -5031,7 +5031,9 @@ int townManager::main(message& msg)
                         doPortalOfSummoning();
                         redrawTownScreen();
                         break;
-                    default:
+                    case TOWN_RAMPART:
+                    case TOWN_TOWER:
+                    case TOWN_FORTRESS:
                         strcpy(cTemp,
                                getBuildingInfo(m_townToView, EXTRA_1_ID,
                                                1, 1));
