@@ -6099,8 +6099,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     if (currHero) {
-                        testFlag = 1UL << testCell->m_skeletonInfo.m_id;
-                        visited = testFlag & currHero->m_arenaFlags;
+                        visited = currHero->m_arenaFlags
+                            & (1UL << testCell->m_skeletonInfo.m_id);
                         if (visited) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x006603c4, quickInfoVisitFormat, "\n\n%s"),
