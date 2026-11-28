@@ -551,7 +551,7 @@ public:
     type_creature_bank& getCreatureBank() const;
     void clearVisitedBits();
     short getCustomIndex() const;
-    int getItemId() const;
+    short getItemId() const;
     bool playerKnowsCell(short player) const;
     void setCellVisited(short player);
     bool gardenIsFull() const;
@@ -1405,8 +1405,12 @@ inline void ExtraInfoUnion::clearVisitedBits() { m_cellVisitedInfo.m_visited = 0
 DC_ADDRESS(0x09c7c8, 0xc)
 inline short ExtraInfoUnion::getCustomIndex() const { return m_monsterInfo.m_index; }
 
+// Original public ?GetItemId@ExtraInfoUnion@@QBAFXZ returns short. The
+// short result is what narrows retail's id loads to a byte in doEventSkeleton
+// (0x4a55e1), aiValueOfEvent (0x528723) and quickInfo's garden; an int
+// result loses doEventSkeleton's exact match.
 DC_ADDRESS(0x01fa80, 0x12)
-inline int ExtraInfoUnion::getItemId() const { return m_skeletonInfo.m_id; }
+inline short ExtraInfoUnion::getItemId() const { return m_skeletonInfo.m_id; }
 
 DC_ADDRESS(0x09c7d4, 0x32)
 inline void ExtraInfoUnion::setLeanTo(short id, short amount, int resource)

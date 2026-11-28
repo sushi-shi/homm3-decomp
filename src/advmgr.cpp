@@ -2498,11 +2498,16 @@ static void setWitchHutHelpText(char* buffer, hero* currentHero,
 // same way (57 arms, 17 differing) and shares five of those rows exactly -
 // PYRAMID, WAGON, WARRIOR_TOMB, WATER_WHEEL and WINDMILL are the same
 // inlined helpers, so a fix there is worth double.
-// Mac 0xd1f8..0xd218 and 0xd5c8..0xd5ec expand getItemId's low-five-bit
-// extraction and short result, followed by the spring/garden full-bit
-// predicates. Keep both accessor calls without extending string lifetimes.
-// The other eleven visit-ID shifts have the same short accessor expansion
-// (arena at Mac 0xc340/0xc344, through war school at 0xde90/0xde94).
+// The thirteen visit-ID shifts read the five-bit id field directly, as
+// Dreamcast's unoptimized SetRolloverText (advmgr.cpp:3199 onward) does: it
+// makes no GetItemId call at all and masks the loaded dword with 31. Retail
+// loads the dword at eleven sites (`mov ecx,[ebx] / and ecx,0x1f`, arena at
+// 0x40b286) and shares it with the full bit at the spring and garden
+// (0x40c08d, 0x40c3ce). The short accessor narrows each load to a byte
+// (96.41%). Mac 0xc340/0xc344 sign-extends the id at every site, which the
+// direct read does not explain.
+// DC line 3160 guards the GetHero call with `curHero != -1` and line 3166
+// assigns the null hero; VC6 folds the accessor's own test into that guard.
 // SIREN/STABLES retain the whole visited-text operation inside the trigger/
 // hero guard: Mac 0xda80/0xda88 and 0xdb08/0xdb10 exit to 0xe068; retail
 // 0x40c8a4/0x40c8af and 0x40c8f5/0x40c900 exit to 0x40d13b. Guarding
@@ -2510,7 +2515,8 @@ static void setWitchHutHelpText(char* buffer, hero* currentHero,
 // the native scopes also recovers 95.69 -> 96.76% Windows.
 // Keep the raw visit mask in visited, then test fullness in the condition:
 // Complete retains that mask rather than assigning a normalized Boolean.
-// The complete ID-accessor model reaches 96.25%; branch joins remain.
+// Direct id reads with the short accessor restored reach 97.10%; branch
+// joins remain.
 VA(0x0040b150, 0x229C)
 DC_ADDRESS(0x00c13c, 0x2c40)
 MAC_ADDRESS(0x00c1e8, 0x1eb4)  // anchor-global
@@ -2531,7 +2537,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     player = g_game->getLocalPlayer();
     playerBit = 1 << thisPlayer;
     if (player->m_currHeroId != -1)
-        currHero = &g_game->m_heroes[player->m_currHeroId];
+        currHero = g_game->getHero(player->m_currHeroId);
     else
         currHero = NULL;
 
@@ -2558,7 +2564,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case ARENA:
         strcpy(g_text, g_quickViewText[ARENA]);
         if (cell->m_isTrigger && currHero) {
-            visited = (currHero->m_arenaFlags & (1UL << cell->getItemId()));
+            visited = (currHero->m_arenaFlags & (1UL << cell->m_skeletonInfo.m_id));
             if (visited)
                 sprintf(tempText, visitedFormat,
                         g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2674,7 +2680,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case DEAD_GUY:
         strcpy(g_text, g_quickViewText[DEAD_GUY]);
         if (cell->m_isTrigger && currHero) {
-            visited = (player->m_deadGuyFlags & (1UL << cell->getItemId()));
+            visited = (player->m_deadGuyFlags & (1UL << cell->m_skeletonInfo.m_id));
             if (visited)
                 sprintf(tempText, visitedFormat,
                         g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2695,7 +2701,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = (currHero->m_defenseTowerFlags
-                    & (1UL << cell->getItemId()));
+                    & (1UL << cell->m_skeletonInfo.m_id));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2816,7 +2822,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = (currHero->m_gardenOfRevelationFlags
-                    & (1UL << cell->getItemId()));
+                    & (1UL << cell->m_skeletonInfo.m_id));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2866,7 +2872,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case LEAN_TO:
         strcpy(g_text, g_quickViewText[LEAN_TO]);
         if (cell->m_isTrigger && currHero) {
-            visited = (player->m_leanToFlags & (1UL << cell->getItemId()));
+            visited = (player->m_leanToFlags & (1UL << cell->m_skeletonInfo.m_id));
             if (visited)
                 sprintf(tempText, visitedFormat,
                         g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2886,7 +2892,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                 strcat(g_text, tempText);
             }
             if (currHero) {
-                visited = (currHero->m_libraryFlags & (1UL << cell->getItemId()));
+                visited = (currHero->m_libraryFlags & (1UL << cell->m_skeletonInfo.m_id));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2920,7 +2926,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = (currHero->m_magicSchoolFlags
-                    & (1UL << cell->getItemId()));
+                    & (1UL << cell->m_skeletonInfo.m_id));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2942,7 +2948,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = player->m_magicSpringFlags
-                    & (1UL << cell->getItemId());
+                    & (1UL << cell->m_skeletonInfo.m_id);
                 if (visited && !cell->magicSpringIsFull())
                     sprintf(tempText, visitedFormat,
                             g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -2984,7 +2990,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                 strcat(g_text, tempText);
             }
             if (currHero) {
-                visited = (currHero->m_mercCampFlags & (1UL << cell->getItemId()));
+                visited = (currHero->m_mercCampFlags & (1UL << cell->m_skeletonInfo.m_id));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3036,7 +3042,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         strcpy(g_text, g_quickViewText[MYSTICAL_GARDEN]);
         if (cell->m_isTrigger) {
             visited = player->m_mysticalGardenFlags
-                & (1UL << cell->getItemId());
+                & (1UL << cell->m_skeletonInfo.m_id);
             if (visited && !cell->gardenIsFull())
                 sprintf(tempText, visitedFormat,
                         g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3091,7 +3097,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = (currHero->m_powerSchoolFlags
-                    & (1UL << cell->getItemId()));
+                    & (1UL << cell->m_skeletonInfo.m_id));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3208,7 +3214,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = (currHero->m_trainingGroundsFlags
-                    & (1UL << cell->getItemId()));
+                    & (1UL << cell->m_skeletonInfo.m_id));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3246,7 +3252,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                 strcat(g_text, tempText);
             }
             if (currHero) {
-                visited = (currHero->m_warSchoolFlags & (1UL << cell->getItemId()));
+                visited = (currHero->m_warSchoolFlags & (1UL << cell->m_skeletonInfo.m_id));
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->GetText(GENERAL_TEXT_VISITED_OBJECT));
@@ -5859,13 +5865,18 @@ void advManager::updateRadar(bool updateFlag, bool partialUpdate,
 // Keep those calls while recovering the lifetime/inliner context.
 // Other differences include GetHero arm layout, the nested cell/zCell
 // decision, and switch-tail scheduling. Compare named sites, not totals.
-// DC8332 names GetItemId for the garden's visit bit. Mac 0x15ab4..0x15acc
-// expands its five-bit extraction and short result before the shift.
-// Mac 0x15764..0x15788 has the same accessor followed by the spring's
-// full-bit predicate; 0x15ad8..0x15adc expands the garden predicate.
-// All eleven other visit-ID shifts share the short accessor expansion
-// (arena at Mac 0x1490c/0x14910, through war school at 0x16328/0x1632c).
-// NewmapCell inherits these canonical ExtraInfoUnion accessors.
+// DC8332 names GetItemId for the garden's visit bit, the function's only
+// call to it; Dreamcast's unoptimized QuickInfo reads the five-bit id field
+// directly at the other twelve visit shifts. Retail agrees site for site:
+// the garden alone narrows the load to a byte (0x414d66, `mov cl,[ebx]`),
+// eleven sites load the dword, and the spring shares one dword load between
+// the id and its full bit (0x414a7f). Mac 0x15ab4..0x15acc sign-extends
+// the id at every site, which the direct read does not explain.
+// Twelve fewer accessor expansions also move the inline budget: at getCell
+// the depth-2 budget is 118 (root cb 7079, 118 sites remaining), which
+// expands zCell under cell(0,0,0) and refuses it under cell(point). Retail
+// does the reverse, so its budget there is 115..117: one to three more
+// depth-1 sites after getCell, or a root cb below 7047.
 // DC records text lookups throughout the quick-info arms. Preserve the
 // Complete getText helper at those sites while checking retail call shape.
 // The one call-count delta (80 vs 79) is WATERING_HOLE's visited/unvisited
@@ -5873,9 +5884,6 @@ void advManager::updateRadar(bool updateFlag, bool partialUpdate,
 // call (+0x210c jmp +0x212a) while every other visit pair keeps two calls.
 // A ternary argument there gives 93.32 and at ARENA 95.64 (it only removes
 // a call retail keeps); both rejected, the if/else pairs stay (2026-09-29).
-// Mac visited-bitmap arms repeatedly extract five bits then extsh, the
-// getItemId short-return operation (e.g. 15528..15538, 15678..15688).
-// Spring 15788 and garden 15ad8..15adc expand their fullness getters.
 // Every guarded statement and case group is braced. The braces cost the
 // front end 236 units (cb 6736 -> 6972) without code, which lets both string
 // appends expand as retail (+0x29f: _Xlen/_Grow/_Eos inline): 91.77 -> 93.13.
@@ -5888,8 +5896,9 @@ void advManager::updateRadar(bool updateFlag, bool partialUpdate,
 // assign _Eos and the diggable append expand, the quest _Tidy expands) and
 // scores 94.58; the missing ~500 tuples (or ~11 fewer depth-1 sites after
 // getCell) are not recovered. Rejected: ARENA without testFlag (90.53),
-// short getItemId (flat here, costs setRolloverText), getMine-free
-// lighthouse vector indexing (flat).
+// getMine-free lighthouse vector indexing (flat). That window predates the
+// direct id reads; the spring through the accessor adds the one site that
+// lands in it (94.71) but narrows the spring's load, which retail does not.
 VA(0x004137c0, 0x25A0)
 DC_ADDRESS(0x015fdc, 0x2c50)
 MAC_ADDRESS(0x0145e8, 0x1fe0)  // linkorder
@@ -5982,7 +5991,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     if (currHero) {
-                        testFlag = 1UL << testCell->getItemId();
+                        testFlag = 1UL << testCell->m_skeletonInfo.m_id;
                         visited = testFlag & currHero->m_arenaFlags;
                         if (visited) {
                             sprintf(tempText,
@@ -6122,7 +6131,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 if (testCell->m_isTrigger) {
                     if (currHero) {
                         visited = (g_currentPlayer->m_deadGuyFlags
-                            & (1UL << testCell->getItemId()));
+                            & (1UL << testCell->m_skeletonInfo.m_id));
                         if (visited) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x006603c4, quickInfoVisitFormat, "\n\n%s"),
@@ -6149,7 +6158,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_defenseTowerFlags
-                            & (1UL << testCell->getItemId()));
+                            & (1UL << testCell->m_skeletonInfo.m_id));
                         if (visited) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x006603c4, quickInfoVisitFormat, "\n\n%s"),
@@ -6289,7 +6298,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_gardenOfRevelationFlags
-                            & (1UL << testCell->getItemId()));
+                            & (1UL << testCell->m_skeletonInfo.m_id));
                         if (visited) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x006603c4, quickInfoVisitFormat, "\n\n%s"),
@@ -6353,7 +6362,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 if (testCell->m_isTrigger) {
                     if (currHero) {
                         visited = g_currentPlayer->m_leanToFlags
-                            & (1UL << testCell->getItemId());
+                            & (1UL << testCell->m_skeletonInfo.m_id);
                         if (visited) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x0066034c, quickInfoLeanToFormat, " %s"),
@@ -6380,7 +6389,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_libraryFlags
-                            & (1UL << testCell->getItemId()));
+                            & (1UL << testCell->m_skeletonInfo.m_id));
                         if (visited) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x006603c4, quickInfoVisitFormat, "\n\n%s"),
@@ -6422,7 +6431,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_magicSchoolFlags
-                            & (1UL << testCell->getItemId()));
+                            & (1UL << testCell->m_skeletonInfo.m_id));
                         if (visited) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x006603c4, quickInfoVisitFormat, "\n\n%s"),
@@ -6449,7 +6458,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = g_currentPlayer->m_magicSpringFlags
-                            & (1UL << testCell->getItemId());
+                            & (1UL << testCell->m_skeletonInfo.m_id);
                         if (visited && !testCell->magicSpringIsFull()) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x006603c4, quickInfoVisitFormat, "\n\n%s"),
@@ -6502,7 +6511,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_mercCampFlags
-                            & (1UL << testCell->getItemId()));
+                            & (1UL << testCell->m_skeletonInfo.m_id));
                         if (visited) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x006603c4, quickInfoVisitFormat, "\n\n%s"),
@@ -6621,7 +6630,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_powerSchoolFlags
-                            & (1UL << testCell->getItemId()));
+                            & (1UL << testCell->m_skeletonInfo.m_id));
                         if (visited) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x006603c4, quickInfoVisitFormat, "\n\n%s"),
@@ -6768,7 +6777,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_trainingGroundsFlags
-                            & (1UL << testCell->getItemId()));
+                            & (1UL << testCell->m_skeletonInfo.m_id));
                         if (visited) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x006603c4, quickInfoVisitFormat, "\n\n%s"),
@@ -6817,7 +6826,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_warSchoolFlags
-                            & (1UL << testCell->getItemId()));
+                            & (1UL << testCell->m_skeletonInfo.m_id));
                         if (visited) {
                             sprintf(tempText,
                                     DATA_COMPGEN(0x006603c4, quickInfoVisitFormat, "\n\n%s"),
