@@ -6678,9 +6678,7 @@ void type_random_map_generator::repairWaterZoneBorders()
                                 break;
                             }
                             ++nearby.m_x;
-                            if (nearby.m_x >= bounds.m_maximumX)
-                                break;
-                        } while (1);
+                        } while (nearby.m_x < bounds.m_maximumX);
                     }
                 }
                 if (!found || zone->m_templateZone->findConnection(destinationZone))

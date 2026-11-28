@@ -304,11 +304,7 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
             if (fs.abc[static_cast<unsigned char>(str[k])].abcC < 0)
                 width += fs.abc[str[k]].abcC;
             pos = k;
-            for (;;) {
-                if (str[pos] == ' ')
-                    break;
-                if (pos < lineStart)
-                    break;
+            while (str[pos] != ' ' && pos >= lineStart) {
                 if (str[pos] != '{' && str[pos] != '}') {
                     width -= GetCharacterWidth(str[pos]);
                     if (currY + 2 * height > boxHeight && width < boxWidth)
@@ -493,11 +489,7 @@ int font::LongestWrappedLineWidth(const char* str, int boxWidth) const
         if (width > boxWidth) {
             int candidate = 0;
             pos--;
-            for (;;) {
-                if (str[pos] == ' ')
-                    break;
-                if (pos < lineStart)
-                    break;
+            while (str[pos] != ' ' && pos >= lineStart) {
                 if (str[pos] != '{' && str[pos] != '}') {
                     width -= GetCharacterWidth(str[pos]);
                     if (candidate == 0 && width < boxWidth)

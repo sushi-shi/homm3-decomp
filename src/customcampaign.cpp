@@ -2475,7 +2475,7 @@ void TCampaignBrief::MapTextStruct::play()
         videoEnd = GameTime::get();
     }
 
-    for (;;) {
+    do {
         pollSound();
         process1WindowsMessage();
         if (videoNeedsUpdate())
@@ -2586,9 +2586,7 @@ void TCampaignBrief::MapTextStruct::play()
             finished = 1;
             break;
         }
-        if (finished)
-            break;
-    }
+    } while (!finished);
 
     if (speech) {
         g_soundManager->stopSample(speech->memSample.memHSample);
