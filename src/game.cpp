@@ -4500,6 +4500,10 @@ void game::matchUndergroundGates()
 // the invariant is not in cell() and it is not kept. `x >= 0 && y >= 0 &&
 // z >= 0` (cb 54) is too light: setWagon(artifact) expands. The missing
 // spend belongs to this caller's own cell lookups.
+// 2026-11-28 probe: one cell-side setter for the five bank arms' three
+// field stores lowers the root to cb 2777 but is charged at every site and
+// overshoots (86.38%, randomizeWitchHut and setTomb stay calls); no native
+// record names such a setter, so the arms keep their three stores.
 VA(0x004c0cc0, 0x1668)
 DC_ADDRESS(0x0ac910, 0x1278)
 MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order

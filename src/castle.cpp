@@ -116,6 +116,14 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
                 // Direct built/active masks are not an equivalent spelling:
                 // they drop Complete from 98.57% to 88.70% and lose two
                 // inline-site branches across the rest of this function.
+                // Residual: retail holds the 64-bit built mask in edx:edi
+                // across the first two tests and ANDs a copy of it, reloading
+                // the town for the third; ours holds the town and ANDs into
+                // the bit. TBottomViewTown's and townManager::main's hall
+                // chains differ the same way. Byte-flat in all three:
+                // hasBuilding with its AND operands swapped, with an implicit
+                // bool return, and the table under its original name
+                // (?bitNumber@@3PA_JA).
                 if (m_townToView->hasBuilding(HALL_VILLAGE_ID, false)) {
                     g_castleBuildOrder[i] = HALL_TOWN_ID;
                 } else if (m_townToView->hasBuilding(HALL_TOWN_ID, false)) {
