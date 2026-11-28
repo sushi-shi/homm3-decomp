@@ -3082,11 +3082,24 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // is an indexed one-byte array, local to the hero loop.
 // The scalar write groups own no locals; removing their artificial scopes and
 // testing saveVector directly preserves the natural lifetime of saved.
-// Residual: VC6 expands both pool-loop saveVector calls that retail retains,
-// and the associated failure cleanup differs. Bracing every error return with
-// count restored falls from 92.8015 to 90.7320; moving the shared index to
-// entry and removing the remaining availability-guard braces are byte-flat.
-// Keep the canonical helper calls.
+// The hero-pool masks go through the canonical packed-bit writer: retail's
+// loop (0x4be6f1..0x4be73b) is its body - packed[0] cleared in the dead
+// argument slot, bitset<8>::test called, `packed[index >> 3] |= 1 << (index
+// & 7)` over an unsigned index, an unchecked one-byte write. As a charged
+// root candidate (cb 107) it leaves the two lith-pool loops' saveVector calls
+// and the following destructor copies retail's budget (92.81 -> 98.43%; a
+// pasted loop expanded both saveVector calls).
+// Dreamcast 3637/3638 computes MapExtraSize in its own statement and scales
+// it at the write and at the test; retail forms levels*width*height in EAX
+// and `lea edi,[eax+eax]` (98.43 -> 98.97%).
+// Residual: retail expands the writer's fill_n, which needs the root at cb
+// 1709..1721 (ours 1690; the same window keeps every other decision). The
+// loop's own index is three units inside that; reusing i falls below the
+// window's floor for the first lith-loop destructor (91.22%). Retail also
+// homes the grail byte in an argument-slot temporary; a value write there is
+// five units lighter and 91.77% until the root's missing cost is found.
+// Twenty braced error returns overshoot (cb 1730, 89.67%), and Dreamcast's
+// scopes show those returns unbraced.
 VA(0x004be3f0, 0xAA5)
 DC_ADDRESS(0x0a8cd0, 0xcfe)
 MAC_ADDRESS(0x0d2954, 0x1ba8)  // SavedGameHeader + write/pool callee sequence
@@ -3158,17 +3171,8 @@ int game::save(TAbstractFile* outfile)
     // Retail retains bitset<8>::test. Reading through const operator[]
     // preserves that boundary without a pin (59.5944% for the whole save);
     // direct test(), including on a const reference, expands it (57.4921%).
-    for (i = 0; i < HERO_COUNT; ++i) {
-        const std::bitset<NUM_PLAYERS>& players = m_heroPoolMap[i];
-        unsigned char poolBits[1];
-        poolBits[0] = 0;
-        unsigned int player;
-        for (player = 0; player < NUM_PLAYERS; ++player) {
-            if (players[player])
-                poolBits[player >> 3] |= 1 << (player & 7);
-        }
-        outfile->write(poolBits, sizeof(poolBits));
-    }
+    for (int heroId = 0; heroId < HERO_COUNT; ++heroId)
+        writePackedBits(outfile, m_heroPoolMap[heroId]);
 
     // The twelve guarded scalar writes. Retail carries FOUR temps for
     // them, not one: a char reused across writes 1-2 and 7-9, an unsigned
@@ -3267,11 +3271,10 @@ int game::save(TAbstractFile* outfile)
     // not through this->worldMap, and the *2 is applied LAST - retail's
     // `lea edi,[eax+eax]` follows both imuls. The count is computed once
     // into one local because a virtual call sits between its two uses.
-    unsigned int mapExtraBytes =
-        g_game->getNumMapLevels() * g_mapHeight * g_mapWidth *
-        sizeof(unsigned short);
-    count = outfile->write(g_mapExtra, mapExtraBytes);
-    if (count < mapExtraBytes)
+    int mapExtraSize =
+        g_game->getNumMapLevels() * g_mapHeight * g_mapWidth;
+    count = outfile->write(g_mapExtra, mapExtraSize * sizeof(unsigned short));
+    if (count < mapExtraSize * sizeof(unsigned short))
         return -1;
 
     // Keep the canonical pool writers; retail retains all seven calls.
