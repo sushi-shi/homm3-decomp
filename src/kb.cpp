@@ -443,14 +443,14 @@ int earlySetup()
     aiInitialize();
     if (!interpretCommandLine())
         return 1;
-    g_cdDriveNumber = setupCDDrive();
+    g_cdRomErr = setupCDDrive();
     if (!loadAnimHeaders())
         shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
             "Unable to initialize resources - possible disk problem."));
     if (!loadSoundHeaders())
         shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
             "Unable to initialize resources - possible disk problem."));
-    if (!g_cdDriveNumber) {
+    if (!g_cdRomErr) {
         int i;
 
         i = 0;
@@ -459,13 +459,13 @@ int earlySetup()
                 i = 0;
                 while (1) {
                     if (i >= g_videoCount3) {
-                        g_cdDriveNumber = CD_ROM_RESTORATION_OF_ERATHIA_DISC;
+                        g_cdRomErr = CD_ROM_RESTORATION_OF_ERATHIA_DISC;
                         break;
                     }
                     if (!strcmpi(g_videoHeader3[i].m_name,
                                   DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
                                       "h3abab1.smk"))) {
-                        g_cdDriveNumber = CD_ROM_ARMAGEDDONS_BLADE_DISC;
+                        g_cdRomErr = CD_ROM_ARMAGEDDONS_BLADE_DISC;
                         break;
                     }
                     i++;
@@ -706,7 +706,7 @@ static void setupCDRom()
 {
     int oldNoSound = g_noSound;
 
-    switch (g_cdDriveNumber) {
+    switch (g_cdRomErr) {
     case CD_ROM_DRIVE_UNAVAILABLE:
         g_mouseManager->showPointer(false);
         g_noSound = 1;

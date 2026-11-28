@@ -54,8 +54,10 @@ private:
 };
 SIZE(TMainMenu, 0x54);
 
-// SetupCDDrive's result. Dreamcast kb.cpp's static SetupCDRom and retail
-// oldmain both dispatch on this value before the front-end is opened.
-extern int g_cdDriveNumber;
+// SetupCDDrive's result (ECDRomSetupResult). Dreamcast kb.cpp's static
+// SetupCDRom and retail oldmain both dispatch on this value before the
+// front-end is opened. No Heroes III symbol names it; Heroes II's debug
+// symbols call the same startup global iCDRomErr.
+extern int g_cdRomErr;
 
 #endif  /* HOMM3_MAINMENU_H */
