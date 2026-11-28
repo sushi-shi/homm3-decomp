@@ -7884,6 +7884,17 @@ void townManager::setupWell(TCastleWindow* wellWin)
 // retail's 3357..3444. Passing g_text directly as DC 9387 does is flat.
 // Keep retained text getters.
 // CUR 98.91 -> 98.34%: 894b545ab's if/return getPrimarySkill costs more to inline.
+// The solver now wants this root 55..142 units heavier, getPrimarySkill at
+// cb 41..59 or game::getHero at 40 or less. A scope-depth audit of DC
+// 9284..9589 finds one brace difference only (the dead-player count at
+// 9302/9303 is an unbraced loop body, applied: 2 units lighter, byte-flat);
+// every other arm and loop body already has DC's braces, and i/index2 are
+// DC's procedure-scope counters. DC statements with no retail code: the
+// member clears at 9207..9212 and 9315..9322 and the byte flags at 9432,
+// 9518, 9570 and 9591. DC calls no player or hero accessor here that the
+// source reads as a field. getHero's else arm is needed by other callers.
+// Mac 0x1e2288 calls vector operator[] for the primary-skill caption where
+// GetText leaves data(); the subscript spelling is byte-flat.
 // E:\gamedcs\townmgr.cpp:9206
 VA(0x005dda10, 0x145F)
 DC_ADDRESS(0x180204, 0xeaa)
@@ -7933,10 +7944,9 @@ void TThievesGuildWindow::setupThievesGuild(int iThievesGuilds)
     int numDeadPlayers = 0;
     int i;
     int index2;
-    for (i = 0; i < NUM_PLAYERS; i++) {
+    for (i = 0; i < NUM_PLAYERS; i++)
         if (g_game->m_playerDisabled[i])
             numDeadPlayers++;
-    }
 
     for (i = 7 - numDeadPlayers; i < 7; i++)
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,

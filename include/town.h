@@ -564,8 +564,16 @@ public:
 
     // Town.h:325-327 records the active-mask guard then the built-mask
     // return. DC HasBuilding (Town.h:324-328) reads the active mask itself,
-    // with no GetBuildingMask call, and opens a second lexical scope for
-    // line 326: the active arm is braced.
+    // with no GetBuildingMask call. Its scope depths (1 at the if, 2 at
+    // line 326) are those of an unbraced arm, but Complete needs this body
+    // at inline cost 62 or more: unbraced (60) turns hero::getLuck's retained
+    // call into an expansion (100 -> 94.23) and moves nothing else in the
+    // 21 units that use it. One conditional return (54) lowers five exact
+    // callers there. In the seven units built for the rest (townmgr, castle,
+    // bottomviewsubwindow, ai_player, hero, town, philai): an if/else pair
+    // (64) and the AND operands swapped in either or both arms move nothing;
+    // a local for the bit or for the mask and `0 != (...)` lower between
+    // nine and sixty exact callers.
     VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18
     DC_ADDRESS(0x01fe14, 0x98)
     bool hasBuilding(int buildingId, bool checkIncluded) const

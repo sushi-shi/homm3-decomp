@@ -1227,6 +1227,13 @@ static long getLastBackpackIndex(long heroNumber)
 
 // Dreamcast proves these as two ordinary static source helpers, each with the
 // selected hero index, one backpack-bound query and one conditional refresh.
+// TOverviewWindow::windowHandler's residual is in these expansions: where
+// the backpack-bound query is expanded, retail zero-extends the start byte
+// into eax for the three decrement rows and ours into edx; where retail
+// keeps the query as a call (row 3) both use edx. The page arms' scratch
+// registers differ from row 2 on. Byte-flat in decrementBackpackStart: the
+// four orders of the three addends, an int bound, an int hero index, and an
+// explicit unsigned char cast on the stored remainder.
 // Complete emits no standalone copies: VC6 expands every call below, while
 // independently choosing whether to expand get_last_backpack_index within
 // each expansion.
