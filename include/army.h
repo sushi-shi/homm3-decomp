@@ -927,7 +927,7 @@ public:
                                    long enemyHex) const;
     long getSpellTime(int spell) const;
     TSkillMastery getSpellLevel(int spell) const;
-    unsigned char setInsideAreaEffect(unsigned char arg);
+    bool setInsideAreaEffect(unsigned char arg);
     void playSample(TSampleID id);
     void stopSample(TSampleID id);
     void waitSample(TSampleID which);

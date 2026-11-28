@@ -106,7 +106,7 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
 VA(0x0041e440, 0x129)
 DC_ADDRESS(0x023750, 0x14c)
 MAC_ADDRESS(0x01f664, 0x210)
-unsigned char combatManager::failedSiege()
+bool combatManager::failedSiege()
 {
     DATA(0x0063abc0) static const TWallTargetId walls[4] = {
         WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
@@ -480,7 +480,7 @@ long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_
 VA(0x0041eea0, 0x1B9)
 DC_ADDRESS(0x02429c, 0x28e)
 MAC_ADDRESS(0x0205c4, 0x3cc)
-unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type_AI_combat_parameters& estimate)
+bool combatManager::chooseCyclopsAction(long bestValue, long side, type_AI_combat_parameters& estimate)
 {
     DATA(0x0063abd0) static const TWallTargetId walls[4] = {
         WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
@@ -705,7 +705,7 @@ long combatManager::getAttackChange(const army* currentArmy, const army* enemy, 
 VA(0x0041f580, 0x304)
 DC_ADDRESS(0x024b64, 0x2f8)
 MAC_ADDRESS(0x0210f0, 0x3cc)
-unsigned char combatManager::moveToward(const army* currentArmy, long targetHex, const long* enemyAttacks, unsigned char considerWaiting)
+bool combatManager::moveToward(const army* currentArmy, long targetHex, const long* enemyAttacks, unsigned char considerWaiting)
 {
     if (!currentArmy->getSpellTime(72) && currentArmy->getSpeed()) {
         g_searchArray->findCombatPath(currentArmy, m_currentSide, targetHex,
@@ -1149,7 +1149,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
 VA(0x004205d0, 0x185)
 DC_ADDRESS(0x025998, 0x172)
 MAC_ADDRESS(0x0223e4, 0x1ec)  // linkorder
-unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const army* client, long* bestHex, long* openHexes, searchArray* currentSearchArray)
+bool combatManager::chooseDefenseHex(const army* currentArmy, const army* client, long* bestHex, long* openHexes, searchArray* currentSearchArray)
 {
     long bestTravelTime;
     long bestHexesCovered;
@@ -1206,7 +1206,7 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
 VA(0x00420760, 0x187)
 DC_ADDRESS(0x025b0c, 0x174)
 MAC_ADDRESS(0x0225d0, 0x1ac)
-unsigned char combatManager::attemptShooterDefense(const army* currentArmy, searchArray* currentSearchArray, const type_AI_combat_parameters* estimate)
+bool combatManager::attemptShooterDefense(const army* currentArmy, searchArray* currentSearchArray, const type_AI_combat_parameters* estimate)
 {
     long hex;
 
@@ -1260,7 +1260,7 @@ unsigned char combatManager::attemptShooterDefense(const army* currentArmy, sear
 VA(0x004208f0, 0x184)
 DC_ADDRESS(0x025c80, 0x178)
 MAC_ADDRESS(0x02277c, 0x248)
-unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyAttacks, const searchArray* currentSearchArray)
+bool combatManager::chooseToRun(const army* ourArmy, const long* enemyAttacks, const searchArray* currentSearchArray)
 {
     if (g_game->m_setup.m_difficulty < 2
         && !IsHuman[ourArmy->group])
@@ -1317,7 +1317,7 @@ unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyA
 VA(0x00420a80, 0x264)
 DC_ADDRESS(0x025df8, 0x214)
 MAC_ADDRESS(0x0229c4, 0x28c)
-unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters& data)
+bool combatManager::hasRangedAdvantage(type_AI_combat_parameters& data)
 {
     long totalValue[2];
     long shooterValue[2];
@@ -1388,7 +1388,7 @@ VA_COMPGEN(0x00420cf0, 0x26, IMPLICIT_DTOR, type_spellvalue)
 VA(0x00420d20, 0x1D5)
 DC_ADDRESS(0x02600c, 0x132)
 MAC_ADDRESS(0x022cb8, 0x1ac)  // anchor-callee
-unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long& bestValue, type_AI_combat_parameters& estimate)
+bool combatManager::chooseCreatureSpell(const army* currentArmy, long& bestValue, type_AI_combat_parameters& estimate)
 {
     // Dreamcast calls getGroup again in the loop; Complete caches the side
     // before construction.
@@ -1564,7 +1564,7 @@ bool combatManager::chooseResurrectAction(const army* currentArmy, long& bestVal
 VA(0x00421280, 0x166)
 DC_ADDRESS(0x026464, 0x96)
 MAC_ADDRESS(0x023278, 0x148)
-unsigned char combatManager::chooseSpellAction(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
+bool combatManager::chooseSpellAction(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
 {
     if (m_creaturePlacement)
         return 0;
@@ -1600,7 +1600,7 @@ unsigned char combatManager::chooseSpellAction(const army* currentArmy, long* be
 VA(0x004213f0, 0xF5)
 DC_ADDRESS(0x0264fc, 0x102)
 MAC_ADDRESS(0x0233c0, 0x160)
-unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estimate)
+bool combatManager::shouldStayInCastle(type_AI_combat_parameters* estimate)
 {
     if (!m_fortificationLevel)
         return 0;
@@ -2365,7 +2365,7 @@ void combatManager::findAITargets(long ourGroup, const army* currentArmy,
 VA(0x00422da0, 0x1AD)
 DC_ADDRESS(0x027b18, 0x15c)
 MAC_ADDRESS(0x0253d4, 0x170)
-unsigned char combatManager::doSpellAI()
+bool combatManager::doSpellAI()
 {
     m_nextAction = 0;
     if (m_spellsCast[m_currentSide])

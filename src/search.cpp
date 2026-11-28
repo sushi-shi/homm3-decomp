@@ -308,7 +308,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
 VA(0x0056aad0, 0x68)
 DC_ADDRESS(0x12bbc8, 0x74)
 MAC_ADDRESS(0x162388, 0x104)
-unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
+bool searchArray::enterHostileTrigger(const hero* currentHero,
                                               pathCell& cell)
 {
     if (cell != cell.m_monster) {
@@ -574,10 +574,10 @@ DC_ADDRESS(0x12c36c, 0x728)
 MAC_ADDRESS(0x1631a0, 0xbac)  // exhaustive search.obj order-map
 void searchArray::seedPosition(hero* currentHero, type_point start,
                                type_point target, int maxMobility,
-                               unsigned char isBoat,
+                               bool isBoat,
                                type_search_type searchType,
                                int curTempMobility,
-                               unsigned char seedContinuation)
+                               bool seedContinuation)
 {
     TSkillMastery pathfinding =
         currentHero->getSecondarySkill(eSecSkillPathfinding);

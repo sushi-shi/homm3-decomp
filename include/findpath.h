@@ -144,10 +144,10 @@ public:
     long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
     void seedPosition(hero* currentHero, type_point start,
                       type_point target, int maxMobility,
-                      unsigned char isBoat,
+                      bool isBoat,
                       type_search_type searchType,
                       int curTempMobility,
-                      unsigned char seedContinuation);
+                      bool seedContinuation);
     int buildPath(const hero* currentHero, long limit);
 
     // E:\gamedcs\FindPath.h:211-213: vector::clear.
@@ -244,7 +244,7 @@ private:
     void clear(long flyLevel, long startZ, long stopZ);
     void enterGate(const pathCell& cell, const NewmapCell* mapCell,
                     long limit);
-    unsigned char enterHostileTrigger(const hero* currentHero,
+    bool enterHostileTrigger(const hero* currentHero,
                                      pathCell& cell);
     // search.obj 0x56a400 / 0x56a730, the lith-family and underground
     // gate seeders; both parameter lists are the DC roster's

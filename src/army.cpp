@@ -899,7 +899,7 @@ void army::removeBinding()
 VA(0x0043efe0, 0xCF)
 DC_ADDRESS(0x045164, 0xa0)
 MAC_ADDRESS(0x04abf0, 0x118)  // DC reads the side directly; Mac 0x4ac24's load is the same field read.
-unsigned char army::setInsideAreaEffect(unsigned char arg)
+bool army::setInsideAreaEffect(unsigned char arg)
 {
     if (m_isAreaEffectTarget == arg)
         return 0;
