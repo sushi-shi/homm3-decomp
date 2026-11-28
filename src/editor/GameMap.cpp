@@ -5196,10 +5196,14 @@ enum {
     kCellBeachBorder = 0x40
 };
 
+}  // namespace
+
+// One cell in the map file. Loki exports both beside readCellData and
+// writeCellData (h3maped 0x8157540 readCell__FP11TRawIStreamPQ38TGameMap6TLayer5TCell,
+// 0x81576f8 writeCell__FP11TRawOStreamRCQ38TGameMap6TLayer5TCellb), outside
+// GameMap.cpp's anonymous namespace.
 void readCell(TRawIStream* pIStream, TGameMap::TLayer::TCell* pCell);
 void writeCell(TRawOStream* pOStream, const TGameMap::TLayer::TCell& cell, bool bBeachBorder);
-
-}  // namespace
 
 // A layer's cells, row by row.
 VA(0x0042b7e8, 0x58)
@@ -5217,8 +5221,6 @@ void writeCellData(TRawOStream& stream, const TGameMap::TLayer& layer)
         for (unsigned int x = 0; x < layer.getWidth(); x++)
             writeCell(&stream, layer.getCell(x, y), isBeachBorder(layer, TTilePoint(x, y)));
 }
-
-namespace {
 
 // Seven bytes: the terrain, river and road with their tiles, then the flips.
 VA(0x0042b8bd, 0xa0)
@@ -5264,8 +5266,6 @@ void writeCell(TRawOStream* pOStream, const TGameMap::TLayer::TCell& cell, bool 
               << static_cast<signed char>(cell.getRoadTileNum())
               << flags;
 }
-
-}  // namespace
 
 inline TMapLayerObjectID TGameMap::TLayer::_findObject(const TTilePoint& loc,
                                                        bool (*pfnPredicate)(const TGameObject&)) const

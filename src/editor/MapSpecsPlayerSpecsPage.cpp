@@ -77,8 +77,12 @@ void TMapSpecsPlayerSpecsPage::OnConfluxCheck()
 DATA(0x0053ac08)
 static const int g_akTownTypeCheckIDs[kNumTownTypes] = { IDC_CASTLE_CHECK, IDC_RAMPART_CHECK, IDC_TOWER_CHECK, IDC_INFERNO_CHECK, IDC_NECROPOLIS_CHECK, IDC_DUNGEON_CHECK, IDC_STRONGHOLD_CHECK, IDC_FORTRESS_CHECK, IDC_CONFLUX_CHECK };
 
+namespace {
+
+// Loki defines it in MapSpecsPlayerSpecsPage.cpp's anonymous namespace
+// (h3maped 0x81d8334, getBehaviorTypeName__44_GLOBAL_.N.MapSpecsPlayerSpecsPage.cpp...).
 VA(0x00472fb2, 0x4c)
-static const char* getBehaviorTypeName(TPlayerInfo::TBehaviorType behaviorType)
+const char* getBehaviorTypeName(TPlayerInfo::TBehaviorType behaviorType)
 {
     assert(behaviorType >= 0 && behaviorType < TPlayerInfo::s_kNumBehaviorTypes);
     DATA_COMPGEN_GUARD(0x005a1cfc, behaviorTypeNamesGuard, akBehaviorTypeName)
@@ -87,6 +91,8 @@ static const char* getBehaviorTypeName(TPlayerInfo::TBehaviorType behaviorType)
     };
     return akBehaviorTypeName[behaviorType];
 }
+
+}  // namespace
 
 VA(0x00472ffe, 0x1cb)
 TMapSpecsPlayerSpecsPage::TMapSpecsPlayerSpecsPage(TParentSheet* pParentSheet, const TGameMap& oldMap,

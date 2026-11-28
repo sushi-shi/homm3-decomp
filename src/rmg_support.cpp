@@ -88,6 +88,13 @@ static const bool g_rmgLineReflections[4][2] = {
     {0, 0}, {0, 1}, {1, 0}, {1, 1}
 };
 
+// Loki's LinePlacement.cpp defines computeAdjacentLines, computeLineShape,
+// recalcLineShape and eraseLines in its anonymous namespace (h3maped
+// 0x8163308..0x8163904, `..._GLOBAL_.N.__18TLineTilesetTraits...` names). No
+// other translation unit of Complete calls them, so they stay file-private.
+namespace {
+
+// The RoE form writes through pointers and reads a tileset-traits table.
 VA(0x004f9cb0, 0x24e)
 MAC_ADDRESS(0x222498, 0x2a4)
 VA_AT(h3maped, 0x00458893, 0x19c)
@@ -167,6 +174,8 @@ void computeLineShape(
     }
 }
 
+} // namespace
+
 // Initializer-list copy of the point: the body assignment costs the
 // walker's first neighbour pass its retained compound add; the factory and
 // rectangle clear are byte-identical either way.
@@ -223,6 +232,8 @@ u32 TRmgLinePatternTable::selectFrame(s32 pattern)
         + rand() % m_ranges[pattern].m_frameCount;
 }
 
+namespace {
+
 // Complete retains this four-argument neighbour query in the editor and expands
 // it in the game. Mac 0x2223a0 and Loki computeAdjacentLines identify the whole
 // loop boundary; the former per-neighbour wrapper was only a budget hypothesis.
@@ -243,6 +254,8 @@ void computeAdjacentLines(TMapLineFilter* pMapFilter, const TTilePoint& point,
     }
 }
 
+// Shared fastcall refresh reached by the rectangle clear and point walker
+// (Loki's recalcLineShape also returns whether the cell changed).
 // Windows and Mac keep the selected pattern separate from the old tile type.
 // Loki also calls the canonical output-reference selector directly.
 VA(0x004f9f00, 0x146)
@@ -270,11 +283,15 @@ void recalcLineShape(TMapLineFilter* painter, const TTilePoint& point)
     }
 }
 
+} // namespace
+
 VA(0x004fa050, 0x22) // anchor-callee 0x4f9f86; thiscall hidden value return
 TRmgLinePainterTile TMapLineFilter::getCell(const TTilePoint& point)
 {
     return TRmgLinePainterTile(this, point);
 }
+
+namespace {
 
 // The first pass uses the filter factory, as Loki eraseLines does. Complete
 // retains the resulting proxy copy in the editor and expands it in the game;
@@ -338,6 +355,8 @@ void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rec
         }
     }
 }
+
+} // namespace
 
 VA(0x004fa280, 0x30)
 MAC_ADDRESS(0x222c40, 0x4c) // anchor-caller 0x55ee50/0x55f3b0; thiscall ret 0xc

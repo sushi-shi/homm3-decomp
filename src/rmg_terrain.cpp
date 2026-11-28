@@ -782,9 +782,13 @@ void TRmgTerrainPainter::paintRectangle(
     }
 }
 
+namespace {
+
 // Mac retains this adapter in both point painting and terrain repair. Loki's
 // inline layer overload of computeAdjacentDirs performs the same dimension
-// lookup; only this TU expands it on Windows.
+// lookup in TerrainPlacement.cpp's anonymous namespace (h3maped 0x836cf20,
+// computeAdjacentDirs__37_GLOBAL_.N.TerrainPlacement.cpp...); only this TU
+// expands it on Windows.
 MAC_ADDRESS(0x258a64, 0x3c)
 inline void computeAdjacentDirs(
     const TRmgTerrainPainter* painter, const TTilePoint& point, bool (&available)[8])
@@ -792,6 +796,8 @@ inline void computeAdjacentDirs(
     ::computeAdjacentDirs(painter->getWidth(), painter->getHeight(),
                           point.x(), point.y(), available);
 }
+
+} // namespace
 
 // Coordinate accessors preserve the cardinal probes' value temporaries when
 // the native neighbour-mask adapter is present. The editor is exact.
