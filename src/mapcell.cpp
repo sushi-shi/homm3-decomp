@@ -619,48 +619,21 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 // TQuestGuard vector, loads every row, and registers each non-null polymorphic
 // quest record in mapObjectData just as the seer-hut loop in Load does.
 
-// Residual (90.4916%, compiler allocation wall): `sema --branches` agrees on
-// all 19 branch decisions. The remaining differences are register/stack
-// scheduling across the inlined resize and push_back bodies. An unsigned
-// short loop was 89.7479%; masking an int and using for/while loops reached
-// 88.3698/89.8403%; a second promoted count was 88.6135%; and explicitly
-// hoisting the quest pointer was 82.2605%. The guarded do/while below is the
-// best spelling in that earlier compiler context.
-
-// [polish-45] The first `!!` names the remaining shape precisely: retail
-// SINKS the masked count.  `mov esi,[ebp-0xc] / and esi,0xffff` keeps the
-// value in ESI across the whole inlined resize and only writes it back to
-// count's own address-taken slot just before the loop; this compile does the
-// read-modify-write `mov ecx,[ebp-0x4] / and ecx,0xffff / mov [ebp-0x4],ecx`
-// at the statement and reloads for every later use.  The stack ordering is
-// the mirror image too - retail assigns -0x4 to the quest pointer, -0x8 to
-// `i` and -0xc to `count`, this compile assigns -0x4/-0x8/-0xc to
-// count/quest/i - so the two compiles walked the same symbols in opposite
-// handle order (docs/vc6/regalloc.md 0).  Frames are the same size (0x1c),
-// so no local is missing; the earlier "second promoted count" probe (88.6135)
-// is the right family but the wrong direction.
-
-// [polish-47] The slot ledger is now read off the bytes, and BOTH sides home
-// the same three values - the difference is only WHICH slot each got.
-// Retail: quest at [ebp-0x4] (stored in the branch shadow of
-// `mov eax,[ebx+eax] / test eax,eax / je`), i at -0x8, count at -0xc.
-// This compile: count at -0x4, quest at -0x8, i at -0xc. Two source
-// orderings measured against that, do not retry:
-//   * declaring `int i; int count;` as a top-of-function block (retail's
-//     order for those two) - BYTE-FLAT at 90.4930. It does move i from
-//     -0x4's neighbour down to -0xc, so declaration order DOES drive the
-//     numbering, but count stays at -0x4 and nothing else follows.
-//   * the full DC-style block `type_quest* quest; int i; int count;` with
-//     the loop body reading `quest = QuestGuardList[i].quest` once -
-//     90.4930 -> 82.2581, and the branch polarity flips. Naming the quest
-//     pointer lengthens its live range across the load() call and costs far
-//     more than the slot it buys.
-// So the residual is the handle NUMBERING with the same local set, not a
-// missing or extra local: docs/vc6/handle-order.md's C1-capped class.
+// The quest pointer is a named local read once before the test: Mac
+// 0x11f8a8..0x11f8b8 loads it, stores it to its own slot ahead of the branch
+// and pushes that slot, and retail stores [ebp-4] in the shadow of the same
+// test. Retail also keeps resize's erase out of line, which the budget rule
+// allows only with six root inline candidates after the count read (the
+// resize body then starts at 886/5 = 177 and reaches erase's 69 with 51;
+// with five it starts at 221 and erase expands, 85.90%). Two subscripts and
+// the push_back leave one candidate missing, so the pointer read goes
+// through TQuestGuard's accessor: 91.26 -> 100%. The accessor is inferred
+// from that count; its name is not proven.
 // Native Mac 0x11f86c decodes the little-endian count; 0x11f924..0x11f930
-// increments an index and compares against the unchanged count. The same
-// canonical reader and for-loop raise current Windows MAX 88.65 -> 91.30;
-// CodeWarrior retains the scalar wrapper instead of expanding it as native does.
+// increments an index and compares against the unchanged count.
+// The two _Ufill calls reach retail 0x48d940, the int copy that the pointer
+// instantiation folds onto; `homm3 delink --unit mapcell` proves that fold
+// once this body matches.
 VA(0x004fd950, 0x268)
 MAC_ADDRESS(0x11f834, 0x114)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
 void NewfullMap::loadQuestGuardList(
@@ -670,9 +643,10 @@ void NewfullMap::loadQuestGuardList(
     m_questGuardList.resize(count);
     for (int i = 0; i < count; ++i) {
         m_questGuardList[i].load(infile, saveVersion);
-        if (m_questGuardList[i].m_quest)
-            m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(m_questGuardList[i].m_quest)));
+        CMapObjectData* quest = static_cast<CMapObjectData*>(
+            static_cast<void*>(m_questGuardList[i].getQuest()));
+        if (quest)
+            m_mapObjectData.push_back(quest);
     }
 }
 

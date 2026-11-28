@@ -38,6 +38,10 @@ public:
     // local. This Complete-only class has no DC inline declaration; keep
     // one ordinary constructor definition in seerhut.cpp.
     TQuestGuard();
+    // loadQuestGuardList (0x4fd950) needs one more root inline candidate
+    // than its two subscripts and push_back supply, at the quest read.
+    // Inferred accessor; the original name is unknown.
+    type_quest* getQuest() const { return m_quest; }
     void doEvent(hero* currentHero, bool humanPlayer,
                  NewmapCell* eventCell, type_point point);
     void read(TAbstractFile* infile);
