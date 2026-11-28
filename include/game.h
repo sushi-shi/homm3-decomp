@@ -1962,8 +1962,8 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
         openedName = g_game->m_setup.m_filename;
         chdir("games");
         try {
-            ownedInput = std::auto_ptr<TAbstractFile>(
-                infile = new TGzFile(openedName.c_str(), "rb"));
+            infile = new TGzFile(openedName.c_str(), "rb");
+            ownedInput = std::auto_ptr<TAbstractFile>(infile);
         }
         catch (const TGzFile::TOpenFailure&) {
             return -1;

@@ -761,7 +761,9 @@ MAC_ADDRESS(0x165b2c, 0x50)
 type_monster_quest::type_monster_quest(bool flags)
     : type_quest(flags)
 {
-    m_position.m_x = (m_monsterId = m_defeatedBy = -1);
+    m_defeatedBy = -1;
+    m_position.m_x = -1;
+    m_monsterId = -1;
 }
 
 // Both quest text operations use the canonical GetArmyName with a plural
