@@ -4723,6 +4723,13 @@ void townManager::drawTown(int update, int incFrame, bool drawHotspots)
 // retail's two 64-bit AND register forms (unchanged by those names, by a
 // function-top `building`; a ternary chain drops to 99.06%), and the
 // resource-border help row resolves as g_spellEffectTraits+0xa4 in retail.
+// Retail's rule in every chain is that the cached mask is the AND's
+// destination: copied while a later test still needs it (hall tests one and
+// two here), loaded or overwritten otherwise. Ours makes the bit the
+// destination in the hall chain and copies the mask in the castle chain's
+// first test. hasBuilding with an unbraced arm, an implicit bool return, an
+// if/else pair of `return true` tests (its own body 99.41%) or one
+// conditional return leaves both chains unchanged.
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)
 DC_ADDRESS(0x175160, 0x14d2)
@@ -5031,7 +5038,9 @@ int townManager::main(message& msg)
                         doPortalOfSummoning();
                         redrawTownScreen();
                         break;
-                    default:
+                    case TOWN_RAMPART:
+                    case TOWN_TOWER:
+                    case TOWN_FORTRESS:
                         strcpy(cTemp,
                                getBuildingInfo(m_townToView, EXTRA_1_ID,
                                                1, 1));
@@ -5916,9 +5925,16 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
 // ResourceManager::Dispose wrapper after adding the last icon.
 // Derived widget locals reproduce retail's widget* conversion temporaries
 // for vector insertion, its extra frame slot and nested construction call.
-// Residual at 99.9819%: the loop back edge reloads width/window in the
-// opposite order. Combining GetSprite/GetWidth in one full expression
-// (DC row 7403) is byte-flat; preserve the ordinary helper calls.
+// Residual at 99.9819%: after the icon loop retail re-enters three live
+// ranges in the order sprite (eax), window (esi), numResources (ebx); the
+// zero-trip branch at 0x5d6279 skips all three. This compile emits window
+// first. Combining GetSprite/GetWidth in one full expression (DC row 7403)
+// is byte-flat; preserve the ordinary helper calls. Also byte-flat: the
+// sprite and width declared at the top, a for-init counter, numResources and
+// window declared at the top, pre-increment, const locals, Dispose through
+// the resource* overload or nested in the CSprite* one, and the sprite and
+// width assigned in the for-init after the counter (before it: 99.66%).
+// `message msg` at the top lowers it to 97.73%.
 VA(0x005d5f30, 0x8DA)
 DC_ADDRESS(0x1793b4, 0x54a)
 MAC_ADDRESS(0x1d35a4, 0x53c)  // arity(ret 0xc, 3 args) + anchor-callee TBuyBuildWindow ctor
@@ -6861,6 +6877,15 @@ void townManager::moveHero(town* fromTown, town* toTown)
 // That spelling is cb-flat (16017) and leaves the same residual; its 54
 // retained calls then name ??ATTextResource where the target labels the
 // folded body GetText (99.94 by name only). Left for the owner's decision.
+// Two edits each remove enough units to close this root (measured 100%):
+// town::hasBuilding as one conditional return (cb 62 -> 54), and dropping
+// the del_Spr_from_Cache call below (4 root units plus the empty body's
+// 12). The first is refuted elsewhere: that helper form lowers
+// hero::getLuck, hero::getMoraleDescription, aiEnterTown,
+// town::buildBuilding and town::giveEventReward, which all need cb 62.
+// The second removes a Dreamcast-recorded call (8256), so it is not
+// applied here; removing all 31 such calls in the image changes no other
+// function's bytes.
 VA(0x005d86f0, 0x445A)
 DC_ADDRESS(0x17b48c, 0x3c68)
 MAC_ADDRESS(0x1d6668, 0xa4e0)
@@ -7405,61 +7430,66 @@ void TCastleWindow::showText()
 
 // Complete expands the ordinary ShowText member at the shared tail.
 
-// TWO branch senses carry this row and they are worth 33.7 points
-// between them. Retail's `cmp eax,0x3f1 / jge` sends the HIGH band
-// forward, so the 0x3e9 band is the if-body and the 0x3f1 band the else;
-// and retail's `cmp eax,0x7800 / je` sends the EXIT arm forward, so the
-// empty line is the if-body and the sprintf the else. Written the two
-// natural ways round - high band first, `== EXIT_BUTTON_ID` first - the
-// same instructions land in the wrong blocks and the row sits at 64.03.
-
-// Residual (97.8%): 13 bytes in two encoder/schedule classes, neither
-// source-reachable. The dwelling read is `[ecx+eax+0x1bb]` against
-// retail's `[eax+ecx+0x1bb]` - one SIB byte, base and index transposed
-// over the same effective address (B18); a named row local, an explicit
-// `*(p + i)` and the reversed `i[p]` subscript are all byte-inert. And
-// the 0x3f1 arm parks the table value in ECX where retail takes EAX,
-// which rotates the inlined strcpy's `or ecx,-1` and `xor eax,eax` past
-// each other - the 0x3e9 arm, identical source modulo the addend, is
-// byte-exact, so this is allocator state rather than spelling: a named
-// index local, a named `const char*`, and `* 2` for `2 *` all measure
-// 97.77. (why-reg cannot be pointed at this row - given the mangled name
-// it resolves to TMageGuildWindow::SetRolloverText, the file's other row
-// of that name.)
+// DC 8777..8795 tests the two low bands with if / else if; DC 8798 then
+// switches on the code (jump table at dc 0x17f612): the eight resource
+// texts, the seven resource borders, the exit button and a default. VC6
+// turns that switch into retail's compare tree (`cmp 0x3f1 / jge`, then
+// `cmp 0x7800 / je`).
+// DC reads msg's codeY from the message each time (0x17f55c and again at
+// 0x17f5c8 after the HasBuilding call), so there is no local copy of it, and
+// line 8788 spells the dwelling lookup again inside the army-name argument.
 // DC declares message&; Complete passes the same one-word address.
 VA(0x005dcbf0, 0x25A)
 DC_ADDRESS(0x17f54c, 0x19c)
 MAC_ADDRESS(0x1e0cc8, 0x238)  // anchor-bracket + `ret 4` arity + ShowText tail
 void TCastleWindow::setRolloverText(message& msg)
 {
-    int code = msg.m_codeY;
-    if (code > 0x38 && code < 0x69) {
-        strcpy(g_text, g_castleInfo[(code - 0x39) / 8]);
-    } else if (code >= 0x11 && code <= 0x17) {
-        int dwelling = g_townManager->m_currentDwellingIdOff[code - 0x11];
+    if (msg.m_codeY > 0x38 && msg.m_codeY < 0x69) {
+        strcpy(g_text, g_castleInfo[(msg.m_codeY - 0x39) / 8]);
+    } else if (msg.m_codeY >= 0x11 && msg.m_codeY <= 0x17) {
+        int dwelling = g_townManager->m_currentDwellingIdOff[msg.m_codeY - 0x11];
         if (g_townManager->m_townToView->hasBuilding(DWELLING_0_ID + dwelling, true)) {
             sprintf(g_text, "%s %s", (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
-                    getArmyName(g_dwellingType[g_townManager->m_townToView->m_type][dwelling], 2));
+                    getArmyName(
+                        g_dwellingType[g_townManager->m_townToView->m_type]
+                                      [g_townManager->m_currentDwellingIdOff[
+                                           msg.m_codeY - 0x11]],
+                        2));
         } else {
             strcpy(g_text, "");
         }
-    } else if (code <= 0x3f7) {
-        if (code < 0x3f1) {
-            if (code >= 0x3e9 && code <= 0x3f0)
-                strcpy(g_text,
-                       g_adventureWindowHelp[
-                           g_resourceHelpIndices[code - 0x3e9]].m_text);
-            else
-                strcpy(g_text, "");
-        } else {
+    } else {
+        switch (msg.m_codeY) {
+        case RESOURCE_TEXT_ID:
+        case RESOURCE_TEXT_ID + 1:
+        case RESOURCE_TEXT_ID + 2:
+        case RESOURCE_TEXT_ID + 3:
+        case RESOURCE_TEXT_ID + 4:
+        case RESOURCE_TEXT_ID + 5:
+        case RESOURCE_TEXT_ID + 6:
+        case RESOURCE_TEXT_ID + 7:
             strcpy(g_text,
                    g_adventureWindowHelp[
-                       g_resourceHelpIndices[code - 0x3f1]].m_text);
+                       g_resourceHelpIndices[msg.m_codeY - RESOURCE_TEXT_ID]].m_text);
+            break;
+        case RESOURCE_BORDER_ID:
+        case RESOURCE_BORDER_ID + 1:
+        case RESOURCE_BORDER_ID + 2:
+        case RESOURCE_BORDER_ID + 3:
+        case RESOURCE_BORDER_ID + 4:
+        case RESOURCE_BORDER_ID + 5:
+        case RESOURCE_BORDER_ID + 6:
+            strcpy(g_text,
+                   g_adventureWindowHelp[
+                       g_resourceHelpIndices[msg.m_codeY - RESOURCE_BORDER_ID]].m_text);
+            break;
+        case EXIT_BUTTON_ID:
+            sprintf(g_text, g_castleInfo[6], g_neutralBuildingNames[m_castleType]);
+            break;
+        default:
+            strcpy(g_text, "");
+            break;
         }
-    } else if (code != EXIT_BUTTON_ID) {
-        strcpy(g_text, "");
-    } else {
-        sprintf(g_text, g_castleInfo[6], g_neutralBuildingNames[m_castleType]);
     }
 
     showText();

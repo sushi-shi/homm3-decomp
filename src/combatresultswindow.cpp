@@ -129,6 +129,11 @@ DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
 // Native bool is_siege is proved by DC public
 // ??0TCombatResultsWindow@@QAA@PBVhero@@0HH_NH@Z. The formal T_UCHAR
 // record is a lowered storage type; retail also consumes the flag as a byte.
+// The 99.86% residual is one home swap: retail keeps myHero in attacker's
+// dead parameter slot [ebp+8] (it even stores attacker back there at
+// 0x47032a) and the push_back temporary at [ebp-0x14]; this compile does
+// the reverse. Byte-flat: a non-const pointer, `!mySide`, a parenthesised
+// test. `mySide ? defender : attacker` and `mySide != 0 ? ...` give 99.73%.
 VA(0x004702d0, 0x176D)
 DC_ADDRESS(0x068364, 0xe34)
 MAC_ADDRESS(0x07df80, 0x1aec)  // CPResult.pcx + vtable/global stores

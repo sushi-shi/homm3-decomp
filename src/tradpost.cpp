@@ -1788,6 +1788,12 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // command fields. Restoring them raises Windows98.73 ->99.10 (2026-09-27).
 // Mac 0x1f6148..0x1f6164 and 0x1f6230..0x1f624c assign each resource
 // widget ID before its status mask (99.78% Windows). All 54 named calls agree.
+// The one differing statement is the sell arm's g_currentPlayer->m_resources[i]:
+// both builds walk g_resourceValueWidgetY with one pointer p and keep
+// delta = 0x9c - &g_resourceValueWidgetY in a frame slot, but retail adds
+// (delta + p) and then indexes by the player pointer, ours adds
+// (delta + player) and indexes by p. Byte-flat: post-increment, a long
+// counter, and a function-scope counter.
 // Earlier word-order controls were flat; volatile scratch aliases remain unsupported.
 // DC 1174..1177 and 1223..1226 select each m_codeX with if/else (score-neutral).
 // DC line 1208 calls the ordinary private ComputeTradeRatios
@@ -3007,19 +3013,24 @@ void TSellCreatureWindow::setupNewTrade()
 
 // E:\gamedcs\tradpost.cpp:2327
 // The shared message constructor owns the zero fields.
+// DC names the local `msg`, tests the loop at 2334 and increments on its own
+// body line 2339: a while loop over a counter that is zero before the
+// backpack count is read (DC 0x18b424, retail 0x5ee17a ahead of the call).
 DC_ADDRESS(0x18b414, 0x76)
 MAC_ADDRESS(0x1f892c, 0xf4)
 void TSellArtifactWindow::updateMarketBackpack()
 {
+    int k = 0;
     long numInBackpack = g_marketHero->getNumberInBackpack(true);
-    message icon;
-    icon.m_id = MESSAGE_WIDGET;
-    icon.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-    for (int k = 0; k < 5 && k < numInBackpack; ++k) {
-        icon.m_codeY = k + 0x66;
-        icon.m_extra = g_marketHero->getBackpack(
+    message msg;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+    while (k < 5 && k < numInBackpack) {
+        msg.m_codeY = k + 0x66;
+        msg.m_extra = g_marketHero->getBackpack(
             ((g_backpackStart & 0xff) + k) % numInBackpack).m_artifactId;
-        broadcastMessage(icon);
+        broadcastMessage(msg);
+        k++;
     }
 }
 
@@ -3531,7 +3542,7 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
 // getNumberInBackpack (DC 3034 has no slot/count locals). That caller cb (826)
 // leaves the first setupNewTrade's nested budget below computeTradeRatios'
 // cb 162, so retail's resource arm calls it while the artifact arm expands it.
-// The residual is MESSAGE_WIDGET held in esi (msg then moves to edi).
+// DC 2957..2961 and 2985..2990 nest both select arms under the changed test.
 VA(0x005edf60, 0x75f)
 DC_ADDRESS(0x18c00c, 0x36c)
 MAC_ADDRESS(0x1f98dc, 0x40c)  // anchor-vtable 0x643aac slot 9
@@ -3553,12 +3564,11 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
             case MARKET_BUY_GOLD_ID: {
                 int destination = msg.m_codeY - MARKET_BUY_WOOD_ID;
-                if (destination == g_leftResource)
-                    break;
-                g_leftResource = destination;
-                updateFlag = 1;
-                if (g_selectedArtifact != -1) {
-                    setupNewTrade();
+                if (destination != g_leftResource) {
+                    g_leftResource = destination;
+                    updateFlag = 1;
+                    if (g_selectedArtifact != -1)
+                        setupNewTrade();
                 }
                 break;
             }
@@ -3573,12 +3583,12 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_ARTIFACT_SLOT_19_ID: case MARKET_ARTIFACT_SLOT_20_ID:
             case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID: {
                 int artifactSlot = msg.m_codeY - MARKET_ARTIFACT_SLOT_00_ID;
-                if (artifactSlot == g_selectedArtifact)
-                    break;
-                g_selectedArtifact = artifactSlot;
-                updateFlag = 1;
-                if (g_leftResource != -1)
-                    setupNewTrade();
+                if (artifactSlot != g_selectedArtifact) {
+                    g_selectedArtifact = artifactSlot;
+                    updateFlag = 1;
+                    if (g_leftResource != -1)
+                        setupNewTrade();
+                }
                 break;
             }
 

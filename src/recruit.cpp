@@ -713,7 +713,7 @@ inline void recruitUnit::setRolloverText(int codeY)
 }
 
 // Mac 0x14fb24 is retained at both timeout/remote-abort call sites
-// (0x14fb94 and 0x14fc10). Ordinary completion only changes id/codeX.
+// (0x14fb94 and 0x14fc10).
 DC_ADDRESS(0x11a2f4, 0x18)
 MAC_ADDRESS(0x14fb24, 0x30)
 int exitRecruitUnit(message& msg)
@@ -725,46 +725,23 @@ int exitRecruitUnit(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-int finishRecruitUnit(message& msg)
-{
-    msg.m_id = MESSAGE_EXECUTIVE;
-    msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
-    return MESSAGE_DISPATCH_FORWARD;
-}
-
 // E:\gamedcs\recruit.cpp:704
 // The message command map is fixed by the retail switch tables: 0x20e is the
 // typed quantity, 0x214 the maximum button, 0x21a..0x21d the four creature
 // borders, and 0x7801/0x7802 the cancel/accept controls. Right-select is
 // carried independently in qualifier bit 9 and opens a quick army view.
-// Residual (99.11%): retail and this reconstruction have the same 119
-// executable blocks through the common epilogue; 117 are instruction-count
-// exact. The head delta is C1/C2 scheduling: retail reloads glTimers[0]
-// after selecting max(100, elapsed), while our CL retains the subtraction
-// load in ecx and consequently rotates the four mon_type loads. Compound,
-// explicit-assignment, reversed-addend, and split elapsed spellings compile
-// identically. `homm3 vc6 why-reg --model` classifies the remaining
-// caller-saved divergence as front-end handle state after its only proposed
-// naming edit is copy-propagated. The other byte delta is exception-state
-// numbering (retail's four view windows are states 0..3 and the temporary
-// format_string is 4; ours numbers the temporary first), plus the resulting
-// switch-table tail bytes. Reordering the cases to force those state numbers
-// regresses the body to 87.17%, so the semantic source order stays intact.
-// A target-local 240-trial follow-up on 2026-09-07 crossed the twelve
-// non-include Gruntz state families; every candidate remained at 99.0924%.
-// Those sampled states did not recover the 99.1111% HIST island; no
-// synthetic declaration or unsupported local is kept.
-// Current 99.95% build has 119/119 exact CFG blocks. Retail reuses one
-// TViewArmyWindow stack slot for the first three arms and gives the fourth a
-// second slot; VC6 currently reuses one for all four. DC and the bounded Mac
-// counterpart each retain four distinct shadowed locals, so this does not
-// justify a synthetic Windows-only object or scope.
-// The timeout and remote-abort checks share one abortDialog flag and one
-// exitRecruitUnit call. DC 707/723 and Mac 0x14fb94/0x14fc10 show two helper
-// calls, but retail Windows jumps from the timeout test forward into the
-// single tail after the network check; two `return exitRecruitUnit(msg)`
-// sites leave VC6 with two tails (95.74%), the shared flag 99.89% (the
-// explicit four stores instead of the helper call are byte-identical).
+// DC 705..723 and Mac 0x14fb94/0x14fc10 return through exitRecruitUnit at
+// the timeout and at the remote abort; VC6 merges the two expansions into
+// the tail after the network check.
+// DC local `exitFlag` (int, stack-homed; DC 752, 1045, 1058) and Mac r23
+// (0x14fd30, 0x1502ac, 0x1502d4, 0x150360, 0x150618, 0x150670) are the
+// finish flag: three arms set it, the full-backpack arm clears it again, and
+// one test after the widget-command switch ends the dialog. VC6 threads the
+// three constant stores straight into that block. The right-click bit is a
+// separate value (DC r13 from the braced if/else at 754..761, Mac r24).
+// Mac reloads m_numberToBuy for every slider update and for the cancel
+// arm's accept-button state, and returns from the unchanged-hover test
+// (DC 1069/1070, Mac 0x1506a8).
 // The admitted Mac Main pair is currently unavailable: CodeWarrior emits an
 // anonymous 16-byte zero template for DC's const mon_type[4] array that Mac
 // retail never loads; Main also expands setRolloverText in the candidate while
@@ -774,22 +751,21 @@ DC_ADDRESS(0x11a30c, 0x970)
 MAC_ADDRESS(0x14fb54, 0xb8c)  // anchor-callee + switch-table bracket
 int recruitUnit::main(message& msg)
 {
-    // Infer a bool predicate from the native bool IsExpired contract;
-    // keep the shared Windows timeout/network abort tail unchanged.
-    bool abortDialog = g_turnDuration.isExpired();
+    if (g_turnDuration.isExpired()) {
+        return exitRecruitUnit(msg);
+    }
 
-    if (!abortDialog && g_remoteOn) {
+    if (g_remoteOn) {
         bool msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
             handler->checkHandleNet(1, &msgReceived);
-            if (msgReceived && handler->getAbortPopupMsg())
-                abortDialog = true;
+            if (msgReceived) {
+                if (handler->getAbortPopupMsg())
+                    return exitRecruitUnit(msg);
+            }
         }
     }
-
-    if (abortDialog)
-        return exitRecruitUnit(msg);
 
     long elapsed = GameTime::get()
                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
@@ -814,7 +790,13 @@ int recruitUnit::main(message& msg)
                                     WINDOW_ALL_WIDGETS_HIGH);
     }
 
-    int exitFlag = (msg.m_qualifier & 0x200) != 0;
+    int exitFlag = 0;
+    int rightClick;
+    if (msg.m_qualifier & 0x200) {
+        rightClick = 1;
+    } else {
+        rightClick = 0;
+    }
     switch (msg.m_id) {
     case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
@@ -822,7 +804,7 @@ int recruitUnit::main(message& msg)
         case widget::WIDGET_RIGHT_SELECT:
             switch (msg.m_codeY) {
             case RECRUIT_QUANTITY_ID:
-                if (exitFlag)
+                if (rightClick)
                     break;
                 msg.m_codeX = widget::WIDGET_GET_TEXT;
                 g_recruitWindow->broadcastMessage(msg);
@@ -837,17 +819,17 @@ int recruitUnit::main(message& msg)
                 break;
 
             case RECRUIT_CREATURE_0_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_0 && !exitFlag) {
+                if (m_selectedPosition != RECRUIT_SLOT_0 && !rightClick) {
                     m_selectedPosition = RECRUIT_SLOT_0;
                     m_monsterType = m_monType1;
                     m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
+                    g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(true, 0);
                 } else {
                     TViewArmyWindow view_army_window(
-                        m_monType1, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
+                        m_monType1, 0x77, 0x20, !rightClick);
+                    if (rightClick)
                         view_army_window.quickView();
                     else
                         view_army_window.doModal();
@@ -855,17 +837,17 @@ int recruitUnit::main(message& msg)
                 break;
 
             case RECRUIT_CREATURE_1_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_1 && !exitFlag) {
+                if (m_selectedPosition != RECRUIT_SLOT_1 && !rightClick) {
                     m_selectedPosition = RECRUIT_SLOT_1;
                     m_monsterType = m_monType2;
                     m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
+                    g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(true, 1);
                 } else {
                     TViewArmyWindow view_army_window(
-                        m_monType2, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
+                        m_monType2, 0x77, 0x20, !rightClick);
+                    if (rightClick)
                         view_army_window.quickView();
                     else
                         view_army_window.doModal();
@@ -873,17 +855,17 @@ int recruitUnit::main(message& msg)
                 break;
 
             case RECRUIT_CREATURE_2_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_2 && !exitFlag) {
+                if (m_selectedPosition != RECRUIT_SLOT_2 && !rightClick) {
                     m_selectedPosition = RECRUIT_SLOT_2;
                     m_monsterType = m_monType3;
                     m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
+                    g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(true, 2);
                 } else {
                     TViewArmyWindow view_army_window(
-                        m_monType3, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
+                        m_monType3, 0x77, 0x20, !rightClick);
+                    if (rightClick)
                         view_army_window.quickView();
                     else
                         view_army_window.doModal();
@@ -891,17 +873,17 @@ int recruitUnit::main(message& msg)
                 break;
 
             case RECRUIT_CREATURE_3_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_3 && !exitFlag) {
+                if (m_selectedPosition != RECRUIT_SLOT_3 && !rightClick) {
                     m_selectedPosition = RECRUIT_SLOT_3;
                     m_monsterType = m_monType4;
                     m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
+                    g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
                     g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
                     update(true, 3);
                 } else {
                     TViewArmyWindow view_army_window(
-                        m_monType4, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
+                        m_monType4, 0x77, 0x20, !rightClick);
+                    if (rightClick)
                         view_army_window.quickView();
                     else
                         view_army_window.doModal();
@@ -915,7 +897,7 @@ int recruitUnit::main(message& msg)
         case widget::WIDGET_DESELECT:
             switch (msg.m_codeY) {
             case RECRUIT_MAXIMUM_ID:
-                if (exitFlag)
+                if (rightClick)
                     break;
                 m_numberToBuy = m_maxAvail;
                 g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
@@ -926,10 +908,12 @@ int recruitUnit::main(message& msg)
                 break;
 
             case RECRUIT_ACCEPT_ID:
-                if (exitFlag)
+                if (rightClick)
                     break;
-                if (m_numberToBuy == 0 && m_monType2 == CREATURE_NONE)
-                    return finishRecruitUnit(msg);
+                if (m_numberToBuy == 0 && m_monType2 == CREATURE_NONE) {
+                    exitFlag = 1;
+                    break;
+                }
 
                 if (akCreatureTypeTraits[m_monsterType].attributes
                     & g_ctaSiegeWeapon) {
@@ -937,6 +921,7 @@ int recruitUnit::main(message& msg)
                         > 64) {
                         normalDialog((*g_generalText)[GENERAL_TEXT_RECRUIT_BACKPACK_FULL],
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                        exitFlag = 0;
                         break;
                     }
 
@@ -972,37 +957,44 @@ int recruitUnit::main(message& msg)
                         m_resourcesPerTroop * m_numberToBuy;
                 *m_numAvail -= static_cast<short>(m_numberToBuy);
                 m_numberToBuy = 0;
-                g_recruitWindow->m_quantitySlider->setState(0);
+                g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
                 g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
 
                 if (m_monType2 == CREATURE_NONE
-                    || m_type == RECRUIT_SOURCE_TOWN)
-                    return finishRecruitUnit(msg);
-
-                update(true, m_selectedPosition);
-                g_advManager->updBottomView(1, 1, 1);
-                g_recruitWindow->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
-                                            WINDOW_ALL_WIDGETS_HIGH);
+                    || m_type == RECRUIT_SOURCE_TOWN) {
+                    exitFlag = 1;
+                } else {
+                    update(true, m_selectedPosition);
+                    g_advManager->updBottomView(1, 1, 1);
+                    g_recruitWindow->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
+                                                WINDOW_ALL_WIDGETS_HIGH);
+                }
                 break;
 
             case RECRUIT_CANCEL_ID:
-                if (exitFlag)
+                if (rightClick)
                     break;
                 m_numberToBuy = 0;
-                g_recruitWindow->m_acceptButton->enable(0);
-                return finishRecruitUnit(msg);
+                g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
+                exitFlag = 1;
+                break;
             }
             break;
 
+        }
+        if (exitFlag == 1) {
+            msg.m_id = MESSAGE_EXECUTIVE;
+            msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
+            return MESSAGE_DISPATCH_FORWARD;
         }
         break;
 
     case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg.m_codeY;
-            setRolloverText(msg.m_codeY);
-        }
+        if (msg.m_codeY == g_windowManager->m_lastHover)
+            return MESSAGE_DISPATCH_CONSUME;
+        g_windowManager->m_lastHover = msg.m_codeY;
+        setRolloverText(msg.m_codeY);
         break;
     }
 
