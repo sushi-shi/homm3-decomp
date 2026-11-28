@@ -2531,9 +2531,8 @@ DC_ADDRESS(0x00c13c, 0x2c40)
 MAC_ADDRESS(0x00c1e8, 0x1eb4)  // anchor-global
 void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
 {
-    if (m_advWindow->m_chatEdit->m_hasFocus) {
+    if (m_advWindow->m_chatEdit->m_hasFocus)
         return;
-    }
 
     int visited;
     playerData* player;
@@ -2565,12 +2564,11 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case EVENT:
     case HOLY_GRAIL: {
         TAdventureObjectType special = testCell->getSpecialTerrain();
-        if (special != NOTHING) {
+        if (special != NOTHING)
             strcpy(g_text, g_quickViewText[special]);
-        } else {
+        else
             strcpy(g_text, DATA_COMPGEN(
                 0x00691210, rolloverEmptyText, ""));
-        }
         break;
     }
     case ARENA: {
@@ -6083,12 +6081,11 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 std::string result;
                 TAdventureObjectType special =
                     testCell->getSpecialTerrain();
-                if (special == NOTHING) {
+                if (special == NOTHING)
                     result = g_terrainNames[testCell->m_groundSet];
-                } else {
+                else
                     result =
                         g_quickViewText[special];
-                }
 
                 if (testCell->isDiggable()) {
                     result += '\n';
@@ -7020,12 +7017,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
 
     x = cellX * 32;
     y = cellY * 32;
-    if (x < 8) {
+    if (x < 8)
         x = 8;
-    }
-    if (y < 8) {
+    if (y < 8)
         y = 8;
-    }
     if (x + width > 600) {
         x = 600 - width;
     }
