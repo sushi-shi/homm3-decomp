@@ -3065,10 +3065,6 @@ void combatManager::armageddon(int level, int power)
 // 12-state cast/declaration-lifetime family emits three objects but leaves
 // this target flat; compound progress update and direct angle-field reuse
 // also fail to improve it. The register model finds no binding divergence.
-// `m_progress = (progress = float(numerator)) / float(m_totalLength)` pins the
-// numerator's load between the two /Op conversions and reaches 100%; it is no
-// developer spelling and is not kept (docs/vc6/regalloc.md, "x87 rounding
-// temporaries").
 VA(0x005a5260, 0x1DC)
 DC_ADDRESS(0x1542b4, 0x3ca)
 MAC_ADDRESS(0x195d20, 0x348)  // order-map+arity
@@ -3086,7 +3082,8 @@ void combatManager::resetBoltAngle(SBolt* bolt)
     if (remaining > bolt->m_totalLength) {
         bolt->m_progress = 0;
     } else {
-        bolt->m_progress = static_cast<float>(bolt->m_totalLength - remaining)
+        float progress;
+        bolt->m_progress = (progress = static_cast<float>(bolt->m_totalLength - remaining))
             / static_cast<float>(bolt->m_totalLength);
     }
 
