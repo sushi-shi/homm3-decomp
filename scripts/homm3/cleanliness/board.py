@@ -64,7 +64,13 @@ The rows (ratcheted unless noted; floors start at the tree's current counts):
                       callers; retained library definitions need review.
   cpp extern decls    a declaration re-spelled in a consumer .cpp instead
                       of living in its OWNER's header. Fix: declare once
-                      in the owner header and #include it.
+                      in the owner header and #include it. Not counted: an
+                      object the same .cpp defines at file scope with an
+                      initializer. That file is the owner, and the
+                      declaration is its forward reference to a table
+                      defined after the objects it points at (retail's
+                      g_rmgTerrainRules, whose element type lives in
+                      rmg_terrain.cpp's anonymous namespace).
   .cpp-local views    an unproven/duplicate class definition in a .cpp.
                       A unique class whose CodeView methods originate only
                       in that .cpp is a legitimate source-local class; so
@@ -235,12 +241,37 @@ _VOLATILE = re.compile(r"\bvolatile\b")
 # _strip replaces the language-linkage string with spaces, leaving
 # `extern   {`; declarations inside that block belong to its linkage scope.
 _CPP_EXTERN = re.compile(r'^[ \t]*extern\b(?![ \t]*\{)', re.MULTILINE)
+# The object an extern declaration names: the last identifier before its
+# optional array bounds and the terminating semicolon. Functions end in `)`
+# and never match, so a re-declared prototype is always counted.
+_CPP_EXTERN_OBJECT = re.compile(r"(\w+)\s*(?:\[[^\]]*\]\s*)*;")
 # struct/class DEFINITION (name then body brace, optional base clause) -
 # not forward decls, not elaborated uses (`class TBar* p;`).
 _CPP_LOCAL_DEF = re.compile(
     r"\b(?:struct|class)\s+(?P<name>\w+(?:::\w+)*)\b(?:\s+final)?\s*(?::[^;{]*)?\{")
 _CPP_LOCAL_ENUM = re.compile(
     r"\b(?:typedef\s+)?enum\b\s*\w*\s*\{")
+
+def _cpp_extern_sites(code: str, _ctx) -> list:
+    """An owner's forward declaration is not a consumer re-declaration.
+
+    A .cpp that declares an object `extern` and then defines it at file
+    scope with an initializer (`name[...] = ...`) owns that object: the
+    declaration only lets earlier functions name a table whose definition
+    follows its initializers' operands. No header can own it when its type
+    is private to the file. Everything else still counts.
+    """
+    out = []
+    for match in _CPP_EXTERN.finditer(code):
+        end = code.find(";", match.end())
+        declared = _CPP_EXTERN_OBJECT.search(code, match.end(), end + 1) if end >= 0 else None
+        if declared and re.search(
+                r"^(?!extern\b)\w[^;{}()=\n]*\b" + re.escape(declared.group(1))
+                + r"\s*(?:\[[^\]]*\]\s*)*=", code, re.MULTILINE):
+            continue
+        out.append(match.start())
+    return out
+
 
 def _cpp_local_view_sites(code: str, ctx) -> list:
     """A source-proven local class is not a per-TU reconstruction view."""
@@ -643,9 +674,10 @@ METRICS = (
     ("std internal references", _regex_sites(_STD_INTERNAL), False,
      "restore the public/source helper at call sites; retain internal library "
      "definitions only where supported by evidence"),
-    ("cpp extern decls", _regex_sites(_CPP_EXTERN), True,
+    ("cpp extern decls", _cpp_extern_sites, True,
      "declare it ONCE in the owner's header and #include that - a "
-     "consumer .cpp never re-declares"),
+     "consumer .cpp never re-declares (a forward declaration of an object "
+     "the same .cpp defines is the owner's, and is not counted)"),
     (".cpp-local views", _cpp_local_view_sites, True,
      "restore the unique CodeView source owner; unproven or duplicate .cpp views remain forbidden"),
     (".cpp-local enums", _cpp_local_enum_sites, True,
@@ -950,11 +982,16 @@ _SAMPLES = {
          "/* std::_cpp_min(a, b) */")),
     "cpp extern decls": (
         ("extern int g_heroCount;",
-         '  extern "C" void mm_init();'),
+         '  extern "C" void mm_init();',
+         "extern TRule* const g_rules[];\nTRule* rule = g_rules[terrain];",
+         "extern TRule* const g_rules[];\nvoid f()\n{\n    g_rules[0] = 0;\n}",
+         "extern void draw();\nvoid draw()\n{\n}"),
         ("int externalize();",
          "// extern lives in the owner header",
          "internal_extern_helper();",
-         'extern "C" {\nint errno;\n}')),
+         'extern "C" {\nint errno;\n}',
+         "extern TRule* const g_rules[];\nTRule* const g_rules[2] = {\n"
+         "    &g_first, &g_second\n};")),
     ".cpp-local views": (
         ("struct TFoo { int a; };",
          "class advPopup : public TWindow {"),
