@@ -6710,7 +6710,7 @@ bool TSingleSelectionWindow::onReqHeaderConfirmMsg(CNetMsg* netMsg)
 // sites.
 DC_ADDRESS(0x140670, 0x7c)
 MAC_ADDRESS(0x18128c, 0x50)
-static inline void updateTurnDuration()
+inline void updateTurnDuration()
 {
     g_turnDuration.setDuration(
         g_turnDurationMinutes[g_game->m_setup.m_turnDuration] * 60000);

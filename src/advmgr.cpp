@@ -2138,9 +2138,12 @@ void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
         eventCell = doAdvCommand(triggerPoint);
 }
 
+// Dreamcast records set_town_help, set_hero_help and set_pyramid_help as
+// external (S_GPROC32) advmgr.obj procedures. Retail expands each at its
+// call sites and /OPT:REF drops the unreferenced bodies.
 DC_ADDRESS(0x00b208, 0x50)
 MAC_ADDRESS(0x00ae24, 0x6c)
-static void setTownHelp(char* buffer, const NewmapCell* cell)
+void setTownHelp(char* buffer, const NewmapCell* cell)
 {
     const town* mapTown = g_game->getTown(cell->m_extraInfo);
     const char* townTypeName = townManager::getTownTypeName(cell->m_objectIndex);
@@ -2152,7 +2155,7 @@ static void setTownHelp(char* buffer, const NewmapCell* cell)
 
 DC_ADDRESS(0x00b258, 0x60)
 MAC_ADDRESS(0x00ae90, 0x98)
-static void setHeroHelp(char* buffer, const NewmapCell* cell)
+void setHeroHelp(char* buffer, const NewmapCell* cell)
 {
     hero* mapHero = g_game->getHero(cell->m_extraInfo);
     sprintf(buffer,
@@ -2162,7 +2165,7 @@ static void setHeroHelp(char* buffer, const NewmapCell* cell)
 
 DC_ADDRESS(0x00b2b8, 0x104)
 MAC_ADDRESS(0x00af28, 0xf0)
-static void setPyramidHelp(
+void setPyramidHelp(
     char* buffer, const NewmapCell* cell, const hero* currentHero,
     const char* separator)
 {

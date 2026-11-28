@@ -164,7 +164,7 @@ void checkDoMain(int forceMouseCheck, int mouseOnly)
 // its sole call site.
 DC_ADDRESS(0x10d510, 0x4)
 MAC_ADDRESS(0x13d680, 0x4)
-static void showStatus()
+void showStatus()
 {
 }
 

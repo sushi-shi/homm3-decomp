@@ -474,12 +474,12 @@ void recruitUnit::close()
 // transcribed exactly as the bytes read them.
 // E:\gamedcs\recruit.cpp:473 - no out-of-line retail body:
 // recruitUnit::Update is its only call site, so /Ob2
-// inlined it there as the jump table at 0x5504d4 and the
-// single-call-site STATIC rule dropped the standalone copy. `static`
-// reproduces that absence.
+// inlined it there as the jump table at 0x5504d4 and /OPT:REF dropped
+// the unreferenced standalone copy. Dreamcast records an external
+// (S_GPROC32) recruit.obj procedure.
 DC_ADDRESS(0x119d64, 0x32)
 MAC_ADDRESS(0x14f3cc, 0x50)
-static TArtifact siegeMonsterToSiegeArtifact(TCreatureType siegeMon)
+TArtifact siegeMonsterToSiegeArtifact(TCreatureType siegeMon)
 {
     switch (siegeMon) {
     case CREATURE_CATAPULT:

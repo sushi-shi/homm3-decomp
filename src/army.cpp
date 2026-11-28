@@ -777,15 +777,16 @@ double army::computeKarma() const
 // Append `arg` to `array` unless it is already there, answering whether
 // it went in.
 
-// STATIC: it has no retail out-of-line copy; both call sites in add_aura
-// inline it.
+// It has no retail out-of-line copy: every call site expands it and
+// /OPT:REF drops the unreferenced body. Dreamcast records an external
+// (S_GPROC32) army.obj procedure.
 
 // The membership test is std::find (DC army.obj carries its `army**`
 // instantiation).
 // E:\gamedcs\army.cpp:917
 DC_ADDRESS(0x044e14, 0xac)
 MAC_ADDRESS(0x04a7b0, 0xdc)
-static unsigned char addItem(std::vector<army*>& array, army* arg)
+unsigned char addItem(std::vector<army*>& array, army* arg)
 {
     if (std::find(array.begin(), array.end(), arg) != array.end())
         return 0;
