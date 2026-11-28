@@ -53,19 +53,19 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:start -->
 
-**GOG Complete map editor `h3maped.exe`: 99.80% matched (MAX)** — 6,094 / 6,161 functions exact (98.9%), weighted by size over 821,520 bytes of code.
+**GOG Complete map editor `h3maped.exe`: 99.81% matched (MAX)** — 6,095 / 6,161 functions exact (98.9%), weighted by size over 821,520 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           6,049 |   99.75% | last measured score                            |
-| MAX   |           6,094 |   99.80% | best result for each function's current source |
-| HIST  |           6,094 |   99.86% | all-time peak across source revisions          |
+| CUR   |           6,050 |   99.76% | last measured score                            |
+| MAX   |           6,095 |   99.81% | best result for each function's current source |
+| HIST  |           6,095 |   99.87% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   164 | 5517 / 5546 (99.5%) |    99.84% |
+| `game`       |   164 | 5518 / 5546 (99.5%) |    99.85% |
 | `rmg`        |     6 |   446 / 480 (92.9%) |    99.48% |
 | `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`      |     3 |     49 / 53 (92.5%) |    99.99% |
@@ -86,19 +86,19 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3ccmped-match-score:start -->
 
-**GOG Complete campaign editor `h3ccmped.exe`: 99.51% matched (MAX)** — 1,587 / 1,609 functions exact (98.6%), weighted by size over 265,949 bytes of code.
+**GOG Complete campaign editor `h3ccmped.exe`: 99.54% matched (MAX)** — 1,589 / 1,609 functions exact (98.8%), weighted by size over 265,949 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           1,581 |   99.16% | last measured score                            |
-| MAX   |           1,587 |   99.51% | best result for each function's current source |
-| HIST  |           1,588 |   99.56% | all-time peak across source revisions          |
+| CUR   |           1,583 |   99.19% | last measured score                            |
+| MAX   |           1,589 |   99.54% | best result for each function's current source |
+| HIST  |           1,589 |   99.57% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |    44 | 1464 / 1486 (98.5%) |    99.44% |
+| `game`       |    44 | 1466 / 1486 (98.7%) |    99.47% |
 | `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`      |     3 |    41 / 41 (100.0%) |   100.00% |
 | `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |

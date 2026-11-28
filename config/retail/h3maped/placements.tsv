@@ -2975,7 +2975,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00160dd0	0x10	data	__TI3?AVTPlaceObjFailureNoAvailableHeroesInClass@@	GameMap	external	referenced by ?_placeNewObject@_TImpl@TGameMap@@QAEI_NPAVTNonRandomHero@@ABV?$TPoint@I@@PAV?$TExtent@II@@@Z at +0x4f
 0x00160de0	0x1c	data	__CT??_R0?AVTPlaceObjFailureTooManyTownsOnMap@@@8??0TPlaceObjFailureTooManyTownsOnMap@@QAE@ABV0@@Z20	GameMap	external	referenced by __CTA4?AVTPlaceObjFailureTooManyTownsOnMap@@ at +0x4
 0x00160e00	0x14	data	__CTA4?AVTPlaceObjFailureTooManyTownsOnMap@@	GameMap	external	referenced by __TI4?AVTPlaceObjFailureTooManyTownsOnMap@@ at +0xc
-0x00160e18	0x10	data	__TI4?AVTPlaceObjFailureTooManyTownsOnMap@@	GameMap	external	referenced by ?_placeNewObject@_TImpl@TGameMap@@QAEI_NPAVTTown@@ABV?$TPoint@I@@PAV?$TExtent@II@@@Z at +0x20 (retail +0x20, by operand order)
+0x00160e18	0x10	data	__TI4?AVTPlaceObjFailureTooManyTownsOnMap@@	GameMap	external	referenced by ?_placeNewObject@_TImpl@TGameMap@@QAEI_NPAVTTown@@ABV?$TPoint@I@@PAV?$TExtent@II@@@Z at +0x20
 0x00160e28	0x1c	data	__CT??_R0?AVTPlaceObjFailureHolyGrailAlreadyPlaced@@@8??0TPlaceObjFailureHolyGrailAlreadyPlaced@@QAE@ABV0@@Z12	GameMap	external	referenced by __CTA3?AVTPlaceObjFailureHolyGrailAlreadyPlaced@@ at +0x4
 0x00160e48	0x10	data	__CTA3?AVTPlaceObjFailureHolyGrailAlreadyPlaced@@	GameMap	external	referenced by __TI3?AVTPlaceObjFailureHolyGrailAlreadyPlaced@@ at +0xc
 0x00160e58	0x10	data	__TI3?AVTPlaceObjFailureHolyGrailAlreadyPlaced@@	GameMap	external	referenced by ?_placeNewObject@_TImpl@TGameMap@@QAEI_NPAVTHolyGrail@@ABV?$TPoint@I@@PAV?$TExtent@II@@@Z at +0x1d

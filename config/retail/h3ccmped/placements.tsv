@@ -135,7 +135,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0000bbd0	0x23	func	?_Ucopy@?$vector@_NV?$allocator@_N@std@@@std@@IAEPA_NPB_N0PA_N@Z	Campaign	external	masked body (35 bytes, 0 relocations) unique at a census start
 0x0000bc00	0x8	func	?_Refcnt@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEAAEPBD@Z	Campaign	external	referenced by ??1TPlayerSlot@TGameMapHeader@@QAE@XZ at +0x46
 0x0000bc10	0xe	func	?deallocate@?$allocator@D@std@@QAEXPAXI@Z	Campaign	external	referenced by ??1TPlayerSlot@TGameMapHeader@@QAE@XZ at +0x7a
-0x0000bc20	0xe0	func	?_Xran@?$bitset@$04@std@@ABEXXZ	Campaign	external	referenced by ??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z at +0x12
+0x0000bc20	0xe0	func	?_Xran@?$bitset@$04@std@@ABEXXZ	Campaign	external	referenced by ?set@?$bitset@$04@std@@QAEAAV12@I_N@Z at +0xe
 0x0000bd00	0x27a	func	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEXPAV?$auto_ptr@VTScenarioStartingBonus@@@2@IABV32@@Z	Campaign	external	masked body (634 bytes, 12 relocations) unique at a census start
 0x0000bf80	0x524	func	?erase@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE?AViterator@12@V312@@Z	Campaign	external	masked body (1316 bytes, 38 relocations) unique at a census start
 0x0000c4b0	0x171	func	?_Copy@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IAEXABV12@@Z	Campaign	external	masked body (369 bytes, 20 relocations) unique at a census start
@@ -4013,14 +4013,14 @@ rva	size	kind	name	unit	linkage	evidence
 0x000bd120	0xd	data	??_C@_0N@OFON@CmpEdCmd?4txt?$AA@	MainFrame	external	referenced by ??0TCommandTexts@@QAE@XZ at +0x39
 0x000bd240	0x4	data	?akPlayerTraits@@3PBUTPlayerTraits@@B	Player	external	referenced by 0x0002ed80 at +0x2d
 0x000bd244	0xd	data	??_C@_0N@EJOF@plcolors?4txt?$AA@	Player	external	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x8e
-0x000bd254	0x4	data	?akHeroPrimarySkillTraits@@3PAUTPrimarySkillTraits@THero@@A	PrimarySkillTraits	external	referenced by 0x0002e6d0 at +0x98
+0x000bd254	0x4	data	?akHeroPrimarySkillTraits@@3PAUTPrimarySkillTraits@THero@@A	PrimarySkillTraits	external	referenced by 0x0002e6d0 at +0x48
 0x000bd258	0xd	data	??_C@_0N@GCMA@priskill?4txt?$AA@	PrimarySkillTraits	external	referenced by ?InitializePrimarySkillTraitsTable@@YAXXZ at +0x4f
 0x000bd300	0x2	data	??_C@_01BJG@?6?$AA@	ScenarioPropsGeneralPage	external	referenced by ?_showPrologue@TScenarioPropsProloguePageBase@@AAEXPBVTScenarioPrologue@@@Z at +0x120
 0x000bd304	0x3	data	??_C@_02PIMC@?$AN?6?$AA@	ScenarioPropsGeneralPage	external	referenced by ?_showPrologue@TScenarioPropsProloguePageBase@@AAEXPBVTScenarioPrologue@@@Z at +0x11b
 0x000bd4d8	0x6	data	??_C@_05DFPL@?$CFd?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	referenced by 0x0002e4d0 at +0x69
 0x000bd4e0	0x6	data	??_C@_05JKGE@?$CFs?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	referenced by 0x0002e630 at +0x42
-0x000bd4e8	0x9	data	??_C@_08CELG@?0?5?$CL?$CFd?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	string literal referenced by 0x0002e6d0
-0x000bd4f4	0x7	data	??_C@_06JCBO@?$CL?$CFd?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	string literal referenced by 0x0002e6d0
+0x000bd4e8	0x9	data	??_C@_08CELG@?0?5?$CL?$CFd?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	referenced by 0x0002e6d0 at +0xa6
+0x000bd4f4	0x7	data	??_C@_06JCBO@?$CL?$CFd?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	referenced by 0x0002e6d0 at +0x56
 0x000bd694	0xb	data	??_C@_0L@GIMI@?$CFs?5?9?5?$CFs?7?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	referenced by 0x0002ffb0 at +0x78
 0x000bd724	0x6	data	??_C@_05BKBC@?$CFs?7?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	referenced by 0x00030cc0 at +0x85
 0x000bd760	0x4	data	?akHeroSkillMasteryTraits@@3PAUTSkillMasteryTraits@THero@@A	SkillMasteryTraits	external	referenced by 0x00020360 at +0x9d
