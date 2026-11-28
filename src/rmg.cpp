@@ -5663,11 +5663,23 @@ VA_COMPGEN_AT(h3maped, 0x004ae1eb, 0x12, VECTOR_SIZE, Short)
 // do-while edge walk, halfEdge accessors, local template pointers, a copied
 // reverse connection.
 // Residual: the remaining game call difference is inside the fourth
-// connection insertion (its _Destroy and one _Ucopy stay calls; the inline
-// solver fits root cb 1100..1155 against our 995, or a getLevelPosition cb
-// at most 40, whose direct return costs fillIslandInterior and others). The
-// editor frame stays four bytes short of retail's separate index + 1 home.
-// Preserve the canonical helpers.
+// connection insertion (its _Destroy and one _Ucopy stay calls). Replay: the
+// last push_back needs 1439..1550 left and has 1230; the charged sites
+// before it are four m_zones.size() (42), six getLevelPosition() (48), three
+// inserts (64) and initializeDistances (112). Retail does make all six
+// by-value position copies (0x53db1e..0x53db33, 0x53db68..0x53db89), so
+// either they are free here or the root is 105..160 larger. With a
+// direct-return getter (cost 32) this body compiles to retail's 504
+// instructions, calls and blocks, leaving only six scalar frame homes
+// permuted (99.91), but positionZone's second append then expands its
+// insert in both images (it needs 76 charged before it, and Mac 0x23cacc..
+// 0x23cb1c stores the coordinates straight into the zone, so no constructor
+// supplies that), as do fillIslandInterior and four later connection
+// functions. One getter cannot cost 48 there and nothing here; no second
+// copy operation is evidenced. The && and field spellings of the clip test
+// are byte-equal apart from that budget (90.71).
+// The editor frame stays four bytes short of retail's separate index + 1
+// home. Preserve the canonical helpers.
 VA(0x0053DAD0, 0x57F)
 MAC_ADDRESS(0x23f518, 0x40c) // anchor-callee buildZoneBoundaries; Complete-only, ret 8
 VA_AT(h3maped, 0x004a3710, 0x2f3)
