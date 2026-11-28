@@ -481,7 +481,7 @@ void combatManager::initiateSpell(ESpellId spellToCast, int creatureSpell)
         break;
     }
 
-    g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+    g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
 }
 
 // Complete factors the live rollover update out of InitiateSpell and the
@@ -524,7 +524,7 @@ static int updateSpellTarget(long hex)
             g_combatManager->checkChangeHighlighter(hex);
     } else {
         result = -1;
-        g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
+        g_mouseManager->setPointer(SELECT_NULL, mouseManager::COMBAT_SET);
         g_combatManager->displayFailureReason(
             static_cast<ESpellId>(spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
             g_generalText->GetText(GENERAL_TEXT_SELECT_SPELL_TARGET), hex);
@@ -1805,7 +1805,7 @@ static int handleSacrificeBeneficiary(message& msg)
             g_combatManager->checkChangeHighlighter(hex);
         } else {
             g_sacrificeBeneficiaryValidTarget = 0;
-            g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(SELECT_NULL, mouseManager::COMBAT_SET);
             g_combatManager->displayFailureReason(
                 SPELL_SACRIFICE, (*g_generalText)[GENERAL_TEXT_CHOOSE_RESURRECTION_TARGET], hex);
             g_combatManager->turnOffHighlighter(1);
@@ -1862,12 +1862,12 @@ static int handleCastSacrifice(message& msg)
                 != g_combatManager->m_cells[g_combatManager->m_nextActionGridIndex]
                        .getArmy()) {
             g_sacrificeIndexIsValid = 1;
-            g_mouseManager->setPointer(0x12, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(SELECT_SACRIFICE, mouseManager::COMBAT_SET);
             g_combatManager->spellTargetMessage(SPELL_SACRIFICE, hex, 0);
             g_combatManager->checkChangeHighlighter(hex);
         } else {
             g_sacrificeIndexIsValid = 0;
-            g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(SELECT_NULL, mouseManager::COMBAT_SET);
             g_combatManager->displayFailureReason(
                 SPELL_SACRIFICE, (*g_generalText)[GENERAL_TEXT_CHOOSE_SACRIFICE_TARGET], hex);
             g_combatManager->turnOffHighlighter(1);
@@ -2059,7 +2059,7 @@ static int handleCastWallSpell(message& msg)
             }
         } else {
             g_castWallIndexToCastOn = -1;
-            g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(SELECT_NULL, mouseManager::COMBAT_SET);
             g_combatManager->displayFailureReason(
                 static_cast<ESpellId>(spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
                 (*g_generalText)[GENERAL_TEXT_SELECT_SPELL_TARGET], hex);
@@ -2123,7 +2123,7 @@ static int handleCastTeleport(message& msg)
             g_combatManager->checkChangeHighlighter(hex);
         } else {
             g_castTeleportArmyHex = -1;
-            g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(SELECT_NULL, mouseManager::COMBAT_SET);
             g_combatManager->displayFailureReason(
                 SPELL_TELEPORT, (*g_generalText)[GENERAL_TEXT_SELECT_SPELL_TARGET], hex);
             g_combatManager->turnOffHighlighter(1);
@@ -2202,11 +2202,11 @@ static int handleGetTeleportDestination(message& msg)
         army* sourceArmy = sourceCell->getArmy();
         if (g_combatManager->isValidTeleport(sourceArmy, hex)) {
             g_teleportDestinationHex = hex;
-            g_mouseManager->setPointer(0x13, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(SELECT_TELEPORT, mouseManager::COMBAT_SET);
             g_combatManager->spellTargetMessage(SPELL_TELEPORT, hex, 1);
         } else {
             g_teleportDestinationHex = -1;
-            g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(SELECT_NULL, mouseManager::COMBAT_SET);
             g_combatManager->m_combatWindow->combatMessage(
                 (*g_generalText)[GENERAL_TEXT_INVALID_TELEPORT_DESTINATION], 0, 0);
         }

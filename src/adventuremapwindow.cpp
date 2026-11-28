@@ -848,7 +848,7 @@ bool TAdventureMapWindow::processHover(int hx, int hy)
         g_lastAdventureHover = hoverID;
 
         if (hoverID == -1) {
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         } else if (hoverID <= HERO_LOCATOR_4_ID) {
             if (hoverID >= HERO_LOCATOR_0_ID)
                 goto hero_rollover;

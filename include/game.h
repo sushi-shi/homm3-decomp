@@ -1637,10 +1637,10 @@ int getTeam(int playerNum) const
     DC_ADDRESS(0x09ca1c, 0x68)
     void setInfoFlag(enum GlobalInfoFlags flag, const int playerNum)
     {
-        if (playerNum < 0 || playerNum >= 8)
+        if (playerNum < 0 || playerNum >= NUM_PLAYERS)
             return;
         int team = getTeam(playerNum);
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < NUM_PLAYERS; i++) {
             if (m_mapHeader.m_teamInfo[i] == team)
                 m_globalInfoFlags[flag] |= 1 << i;
         }
@@ -1652,7 +1652,7 @@ int getTeam(int playerNum) const
     DC_ADDRESS(0x01fefc, 0x44)
     bool getInfoFlag(enum GlobalInfoFlags flag, const int playerNum) const
     {
-        if (playerNum < 0 || playerNum >= 8)
+        if (playerNum < 0 || playerNum >= NUM_PLAYERS)
             return 0;
         return (m_globalInfoFlags[flag] & (1 << playerNum)) != 0;
     }

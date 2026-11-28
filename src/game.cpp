@@ -1703,7 +1703,7 @@ int getNumObelisks(int whichPlayer)
 {
     int numFound = 0;
 
-    for (int i = 0; i < 48; i++) {
+    for (int i = 0; i < g_obeliskCount; i++) {
         if (g_game->m_obeliskFlags[i] & (1 << whichPlayer))
             numFound++;
     }
@@ -4814,7 +4814,7 @@ void game::randomizeEvents()
 
                 case OBELISK:
                     // DC 5410 stores the obelisk index; 5411 advances it.
-                    if (g_game->m_numObelisks < 48) {
+                    if (g_game->m_numObelisks < g_obeliskCount) {
                         tempCell->m_extraInfo = g_game->m_numObelisks;
                         g_game->m_numObelisks++;
                     }

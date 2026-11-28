@@ -29,7 +29,7 @@ static int mainMenuHandler(message& msg);
 #include "winmgr.h"
 
 // Retail scalar state; startup initial values come from the pinned image.
-DATA(0x0069957c) int g_cdDriveNumber;
+DATA(0x0069957c) int g_cdRomErr;
 
 // Set after the one-time missing-CD notice has been shown. The constructor
 // uses it only as the persistent suppression latch; the disk-space check has
@@ -166,9 +166,9 @@ static int mainMenuHandler(message& msg)
 
         g_mainMenu->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                WINDOW_ALL_WIDGETS_HIGH);
-        if (g_cdDriveNumber == CD_DRIVE_NUMBER_5 ||
-            g_cdDriveNumber == CD_DRIVE_NUMBER_6) {
-            const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
+        if (g_cdRomErr == CD_ROM_RESTORATION_OF_ERATHIA_DISC ||
+            g_cdRomErr == CD_ROM_ARMAGEDDONS_BLADE_DISC) {
+            const char* drive = g_cdRomErr == CD_ROM_RESTORATION_OF_ERATHIA_DISC
                 ? (*g_generalText)[GENERAL_TEXT_RESTORATION_OF_ERATHIA]
                 : (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
             normalDialog(formatString(

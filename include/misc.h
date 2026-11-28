@@ -20,18 +20,28 @@ void writePrefs();                  // 0x50c1b0
 std::string formatString(const char* format, ...);  // 0x50c600
 unsigned long getAvailableDiskSpace();            // 0x50c7a0
 
-// SetupCDDrive result domain. Retail proves all six non-default arms in
-// oldmain's inlined SetupCDRom and separately singles out 5/6 in the main
-// menu. The original enumerator spellings did not survive, so keep the names
-// deliberately numeric rather than inventing error semantics for them.
-enum ECDDriveNumber {
-    CD_DRIVE_NUMBER_1 = 1,
-    CD_DRIVE_NUMBER_2 = 2,
-    CD_DRIVE_NUMBER_3 = 3,
-    CD_DRIVE_NUMBER_4 = 4,
-    CD_DRIVE_NUMBER_5 = 5,
-    CD_DRIVE_NUMBER_6 = 6,
-    CD_DRIVE_NUMBER_NO_CD_REQUIRED = 7
+// SetupCDDrive's result, as the startup code keeps it. No Heroes III symbol
+// names the domain; Heroes II's debug symbols call the same startup global
+// iCDRomErr, and the values 1..4 keep their Heroes II meaning. The retained
+// retail body behind the patched entry (0x50c1c6..0x50c599) returns
+//   0 with the disc found,
+//   2 when two rounds of MCI "open %c: type cdaudio" probes find no disc,
+//   3 when _chdir(AppPath) fails,
+//   4 when DATA\H3BITMAP.LOD cannot be opened from that directory;
+// it never returns 1, which SetupCDRom still handles (the CD-ROM
+// unavailable notice). EarlySetup then turns 0 into 5 or 6 when the disc's
+// video archive lacks the Shadow of Death movie: 6 when it holds the
+// Armageddon's Blade movie, 5 otherwise, and the main menu names that
+// edition in its wrong-disc notice. 7 is the pinned image's patched result.
+enum ECDRomSetupResult {
+    CD_ROM_READY = 0,
+    CD_ROM_DRIVE_UNAVAILABLE = 1,
+    CD_ROM_DISC_MISSING = 2,
+    CD_ROM_GAME_DIRECTORY_MISSING = 3,
+    CD_ROM_DATA_FILES_MISSING = 4,
+    CD_ROM_RESTORATION_OF_ERATHIA_DISC = 5,
+    CD_ROM_ARMAGEDDONS_BLADE_DISC = 6,
+    CD_ROM_NOT_REQUIRED = 7
 };
 
 // Registry-path state owned by misc.cpp. AppPath's 351-byte extent is

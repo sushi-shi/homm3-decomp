@@ -443,14 +443,14 @@ int earlySetup()
     aiInitialize();
     if (!interpretCommandLine())
         return 1;
-    g_cdDriveNumber = setupCDDrive();
+    g_cdRomErr = setupCDDrive();
     if (!loadAnimHeaders())
         shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
             "Unable to initialize resources - possible disk problem."));
     if (!loadSoundHeaders())
         shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
             "Unable to initialize resources - possible disk problem."));
-    if (!g_cdDriveNumber) {
+    if (!g_cdRomErr) {
         int i;
 
         i = 0;
@@ -459,13 +459,13 @@ int earlySetup()
                 i = 0;
                 while (1) {
                     if (i >= g_videoCount3) {
-                        g_cdDriveNumber = 5;
+                        g_cdRomErr = CD_ROM_RESTORATION_OF_ERATHIA_DISC;
                         break;
                     }
                     if (!strcmpi(g_videoHeader3[i].m_name,
                                   DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
                                       "h3abab1.smk"))) {
-                        g_cdDriveNumber = 6;
+                        g_cdRomErr = CD_ROM_ARMAGEDDONS_BLADE_DISC;
                         break;
                     }
                     i++;
@@ -706,8 +706,8 @@ static void setupCDRom()
 {
     int oldNoSound = g_noSound;
 
-    switch (g_cdDriveNumber) {
-    case CD_DRIVE_NUMBER_1:
+    switch (g_cdRomErr) {
+    case CD_ROM_DRIVE_UNAVAILABLE:
         g_mouseManager->showPointer(false);
         g_noSound = 1;
         if (g_tcpHostStatus)
@@ -716,21 +716,21 @@ static void setupCDRom()
         g_noCdRom = 1;
         break;
 
-    case CD_DRIVE_NUMBER_2:
-    case CD_DRIVE_NUMBER_5:
-    case CD_DRIVE_NUMBER_6:
+    case CD_ROM_DISC_MISSING:
+    case CD_ROM_RESTORATION_OF_ERATHIA_DISC:
+    case CD_ROM_ARMAGEDDONS_BLADE_DISC:
         g_mouseManager->showPointer(false);
         g_noSound = 1;
         g_noCdRom = 1;
         break;
 
-    case CD_DRIVE_NUMBER_3:
+    case CD_ROM_GAME_DIRECTORY_MISSING:
         earlyShutdown(
             DATA_COMPGEN(0x0067f728, oldMainStartupError, "Startup error"),
             (*g_generalText)[GENERAL_TEXT_GAME_DIRECTORY_CHANGE_ERROR]);
         exit(0);
 
-    case CD_DRIVE_NUMBER_4:
+    case CD_ROM_DATA_FILES_MISSING:
         earlyShutdown(
             DATA_COMPGEN(0x0067f728, oldMainStartupError, "Startup error"),
             (*g_generalText)[GENERAL_TEXT_GAME_DATA_NOT_FOUND]);
@@ -1186,7 +1186,7 @@ int oldmain()
             continue;
 
         case TMainMenu::RESTART_ID: {
-            g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_WAIT_POINTER, mouseManager::ADVENTURE_SET);
             showProgressBar();
             incProgressBar(1);
 
@@ -1495,7 +1495,7 @@ static int doNewGame()
 
         case TGameTypeWindow::TUTORIAL_ID: {
             g_game->m_isTutorial = 1;
-            g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+            g_mouseManager->setPointer(ADV_WAIT_POINTER, mouseManager::ADVENTURE_SET);
             showProgressBar();
             incProgressBar(1);
 
@@ -1529,7 +1529,7 @@ static int doNewGame()
                 incProgressBar(1);
                 exitNewGame = 1;
             } else {
-                g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+                g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
                 normalDialog(g_generalText->GetText(GENERAL_TEXT_TUTORIAL_MAP_MISSING), 1, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             }

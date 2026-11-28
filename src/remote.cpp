@@ -2054,12 +2054,12 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
                             "OnPlayerDropUpdateMsg (%d)"),
                 dpid);
 
-    g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_WAIT_POINTER, mouseManager::ADVENTURE_SET);
     CTextDialog dlg(0x12);
     dlg.setup((*g_generalText)[GENERAL_TEXT_PLAYER_DROP_RELOAD],
               g_mediumFont);
     dlg.open(0, 1);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
 
     CHourGlass hourGlass(1);
     if (!g_game->loadGame(g_config.m_scFile, 0, 0)) {
@@ -2909,7 +2909,7 @@ void CHourGlass::stop()
     if (m_thread)
         stopMouseThread();
     else
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
 }
 
 DC_ADDRESS(0x11f524, 0x2a)
@@ -2919,7 +2919,7 @@ void CHourGlass::start()
     if (m_thread)
         startMouseThread();
     else
-        g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(ADV_WAIT_POINTER, mouseManager::ADVENTURE_SET);
 }
 
 // Original: GetQueueSize; remote.cpp:3142

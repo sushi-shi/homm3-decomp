@@ -33,7 +33,7 @@ void advManager::checkCastSpell()
     mobilizeCurrHero(0, 0, 1);
     completeDraw(0);
     updateScreen(0, 0);
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
 
     hero* currentHero = g_game->getCurrHero();
     {

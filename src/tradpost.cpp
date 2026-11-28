@@ -1485,7 +1485,7 @@ static void doMarket()
 
     g_marketWindowX = 0x64;
     g_marketWindowY = 3;
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
     g_mouseManager->showPointer(1);
 
     while (g_marketWindow != MARKET_COMMAND_ID) {

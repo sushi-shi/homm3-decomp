@@ -57,7 +57,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
     g_levelUpWindow = this;
     if (g_remoteOn && !g_currentPlayer->isLocalHuman())
         g_dialogDeadline = GameTime::get() + 15000;
-    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 385, 470, BACKGROUND_ID, "lvlupbkg.pcx", 0x800);
@@ -249,7 +249,7 @@ int TLevelUpWindow::windowHandler(message& msg)
         if (hoverID != g_lastImHoverId) {
             g_lastImHoverId = hoverID;
             if (hoverID != -1)
-                g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+                g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
         }
     } else if (msg.m_id == MESSAGE_WIDGET) {
         switch (msg.m_codeX) {

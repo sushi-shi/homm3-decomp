@@ -435,7 +435,7 @@ void combatManager::setCombatDirections(int hex)
         targetGroup = (targetIndex + 3) % 6;
         if (firstIsValid) {
             m_combatDirections[1][attackAngle] = firstHex;
-            m_combatDirections[0][attackAngle] = targetGroup + 7;
+            m_combatDirections[0][attackAngle] = targetGroup + const_attack_northeast;
         }
 
         if (!currentArmy->is(creatureDoubleWide))
@@ -453,7 +453,7 @@ void combatManager::setCombatDirections(int hex)
         if (!firstIsValid && !secondIsValid)
             continue;
 
-        m_combatDirections[0][attackAngle] = targetGroup + 7;
+        m_combatDirections[0][attackAngle] = targetGroup + const_attack_northeast;
         if (targetIndex == COMBAT_DIRECTION_1
                 || targetIndex == COMBAT_DIRECTION_4) {
             if (secondIsValid)
@@ -467,9 +467,9 @@ void combatManager::setCombatDirections(int hex)
         }
 
         if (targetIndex >= 2 && targetIndex <= 3)
-            targetGroup = 13;
+            targetGroup = const_attack_up;
         else
-            targetGroup = 14;
+            targetGroup = const_attack_down;
         if (firstIsValid && secondIsValid) {
             if (attackAngle == COMBAT_ATTACK_ANGLE_5
                     || attackAngle == COMBAT_ATTACK_ANGLE_6
@@ -549,9 +549,9 @@ DC_ADDRESS(0x06bea4, 0x18)
 MAC_ADDRESS(0x082e98, 0x24)
 int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 {
-    if (inCombatCommand >= COMBAT_COMMAND_VIEW_OTHER_HERO
-            && inCombatCommand <= COMBAT_COMMAND_VIEW_TOWERS)
-        return 5;
+    if (inCombatCommand >= SELECT_ENEMY_TENT
+            && inCombatCommand <= const_select_tower_info)
+        return SELECT_ARMY_INFO;
     return inCombatCommand;
 }
 
@@ -928,7 +928,7 @@ int combatManager::processCombatMsg(message& msg)
             m_combatWindow->m_creatureSubWindows[2]->unShow();
             m_combatWindow->m_creatureSubWindows[3]->unShow();
             g_windowManager->convertToHover(msg);
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
             m_lastCellIndex = -1;
             m_lastCommand = -99;
             return MESSAGE_DISPATCH_CONSUME;
@@ -939,7 +939,7 @@ int combatManager::processCombatMsg(message& msg)
         // sentinel still refreshes command state; only information-window
         // updates require a changed cell.
         if (gridIndex == m_lastCellIndex && gridIndex != -1) {
-            if (m_combatCommand == COMBAT_COMMAND_ATTACK)
+            if (m_combatCommand == SELECT_ATTACK)
                 pointerChanged = checkSetMouseDirection(mouseX, mouseY,
                                                         gridIndex);
         } else {
@@ -1020,12 +1020,12 @@ int combatManager::processCombatMsg(message& msg)
             m_lastCommand = -99;
             // DC 0x6c878 and Mac 0x83ac0 pass the just-stored member.
             m_combatCommand = getCommand(m_lastCellIndex);
-            m_lastAttackCursor = 6;
-            if (m_combatCommand == COMBAT_COMMAND_ATTACK) {
+            m_lastAttackCursor = CBT_ARROW_POINTER;
+            if (m_combatCommand == SELECT_ATTACK) {
                 setCombatDirections(gridIndex);
                 pointerChanged = checkSetMouseDirection(mouseX, mouseY,
                                                         gridIndex);
-            } else if (m_combatCommand == COMBAT_COMMAND_CREATURE_SPELL) {
+            } else if (m_combatCommand == SELECT_CREATURE_SPELL) {
                 g_mouseManager->setPointer(0, mouseManager::SPELL_SET);
             } else {
                 g_mouseManager->setPointer(
@@ -1035,7 +1035,7 @@ int combatManager::processCombatMsg(message& msg)
         }
 
         if (m_combatCommand != m_lastCommand
-                || (m_combatCommand == COMBAT_COMMAND_ATTACK && pointerChanged)) {
+                || (m_combatCommand == SELECT_ATTACK && pointerChanged)) {
             m_lastCommand = m_combatCommand;
             combatMessage(m_combatCommand);
         }
@@ -1102,7 +1102,7 @@ int combatManager::processCombatMsg(message& msg)
             m_combatWindow->m_creatureSubWindows[1]->unShow();
             m_combatWindow->m_creatureSubWindows[2]->unShow();
             m_combatWindow->m_creatureSubWindows[3]->unShow();
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
             viewArmy(getCurrentArmy(), 0);
             resetMouse();
             break;
@@ -1325,24 +1325,24 @@ MAC_ADDRESS(0x084534, 0x5a4)  // anchor-global
 int combatManager::getCommand(int newIndex)
 {
     if (newIndex == -1)
-        return COMBAT_COMMAND_NONE;
+        return SELECT_NULL;
 
     if (g_remoteOn && m_thisNetHasControl == 0)
-        return m_cells[newIndex].hasArmy() ? COMBAT_COMMAND_VIEW_ARMY
-                                           : COMBAT_COMMAND_HOVER;
+        return m_cells[newIndex].hasArmy() ? SELECT_ARMY_INFO
+                                           : CBT_ARROW_POINTER;
 
     if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
         if (m_heroes[1])
-            return m_currentSide == 1 ? COMBAT_COMMAND_SPELL_BOOK
-                                     : COMBAT_COMMAND_VIEW_OTHER_HERO;
-        return COMBAT_COMMAND_NONE;
+            return m_currentSide == 1 ? SELECT_TENT
+                                     : SELECT_ENEMY_TENT;
+        return SELECT_NULL;
     }
 
     if (newIndex == COMBAT_HEX_ATTACKER_HERO) {
         if (m_heroes[0])
-            return m_currentSide == 0 ? COMBAT_COMMAND_SPELL_BOOK
-                                     : COMBAT_COMMAND_VIEW_OTHER_HERO;
-        return COMBAT_COMMAND_NONE;
+            return m_currentSide == 0 ? SELECT_TENT
+                                     : SELECT_ENEMY_TENT;
+        return SELECT_NULL;
     }
 
     army* currentArmy = getCurrentArmy();
@@ -1354,9 +1354,9 @@ int combatManager::getCommand(int newIndex)
                 && validWallTarget(WALL_TARGET_0)) {
             currentArmy->indexToAttack = newIndex;
             currentArmy->groupToAttack = -1;
-            return COMBAT_COMMAND_BOMBARD_WALL;
+            return SELECT_ATTACK_WALL;
         }
-        return COMBAT_COMMAND_VIEW_TOWERS;
+        return const_select_tower_info;
     }
 
     if (m_fortificationLevel >= eFortificationCitadel
@@ -1366,13 +1366,13 @@ int combatManager::getCommand(int newIndex)
                 && validWallTarget(WALL_TARGET_7)) {
             currentArmy->indexToAttack = newIndex;
             currentArmy->groupToAttack = -1;
-            return COMBAT_COMMAND_BOMBARD_WALL;
+            return SELECT_ATTACK_WALL;
         }
-        return COMBAT_COMMAND_VIEW_TOWERS;
+        return const_select_tower_info;
     }
 
     if (!validHex(newIndex) || inInvisibleColumn(newIndex))
-        return COMBAT_COMMAND_NONE;
+        return SELECT_NULL;
 
     currentArmy->groupToAttack = -1;
     currentArmy->indexToAttack = -1;
@@ -1385,41 +1385,41 @@ int combatManager::getCommand(int newIndex)
         targetSide = target->getOwningSide();
 
         if (m_creaturePlacement)
-            return COMBAT_COMMAND_VIEW_ARMY;
+            return SELECT_ARMY_INFO;
         if (target == currentArmy)
-            return COMBAT_COMMAND_VIEW_ARMY;
+            return SELECT_ARMY_INFO;
         if (currentArmy->m_creatureType == CREATURE_FAERIE_DRAGON
                 && currentArmy->canCastSpell(newIndex))
-            return COMBAT_COMMAND_CREATURE_SPELL;
+            return SELECT_CREATURE_SPELL;
         if (targetSide == m_currentSide && currentArmy->canCastSpell(newIndex))
-            return COMBAT_COMMAND_CREATURE_SPELL;
+            return SELECT_CREATURE_SPELL;
         if (targetSide == m_currentSide
                 && currentArmy->m_creatureType == CREATURE_FIRST_AID_TENT
                 && target->m_topCreatureDamage > 0
                 && !target->is(creatureSiegeWeapon))
-            return COMBAT_COMMAND_FIRST_AID;
+            return SELECT_FIRST_AID;
         if (targetSide == m_currentSide)
-            return COMBAT_COMMAND_VIEW_ARMY;
+            return SELECT_ARMY_INFO;
 
         currentArmy->groupToAttack = cell->m_armySide;
         currentArmy->indexToAttack = cell->m_armySlot;
 
         if (currentArmy->canShoot(0)) {
             if (currentArmy->m_creatureType == CREATURE_ARROW_TOWER)
-                return COMBAT_COMMAND_SHOOT;
+                return SELECT_SPECIAL_ATTACK;
             if (shotIsThroughWall(currentArmy, currentArmy->m_gridIndex,
                                   newIndex)
                     || shotIsNotOptimal(currentArmy, target))
-                return COMBAT_COMMAND_SHOOT_PENALTY;
-            return COMBAT_COMMAND_SHOOT;
+                return SELECT_SPECIAL_ATTACK_BROKEN;
+            return SELECT_SPECIAL_ATTACK;
         }
         if (currentArmy->validPath(newIndex, 0))
             return currentArmy->m_creatureType == CREATURE_BALLISTA
-                ? COMBAT_COMMAND_SHOOT : COMBAT_COMMAND_ATTACK;
+                ? SELECT_SPECIAL_ATTACK : SELECT_ATTACK;
 
         currentArmy->groupToAttack = -1;
         currentArmy->indexToAttack = -1;
-        return COMBAT_COMMAND_NONE;
+        return SELECT_NULL;
     }
 
     if (currentArmy->is(creatureCatapult)
@@ -1434,7 +1434,7 @@ int combatManager::getCommand(int newIndex)
                 if (validWallTarget(wall)) {
                     currentArmy->indexToAttack = newIndex;
                     currentArmy->groupToAttack = -1;
-                    return COMBAT_COMMAND_BOMBARD_WALL;
+                    return SELECT_ATTACK_WALL;
                 }
                 break;
             }
@@ -1442,7 +1442,7 @@ int combatManager::getCommand(int newIndex)
     }
 
     if (!m_creaturePlacement && currentArmy->canCastResurrect(newIndex))
-        return COMBAT_COMMAND_CREATURE_SPELL;
+        return SELECT_CREATURE_SPELL;
 
     if (!m_creaturePlacement
             || !isOutsidePlacementBoundry(currentArmy->getOwningSide(),
@@ -1451,14 +1451,14 @@ int combatManager::getCommand(int newIndex)
                                           currentArmy->m_monInfo.speed,
                                           m_creaturePlacement, -1);
         if (m_cells[newIndex].m_validMove || m_cells[newIndex].m_frontMove)
-            return (currentArmy->is(creatureFlyingArmy)) ? COMBAT_COMMAND_FLY
-                                            : COMBAT_COMMAND_WALK;
+            return (currentArmy->is(creatureFlyingArmy)) ? SELECT_FLY
+                                                         : SELECT_MOVE;
     }
 
     if (newIndex == s_wallTargets[WALL_TARGET_6].m_targetHex
             && m_fortificationLevel == eFortificationCastle)
-        return COMBAT_COMMAND_VIEW_TOWERS;
-    return COMBAT_COMMAND_NONE;
+        return const_select_tower_info;
+    return SELECT_NULL;
 }
 
 // Wall target 7 and the full-castle targets 0/6 call ViewCastleBallista
@@ -1501,7 +1501,7 @@ int combatManager::rightClick(int newIndex)
 
     if (validHex(newIndex)
             && m_cells[newIndex].hasArmy()) {
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
         viewArmy(m_cells[newIndex].getArmy(), 1);
         resetMouse();
         return 0;
@@ -1527,8 +1527,8 @@ void combatManager::doCommand(int command)
     army* currentArmy = getCurrentArmy();
 
     switch (command) {
-    case COMBAT_COMMAND_WALK:
-    case COMBAT_COMMAND_FLY:
+    case SELECT_MOVE:
+    case SELECT_FLY:
         m_nextAction = 2;
         m_nextActionGridIndex = m_lastCellIndex;
         if (currentArmy->is(creatureDoubleWide) && m_cells[m_lastCellIndex].m_frontMove)
@@ -1536,26 +1536,26 @@ void combatManager::doCommand(int command)
         m_nextActionExtra = -1;
         break;
 
-    case COMBAT_COMMAND_SHOOT:
-    case COMBAT_COMMAND_SHOOT_PENALTY:
+    case SELECT_SPECIAL_ATTACK:
+    case SELECT_SPECIAL_ATTACK_BROKEN:
         m_nextAction = 7;
         m_nextActionGridIndex = m_lastCellIndex;
         m_nextActionExtra = -1;
         break;
 
-    case COMBAT_COMMAND_CREATURE_SPELL:
+    case SELECT_CREATURE_SPELL:
         m_nextAction = 10;
         m_nextActionGridIndex = m_lastCellIndex;
         m_nextActionExtra = -1;
         break;
 
-    case COMBAT_COMMAND_ATTACK:
+    case SELECT_ATTACK:
         m_nextActionGridIndex = m_lastCellIndex;
         m_nextAction = 6;
         m_nextActionExtra = m_lastMoveToIndex;
         break;
 
-    case COMBAT_COMMAND_SPELL_BOOK:
+    case SELECT_TENT:
         if (m_creaturePlacement)
             break;
         {
@@ -1574,33 +1574,33 @@ void combatManager::doCommand(int command)
             m_combatWindow->m_creatureSubWindows[1]->unShow();
             m_combatWindow->m_creatureSubWindows[2]->unShow();
             m_combatWindow->m_creatureSubWindows[3]->unShow();
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
             initiateSpell(static_cast<ESpellId>(spell), 0); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
             resetMouse();
         }
         break;
 
-    case COMBAT_COMMAND_VIEW_TOWERS:
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+    case const_select_tower_info:
+        g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
         viewCastleBallista(0);
         resetMouse();
         break;
 
-    case COMBAT_COMMAND_VIEW_ARMY:
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+    case SELECT_ARMY_INFO:
+        g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
         if (!validHex(m_lastCellIndex))
             break;
         viewArmy(m_cells[m_lastCellIndex].getArmy(), 0);
         resetMouse();
         break;
 
-    case COMBAT_COMMAND_BOMBARD_WALL:
+    case SELECT_ATTACK_WALL:
         m_nextAction = 9;
         m_nextActionGridIndex = m_lastCellIndex;
         m_nextActionExtra = -1;
         break;
 
-    case COMBAT_COMMAND_FIRST_AID:
+    case SELECT_FIRST_AID:
         m_nextAction = 11;
         m_nextActionGridIndex = m_lastCellIndex;
         m_nextActionExtra = -1;
@@ -1806,7 +1806,7 @@ void combatManager::doVictory(int winningGroup)
     if (!isQuickCombat())
         m_combatWindow->combatMessage("", 0, 0);
     g_mouseManager->m_noChangePointer = 0;
-    g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+    g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
     g_mouseManager->showPointer(false);
     // DC command.cpp:2710 follows ShowPointer with this header helper;
     // Complete shares the pointer restoration before its result branches.
@@ -2130,7 +2130,7 @@ void combatManager::getControl()
 
     if (m_status == STATUS_ACTIVE
             && !isQuickCombat())
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
 
     checkChangeSelector();
 
@@ -2264,7 +2264,7 @@ void combatManager::resetMouse()
         return;
     }
 
-    g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+    g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
 }
 
 // Original process_move_then_attack, DC command.cpp:3365: message& msg,
@@ -2378,7 +2378,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
     g_processingCombatAction = 1;
     if (!isQuickCombat()) {
         if (m_nextAction)
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            g_mouseManager->setPointer(CBT_ARROW_POINTER, mouseManager::COMBAT_SET);
         updateMouseGrid(-1, 1);
         memset(m_curDrawGridShade, 0, sizeof(m_curDrawGridShade));
         if (updateGrid(0, 0))
