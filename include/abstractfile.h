@@ -28,6 +28,9 @@ public:
 // calls and eleven direct buffer writes. The helper lifetimes reproduce
 // retail's 0x8 frame; the earlier function-scope staging buffers used 0x1c.
 // This is an inferred interface, not a recovered template declaration.
+// The rmg record writers (78 braced fields) and the seer-hut quest writers
+// (7) were such braced scopes: each is byte-identical as a writeValue call,
+// where merely dropping the braces moves bytes.
 // town::save, SavedGameHeader::save, and the NewSMapHeader and mapcell
 // readers still stage by hand, and several of them sit below 100%
 // on frame-size residuals. Check each against its own retail bytes before
@@ -47,8 +50,13 @@ public:
 // call, the instantiations reuse frame slots in hero::save. Dreamcast's
 // per-width locals and nested scopes support short staging lifetimes, but
 // do not distinguish a template from other original source spellings.
+// Inline like the readers above, for the same reason: CodeWarrior -O1 expands
+// only inline functions, and Mac's record writers (type_random_artifact::write
+// 0x00533500 is byte-exact) stage each scalar in place with no writer call.
+// Out of line, CodeWarrior keeps a call per field and the pair cannot be
+// compared. VC6 /Ob2 output is unchanged in all eight units that use it.
 template <class T>
-int writeValue(TAbstractFile* outfile, T value)
+inline int writeValue(TAbstractFile* outfile, T value)
 {
     return outfile->write(&value, sizeof(value));
 }
