@@ -1571,6 +1571,19 @@ struct TRmgZone {
     {
         m_zoneDistances[column] = distance;
     }
+    // propagateZoneDistances bounds its column loop with this count; retail
+    // keeps the nested vector<short>::size() call (0x54c3d0) at that entry,
+    // which a direct size() never does. Role-derived name.
+    int getZoneDistanceCount() const
+    {
+        return m_zoneDistances.size();
+    }
+    // The distance relaxations and joinExtraZones read the template slot
+    // through this; Mac expands it at every site. Role-derived name.
+    TRmgTemplateZone* getTemplateZone() const
+    {
+        return m_templateZone;
+    }
     const TRmgZoneBounds& getBounds() const
     {
         return m_bounds;
