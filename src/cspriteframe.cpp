@@ -2364,6 +2364,15 @@ void CSpriteFrame::DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 // code 7's opaque run is skipped over rather than drawn, and every other
 // code just advances.
 
+// h3maped (2026-11-28): DrawCreatureImpl, DrawAdvObjShadowImpl and both
+// DrawAdvObjShadowScaled bodies miss only the three-quarter blend's AND
+// width. Retail h3maped ANDs a dword: its .bss has div4mask at +0xc (0 mod
+// 4) from Draw's kOpaqueRunCode at +0, with div2mask +8,
+// kGeneralRLEOpaqueRunCode +0xb, Draw's guard +0xf, kGeneralRLEMaxRunLength
+// +0x10, DrawCreatureImpl's guard +0x14 and its kOpaqueRunCode +0x16. Our
+// libraries-profile object scrambles DrawCreatureImpl's kOpaqueRunCode to
+// +0xc, ahead of div4mask (+0xe, word AND). The .bss order is a symbol hash
+// (docs/vc6/data-layout.md), so the fix is the editor compiland's static set.
 // A single row cursor. The three-quarter blend evaluates its div2mask term
 // first, as Loki's h3maped does; div4mask's placement (and so its AND
 // width) depends on EncodeGeneral's dynamically initialized kMaxRunLength in

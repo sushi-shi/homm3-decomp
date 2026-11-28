@@ -2661,8 +2661,12 @@ void philAI::getTurnAIVars(int whichPlayer)
                 aiGetValueOfArtifact(artifact, whichPlayer);
         }
     }
+    // FLAGGED FOR CLEANUP (lever accepted for 100%, 2026-11-28): the embedded assignment pins the numerator's
+    // reload ahead of the divisor's conversion, as in combatMonsterEvent,
+    // resetBoltAngle and getFrenzyValue. It is not a developer spelling.
+    double numerator;
     g_currentPlayer->m_ai.m_turnValueOfAvgArtifact =
-        static_cast<float>(static_cast<double>(totalArtifactValue)
+        static_cast<float>((numerator = static_cast<double>(totalArtifactValue))
                            / static_cast<double>(artifactCount));
 
     signed char difficulty = g_game->m_setup.m_difficulty;

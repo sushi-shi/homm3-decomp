@@ -2265,7 +2265,7 @@ hero	?getStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?getStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110	tokens1:4b11cd54c3cc
 hero	?getSurrenderCostFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4580	tokens1:c2a87a4e80c8
 hero	?getVisibility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4070	tokens1:ac537466bb65
-hero	?giveArtifact@hero@@QAEEABUtype_artifact@@EE@Z	96.5425	96.6316	96.6316	0xe3070	tokens1:db41ba816cc0
+hero	?giveArtifact@hero@@QAEEABUtype_artifact@@EE@Z	100.0000	100.0000	100.0000	0xe3070	tokens1:b5b9d5037c77
 hero	?giveExperience@hero@@QAEHHH_N@Z	100.0000	100.0000	100.0000	0xe33b0	tokens1:199397655ba8
 hero	?giveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	tokens1:9c0e96f94855
 hero	?giveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	tokens1:b85bbedd662d
@@ -2498,7 +2498,7 @@ mainmenu	??0TMainMenu@@QAE@XZ	100.0000	100.0000	100.0000	0xfb2a0	tokens1:3d43776
 mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660	tokens1:0955a9ef9c54
 mainmenu	??_GTMainMenu@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xfb630	-
 mainmenu	?doModal@TMainMenu@@QAEXXZ	100.0000	100.0000	100.0000	0xfb6e0	tokens1:fc35791ff738
-mainmenu	?mainMenuHandler@@YIHAAVmessage@@@Z	93.4817	93.4817	94.0845	0xfb710	tokens1:fb486378e3d5
+mainmenu	?mainMenuHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xfb710	tokens1:71b4526ef46c
 mapcell	??0CObjectType@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x106080	tokens1:0f960b41ea08
 mapcell	??0NewfullMap@@QAE@XZ	100.0000	100.0000	100.0000	0xfd060	tokens1:032cb1b90387
 mapcell	??0NewmapCell@@QAE@XZ	100.0000	100.0000	100.0000	0xfd650	tokens1:b1e785855074
@@ -2944,7 +2944,7 @@ philai	?getRawSpellValue@type_spellvalue@@QBEJH@Z	100.0000	100.0000	100.0000	0x1
 philai	?getSchoolValue@@YIJPBVhero@@W4TSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x124d20	tokens1:4e16c313111b
 philai	?getSeerSkillRewardValue@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0x124630	tokens1:cea012e3c0f8
 philai	?getSkillValue@@YIJPBVhero@@W4TSecondarySkill@@E@Z	99.9438	99.9438	99.9438	0x124690	tokens1:bf5c6cc88b39
-philai	?getTurnAIVars@philAI@@QAEXH@Z	97.8723	97.8723	97.8723	0x127960	tokens1:221248c58af9
+philai	?getTurnAIVars@philAI@@QAEXH@Z	100.0000	100.0000	100.0000	0x127960	tokens1:724f8137ed83
 philai	?getValueOfSpring@@YIJPBVhero@@PBVNewmapCell@@G@Z	100.0000	100.0000	100.0000	0x12b810	tokens1:8817a3a901f1
 philai	?getValueOfWell@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510	tokens1:06614c0f8d43
 philai	?luckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80	tokens1:7f308be436d7
@@ -3207,7 +3207,7 @@ resourcemanager	?Close@ResourceManager@@YIXXZ	100.0000	100.0000	100.0000	0x15a55
 resourcemanager	?GetBackdrop@ResourceManager@@YIXPBDPAVBitmap16Bit@@@Z	100.0000	100.0000	100.0000	0x15cf00	tokens1:2d4152ebaa13
 resourcemanager	?GetBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	100.0000	100.0000	100.0000	0x15afd0	tokens1:ddd97e2c986c
 resourcemanager	?GetBitmap816@ResourceManager@@YIPAVBitmap816@@PBD@Z	100.0000	100.0000	100.0000	0x15a800	tokens1:851872c451ef
-resourcemanager	?GetBitmapResourceSize@ResourceManager@@YIHPBD@Z	96.7742	96.7742	96.7742	0x15d070	tokens1:9a61b33f015a
+resourcemanager	?GetBitmapResourceSize@ResourceManager@@YIHPBD@Z	100.0000	100.0000	100.0000	0x15d070	tokens1:4bfebe86c12c
 resourcemanager	?GetFont@ResourceManager@@YIPAVfont@@PBD@Z	100.0000	100.0000	100.0000	0x15bb00	tokens1:7974efdd9fe2
 resourcemanager	?GetPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	100.0000	100.0000	100.0000	0x15b470	tokens1:bb6abf7ba3ae
 resourcemanager	?GetPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	100.0000	100.0000	100.0000	0x15b3e0	tokens1:8c163059dfca
@@ -4070,7 +4070,7 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAE_NPAVCNetM
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	tokens1:ff4fab1c0006
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:55093b815760
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189710	tokens1:0ced05042516
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	tokens1:9ab4056b5b4f
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	tokens1:c512329534f2
@@ -4126,7 +4126,7 @@ singleselectionwindow	?turnOffScenarioOptions@TSingleSelectionWindow@@QAEXXZ	100
 singleselectionwindow	?update@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x18e2d0	tokens1:c0d6578e5117
 singleselectionwindow	?update@TSingleSelectionWindow@@QAEHXZ	100.0000	100.0000	100.0000	0x184550	tokens1:bef11d028daf
 singleselectionwindow	?updateAllyEnemyFlags@TSingleSelectionWindow@@QAEX_N@Z	100.0000	100.0000	100.0000	0x185300	tokens1:518859260e4b
-singleselectionwindow	?updateGameVars@TSingleSelectionWindow@@QAEXXZ	74.8198	74.8198	85.2387	0x183580	tokens1:f0cf6eebcc7c
+singleselectionwindow	?updateGameVars@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x183580	tokens1:6b1de90975ad
 singleselectionwindow	?updateMainWindow@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17fb90	tokens1:a32032a2d75d
 singleselectionwindow	?updateNameLists@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18c960	tokens1:9cd68b2d1b5f
 singleselectionwindow	?updatePlayerPositions@TSingleSelectionWindow@@QAEX_N@Z	100.0000	100.0000	100.0000	0x188330	tokens1:af0a33720339
@@ -4468,7 +4468,7 @@ towngatewindow	?updateTownLocator@TTownGateWindow@@AAEXH@Z	100.0000	100.0000	100
 towngatewindow	?windowHandler@TTownGateWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1c2840	tokens1:719caf7e66c6
 townmgr	??0TBlacksmithWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d1360	tokens1:12a4851d0e9a
 townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1d55c0	tokens1:f9f910b89b38
-townmgr	??0TCastleWindow@@QAE@XZ	99.9657	99.9657	100.0000	0x1d86f0	tokens1:35320da2d020
+townmgr	??0TCastleWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1d86f0	tokens1:96dcabaff44a
 townmgr	??0TGarrisonWindow@@QAE@PAVhero@@HAAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1d0e00	tokens1:3bc5bd56c48b
 townmgr	??0THallWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1c9be0	tokens1:f1031c5a5b7e
 townmgr	??0TMageGuildWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1cc980	tokens1:9860fe76ad17

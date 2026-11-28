@@ -1763,39 +1763,38 @@ LODFile* ResourceManager::PointToBitmapResource(const char* name)
     return findBitmapResource(name);
 }
 
-// Dreamcast's direct method is one source statement with no
-// recorded locals; retail expands it into this three-block Complete archive
-// walk. Candidate and retail have the same 30/31-instruction sequence. Retail
-// retains a dead `lea` of the selected 24-byte context after loading the
-// bitmap list; pointer/reference/accessor spellings remove it, a named context
-// reference is byte-flat, and a by-value spelling performs a real 24-byte
-// copy. why-reg's model finds no binding divergence and its guided volatile
-// probe is worse (5 rather than 3 masked slots), so the residual is a bounded
-// C1 dead-address-materialization wall.
-// Twenty-one context/list and loop spellings remained at 96.7742%. The shared
-// single-call source loop also compiles to Complete's two lookup call sites
-// at that same score, while Mac 0:0x1546a0 keeps one call in the loop. A Mac
-// list reference adds an address instruction; a named context, named game
-// state, array-of-three view, for-initializer lifetime, and -O2/-O3 are
-// byte-flat in the Mac probe. A break/shared return moves the size load
-// behind the loop. Flattening the context to six direct fields (with either
-// a const context reference or direct access), or making the three lists an
-// actual array, also leaves the missing row-address LEA and MAX unchanged.
-// The exact PointToBitmapResource expansion retains this LEA after loading
-// both count and indices; no extra count use is evidenced for this method.
-// The direct list expression and simple loop are retained.
+// FLAGGED FOR CLEANUP (lever accepted for 100%, 2026-11-28): `--remaining`
+// is stepped and never read; natural forms measure 96.77%.
+// Dreamcast's direct method is one source statement with no recorded
+// locals; Complete walks the selected context's bitmap archive list.
+// Retail keeps a dead `lea` of the 24-byte context row after loading the
+// list: VC6 materializes the row address only when both the count and the
+// indices are taken from it, as the exact PointToBitmapResource expansion
+// of findBitmapResource shows. This walk is that sibling's counted loop
+// without the exhaustion exit: the counter is still stepped, VC6 then
+// deletes it as dead, and the row address stays behind (100%). Controls:
+// reading the count without stepping it, or no count at all (twenty-one
+// context/list/loop spellings, a named context or list reference, six
+// flattened fields, an array of three lists), drop the LEA at 96.7742%;
+// the stepped counter is exact as for (;;), as a while loop over the
+// entry or the file pointer, and in the for-increment. Mac 0:0x1546a0
+// folds the single live field load and shows no counter either way.
 VA(0x0055d070, 0x5C)
 DC_ADDRESS(0x1224e4, 0x4c)
 MAC_ADDRESS(0x1546a0, 0x88)  // retail archive-list walk + dc/hd name corroboration
 int ResourceManager::GetBitmapResourceSize(const char* name)
 {
-    const int* archive =
-        g_resourceArchiveContexts[g_videoGameState].m_bitmaps.m_indices;
+    TResourceArchiveContext& context =
+        g_resourceArchiveContexts[g_videoGameState];
+    int remaining = context.m_bitmaps.m_count;
+    const int* archive = context.m_bitmaps.m_indices;
+
     for (;;) {
         LODEntry* entry = g_resourceLodSlots[*archive].m_file.getItemIndex(name);
         if (entry)
             return entry->size;
         ++archive;
+        --remaining;
     }
 }
 

@@ -141,6 +141,8 @@ unsigned int TMonster::getResourceQuantity(TGameResourceType type) const
 // it meets budget 34 against its cost 43. The replay expands it with every
 // scalar writer 2 tuples lighter or the string writer at 58 or less (its
 // long-length form costs 64).
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x00488be8, 0x18d)
 void TMonster::write(TRawOStream* pOStream, int version) const
 {
@@ -161,7 +163,8 @@ void TMonster::write(TRawOStream* pOStream, int version) const
     }
     *pOStream << static_cast<signed char>(_m_bNeverFlees) << static_cast<signed char>(_m_bNeverGrows);
     signed char aReserved[kNumMonsterReserved];
-    fill_n(aReserved, sizeof(aReserved), 0);
+    for (unsigned int i = 0; i < kNumMonsterReserved; ++i)
+        aReserved[i] = 0;
     *pOStream << aReserved;
 }
 

@@ -1088,6 +1088,8 @@ void TGameMap::_TImpl::streamObject(streambuf* pStreamBuf, const TGameObject& ob
 // once before the loop (setge plus the field offset); the per-hero selection
 // here tests the edition in the loop. A pointer to the selected bool member
 // reproduces the hoisted offset exactly but has no native evidence.
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x0041f21d, 0x133)
 TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, TSize size, bool bTwoLayer)
     : _m_pClient(pClient), _m_version(version), _m_size(size), _m_bTwoLayer(bTwoLayer)
@@ -1095,11 +1097,12 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, TSize size, boo
     assert(_m_pClient != NULL);
     assert((int)_m_size >= (int)0 && (int)_m_size < (int)s_kNumSizes);
     _m_aLayer.resize(_m_bTwoLayer ? 2 : 1, TLayer(_m_size));
+    bool THeroTraits::* availableMember = _m_version >= GAME_VERSION_AB
+        ? &THeroTraits::m_availableInExpansion : &THeroTraits::m_availableInOriginal;
     for (unsigned int heroID = 0; heroID < kNumHeroes; heroID++) {
         const THeroTraits& traits = akHeroTraits[heroID];
         _m_pProperties->m_disabledHeroes[heroID] =
-            traits.m_special
-            || !(_m_version >= GAME_VERSION_AB ? traits.m_availableInExpansion : traits.m_availableInOriginal);
+            traits.m_special || !(traits.*availableMember);
     }
 }
 

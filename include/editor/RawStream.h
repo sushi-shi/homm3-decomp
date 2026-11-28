@@ -176,10 +176,13 @@ inline TRawOStream& writeFromIter(TRawOStream& stream, InputIterator first, Inpu
 // size_type count reproduces retail's order.
 template <class T>
 // VA instance: writeContainer<TRumor>
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x00434342, 0x4a)
 void writeContainer(TRawOStream& stream, const std::vector<T>& aItem)
 {
-    stream << static_cast<long>(aItem.size());
+    typename std::vector<T>::size_type numItems = aItem.size();
+    stream << static_cast<long>(numItems);
     writeFromIter(stream, aItem.begin(), aItem.end());
 }
 

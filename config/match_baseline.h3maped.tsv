@@ -1411,7 +1411,7 @@ GameMap	??0_TBookkeeping@_TImpl@TGameMap@@QAE@ABU012@@Z	100.0000	100.0000	100.00
 GameMap	??0_TBookkeeping@_TImpl@TGameMap@@QAE@XZ	100.0000	100.0000	100.0000	0x338c8	tokens1:caa948806702
 GameMap	??0_TImpl@TGameMap@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x3757f	-
 GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	94.7865	94.7865	96.8333	0x1f350	tokens1:4daac7e146fe
-GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@W4TSize@1@_N@Z	90.0808	90.0808	100.0000	0x1f21d	tokens1:b0ab2be28387
+GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@W4TSize@1@_N@Z	100.0000	100.0000	100.0000	0x1f21d	tokens1:854e4c2c2bca
 GameMap	??0_TImpl@TLayer@TGameMap@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0x2a51c	tokens1:24283eca8797
 GameMap	??0_TImpl@TLayer@TGameMap@@QAE@W4TSize@2@@Z	100.0000	100.0000	100.0000	0x2a545	tokens1:21a57e3f5e5a
 GameMap	??0_TPlayerBookkeeping@_TImpl@TGameMap@@QAE@ABU012@@Z	100.0000	100.0000	100.0000	0x3744d	-
@@ -2141,7 +2141,7 @@ GameMap	?writeBitset@@YAXAAVTRawOStream@@ABV?$bitset@$0JA@@std@@@Z	100.0000	100.
 GameMap	?writeBitset@@YAXAAVTRawOStream@@ABV?$bitset@$0JM@@std@@@Z	100.0000	100.0000	100.0000	0x3bdab	-
 GameMap	?writeCell@@YAXPAVTRawOStream@@ABVTCell@TLayer@TGameMap@@_N@Z	100.0000	100.0000	100.0000	0x2b95d	tokens1:07f514823e08
 GameMap	?writeCellData@@YAXAAVTRawOStream@@ABVTLayer@TGameMap@@@Z	100.0000	100.0000	100.0000	0x2b840	tokens1:ff0bd75fc0ba
-GameMap	?writeContainer@@YAXAAVTRawOStream@@ABV?$vector@VTRumor@@V?$allocator@VTRumor@@@std@@@std@@@Z	96.1176	96.1176	100.0000	0x34342	tokens1:ea548416ab93
+GameMap	?writeContainer@@YAXAAVTRawOStream@@ABV?$vector@VTRumor@@V?$allocator@VTRumor@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x34342	tokens1:d9f361492b24
 GameMap	__h3cg$GameMap$static_dtor$aAdjObjID	100.0000	100.0000	100.0000	0x20907	-
 GameMap	__h3cg$GameMap$static_dtor$aHigherObjIDs	100.0000	100.0000	100.0000	0x26927	-
 GameMap	__h3cg$GameMap$static_dtor$aLowerObjIDs	100.0000	100.0000	100.0000	0x26931	-
@@ -2396,7 +2396,7 @@ Hero	?write@THeroPlaceholder@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	100.0000	100.0
 Hero	?write@THeroPlaceholder@@UBEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x4aec4	tokens1:9ced7df1426b
 Hero	?write@TPlayableObject@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x47d69	-
 Hero	?write@TPrimarySkills@THeroPrototype@@QBEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x4a51c	tokens1:96ebd301a24b
-Hero	?write@TSecondarySkills@THeroPrototype@@QBEXPAVTRawOStream@@H@Z	99.9474	99.9474	100.0000	0x4a301	tokens1:f7404e233f65
+Hero	?write@TSecondarySkills@THeroPrototype@@QBEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x4a301	tokens1:d286ffc012a2
 Hero	?write@TSpells@THeroPrototype@@QBEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x4a4e4	tokens1:e04f98b81e4c
 Hero	__h3cg$Hero$static_ctor$aHeroClassTraitsImp	100.0000	100.0000	100.0000	0x4a0db	-
 Hero	__h3cg$Hero$static_ctor$aHeroTraitsImp	100.0000	100.0000	100.0000	0x4a077	-
@@ -2478,7 +2478,7 @@ HeroPropsGeneralPage	?OnCustomizeNameCheck@TIdentifiedHeroPropsGeneralPage@@IAEX
 HeroPropsGeneralPage	?OnCustomizePortraitCheck@TIdentifiedHeroPropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0x51704	tokens1:9f0d7f8e041e
 HeroPropsGeneralPage	?OnDeltaposPortraitSpin@TIdentifiedHeroPropsGeneralPage@@IAEXPAUtagNMHDR@@PAJ@Z	100.0000	100.0000	100.0000	0x515a1	tokens1:b2f3e0083376
 HeroPropsGeneralPage	?OnInitDialog@THeroPropsGeneralPage@@UAEHXZ	100.0000	100.0000	100.0000	0x4f9df	tokens1:56abe9c17678
-HeroPropsGeneralPage	?OnInitDialog@TIdentifiedHeroPropsGeneralPage@@UAEHXZ	99.8781	99.8781	100.0000	0x50e4e	tokens1:8845abe5a198
+HeroPropsGeneralPage	?OnInitDialog@TIdentifiedHeroPropsGeneralPage@@UAEHXZ	100.0000	100.0000	100.0000	0x50e4e	tokens1:075667a702cb
 HeroPropsGeneralPage	?OnInitDialog@TNonRandomHeroPropsGeneralPage@@UAEHXZ	100.0000	100.0000	100.0000	0x519bb	tokens1:07b1fda79599
 HeroPropsGeneralPage	?OnInitDialog@TPrisonPropsGeneralPage@@UAEHXZ	100.0000	100.0000	100.0000	0x51d37	tokens1:749f060286d4
 HeroPropsGeneralPage	?OnInitDialog@TRandomHeroPropsGeneralPage@@UAEHXZ	100.0000	100.0000	100.0000	0x5018f	tokens1:7a876e80034d
@@ -2609,10 +2609,10 @@ HeroPrototypePropsGeneralPage	??_GTError@?$TGDIObjectSelector@VCBitmap@@@@UAEPAX
 HeroPrototypePropsGeneralPage	??_GTGDIObjectSelectorError@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x52205	-
 HeroPrototypePropsGeneralPage	??_GTHeroPrototypePropsGeneralPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5601f	-
 HeroPrototypePropsGeneralPage	?DoDataExchange@THeroPrototypePropsGeneralPage@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x56321	tokens1:e6384202d7e4
-HeroPrototypePropsGeneralPage	?GetMessageMap@THeroPrototypePropsGeneralPage@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x563be	tokens1:743d953c61a8
+HeroPrototypePropsGeneralPage	?GetMessageMap@THeroPrototypePropsGeneralPage@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x563be	tokens1:82d281b729ba
 HeroPrototypePropsGeneralPage	?OnChangeNameEdit@THeroPrototypePropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0x56ae9	tokens1:e011fcff553e
 HeroPrototypePropsGeneralPage	?OnDeltaposPortraitSpin@THeroPrototypePropsGeneralPage@@IAEXPAUtagNMHDR@@PAJ@Z	100.0000	100.0000	100.0000	0x56b68	tokens1:406418c551b6
-HeroPrototypePropsGeneralPage	?OnInitDialog@THeroPrototypePropsGeneralPage@@UAEHXZ	99.9409	99.9409	100.0000	0x563c4	tokens1:73aa28852b5e
+HeroPrototypePropsGeneralPage	?OnInitDialog@THeroPrototypePropsGeneralPage@@UAEHXZ	100.0000	100.0000	100.0000	0x563c4	tokens1:303d2d06c666
 HeroPrototypePropsGeneralPage	?OnOK@THeroPrototypePropsGeneralPage@@UAEXXZ	100.0000	100.0000	100.0000	0x56955	tokens1:be1a5c8a6082
 HeroPrototypePropsGeneralPage	?OnPlayer1Check@THeroPrototypePropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0x55b0a	tokens1:e0f5db37182e
 HeroPrototypePropsGeneralPage	?OnPlayer2Check@THeroPrototypePropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0x55b12	tokens1:e5aaf25c7c30
@@ -2999,7 +2999,7 @@ MapEditWnd	?_computeFloatingObjRect@TMapEditWnd@@ABE?AVCRect@@ABVCPoint@@@Z	100.
 MapEditWnd	?_computeViewRectSize@TMapEditWnd@@ABE?AVCSize@@HH@Z	100.0000	100.0000	100.0000	0x6c7cf	tokens1:78b46b854504
 MapEditWnd	?_copySelectedObject@TMapEditWnd@@AAE_NXZ	100.0000	100.0000	100.0000	0x6c484	tokens1:d1f5ab588a85
 MapEditWnd	?_drawBrush@TMapEditWnd@@AAEXPAVCDC@@@Z	100.0000	100.0000	100.0000	0x6af50	tokens1:42f876d56c6d
-MapEditWnd	?_drawMap@TMapEditWnd@@AAEXPAVCDC@@AAVCRect@@@Z	99.9408	99.9408	100.0000	0x6b686	tokens1:c566f8cdfdf1
+MapEditWnd	?_drawMap@TMapEditWnd@@AAEXPAVCDC@@AAVCRect@@@Z	100.0000	100.0000	100.0000	0x6b686	tokens1:4508876832cd
 MapEditWnd	?_drawSelectionFrame@TMapEditWnd@@AAEXPAVCDC@@@Z	100.0000	100.0000	100.0000	0x6ae29	tokens1:3087fad098f4
 MapEditWnd	?_generateMouseMove@TMapEditWnd@@AAEXXZ	100.0000	100.0000	100.0000	0x6c386	tokens1:71baa2f4bdbd
 MapEditWnd	?_getMapLayer@TMapEditWnd@@ABEABVTLayer@TGameMap@@XZ	100.0000	100.0000	100.0000	0x6a5b2	tokens1:21de0bcf3ffa
@@ -3983,7 +3983,7 @@ Monster	?isCustomized@TMonster@@UBE_NXZ	100.0000	100.0000	100.0000	0x88b6e	token
 Monster	?mismatch@std@@YA?AU?$pair@PBIPBI@1@PBI00@Z	100.0000	100.0000	100.0000	0x88ee5	-
 Monster	?setResourceQuantity@TMonster@@QAEXW4TGameResourceType@@I@Z	100.0000	100.0000	100.0000	0x889eb	tokens1:6e5dcefad498
 Monster	?write@TMonster@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x46f91	-
-Monster	?write@TMonster@@UBEXPAVTRawOStream@@H@Z	78.4621	78.4621	100.0000	0x88be8	tokens1:aa544936c635
+Monster	?write@TMonster@@UBEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x88be8	tokens1:cd52a0ee56cf
 MonsterPropsGeneralPage	??0TMonsterPropsGeneralPage@@QAE@PAVTMonster@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x890e2	tokens1:519204ce5f2e
 MonsterPropsGeneralPage	??1TMonsterPropsGeneralPage@@UAE@XZ	100.0000	100.0000	100.0000	0x891f9	tokens1:796d9c9a06bb
 MonsterPropsGeneralPage	??_GTMonsterPropsGeneralPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x891dd	-
@@ -4007,8 +4007,8 @@ MonsterPropsTreasurePage	??1TMonsterPropsTreasurePage@@UAE@XZ	100.0000	100.0000	
 MonsterPropsTreasurePage	??1_TResourceControls@TMonsterPropsTreasurePage@@QAE@XZ	100.0000	100.0000	100.0000	0x8a136	-
 MonsterPropsTreasurePage	??_GTMonsterPropsTreasurePage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8a0d4	-
 MonsterPropsTreasurePage	?DoDataExchange@TMonsterPropsTreasurePage@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x8a1c6	tokens1:4804eb370837
-MonsterPropsTreasurePage	?GetMessageMap@TMonsterPropsTreasurePage@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x8a246	tokens1:0ed77c4604cb
-MonsterPropsTreasurePage	?OnInitDialog@TMonsterPropsTreasurePage@@UAEHXZ	98.0410	98.0410	100.0000	0x8a24c	tokens1:f1c76712db9b
+MonsterPropsTreasurePage	?GetMessageMap@TMonsterPropsTreasurePage@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x8a246	tokens1:5be5b44ec660
+MonsterPropsTreasurePage	?OnInitDialog@TMonsterPropsTreasurePage@@UAEHXZ	100.0000	100.0000	100.0000	0x8a24c	tokens1:6e9c6efdb957
 MonsterPropsTreasurePage	?OnOK@TMonsterPropsTreasurePage@@UAEXXZ	100.0000	100.0000	100.0000	0x8a4d9	tokens1:d7d6de7df09b
 MonsterPropsTreasurePage	?_areResourceQuantitiesModified@TMonsterPropsTreasurePage@@ABE_NXZ	100.0000	100.0000	100.0000	0x8a216	tokens1:b4c653fd9abe
 NewMapDlg	??0TNewMapDlg@@QAE@PAVCWnd@@ABUTNewMapParams@TMapDoc@@@Z	100.0000	100.0000	100.0000	0x8a7aa	tokens1:74db295c5ef9
@@ -5018,7 +5018,7 @@ Town	?setTimedEvents@TTown@@QAEXABV?$vector@VTTimedEvent@TTown@@V?$allocator@VTT
 Town	?setVisitingHero@TTown@@QAEXPBVTHero@@@Z	100.0000	100.0000	100.0000	0xc242d	tokens1:3a163256eb51
 Town	?write@TTimedEvent@TTown@@QBEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0xc19e0	tokens1:794b81abb171
 Town	?write@TTown@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0xc3703	-
-Town	?write@TTown@@UBEXPAVTRawOStream@@H@Z	98.8428	98.8428	100.0000	0xc2ad9	tokens1:d89c0aafaa01
+Town	?write@TTown@@UBEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0xc2ad9	tokens1:763b8fd04b26
 TownPropsBuildingsPage	??0TTownPropsBuildingsPage@@QAE@ABVTGameMap@@AAV1@_NI@Z	100.0000	100.0000	100.0000	0xc3920	tokens1:ddee3c8e32b2
 TownPropsBuildingsPage	??1TTownPropsBuildingsPage@@UAE@XZ	100.0000	100.0000	100.0000	0xc3a97	tokens1:5c3e1489c6da
 TownPropsBuildingsPage	??8TBuildingState@TTown@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0xc49da	-
