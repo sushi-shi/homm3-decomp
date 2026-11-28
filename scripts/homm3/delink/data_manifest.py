@@ -914,6 +914,16 @@ def string_rows(base_dir=BASE_DIR, *, nonliteral_ranges=(), votes=None):
                 withheld.append((rva, next(iter(units.values())),
                                  f"string storage {start} not enrollable"))
                 continue
+            if STORAGE[start] == "rdata" and \
+                    {s.split("$", 1)[0] for s in sections[whole]} <= {".data"}:
+                # cl pooled this literal into .data. LINK does not move a
+                # contribution between sections, so equal bytes in retail's
+                # .rdata are another datum (a named const char array), and
+                # enrolling the literal there would collide with its claim.
+                withheld.append((rva, next(iter(units.values())),
+                                 "candidate .data literal matches retail "
+                                 ".rdata bytes"))
+                continue
             for unit, name in sorted(units.items()):
                 by_name[name].append(
                     {"name": name, "object": f"{unit}.c", "rva": rva, "size": size,
