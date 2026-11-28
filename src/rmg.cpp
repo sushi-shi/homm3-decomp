@@ -6960,18 +6960,34 @@ void type_random_map_generator::placeGuard(int value, TRmgMapPosition position)
 // before choosing border objects or a guard.  There is no Dreamcast RMG
 // counterpart; the helper names describe their retained retail bodies.
 // Retail preserves coordinate copies before translation; construct the
-// ordinary addition helper's result before applying its offset. Source-slot
-// locals reproduce source-index-before-destination lookup, and binding both
-// input slots before their zone indices follows the native
-// 0x243b24..0x243b38 prefix. The two size calls preserve retail's count
-// reuse through min. Lower controls: a separate scan position copy,
-// caller-side copy/+= for either addition, entrance or guard-input locals,
-// returning the += reference, copy-initializing from a constructed
-// temporary, direct range erase, and naming candidateCount before the empty
-// test. Keep the canonical helper calls.
-// Residual: the map query expands inside both guard placements, the final
-// guard accessors call the scalar overload instead of the value overload,
-// and the second guard's occupancy size remains out of line.
+// ordinary addition helper's result before applying its offset. The two
+// size calls preserve retail's count reuse through min. Mac
+// 0x243b88..0x243bb8 returns from each of the three entry guards
+// separately.
+// The guard value is assigned in each arm of an if/else: retail +0x245
+// stores zero straight into its home, where a conditional expression joins
+// both arms in a register first. Each crossing names its map item (retail
+// +0x36a forms the item pointer before reading the direction, and the
+// editor needs it) and adds the direction vector straight from the table.
+// The source zone index comes through getTemplateZone(), as in
+// createSubterraneanGate; the earlier template-slot locals followed Mac's
+// 0x243b24..0x243b38 load order and compile to the same Windows bytes, but
+// cost eight tuples.
+// The early return's vector destructor expands only while the root costs
+// 940..965 tuples (now 964); template-slot locals, braces around the guard
+// value's arms or a named direction point push it past that and retail's
+// out-of-line destructor moves to the wrong return.
+// The editor is exact. Game residual (99.03%): both expanded guard
+// placements keep the zone in EDX and load the guard value before pushing
+// either createGuard argument, where retail keeps the zone in ECX and
+// pushes it first (+0x580, +0x5e1); and one reload at the scan loop's
+// latch. Lower controls: a separate scan position copy, caller-side
+// copy/+= for either addition, entrance or guard-input locals, returning
+// the += reference, copy-initializing from a constructed temporary, direct
+// range erase, naming candidateCount before the empty test, a connection
+// direction getter (game 94.84, editor 98.79), the other position formed
+// from the copied position (89.77) and a direction reference (98.46).
+// Keep the canonical helper calls.
 VA(0x00541140, 0x63A)
 MAC_ADDRESS(0x243af8, 0x53c) // anchor-callee ConnectZones 0x543550; retail-only
 unsigned char type_random_map_generator::createGroundConnection(
@@ -6980,10 +6996,8 @@ unsigned char type_random_map_generator::createGroundConnection(
     std::vector<TRmgMapItem*>* borderItems,
     std::vector<TRmgMapPosition>* borderPositions)
 {
-    TRmgTemplateZone* sourceSlot = source->m_templateZone;
-    TRmgTemplateZone* destinationSlot = connection->m_destination;
-    int sourceZone = sourceSlot->m_zoneIndex;
-    TRmgZone* destination = m_zones[destinationSlot->m_zoneIndex];
+    int sourceZone = source->getTemplateZone()->m_zoneIndex;
+    TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
     int destinationZone = destination->m_templateZone->m_zoneIndex;
     if (source->getLevelPosition().m_z != destination->getLevelPosition().m_z)
         return 0;
@@ -7019,7 +7033,11 @@ unsigned char type_random_map_generator::createGroundConnection(
     if (candidates.size() == 0)
         return 0;
 
-    int guardValue = connection->m_unguarded ? 0 : getRmgGuardValue(connection->m_value, m_monsterStrength);
+    int guardValue;
+    if (connection->m_unguarded)
+        guardValue = 0;
+    else
+        guardValue = getRmgGuardValue(connection->m_value, m_monsterStrength);
 
     if (bestCost == 1 && guardValue == 0 && !connection->m_placeBorderObjects)
         return 1;
@@ -7028,9 +7046,9 @@ unsigned char type_random_map_generator::createGroundConnection(
     for (int crossing = 0; crossing < count; ++crossing) {
         int selected = rand() % candidates.size();
         TRmgMapPosition position = candidates[selected];
-        TRmgPoint direction = g_rmgDirections[
-            getMapItem(position)->m_tileData.m_connectionDirection];
-        TRmgMapPosition otherPosition = candidates[selected] + direction;
+        TRmgMapItem* item = getMapItem(position);
+        TRmgMapPosition otherPosition = candidates[selected]
+            + g_rmgDirections[item->m_tileData.m_connectionDirection];
 
         openConnectionPath(candidates[selected], connection->m_placeBorderObjects);
         source->m_entrances.push_back(TRmgPoint(position.m_x, position.m_y));
