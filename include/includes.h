@@ -84,9 +84,10 @@ public:
 public:
     TPickANumber(int lowBound, int high);
 
-    // Original: TPickANumber::IsAvailable; includes.h:166
+    // Original: TPickANumber::IsAvailable; includes.h:166. The public
+    // ?IsAvailable@TPickANumber@@QBA_NH@Z proves bool.
     DC_ADDRESS(0x0fe374, 0x24)
-    unsigned char isAvailable(int number) const
+    bool isAvailable(int number) const
     {
         return m_available[number - m_low];
     }

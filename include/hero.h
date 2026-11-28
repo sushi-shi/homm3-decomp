@@ -1088,8 +1088,9 @@ public:
     // E:\gamedcs\Hero.h:724. Dreamcast retains this header helper as a
     // standalone inline body; Complete stores the resolved sex on the live
     // hero and inlines this test at its spells.cpp caller.
+    // ?IsMale@hero@@QBA_NXZ proves bool.
     DC_ADDRESS(0x1581a0, 0x18)
-    unsigned char isMale() const
+    bool isMale() const
     {
         return m_sex == 0;
     }

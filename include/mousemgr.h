@@ -123,9 +123,9 @@ public:
     }
 
     // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this source
-    // helper (the field_68 test).
+    // helper (the field_68 test). ?IsVis@mouseManager@@QBA_NXZ proves bool.
 DC_ADDRESS(0x038064, 0xa)
-unsigned char isVis() const { return m_hideCount == 0; }
+bool isVis() const { return m_hideCount == 0; }
 
 private:
     void saveAndDraw(IDirectDrawSurface* dstSurface,

@@ -106,7 +106,7 @@ private:
     unsigned char m_canCastWaterWalk;
     TSkillMastery m_waterWalkLevel;
     TSkillMastery m_flightLevel;
-    unsigned char m_limitReached;
+    bool m_limitReached;
     pathCell* m_cellData;
 
 public:
@@ -196,9 +196,10 @@ public:
     bool isMoat(short hex) const { return m_isMoatSlowed[hex]; }
 
     // E:\\gamedcs\\findpath.h:247. Inlined in move_hero and
-    // AI_choose_destination.
+    // AI_choose_destination. ?limit_was_reached@searchArray@@QBA_NXZ proves
+    // bool; the flag it returns is typed to match (byte-flat).
     DC_ADDRESS(0x037e7c, 0x8)
-    bool limitWasReached() const { return m_limitReached != 0; }
+    bool limitWasReached() const { return m_limitReached; }
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
     void lowerDoor();
     bool findCombatPath(const army* currentArmy, long currentGroup,

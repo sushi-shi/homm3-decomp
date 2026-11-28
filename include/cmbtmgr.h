@@ -998,7 +998,7 @@ public:
     // Army-slot indexes for the main building, lower tower and upper
     // tower defenders. DamageWall reads one selected slot when the
     // corresponding target falls and marks that stack removed.
-    unsigned char m_inSecondPhase;  // +0x13de4
+    bool m_inSecondPhase;  // +0x13de4
 
 public:
     // Dreamcast in_second_phase is a byte followed by OriginalAttackSkill;
