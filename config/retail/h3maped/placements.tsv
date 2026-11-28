@@ -2091,7 +2091,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0009e175	0x36	func	??1TRmgObjectPlacementRule@@QAE@XZ	rmg	external	masked body (54 bytes, 5 relocations) unique at a census start
 0x0009e1ab	0x14	func	??_F?$vector@HV?$allocator@H@std@@@std@@QAEXXZ	rmg	external	masked body (20 bytes, 0 relocations) unique at a census start; ICF-folded with 2 identical bodies
 0x0009e6cd	0x33	func	?addObject@t_abstract_random_generator@@UAEXPAVtype_object@@UTRmgMapPosition@@@Z	rmg	external	masked body (51 bytes, 2 relocations) unique at a census start
-0x0009e700	0x46d	func	?decorateMapCell@t_abstract_random_generator@@QAEXUTRmgMapPosition@@H@Z	rmg	external	referenced by ?decorateMap@t_abstract_random_generator@@QAEXXZ at +0xda
+0x0009e700	0x46d	func	?decorateMapCell@t_abstract_random_generator@@QAEXUTRmgMapPosition@@H@Z	rmg	external	masked body (1133 bytes, 26 relocations) unique at a census start
 0x0009eb6d	0x20	func	?getMapItem@type_random_map@@QAEPAUTRmgMapItem@@UTRmgMapPosition@@@Z	rmg	external	masked body (32 bytes, 0 relocations) unique at a census start
 0x0009eb8d	0x165	func	?decorateMap@t_abstract_random_generator@@QAEXXZ	rmg	external	masked body (357 bytes, 4 relocations) unique at a census start
 0x0009ecf2	0x26a	func	??0type_random_map_generator@@QAE@HHHHHHHHHPAVtype_progress_bar@@H@Z	rmg	external	masked body (618 bytes, 22 relocations) unique at a census start
@@ -2108,7 +2108,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000a218c	0x287	func	?initializeZones@type_random_map_generator@@QAEXPAUTRmgTemplate@@@Z	rmg	external	masked body (647 bytes, 9 relocations) unique at a census start
 0x000a2413	0x207	func	?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTRmgPoint@@0HHH@Z	rmg	external	masked body (519 bytes, 10 relocations) unique at a census start
 0x000a261a	0x15d	func	?drawStraightZoneBoundary@type_random_map_generator@@QAEXUTRmgPoint@@0HH@Z	rmg	external	masked body (349 bytes, 3 relocations) unique at a census start
-0x000a2777	0x3bc	func	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgHalfEdge@@E@Z	rmg	external	referenced by ?buildZoneBoundaries@type_random_map_generator@@QAEXPAUTRmgTemplate@@H@Z at +0x48a
+0x000a2777	0x3bc	func	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgHalfEdge@@E@Z	rmg	external	masked body (956 bytes, 20 relocations) unique at a census start
 0x000a2cdc	0x1e7	func	?drawIslandBoundary@type_random_map_generator@@QAEXUTRmgPoint@@0HHH@Z	rmg	external	masked body (487 bytes, 10 relocations) unique at a census start
 0x000a41b4	0x11d	func	?subdivideRmgNoiseRegion@@YAXAAV?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@UTRmgNoiseRegion@@UTRmgNoiseMidpoints@@H@Z	rmg	external	masked body (285 bytes, 4 relocations) unique at a census start
 0x000a4694	0x209	func	?floodWaterZoneDistances@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	rmg	external	masked body (521 bytes, 12 relocations) unique at a census start
@@ -2120,7 +2120,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000a5c07	0x1fc	func	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	rmg	external	referenced by ?placeGuard@type_random_map_generator@@QAEXHUTRmgMapPosition@@@Z at +0x4e
 0x000a5e03	0x70	func	?placeGuard@type_random_map_generator@@QAEXHUTRmgMapPosition@@@Z	rmg	external	masked body (112 bytes, 1 relocations) unique at a census start
 0x000a5e73	0x1f8	func	?placeBorderGuard@type_random_map_generator@@QAEHUTRmgMapPosition@@HPAUTRmgZone@@@Z	rmg	external	masked body (504 bytes, 8 relocations) unique at a census start
-0x000a61bc	0x3e9	func	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	rmg	external	referenced by ?connectZones@type_random_map_generator@@QAEXXZ at +0x253
+0x000a61bc	0x3e9	func	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	rmg	external	masked body (1001 bytes, 24 relocations) unique at a census start
 0x000a65a5	0x5c	func	?getRmgGuardValue@@YAHHH@Z	rmg	external	masked body (92 bytes, 4 relocations) unique at a census start
 0x000a6601	0x155	func	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	rmg	external	masked body (341 bytes, 9 relocations) unique at a census start
 0x000a6795	0x14b	func	?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z	rmg	external	masked body (331 bytes, 4 relocations) unique at a census start
@@ -2142,7 +2142,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000a9c7c	0xee	func	?placeExtraMines@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	rmg	external	masked body (238 bytes, 3 relocations) unique at a census start
 0x000a9d6a	0xd6	func	?placeMines@type_random_map_generator@@QAEXXZ	rmg	external	masked body (214 bytes, 2 relocations) unique at a census start
 0x000a9e40	0xdc	func	?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@HHH@Z	rmg	external	masked body (220 bytes, 7 relocations) unique at a census start
-0x000a9f1c	0x279	func	?createTreasureObject@type_random_map_generator@@QAEPAVtype_object@@PAUTRmgZone@@HHPAHEEEUTRmgMapPosition@@@Z	rmg	external	referenced by ?replaceObjectWithTreasure@type_random_map_generator@@QAEXPAVtype_object@@H@Z at +0x6f
+0x000a9f1c	0x279	func	?createTreasureObject@type_random_map_generator@@QAEPAVtype_object@@PAUTRmgZone@@HHPAHEEEUTRmgMapPosition@@@Z	rmg	external	masked body (633 bytes, 16 relocations) unique at a census start
 0x000aa195	0x46	func	?countRmgOccupiedCells@@YAHPBUTObjectType@@@Z	rmg	internal	masked body (70 bytes, 2 relocations) unique at a census start
 0x000aa354	0x95	func	?assembleTreasureGroup@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgTreasureGroup@@EHH@Z	rmg	external	masked body (149 bytes, 9 relocations) unique at a census start
 0x000aad8e	0x44	func	??1TRmgTreasureGroup@@QAE@XZ	rmg	external	masked body (68 bytes, 6 relocations) unique at a census start
