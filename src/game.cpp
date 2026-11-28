@@ -4173,17 +4173,13 @@ void game::randomizeUniversity(NewmapCell* cell)
         skill = eSecSkillPathfinding;
         for (;;) {
             if (!availableSkills[skill]) {
-                {
-                    skill = TSecondarySkill(skill + 1);
-                }
+                skill = TSecondarySkill(skill + 1);
                 continue;
             }
             if (choice == 0)
                 break;
             --choice;
-            {
-                skill = TSecondarySkill(skill + 1);
-            }
+            skill = TSecondarySkill(skill + 1);
         }
 
         university.m_skills[i] = skill;
@@ -5288,15 +5284,11 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
         if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             int intBuffer;
             infile->read(&intBuffer, sizeof(char));
-            {
-                m_victoryCondition.m_creatureType = TCreatureType(intBuffer & 0xff);
-            }
+            m_victoryCondition.m_creatureType = TCreatureType(intBuffer & 0xff);
         } else {
             short shortBuffer;
             infile->read(&shortBuffer, sizeof(shortBuffer));
-            {
-                m_victoryCondition.m_creatureType = TCreatureType(shortBuffer);
-            }
+            m_victoryCondition.m_creatureType = TCreatureType(shortBuffer);
         }
         {
             int intBuffer;
@@ -8810,11 +8802,9 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             0x00677f54, xferFinishedLog,
             "Finished sending data... Now handling requests.."));
         done = 1;
-        {
-            CGameTransmitEndMsg endMsg(g_monthType, g_monthTypeExtra,
-                                     g_weekType, g_weekTypeExtra, diffSize);
-            transmitRemoteData(&endMsg, toWho, false, true);
-        }
+        CGameTransmitEndMsg endMsg(g_monthType, g_monthTypeExtra,
+                                 g_weekType, g_weekTypeExtra, diffSize);
+        transmitRemoteData(&endMsg, toWho, false, true);
     }
     done = 0;
 

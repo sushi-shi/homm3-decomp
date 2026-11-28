@@ -183,17 +183,15 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
 
     m_widgets.reserve(51);
 
-    {
-        bitmapBorder* const background = new bitmapBorder(
-            0, 0, 620, 595, BACKGROUND_ID,
-            DATA_COMPGEN(0x00684bcc, spellbookBackground, "Spelback.pcx"),
-            0x800);
-        if (h.m_owner >= 0)
-            background->setPlayerPaletteColors(h.m_owner);
-        else
-            background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
-        m_widgets.push_back(background);
-    }
+    bitmapBorder* const background = new bitmapBorder(
+        0, 0, 620, 595, BACKGROUND_ID,
+        DATA_COMPGEN(0x00684bcc, spellbookBackground, "Spelback.pcx"),
+        0x800);
+    if (h.m_owner >= 0)
+        background->setPlayerPaletteColors(h.m_owner);
+    else
+        background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
+    m_widgets.push_back(background);
 
     int spellLevelWidgetsIndex = m_widgets.size();
     int id = SPELL_LEVEL_0_ID;

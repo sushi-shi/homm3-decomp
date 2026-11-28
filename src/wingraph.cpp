@@ -351,12 +351,10 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
             != DDERR_SURFACELOST) {
             return;
         }
-        {
-            HRESULT result = ddRestoreSurfaces();
-            if (result != DD_OK)
-                ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                                  "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x233);
-        }
+        HRESULT result = ddRestoreSurfaces();
+        if (result != DD_OK)
+            ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x233);
     }
 }
 

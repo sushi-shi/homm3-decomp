@@ -1199,10 +1199,8 @@ void remoteCleanup()
         }
 
         g_remoteOn = 0;
-        {
-            CNetPlayerInfo playerInfo;
-            g_thisNetPlayerInfo = playerInfo;
-        }
+        CNetPlayerInfo playerInfo;
+        g_thisNetPlayerInfo = playerInfo;
     }
 }
 

@@ -1178,11 +1178,9 @@ TTownScreenWindow::TTownScreenWindow()
                                      0, 0, 0, 0, 0x10));
     m_widgets.push_back(new iconWidget(122, 413, 38, 38, 159, "itmcl.def",
                                      0, 0, 0, 0, 0x10));
-    {
-        widget* label = new textWidget(163, 434, 64, 18, 0, "smalfont.fnt",
-                                     font::PRIMARY, 160, 5, 0, 8);
-        m_widgets.push_back(label);
-    }
+    m_widgets.push_back(new textWidget(
+        163, 434, 64, 18, 0, "smalfont.fnt",
+        font::PRIMARY, 160, 5, 0, 8));
 
     for (int i = 0; i < 8; i++) {
         m_growthBonusIcon[i] = new iconWidget(
@@ -1210,41 +1208,27 @@ TTownScreenWindow::TTownScreenWindow()
     m_widgets.push_back(new iconWidget(677, 387, 58, 64, 107, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
 
-    {
-        widget* label = new textWidget(305, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 108, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(367, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 109, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(429, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 110, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(491, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 111, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(553, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 112, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(615, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 113, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(677, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 114, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
+    m_widgets.push_back(new textWidget(
+        305, 436, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 108, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        367, 436, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 109, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        429, 436, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 110, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        491, 436, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 111, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        553, 436, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 112, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        615, 436, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 113, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        677, 436, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 114, 2, 0, 8));
 
     m_widgets.push_back(new iconWidget(305, 387, 58, 64, 115, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
@@ -1276,41 +1260,27 @@ TTownScreenWindow::TTownScreenWindow()
     m_widgets.push_back(new iconWidget(677, 483, 58, 64, 132, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
 
-    {
-        widget* label = new textWidget(305, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 133, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(367, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 134, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(429, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 135, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(491, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 136, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(553, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 137, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(615, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 138, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(677, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 139, 2, 0, 8);
-        m_widgets.push_back(label);
-    }
+    m_widgets.push_back(new textWidget(
+        305, 532, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 133, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        367, 532, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 134, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        429, 532, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 135, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        491, 532, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 136, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        553, 532, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 137, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        615, 532, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 138, 2, 0, 8));
+    m_widgets.push_back(new textWidget(
+        677, 532, 58, 20, "0", "Verd10B.fnt",
+        font::WHITE, 139, 2, 0, 8));
 
     m_widgets.push_back(new iconWidget(305, 483, 58, 64, 140, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
@@ -1327,11 +1297,9 @@ TTownScreenWindow::TTownScreenWindow()
     m_widgets.push_back(new iconWidget(677, 483, 58, 64, 146, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
 
-    {
-        button* control = new button(744, 414, 48, 16, 152, "iam014.def",
-                                 0, 1, 0, 0, 2);
-        m_widgets.push_back(control);
-    }
+    button* control = new button(744, 414, 48, 16, 152, "iam014.def",
+                             0, 1, 0, 0, 2);
+    m_widgets.push_back(control);
     {
         button* control = new button(744, 526, 48, 16, 153, "iam015.def",
                                  0, 1, 0, 0, 2);
@@ -1349,17 +1317,13 @@ TTownScreenWindow::TTownScreenWindow()
         m_widgets.push_back(control);
     }
 
-    {
-        widget* label = new bitmapBackedTextWidget(7, 555, 734, 19, 0,
-                                                "smalfont.fnt", "TStatBar.pcx",
-                                                font::PRIMARY, 151, 1, 0);
-        m_widgets.push_back(label);
-    }
-    {
-        widget* label = new textWidget(85, 387, 147, 20, 0, "medfont.fnt",
-                                     font::PRIMARY, 149, 0, 0, 8);
-        m_widgets.push_back(label);
-    }
+    m_widgets.push_back(new bitmapBackedTextWidget(
+        7, 555, 734, 19, 0,
+        "smalfont.fnt", "TStatBar.pcx",
+        font::PRIMARY, 151, 1, 0));
+    m_widgets.push_back(new textWidget(
+        85, 387, 147, 20, 0, "medfont.fnt",
+        font::PRIMARY, 149, 0, 0, 8));
 
     widget** it = m_widgets.begin();
     while (it != m_widgets.end()) {
@@ -4752,17 +4716,15 @@ int townManager::main(message& msg)
         }
     }
 
-    {
-        // Retail reads Get() before g_timers[0] (elapsedSince(g_timers[0])
-        // loads the timer first), so the two halves are spelled out.
-        unsigned long now = GameTime::get();
-        int delta = GameTime::elapsed(now, g_timers[0]);
-        if (delta >= 0) {
-            // DC townmgr.cpp:5920 calls max; retail 0x5d33c2 selects
-            // the larger interval, keeping panorama updates 150 ms apart.
-            g_timers[0] += max(150, delta);
-            drawTown(1, 1, 0);
-        }
+    // Retail reads Get() before g_timers[0] (elapsedSince(g_timers[0])
+    // loads the timer first), so the two halves are spelled out.
+    unsigned long now = GameTime::get();
+    int delta = GameTime::elapsed(now, g_timers[0]);
+    if (delta >= 0) {
+        // DC townmgr.cpp:5920 calls max; retail 0x5d33c2 selects
+        // the larger interval, keeping panorama updates 150 ms apart.
+        g_timers[0] += max(150, delta);
+        drawTown(1, 1, 0);
     }
 
     switch (msg.m_id) {
@@ -6267,12 +6229,10 @@ void townManager::setupMage(heroWindow* mageWin)
             if (m_townToView->m_type == TOWN_TOWER
                 && (m_townToView->hasBuilding(EXTRA_1_ID, true)))
                 state++;
-            {
-                int storage;
-                storage = level;
-                if (!m_townToView->isLegalBuilding(type_building_id(storage)))
-                    state = 0;
-            }
+            int storage;
+            storage = level;
+            if (!m_townToView->isLegalBuilding(type_building_id(storage)))
+                state = 0;
             if (slot < m_townToView->m_mageGuildSpellCounts[level])
                 state = 0;
             else
