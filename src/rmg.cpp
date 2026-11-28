@@ -4602,27 +4602,24 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 // placed and its 12-byte position vector. Retail samples offsets around
 // the center and appends positions accepted by canPlaceZone. Provisional
 // role name; Complete-only, no Dreamcast counterpart.
-// Exposing the ordinary position-constructor body in this TU, together
-// with constructed candidates, the named Y temporary and middle zone setter,
-// this restores all retail insertion call boundaries; with the constructor
-// hidden in support they are lost.
-// The opposite-level probe stores the center's x/y and the new level
-// straight into the zone, as Mac 0x23c0f0..0x23c104 and the editor
-// (0x4a18f7..0x4a1913) do, with no candidate temporary or setter copy.
+// Each probe stores its coordinates straight into the zone: Mac 0x23c09c..
+// 0x23c0a4 and 0x23c1ec..0x23c1f4 write the two converted values and the
+// level to zone+0x10/0x14/0x18 with no constructed position between, as the
+// opposite-level probe does (Mac 0x23c0f0..0x23c104, editor 0x4a18f7..
+// 0x4a1913). Retail converts y before x (0x53aeda sines, 0x53aee9 cosines)
+// and keeps y on the stack across the second conversion, so y is a local
+// formed first. The center's position is copied from the member (Mac
+// 0x23bff8..0x23c004 loads the three fields) and each accepted position is
+// read back through getLevelPosition(), which preserves the snapshot even
+// if the predicate changes the zone.
 // Retail stores x and y before it computes the new level (0x53af56..
 // 0x53af61), so the level is formed after those two stores.
-// The temporary reference spelling is provisional
-// source ownership, not recovered DC text. Three post-predicate getter reads
-// preserve accepted-position snapshots even if a predicate changes the zone.
-// Construction/update/lifetime forms with canonical getSize/max calls
-// expanded vector helpers too far before that ownership recovery. Retain
-// real helpers and ordinary calls.
-// Residual (game): the last loop's expanded insert calls the ternary's
-// second size() where retail expands it. The inline trace gives this caller
-// cb 517 (budget 1034); retail's decision needs cb 559..600, so the second
-// size() gets 42 instead of 84. A max() radius, plain int Y temporaries,
-// loop-scoped constructed candidates and TRmgZone::getSize() reads (cb 512)
-// are all lower; getNumberLevels() is flat.
+// Inline budget (replay): the last push_back's insert(pos, n, value) expands
+// two of its size() calls, which needs 701..784 left there. This body sits
+// at the 1000 floor and charges three getLevelPosition() copies and two
+// inserts (728). A fourth accessor copy for the center leaves 680, and the
+// former constructed candidates (two more charged constructors) 618; both
+// are byte-identical elsewhere and expand one size() only.
 VA(0x0053AE80, 0x36A)
 MAC_ADDRESS(0x23bfbc, 0x28c) // anchor-callee 0x53bab9/0x53bb23; thiscall, ret 0xc
 VA_AT(h3maped, 0x004a17f5, 0x172)
@@ -4630,16 +4627,13 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
     TRmgZone* zone, std::vector<TRmgMapPosition>& candidates)
 {
     int radius = center->m_templateZone->m_size + zone->m_templateZone->m_size;
-    TRmgMapPosition position = center->getLevelPosition();
-    TRmgMapPosition candidate;
+    TRmgMapPosition position = center->m_levelPosition;
     for (int direction = 0; direction < 32; ++direction) {
-        const int& y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
-        candidate = TRmgMapPosition(
-            static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]),
-            y, position.m_z);
-        zone->m_levelPosition.m_x = candidate.m_x;
-        zone->m_levelPosition.m_y = candidate.m_y;
-        zone->m_levelPosition.m_z = candidate.m_z;
+        int y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        zone->m_levelPosition.m_x =
+            static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
+        zone->m_levelPosition.m_y = y;
+        zone->m_levelPosition.m_z = position.m_z;
         if (canPlaceZone(zone))
             candidates.push_back(zone->getLevelPosition());
     }
@@ -4655,13 +4649,11 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
     if (radius < zone->m_templateZone->m_size)
         radius = zone->m_templateZone->m_size;
     for (direction = 0; direction < 32; ++direction) {
-        const int& y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
-        candidate = TRmgMapPosition(
-            static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]),
-            y, level);
-        zone->m_levelPosition.m_x = candidate.m_x;
-        zone->m_levelPosition.m_y = candidate.m_y;
-        zone->m_levelPosition.m_z = candidate.m_z;
+        int y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        zone->m_levelPosition.m_x =
+            static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
+        zone->m_levelPosition.m_y = y;
+        zone->m_levelPosition.m_z = level;
         if (canPlaceZone(zone))
             candidates.push_back(zone->getLevelPosition());
     }
