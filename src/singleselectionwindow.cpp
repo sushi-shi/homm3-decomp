@@ -6603,9 +6603,12 @@ bool TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
 // their own way out: one `||` guard (Mac 0x180c48..0x180c64 tests both
 // before one `return 1`) plus a single trailing `return 1` after the arms
 // (Mac joins both arms at 0x18125c before its one result) gives that
-// shrink-wrapped save (99.97%). Residual: one commuted
+// shrink-wrapped save (99.97%). That left one commuted
 // `lea edx, [eax + edi]` in the third byte-copy loop of the m_headersA row
-// assignment. Controls: two guarded returns with the shared tail duplicate
+// assignment; reading the sender through the typed `mapFileNameMsg` at the
+// two request sends, like every other field, instead of through the
+// untyped parameter closes it (100%; either site alone does too).
+// Controls: two guarded returns with the shared tail duplicate
 // the epilogue inline (92.17%); the `||` guard with returns in each arm,
 // a positive wrapping guard with or without arm returns, empty(), `true`
 // returns and hoisting the message cast keep EBX in the prologue (96.6x%).
@@ -6647,14 +6650,14 @@ bool TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
             m_selectionHeaders[mapFileNameMsg->m_number] = temp;
         } else {
             CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
-            transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
+            transmitRemoteDataDPID(&msg, mapFileNameMsg->m_dpidFrom, false, true);
         }
     } else {
 #if !defined(HOMM3_TARGET_MAC)
         chdir("..");
 #endif
         CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
-        transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
+        transmitRemoteDataDPID(&msg, mapFileNameMsg->m_dpidFrom, false, true);
     }
     return true;
 }
