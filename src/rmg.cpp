@@ -6262,13 +6262,18 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
 // twice before the map formula (0x241438..0x241464), the generator lookup;
 // its reset, scan and selection lookups copy once (m_map). Keep the reset and
 // selected-cell pointers: dropping either lowers both images.
-// Residual: both scans' level*height imul operands are swapped; the game
-// interleaves the bounds, index and position copies that retail emits in
-// sequence (MAX 97.16 with the earlier position-first order, 96.61 here),
-// plus an EDX/ECX swap in the perimeter clamps. Construction/loop/getter,
-// selection/scan/upper-limit, named scan cells/insert iterators, ADD-negative
-// limit forms, getBounds, assigned/copy-initialized full positions and
-// position-before-index orders do not recover it.
+// The zone index is read through getTemplateZone(), as fillZoneArea reads
+// it: retail copies the bounds, then the index, then the position, in
+// sequence, where the direct member chain interleaved the three and swapped
+// EDX/ECX in the perimeter clamps (96.61 -> 99.94).
+// Residual, the same in both images: the candidate scan's lookup multiplies
+// level by height (mov eax,[level]; imul eax,[height], game 0x53f6c4,
+// editor 0x4a4b1a) where the reset and selection lookups multiply height
+// by level, as all three do here. The editor also adds the cell base to
+// the index there instead of indexing off it. A named scan cell gives the
+// editor that add (99.93) but takes the game's base register (96.65); the
+// three-coordinate overload, either operand spelling of its product, the
+// generator's forwarder and a cost accessor are byte-equal to this form.
 VA(0x0053F470, 0x409)
 MAC_ADDRESS(0x24123c, 0x638)
 VA_AT(h3maped, 0x004a4913, 0x37b)
@@ -6277,7 +6282,7 @@ void type_random_map_generator::populateWaterZoneIslands(TRmgZone* zone)
     if (zone->m_terrain != eTerrainWater)
         return;
     TRmgZoneBounds bounds = zone->m_bounds;
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
+    int zoneIndex = zone->getTemplateZone()->m_zoneIndex;
     TRmgMapPosition position;
     position.m_z = zone->getLevelPosition().m_z;
     for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
