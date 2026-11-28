@@ -9221,8 +9221,11 @@ int CAdvPopup::windowHandler(message& msg)
         CNetMsgHandler* netMsgHandler = g_dPlay->getNetMsgHandler();
         if (netMsgHandler)
             netMsgHandler->checkHandleNet(1, &msgReceived);
-        if (msgReceived && netMsgHandler->getAbortPopupMsg())
-            return exitDialog(msg);
+        if (msgReceived) {
+            if (netMsgHandler->getAbortPopupMsg()) {
+                return exitDialog(msg);
+            }
+        }
     }
     return 0;
 }

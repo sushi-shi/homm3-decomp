@@ -3515,10 +3515,11 @@ static long valueOfReinforcing(hero* currentHero, town* currentTown, short moveC
         &currentTown->getArmy(), player->m_resources,
         hasAngelicAlliance);
 
-    if (moveCost >= 400
-        && purchaser.getArmyIncrease()
-               < currentHero->m_army.getAIValue() / 3)
-        return 0;
+    if (moveCost >= 400) {
+        if (purchaser.getArmyIncrease()
+            < currentHero->m_army.getAIValue() / 3)
+            return 0;
+    }
 
     return purchaseValue + swapValue / 2;
 }

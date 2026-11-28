@@ -127,8 +127,11 @@ bool combatManager::automateCatapult()
         index = 0;
         for (; index < 4; index++) {
             long strength = getWallStrength(walls[index]);
-            if (strength == weakest && --choice == 0)
-                break;
+            if (strength == weakest) {
+                --choice;
+                if (choice == 0)
+                    break;
+            }
         }
         target = walls[index];
     } else {

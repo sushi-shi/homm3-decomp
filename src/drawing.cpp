@@ -826,9 +826,11 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
     DATA(0x006969b8)
     static std::vector<long> oldHexes;
 
-    if (m_battleOver
-            || isQuickCombat()
-            || !g_config.m_showCombatMouseHex)
+    if (m_battleOver)
+        return;
+    if (isQuickCombat())
+        return;
+    if (!g_config.m_showCombatMouseHex)
         return;
     if (newMouseGridIndex == lastMouseGridIndex && !forceUpdate)
         return;
@@ -956,9 +958,11 @@ void combatManager::drawFrame(bool update,
                               bool refreshBackground,
                               bool doDelayTil)
 {
-    if (m_battleOver
-            || isQuickCombat()
-            || !m_combatShowIt)
+    if (m_battleOver)
+        return;
+    if (isQuickCombat())
+        return;
+    if (!m_combatShowIt)
         return;
 
     SLimitData tempLimits;
