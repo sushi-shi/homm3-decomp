@@ -548,9 +548,11 @@ VA(0x00405ce0, 0x195)
 TCampaign::_TImpl::_TImpl(int type)
     : m_type(type), m_bDifficultyChoice(false), m_music(0x22)
 {
-    // Residual: retail indexes the traits with the type parameter rather than
-    // m_type; the class's own getNumScenarios() is kept.
-    unsigned int numScenarios = getNumScenarios();
+    // Retail indexes the traits with the incoming type parameter.
+    // FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): reads the table
+    // directly instead of the class's getNumScenarios(), which reads m_type
+    // and measures 98.63%.
+    unsigned int numScenarios = g_campaignMapTraits[type].m_numRegions;
     m_scenarios.resize(numScenarios, TScenario(numScenarios));
 }
 

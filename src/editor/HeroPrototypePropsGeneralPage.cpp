@@ -210,6 +210,8 @@ END_MESSAGE_MAP()
 // Residual: retail reuses the portrait rectangles' stack homes for the
 // later player scan, which declaring them inside the client-DC block
 // reproduces without lifetime evidence.
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x004563c4, 0x591)
 BOOL THeroPrototypePropsGeneralPage::OnInitDialog()
 {
@@ -245,17 +247,17 @@ BOOL THeroPrototypePropsGeneralPage::OnInitDialog()
     _m_experienceCombo.GetWindow(GW_CHILD)->ModifyStyle(0, ES_NUMBER);
     _m_experienceCombo.LimitText(TDigits<s_kMaxExperience>::getDigits());
     _m_experienceCombo.SetWindowText(TFormattedString("%d", _m_pNewPrototype->getExperience()));
-    CRect rect;
-    _m_portraitStatic.GetWindowRect(&rect);
-    ScreenToClient(&rect);
-    CRect spinRect;
-    _m_portraitSpin.GetWindowRect(&spinRect);
-    ScreenToClient(&spinRect);
-    rect.right = spinRect.left;
-    rect.bottom = spinRect.bottom;
-    _m_portraitStatic.MoveWindow(&rect, FALSE);
-    _m_portraitStatic.GetClientRect(&rect);
     {
+        CRect rect;
+        _m_portraitStatic.GetWindowRect(&rect);
+        ScreenToClient(&rect);
+        CRect spinRect;
+        _m_portraitSpin.GetWindowRect(&spinRect);
+        ScreenToClient(&spinRect);
+        rect.right = spinRect.left;
+        rect.bottom = spinRect.bottom;
+        _m_portraitStatic.MoveWindow(&rect, FALSE);
+        _m_portraitStatic.GetClientRect(&rect);
         CClientDC dc(this);
         _m_portraitBitmap.CreateCompatibleBitmap(&dc, rect.Width(), rect.Height());
     }

@@ -374,37 +374,47 @@ void TScenarioStartingOptionsWriter::write(const TScenarioStartingOptions* pOpti
 // Residual (shared by the crossover and starting-hero writers): retail
 // copies the element count before writing it; an unevidenced count local
 // reproduced that and was not kept.
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x00411b80, 0xf7)
 void TScenarioStartingOptionsWriter::visit(const TScenarioOptionsBonus& options)
 {
     writeValue<ubyte>(*m_pOStream, eOptionsBonus);
-    writeValue<ubyte>(*m_pOStream, options.getPlayer());
-    writeValue<ubyte>(*m_pOStream, options.getBonuses().size());
-    for (unsigned int i = 0; i < options.getBonuses().size(); i++)
-        bonusWriter.write(*options.getBonuses()[i], *m_pOStream, m_version);
+    writeValue<ubyte>(*m_pOStream, options.m_player);
+    unsigned int numBonuses = options.m_bonuses.size();
+    writeValue<ubyte>(*m_pOStream, numBonuses);
+    for (unsigned int i = 0; i < options.m_bonuses.size(); i++)
+        bonusWriter.write(*options.m_bonuses[i], *m_pOStream, m_version);
 }
 
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x00411c80, 0x11e)
 void TScenarioStartingOptionsWriter::visit(const TScenarioOptionsCrossoverScenario& options)
 {
     writeValue<ubyte>(*m_pOStream, eOptionsCrossoverScenario);
-    writeValue<ubyte>(*m_pOStream, options.getChoices().size());
-    for (unsigned int i = 0; i < options.getChoices().size(); i++) {
-        const TScenarioOptionsCrossoverScenario::TChoice& choice = options.getChoices()[i];
-        writeValue<ubyte>(*m_pOStream, choice.getPlayer());
-        writeValue<ubyte>(*m_pOStream, choice.getScenario());
+    unsigned int numChoices = options.m_choices.size();
+    writeValue<ubyte>(*m_pOStream, numChoices);
+    for (unsigned int i = 0; i < options.m_choices.size(); i++) {
+        const TScenarioOptionsCrossoverScenario::TChoice& choice = options.m_choices[i];
+        writeValue<ubyte>(*m_pOStream, choice.m_player);
+        writeValue<ubyte>(*m_pOStream, choice.m_scenario);
     }
 }
 
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x00411da0, 0x11e)
 void TScenarioStartingOptionsWriter::visit(const TScenarioOptionsStartingHero& options)
 {
     writeValue<ubyte>(*m_pOStream, eOptionsStartingHero);
-    writeValue<ubyte>(*m_pOStream, options.getChoices().size());
-    for (unsigned int i = 0; i < options.getChoices().size(); i++) {
-        const TScenarioOptionsStartingHero::TChoice& choice = options.getChoices()[i];
-        writeValue<ubyte>(*m_pOStream, choice.getPlayer());
-        writeValue<short>(*m_pOStream, choice.getHero());
+    unsigned int numChoices = options.m_choices.size();
+    writeValue<ubyte>(*m_pOStream, numChoices);
+    for (unsigned int i = 0; i < options.m_choices.size(); i++) {
+        const TScenarioOptionsStartingHero::TChoice& choice = options.m_choices[i];
+        writeValue<ubyte>(*m_pOStream, choice.m_player);
+        int hero = choice.m_hero;
+        writeValue<short>(*m_pOStream, hero);
     }
 }
 

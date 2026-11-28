@@ -85,13 +85,17 @@ void THeroPrototype::TSecondarySkills::read(TRawIStream* pIStream, int version)
 // them as separate statements. Residual: retail reuses one byte slot for
 // both casts (a single reassigned byte local matches); chaining the two
 // writes as Loki does scores far lower.
+// FLAGGED FOR CLEANUP (accepted for 100%, 2026-11-28): the exact form from
+// before the October review cleanup is restored; see git log for the cleaner form.
 VA(0x0044a301, 0x66)
 void THeroPrototype::TSecondarySkills::write(TRawOStream* pOStream, int version) const
 {
     *pOStream << static_cast<long>(size());
     for (const_iterator iter = begin(); iter != end(); ++iter) {
-        *pOStream << static_cast<signed char>(iter->first);
-        *pOStream << static_cast<signed char>(iter->second);
+        signed char value = static_cast<signed char>(iter->first);
+        *pOStream << value;
+        value = static_cast<signed char>(iter->second);
+        *pOStream << value;
     }
 }
 
