@@ -131,13 +131,13 @@ void checkConfigFile()
 }
 
 // E:\gamedcs\misc.cpp:352
-// No retail body: SetDefaultSystemOptions has internal linkage and its one
-// call site inlined it. Mac retains this helper; setGameDefaults calls it
-// there. Its first store initializes animateSpellBook;
+// No retail body: its one call site expands it and /OPT:REF drops the
+// unreferenced copy. Dreamcast records an external (S_GPROC32) misc.obj
+// procedure. Mac retains this helper; setGameDefaults calls it there. Its first store initializes animateSpellBook;
 // setDefaultCombatOptions repeats that initialization.
 DC_ADDRESS(0x0fdb78, 0x20)
 MAC_ADDRESS(0x131144, 0x3c)
-static void setDefaultSystemOptions()
+void setDefaultSystemOptions()
 {
     g_config.m_animateSpellBook = 1;
     g_config.m_showRoute = 1;

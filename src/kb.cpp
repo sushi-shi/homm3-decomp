@@ -1934,7 +1934,7 @@ int nullHandler(message& msg)
 // records message& and a zero-remainder first arm at kb.cpp:2345/2346.
 DC_ADDRESS(0x0e1bf8, 0xd4)
 MAC_ADDRESS(0x111c64, 0xd4)
-static int exitNormalDialog(message& msg)
+int exitNormalDialog(message& msg)
 {
     switch (g_normalDialogMbType) {
     case NORMAL_DIALOG_DEFAULT:

@@ -72,7 +72,7 @@ checks, against the pinned SP3 CL under Wine.
 | 0.5 | `/GX`: `sample` ctor `0x566da0` carries a full `fs:[0]` frame; the "first no-EH TU" inference was RETIRED | `units.toml:43-50` | closed | none (image-level; probes compile under /GX) |
 | 0.6 | `/GR-` for game TUs: none of 252 recovered vtable starts has a COL pointer; no `__RTDynamicCast` family | attempt-1 `docs/compiler-toolchain.md:125-133` | closed | none (image-level) |
 | 0.7 | Dinkumware, **not** STLport (CLOSED 2026-08-07); `<bitset>`/`<vector>` from the pinned toolchain suffice | SKILL.md:158-160 | closed | none (toolchain identity) |
-| 0.8 | Non-`/Gy`: `inline` member definitions reproduce absence of out-of-line copies (winfile `Exists`) | `src/strip.cpp:21-23` | closed | none |
+| 0.8 | `/Gy`: `/O2` hands C2 `-Gy` ([driver-passes.md](driver-passes.md)), so every function is its own COMDAT (each game object carries one `.text` section per function) and LINK's `/OPT:REF` drops an external body no retained code references. A missing out-of-line copy therefore does not prove `static` or `inline` (A4) | `llvm-objdump -h build/objdiff/base/philai.obj`; the ten helpers of A4 | closed | none |
 | 0.9 | Mixed object generations in the retail link: Rich header shows C++ build **8447 for 145 objects**, **8168 for 26** — independent corroboration for the stale-CL-generation residual class (F1) | attempt-1 `docs/compiler-toolchain.md:6-8` | closed | none (link-level) |
 
 ---
@@ -101,7 +101,7 @@ with the copy at `0x50cc80` serving the external WM_ACTIVATE caller
 `/Ob2` inlines, and no copy is emitted (compile side; `/OPT:REF` handles the
 COMDAT case). Byte-proven absences: `initialize.cpp`
 `create_included_masks`/`create_building_masks`; `recruit`
-`SiegeMonsterToSiegeArtifact`, `recruitUnit::UpdateCost`,
+`recruitUnit::UpdateCost`,
 `TRecruitQuickWindow::TRecruitQuickWindow`; `strip`
 `DrawNumber`/`DrawSelector`; `soundmgr` `SamplePlaying`/`ServeSampleStream`;
 `findpath` `valid_move_adjacent`×2, `build_combat_path`, `mark_enemy`,
@@ -111,10 +111,23 @@ COMDAT case). Byte-proven absences: `initialize.cpp`
 - status: explained-lever
 - probe: `a02_static_single_site.cpp` (PASS — no `?helper` symbol anywhere)
 
-### A4. Reproduction instrument: `static` for free functions, `inline` for members (non-`/Gy`)
-- evidence: `src/recruit.cpp:197-200`, `src/strip.cpp:97-99`
-- status: explained-lever
-- probe: `a02_static_single_site.cpp` (the `static` half); member `inline` not probed
+### A4. Absence alone does not choose the linkage
+A3 is the compile side only. The game is `/Gy` with `/OPT:REF` (0.8): an
+external function that every caller expands is still emitted as a COMDAT, has
+no reference left and is dropped at link, exactly like the `static` one. So
+`static` is not needed to reproduce an absent free function, and retail's
+absence cannot contradict a Dreamcast `S_GPROC32` record. What `static` does
+change is the inliner's save gate ([inliner.md](inliner.md): a file-`static`
+body is saved at any size, an external one only below 175), so a caller that
+expands a large body is the retail evidence for `static` or `inline`.
+- evidence: ten Dreamcast-global helpers that carried `static` for this
+  reason (`setTownHelp`, `setHeroHelp`, `setPyramidHelp`, `addItem`,
+  `exitNormalDialog`, `setDefaultSystemOptions`, `showStatus`,
+  `siegeMonsterToSiegeArtifact`, `isValidHuman`, `updateTurnDuration`):
+  external again, all eight units keep every function's bytes, and the only
+  relocation to each emitted body is its own `.debug$F` record
+- status: explained
+- probe: `a02_static_single_site.cpp` (the `static` half of A3); member `inline` not probed
 
 ### A5. Size arithmetic validates the rule
 Retail `FindCombatPath` is 1927 B against the DC body's 1082 + absorbed

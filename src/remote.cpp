@@ -1944,7 +1944,7 @@ int getPriorPlayer(int gamePos)
 // CDPlayPlayer member names; inlined into UpdateCurrentPlayers.
 DC_ADDRESS(0x11dec8, 0x48)
 MAC_ADDRESS(0x213ce8, 0x94)
-static inline unsigned char isValidHuman(
+inline unsigned char isValidHuman(
     CAutoArray<CDPlayPlayer>& playerArray, unsigned long dpid)
 {
     for (unsigned long i = 0; i < playerArray.getCount(); ++i) {
