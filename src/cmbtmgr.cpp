@@ -2186,53 +2186,51 @@ unsigned char combatManager::placeObstacle(int obstacleId)
         hex = picker.pick();
         if (hex < 0x12)
             return 0;
-        {
-            int row = gridY(hex);
-            if (shape->m_minRow > row)
-                continue;
-            if (gridX(hex) == 0 || shape->m_width + gridX(hex) > 15)
-                continue;
-            if (m_cells[hex].m_attributes & hexcell::obstacleMask)
-                continue;
-            const unsigned char baseRowIsOdd = rowIsOdd(row);
-            unsigned char overlap = 0;
-            for (int i = 0; i < shape->m_extraHexCount; i++) {
-                int cellIndex = shape->m_extraHexOffsets[i] + hex;
-                if (baseRowIsOdd && !rowIsOdd(gridY(cellIndex)))
-                    cellIndex--;
-                int cellColumn = gridX(cellIndex);
-                if (cellColumn <= 2 || cellColumn >= 14
-                        || (m_cells[cellIndex].m_attributes & hexcell::obstacleMask)) {
-                    overlap = 1;
-                    break;
-                }
+        int row = gridY(hex);
+        if (shape->m_minRow > row)
+            continue;
+        if (gridX(hex) == 0 || shape->m_width + gridX(hex) > 15)
+            continue;
+        if (m_cells[hex].m_attributes & hexcell::obstacleMask)
+            continue;
+        const unsigned char baseRowIsOdd = rowIsOdd(row);
+        unsigned char overlap = 0;
+        for (int i = 0; i < shape->m_extraHexCount; i++) {
+            int cellIndex = shape->m_extraHexOffsets[i] + hex;
+            if (baseRowIsOdd && !rowIsOdd(gridY(cellIndex)))
+                cellIndex--;
+            int cellColumn = gridX(cellIndex);
+            if (cellColumn <= 2 || cellColumn >= 14
+                    || (m_cells[cellIndex].m_attributes & hexcell::obstacleMask)) {
+                overlap = 1;
+                break;
             }
-            if (overlap)
-                continue;
-
-            if (g_game->m_gameVersion < 2 && m_fortificationLevel >= 2
-                    && m_defendingTown->m_type == TOWN_STRONGHOLD) {
-                int wallColumn = g_castleWallColumns[row];
-                if (wallColumn == COMBAT_HEX_GATE)
-                    wallColumn = 0x5d;
-                if (shape->m_width + hex >= wallColumn - 2)
-                    continue;
-            }
-
-            TObstacle obstacle;
-            obstacle.m_sprite = ResourceManager::GetSprite(shape->m_spriteName);
-            obstacle.m_shape = shape;
-            obstacle.m_hex = static_cast<unsigned char>(hex);
-            obstacle.m_owner = -1;
-            obstacle.m_isVisible = 1;
-            obstacle.m_damage = 0;
-            obstacle.m_duration = 0;
-            obstacle.m_dispelEffect = eSpellEffectNone;
-            m_obstacles.push_back(obstacle);
-            int obstacleSlot = m_obstacles.size() - 1;
-            placeObstacle(obstacle, obstacleSlot, hex, hexcell::blocked);
-            return 1;
         }
+        if (overlap)
+            continue;
+
+        if (g_game->m_gameVersion < 2 && m_fortificationLevel >= 2
+                && m_defendingTown->m_type == TOWN_STRONGHOLD) {
+            int wallColumn = g_castleWallColumns[row];
+            if (wallColumn == COMBAT_HEX_GATE)
+                wallColumn = 0x5d;
+            if (shape->m_width + hex >= wallColumn - 2)
+                continue;
+        }
+
+        TObstacle obstacle;
+        obstacle.m_sprite = ResourceManager::GetSprite(shape->m_spriteName);
+        obstacle.m_shape = shape;
+        obstacle.m_hex = static_cast<unsigned char>(hex);
+        obstacle.m_owner = -1;
+        obstacle.m_isVisible = 1;
+        obstacle.m_damage = 0;
+        obstacle.m_duration = 0;
+        obstacle.m_dispelEffect = eSpellEffectNone;
+        m_obstacles.push_back(obstacle);
+        int obstacleSlot = m_obstacles.size() - 1;
+        placeObstacle(obstacle, obstacleSlot, hex, hexcell::blocked);
+        return 1;
     }
 }
 

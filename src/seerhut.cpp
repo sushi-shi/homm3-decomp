@@ -1097,9 +1097,7 @@ void type_artifact_quest::load(TAbstractFile* file, int version)
 
         file->read(&id, sizeof(id));
         TArtifact artifact;
-        {
-            artifact = TArtifact(id);
-        }
+        artifact = TArtifact(id);
         m_artifacts.push_back(artifact);
     }
     type_quest::load(file, version);
@@ -1120,9 +1118,7 @@ void type_artifact_quest::loadFromMap(TAbstractFile* file)
 
         file->read(&id, sizeof(id));
         TArtifact artifact;
-        {
-            artifact = TArtifact(id);
-        }
+        artifact = TArtifact(id);
         m_artifacts.push_back(artifact);
         g_game->m_artifactDisabled[artifact] = 1;
     }
@@ -1338,9 +1334,7 @@ void type_creature_quest::load(TAbstractFile* file, int version)
 
         file->read(&type, sizeof(short));
         TCreatureType creature;
-        {
-            creature = TCreatureType(type & 0xffff);
-        }
+        creature = TCreatureType(type & 0xffff);
         file->read(&number, sizeof(number));
         int amount = number;
         m_counts.push_back(amount);
@@ -1365,9 +1359,7 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
 
         file->read(&type, sizeof(short));
         TCreatureType creature;
-        {
-            creature = TCreatureType(type & 0xffff);
-        }
+        creature = TCreatureType(type & 0xffff);
         file->read(&number, sizeof(short));
         int amount = number & 0xffff;
         m_counts.push_back(amount);
@@ -2305,16 +2297,12 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
                                    m_value.m_creature.m_count, -1)) {
             if (humanPlayer) {
                 TCreatureType creature;
-                {
-                    creature = TCreatureType(m_value.m_creature.m_creatureType);
-                }
+                creature = TCreatureType(m_value.m_creature.m_creatureType);
                 doMonsterJoinDialog(currentHero, creature,
                     m_value.m_creature.m_count);
             } else {
                 TCreatureType creature;
-                {
-                    creature = TCreatureType(m_value.m_creature.m_creatureType);
-                }
+                creature = TCreatureType(m_value.m_creature.m_creatureType);
                 aiJoinDecision(currentHero, creature,
                     m_value.m_creature.m_count);
             }

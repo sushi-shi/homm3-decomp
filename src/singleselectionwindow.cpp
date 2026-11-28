@@ -660,14 +660,10 @@ VA(0x00577950, 0xBE)
 MAC_ADDRESS(0x16e6c0, 0x88)
 unsigned char CGameHeaderInfoMsg::write(TAbstractFile* outfile) const
 {
-    {
-        unsigned char flag = m_flag;
-        outfile->write(&flag, 1);
-    }
-    {
-        int number = m_number;
-        outfile->write(&number, 4);
-    }
+    unsigned char flag = m_flag;
+    outfile->write(&flag, 1);
+    int number = m_number;
+    outfile->write(&number, 4);
     return const_cast<GameSelectionHeadersStruct&>(m_header).write(outfile);
 }
 
@@ -2394,38 +2390,36 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         634, 456, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2));
 
     // DC2445..2490: resource/key selection and both navigation buttons.
-    {
-        const char* t = "scnrbeg.def";
-        int key = 48;
-        if (m_loadMode) {
-            t = "scnrlod.def";
-            key = 38;
-        } else if (m_saveMode) {
-            t = "scnrsav.def";
-            key = 31;
-        }
-        button* b = new button(
-            414, 535, 166, 40, 186, t,
-            0, 1, 0, key, 2);
-        if (m_loadMode)
-            b->setHotkey(28);
-        m_widgets.push_back(b);
+    const char* t = "scnrbeg.def";
+    int key = 48;
+    if (m_loadMode) {
+        t = "scnrlod.def";
+        key = 38;
+    } else if (m_saveMode) {
+        t = "scnrsav.def";
+        key = 31;
+    }
+    button* b = new button(
+        414, 535, 166, 40, 186, t,
+        0, 1, 0, key, 2);
+    if (m_loadMode)
+        b->setHotkey(28);
+    m_widgets.push_back(b);
 
-        // Complete campaign saves may only return from an unfinished scenario.
-        // Retail proves both the GetCurrentScenario boundary and this duplicated
-        // button-construction source family. Keep the header accessor inline:
-        // this large caller naturally retains the call and emits its exact COMDAT.
-        if (g_inCampaign) {
-            if (!g_game->m_campaign.getCurrentScenario()->m_completed) {
-                m_widgets.push_back(new button(
-                    584, 535, 166, 40, 188, "scnrback.def",
-                    0, 1, 0, 1, 2));
-            }
-        } else {
+    // Complete campaign saves may only return from an unfinished scenario.
+    // Retail proves both the GetCurrentScenario boundary and this duplicated
+    // button-construction source family. Keep the header accessor inline:
+    // this large caller naturally retains the call and emits its exact COMDAT.
+    if (g_inCampaign) {
+        if (!g_game->m_campaign.getCurrentScenario()->m_completed) {
             m_widgets.push_back(new button(
                 584, 535, 166, 40, 188, "scnrback.def",
                 0, 1, 0, 1, 2));
         }
+    } else {
+        m_widgets.push_back(new button(
+            584, 535, 166, 40, 188, "scnrback.def",
+            0, 1, 0, 1, 2));
     }
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -3530,16 +3524,14 @@ void TSingleSelectionWindow::setupAdvancedOptions()
         bonusRight->m_y = nextColor * 50 + 133;
         townButton->m_y = nextColor * 50 - m_y + 130;
 
-        {
-            widget* townIcon = getWidget(i + 231);
-            widget* heroIcon = getWidget(i + 247);
-            widget* heroLeft = getWidget(i + 239);
-            widget* heroRight = getWidget(i + 255);
-            heroIcon->m_y = nextColor * 50 + 133;
-            townIcon->m_y = nextColor * 50 + 133;
-            heroRight->m_y = nextColor * 50 + 133;
-            heroLeft->m_y = nextColor * 50 + 133;
-        }
+        widget* townIcon = getWidget(i + 231);
+        widget* heroIcon = getWidget(i + 247);
+        widget* heroLeft = getWidget(i + 239);
+        widget* heroRight = getWidget(i + 255);
+        heroIcon->m_y = nextColor * 50 + 133;
+        townIcon->m_y = nextColor * 50 + 133;
+        heroRight->m_y = nextColor * 50 + 133;
+        heroLeft->m_y = nextColor * 50 + 133;
 
         playerName->m_y = nextColor * 50 + 151;
         playerType->m_y = nextColor * 50 + 151;

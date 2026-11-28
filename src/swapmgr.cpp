@@ -1582,61 +1582,59 @@ int swapManager::main(message& msg)
             case widget::WIDGET_RIGHT_SELECT:
                 switch (msg.m_codeY)
                 {
-                {
-                    int skillHero;
-                    int skillIndex;
-                case kSwapRolloverLeftSkill0:
-                case kSwapRolloverLeftSkill1:
-                case kSwapRolloverLeftSkill2:
-                case kSwapRolloverLeftSkill3:
-                case kSwapRolloverLeftSkill4:
-                case kSwapRolloverLeftSkill5:
-                case kSwapRolloverLeftSkill6:
-                case kSwapRolloverLeftSkill7:
-                    if (g_heroScreenDraggedArtifact.m_artifactId
-                        != ARTIFACT_NONE)
-                        break;
-                    skillHero = 0;
-                    skillIndex = msg.m_codeY - kSwapRolloverLeftSkill0;
-                    goto show_secondary_skill;
-
-                case kSwapRolloverRightSkill0:
-                case kSwapRolloverRightSkill1:
-                case kSwapRolloverRightSkill2:
-                case kSwapRolloverRightSkill3:
-                case kSwapRolloverRightSkill4:
-                case kSwapRolloverRightSkill5:
-                case kSwapRolloverRightSkill6:
-                case kSwapRolloverRightSkill7:
-                    if (g_heroScreenDraggedArtifact.m_artifactId
-                        != ARTIFACT_NONE)
-                        break;
-                    skillHero = 1;
-                    skillIndex = msg.m_codeY - kSwapRolloverRightSkill0;
-
-                // DC lines 1311-1338 expose two side/index assignments and
-                // one shared GetNthSS/string/dialog scope.
-                show_secondary_skill:
-                    if (skillIndex < m_heroes[skillHero]->m_skillCount)
-                    {
-                        int skill = m_heroes[skillHero]->getNthSS(skillIndex);
-                        strcpy(g_text,
-                               akSSkillTraits[skill].m_levelNames[
-                                   m_heroes[skillHero]->getSecondarySkill(
-                                       TSecondarySkill(skill)) - 1]);
-                        normalDialog(
-                            g_text,
-                            rightMouse
-                                ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                : hero::PRIMARY_STAT_DIALOG_TYPE,
-                            -1, -1, 20,
-                            m_heroes[skillHero]->getSecondarySkill(
-                                TSecondarySkill(skill))
-                                + 3 * skill + 2,
-                            -1, 0, -1, 0, -1, 0);
-                    }
+                int skillHero;
+                int skillIndex;
+            case kSwapRolloverLeftSkill0:
+            case kSwapRolloverLeftSkill1:
+            case kSwapRolloverLeftSkill2:
+            case kSwapRolloverLeftSkill3:
+            case kSwapRolloverLeftSkill4:
+            case kSwapRolloverLeftSkill5:
+            case kSwapRolloverLeftSkill6:
+            case kSwapRolloverLeftSkill7:
+                if (g_heroScreenDraggedArtifact.m_artifactId
+                    != ARTIFACT_NONE)
                     break;
+                skillHero = 0;
+                skillIndex = msg.m_codeY - kSwapRolloverLeftSkill0;
+                goto show_secondary_skill;
+
+            case kSwapRolloverRightSkill0:
+            case kSwapRolloverRightSkill1:
+            case kSwapRolloverRightSkill2:
+            case kSwapRolloverRightSkill3:
+            case kSwapRolloverRightSkill4:
+            case kSwapRolloverRightSkill5:
+            case kSwapRolloverRightSkill6:
+            case kSwapRolloverRightSkill7:
+                if (g_heroScreenDraggedArtifact.m_artifactId
+                    != ARTIFACT_NONE)
+                    break;
+                skillHero = 1;
+                skillIndex = msg.m_codeY - kSwapRolloverRightSkill0;
+
+            // DC lines 1311-1338 expose two side/index assignments and
+            // one shared GetNthSS/string/dialog scope.
+            show_secondary_skill:
+                if (skillIndex < m_heroes[skillHero]->m_skillCount)
+                {
+                    int skill = m_heroes[skillHero]->getNthSS(skillIndex);
+                    strcpy(g_text,
+                           akSSkillTraits[skill].m_levelNames[
+                               m_heroes[skillHero]->getSecondarySkill(
+                                   TSecondarySkill(skill)) - 1]);
+                    normalDialog(
+                        g_text,
+                        rightMouse
+                            ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                            : hero::PRIMARY_STAT_DIALOG_TYPE,
+                        -1, -1, 20,
+                        m_heroes[skillHero]->getSecondarySkill(
+                            TSecondarySkill(skill))
+                            + 3 * skill + 2,
+                        -1, 0, -1, 0, -1, 0);
                 }
+                break;
 
                 case kSwapRolloverHeroLeft:
                     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE
@@ -2197,15 +2195,13 @@ void swapManager::setRolloverText(int codeY)
         break;
     }
 
-    {
-        union {
-            char* m_pointer;
-            int m_payload;
-        } converted;
-        converted.m_pointer = g_text;
-        m_parent->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                 0x7b, converted.m_payload);
-    }
+    union {
+        char* m_pointer;
+        int m_payload;
+    } converted;
+    converted.m_pointer = g_text;
+    m_parent->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                             0x7b, converted.m_payload);
     m_parent->drawWindow(0, 0x7a, 0x7b);
     g_windowManager->updateScreen(4, 0x242, 0x2d4, 0x12);
 }

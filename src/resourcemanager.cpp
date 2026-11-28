@@ -733,56 +733,54 @@ Bitmap816* ResourceManager::GetBitmap816(const char* name)
         return result;
     }
 
-    {
-        LODFile* lodFile = findBitmapResource(name);
+    LODFile* lodFile = findBitmapResource(name);
+
+    if (!lodFile) {
+        reportMissingTypedResource(
+            DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
+                         "GetBitmap816"),
+            RESOURCE_TYPE_BITMAP, name);
+
+        // Each loader owns its fallback name as .rdata array storage
+        // (two separate "default.pal" copies).
+        DATA(0x0064108c) static const char fallbackName[] = "default.pcx";
+        lodFile = findBitmapResource(fallbackName);
 
         if (!lodFile) {
             reportMissingTypedResource(
                 DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
                              "GetBitmap816"),
-                RESOURCE_TYPE_BITMAP, name);
-
-            // Each loader owns its fallback name as .rdata array storage
-            // (two separate "default.pal" copies).
-            DATA(0x0064108c) static const char fallbackName[] = "default.pcx";
-            lodFile = findBitmapResource(fallbackName);
-
-            if (!lodFile) {
-                reportMissingTypedResource(
-                    DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
-                                 "GetBitmap816"),
-                    RESOURCE_TYPE_BITMAP, fallbackName);
-                return 0;
-            }
+                RESOURCE_TYPE_BITMAP, fallbackName);
+            return 0;
         }
-
-        {
-            lodFile->read(&bmpHeader, sizeof(bmpHeader));
-            TAutoArrayPtr<unsigned char> data(
-                new unsigned char[bmpHeader.m_dataSize]);
-            lodFile->read(data.get(), bmpHeader.m_dataSize);
-
-            TPalette24 palette24;
-            lodFile->read(palette24.Palette, sizeof(palette24.Palette));
-            if (SaturatedGraphicsEasterEgg)
-                palette24.AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
-
-            TPalette16 palette16(
-                palette24,
-                RedBits, RedShift,
-                GreenBits, GreenShift,
-                BlueBits, BlueShift);
-
-            result = new Bitmap816(
-                name, bmpHeader.m_width, bmpHeader.m_height, data.get(),
-                &palette16, bmpHeader.m_dataSize);
-            if (result)
-                result->SetPalette(&palette24);
-        }
-
-        if (result)
-            AddToCache(result);
     }
+
+    {
+        lodFile->read(&bmpHeader, sizeof(bmpHeader));
+        TAutoArrayPtr<unsigned char> data(
+            new unsigned char[bmpHeader.m_dataSize]);
+        lodFile->read(data.get(), bmpHeader.m_dataSize);
+
+        TPalette24 palette24;
+        lodFile->read(palette24.Palette, sizeof(palette24.Palette));
+        if (SaturatedGraphicsEasterEgg)
+            palette24.AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+
+        TPalette16 palette16(
+            palette24,
+            RedBits, RedShift,
+            GreenBits, GreenShift,
+            BlueBits, BlueShift);
+
+        result = new Bitmap816(
+            name, bmpHeader.m_width, bmpHeader.m_height, data.get(),
+            &palette16, bmpHeader.m_dataSize);
+        if (result)
+            result->SetPalette(&palette24);
+    }
+
+    if (result)
+        AddToCache(result);
 
     return result;
 }
@@ -1151,11 +1149,9 @@ TTextResource* ResourceManager::loadText(const char* name)
             fseek(file, 0, SEEK_SET);
 
             TTextResource* result;
-            {
-                t_stdio_file_adapter stream(file);
-                TAbstractFile* streamInterface = &stream;
-                result = loadTextData(name, streamInterface, fileSize);
-            }
+            t_stdio_file_adapter stream(file);
+            TAbstractFile* streamInterface = &stream;
+            result = loadTextData(name, streamInterface, fileSize);
 
             fclose(file);
             return result;
@@ -1219,11 +1215,9 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
             fseek(file, 0, SEEK_SET);
 
             TSpreadsheetResource* result;
-            {
-                t_stdio_file_adapter stream(file);
-                TAbstractFile* streamInterface = &stream;
-                result = loadSpreadsheetData(name, streamInterface, fileSize);
-            }
+            t_stdio_file_adapter stream(file);
+            TAbstractFile* streamInterface = &stream;
+            result = loadSpreadsheetData(name, streamInterface, fileSize);
 
             fclose(file);
             return result;

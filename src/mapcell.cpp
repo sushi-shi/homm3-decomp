@@ -3220,10 +3220,8 @@ void NewfullMap::readQuestGuardData(TAbstractFile* infile, CObject* tempObject)
 {
     TQuestGuard tempGuard;
     tempGuard.read(infile);
-    {
-        m_questGuardList.push_back(tempGuard);
-        tempObject->m_extraInfo = m_questGuardList.size() - 1;
-    }
+    m_questGuardList.push_back(tempGuard);
+    tempObject->m_extraInfo = m_questGuardList.size() - 1;
     if (tempGuard.m_quest) {
         CMapObjectData* questData = static_cast<CMapObjectData*>(
             static_cast<void*>(tempGuard.m_quest));

@@ -3210,89 +3210,85 @@ void combatManager::drawBolt(SBolt* bolt, int drawLength)
             if (bolt->m_pixelY == lastY)
                 continue;
         }
-        {
-            lastX = bolt->m_pixelX;
-            lastY = bolt->m_pixelY;
-            for (k = spanFirst; k <= spanLast; k++) {
-                if (bolt->m_shallow)
-                    y = bolt->m_pixelY + k;
-                else
-                    x = bolt->m_pixelX + k;
-                if (!inCombatArea(x, y))
-                    continue;
-                {
-                    if (k < 0)
-                        fromEdge = k - spanFirst;
-                    else
-                        fromEdge = spanLast - k;
+        lastX = bolt->m_pixelX;
+        lastY = bolt->m_pixelY;
+        for (k = spanFirst; k <= spanLast; k++) {
+            if (bolt->m_shallow)
+                y = bolt->m_pixelY + k;
+            else
+                x = bolt->m_pixelX + k;
+            if (!inCombatArea(x, y))
+                continue;
+            if (k < 0)
+                fromEdge = k - spanFirst;
+            else
+                fromEdge = spanLast - k;
 
-                    switch (bolt->m_color) {
-                    case BOLT_COLOR_4: {
-                        unsigned char* rgb = g_boltWhiteSpanColors[fromEdge];
-                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
-                            static_cast<unsigned short>(
-                                rgBto16(rgb[0], rgb[1], rgb[2]));
-                        break;
-                    }
-                    case BOLT_COLOR_2: {
-                        unsigned char* rgb = g_boltGreenSpanColors[fromEdge];
-                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
-                            static_cast<unsigned short>(
-                                rgBto16(rgb[0], rgb[1], rgb[2]));
-                        break;
-                    }
-                    case BOLT_COLOR_0: {
-                        unsigned char* rgb = g_boltSpectrumColors[k - spanFirst];
-                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
-                            static_cast<unsigned short>(rgBto16(
-                                rgb[0], rgb[1], rgb[2]));
-                        break;
-                    }
-                    case BOLT_COLOR_3: {
-                        unsigned char* rgb = g_boltSpectrumColors[14 - (k - spanFirst)];
-                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
-                            static_cast<unsigned short>(rgBto16(
-                                rgb[0], rgb[1], rgb[2]));
-                        break;
-                    }
-                    case BOLT_COLOR_CHAIN_LIGHTNING:
-                        if (fromEdge == BOLT_SPAN_DEPTH_0)
-                            color = rgBto16(255, 255, 255);
-                        else if (fromEdge == BOLT_SPAN_DEPTH_1)
-                            color = rgBto16(240, 240, 255);
-                        else if (fromEdge == BOLT_SPAN_DEPTH_2)
-                            color = rgBto16(224, 224, 255);
-                        else if (fromEdge == BOLT_SPAN_DEPTH_3)
-                            color = rgBto16(216, 216, 255);
-                        else if (fromEdge == BOLT_SPAN_DEPTH_4)
-                            color = rgBto16(200, 200, 255);
-                        else
-                            color = rgBto16(192, 192, 255);
-                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] = color;
-                        break;
-                    default:
-                        // Anything outside the six special values is a raw
-                        // 16-bit pixel, written straight through.
-                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
-                            static_cast<unsigned short>(bolt->m_color);
-                        break;
-                    }
-                }
+            switch (bolt->m_color) {
+            case BOLT_COLOR_4: {
+                unsigned char* rgb = g_boltWhiteSpanColors[fromEdge];
+                (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
+                    static_cast<unsigned short>(
+                        rgBto16(rgb[0], rgb[1], rgb[2]));
+                break;
             }
+            case BOLT_COLOR_2: {
+                unsigned char* rgb = g_boltGreenSpanColors[fromEdge];
+                (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
+                    static_cast<unsigned short>(
+                        rgBto16(rgb[0], rgb[1], rgb[2]));
+                break;
+            }
+            case BOLT_COLOR_0: {
+                unsigned char* rgb = g_boltSpectrumColors[k - spanFirst];
+                (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
+                    static_cast<unsigned short>(rgBto16(
+                        rgb[0], rgb[1], rgb[2]));
+                break;
+            }
+            case BOLT_COLOR_3: {
+                unsigned char* rgb = g_boltSpectrumColors[14 - (k - spanFirst)];
+                (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
+                    static_cast<unsigned short>(rgBto16(
+                        rgb[0], rgb[1], rgb[2]));
+                break;
+            }
+            case BOLT_COLOR_CHAIN_LIGHTNING:
+                if (fromEdge == BOLT_SPAN_DEPTH_0)
+                    color = rgBto16(255, 255, 255);
+                else if (fromEdge == BOLT_SPAN_DEPTH_1)
+                    color = rgBto16(240, 240, 255);
+                else if (fromEdge == BOLT_SPAN_DEPTH_2)
+                    color = rgBto16(224, 224, 255);
+                else if (fromEdge == BOLT_SPAN_DEPTH_3)
+                    color = rgBto16(216, 216, 255);
+                else if (fromEdge == BOLT_SPAN_DEPTH_4)
+                    color = rgBto16(200, 200, 255);
+                else
+                    color = rgBto16(192, 192, 255);
+                (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] = color;
+                break;
+            default:
+                // Anything outside the six special values is a raw
+                // 16-bit pixel, written straight through.
+                (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
+                    static_cast<unsigned short>(bolt->m_color);
+                break;
+            }
+        }
 
-            remaining = abs(bolt->m_destY - bolt->m_pixelY)
-                + abs(bolt->m_destX - bolt->m_pixelX);
-            if (bolt->m_done) {
-                if (remaining > bolt->m_closestDistance + 1 || remaining <= 2) {
-                    bolt->m_atDestination = 1;
-                    return;
-                } else if (remaining < bolt->m_closestDistance) {
-                    bolt->m_closestDistance = remaining;
-                }
-            } else if (remaining < 15) {
-                bolt->m_done = 1;
+        remaining = abs(bolt->m_destY - bolt->m_pixelY)
+            + abs(bolt->m_destX - bolt->m_pixelX);
+        if (bolt->m_done) {
+            if (remaining > bolt->m_closestDistance + 1 || remaining <= 2) {
+                bolt->m_atDestination = 1;
+                return;
+            } else if (remaining < bolt->m_closestDistance) {
                 bolt->m_closestDistance = remaining;
             }
+        } else if (remaining < 15) {
+            bolt->m_done = 1;
+            bolt->m_closestDistance = remaining;
         }
     } }
 }
@@ -3592,10 +3588,8 @@ done:
         army* currentArmy = getCurrentArmy();
         if (currentArmy->m_monFrameInfo.m_attackFrames) {
             long frames;
-            {
-                CSprite* icon = currentArmy->m_stdIcon;
-                frames = icon->GetNumFrames(currentArmy->m_currFrameType);
-            }
+            CSprite* icon = currentArmy->m_stdIcon;
+            frames = icon->GetNumFrames(currentArmy->m_currFrameType);
             long frameDelay = currentArmy->m_monFrameInfo.m_attackStartCycleTime / frames;
             while (currentArmy->m_currFrameIndex < frames) {
                 if (currentArmy->m_currFrameIndex == frames - 1)

@@ -3592,9 +3592,7 @@ void advManager::monstersFight(hero* currentHero, NewmapCell* cell,
                                 type_point point, bool humanPlayer)
 {
     TCreatureType monType;
-    {
-        monType = TCreatureType(cell->m_objectIndex);
-    }
+    monType = TCreatureType(cell->m_objectIndex);
     int numMons = cell->m_monsterInfo.m_qty;
     int survived = combatMonsterEvent(currentHero, monType, &numMons,
                                       cell, point,
@@ -3630,9 +3628,7 @@ void advManager::monstersFlee(hero* currentHero, NewmapCell* cell,
                                type_point point, bool humanPlayer)
 {
     TCreatureType monType;
-    {
-        monType = TCreatureType(cell->m_objectIndex);
-    }
+    monType = TCreatureType(cell->m_objectIndex);
 
     if (humanPlayer) {
         sprintf(g_text,
@@ -3668,9 +3664,7 @@ bool advManager::monstersJoin(hero* currentHero, NewmapCell* cell,
                                bool humanPlayer)
 {
     TCreatureType monType;
-    {
-        monType = TCreatureType(cell->m_objectIndex);
-    }
+    monType = TCreatureType(cell->m_objectIndex);
     int numMons = cell->m_monsterInfo.m_qty;
 
     if (humanPlayer) {
@@ -3714,9 +3708,7 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
                                    bool humanPlayer)
 {
     TCreatureType monType;
-    {
-        monType = TCreatureType(cell->m_objectIndex);
-    }
+    monType = TCreatureType(cell->m_objectIndex);
     int numMons = cell->m_monsterInfo.m_qty;
     int cost = akCreatureTypeTraits[monType].cost[GOLD] * numMons;
 
@@ -3831,9 +3823,7 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
                                           bool humanPlayer)
 {
     TCreatureType monType;
-    {
-        monType = TCreatureType(cell->m_objectIndex);
-    }
+    monType = TCreatureType(cell->m_objectIndex);
     int numTroops = cell->m_monsterInfo.m_qty;
     int disposition = cell->m_monsterInfo.m_disposition;
 

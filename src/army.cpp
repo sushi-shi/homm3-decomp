@@ -3550,10 +3550,8 @@ void army::attackWall(int targetGridIndex)
     g_combatManager->m_lastMovedArmy = 0;
     g_combatManager->turnOffHighlighter(1);
     TWallTargetId wall;
-    {
-        // GetTargetWallIndex returns int in Complete and an enum in Dreamcast.
-        wall = TWallTargetId(combatManager::getTargetWallIndex(targetGridIndex));
-    }
+    // GetTargetWallIndex returns int in Complete and an enum in Dreamcast.
+    wall = TWallTargetId(combatManager::getTargetWallIndex(targetGridIndex));
     hero* controller = getController();
     long level;
     switch (m_creatureType) {

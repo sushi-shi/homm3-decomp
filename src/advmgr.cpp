@@ -5130,11 +5130,9 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
     if (srcY >= g_mapHeight && !g_completeDrawAllCells)
         return;
 
-    {
-        type_point point;
-        point = type_point(srcX, srcY, z);
-        getCell(point);
-    }
+    type_point point;
+    point = type_point(srcX, srcY, z);
+    getCell(point);
 
     int baseX = m_scrollX + destX * 32;
     int baseY = m_scrollY + destY * 32;
@@ -7363,9 +7361,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
     const int count = cell->m_extraInfo & 0xfff;
     TCreatureType type;
-    {
-        type = TCreatureType(cell->m_objectIndex);
-    }
+    type = TCreatureType(cell->m_objectIndex);
 
     playerData* localPlayer = g_game->getLocalPlayer();
     g_game->getLocalPlayerGamePos();

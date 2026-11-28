@@ -4760,19 +4760,17 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                                 slotFits = false;
                                 break;
                             }
-                            {
-                                int occupied =
-                                    (akArtifactTraits[artifact].m_allowableSlotMask
-                                     == componentClass) ? 1 : 0;
-                                for (int i = 0; i < kNumArtifactSlots + 1; i++) {
-                                    if (classSlots[i] &&
-                                        getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
-                                        occupied++;
-                                }
-                                if (componentCount >= capacity - occupied) {
-                                    slotFits = false;
-                                    break;
-                                }
+                            int occupied =
+                                (akArtifactTraits[artifact].m_allowableSlotMask
+                                 == componentClass) ? 1 : 0;
+                            for (int i = 0; i < kNumArtifactSlots + 1; i++) {
+                                if (classSlots[i] &&
+                                    getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
+                                    occupied++;
+                            }
+                            if (componentCount >= capacity - occupied) {
+                                slotFits = false;
+                                break;
                             }
                             counts[componentClass]++;
                         } while (++component < ARTIFACT_COUNT);

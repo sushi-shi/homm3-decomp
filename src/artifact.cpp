@@ -465,43 +465,41 @@ bool InitializeArtifactTraitsTable()
         }
     }
 
-    {
-        TResourcePtr<TSpreadsheetResource> slotsSheet(
-            ResourceManager::GetSpreadsheet(
-                DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
-                             "artslots.txt")));
-        if (!slotsSheet.get() || slotsSheet->GetNumberOfRows() < kNumArtifactSlots + 1) {
-            return 0;
-        }
+    TResourcePtr<TSpreadsheetResource> slotsSheet(
+        ResourceManager::GetSpreadsheet(
+            DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
+                         "artslots.txt")));
+    if (!slotsSheet.get() || slotsSheet->GetNumberOfRows() < kNumArtifactSlots + 1) {
+        return 0;
+    }
 
-        unsigned stringBytes = 0;
-        int slot;
-        for (slot = 0; slot < kNumArtifactSlots + 1; ++slot)
-            stringBytes += strlen(slotsSheet->GetRow(slot)[0]) + 1;
+    unsigned stringBytes = 0;
+    int slot;
+    for (slot = 0; slot < kNumArtifactSlots + 1; ++slot)
+        stringBytes += strlen(slotsSheet->GetRow(slot)[0]) + 1;
 
-        VA_COMPGEN(0x0044d340, 0x16, STATIC_DTOR, artifactSlotStrings)
-        // The editors' placements cannot tell this teardown from
-        // artifactStrings' masked twin.
-        VA_COMPGEN_AT(h3maped, 0x00403aff, 0x16, STATIC_DTOR, artifactSlotStrings)
-        VA_COMPGEN_AT(h3ccmped, 0x00402ed0, 0x16, STATIC_DTOR, artifactSlotStrings)
-        DATA(0x00694c98)
-        static TAutoArrayPtr<char> artifactSlotStrings(new char[stringBytes]);
-        if (!artifactSlotStrings.get())
-            return 0;
+    VA_COMPGEN(0x0044d340, 0x16, STATIC_DTOR, artifactSlotStrings)
+    // The editors' placements cannot tell this teardown from
+    // artifactStrings' masked twin.
+    VA_COMPGEN_AT(h3maped, 0x00403aff, 0x16, STATIC_DTOR, artifactSlotStrings)
+    VA_COMPGEN_AT(h3ccmped, 0x00402ed0, 0x16, STATIC_DTOR, artifactSlotStrings)
+    DATA(0x00694c98)
+    static TAutoArrayPtr<char> artifactSlotStrings(new char[stringBytes]);
+    if (!artifactSlotStrings.get())
+        return 0;
 
-        char* destination = artifactSlotStrings.get();
-        for (slot = 0; slot < kNumArtifactSlots + 1; ++slot) {
-            const char* source = slotsSheet->GetRow(slot)[0];
-            unsigned length = strlen(source) + 1;
-            memcpy(destination, source, length);
-            g_artifactSlotTraitsStorage[slot].m_name = destination;
-            destination += length;
+    char* destination = artifactSlotStrings.get();
+    for (slot = 0; slot < kNumArtifactSlots + 1; ++slot) {
+        const char* source = slotsSheet->GetRow(slot)[0];
+        unsigned length = strlen(source) + 1;
+        memcpy(destination, source, length);
+        g_artifactSlotTraitsStorage[slot].m_name = destination;
+        destination += length;
 
-            int mask = 0;
-            while (!g_artifactSlotMasks[mask].test(slot))
-                ++mask;
-            g_artifactSlotTraitsStorage[slot].m_type = mask;
-        }
+        int mask = 0;
+        while (!g_artifactSlotMasks[mask].test(slot))
+            ++mask;
+        g_artifactSlotTraitsStorage[slot].m_type = mask;
     }
     return 1;
 }

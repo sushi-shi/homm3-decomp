@@ -53,61 +53,59 @@ int border::main(message& msg)
     if (m_sleepCount > 0)
         return 0;
 
-    {
-        if (!(m_status & WIDGET_ACTIVE)) {
-            if (msg.m_id == MESSAGE_WIDGET)
-                return widget::main(msg);
-        } else {
-            unsigned char isDisabled = 0;
-            if (m_status & WIDGET_DISABLED)
-                isDisabled = 1;
-
-            switch (msg.m_id) {
-            case MESSAGE_LEFT_BUTTON_DOWN:
-                if (isDisabled)
-                    break;
-                // fall through
-            case MESSAGE_RIGHT_BUTTON_DOWN: {
-                short mouseX = msg.m_codeX - m_parentWindow->m_x;
-                short mouseY = msg.m_codeY - m_parentWindow->m_y;
-                if (mouseX >= m_x && mouseY >= m_y && mouseX < m_x + m_width
-                    && mouseY < m_y + m_height) {
-                    if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-                        msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
-                        msg.m_codeX = WIDGET_RIGHT_SELECT;
-                    } else {
-                        m_status |= WIDGET_SELECTED;
-                        msg.m_codeX = WIDGET_SELECT;
-                    }
-                    if (handleClick(1, msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN))
-                        return 1;
-                    msg.m_id = MESSAGE_WIDGET;
-                    msg.m_codeY = m_id;
-                    return 2;
-                }
-                return 0;
-            }
-
-            case MESSAGE_LEFT_BUTTON_UP:
-                if (isDisabled)
-                    break;
-                // fall through
-            case MESSAGE_RIGHT_BUTTON_UP:
-                if (m_status & WIDGET_SELECTED) {
-                    m_status &= ~WIDGET_SELECTED;
-                    if (handleClick(0, msg.m_id == MESSAGE_RIGHT_BUTTON_UP))
-                        return 1;
-                    msg.m_id = MESSAGE_WIDGET;
-                    msg.m_codeX = WIDGET_DESELECT;
-                    msg.m_codeY = m_id;
-                    return 2;
-                }
-                return 0;
-            default:
-                break;
-            }
+    if (!(m_status & WIDGET_ACTIVE)) {
+        if (msg.m_id == MESSAGE_WIDGET)
             return widget::main(msg);
+    } else {
+        unsigned char isDisabled = 0;
+        if (m_status & WIDGET_DISABLED)
+            isDisabled = 1;
+
+        switch (msg.m_id) {
+        case MESSAGE_LEFT_BUTTON_DOWN:
+            if (isDisabled)
+                break;
+            // fall through
+        case MESSAGE_RIGHT_BUTTON_DOWN: {
+            short mouseX = msg.m_codeX - m_parentWindow->m_x;
+            short mouseY = msg.m_codeY - m_parentWindow->m_y;
+            if (mouseX >= m_x && mouseY >= m_y && mouseX < m_x + m_width
+                && mouseY < m_y + m_height) {
+                if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+                    msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
+                    msg.m_codeX = WIDGET_RIGHT_SELECT;
+                } else {
+                    m_status |= WIDGET_SELECTED;
+                    msg.m_codeX = WIDGET_SELECT;
+                }
+                if (handleClick(1, msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN))
+                    return 1;
+                msg.m_id = MESSAGE_WIDGET;
+                msg.m_codeY = m_id;
+                return 2;
+            }
+            return 0;
         }
+
+        case MESSAGE_LEFT_BUTTON_UP:
+            if (isDisabled)
+                break;
+            // fall through
+        case MESSAGE_RIGHT_BUTTON_UP:
+            if (m_status & WIDGET_SELECTED) {
+                m_status &= ~WIDGET_SELECTED;
+                if (handleClick(0, msg.m_id == MESSAGE_RIGHT_BUTTON_UP))
+                    return 1;
+                msg.m_id = MESSAGE_WIDGET;
+                msg.m_codeX = WIDGET_DESELECT;
+                msg.m_codeY = m_id;
+                return 2;
+            }
+            return 0;
+        default:
+            break;
+        }
+        return widget::main(msg);
     }
 
     return 0;

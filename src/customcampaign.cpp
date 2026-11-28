@@ -485,11 +485,9 @@ VA(0x004845f0, 0x24)
 MAC_ADDRESS(0x092544, 0x4c)
 void TCampaignBuildingBonus::read(TAbstractFile* file)
 {
-    {
-        unsigned char building;
-        file->read(&building, sizeof(unsigned char));
-        m_building = building;
-    }
+    unsigned char building;
+    file->read(&building, sizeof(unsigned char));
+    m_building = building;
 }
 
 VA(0x00484620, 0x3)
@@ -1142,16 +1140,12 @@ void TCampaignStartCrossoverOption::read(TAbstractFile* file)
     }
     while (count--) {
         TCampaignCrossoverChoice choice;
-        {
-            signed char player;
-            file->read(&player, sizeof(signed char));
-            choice.m_player = player;
-        }
-        {
-            signed char scenario;
-            file->read(&scenario, sizeof(signed char));
-            choice.m_scenario = scenario;
-        }
+        signed char player;
+        file->read(&player, sizeof(signed char));
+        choice.m_player = player;
+        signed char scenario;
+        file->read(&scenario, sizeof(signed char));
+        choice.m_scenario = scenario;
         m_choices.push_back(choice);
     }
 }
@@ -1241,16 +1235,12 @@ void TCampaignStartHeroOption::read(TAbstractFile* file)
     m_choices.clear();
     while (count--) {
         TCampaignHeroChoice choice;
-        {
-            signed char player;
-            file->read(&player, sizeof(signed char));
-            choice.m_player = player;
-        }
-        {
-            short heroId;
-            file->read(&heroId, sizeof(short));
-            choice.m_hero = heroId;
-        }
+        signed char player;
+        file->read(&player, sizeof(signed char));
+        choice.m_player = player;
+        short heroId;
+        file->read(&heroId, sizeof(short));
+        choice.m_hero = heroId;
         m_choices.push_back(choice);
     }
 }

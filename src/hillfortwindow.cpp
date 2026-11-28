@@ -282,10 +282,8 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
                 strcpy(s.m_resourceCost, "");
             } else {
                 TCreatureType upgraded;
-                {
-                    TCreatureType baseType = s.m_type;
-                    upgraded = g_game->upgradedCreatureType(baseType);
-                }
+                TCreatureType baseType = s.m_type;
+                upgraded = g_game->upgradedCreatureType(baseType);
                 {
                     TCreatureType baseType = s.m_type;
                     getUpgradeCost(baseType, upgraded, s.m_count, s.m_cost);
@@ -461,10 +459,8 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
             TCreatureType type = m_slot[which].m_type;
             if (g_game->isBaseCreature(type)) {
                 TCreatureType upgraded;
-                {
-                    TCreatureType baseType = m_slot[which].m_type;
-                    upgraded = g_game->upgradedCreatureType(baseType);
-                }
+                TCreatureType baseType = m_slot[which].m_type;
+                upgraded = g_game->upgradedCreatureType(baseType);
 
                 g_game->getCurrHero()->m_army.m_armies[which] = upgraded;
                 for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++)

@@ -1093,24 +1093,22 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
                 break;
             pollSound();
             process1WindowsMessage();
-            {
-                message msg = g_inputManager->getEvent();
-                switch (msg.m_id) {
-                    case MESSAGE_KEY_DOWN:
-                        if (msg.m_codeX == KEYCODE_F4)
-                            break;
-                        // fall through
-                    case MESSAGE_LEFT_BUTTON_DOWN:
-                    case MESSAGE_RIGHT_BUTTON_DOWN:
-                        if (!g_firstTimeThrough) {
-                            aborted = 1;
-                            break;
-                        }
+            message msg = g_inputManager->getEvent();
+            switch (msg.m_id) {
+                case MESSAGE_KEY_DOWN:
+                    if (msg.m_codeX == KEYCODE_F4)
                         break;
-                }
-                if (aborted)
+                    // fall through
+                case MESSAGE_LEFT_BUTTON_DOWN:
+                case MESSAGE_RIGHT_BUTTON_DOWN:
+                    if (!g_firstTimeThrough) {
+                        aborted = 1;
+                        break;
+                    }
                     break;
             }
+            if (aborted)
+                break;
             if (videoNeedsUpdate())
                 videoDrawRects();
         }

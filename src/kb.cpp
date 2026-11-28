@@ -757,26 +757,24 @@ static void playFramedVideo(int videoId, const char* frameName)
         if (!videoPlaying())
             break;
 
-        {
-            bool done = 0;
-            process1WindowsMessage();
-            message msg = g_inputManager->getEvent();
-            switch (msg.m_id) {
-            case MESSAGE_KEY_DOWN:
-                if (msg.m_codeX == KEYCODE_F4)
-                    break;
-                // fall through
-            case MESSAGE_LEFT_BUTTON_DOWN:
-            case MESSAGE_RIGHT_BUTTON_DOWN:
-                if (!g_firstTimeThrough) {
-                    done = 1;
-                    break;
-                }
+        bool done = 0;
+        process1WindowsMessage();
+        message msg = g_inputManager->getEvent();
+        switch (msg.m_id) {
+        case MESSAGE_KEY_DOWN:
+            if (msg.m_codeX == KEYCODE_F4)
+                break;
+            // fall through
+        case MESSAGE_LEFT_BUTTON_DOWN:
+        case MESSAGE_RIGHT_BUTTON_DOWN:
+            if (!g_firstTimeThrough) {
+                done = 1;
                 break;
             }
-            if (done)
-                break;
+            break;
         }
+        if (done)
+            break;
 
         if (videoNeedsUpdate())
             videoDrawRects();
@@ -1650,14 +1648,12 @@ static unsigned char doCampaignWindow()
             customCampaignWindow.doModal(0);
             if (g_windowManager->m_dialogReturn) {
                 g_inCampaign = 1;
-                {
-                    TCampaignBrief campaignBrief(1, 0);
-                    campaignBrief.doModal();
-                    if (g_windowManager->m_dialogReturn
-                        != DIALOG_RETURN_CANCEL)
-                        return 1;
-                    g_inCampaign = 0;
-                }
+                TCampaignBrief campaignBrief(1, 0);
+                campaignBrief.doModal();
+                if (g_windowManager->m_dialogReturn
+                    != DIALOG_RETURN_CANCEL)
+                    return 1;
+                g_inCampaign = 0;
             }
             break;
         }

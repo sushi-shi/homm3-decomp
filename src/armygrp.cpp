@@ -495,69 +495,67 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             return 0.0f;
         break;
     }
-    {
-        chance = 1.0f;
-        if (!(castingHero
-                && castingHero->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))
-            && !(targetHero
-                && targetHero->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))) {
-            if (isMindSpell(spell)) {
-                if ((attrs & 0x400)
-                    || (targetHero
-                        && targetHero->isWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE)))
-                    return 0.0f;
-            }
-            if ((attrs & 0x4000) && (spellRec->m_school & 0x2))
+    chance = 1.0f;
+    if (!(castingHero
+            && castingHero->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))
+        && !(targetHero
+            && targetHero->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))) {
+        if (isMindSpell(spell)) {
+            if ((attrs & 0x400)
+                || (targetHero
+                    && targetHero->isWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE)))
                 return 0.0f;
-            switch (targetArmyType) {
-            case CREATURE_DWARF:
-            case CREATURE_CRYSTAL_DRAGON:
-                chance = 0.8f;
-                break;
-            case CREATURE_BATTLE_DWARF:
-                chance = 0.6f;
-                break;
-            case CREATURE_AIR_ELEMENTAL:
-            case CREATURE_STORM_ELEMENTAL:
-                if (spell == SPELL_METEOR_SHOWER || spell == SPELL_BLIND)
-                    return 0.0f;
-                break;
-            case CREATURE_EARTH_ELEMENTAL:
-            case CREATURE_MAGMA_ELEMENTAL:
-                if (spell == SPELL_ARMAGEDDON || spell == SPELL_LIGHTNING_BOLT
-                    || spell == SPELL_CHAIN_LIGHTNING
-                    || spell == SPELL_TITANS_LIGHTNING_BOLT)
-                    return 0.0f;
-                break;
-            case CREATURE_WATER_ELEMENTAL:
-            case CREATURE_ICE_ELEMENTAL:
-                if (spell == SPELL_ICE_BOLT || spell == SPELL_FROST_RING)
-                    return 0.0f;
-                break;
-            case CREATURE_GREEN_DRAGON:
-            case CREATURE_RED_DRAGON:
-            case CREATURE_AZURE_DRAGON:
-                if (spellRec->m_level <= 3)
-                    return 0.0f;
-                break;
-            case CREATURE_GOLD_DRAGON:
-                if (spellRec->m_level <= 4)
-                    return 0.0f;
-                break;
-            case CREATURE_BLACK_DRAGON:
-            case CREATURE_MAGIC_ELEMENTAL:
+        }
+        if ((attrs & 0x4000) && (spellRec->m_school & 0x2))
+            return 0.0f;
+        switch (targetArmyType) {
+        case CREATURE_DWARF:
+        case CREATURE_CRYSTAL_DRAGON:
+            chance = 0.8f;
+            break;
+        case CREATURE_BATTLE_DWARF:
+            chance = 0.6f;
+            break;
+        case CREATURE_AIR_ELEMENTAL:
+        case CREATURE_STORM_ELEMENTAL:
+            if (spell == SPELL_METEOR_SHOWER || spell == SPELL_BLIND)
                 return 0.0f;
-            }
-            if (targetHero)
-                chance -= 1.0f - targetHero->getMagicResistanceFactor();
+            break;
+        case CREATURE_EARTH_ELEMENTAL:
+        case CREATURE_MAGMA_ELEMENTAL:
+            if (spell == SPELL_ARMAGEDDON || spell == SPELL_LIGHTNING_BOLT
+                || spell == SPELL_CHAIN_LIGHTNING
+                || spell == SPELL_TITANS_LIGHTNING_BOLT)
+                return 0.0f;
+            break;
+        case CREATURE_WATER_ELEMENTAL:
+        case CREATURE_ICE_ELEMENTAL:
+            if (spell == SPELL_ICE_BOLT || spell == SPELL_FROST_RING)
+                return 0.0f;
+            break;
+        case CREATURE_GREEN_DRAGON:
+        case CREATURE_RED_DRAGON:
+        case CREATURE_AZURE_DRAGON:
+            if (spellRec->m_level <= 3)
+                return 0.0f;
+            break;
+        case CREATURE_GOLD_DRAGON:
+            if (spellRec->m_level <= 4)
+                return 0.0f;
+            break;
+        case CREATURE_BLACK_DRAGON:
+        case CREATURE_MAGIC_ELEMENTAL:
+            return 0.0f;
         }
-        if (spellRec->m_karma > 0) {
-            return 1.0f;
-        }
-        if (chance < 0.0f)
-            chance = 0.0f;
-        return chance;
+        if (targetHero)
+            chance -= 1.0f - targetHero->getMagicResistanceFactor();
     }
+    if (spellRec->m_karma > 0) {
+        return 1.0f;
+    }
+    if (chance < 0.0f)
+        chance = 0.0f;
+    return chance;
 }
 
 VA(0x0044aa00, 0x3A)
