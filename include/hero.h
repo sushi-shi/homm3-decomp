@@ -652,12 +652,19 @@ public:
     // byte [this+0x430] and then handles spell 0 = eSpellSummonBoat.
     // The retail x86 offsets are byte-proven here; only the names come
     // from the Dreamcast build.
+    // Both tables hold bool: their accessors return native bool
+    // (?is_in_spellbook@hero@@QBA_NW4SpellID@@@Z,
+    // ?SpellIsAvailable@hero@@QBA_NH@Z) and update_spell_list merges them
+    // with std::logical_or<bool>; DC's unsigned-char member primitive is the
+    // lowered bool. Retail needs the plain bool element read: byte tables
+    // compared `!= 0` let VC6 fold exchangeSpells' repeated ownership test
+    // (99.24%) and reshape doEventShrine (95.14%); both are exact with bool.
     enum { NUM_SPELLS = 70 };
 
 private:
        // DC SpellID::kNumSpells
-    unsigned char m_inSpellbook[NUM_SPELLS];  // +0x3ea
-    unsigned char m_availableSpells[NUM_SPELLS];  // +0x430
+    bool m_inSpellbook[NUM_SPELLS];  // +0x3ea
+    bool m_availableSpells[NUM_SPELLS];  // +0x430
     // The four primary skills (DC name `stats`), byte-proven by
     // hero::get_primary_skill_total 0x4e5960 - a four-iteration
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
@@ -1168,7 +1175,7 @@ public:
     DC_ADDRESS(0x037ddc, 0x10)
     bool isInSpellbook(SpellID spell) const
     {
-        return m_inSpellbook[spell] != 0;
+        return m_inSpellbook[spell];
     }
 
     // Dreamcast keeps these five source-visible setter boundaries; inlined in
@@ -1208,9 +1215,10 @@ public:
         m_valueOfWell = arg;
     }
 
-    // DC-attested inline helper; inlined in SetShrineHelpText.
+    // DC-attested inline helper; inlined in SetShrineHelpText. The original
+    // public ?SpellIsAvailable@hero@@QBA_NH@Z proves the bool return.
     DC_ADDRESS(0x01fd90, 0x1a)
-    unsigned char spellIsAvailable(int spell) const
+    bool spellIsAvailable(int spell) const
     {
         return m_availableSpells[spell];
     }

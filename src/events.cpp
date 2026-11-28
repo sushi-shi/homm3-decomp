@@ -2164,9 +2164,10 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
 // DC 1979-2019 builds the message with operator+=.
 // DC's local records retain enum SpellID vectors and loop variable; use the
 // canonical ESpellId domain through their comparator and sort instantiations.
-// Residual: the initial max operand temporaries occupy opposite stack homes,
-// and the frame/string-operation layout differs. Named string calls agree,
-// including the expanded final taught-message append. Both builds destroy
+// Exact with hero's bool spell tables: retail repeats the first hero's
+// ownership test in the else arm (0x4a2a8c) and loads the second hero's
+// flag separately in each arm; over byte tables compared `!= 0` VC6 folds
+// that test and hoists the load (99.24%). Both builds destroy
 // formatString's temporary at expression end; do not extend its lifetime.
 VA(0x004a2940, 0x85C)
 DC_ADDRESS(0x093464, 0x556)
