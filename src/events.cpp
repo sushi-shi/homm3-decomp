@@ -6365,11 +6365,11 @@ DC_ADDRESS(0x09c554, 0x224)
 MAC_ADDRESS(0x0bd314, 0xbe4)
 void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho, type_point& point, hero** leftHero, armyGroup** leftArmyGroup, int* rightPlayer, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* seed, signed char* winner, unsigned char* retreatWin, unsigned char* combatSurrender)
 {
-    *leftHero = NULL;
-    *leftArmyGroup = NULL;
-    *rightTown = NULL;
-    *rightHero = NULL;
-    *rightArmyGroup = NULL;
+    *leftHero = 0;
+    *leftArmyGroup = 0;
+    *rightTown = 0;
+    *rightHero = 0;
+    *rightArmyGroup = 0;
     *rightPlayer = -1;
 
     *fromWho = combatInitMsg->m_netmsg.m_from;
