@@ -147,6 +147,10 @@ public:
         TCampaignStartOption* getStartOptions() { return m_options; }
         const TCampaignStartOption* getStartOptions() const { return m_options; }
         int getStartOptionCount() const;
+        // Forwards to the owned option record like getStartOptionCount and
+        // getBonusText. updateAllyEnemyFlags' evaluation order needs the
+        // choice as this query's argument; the name is inferred.
+        int getStartOptionPlayer(int choice) const;
 
         ScenarioStruct();
         // Retail 0x487e40 (`ret 0xc`): reads one scenario record out of
@@ -269,6 +273,9 @@ public:
         // Windows retains the nested vector query in both expansions; the
         // original helper name and class ownership remain inferred.
         int getScenarioCount() const { return m_scenarios.size(); }
+        // Mac 0x645b8 (updateAllyEnemyFlags) retains the vector storage call
+        // one accessor level around operator[] leaves. Name inferred.
+        ScenarioStruct* getScenario(int which) { return m_scenarios[which]; }
 
         // Inlined in both load and the destructor.
         MAC_ADDRESS(0x096afc, 0x78)

@@ -225,27 +225,29 @@ int g_campaignBriefPlayerSlot;
 // (ENEMY_FLAG1_ID..) of the local player's slot, hiding every flag first and skipping
 // the positions the scenario leaves empty.
 
-// Naming the briefing-choice argument before the scenario lookup and retaining
-// the scenario pointer restores retail's evaluation order. The Mac loop keeps
-// separate zero-based enemy and ally counters and adds each widget ID at use;
-// CodeWarrior's three counter registers follow that declaration order. VC6
-// remains at 99.8958 with all nine CFG blocks, five branches and thirteen calls
-// exact. The remaining byte is the commutative
-// SIB spelling in the second teamInfo lookup inside Dreamcast-proven OnSameTeam:
-// candidate [ecx+eax+0x1f879], retail [eax+ecx+0x1f879]. Naming either the player
-// slot or the game receiver is byte-flat, so keep the canonical helper boundary.
-// Mac resolves the same externally linked player slot but retains one
-// std::__vector_pod::data call before getPlayer (14 calls against our 13).
+// The player-slot query is one expression: the header's scenario accessor,
+// then the scenario's forwarding player query with the briefing choice as its
+// argument. Mac 0x645b8 retains the vector storage call that one accessor
+// level leaves behind (direct m_scenarios[] expands it: Mac 20.63%), and
+// 0x6468c/0x646c8 compute each widget ID once (r25) before the two getWidget
+// calls, which the two branch locals reproduce. Mac 24.03 -> 99.27% (the
+// rest is the frame size); Windows 99.7917 -> 99.8958 because the forwarding
+// query evaluates the briefing choice before the scenario lookup and keeps
+// the scenario pointer in ECX. The Mac loop keeps separate zero-based enemy
+// and ally counters in that declaration order.
+// Residual: the commutative SIB spelling of the second teamInfo lookup inside
+// Dreamcast-proven OnSameTeam: candidate [ecx+eax+0x1f879], retail
+// [eax+ecx+0x1f879]. Byte-flat: naming the player slot or the game receiver,
+// the index declared in the for head, first or bare at the top, the counters
+// in the other order, a named position local.
 VA(0x00458010, 0x10F)
 DC_ADDRESS(0x058a9c, 0x162)
 MAC_ADDRESS(0x064584, 0x19c)  // handler caller + DC source identity
 void TCampaignBrief::updateAllyEnemyFlags()
 {
-    int briefingChoice = g_game->m_campaign.m_briefingChoice;
-    ScenarioStruct* scenario =
-        m_campaign->m_scenarios[m_selectedScenario];
     g_campaignBriefPlayerSlot =
-        scenario->getStartOptions()->getPlayer(briefingChoice);
+        m_campaign->getScenario(m_selectedScenario)->getStartOptionPlayer(
+            g_game->m_campaign.m_briefingChoice);
     int enemyFlag = 0;
     int allyFlag = 0;
     int i = 0;
@@ -254,14 +256,14 @@ void TCampaignBrief::updateAllyEnemyFlags()
         getWidget(i + ALLY_FLAG1_ID)->hide();
         if (g_game->m_setup.m_playerPos[i] >= 0) {
             if (g_game->onSameTeam(i, g_campaignBriefPlayerSlot)) {
-                getWidget(ALLY_FLAG1_ID + allyFlag)->show();
-                getWidget(ALLY_FLAG1_ID + allyFlag)->sendMessage(
-                    widget::WIDGET_SET_ICON_FRAME, i);
+                int id = ALLY_FLAG1_ID + allyFlag;
+                getWidget(id)->show();
+                getWidget(id)->sendMessage(widget::WIDGET_SET_ICON_FRAME, i);
                 allyFlag++;
             } else {
-                getWidget(ENEMY_FLAG1_ID + enemyFlag)->show();
-                getWidget(ENEMY_FLAG1_ID + enemyFlag)->sendMessage(
-                    widget::WIDGET_SET_ICON_FRAME, i);
+                int id = ENEMY_FLAG1_ID + enemyFlag;
+                getWidget(id)->show();
+                getWidget(id)->sendMessage(widget::WIDGET_SET_ICON_FRAME, i);
                 enemyFlag++;
             }
         }

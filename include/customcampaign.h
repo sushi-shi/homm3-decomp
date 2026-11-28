@@ -419,6 +419,11 @@ inline int TCampaignBrief::ScenarioStruct::getStartOptionCount() const
     return getStartOptions()->getCount();
 }
 
+inline int TCampaignBrief::ScenarioStruct::getStartOptionPlayer(int choice) const
+{
+    return getStartOptions()->getPlayer(choice);
+}
+
 // Vftable 0x63d98c, 0x18 bytes: the player at +4 and the bonus list at +8.
 class TCampaignStartBonusOption : public TCampaignStartOption {
 public:
