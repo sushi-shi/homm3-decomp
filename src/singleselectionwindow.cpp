@@ -4174,6 +4174,22 @@ void TSingleSelectionWindow::applyHeaderToGame(
     m_descriptionWidget->setText(header->m_description);
 }
 
+// LEVER (owner decision): two free inline candidates after the second
+// applyHeaderToGame are what the traced /Ob2 budgets need (see the note
+// above). Reading the two saved player tables through accessors supplies
+// them and makes updateGameVars exact; no native build shows which two
+// inline calls the shipped tail really made, so these names, their
+// placement and even their operation are placeholders.
+static inline const unsigned char* savedDeadPlayers(const SavedGameHeader& saved)
+{
+    return saved.m_deadPlayer;
+}
+
+static inline const int* savedHumanPlayers(const SavedGameHeader& saved)
+{
+    return saved.m_humanPlayer;
+}
+
 VA(0x00583580, 0x30C)
 DC_ADDRESS(0x139090, 0x408)
 MAC_ADDRESS(0x17b1c4, 0x140)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x
@@ -4218,9 +4234,9 @@ void TSingleSelectionWindow::updateGameVars()
     if (m_loadMode) {
         // SetText can run widget code; retail resolves this row afterwards.
         GameSelectionHeadersStruct& loaded = m_selectionHeaders[m_currentMap];
-        memcpy(g_game->m_playerDisabled, loaded.m_saved.m_deadPlayer,
+        memcpy(g_game->m_playerDisabled, savedDeadPlayers(loaded.m_saved),
                sizeof(loaded.m_saved.m_deadPlayer));
-        memcpy(g_wasHuman, loaded.m_saved.m_humanPlayer,
+        memcpy(g_wasHuman, savedHumanPlayers(loaded.m_saved),
                sizeof(loaded.m_saved.m_humanPlayer));
     }
 }
