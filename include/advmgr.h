@@ -1068,13 +1068,13 @@ public:
     void bvMessage(const char* msg);
 
 private:
-    unsigned char updBottomViewHero(unsigned char forceUpdate);
-    unsigned char updBottomViewTown(unsigned char forceUpdate);
-    unsigned char updBottomViewKingdom(unsigned char forceUpdate);
-    unsigned char updBottomViewEnemyTurn(unsigned char forceUpdate);
-    unsigned char updBottomViewNewTurn(unsigned char forceUpdate);
-    unsigned char updBottomViewResMsg(unsigned char forceUpdate);
-    unsigned char updBottomViewMessage(unsigned char forceUpdate);
+    bool updBottomViewHero(bool forceUpdate);
+    bool updBottomViewTown(bool forceUpdate);
+    bool updBottomViewKingdom(bool forceUpdate);
+    bool updBottomViewEnemyTurn(bool forceUpdate);
+    bool updBottomViewNewTurn(bool forceUpdate);
+    bool updBottomViewResMsg(bool forceUpdate);
+    bool updBottomViewMessage(bool forceUpdate);
     void doEventAnchor(class hero* currentHero, bool humanPlayer);
     void doEventArena(class hero* currentHero, NewmapCell* cell,
                       bool humanPlayer);
@@ -1448,7 +1448,7 @@ public:
     int processWaitingHover(int mouseX, int mouseY);
     int processHover(int mouseX, int mouseY);
     int processSearch(int x, int y, int z);
-    void updBottomView(unsigned char forceUpdate, unsigned char drawWindow,
+    void updBottomView(bool forceUpdate, bool drawWindow,
                        unsigned char update);
     void showRoute(int updateScreen, int reseed, int changeButton);
     void seedTo(type_point target);

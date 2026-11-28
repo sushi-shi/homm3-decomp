@@ -707,7 +707,7 @@ public:
     // Bulk-copy boundary name provisional; its body precedes its caller.
     void setPrimarySkills(const signed char* stats);
     unsigned char hasArtifact(int whichArtifact) const;
-    unsigned char hasSecondarySkill(int whichSkill);
+    bool hasSecondarySkill(int whichSkill);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     // Complete-only custom-spell setup and campaign carry-over share these
     // clears (name provisional); DC hero::initialize fills them directly.
@@ -797,7 +797,7 @@ public:
     float getLogisticsFactor() const;
     float getSorceryFactor() const;
     // 0x4e5550 - checks spell access, mana, boat reachability and pool space.
-    unsigned char canSummonBoat() const;
+    bool canSummonBoat() const;
     long getNavigationFactor() const;
     int getMobility(bool seaMovement) const;
     int getMobility() const;
@@ -823,7 +823,7 @@ public:
                          TCreatureTypeTraits* traits) const;
     // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open
     // with the same `owner < 0` guard.
-    unsigned char belongsToHuman() const;
+    bool belongsToHuman() const;
     class playerData* getPlayer() const;
     // 0x4e5330 / 0x4e5380, the two status-bar gauge frames.
     int getMobilityFrame() const;
@@ -841,7 +841,7 @@ public:
     long getLastBackpackIndex() const;
     // 0x004e56e0 - the patrol test: Manhattan distance from the patrol
     // anchor, same level, against patrolRadius.
-    unsigned char isInPatrolRadius(struct type_point point) const;
+    bool isInPatrolRadius(struct type_point point) const;
     // 0x004e2d50 - the fourth backpack primitive; closes the hole a
     // removed slot leaves and drops `backpackCount`.
     void removeBackpackArtifact(short slot);
@@ -1053,7 +1053,7 @@ public:
     // (armyGroup::IsMember).
     // E:\gamedcs\Hero.h:702
     DC_ADDRESS(0x0d58f8, 0x1c)
-    unsigned char hasArmy(TCreatureType type) const
+    bool hasArmy(TCreatureType type) const
     {
         return m_army.isMember(type);
     }
@@ -1088,8 +1088,9 @@ public:
     // E:\gamedcs\Hero.h:724. Dreamcast retains this header helper as a
     // standalone inline body; Complete stores the resolved sex on the live
     // hero and inlines this test at its spells.cpp caller.
+    // ?IsMale@hero@@QBA_NXZ proves bool.
     DC_ADDRESS(0x1581a0, 0x18)
-    unsigned char isMale() const
+    bool isMale() const
     {
         return m_sex == 0;
     }

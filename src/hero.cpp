@@ -1177,7 +1177,7 @@ const char* hero::getBiography()
 VA(0x004d9050, 0x20)
 DC_ADDRESS(0x0cc0bc, 0x26)
 MAC_ADDRESS(0x0f4bc0, 0x5c)
-unsigned char hero::belongsToHuman() const
+bool hero::belongsToHuman() const
 {
     if (m_owner < 0)
         return 0;
@@ -4543,7 +4543,7 @@ int hero::giveSS(int whichSS, int numLevelsToGive)
 // E:\gamedcs\hero.cpp:4689
 DC_ADDRESS(0x0d38d8, 0x12)
 MAC_ADDRESS(0x103018, 0x20)
-unsigned char hero::hasSecondarySkill(int whichSkill)
+bool hero::hasSecondarySkill(int whichSkill)
 {
     return m_skillOrder[whichSkill] > 0;
 }
@@ -5977,7 +5977,7 @@ boat* hero::findSummonableBoat() const
 VA(0x004e5550, 0x15E)
 DC_ADDRESS(0x0d524c, 0x64)
 MAC_ADDRESS(0x106614, 0xd0)
-unsigned char hero::canSummonBoat() const
+bool hero::canSummonBoat() const
 {
     if (!spellIsAvailable(SPELL_SUMMON_BOAT))
         return 0;
@@ -6009,7 +6009,7 @@ VA(0x004e56e0, 0x7C)
 DC_ADDRESS(0x0d52d0, 0xd0)
 MAC_ADDRESS(0x10671c, 0xd0)
 // DC names distance.
-unsigned char hero::isInPatrolRadius(type_point point) const
+bool hero::isInPatrolRadius(type_point point) const
 {
     if (m_patrolRadius < 0 || m_patrolX == kPatrolNone)
         return 1;

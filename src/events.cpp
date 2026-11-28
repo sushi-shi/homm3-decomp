@@ -1106,6 +1106,10 @@ static void showRewards(std::string& text,
 // push_back, the empty-text assignment, and show_rewards(..., 8).
 // Retail expands this helper and push_back while retaining insert calls.
 // Moving the flush into callers loses the nested inlining context.
+// giveBlackBoxReward (99.52%) still expands one showRewards erase retail
+// calls; the inline replay fits this body two units heavier (cb 82 -> 84)
+// or the root 8..12 lighter. `!text.length()` is byte-flat, and DC's record
+// (EGameResource resource; long qualifier) is the only typed lead left.
 DC_ADDRESS(0x091308, 0x84)
 MAC_ADDRESS(0x0aabf8, 0x88)
 static void addReward(std::string& text, const std::string& alternate,

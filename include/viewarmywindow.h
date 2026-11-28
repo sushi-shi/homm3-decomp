@@ -34,7 +34,7 @@ public:
 
     TViewArmyWindow(int armyType, int x0, int y0, unsigned char showOk);
     TViewArmyWindow(const army* thisArmy, int x0, int y0,
-                    unsigned char showOk);
+                    bool showOk);
     // Complete adds the tenth groupAlignments argument (ret 0x28) and
     // uses the mutable group pointer required by GetArmyMorale/GetArmyLuck.
     TViewArmyWindow(armyGroup* group, int iarmy, const hero* thisHero,

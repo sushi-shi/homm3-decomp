@@ -97,7 +97,7 @@ VA(0x005f3360, 0x7B5)
 DC_ADDRESS(0x190abc, 0x3bc)
 MAC_ADDRESS(0x1ff748, 0x650)  // direct caller + CrStkPU.pcx
 TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
-                                 unsigned char showOk)
+                                 bool showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
       m_armyType(thisArmy->m_creatureType),
       m_armySize(thisArmy->m_numTroops),

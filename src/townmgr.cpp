@@ -4732,7 +4732,7 @@ int townManager::main(message& msg)
     int exitFlag = 0;
     char cTemp[400];
     playerData* thisPlayer = g_game->getLocalPlayer();
-    unsigned char msgReceived;
+    bool msgReceived;
 
     g_soundManager->serviceSounds();
     if (g_turnDuration.isExpired())

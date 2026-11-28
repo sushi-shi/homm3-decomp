@@ -288,7 +288,7 @@ public:
 class CNewPlayerUpdateProc {
 public:
     CNewPlayerUpdateProc(unsigned long dpid);
-    unsigned char isFinished();
+    bool isFinished();
     void headerRequested(unsigned char flag, int number);
     void headerConfirmed();
     virtual void go();       // slot 0, 0x5789f0
@@ -332,7 +332,7 @@ public:
 
     CNewPlayerUpdateMan();
 
-    unsigned char isSendingHeaders();
+    bool isSendingHeaders();
 
     int getFirstAvailable();
 
@@ -1427,7 +1427,7 @@ inline CNewPlayerUpdateProc::CNewPlayerUpdateProc(unsigned long dpid)
 
 // E:\gamedcs\singleselectionwindow.cpp:1341
 DC_ADDRESS(0x148338, 0x10)
-inline unsigned char CNewPlayerUpdateProc::isFinished() { return m_finished; }
+inline bool CNewPlayerUpdateProc::isFinished() { return m_finished; }
 
 // DC HeaderRequested (0x148348), singleselectionwindow.cpp:1346.
 // Complete's expanded copy at 0x5892b0 queues flag/number by value instead
@@ -1651,7 +1651,7 @@ void CNewPlayerUpdateMan::tick()
 // DC IsSendingHeaders; inlined in each sort-button arm.
 // E:\gamedcs\singleselectionwindow.cpp:1517
 DC_ADDRESS(0x148928, 0x38)
-inline unsigned char CNewPlayerUpdateMan::isSendingHeaders()
+inline bool CNewPlayerUpdateMan::isSendingHeaders()
 {
     for (int i = 0; i < NUM_PLAYERS; ++i)
         if (m_procs[i])
@@ -3217,6 +3217,10 @@ void TSingleSelectionWindow::toggleRandomMapOptions()
 // the other machines through SendPlayerPositions. Mac 0x178a08/0x178a30
 // address the member directly; avoid an inferred cached local-header reference.
 // This restores Windows's local-header frame and destructor frontier (97.69%).
+// Residual: retail keeps the header's ~vector<HeroId> as a call; the inline
+// replay fits root cb 753..758 (ours 764). Mac 0x178800..0x178834 stores the
+// version in three arms, but an if / else if / else here is 90.63%: retail
+// needs the 21/14 ternary.
 VA(0x00580430, 0x63B)
 MAC_ADDRESS(0x1786d0, 0x4c4)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
@@ -6760,7 +6764,7 @@ bool TSingleSelectionWindow::sendPlayerPositions(
 // E:\gamedcs\singleselectionwindow.cpp:7009
 DC_ADDRESS(0x140ee4, 0x40)
 MAC_ADDRESS(0x181c70, 0x110)
-unsigned char TSingleSelectionWindow::sendSetupInfo(
+bool TSingleSelectionWindow::sendSetupInfo(
     unsigned long dpid)
 {
     CNewSetupInfoMsg msg(&g_game->m_setup);
@@ -7531,7 +7535,7 @@ void TSingleSelectionWindow::sendPlayerFaces()
 VA(0x0058BCE0, 0x5AF)
 DC_ADDRESS(0x142674, 0x1fc)
 MAC_ADDRESS(0x183698, 0x51c)  // begin-button caller and DC source shape
-unsigned char TSingleSelectionWindow::onBeginGame()
+bool TSingleSelectionWindow::onBeginGame()
 {
     if (m_randomMapSelected) {
         std::string name = getRandomMapName();
@@ -7639,7 +7643,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
 VA(0x0058C290, 0x2D2)
 DC_ADDRESS(0x142870, 0x176)
 MAC_ADDRESS(0x183bb4, 0x1a8)
-unsigned char TSingleSelectionWindow::beginSavedGame()
+bool TSingleSelectionWindow::beginSavedGame()
 {
     incProgressBar(true);
     updateTurnDuration();
@@ -7875,7 +7879,7 @@ void TSingleSelectionWindow::updateTown(
 VA(0x0058CE70, 0x40)
 DC_ADDRESS(0x1431bc, 0x58)
 MAC_ADDRESS(0x1845e4, 0x6c)
-unsigned char TSingleSelectionWindow::hasMultipleTowns(int gamePos)
+bool TSingleSelectionWindow::hasMultipleTowns(int gamePos)
 {
     NewSMapHeader* mp = &g_game->m_mapHeader;
     CMapHeaderData::TPlayerSlotAttributes* slotAtt =
@@ -7892,7 +7896,7 @@ unsigned char TSingleSelectionWindow::hasMultipleTowns(int gamePos)
 VA(0x0058CEB0, 0xF7)
 DC_ADDRESS(0x143214, 0x116)
 MAC_ADDRESS(0x184650, 0x14c)
-unsigned char TSingleSelectionWindow::canChooseTown(int gamePos)
+bool TSingleSelectionWindow::canChooseTown(int gamePos)
 {
     if (m_loadMode)
         return 0;
@@ -7917,7 +7921,7 @@ unsigned char TSingleSelectionWindow::canChooseTown(int gamePos)
 VA(0x0058CFB0, 0x129)
 DC_ADDRESS(0x14332c, 0x116)
 MAC_ADDRESS(0x18479c, 0x154)
-unsigned char TSingleSelectionWindow::canChooseHero(int gamePos)
+bool TSingleSelectionWindow::canChooseHero(int gamePos)
 {
     if (m_loadMode)
         return 0;
@@ -7938,7 +7942,7 @@ unsigned char TSingleSelectionWindow::canChooseHero(int gamePos)
         return 0;
     if (slotAtt->m_generateHero)
         return 1;
-    unsigned char randomHero = slotAtt->m_hasRandomHero != 0;
+    bool randomHero = slotAtt->m_hasRandomHero != 0;
     return randomHero;
 }
 
@@ -8100,7 +8104,7 @@ void TSingleSelectionWindow::updateNames()
 VA(0x0058D3E0, 0x122)
 DC_ADDRESS(0x143954, 0x128)
 MAC_ADDRESS(0x184f00, 0xf0)
-unsigned char TSingleSelectionWindow::highlightFile(char* filename)
+bool TSingleSelectionWindow::highlightFile(char* filename)
 {
     int len = strlen(filename);
     int i = 0;
@@ -8442,7 +8446,7 @@ VA_COMPGEN(0x0058e2e0, 0x21, SCALAR_DELETING_DTOR,
 VA(0x0058e310, 0x21)
 DC_ADDRESS(0x1451a0, 0x48)
 MAC_ADDRESS(0x186068, 0x58)
-CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(unsigned char inPopup, unsigned char* msgReceived)
+CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(bool inPopup, bool* msgReceived)
 {
     CNetMsg* msg = GetRemoteData(false, &m_wasCompressed);
     if (!msg)

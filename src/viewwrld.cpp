@@ -222,6 +222,8 @@ inline void vwClipScaleToScreenBuffer(int destX, int destY)
 // E:\gamedcs\viewwrld.cpp:226
 // This is the caller-facing half of the same source boundary; inlined into
 // VWDrawAdvObj, including the nested clipped helper above.
+// vwDrawRoad's residual (99.54%) is this row-offset product's operand
+// registers; swapping the factors here is byte-flat in every expansion.
 DC_ADDRESS(0x196a18, 0x100)
 inline void vwScaleToScreenBuffer(int destX, int destY)
 {

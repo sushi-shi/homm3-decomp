@@ -106,7 +106,7 @@ private:
     unsigned char m_canCastWaterWalk;
     TSkillMastery m_waterWalkLevel;
     TSkillMastery m_flightLevel;
-    unsigned char m_limitReached;
+    bool m_limitReached;
     pathCell* m_cellData;
 
 public:
@@ -144,10 +144,10 @@ public:
     long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
     void seedPosition(hero* currentHero, type_point start,
                       type_point target, int maxMobility,
-                      unsigned char isBoat,
+                      bool isBoat,
                       type_search_type searchType,
                       int curTempMobility,
-                      unsigned char seedContinuation);
+                      bool seedContinuation);
     int buildPath(const hero* currentHero, long limit);
 
     // E:\gamedcs\FindPath.h:211-213: vector::clear.
@@ -196,9 +196,10 @@ public:
     bool isMoat(short hex) const { return m_isMoatSlowed[hex]; }
 
     // E:\\gamedcs\\findpath.h:247. Inlined in move_hero and
-    // AI_choose_destination.
+    // AI_choose_destination. ?limit_was_reached@searchArray@@QBA_NXZ proves
+    // bool; the flag it returns is typed to match (byte-flat).
     DC_ADDRESS(0x037e7c, 0x8)
-    bool limitWasReached() const { return m_limitReached != 0; }
+    bool limitWasReached() const { return m_limitReached; }
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
     void lowerDoor();
     bool findCombatPath(const army* currentArmy, long currentGroup,
@@ -243,7 +244,7 @@ private:
     void clear(long flyLevel, long startZ, long stopZ);
     void enterGate(const pathCell& cell, const NewmapCell* mapCell,
                     long limit);
-    unsigned char enterHostileTrigger(const hero* currentHero,
+    bool enterHostileTrigger(const hero* currentHero,
                                      pathCell& cell);
     // search.obj 0x56a400 / 0x56a730, the lith-family and underground
     // gate seeders; both parameter lists are the DC roster's
