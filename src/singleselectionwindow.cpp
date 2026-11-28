@@ -3217,14 +3217,21 @@ void TSingleSelectionWindow::toggleRandomMapOptions()
 // the other machines through SendPlayerPositions. Mac 0x178a08/0x178a30
 // address the member directly; avoid an inferred cached local-header reference.
 // This restores Windows's local-header frame and destructor frontier (97.69%).
-// Residual: retail keeps the header's ~vector<HeroId> as a call; the inline
-// replay fits root cb 753..758 (ours 764). Mac 0x178800..0x178834 stores the
-// version in three arms, but an if / else if / else here is 90.63%: retail
-// needs the 21/14 ternary.
+// Retail keeps the header's ~vector<HeroId> as a call, and the inline replay
+// fits only root cb 753..758. Two `for (int ...)` loops gave 764: each
+// declaration-initializer costs three tuples more than an assignment to a
+// function-scope index. One `int i` shared by both loops, as makeHeroFilter
+// and its neighbours declare theirs, gives 758 and every retail byte (100%;
+// separate function-scope i and j do too, a second loop reusing a
+// for-scoped i does not). Mac 0x178800..0x178834 stores the version in
+// three arms, but an if / else if / else here is 90.63%: retail needs the
+// 21/14 ternary.
 VA(0x00580430, 0x63B)
 MAC_ADDRESS(0x1786d0, 0x4c4)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
 {
+    int i;
+
     g_game->setupOrigData();
 
     NewSMapHeader header;
@@ -3250,7 +3257,7 @@ void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
         header.m_numPlayers =
             static_cast<unsigned char>(m_randomMapOptions.m_humanPlayerCount + m_randomMapOptions.m_computerPlayerCount);
 
-    for (int i = 0; i < NUM_PLAYERS; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         header.m_teamInfo[i] = static_cast<char>(i);
         header.m_playerSlotAttributes[i].m_legalAlignments = 0x1ff;
         header.m_playerSlotAttributes[i].m_canBeHuman =
@@ -3278,11 +3285,11 @@ void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
 
     applyHeaderToGame(&m_localHeader);
 
-    for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
-        m_players.m_humanPlayers[j].m_heroIndex = -1;
-        m_players.m_humanPlayers[j].m_townIndex = -1;
-        m_players.m_computerPlayers[j].m_heroIndex = -1;
-        m_players.m_computerPlayers[j].m_townIndex = -1;
+    for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        m_players.m_humanPlayers[i].m_heroIndex = -1;
+        m_players.m_humanPlayers[i].m_townIndex = -1;
+        m_players.m_computerPlayers[i].m_heroIndex = -1;
+        m_players.m_computerPlayers[i].m_townIndex = -1;
     }
     setHumanSlot();
     makeHeroFilter();
@@ -4142,6 +4149,13 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // depth-1 candidates from the second applyHeaderToGame on where this has
 // two; rebuildRandomMapPlayerSetup's retail decisions rule out extra sites
 // inside applyHeaderToGame. The two missing sites are not yet identified.
+// The bounds, from the traced budgets: the first expansion's nested budget
+// must stay below 133 (seven root candidates from it on) and the second's in
+// 133..178 (four from it on), so both extra candidates are free (cb <= 40)
+// and follow the second call. Mac 0x17b1fc passes this before
+// &m_localHeader, so the random arm has no pointer local; with that the Mac
+// body agrees in all 80 instructions and shows no further call in the tail
+// (CodeWarrior expands such wrappers without a trace).
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
 // Inlined in rebuildRandomMapPlayerSetup, both updateGameVars arms and
@@ -4172,8 +4186,7 @@ void TSingleSelectionWindow::updateGameVars()
     // duplicates the complete transfer here and returns before the original
     // currentMap path rather than sharing a lowered tail.
     if (m_randomMapSelected) {
-        GameSelectionHeadersStruct* localHeader = &m_localHeader;
-        applyHeaderToGame(localHeader);
+        applyHeaderToGame(&m_localHeader);
         return;
     }
 
@@ -6603,9 +6616,12 @@ bool TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
 // their own way out: one `||` guard (Mac 0x180c48..0x180c64 tests both
 // before one `return 1`) plus a single trailing `return 1` after the arms
 // (Mac joins both arms at 0x18125c before its one result) gives that
-// shrink-wrapped save (99.97%). Residual: one commuted
+// shrink-wrapped save (99.97%). That left one commuted
 // `lea edx, [eax + edi]` in the third byte-copy loop of the m_headersA row
-// assignment. Controls: two guarded returns with the shared tail duplicate
+// assignment; reading the sender through the typed `mapFileNameMsg` at the
+// two request sends, like every other field, instead of through the
+// untyped parameter closes it (100%; either site alone does too).
+// Controls: two guarded returns with the shared tail duplicate
 // the epilogue inline (92.17%); the `||` guard with returns in each arm,
 // a positive wrapping guard with or without arm returns, empty(), `true`
 // returns and hoisting the message cast keep EBX in the prologue (96.6x%).
@@ -6647,14 +6663,14 @@ bool TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
             m_selectionHeaders[mapFileNameMsg->m_number] = temp;
         } else {
             CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
-            transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
+            transmitRemoteDataDPID(&msg, mapFileNameMsg->m_dpidFrom, false, true);
         }
     } else {
 #if !defined(HOMM3_TARGET_MAC)
         chdir("..");
 #endif
         CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
-        transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
+        transmitRemoteDataDPID(&msg, mapFileNameMsg->m_dpidFrom, false, true);
     }
     return true;
 }

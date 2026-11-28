@@ -33,13 +33,10 @@ DATA(0x0069957c) int g_cdRomErr;
 
 // Set after the one-time missing-CD notice has been shown. The constructor
 // uses it only as the persistent suppression latch; the disk-space check has
-// its own DC-named static below.
+// its own static local in mainMenuHandler.
 DATA(0x00699660) static TMainMenu* g_mainMenu;
 DATA(0x00699674) static unsigned char g_cdMessageShown;
 DATA(0x00699678) static unsigned long g_lastDiskSpaceCheck;
-
-DATA(0x0067fa60) static int g_lastImHoverId = -1;
-DATA(0x0067fa64) static unsigned char g_checkDiskSpace = 1;
 
 // SetupCDDrive's result is stored by kb.obj's startup path and consumed here
 // to select the localized missing-CD wording. No public DC name survives.
@@ -127,41 +124,57 @@ void TMainMenu::doModal()
 
 // E:\gamedcs\mainmenu.cpp:135
 // 90.0704 -> 93.1606: both CD-dialog arms pass format_string's temporary
-// directly to NormalDialog, so VC6 reuses one EH slot; caching gpGeneralText
-// or naming either std::string creates the wrong live ranges/stack slots.
-// The hover call also really passes Y then X here - retail loads +0x10 first,
-// pushes it, then loads/pushes +0x14 as findWidget's first stack argument.
+// directly to NormalDialog; caching gpGeneralText or naming either
+// std::string creates the wrong live ranges/stack slots.
 // The wrong-edition arm (CD drive 5/6) comes first: retail's unwind map gives
 // that arm's temporary EH state 0 and the generic arm's state 1, and Mac's
-// specific-edition arm also precedes its generic warning. Adopting that order
-// moves MAX 94.08 -> 93.48 (states and block layout now agree). Residual:
-// retail builds both formatString temporaries in one slot ([ebp-0x20], 0x14
-// frame) with the string destructor inlined and its _Tidy zeroing stores
-// dead-store eliminated in both arms; VC6 here keeps two slots (0x24 frame),
-// keeps the later temporary's zeroing stores and caches 0 in ESI. Failed
-// probes: named strings (both or either arm) 90.2-92.9%, one named string
-// from a ternary 79.7%, ternary of the two calls 78.4%, switch on the drive
-// 86.5%, drive ternary inlined 91.6%, drive via if/else or declared with
-// fill 93.48%, fill read after drawWindow 89.0%, format local 93.48%.
+// specific-edition arm also precedes its generic warning (which on Mac
+// passes the text without format_string). Adopting that order moved MAX
+// 94.08 -> 93.48 (states and block layout agree).
+// Mac 0x11ccf0..0x11cd28 guards two function-local statics around the two
+// flag initializers: lastIMHoverID (-1), the flags, then check_disk_space
+// (Dreamcast prints both names undecorated). Mac 0x11d058 switches on the
+// widget command and leaves the declined quit with a break; its tail at
+// 0x11d1d0..0x11d22c sets the exit flag on the lobby timeout and tests it
+// again for the one end-dialog return. Dreamcast's only stack local,
+// updatePlease (sp+0x33), is the redraw flag set at line 257 and read with
+// VideoNeedsUpdate at 276; the exit flag is its r9 and has no recorded name.
+// These forms are byte-identical to the earlier `confirmed` flag and
+// early-return tail under VC6 (93.48%).
+// Residual: retail keeps both formatString temporaries in one slot
+// ([ebp-0x20], frame 0x14) and drops both destructors' _Tidy zeroing stores;
+// this source gets two slots (frame 0x24), keeps the zeroing stores of the
+// generic arm and caches zero in ESI. VC6 gives the last-created
+// stack-memory local its own bin (docs/vc6/regalloc.md): any later local
+// whose address is taken, such as a pointer or reference bound to helpID,
+// hoverID, id or w, makes the two temporaries share and the function exact,
+// with no other byte moving. Neither Dreamcast nor Mac shows such a local,
+// so that form lives on the levers branch. Not triggers: unused locals,
+// the static locals, the address of a flag or of fill, named strings
+// (90.3%), braces, else-if nesting (91.7%), a switch on the drive (86.5%),
+// ternaries (78.4..91.6%), an inline const-reference dialog wrapper.
 VA(0x004fb710, 0x484)
 DC_ADDRESS(0x0ea618, 0x398)
 MAC_ADDRESS(0x11ccd0, 0x574)  // admitted row includes the jump table/padding; decoded body ends at +0x46d
 static int mainMenuHandler(message& msg)
 {
+    // Original DC names: lastIMHoverID, check_disk_space.
+    DATA(0x0067fa60) static int lastImHoverId = -1;
+    unsigned char done = 0;
     unsigned char updatePlease = 0;
-    unsigned char hoverChanged = 0;
+    DATA(0x0067fa64) static unsigned char checkDiskSpace = 1;
 
-    if (g_checkDiskSpace) {
+    if (checkDiskSpace) {
         if (getAvailableDiskSpace() < 5 * 1024 * 1024) {
             normalDialog((*g_generalText)[GENERAL_TEXT_MAIN_MENU_LOW_DISK],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            updatePlease = 1;
+            done = 1;
             g_windowManager->m_dialogReturn = TMainMenu::QUIT_ID;
         }
-        g_checkDiskSpace = 0;
+        checkDiskSpace = 0;
     }
 
-    if (g_mainMenu->m_showCdMessage && !updatePlease) {
+    if (g_mainMenu->m_showCdMessage && !done) {
         const char* fill = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
 
         g_mainMenu->drawWindow(true, WINDOW_ALL_WIDGETS_LOW,
@@ -210,8 +223,8 @@ static int mainMenuHandler(message& msg)
             msg.m_codeY > TMainMenu::QUIT_ID)
             return 0;
 
-        if (msg.m_codeX == widget::WIDGET_DESELECT) {
-            bool confirmed = true;
+        switch (msg.m_codeX) {
+        case widget::WIDGET_DESELECT:
             if (msg.m_codeY == TMainMenu::QUIT_ID) {
                 videoPause();
                 if (!g_lobbyLaunched) {
@@ -220,21 +233,20 @@ static int mainMenuHandler(message& msg)
                                  -1, 0, -1, 0);
                     videoResume();
                     if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
-                        updatePlease = 0;
-                        confirmed = false;
+                        done = 0;
+                        break;
                     }
                 }
             }
-            if (confirmed) {
-                updatePlease = 1;
-                g_windowManager->m_dialogReturn = msg.m_codeY;
-            }
+            done = 1;
+            g_windowManager->m_dialogReturn = msg.m_codeY;
+            break;
         }
     } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         int hoverID = g_mainMenu->findWidget(msg.m_mouseX, msg.m_mouseY);
-        if (hoverID != g_lastImHoverId) {
-            hoverChanged = 1;
-            g_lastImHoverId = hoverID;
+        if (hoverID != lastImHoverId) {
+            updatePlease = 1;
+            lastImHoverId = hoverID;
             for (int id = TMainMenu::NEW_GAME_ID;
                  id <= TMainMenu::QUIT_ID; ++id) {
                 widget* w = g_mainMenu->getWidget(id);
@@ -249,27 +261,27 @@ static int mainMenuHandler(message& msg)
         }
     }
 
-    if (videoNeedsUpdate() || hoverChanged) {
+    if (videoNeedsUpdate() || updatePlease) {
         g_mainMenu->drawWindow(false, TMainMenu::NEW_GAME_ID,
                                TMainMenu::QUIT_ID);
         g_windowManager->updateScreen(520, 4, 250, 567);
         videoDrawRects();
     }
 
-    if (!updatePlease) {
+    if (!done) {
         if (g_lobbyLaunched) {
-            unsigned long lastCheck = g_lastDiskSpaceCheck;
-            if (GameTime::elapsedSince(lastCheck) > 10000)
+            if (GameTime::elapsedSince(g_lastDiskSpaceCheck) > 10000) {
                 g_windowManager->m_dialogReturn = TMainMenu::NEW_GAME_ID;
-            else
-                return MESSAGE_DISPATCH_CONSUME;
-        } else {
-            return MESSAGE_DISPATCH_CONSUME;
+                done = 1;
+            }
         }
     }
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
-    return MESSAGE_DISPATCH_FORWARD;
+    if (done) {
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return MESSAGE_DISPATCH_CONSUME;
 }
