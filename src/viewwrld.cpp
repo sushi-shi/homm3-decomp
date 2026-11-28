@@ -912,6 +912,13 @@ void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 // clipped scaler's row latch. Reading the buffer before calculating its
 // offset recovers the native instruction order; reversing the multiplication
 // operands is byte-flat. Keep the canonical shared scaler and pixel accessors.
+// Retail's river and road differ in exactly this: the road reverses the
+// factor order of both scaler expansions' row products, and our road
+// reverses only the clipped one. No phase or declaration offset reaches it
+// (compile-m, one assembly). Dreamcast's road has two more unrecorded lines
+// than the river between baseY and the buffer clear (1004..1008 against
+// 965..967), where the full-size drawRoad adjusts tileh; a dead tileh
+// adjustment there, with one to four dead tile locals, is byte-flat.
 VA(0x005f95b0, 0x38B)
 DC_ADDRESS(0x1949cc, 0x17c)
 MAC_ADDRESS(0x205750, 0x2cc)  // exhaustive dc-order-map + VWCompleteDraw call order (3rd layer)

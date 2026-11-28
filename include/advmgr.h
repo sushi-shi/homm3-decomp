@@ -890,6 +890,12 @@ public:
     // twelve bytes against Dinkumware's sixteen, which is the whole of
     // the 232->244 versus 0xd0->0xe0 drift.
     std::vector<resource*> m_cachedGraphics;
+    // Appends one preloaded graphic. No native name survives: open's two
+    // cache arms each pass their loaded pointer by value, and retail homes
+    // both copies in the one frame slot that also serves the unrelated
+    // allocation temporaries (0x407098 and 0x407148 store to [ebp-0x10]).
+    // Two direct push_back temporaries interfere and take separate slots.
+    void cacheGraphic(resource* graphic) { m_cachedGraphics.push_back(graphic); }
     // The wandering-monster attack sprite, avwattak.def, loaded once by
     // open. While a hero walks into a monster, doEventWanderingMonster
     // sets the three monAttack fields below and drawAdvObj (with its

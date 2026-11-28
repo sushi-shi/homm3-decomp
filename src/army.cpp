@@ -2027,24 +2027,31 @@ bool army::walkTo(int destIndex, bool restoreFacing)
 }
 
 // E:\gamedcs\army.cpp:2528
+// Dreamcast line 2535 tests get_controller and line 2536 is that test's
+// unbraced return: its scope pair closes before the luck load, which sits at
+// function level ahead of the roll's own scope. The load stays in r11 across
+// the SRandom call and feeds min afterwards, so luck is a local copy rather
+// than a second member read. Lines 2537..2541 carry no row for the copy or
+// the combined condition; luckStatus = 1 follows at 2542.
 DC_ADDRESS(0x0475ec, 0xa4)
 MAC_ADDRESS(0x04e014, 0x160)
 inline void army::checkLuck()
 {
     m_luckStatus = 0;
-    if (getController() && m_luck > 0) {
-        // Mac 0x4e084 calls sRandom; Windows folds its body with random.
-        if (sRandom(1, 24) <= min(m_luck, 3)) {
-            m_luckStatus = 1;
-            if (!g_combatManager->isQuickCombat()) {
-                launchSample(DATA_COMPGEN(0x00660a20, goodLuckSampleName,
-                                           "goodluck.82m"),
-                              -1, 3);
-                sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_GOOD_LUCK_FORMAT), getName());
-                g_combatManager->m_combatWindow->combatMessage(g_text, true, false);
-                g_combatManager->spellEffect(
-                    eSpellEffectFortune, this, 100, false);
-            }
+    if (!getController())
+        return;
+    int luck = m_luck;
+    // Mac 0x4e084 calls sRandom; Windows folds its body with random.
+    if (luck > 0 && sRandom(1, 24) <= min(luck, 3)) {
+        m_luckStatus = 1;
+        if (!g_combatManager->isQuickCombat()) {
+            launchSample(DATA_COMPGEN(0x00660a20, goodLuckSampleName,
+                                       "goodluck.82m"),
+                          -1, 3);
+            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_GOOD_LUCK_FORMAT), getName());
+            g_combatManager->m_combatWindow->combatMessage(g_text, true, false);
+            g_combatManager->spellEffect(
+                eSpellEffectFortune, this, 100, false);
         }
     }
 }
