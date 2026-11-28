@@ -7407,61 +7407,66 @@ void TCastleWindow::showText()
 
 // Complete expands the ordinary ShowText member at the shared tail.
 
-// TWO branch senses carry this row and they are worth 33.7 points
-// between them. Retail's `cmp eax,0x3f1 / jge` sends the HIGH band
-// forward, so the 0x3e9 band is the if-body and the 0x3f1 band the else;
-// and retail's `cmp eax,0x7800 / je` sends the EXIT arm forward, so the
-// empty line is the if-body and the sprintf the else. Written the two
-// natural ways round - high band first, `== EXIT_BUTTON_ID` first - the
-// same instructions land in the wrong blocks and the row sits at 64.03.
-
-// Residual (97.8%): 13 bytes in two encoder/schedule classes, neither
-// source-reachable. The dwelling read is `[ecx+eax+0x1bb]` against
-// retail's `[eax+ecx+0x1bb]` - one SIB byte, base and index transposed
-// over the same effective address (B18); a named row local, an explicit
-// `*(p + i)` and the reversed `i[p]` subscript are all byte-inert. And
-// the 0x3f1 arm parks the table value in ECX where retail takes EAX,
-// which rotates the inlined strcpy's `or ecx,-1` and `xor eax,eax` past
-// each other - the 0x3e9 arm, identical source modulo the addend, is
-// byte-exact, so this is allocator state rather than spelling: a named
-// index local, a named `const char*`, and `* 2` for `2 *` all measure
-// 97.77. (why-reg cannot be pointed at this row - given the mangled name
-// it resolves to TMageGuildWindow::SetRolloverText, the file's other row
-// of that name.)
+// DC 8777..8795 tests the two low bands with if / else if; DC 8798 then
+// switches on the code (jump table at dc 0x17f612): the eight resource
+// texts, the seven resource borders, the exit button and a default. VC6
+// turns that switch into retail's compare tree (`cmp 0x3f1 / jge`, then
+// `cmp 0x7800 / je`).
+// DC reads msg's codeY from the message each time (0x17f55c and again at
+// 0x17f5c8 after the HasBuilding call), so there is no local copy of it, and
+// line 8788 spells the dwelling lookup again inside the army-name argument.
 // DC declares message&; Complete passes the same one-word address.
 VA(0x005dcbf0, 0x25A)
 DC_ADDRESS(0x17f54c, 0x19c)
 MAC_ADDRESS(0x1e0cc8, 0x238)  // anchor-bracket + `ret 4` arity + ShowText tail
 void TCastleWindow::setRolloverText(message& msg)
 {
-    int code = msg.m_codeY;
-    if (code > 0x38 && code < 0x69) {
-        strcpy(g_text, g_castleInfo[(code - 0x39) / 8]);
-    } else if (code >= 0x11 && code <= 0x17) {
-        int dwelling = g_townManager->m_currentDwellingIdOff[code - 0x11];
+    if (msg.m_codeY > 0x38 && msg.m_codeY < 0x69) {
+        strcpy(g_text, g_castleInfo[(msg.m_codeY - 0x39) / 8]);
+    } else if (msg.m_codeY >= 0x11 && msg.m_codeY <= 0x17) {
+        int dwelling = g_townManager->m_currentDwellingIdOff[msg.m_codeY - 0x11];
         if (g_townManager->m_townToView->hasBuilding(DWELLING_0_ID + dwelling, true)) {
             sprintf(g_text, "%s %s", (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
-                    getArmyName(g_dwellingType[g_townManager->m_townToView->m_type][dwelling], 2));
+                    getArmyName(
+                        g_dwellingType[g_townManager->m_townToView->m_type]
+                                      [g_townManager->m_currentDwellingIdOff[
+                                           msg.m_codeY - 0x11]],
+                        2));
         } else {
             strcpy(g_text, "");
         }
-    } else if (code <= 0x3f7) {
-        if (code < 0x3f1) {
-            if (code >= 0x3e9 && code <= 0x3f0)
-                strcpy(g_text,
-                       g_adventureWindowHelp[
-                           g_resourceHelpIndices[code - 0x3e9]].m_text);
-            else
-                strcpy(g_text, "");
-        } else {
+    } else {
+        switch (msg.m_codeY) {
+        case RESOURCE_TEXT_ID:
+        case RESOURCE_TEXT_ID + 1:
+        case RESOURCE_TEXT_ID + 2:
+        case RESOURCE_TEXT_ID + 3:
+        case RESOURCE_TEXT_ID + 4:
+        case RESOURCE_TEXT_ID + 5:
+        case RESOURCE_TEXT_ID + 6:
+        case RESOURCE_TEXT_ID + 7:
             strcpy(g_text,
                    g_adventureWindowHelp[
-                       g_resourceHelpIndices[code - 0x3f1]].m_text);
+                       g_resourceHelpIndices[msg.m_codeY - RESOURCE_TEXT_ID]].m_text);
+            break;
+        case RESOURCE_BORDER_ID:
+        case RESOURCE_BORDER_ID + 1:
+        case RESOURCE_BORDER_ID + 2:
+        case RESOURCE_BORDER_ID + 3:
+        case RESOURCE_BORDER_ID + 4:
+        case RESOURCE_BORDER_ID + 5:
+        case RESOURCE_BORDER_ID + 6:
+            strcpy(g_text,
+                   g_adventureWindowHelp[
+                       g_resourceHelpIndices[msg.m_codeY - RESOURCE_BORDER_ID]].m_text);
+            break;
+        case EXIT_BUTTON_ID:
+            sprintf(g_text, g_castleInfo[6], g_neutralBuildingNames[m_castleType]);
+            break;
+        default:
+            strcpy(g_text, "");
+            break;
         }
-    } else if (code != EXIT_BUTTON_ID) {
-        strcpy(g_text, "");
-    } else {
-        sprintf(g_text, g_castleInfo[6], g_neutralBuildingNames[m_castleType]);
     }
 
     showText();
