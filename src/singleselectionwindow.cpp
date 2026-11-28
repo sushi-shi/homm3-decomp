@@ -3223,6 +3223,10 @@ void TSingleSelectionWindow::toggleRandomMapOptions()
 // the other machines through SendPlayerPositions. Mac 0x178a08/0x178a30
 // address the member directly; avoid an inferred cached local-header reference.
 // This restores Windows's local-header frame and destructor frontier (97.69%).
+// Residual: retail keeps the header's ~vector<HeroId> as a call; the inline
+// replay fits root cb 753..758 (ours 764). Mac 0x178800..0x178834 stores the
+// version in three arms, but an if / else if / else here is 90.63%: retail
+// needs the 21/14 ternary.
 VA(0x00580430, 0x63B)
 MAC_ADDRESS(0x1786d0, 0x4c4)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
