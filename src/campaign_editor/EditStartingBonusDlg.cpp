@@ -55,11 +55,17 @@ protected:
     virtual void DoDataExchange(CDataExchange* pDX);
     virtual BOOL OnInitDialog();
 
-    // The chosen recipient. Every hero bonus factory passes it through this
-    // value getter (the bonuses' own accessor style); reading the field
-    // directly reorders the hero load or store in five of the six factories.
+    // The chosen recipient, for the derived dialogs' bonus factories. The
+    // recipient combo and its state are this class's own and private, as
+    // TStartingBonusTypeDlg keeps _m_bValid behind setBValid: a derived
+    // dialog reads its own fields (_m_spell, _m_stack, ...) directly and
+    // this base's through the accessor. Loki's map editor has the same
+    // rule: none of its 66 called dialog and page getters is called from
+    // its own class. Reading _m_hero directly reorders the hero load or
+    // store in five of the six factories.
     int getHero() const { return _m_hero; }
 
+private:
     const TCampaignScenarioMap* _m_pMap;
     int _m_player;
     int _m_hero;
