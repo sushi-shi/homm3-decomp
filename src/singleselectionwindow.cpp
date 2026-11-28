@@ -4149,6 +4149,13 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // depth-1 candidates from the second applyHeaderToGame on where this has
 // two; rebuildRandomMapPlayerSetup's retail decisions rule out extra sites
 // inside applyHeaderToGame. The two missing sites are not yet identified.
+// The bounds, from the traced budgets: the first expansion's nested budget
+// must stay below 133 (seven root candidates from it on) and the second's in
+// 133..178 (four from it on), so both extra candidates are free (cb <= 40)
+// and follow the second call. Mac 0x17b1fc passes this before
+// &m_localHeader, so the random arm has no pointer local; with that the Mac
+// body agrees in all 80 instructions and shows no further call in the tail
+// (CodeWarrior expands such wrappers without a trace).
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
 // Inlined in rebuildRandomMapPlayerSetup, both updateGameVars arms and
@@ -4179,8 +4186,7 @@ void TSingleSelectionWindow::updateGameVars()
     // duplicates the complete transfer here and returns before the original
     // currentMap path rather than sharing a lowered tail.
     if (m_randomMapSelected) {
-        GameSelectionHeadersStruct* localHeader = &m_localHeader;
-        applyHeaderToGame(localHeader);
+        applyHeaderToGame(&m_localHeader);
         return;
     }
 
