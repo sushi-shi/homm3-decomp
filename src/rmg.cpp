@@ -5467,15 +5467,23 @@ int TRmgZone::getBoundaryCount() const
 // The scan reads the cursor through the point accessors: three free /Ob2
 // sites after the pop_back take erase's body budget under std::copy's cost,
 // which retail calls; every call matches.
-// Residual: retail retains copy and _Destroy inside seed erasure, where VC6
-// expands them and retains an extra size call in the final lower-span
-// insertion.
+// Statement order follows both images' instruction order: the editor loads
+// the first edge before it stores the -1 sentinel (0x4a32b2) and zeroes the
+// two span flags together inside the row lookup (0x4a33de); both images
+// store the clip bounds top, left, bottom, right (game 0x53d49d..0x53d4a9),
+// the order getInitialZoneBounds returns them in, where an aggregate
+// initializer stores left first. The clearance is narrowed one comparison
+// per statement: the nested call gave the three by-value operand pairs
+// different frame homes in the game and loaded y after the first result in
+// the editor. The zone index is read through getTemplateZone(), which puts
+// the pending vector's allocator byte in dl ahead of it as retail has; a
+// named slot pointer is equal.
 VA(0x0053D380, 0x551)
 MAC_ADDRESS(0x23ed74, 0x4a4) // anchor-caller 0x53e050; Complete-only, thiscall ret 8
 VA_AT(h3maped, 0x004a325d, 0x2f7)
 void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first)
 {
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
+    int zoneIndex = zone->getTemplateZone()->m_zoneIndex;
     std::vector<TRmgMapPosition> pending;
     TRmgMapPosition position;
     position = zone->getLevelPosition();
@@ -5485,16 +5493,16 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
         || position.m_y < 0 || position.m_y >= m_map.getHeight()) {
         int bestClearance = 0;
         TRmgPoint best;
-        best.m_x = -1;
         TRmgHalfEdge* edge = first;
+        best.m_x = -1;
         do {
             edge = edge->m_next;
             TRmgPoint point = edge->m_twin->m_sitePosition;
             if (point.m_x >= 1 && point.m_x < m_map.getWidth() - 1
                 && point.m_y >= 1 && point.m_y < m_map.getHeight() - 1) {
-                int clearance = min(min(min(point.m_x,
-                    m_map.getWidth() - point.m_x - 1), point.m_y),
-                    m_map.getHeight() - point.m_y - 1);
+                int clearance = min(point.m_x, m_map.getWidth() - point.m_x - 1);
+                clearance = min(clearance, point.m_y);
+                clearance = min(clearance, m_map.getHeight() - point.m_y - 1);
                 if (clearance > bestClearance) {
                     bestClearance = clearance;
                     best = point;
@@ -5503,7 +5511,11 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
         } while (edge != first);
         if (best.m_x < 0)
             return;
-        TRmgZoneBounds bounds = {0, 0, m_map.getWidth(), m_map.getHeight()};
+        TRmgZoneBounds bounds;
+        bounds.m_minimumY = 0;
+        bounds.m_minimumX = 0;
+        bounds.m_maximumY = m_map.getHeight();
+        bounds.m_maximumX = m_map.getWidth();
         TRmgPoint clipped = clipRmgBoundaryPoint(
             TRmgPoint(position.m_x, position.m_y), best, bounds);
         position.m_x = clipped.m_x;
@@ -5513,9 +5525,9 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
     while (pending.size() > 0) {
         position = pending.back();
         pending.pop_back();
-        TRmgMapItem* item = m_map.getMapItem(position);
         unsigned char upperSpan = 0;
         unsigned char lowerSpan = 0;
+        TRmgMapItem* item = m_map.getMapItem(position);
         while (position.getX() > 0 && (item - 1)->m_zoneState.m_zone == -1) {
             --item;
             --position.m_x;
