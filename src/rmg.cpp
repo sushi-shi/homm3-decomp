@@ -2516,9 +2516,11 @@ type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* proper
     return object;
 }
 
+// Mac 0x2322ac forwards r4..r7 to the treasure constructor untouched; its
+// only caller 0x232334 (the dwelling constructor) loads 17, subtype, -1, 40.
 MAC_ADDRESS(0x2322ac, 0x38)
-type_flaggable_def::type_flaggable_def(int subtype)
-    : type_treasure_def(17, subtype, -1, 40)
+type_flaggable_def::type_flaggable_def(int objectType, int subtype, int value, int density)
+    : type_treasure_def(objectType, subtype, value, density)
 {
 }
 
@@ -2533,7 +2535,7 @@ type_object* type_flaggable_def::generate(TRmgObjectPropertiesRef* properties,
 
 MAC_ADDRESS(0x232334, 0x48)
 type_map_dwelling_def::type_map_dwelling_def(int subtype)
-    : type_flaggable_def(subtype)
+    : type_flaggable_def(17, subtype, -1, 40)
 {
 }
 
@@ -4348,37 +4350,34 @@ void readRmgTemplateZones(
 // three manually selected overloads.  The four loops below are likewise the
 // only repeated structures present in retail; every other registration is an
 // unrolled source statement.
-// Loop/construction and pointer/container lifetime searches found a
-// scoped-base-pointer candidate that trades the two tail calls for two early
-// spell-box base-constructor calls; it is not adopted. The original final
-// quest append crosses C2's separate
-// 35000 running cap, blocking begin() and the next treasure constructor.
-// Eight base/derived initializer-list controls do not change these call
-// streams; base member initialization also contradicts its exact vptr order.
-// Inline-replay probe: most retail "insert" differences are ICF labels
-// (vector<widget>/vector<int> twins), so the solver's per-symbol target is
-// wrong here. Read per site, both images first diverge at the
-// treasure_def(7) append right after the key-tent loop (retail keeps
-// insert(pos, value) in both), and the game's whole pattern (expanded
-// inserts flip at appends 27/69/70/82/83/97 and the tail) is reproduced at
-// the current root cost only by ~70 more budget spent in the key-tent loop,
-// e.g. a charged cost-70..73 site where `m_disabledKeyTents[color] = 0`
-// stands (h3maped accepts the same). Mac shows only MSL vector<bool>
-// resize/set there; VC6's std::vector<bool> is the byte vector with the
-// same inline costs (compiled), so no evidenced source change is known.
+// The retained calls follow C2's budget rule exactly (inline replay): the
+// nested insert(pos, value) expands while budget / remaining sites >= 64,
+// and nothing expands once the running size reaches 35000 (the tail's
+// push_back calls). These source facts set that budget in both images:
+// - Mac 0x232334 loads 17, the subtype, -1 and 40 and calls 0x2322ac, which
+//   forwards its four arguments unchanged: type_flaggable_def takes the
+//   whole treasure tuple and type_map_dwelling_def supplies the constants
+//   (callee costs 48 + 54 instead of 42 + 48).
+// - Mac counts the first creature loop, the key tents and the dwellings in
+//   r30 but the seer-hut creature loop in r27. CodeWarrior gives one shared
+//   counter r27 in both loops (compiled) and r30/r27 for two declarations:
+//   the seer-hut loop declares its own counter.
+// - The root's cost must be 8011..8013 for the game's pattern (replay), two
+//   more than the statements above give. A compound statement costs two;
+//   the braced dwelling loop body is one spelling that supplies it, and a
+//   block around the first creature loop measures the same in both images.
 // Both creature loops assign the count with if/else straight into the loop
 // counter: Mac branches to two separate count loads (unlike the dwelling
 // loop's one-armed overwrite), and the retail loop entries (mov/dec/test)
-// of both images reject the former ternary-plus-copy local, which compared
-// against zero instead. Root cb 8006 -> 8010 then expands the last spell
-// box's base constructor in both images (h3maped 90.25 -> 99.37, game
-// 99.51 -> 99.53). Residual: h3maped expands one seer-area push_back that
-// retail keeps as a call; the game keeps insert(pos, 1, value) at two
-// sites where retail calls insert(pos, value). Measured: reading the seer
-// count into a shadowing local is identical; keeping the creature scope
-// block (cb 8012) gives 99.32 / 99.28; unbracing the key-tent block too
-// gives 88.32 / 99.36; one loop alone gives 88.32 / 96.75; braced if/else
-// arms (cb 8020..8024) give up to 99.87 / 99.05.
+// of both images reject a ternary-plus-copy local. m_disabledKeyTents is an
+// MSL vector<bool> on Mac; VC6's std::vector<bool> is the byte vector with
+// the same inline costs (compiled).
+// Retail calls vector<type_treasure_def*>::insert(pos, n, value) at 0x54d120,
+// the pointer-vector body recruit.cpp labels for widget; `homm3 delink`
+// admits that fold once this caller matches.
+// Residual (h3maped 99.87): the fourth key tent's inlined constructor stores
+// subtype, value, type, density; ours stores type first, as retail does at
+// the other four sites.
 VA(0x00538B10, 0x2241)
 MAC_ADDRESS(0x2375f0, 0x4880)
 void type_random_map_generator::initializeObjectGenerators()
@@ -4453,8 +4452,9 @@ void type_random_map_generator::initializeObjectGenerators()
     int dwelling = 80;
     if (m_mapVersion < 1)
         dwelling = 58;
-    for (; dwelling--;)
+    for (; dwelling--;) {
         m_objectGenerators.push_back(new type_map_dwelling_def(dwelling));
+    }
 
     m_objectGenerators.push_back(new type_treasure_def(22, 0, 500, 100));
     m_objectGenerators.push_back(new type_treasure_def(23, 0, 1500, 100));
@@ -4508,6 +4508,7 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(82, 0, 1500, 500));
 
     for (int seerSubtype = 0; seerSubtype < m_objectPrototypes[83].size(); ++seerSubtype) {
+        int creature;
         if (m_mapVersion >= 1)
             creature = 145;
         else
