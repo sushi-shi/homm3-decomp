@@ -478,7 +478,12 @@ bool videoPlaying()
 // surface description in the overlay block reproduces the 0x9c frame and
 // measures 89.63% (89.36% assigning x, w, h, y in retail's load order):
 // EBX then holds the Smack arm's x, where retail keeps x, w and h all in
-// memory and only forwards them through EBX.
+// memory and only forwards them through EBX. Eight more arm-local states
+// (int, long or unsigned long scalars; declaration orders xywh, whxy, xwhy,
+// yxwh; either assignment order; the DirectDraw objects at function or
+// overlay scope) give 89.36% or 89.63% (unsigned: 86.88%); retail's `push
+// ebx` for h after the loop shows h is not address-taken, so the three
+// memory homes are an allocator outcome this model does not reach.
 VA(0x005979d0, 0x294)
 DC_ADDRESS(0x14ac60, 0x4)
 MAC_ADDRESS(0x25ea64, 0x26c)  // anchor-global

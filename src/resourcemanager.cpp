@@ -1485,6 +1485,13 @@ inline void addPal24(CSprite* sprite, const TPalette24* pal)
 // Mac 0x153fcc..0x1545e4 independently supports the same DEF decoding and
 // palette helpers. Its TempNewHandle/NewHandle buffer adapter remains an
 // unresolved platform difference; Windows uses ordinary new[]/delete[].
+// 2026-11-28, measured in all three images: a frame-name local declared
+// just before the cache lookup is flat in the game and takes h3maped's
+// exact copy to 98.47%; pointer arithmetic for the name and passing the
+// sequence number unnamed to AllocateSeq are flat everywhere. The game's
+// residual is the operand order of `index * 13 + names` (retail copies the
+// index and adds the loaded table), a C2 expression-rank state like the one
+// type_dialog_icon::set had.
 VA(0x0055c7b0, 0x743)
 VA_AT(h3maped, 0x004dcd20, 0x5e6)
 DC_ADDRESS(0x122320, 0x112)

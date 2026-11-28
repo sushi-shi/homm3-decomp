@@ -4155,7 +4155,11 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // and follow the second call. Mac 0x17b1fc passes this before
 // &m_localHeader, so the random arm has no pointer local; with that the Mac
 // body agrees in all 80 instructions and shows no further call in the tail
-// (CodeWarrior expands such wrappers without a trace).
+// (CodeWarrior expands such wrappers without a trace). Brace or declaration
+// corrections cannot stand in for them: the caller is below the 1000 floor,
+// and the costs of applyHeaderToGame (122) and assignData (64) are fixed by
+// rebuildRandomMapPlayerSetup's exact decisions (67 refuses the first assign
+// there, 134 accepts the second).
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
 // Inlined in rebuildRandomMapPlayerSetup, both updateGameVars arms and
