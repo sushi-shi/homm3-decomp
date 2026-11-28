@@ -9343,8 +9343,16 @@ TRmgMapPosition type_object::getPlacedGroupPosition(
 // the inline trace gives it (881 - 56) / remaining sites, below its cost 48
 // only with the three source-cell predicate calls spelled here; a combined
 // floor predicate helper leaves too few sites. Both copy-backs store the saved byte (Mac 0x24ac28,
-// retail +0x225). Residual: y*width operand order in the group-map lookup
-// and one reload placement at the inner-loop latch (register/schedule).
+// retail +0x225). The object loop indexes the group's vector at both uses,
+// as the completion loop does: Mac 0x24a904..0x24a924 keeps no object
+// home, and both Windows images then multiply the group width by the row
+// (retail +0x16d) where a named object pointer multiplies row by width.
+// Residual (game 99.87, editor 99.91): at the outer latch retail reloads
+// the inner loop's starting X before the row, receiver and group
+// (+0x26e); ours reloads it last. Reusing the first loop's index for the
+// completion loop, map and point accessors, the point overload of the
+// group lookup and a named destination position compile identically or
+// lower.
 VA(0x005469B0, 0x2B4)
 MAC_ADDRESS(0x24a8c0, 0x44c) // anchor-callee 0x547330; thiscall, ret 0x10
 VA_AT(h3maped, 0x004aa3e9, 0x21a)
@@ -9352,10 +9360,8 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position)
 {
     group->m_position = position;
-    for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
-        type_object* object = group->m_objects[i];
-        addObject(object, object->getPlacedGroupPosition(position));
-    }
+    for (unsigned int i = 0; i < group->m_objects.size(); ++i)
+        addObject(group->m_objects[i], group->m_objects[i]->getPlacedGroupPosition(position));
     TRmgZoneBounds bounds;
     bounds.m_minimumX = max(0, -position.m_x);
     bounds.m_minimumY = max(0, -position.m_y);
