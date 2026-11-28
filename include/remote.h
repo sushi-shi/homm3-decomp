@@ -478,11 +478,14 @@ class CNetMsgHandler {
 public:
     CNetMsgHandler();
     virtual ~CNetMsgHandler();  // slot 0
-    virtual CNetMsg* checkHandleNet(unsigned char inPopup,
-                                    unsigned char* msgReceived);  // slot 1
+    virtual CNetMsg* checkHandleNet(bool inPopup,
+                                    bool* msgReceived);  // slot 1
 
+    // ?IsInPopup@CNetMsgHandler@@QAA_NXZ, ?SetInPopup@CNetMsgHandler@@QAAX_N@Z
+    // and ?CheckHandleNet@CNetMsgHandler@@UAAPAVCNetMsg@@_NPA_N@Z prove the
+    // bool flag, parameter and out-parameter.
     DC_ADDRESS(0x0201e8, 0x10)
-    unsigned char isInPopup() { return m_inPopup; }
+    bool isInPopup() { return m_inPopup; }
 
     // E:\gamedcs\remote.h:629
     VA(0x00557900, 0x4)
@@ -503,7 +506,7 @@ public:
     void setAbortPopupMsg(CNetMsg* netMsg);
 
     DC_ADDRESS(0x020204, 0x16)
-    void setInPopup(unsigned char b) { m_inPopup = b; }
+    void setInPopup(bool b) { m_inPopup = b; }
 
 protected:
     // A pure virtual may still have an out-of-line definition: the vtable
@@ -513,7 +516,7 @@ protected:
     // PROTECTED, not private: CAdvMgrNetMsgHandler::HandleNetMsg's defer
     // arms store the abort message directly at nine sites rather than
     // through SetAbortPopupMsg.
-    unsigned char m_inPopup;  // +0x04
+    bool m_inPopup;  // +0x04
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) = 0;  // slot 3
     char m_paddingBeforeAbortPopupMsg[3];
     CNetMsg* m_abortPopupMsg;  // +0x08
@@ -541,8 +544,8 @@ public:
     VA(0x00555170, 0x5)
     DC_ADDRESS(0x11f80c, 0x4)
     MAC_ADDRESS(0x215e1c, 0x8)
-    virtual CNetMsg* checkHandleNet(unsigned char inPopup,
-                                                 unsigned char* msgReceived)
+    virtual CNetMsg* checkHandleNet(bool inPopup,
+                                                 bool* msgReceived)
     {
         return 0;
     }
