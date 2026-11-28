@@ -4987,6 +4987,29 @@ void game::randomizeEvents()
     }
 }
 
+// DC 1177..1181 writes resource, amount, full, has_artifact, visited_bits.
+// The Complete masks prove the corresponding five fields. Retail retains
+// this call inside randomizeWagon and emits the body here, between game.cpp's
+// functions (0x4c2360).
+// FLAGGED FOR CLEANUP: the Dreamcast line table owns this body in MapCell.h
+// as an inline (E:\gamedcs\MapCell.h:1176). As a header inline our
+// randomizeEvents expands the call (nested budget 96 against cost 87) and no
+// body is emitted, which takes this function from 100% to 0%. PR #230 dropped
+// the keyword in the header, which emitted a strong definition in every
+// including unit and broke the candidate link (LNK2005). One ordinary
+// definition here keeps the exact body and links. It returns to MapCell.h as
+// an inline once randomizeEvents' budget is recovered.
+VA(0x004c2360, 0x27)
+DC_ADDRESS(0x0bcac8, 0x74)
+void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
+{
+    m_wagonInfo.m_resource = resource;
+    m_wagonInfo.m_resourceAmount = amount;
+    m_wagonInfo.m_full = 1;
+    m_wagonInfo.m_hasArtifact = 0;
+    m_wagonInfo.m_visitedBits = 0;
+}
+
 // CodeView marks this destructor compiler-generated (dc 0xbd58c).
 VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 
