@@ -212,6 +212,7 @@ public:
         }
         // The loader needs the scalar span to advance its stream offset.
         int getMapDataSize() const { return m_mapDataSize; }
+        signed char getDifficulty() const { return m_difficulty; }
         void setOffset(int offset) { m_offset = offset; }
         // Mac repeats this positive-size scenario predicate in the map
         // count, pool query and pruning path. Name/boundary are inferred.
@@ -273,6 +274,7 @@ public:
         // Windows retains the nested vector query in both expansions; the
         // original helper name and class ownership remain inferred.
         int getScenarioCount() const { return m_scenarios.size(); }
+        int getRegionMap() const { return m_regionMap; }
         // Mac 0x645b8 (updateAllyEnemyFlags) retains the vector storage call
         // one accessor level around operator[] leaves. Name inferred.
         ScenarioStruct* getScenario(int which) { return m_scenarios[which]; }

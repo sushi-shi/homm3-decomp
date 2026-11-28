@@ -591,13 +591,13 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         for (int i = 0;
              i < m_campaign->getScenarioCount(); ++i) {
             CampaignScenarioPreview preview;
-            ScenarioStruct* scenario = m_campaign->m_scenarios[i];
+            ScenarioStruct* scenario = m_campaign->getScenario(i);
             g_game->m_setup.m_fileInitialized = 0;
             if (scenario->hasMap()) {
                 m_campaign->loadScenario(i, &mapHeader);
                 g_game->setupOrigData();
                 g_game->initNewGame(
-                    scenario->m_difficulty, i, &mapHeader, NULL);
+                    scenario->getDifficulty(), i, &mapHeader, NULL);
             }
             static_cast<NewSMapHeader&>(preview) = g_game->m_mapHeader;
             preview.m_gameSetup = g_game->m_setup;
@@ -612,7 +612,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     }
 
     const TCampaignMapTraits& mapTraits =
-        g_campaignMapTraits[m_campaign->m_regionMap];
+        g_campaignMapTraits[m_campaign->getRegionMap()];
     m_widgets.push_back(new bitmapBorder16(
                     0, 0, 800, 600, BACKGROUND_ID, mapTraits.m_imageName, 0x800));
 
@@ -622,8 +622,8 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             mapTraits.m_regionTraits[regionIndex];
         int x = region.m_offsetX;
         int y = region.m_offsetY;
-        if (m_campaign->m_scenarios[regionIndex]->hasMap()) {
-            int color = m_campaign->m_scenarios[regionIndex]->m_regionColor;
+        if (m_campaign->getScenario(regionIndex)->hasMap()) {
+            int color = m_campaign->getScenario(regionIndex)->m_regionColor;
             if (g_game->m_campaign.m_mapScores[regionIndex].m_completed) {
                 m_widgets.push_back(new bitmapBorder(
                                 x, y, 20, 20,
@@ -786,7 +786,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     for (int drawIndex = 0;
          drawIndex < m_campaign->getScenarioCount();
          ++drawIndex) {
-        if (m_campaign->m_scenarios[drawIndex]->hasMap()) {
+        if (m_campaign->getScenario(drawIndex)->hasMap()) {
             if (g_game->m_campaign.m_mapScores[drawIndex].m_completed) {
                 w = getWidget(MAP_CONQUERED_1_ID + drawIndex);
                 mx = w->getRealWidth();
