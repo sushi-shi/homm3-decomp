@@ -583,9 +583,6 @@ int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // Direct and compound float division are also Windows-flat: retail loads the
 // numerator between the two integer-to-float conversions, while VC6 loads it
 // after both. Keep the Mac-exact named components until that lifetime is found.
-// 2026-11-24 diagnostic: a `volatile float` numerator divided by the integer
-// pins that load and is exact, the same lever as game::setupPuzzlePieces'
-// ratio. Nothing else shares the value, so the qualifier is not kept.
 VA(0x00474a00, 0x198)
 MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
@@ -622,9 +619,8 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
     if (yDifference == 0)
         slope = 100.0f;
     else {
-        float horizontal = static_cast<float>(xDifference);
-        float vertical = static_cast<float>(yDifference);
-        slope = horizontal / vertical;
+        volatile float horizontal = static_cast<float>(xDifference);
+        slope = horizontal / yDifference;
     }
 
     if (direction == COMBAT_ATTACK_ANGLE_0
