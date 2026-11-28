@@ -149,7 +149,10 @@ void TMainMenu::doModal()
 // whose address is taken, such as a pointer or reference bound to helpID,
 // hoverID, id or w, makes the two temporaries share and the function exact,
 // with no other byte moving. Neither Dreamcast nor Mac shows such a local,
-// so that form lives on the levers branch. Not triggers: unused locals,
+// so that form lives on the levers branch. With Mac's unformatted generic
+// arm compiled for Mac, its frame (0xe0) and the one temporary's slot (0xa8)
+// equal retail's, so the Mac build has no further memory local and the
+// missing one is in Windows-only code. Not triggers: unused locals,
 // the static locals, the address of a flag or of fill, named strings
 // (90.3%), braces, else-if nesting (91.7%), a switch on the drive (86.5%),
 // ternaries (78.4..91.6%), an inline const-reference dialog wrapper.
@@ -189,10 +192,17 @@ static int mainMenuHandler(message& msg)
                 drive, fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
+#if defined(HOMM3_TARGET_MAC)
+            // Mac 0x11cec8..0x11cf10 passes the generic text unformatted.
+            normalDialog(
+                (*g_generalText)[GENERAL_TEXT_CD_REQUIRED_GENERIC_FORMAT],
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+#else
             normalDialog(formatString(
                 (*g_generalText)[GENERAL_TEXT_CD_REQUIRED_GENERIC_FORMAT],
                 fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+#endif
         }
         g_cdMessageShown = 1;
         g_mainMenu->m_showCdMessage = 0;

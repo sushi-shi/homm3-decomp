@@ -987,6 +987,16 @@ void showCredits()
 // runGame showProgressBar, or this caller at cb ~2400 (ours 2951). Mac's
 // tail calls and DC 1583..1754 add no accessor or helper call there, and the
 // fields read in that tail have no inline accessors; still unidentified.
+// 2026-11-28 bounds: the first restart incProgressBar (trace site 102) sees
+// budget 3444 with 24 root candidates left, a nested budget of 140 against
+// drawProgressCount's cb 99. Retail refuses it, so it had either at least 35
+// candidates left there or a budget below 2444 (1000 less: root cb 500
+// lighter, or 1000 more charged by the eleven expansions before it).
+// Braces do not supply that: Dreamcast records 186 scopes against this
+// body's 184, the body has 50 braces in all, and a brace pair is two units.
+// Mac's call list has no helper call this body pastes: its 0x111020 and
+// 0x119808 after the eight playerData constructors are the vector members
+// of the same expanded playerData assignment under another element type.
 VA(0x004ee3e0, 0x1C04)
 DC_ADDRESS(0x0e0158, 0x11b4)
 MAC_ADDRESS(0x10fd68, 0x12b8)
