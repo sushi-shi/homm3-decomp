@@ -44,10 +44,24 @@
 #include "retailobjecttype.h"
 
 // The reserved bytes after each object record and after the map's header,
-// and the zeros that end the map file (Loki GameMap.cpp).
+// and the zeros that end the map file. Loki's GameMap.o keeps three
+// four-byte objects 5, 31, 124 in its .rodata (image 0x357fd8), so the
+// file-scope constants are proven; no symbol or assert names them, and the
+// spellings (after Loki's proven kNum... constants) are ours.
 const unsigned int kNumObjectReserved = 5;
 const unsigned int kNumMapReserved = 31;
 const unsigned int kNumMapTrailer = 124;
+
+// A cell's flips in the map file's flags byte, and the beach border the
+// file keeps for the game: seven one-byte objects that follow the three
+// counts in Loki's .rodata (names ours, as above).
+const unsigned char kCellHFlipped = 0x01;
+const unsigned char kCellVFlipped = 0x02;
+const unsigned char kCellRiverHFlipped = 0x04;
+const unsigned char kCellRiverVFlipped = 0x08;
+const unsigned char kCellRoadHFlipped = 0x10;
+const unsigned char kCellRoadVFlipped = 0x20;
+const unsigned char kCellBeachBorder = 0x40;
 
 namespace {
 
@@ -5183,18 +5197,6 @@ TMapLayerObjectID TGameMap::TLayer::_placeObject(auto_ptr<TGameObject> pObj, con
 }
 
 namespace {
-
-// A cell's flips in the map file's flags byte, and the beach border the
-// file keeps for the game.
-enum {
-    kCellHFlipped = 0x01,
-    kCellVFlipped = 0x02,
-    kCellRiverHFlipped = 0x04,
-    kCellRiverVFlipped = 0x08,
-    kCellRoadHFlipped = 0x10,
-    kCellRoadVFlipped = 0x20,
-    kCellBeachBorder = 0x40
-};
 
 void readCell(TRawIStream* pIStream, TGameMap::TLayer::TCell* pCell);
 void writeCell(TRawOStream* pOStream, const TGameMap::TLayer::TCell& cell, bool bBeachBorder);
