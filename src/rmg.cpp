@@ -8758,10 +8758,13 @@ int type_random_map_generator::getZoneGuardValue(const TRmgZone* zone, int value
 // cursor level before buildOutline and makes the game copy exact.
 // The trigger reads go through TPoint's x()/y(); with the extra helper
 // expansion that caller mass keeps the editor's third clear() a call.
-// Residual (editor): only the zero register (retail ebx, here ecx) and the
-// ranking-initializer stores in the prologue are scheduled differently.
-// Moving zoneIndex or the ranking locals around the anchor block selects
-// ebx there (up to 96.78) but costs the exact game copy 1-2%.
+// Mac 0x249274..0x249298 copies the zone bounds and then reads the zone's
+// template index; reading it there, through getTemplateZone() as the other
+// zone passes do, gives the editor retail's ebx zero register (93.92 ->
+// 98.35) and keeps the game exact. The direct member chain at that point is
+// 93.62, and the index first 93.08 (game 96.58); distance before the
+// fill count is 97.87 (game 99.99).
+// Residual (editor): the ranking-initializer stores in the prologue.
 // Mac's outline loop (0x249438..0x249518) translates through
 // operator+(TRmgMapPosition, TRmgPoint) and looks the cell up by position;
 // that expansion costs the editor 104 inline budget, so its third clear()
@@ -8777,9 +8780,9 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
     TObjectType* prototype = properties->m_prototype;
     std::vector<TRmgMapPosition> candidates;
     TRmgZoneBounds bounds = zone->m_bounds;
+    int zoneIndex = zone->getTemplateZone()->m_zoneIndex;
     int bestObstacleFillCount = 0;
     int bestDistance = 40000;
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
     // Compare candidate anchors after translating the town entrance by the mine trigger.
     TRmgMapPosition targetAnchor;
     if (startingMine) {
