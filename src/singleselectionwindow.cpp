@@ -3217,14 +3217,21 @@ void TSingleSelectionWindow::toggleRandomMapOptions()
 // the other machines through SendPlayerPositions. Mac 0x178a08/0x178a30
 // address the member directly; avoid an inferred cached local-header reference.
 // This restores Windows's local-header frame and destructor frontier (97.69%).
-// Residual: retail keeps the header's ~vector<HeroId> as a call; the inline
-// replay fits root cb 753..758 (ours 764). Mac 0x178800..0x178834 stores the
-// version in three arms, but an if / else if / else here is 90.63%: retail
-// needs the 21/14 ternary.
+// Retail keeps the header's ~vector<HeroId> as a call, and the inline replay
+// fits only root cb 753..758. Two `for (int ...)` loops gave 764: each
+// declaration-initializer costs three tuples more than an assignment to a
+// function-scope index. One `int i` shared by both loops, as makeHeroFilter
+// and its neighbours declare theirs, gives 758 and every retail byte (100%;
+// separate function-scope i and j do too, a second loop reusing a
+// for-scoped i does not). Mac 0x178800..0x178834 stores the version in
+// three arms, but an if / else if / else here is 90.63%: retail needs the
+// 21/14 ternary.
 VA(0x00580430, 0x63B)
 MAC_ADDRESS(0x1786d0, 0x4c4)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
 {
+    int i;
+
     g_game->setupOrigData();
 
     NewSMapHeader header;
@@ -3250,7 +3257,7 @@ void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
         header.m_numPlayers =
             static_cast<unsigned char>(m_randomMapOptions.m_humanPlayerCount + m_randomMapOptions.m_computerPlayerCount);
 
-    for (int i = 0; i < NUM_PLAYERS; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         header.m_teamInfo[i] = static_cast<char>(i);
         header.m_playerSlotAttributes[i].m_legalAlignments = 0x1ff;
         header.m_playerSlotAttributes[i].m_canBeHuman =
@@ -3278,11 +3285,11 @@ void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
 
     applyHeaderToGame(&m_localHeader);
 
-    for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
-        m_players.m_humanPlayers[j].m_heroIndex = -1;
-        m_players.m_humanPlayers[j].m_townIndex = -1;
-        m_players.m_computerPlayers[j].m_heroIndex = -1;
-        m_players.m_computerPlayers[j].m_townIndex = -1;
+    for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        m_players.m_humanPlayers[i].m_heroIndex = -1;
+        m_players.m_humanPlayers[i].m_townIndex = -1;
+        m_players.m_computerPlayers[i].m_heroIndex = -1;
+        m_players.m_computerPlayers[i].m_townIndex = -1;
     }
     setHumanSlot();
     makeHeroFilter();
