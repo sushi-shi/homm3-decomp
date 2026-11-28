@@ -7272,10 +7272,13 @@ void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 // retail's coordinate value homes) and the shared exit on border success.
 // Capture strength before requested value: either input alone leaves the
 // table calculation's registers wrong.
-// Editor residual: retail pushes both guard inputs straight from memory and
-// loads the map height before copying the scanned position. Passing the
-// fields directly, as the other three callers do, raises the editor
-// 97.80 -> 98.31 but lowers the game 100 -> 97.00.
+// The row-below test reads the map height through getHeight(): the editor
+// then loads it before copying the scanned position, as retail does
+// (97.80 -> 99.05; the game is exact either way).
+// Editor residual: retail pushes both guard inputs straight from memory.
+// Passing both fields directly, as the other three callers do, closes the
+// editor (100) but lowers the game 100 -> 97.00; the strength local alone
+// gives the same pair, the value local alone 99.52 / 98.52.
 VA(0x00541AD0, 0x5B0)
 MAC_ADDRESS(0x2446ac, 0x55c) // anchor-callee connectZones; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::createShipyardConnection(
@@ -7309,7 +7312,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
                         return 1;
                     if (item->getLandType() != eTerrainWater) {
                         nearby = position;
-                        if (position.m_y + 1 < m_map.m_mapHeight) {
+                        if (position.m_y + 1 < m_map.getHeight()) {
                             for (nearby.m_x = position.m_x;
                                  nearby.m_x <= position.m_x + 2; ++nearby.m_x) {
                                 if (m_map.canPlaceObject(properties, nearby, source)
