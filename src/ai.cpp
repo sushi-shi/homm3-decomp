@@ -466,9 +466,10 @@ long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_
             if (target->isIncapacitated()
                     && !bestArmy->isIncapacitated())
                 continue;
-            if ((target->isIncapacitated() || !bestArmy->isIncapacitated())
-                    && value < bestValue)
-                continue;
+            if (target->isIncapacitated() || !bestArmy->isIncapacitated()) {
+                if (value < bestValue)
+                    continue;
+            }
         }
         bestArmy = target;
         bestValue = value;
@@ -532,8 +533,11 @@ unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type
     long target = 0;
     for (; target < 4; target++) {
         long strength = getWallStrength(walls[target]);
-        if (strength == weakest && --choice == 0)
-            break;
+        if (strength == weakest) {
+            --choice;
+            if (choice == 0)
+                break;
+        }
     }
     m_nextAction = 9;
     m_nextActionGridIndex = s_wallTargets[walls[target]].m_targetHex;
@@ -2222,10 +2226,11 @@ long combatManager::simulateActions(std::vector<army*>& list, long i,
 
     for (; i < list.size(); i++) {
         army* currentArmy = list[i];
-        if (currentArmy->cannotAttack()
-            || currentArmy->getSpellTime(59)
-            || currentArmy->m_creatureType == CREATURE_CATAPULT
-            || currentArmy->getTotalHitPoints(1) == 0)
+        if (currentArmy->cannotAttack() || currentArmy->getSpellTime(59))
+            continue;
+        if (currentArmy->m_creatureType == CREATURE_CATAPULT)
+            continue;
+        if (currentArmy->getTotalHitPoints(1) == 0)
             continue;
         if (currentArmy->getControllingSide() != ourGroup)
             return i;

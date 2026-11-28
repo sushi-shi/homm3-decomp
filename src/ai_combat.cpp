@@ -677,16 +677,17 @@ DC_ADDRESS(0x02ad58, 0x108)
 MAC_ADDRESS(0x027720, 0x160)
 void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
-    if (!defender.m_canCastSpells
-        && (choice.m_spell == SPELL_DISPEL
+    if (!defender.m_canCastSpells) {
+        if (choice.m_spell == SPELL_DISPEL
             || choice.m_spell == SPELL_ANTI_MAGIC
             || choice.m_spell == SPELL_PROTECTION_FROM_AIR
             || choice.m_spell == SPELL_PROTECTION_FROM_FIRE
             || choice.m_spell == SPELL_PROTECTION_FROM_WATER
             || choice.m_spell == SPELL_PROTECTION_FROM_EARTH
             || choice.m_spell == SPELL_MAGIC_MIRROR
-            || choice.m_spell == SPELL_CURE))
-        return;
+            || choice.m_spell == SPELL_CURE)
+            return;
+    }
     if (choice.m_spell == SPELL_DISPEL) {
         getEnchantmentValue(choice, m_currentHero);
         if (choice.m_mastery < eMasteryAdvanced)

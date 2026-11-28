@@ -5705,8 +5705,9 @@ DC_ADDRESS(0x09b448, 0x11a)
 MAC_ADDRESS(0x0ba0f0, 0x16c)
 void advManager::doWhirlpool(hero* who)
 {
-    if (!g_game->isHuman(who->m_owner)
-        || who->isWieldingArtifact(ARTIFACT_SEA_CAPTAINS_HAT))
+    if (!g_game->isHuman(who->m_owner))
+        return;
+    if (who->isWieldingArtifact(ARTIFACT_SEA_CAPTAINS_HAT))
         return;
 
     int weakestValue = 99999999;

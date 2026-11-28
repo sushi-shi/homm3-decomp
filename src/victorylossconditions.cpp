@@ -195,9 +195,10 @@ DC_ADDRESS(0x190038, 0xec)
 MAC_ADDRESS(0x1fdb2c, 0x298)
 unsigned char VictoryConditionStruct::checkForUpgradedTown()
 {
-    if (m_type != VICTORY_CONDITION_UPGRADE_TOWN
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+    if (m_type != VICTORY_CONDITION_UPGRADE_TOWN) {
+        return 0;
+    }
+    if (!g_currentPlayer || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
     unsigned char hallOk = 0;
@@ -243,9 +244,10 @@ DC_ADDRESS(0x190124, 0x120)
 MAC_ADDRESS(0x1fddc4, 0x2d0)
 unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
 {
-    if (m_type != VICTORY_CONDITION_BUILD_GRAIL
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+    if (m_type != VICTORY_CONDITION_BUILD_GRAIL) {
+        return 0;
+    }
+    if (!g_currentPlayer || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
     // DC records the target and wildcard locals at the same outer lifetime.
@@ -321,9 +323,10 @@ DC_ADDRESS(0x19037c, 0x8e)
 MAC_ADDRESS(0x1fe314, 0x154)
 unsigned char VictoryConditionStruct::checkForTownCaptureWin()
 {
-    if (m_type != VICTORY_CONDITION_CAPTURE_TOWN
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+    if (m_type != VICTORY_CONDITION_CAPTURE_TOWN) {
+        return 0;
+    }
+    if (!g_currentPlayer || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
     if (!g_game->isHumanAlly(g_netLocalGamePos) && !m_appliesToComputer)
@@ -379,9 +382,10 @@ DC_ADDRESS(0x190488, 0xb0)
 MAC_ADDRESS(0x1fe810, 0x194)
 unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
 {
-    if (m_type != VICTORY_CONDITION_FLAG_ALL_GENERATORS
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+    if (m_type != VICTORY_CONDITION_FLAG_ALL_GENERATORS) {
+        return 0;
+    }
+    if (!g_currentPlayer || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
     if (!g_game->isHumanAlly(g_netLocalGamePos) && !m_appliesToComputer)
@@ -402,9 +406,10 @@ DC_ADDRESS(0x190538, 0xe6)
 MAC_ADDRESS(0x1fe9a4, 0x190)
 unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
 {
-    if (m_type != VICTORY_CONDITION_FLAG_ALL_MINES
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+    if (m_type != VICTORY_CONDITION_FLAG_ALL_MINES) {
+        return 0;
+    }
+    if (!g_currentPlayer || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
     if (!g_game->isHumanAlly(g_netLocalGamePos) && !m_appliesToComputer)
@@ -441,9 +446,10 @@ MAC_ADDRESS(0x1feba0, 0x2bc)
 unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
     const hero* thisHero, const type_point townLoc)
 {
-    if (m_type != VICTORY_CONDITION_TRANSPORT_ARTIFACT
-        || !g_currentPlayer
-        || g_game->m_playerDisabled[g_netLocalGamePos])
+    if (m_type != VICTORY_CONDITION_TRANSPORT_ARTIFACT) {
+        return 0;
+    }
+    if (!g_currentPlayer || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
     if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {

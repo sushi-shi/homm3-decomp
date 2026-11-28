@@ -111,8 +111,10 @@ int executive::addManager(baseManager* newManager, int newPriority)
         else
             newPriority = m_tailManager->m_priority + 1;
     }
-    if (!newManager->m_status && newManager->open(newPriority))
-        return 3;
+    if (!newManager->m_status) {
+        if (newManager->open(newPriority))
+            return 3;
+    }
     baseManager* current = m_tailManager;
     while (current && current->m_priority > newPriority)
         current = current->m_prevManager;

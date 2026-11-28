@@ -7753,8 +7753,11 @@ bool TSingleSelectionWindow::beginNewGame()
         if (!sendPlayerPositions(0))
             return 0;
         g_playerTurn = g_netLocalGamePos;
-        if (!g_game->transmitSaveGame(0x7f, 0, 0, 1) && !g_playerDrop)
-            return 0;
+        if (!g_game->transmitSaveGame(0x7f, 0, 0, 1)) {
+            if (!g_playerDrop) {
+                return 0;
+            }
+        }
     }
 
     incProgressBar(1);

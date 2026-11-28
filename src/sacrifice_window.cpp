@@ -2197,7 +2197,9 @@ int type_skeleton_window::sacrifice(message& msg)
             static_cast<type_skeleton_window*>(msg.m_window);
         for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             TCreatureType type = window->m_armies[1]->m_armyTypes[i];
-            if (type == CREATURE_NONE || type == g_deathCreature[type])
+            if (type == CREATURE_NONE)
+                continue;
+            if (type == g_deathCreature[type])
                 continue;
 
             sprintf(g_text,
