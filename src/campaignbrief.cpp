@@ -510,6 +510,13 @@ void TCampaignBrief::updateDifficultyButtons()
 // and a separate `flag` local for the flag loop reach 99.27%, but no Mac
 // call, DC inline residue or DC local supports them (DC's only widget
 // local is `w`); they would exist only for codegen.
+// 2026-11-28: the one call difference is NewSMapHeader's second string
+// constructor, which retail leaves out of line: the replay prices it at
+// budget 49 against cost 44, and its best fit is 5..12 more free inline
+// sites between `NewSMapHeader mapHeader;` and the campaign-description
+// test. Those three accessors alone give 95.15% (budget 45); adding a
+// completed-map accessor on SCampaign 97.02% with the call still expanded,
+// and a scenario accessor on the header nothing further. Not adopted.
 // Measured and rejected: offsets/colour with a scenario local (94.28),
 // offsets only (93.85), colour only (93.55), no colour local (87.85),
 // scenario before offsets (94.24), const or signed-char locals; pointer
