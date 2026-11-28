@@ -7339,18 +7339,27 @@ unsigned char type_random_map_generator::createShipyardConnection(
 // unevidenced slot locals: those swap the editor's parameter registers
 // (editor 95.97, or 98.40 binding the destination slot first) although
 // the game reaches 98.27 with them.
-// Residual: retail keeps clear()'s erase out of line (a nested budget of
-// 68 or less; ours is 69), the water test materializes the terrain in a
-// register, and the selected candidate's size/base registers swap. Failed
-// probes: getTerrain() or separate if statements for the water test, empty(),
-// direct range erase, a ternary guard value and an unscoped destination
-// bounds copy are flat or lower.
+// Retail +0x2b..+0x33 forms the source zone index through one register
+// (the getTemplateZone() result; the destination's stays a field read, which
+// the editor needs), and reloads the candidate base after rand() while
+// keeping the count: the named unsigned selection of the town placers.
+// Residual: retail keeps clear()'s erase out of line (one to three more
+// free inline sites after it, or 54 less budget), the water test
+// materializes the terrain in a register (Mac 0x244c98 tests it apart from
+// the level comparison, with a beq/bne pair), and the destination pointer
+// stays in EDX while its level position address is formed (+0x1d1). Failed
+// probes: getTerrain(), a one-case switch, inline water predicates (byte or
+// bool, by member or by value) and separate if statements for the water
+// test all compile identically; trigger x()/y() keep erase a call but
+// expand the first guard's map lookup (88.05); empty(), direct range erase,
+// a ternary guard value and an unscoped destination bounds copy are flat or
+// lower.
 VA(0x00542080, 0x8AA)
 MAC_ADDRESS(0x244c08, 0xa1c)
 unsigned char type_random_map_generator::createSubterraneanGate(
     TRmgZone* source, TRmgZoneConnection* connection)
 {
-    int sourceZone = source->m_templateZone->m_zoneIndex;
+    int sourceZone = source->getTemplateZone()->m_zoneIndex;
     TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
     int destinationZone = destination->m_templateZone->m_zoneIndex;
     if (source->getLevelPosition().m_z == destination->getLevelPosition().m_z
@@ -7412,7 +7421,8 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     if (candidates.size() == 0)
         return 0;
 
-    position = candidates[rand() % candidates.size()];
+    unsigned int selected = rand() % candidates.size();
+    position = candidates[selected];
     addObject(new type_object(gateProperties), position);
 
     TRmgMapPosition otherPosition = position;
