@@ -223,7 +223,7 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
 
     for (i = 0; i < g_numOfTownSpecStrScreen[m_townToView->m_type]; ++i) {
         if (canBuy(m_townToView, g_castleBuildOrder[i]))
-            m_canBuyMask |= g_bitNumber[g_castleBuildOrder[i]];
+            m_canBuyMask |= bitNumber[g_castleBuildOrder[i]];
     }
 
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
@@ -245,9 +245,9 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
         int state = -1;
         if (m_townToView->hasBuilding(g_castleBuildOrder[i], true))
             state = 0;
-        else if (!(m_canBuildMask & g_bitNumber[g_castleBuildOrder[i]]))
+        else if (!(m_canBuildMask & bitNumber[g_castleBuildOrder[i]]))
             state = 1;
-        else if (!(m_canBuyMask & g_bitNumber[g_castleBuildOrder[i]]))
+        else if (!(m_canBuyMask & bitNumber[g_castleBuildOrder[i]]))
             state = 2;
 
         if (state != -1) {
@@ -368,7 +368,7 @@ int THallWindow::windowHandler(message& msg)
                 } else if (g_townManager->m_townToView->hasBuilding(building, false)) {
                     sprintf(g_text, g_hallInfo[4],
                             getBuildingName(g_townManager->m_townToView->m_type, building));
-                } else if (!(g_townManager->m_canBuildMask & g_bitNumber[building])) {
+                } else if (!(g_townManager->m_canBuildMask & bitNumber[building])) {
                     if (building == HALL_CAPITOL_ID) {
                         if (g_game->m_players[g_townManager->m_townToView->m_owner].hasCapitol()) {
                             strcpy(g_text, g_hallInfo[0]);
@@ -386,7 +386,7 @@ int THallWindow::windowHandler(message& msg)
                         sprintf(g_text, g_hallInfo[5],
                                 getBuildingName(g_townManager->m_townToView->m_type, building));
                     }
-                } else if (!(g_townManager->m_canBuyMask & g_bitNumber[building])) {
+                } else if (!(g_townManager->m_canBuyMask & bitNumber[building])) {
                     sprintf(g_text, g_hallInfo[6],
                             getBuildingName(g_townManager->m_townToView->m_type, building));
                 } else {
@@ -498,8 +498,8 @@ int THallWindow::windowHandler(message& msg)
                 }
                 closeRequested = g_townManager->buyBuild(building,
                         g_townManager->m_townToView->hasBuilding(building, true)
-                            || !(g_townManager->m_canBuildMask & g_bitNumber[building])
-                            || !(g_townManager->m_canBuyMask & g_bitNumber[building]),
+                            || !(g_townManager->m_canBuildMask & bitNumber[building])
+                            || !(g_townManager->m_canBuyMask & bitNumber[building]),
                         quickView);
                 break;
             }

@@ -640,9 +640,9 @@ void game::calculateProduction()
             crystalDragonIncome[currentTown.m_owner] = 1;
 
         if (currentTown.m_type == TOWN_RAMPART && m_day == 1) {
-            if ((currentTown.getBuildingMask() & g_bitNumber[EXTRA_1_ID]) != 0)
+            if ((currentTown.getBuildingMask() & bitNumber[EXTRA_1_ID]) != 0)
                 production[GOLD] += currentPlayer.m_resources[GOLD] / 10;
-            if ((currentTown.getBuildingMask() & g_bitNumber[SPECIAL_BUILDING_ID]) != 0
+            if ((currentTown.getBuildingMask() & bitNumber[SPECIAL_BUILDING_ID]) != 0
                 && currentTown.m_pondAmount > 0)
                 production[currentTown.m_pondResource] += currentTown.m_pondAmount;
         }

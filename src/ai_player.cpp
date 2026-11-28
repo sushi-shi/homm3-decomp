@@ -486,7 +486,7 @@ void type_AI_player::calculateDemand()
         build_mask = currentTown->getBuildableMask();
         int building;
         for (building = 0; building < MAX_BUILDING_TYPE; building++) {
-            if (g_bitNumber[building] & build_mask) {
+            if (bitNumber[building] & build_mask) {
                 build_cost = currentTown->getBuildCostArray(
                     type_building_id(building));
                 int buildResource;
@@ -1431,13 +1431,13 @@ MAC_ADDRESS(0x02dd5c, 0x10c)
 static __int64 getRequirements(const town* currentTown,
                                 type_building_id building)
 {
-    __int64 prerequisites = g_bitNumber[building];
+    __int64 prerequisites = bitNumber[building];
     __int64 requirements = 0;
     while (building < MAX_BUILDING_TYPE) {
-        if (prerequisites & g_bitNumber[building]) {
+        if (prerequisites & bitNumber[building]) {
             if (!currentTown->isLegalBuilding(H3_ENUM_DECODE(type_building_id, building)))
                 return 0;
-            requirements |= g_bitNumber[building];
+            requirements |= bitNumber[building];
             prerequisites |= g_hierarchyMask[currentTown->m_type][building];
             prerequisites &= ~currentTown->getBuildingMask();
             prerequisites &= ~requirements;
@@ -1457,7 +1457,7 @@ static void getFullCost(const town* currentTown, int* result,
                           __int64 requirements)
 {
     for (int k = 0; k < MAX_BUILDING_TYPE; ++k) {
-        if (requirements & g_bitNumber[k]) {
+        if (requirements & bitNumber[k]) {
             int* costs = currentTown->getBuildCostArray(
                 H3_ENUM_DECODE(type_building_id, k));
             for (int i = 0; i < NUM_RESOURCES; ++i)
@@ -1476,7 +1476,7 @@ static void markValues(long* fullValue, long totalValue,
                         __int64 requirements)
 {
     for (int k = 0; k < MAX_BUILDING_TYPE; ++k) {
-        if (requirements & g_bitNumber[k])
+        if (requirements & bitNumber[k])
             fullValue[k] += totalValue;
     }
 }
@@ -1577,7 +1577,7 @@ bool type_AI_player::purchaseBuilding(
         }
 
         for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
-            if ((buildMask & g_bitNumber[building])
+            if ((buildMask & bitNumber[building])
                 && fullValue[building] > bestValue) {
                 bestValue = fullValue[building];
                 bestTown = currentTown;
@@ -1864,7 +1864,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     __int64* maskPtr = &buildMask;
     for (int building = DWELLING_0_ID;
          building <= DWELLING_6_ID; building++) {
-        if (*maskPtr & g_bitNumber[building]) {
+        if (*maskPtr & bitNumber[building]) {
             creature = g_dwellingType[currentTown->m_type][building - DWELLING_0_ID];
             traits = &akCreatureTypeTraits[creature];
             int* cost = currentTown->getBuildCostArray(
@@ -5020,13 +5020,13 @@ long type_statue_of_legion_artifact::getValue(
             g_game->getTown(player->m_townIds[townIndex]);
         for (int dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
             if (!(currentTown->getBuildingMask()
-                  & g_bitNumber[DWELLING_0_ID + dwelling])) {
+                  & bitNumber[DWELLING_0_ID + dwelling])) {
                 continue;
             }
 
             int dwellingSlot = dwelling;
             if (currentTown->getBuildingMask()
-                & g_bitNumber[DWELLING_0_UPG_ID + dwelling]) {
+                & bitNumber[DWELLING_0_UPG_ID + dwelling]) {
                 dwellingSlot += TOWN_DWELLING_COUNT;
             }
             TCreatureType creature = g_dwellingType[currentTown->m_type][dwellingSlot];

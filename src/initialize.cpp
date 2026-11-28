@@ -190,7 +190,7 @@ static void addToIncludedMask(const int* includeList, __int64* includedBuildings
         int building = *includeList++;
         int included;
         while ((included = *includeList) >= 0) {
-            includedBuildings[building] |= g_bitNumber[included];
+            includedBuildings[building] |= bitNumber[included];
             ++includeList;
             includedBuildings[building] |= includedBuildings[included];
         }
@@ -244,11 +244,11 @@ static void createRequirementMasks(const int* townBuildings, __int64* requiremen
     legalBuildings = 0;
     do {
         int building = *townBuildings++;
-        legalBuildings |= g_bitNumber[building];
+        legalBuildings |= bitNumber[building];
         requirements[building] = 0;
         while (*townBuildings >= 0) {
             int required = *townBuildings++;
-            requirements[building] |= g_bitNumber[required];
+            requirements[building] |= bitNumber[required];
             requirements[building] |= requirements[required];
         }
     } while (*++townBuildings >= 0);
