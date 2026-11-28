@@ -668,16 +668,30 @@ void combatManager::animateMagicArrow(int x, int y, army* target)
 // DC 850/926 passes `obstacles.size() - 1` straight to PlaceObstacle (no
 // slot local); retail's in-place `dec edx` agrees. Fire Wall's counter and
 // the red-colouring side loop are signed (DC cmp/gt, retail jl/jle).
-// Residual (99.84%): the Stone/Bloodlust `attributes &= ~...` tails, where
-// this compile cross-jumps the store and so cannot fold retail's `and
-// [mem],imm`, and two commuted base+index operands (markCreatureEffect's
-// store, string erase's memmove). The closing `default: break;` (DC
-// 1704..1710 unrecorded) makes every shared switch tail keep the earlier
-// copy as retail does; moving it to the top of the switch is byte-flat,
-// and reordering the Force Field/Fire Wall arms only moves the layout.
+// The closing `default: break;` (DC 1704..1710 unrecorded) makes every
+// shared switch tail keep the earlier copy as retail does; moving it to the
+// top of the switch is byte-flat, and reordering the Force Field/Fire Wall
+// arms only moves the layout.
 // Per-arm castY (DC 726/727, 731/732) fixes the castX/castY stack homes.
-// Fire Wall's frame still differs: retail keeps a copy of targetIndex for
-// SpellEffect, but DC lists no such local, so no alias is added for it.
+// Fire Wall passes SpellEffect a copy of targetIndex: Dreamcast loads the
+// parameter into r13 at the loop header (line 979) and hands r13 to
+// SpellEffect while GetSpellWallHex rereads the parameter (line 988); retail
+// keeps the copy at [ebp+0x18] and rereads [ebp+0xc] the same way. Without
+// the copy four frame bins rotate (99.45%).
+// Stone and Bloodlust leave on `if (IsQuickCombat()) break;` (DC 1296/1297,
+// 1324/1325, 1354/1355: the test with an unbraced statement one scope level
+// down that branches to the switch end), and Bloodlust's two paths share
+// one closing DrawFrame after the if/else (DC 1413). That is why retail's
+// single-target clear is `and [mem],imm` followed by a jump into Stone's
+// DrawFrame tail: nested under `!isQuickCombat()` with a DrawFrame per path,
+// the store itself cross-jumps and cannot fold. Dreamcast's loops sit
+// directly at their block's depth, so the frame and side counters are
+// declared once and reused, which also puts them in retail's parameter
+// slots.
+// Residual (99.98%): the two frame loads ahead of the mass-damage
+// `m_effected[group][index]` store come in the other order, and three
+// base+index operands in the mass Bloodlust loops are commuted. Hoisting
+// side and index declarations in any order is flat.
 VA(0x0059fe30, 0x2A4F)
 DC_ADDRESS(0x14f7dc, 0x2366)
 MAC_ADDRESS(0x190540, 0x29f4)  // retail largest-unadmitted row
@@ -965,8 +979,9 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         const int damage = computeSpellDamage(SPELL_FIRE_WALL, power,
                                               mastery, NULL, NULL, NULL, 0);
         const int nHexes = (mastery >= eMasteryAdvanced) + 2;
+        int hex = targetIndex;
         for (int i = 0; i < nHexes; ++i) {
-            spellEffect(traits->m_effect, targetIndex, 100, true);
+            spellEffect(traits->m_effect, hex, 100, true);
 
             TObstacle newWall = {
                 ResourceManager::GetSprite(s_wallObstacleInfo[4].m_spriteName),
@@ -1226,101 +1241,89 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         }
         break;
 
-    case SPELL_STONE:
+    case SPELL_STONE: {
         target->setSpellInfluence(spellId, power, mastery,
                                   castingHero);
         showSpellMessage(isMonsterSpell, spellId, target);
-        if (!isQuickCombat()) {
-            target->m_monInfo.attributes |= creatureGreyColoring;
-            resetLimitCreature();
-            markCreatureEffect(target->group, target->index);
-            computeMaxExtent();
-            for (int frame = 10; frame > 0; --frame) {
-                target->m_paletteEffect = frame * 0.1;
-                drawFrame(true, true, false, 100, true, true);
-            }
-            target->m_monInfo.attributes &= ~creatureGreyColoring;
-            drawFrame(true, true, false, 0, true, false);
+        if (isQuickCombat())
+            break;
+        target->m_monInfo.attributes |= creatureGreyColoring;
+        resetLimitCreature();
+        markCreatureEffect(target->group, target->index);
+        computeMaxExtent();
+        for (int frame = 10; frame > 0; --frame) {
+            target->m_paletteEffect = frame * 0.1;
+            drawFrame(true, true, false, 100, true, true);
         }
+        target->m_monInfo.attributes &= ~creatureGreyColoring;
+        drawFrame(true, true, false, 0, true, false);
         break;
+    }
 
     case SPELL_BLOODLUST:
         if (target) {
             target->setSpellInfluence(spellId, power, mastery,
                                       castingHero);
             showSpellMessage(isMonsterSpell, spellId, target);
-            if (!isQuickCombat()) {
-                target->m_monInfo.attributes |= creatureRedColoring;
-                resetLimitCreature();
-                markCreatureEffect(target->group, target->index);
-                computeMaxExtent();
-                {
-                    for (int frame = 0; frame < 10; ++frame) {
-                        target->m_paletteEffect = frame * 0.1;
-                        drawFrame(true, true, false, 100, true, true);
-                    }
-                }
-                {
-                    for (int frame = 10; frame > 0; --frame) {
-                        target->m_paletteEffect = frame * 0.1;
-                        drawFrame(true, true, false, 100, true, true);
-                    }
-                }
-                target->m_monInfo.attributes &= ~creatureRedColoring;
-                drawFrame(true, true, false, 0, true, false);
+            if (isQuickCombat())
+                break;
+            target->m_monInfo.attributes |= creatureRedColoring;
+            resetLimitCreature();
+            markCreatureEffect(target->group, target->index);
+            computeMaxExtent();
+            for (int frame = 0; frame < 10; ++frame) {
+                target->m_paletteEffect = frame * 0.1;
+                drawFrame(true, true, false, 100, true, true);
             }
+            for (frame = 10; frame > 0; --frame) {
+                target->m_paletteEffect = frame * 0.1;
+                drawFrame(true, true, false, 100, true, true);
+            }
+            target->m_monInfo.attributes &= ~creatureRedColoring;
         } else {
             setMassSpellInfluence(castingHero, spellId, mastery,
                                   power, m_currentSide,
                                   isMonsterSpell);
             showSpellMessage(isMonsterSpell, spellId, NULL);
-            if (!isQuickCombat()) {
-                resetLimitCreature();
-                {
-                    for (int side = 0; side < 2; ++side) {
-                        for (int index = 0; index < m_numArmies[side]; ++index) {
-                            if (m_effected[side][index]) {
-                                m_armies[side][index].m_monInfo.attributes |= creatureRedColoring;
-                                markCreatureEffect(side, index);
-                            }
-                        }
+            if (isQuickCombat())
+                break;
+            resetLimitCreature();
+            for (int side = 0; side < 2; ++side) {
+                for (int index = 0; index < m_numArmies[side]; ++index) {
+                    if (m_effected[side][index]) {
+                        m_armies[side][index].m_monInfo.attributes |= creatureRedColoring;
+                        markCreatureEffect(side, index);
                     }
                 }
-                computeMaxExtent();
+            }
+            computeMaxExtent();
 
-                {
-                    for (int frame = 0; frame < 10; ++frame) {
-                        for (int side = 0; side < 2; ++side) {
-                            for (int index = 0; index < m_numArmies[side]; ++index) {
-                                if (m_effected[side][index])
-                                    m_armies[side][index].m_paletteEffect = frame * 0.1;
-                            }
-                        }
-                        drawFrame(true, true, false, 100, true, true);
+            for (int frame = 0; frame < 10; ++frame) {
+                for (side = 0; side < 2; ++side) {
+                    for (int index = 0; index < m_numArmies[side]; ++index) {
+                        if (m_effected[side][index])
+                            m_armies[side][index].m_paletteEffect = frame * 0.1;
                     }
                 }
-                {
-                    for (int frame = 10; frame > 0; --frame) {
-                        for (int side = 0; side < 2; ++side) {
-                            for (int index = 0; index < m_numArmies[side]; ++index) {
-                                if (m_effected[side][index])
-                                    m_armies[side][index].m_paletteEffect = frame * 0.1;
-                            }
-                        }
-                        drawFrame(true, true, false, 100, true, true);
+                drawFrame(true, true, false, 100, true, true);
+            }
+            for (frame = 10; frame > 0; --frame) {
+                for (side = 0; side < 2; ++side) {
+                    for (int index = 0; index < m_numArmies[side]; ++index) {
+                        if (m_effected[side][index])
+                            m_armies[side][index].m_paletteEffect = frame * 0.1;
                     }
                 }
-                {
-                    for (int side = 0; side < 2; ++side) {
-                        for (int index = 0; index < m_numArmies[side]; ++index) {
-                            if (m_effected[side][index])
-                                m_armies[side][index].m_monInfo.attributes &= ~creatureRedColoring;
-                        }
-                    }
+                drawFrame(true, true, false, 100, true, true);
+            }
+            for (side = 0; side < 2; ++side) {
+                for (int index = 0; index < m_numArmies[side]; ++index) {
+                    if (m_effected[side][index])
+                        m_armies[side][index].m_monInfo.attributes &= ~creatureRedColoring;
                 }
-                drawFrame(true, true, false, 0, true, false);
             }
         }
+        drawFrame(true, true, false, 0, true, false);
         break;
 
     case SPELL_POISON:
