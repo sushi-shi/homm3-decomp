@@ -13,19 +13,19 @@ executables.
 
 <!-- match-score:start -->
 
-**Windows `HEROES3.EXE`: 99.55% matched (MAX)** — 4,672 / 4,785 functions exact (97.6%), weighted by size over 1,999,585 bytes of code.
+**Windows `HEROES3.EXE`: 99.55% matched (MAX)** — 4,671 / 4,785 functions exact (97.6%), weighted by size over 1,999,585 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
 | CUR   |           4,658 |   99.52% | last measured score                            |
-| MAX   |           4,672 |   99.55% | best result for each function's current source |
+| MAX   |           4,671 |   99.55% | best result for each function's current source |
 | HIST  |           4,679 |   99.63% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   123 | 3915 / 3997 (97.9%) |    99.56% |
+| `game`       |   123 | 3914 / 3997 (97.9%) |    99.56% |
 | `rmg`        |     6 |   339 / 370 (91.6%) |    99.07% |
 | `network`    |     4 |  280 / 280 (100.0%) |   100.00% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |   100.00% |
@@ -53,20 +53,20 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:start -->
 
-**GOG Complete map editor `h3maped.exe`: 99.75% matched (MAX)** — 6,076 / 6,161 functions exact (98.6%), weighted by size over 821,520 bytes of code.
+**GOG Complete map editor `h3maped.exe`: 99.75% matched (MAX)** — 6,078 / 6,161 functions exact (98.7%), weighted by size over 821,520 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           6,016 |   99.69% | last measured score                            |
-| MAX   |           6,076 |   99.75% | best result for each function's current source |
-| HIST  |           6,087 |   99.82% | all-time peak across source revisions          |
+| CUR   |           6,032 |   99.70% | last measured score                            |
+| MAX   |           6,078 |   99.75% | best result for each function's current source |
+| HIST  |           6,088 |   99.82% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   164 | 5507 / 5547 (99.3%) |    99.82% |
-| `rmg`        |     6 |   438 / 479 (91.4%) |    99.20% |
+| `game`       |   164 | 5508 / 5546 (99.3%) |    99.82% |
+| `rmg`        |     6 |   439 / 480 (91.5%) |    99.20% |
 | `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`      |     3 |     49 / 53 (92.5%) |    99.99% |
 | `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |
@@ -90,7 +90,7 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           1,573 |   99.11% | last measured score                            |
+| CUR   |           1,573 |   99.10% | last measured score                            |
 | MAX   |           1,579 |   99.46% | best result for each function's current source |
 | HIST  |           1,588 |   99.56% | all-time peak across source revisions          |
 
@@ -98,7 +98,7 @@ MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |    44 | 1456 / 1486 (98.0%) |    99.38% |
+| `game`       |    44 | 1456 / 1486 (98.0%) |    99.37% |
 | `zlib-1.1.3` |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`      |     3 |    41 / 41 (100.0%) |   100.00% |
 | `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |

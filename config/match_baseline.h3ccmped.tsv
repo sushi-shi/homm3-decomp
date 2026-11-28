@@ -1149,7 +1149,7 @@ ScenarioPropsStartingOptionsPage	?update@TScenarioPropsStartingOptionsPage@@QAEX
 ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0x2e5f0	tokens1:a1442c8797d7
 ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0x2e5a0	tokens1:b8803829a622
 ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0x2e4d0	tokens1:549b52511ab6
-ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusPrimarySkill@@@Z	80.5213	80.5213	100.0000	0x2e6d0	tokens1:fb447138b3f7
+ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusPrimarySkill@@@Z	76.5426	76.5426	100.0000	0x2e6d0	tokens1:521f01211068
 ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusResource@@@Z	100.0000	100.0000	100.0000	0x2e8a0	tokens1:b9d78a062082
 ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x2e800	tokens1:eb5528f351b5
 ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusSpell@@@Z	100.0000	100.0000	100.0000	0x2e430	tokens1:3372b8a5b834
@@ -1255,7 +1255,7 @@ TownTypeTraits	__h3cg$TownTypeTraits$static_dtor$pTypeNames	100.0000	100.0000	10
 adler32	@adler32@12	100.0000	100.0000	100.0000	0x402e0	-
 artifact	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x4bb0	-
 artifact	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x2f10	-
-artifact	?InitializeArtifactTraitsTable@@YA_NXZ	88.1095	88.1095	89.7707	0x28d0	tokens1:3e4668f50d9c
+artifact	?InitializeArtifactTraitsTable@@YA_NXZ	88.1095	88.1095	89.7707	0x28d0	tokens1:bc2286b311d4
 artifact	?_Tidy@?$bitset@$0BD@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x2f90	-
 artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	-	100.0000	100.0000	0x3050	-
 artifact	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x3170	-
