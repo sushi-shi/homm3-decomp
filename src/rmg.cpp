@@ -9022,11 +9022,14 @@ static int countRmgOccupiedCells(const TObjectType* prototype)
 // One definition variable serves the scan and the final choice: Mac
 // 0x24a238 and 0x24a508 store both into the same stack slot, as both
 // Windows images do at [ebp-0x10].
-// Game residual: retail calls the first clear()'s erase (its vector<int>
-// label is an ICF twin; the insert/widget and second-erase rows are labels
-// only). The replay with that corrected target fits a root cost 608..616
-// (ours 648) or one or two more free sites after properties.clear(); the
-// editor's calls agree under either. No native evidence names the spelling.
+// Retail +0x117..+0x128 loads the definition's subtype and type and the
+// zone's terrain before pushing any selectObjectPrototype argument, and
+// +0x1b..+0x2a forms the zone index through one register (eax, eax, ecx):
+// the inline accessor results getTerrain, getObjectType, getSubtype and
+// getTemplateZone. The definition's two accessor names are role-derived.
+// Direct field reads push each argument as it is read and take a third
+// register for the zone index (game 96.17, editor 94.98); the accessors
+// make both images exact.
 VA(0x00546190, 0x385)
 MAC_ADDRESS(0x24a190, 0x3f4) // anchor-callee 0x546572/0x546663; thiscall, ret 0x28
 type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
@@ -9034,7 +9037,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     unsigned char allowLinkedPlacement, unsigned char compact,
     TRmgMapPosition position)
 {
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
+    int zoneIndex = zone->getTemplateZone()->m_zoneIndex;
     int totalWeight = 0;
     std::vector<type_treasure_def*> candidates;
     std::vector<TRmgObjectPropertiesRef*> properties;
@@ -9056,7 +9059,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
         if (objectValue < 0 || objectValue < minimum || objectValue > maximum)
             continue;
         TRmgObjectPropertiesRef* candidate = selectObjectPrototype(
-            zone->m_terrain, definition->m_objectType, definition->m_subtype);
+            zone->getTerrain(), definition->getObjectType(), definition->getSubtype());
         if (!candidate)
             continue;
         if (position.m_x >= 0 && m_map.isPlacementBlocked(candidate, position, zoneIndex, 1))
