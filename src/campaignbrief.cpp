@@ -225,27 +225,29 @@ int g_campaignBriefPlayerSlot;
 // (ENEMY_FLAG1_ID..) of the local player's slot, hiding every flag first and skipping
 // the positions the scenario leaves empty.
 
-// Naming the briefing-choice argument before the scenario lookup and retaining
-// the scenario pointer restores retail's evaluation order. The Mac loop keeps
-// separate zero-based enemy and ally counters and adds each widget ID at use;
-// CodeWarrior's three counter registers follow that declaration order. VC6
-// remains at 99.8958 with all nine CFG blocks, five branches and thirteen calls
-// exact. The remaining byte is the commutative
-// SIB spelling in the second teamInfo lookup inside Dreamcast-proven OnSameTeam:
-// candidate [ecx+eax+0x1f879], retail [eax+ecx+0x1f879]. Naming either the player
-// slot or the game receiver is byte-flat, so keep the canonical helper boundary.
-// Mac resolves the same externally linked player slot but retains one
-// std::__vector_pod::data call before getPlayer (14 calls against our 13).
+// The player-slot query is one expression: the header's scenario accessor,
+// then the scenario's forwarding player query with the briefing choice as its
+// argument. Mac 0x645b8 retains the vector storage call that one accessor
+// level leaves behind (direct m_scenarios[] expands it: Mac 20.63%), and
+// 0x6468c/0x646c8 compute each widget ID once (r25) before the two getWidget
+// calls, which the two branch locals reproduce. Mac 24.03 -> 99.27% (the
+// rest is the frame size); Windows 99.7917 -> 99.8958 because the forwarding
+// query evaluates the briefing choice before the scenario lookup and keeps
+// the scenario pointer in ECX. The Mac loop keeps separate zero-based enemy
+// and ally counters in that declaration order.
+// Residual: the commutative SIB spelling of the second teamInfo lookup inside
+// Dreamcast-proven OnSameTeam: candidate [ecx+eax+0x1f879], retail
+// [eax+ecx+0x1f879]. Byte-flat: naming the player slot or the game receiver,
+// the index declared in the for head, first or bare at the top, the counters
+// in the other order, a named position local.
 VA(0x00458010, 0x10F)
 DC_ADDRESS(0x058a9c, 0x162)
 MAC_ADDRESS(0x064584, 0x19c)  // handler caller + DC source identity
 void TCampaignBrief::updateAllyEnemyFlags()
 {
-    int briefingChoice = g_game->m_campaign.m_briefingChoice;
-    ScenarioStruct* scenario =
-        m_campaign->m_scenarios[m_selectedScenario];
     g_campaignBriefPlayerSlot =
-        scenario->getStartOptions()->getPlayer(briefingChoice);
+        m_campaign->getScenario(m_selectedScenario)->getStartOptionPlayer(
+            g_game->m_campaign.m_briefingChoice);
     int enemyFlag = 0;
     int allyFlag = 0;
     int i = 0;
@@ -254,14 +256,14 @@ void TCampaignBrief::updateAllyEnemyFlags()
         getWidget(i + ALLY_FLAG1_ID)->hide();
         if (g_game->m_setup.m_playerPos[i] >= 0) {
             if (g_game->onSameTeam(i, g_campaignBriefPlayerSlot)) {
-                getWidget(ALLY_FLAG1_ID + allyFlag)->show();
-                getWidget(ALLY_FLAG1_ID + allyFlag)->sendMessage(
-                    widget::WIDGET_SET_ICON_FRAME, i);
+                int id = ALLY_FLAG1_ID + allyFlag;
+                getWidget(id)->show();
+                getWidget(id)->sendMessage(widget::WIDGET_SET_ICON_FRAME, i);
                 allyFlag++;
             } else {
-                getWidget(ENEMY_FLAG1_ID + enemyFlag)->show();
-                getWidget(ENEMY_FLAG1_ID + enemyFlag)->sendMessage(
-                    widget::WIDGET_SET_ICON_FRAME, i);
+                int id = ENEMY_FLAG1_ID + enemyFlag;
+                getWidget(id)->show();
+                getWidget(id)->sendMessage(widget::WIDGET_SET_ICON_FRAME, i);
                 enemyFlag++;
             }
         }
@@ -589,13 +591,13 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         for (int i = 0;
              i < m_campaign->getScenarioCount(); ++i) {
             CampaignScenarioPreview preview;
-            ScenarioStruct* scenario = m_campaign->m_scenarios[i];
+            ScenarioStruct* scenario = m_campaign->getScenario(i);
             g_game->m_setup.m_fileInitialized = 0;
             if (scenario->hasMap()) {
                 m_campaign->loadScenario(i, &mapHeader);
                 g_game->setupOrigData();
                 g_game->initNewGame(
-                    scenario->m_difficulty, i, &mapHeader, NULL);
+                    scenario->getDifficulty(), i, &mapHeader, NULL);
             }
             static_cast<NewSMapHeader&>(preview) = g_game->m_mapHeader;
             preview.m_gameSetup = g_game->m_setup;
@@ -610,7 +612,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     }
 
     const TCampaignMapTraits& mapTraits =
-        g_campaignMapTraits[m_campaign->m_regionMap];
+        g_campaignMapTraits[m_campaign->getRegionMap()];
     m_widgets.push_back(new bitmapBorder16(
                     0, 0, 800, 600, BACKGROUND_ID, mapTraits.m_imageName, 0x800));
 
@@ -620,8 +622,8 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             mapTraits.m_regionTraits[regionIndex];
         int x = region.m_offsetX;
         int y = region.m_offsetY;
-        if (m_campaign->m_scenarios[regionIndex]->hasMap()) {
-            int color = m_campaign->m_scenarios[regionIndex]->m_regionColor;
+        if (m_campaign->getScenario(regionIndex)->hasMap()) {
+            int color = m_campaign->getScenario(regionIndex)->m_regionColor;
             if (g_game->m_campaign.m_mapScores[regionIndex].m_completed) {
                 m_widgets.push_back(new bitmapBorder(
                                 x, y, 20, 20,
@@ -784,7 +786,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     for (int drawIndex = 0;
          drawIndex < m_campaign->getScenarioCount();
          ++drawIndex) {
-        if (m_campaign->m_scenarios[drawIndex]->hasMap()) {
+        if (m_campaign->getScenario(drawIndex)->hasMap()) {
             if (g_game->m_campaign.m_mapScores[drawIndex].m_completed) {
                 w = getWidget(MAP_CONQUERED_1_ID + drawIndex);
                 mx = w->getRealWidth();
@@ -964,6 +966,13 @@ void TCampaignBrief::doModal()
 // Native region-text assignment is now represented. The remaining constructor/
 // destructor expansions belong to NewSMapHeader's canonical header body;
 // preserve those boundaries rather than flattening or pinning library calls.
+// Both scenario lookups go through the header's accessor: Mac 0x67cd8 and
+// 0x67fa4 retain the vector storage call one accessor level leaves, as in
+// updateAllyEnemyFlags (67 calls on both sides, against 65 with direct
+// m_scenarios[]). The hover lookup's retained call is the const storage
+// accessor (0x8100), which no spelling here reproduces yet. Windows 91.05 ->
+// 91.03%: the start path's NewSMapHeader constructor/destructor expansions
+// still take different inline decisions, with no single root-cost window.
 VA(0x0045b1e0, 0x8DB)
 DC_ADDRESS(0x05a324, 0x824)
 MAC_ADDRESS(0x0679f0, 0x838)  // DoModal address-take + full retail CFG
@@ -1039,7 +1048,7 @@ static int campaignBriefHandler(message& msg)
                         // 86.3865 -> 91.0541 in the current source context;
                         // old 82.12% assignment probes used an earlier context.
                         std::string text;
-                        text = brief->m_campaign->m_scenarios[helpID]
+                        text = brief->m_campaign->getScenario(helpID)
                                 ->getRegionDescription();
                         normalDialog(text.c_str(), 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
@@ -1192,8 +1201,8 @@ static int campaignBriefHandler(message& msg)
         memset(g_newMapStartingBonus, 3, sizeof(g_newMapStartingBonus));
         incProgressBar(true);
 
-        int gamePos = brief->m_campaign->m_scenarios[selected]
-                          ->getStartOptions()->getPlayer(choice);
+        int gamePos = brief->m_campaign->getScenario(selected)
+                          ->getStartOptionPlayer(choice);
         strcpy(g_game->m_players[gamePos].m_name, g_config.m_networkDefaultName);
         g_localGamePos = gamePos;
         brief->m_campaign->startScenario(selected, choice);

@@ -143,14 +143,18 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // fill_n site is charged (cb 43) between the temporary and the reserve.
 // The row loop reads its preview through one row pointer, as openPreview
 // and the hover handler do; that settles the loop-tail induction registers
-// (97.26 -> 97.30). Residual: ~vector<MapScore> still expands under
-// ~SCampaign (budget 111 vs its cb 94). The inline replay fits it with two
-// or more extra free (cb <= 40) sites between the temporary and the reserve
-// - an in-class completed-campaign accessor at the 13 switch tests measures
-// 99.96% - or root cb ~1290; no native evidence for either, so neither is
-// adopted. Probes: named SCampaign local (94.42), std::fill (93.82),
-// `last` default (96.53), caption local (96.43); braces on the reset arm,
-// help-row pointer, id operand order, reference/const preview: flat.
+// (97.26 -> 97.30).
+// Retail calls ~vector<MapScore> under the temporary's ~SCampaign where the
+// direct member reads expanded it (budget 111 against its cb 94). The inline
+// replay fits retail only with two or more free (cb <= 40) root candidates
+// between the temporary and the reserve, or a root about 105 units lighter.
+// The statements between them are the fill and the thirteen completed-
+// campaign tests of the switch, so those tests go through SCampaign's
+// accessor: 97.30 -> 100%. The accessor is inferred from that count (this
+// constructor is the only reader outside SCampaign); its name is not proven.
+// Earlier probes: named SCampaign local (94.42), std::fill (93.82), `last`
+// default (96.53), caption local (96.43); braces on the reset arm, help-row
+// pointer, id operand order, reference/const preview: flat.
 VA(0x0045ea40, 0x692)
 DC_ADDRESS(0x05b570, 0x790)
 MAC_ADDRESS(0x069f7c, 0xb58)  // campbkx2.pcx + vtable/global stores; Complete narrows the reset flag and adds the campaign-set slot;
@@ -174,16 +178,16 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
         m_campaignAvailable[0] = 1;
         m_campaignAvailable[2] = 1;
         m_campaignAvailable[4] = 1;
-        if (g_game->m_campaign.m_campaignCompleted[0]
-                && g_game->m_campaign.m_campaignCompleted[2]
-                && g_game->m_campaign.m_campaignCompleted[4]) {
+        if (g_game->m_campaign.isCampaignCompleted(0)
+                && g_game->m_campaign.isCampaignCompleted(2)
+                && g_game->m_campaign.isCampaignCompleted(4)) {
             m_campaignAvailable[1] = 1;
             m_campaignAvailable[5] = 1;
         }
-        if (g_game->m_campaign.m_campaignCompleted[1]
-                && g_game->m_campaign.m_campaignCompleted[5])
+        if (g_game->m_campaign.isCampaignCompleted(1)
+                && g_game->m_campaign.isCampaignCompleted(5))
             m_campaignAvailable[3] = 1;
-        if (g_game->m_campaign.m_campaignCompleted[3])
+        if (g_game->m_campaign.isCampaignCompleted(3))
             m_campaignAvailable[6] = 1;
         break;
     case CAMPAIGN_SET_AB: {
@@ -195,7 +199,7 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
         m_campaignAvailable[12] = 1;
         m_campaignAvailable[CAMPAIGN_ROW_AB_SEALED] = 1;
         for (int chain = 7; chain <= 12; ++chain) {
-            if (!g_game->m_campaign.m_campaignCompleted[chain]
+            if (!g_game->m_campaign.isCampaignCompleted(chain)
                     && chain != CAMPAIGN_ROW_AB_SEALED) {
                 m_campaignAvailable[CAMPAIGN_ROW_AB_SEALED] = 0;
                 break;
@@ -209,14 +213,14 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
         m_campaignAvailable[14] = 1;
         m_campaignAvailable[15] = 1;
         m_campaignAvailable[16] = 1;
-        if (g_game->m_campaign.m_campaignCompleted[13]
-                && g_game->m_campaign.m_campaignCompleted[14]
-                && g_game->m_campaign.m_campaignCompleted[15]
-                && g_game->m_campaign.m_campaignCompleted[16])
+        if (g_game->m_campaign.isCampaignCompleted(13)
+                && g_game->m_campaign.isCampaignCompleted(14)
+                && g_game->m_campaign.isCampaignCompleted(15)
+                && g_game->m_campaign.isCampaignCompleted(16))
             m_campaignAvailable[17] = 1;
-        if (g_game->m_campaign.m_campaignCompleted[17])
+        if (g_game->m_campaign.isCampaignCompleted(17))
             m_campaignAvailable[18] = 1;
-        if (g_game->m_campaign.m_campaignCompleted[18])
+        if (g_game->m_campaign.isCampaignCompleted(18))
             m_campaignAvailable[19] = 1;
         break;
     }
@@ -269,7 +273,7 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
 
     for (int campaign = m_firstCampaign; campaign <= last; ++campaign) {
         SCampaignPreview* preview = &g_campaignPreviews[campaign];
-        if (g_game->m_campaign.m_campaignCompleted[campaign])
+        if (g_game->m_campaign.isCampaignCompleted(campaign))
             m_widgets.push_back(new bitmapBorder(
                 preview->m_x + 6,
                 preview->m_y + 74, 42, 40,

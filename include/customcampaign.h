@@ -111,6 +111,13 @@ public:
     std::string m_campaignFilename;
     std::string getCampaignFileName() const;
     unsigned char m_campaignCompleted[21];
+    // TCampaignWindow's constructor (0x45ea40), the only reader outside
+    // this class, needs its thirteen tests to be inline candidates for
+    // retail's ~vector<MapScore> call. Inferred accessor; name unproven.
+    unsigned char isCampaignCompleted(int campaign) const
+    {
+        return m_campaignCompleted[campaign];
+    }
 
 private:
     // +0x3c / +0x4c: the carry-over hero pools and the artifact pools
@@ -417,6 +424,11 @@ public:
 inline int TCampaignBrief::ScenarioStruct::getStartOptionCount() const
 {
     return getStartOptions()->getCount();
+}
+
+inline int TCampaignBrief::ScenarioStruct::getStartOptionPlayer(int choice) const
+{
+    return getStartOptions()->getPlayer(choice);
 }
 
 // Vftable 0x63d98c, 0x18 bytes: the player at +4 and the bonus list at +8.
