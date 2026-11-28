@@ -304,11 +304,8 @@ void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusPrimarySkill& 
     const TArray<unsigned int, kNumPrimarySkills>& quantities = bonus.getSkills();
     CString skills;
     unsigned int skill = 0;
-    while (true) {
-        if (quantities[skill] > 0)
-            break;
+    while (quantities[skill] <= 0)
         ++skill;
-    }
     skills = TFormattedString("+%d %s", quantities[skill], akHeroPrimarySkillTraits[skill].m_name);
     for (skill++; skill < kNumPrimarySkills; skill++) {
         if (quantities[skill] > 0)
