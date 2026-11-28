@@ -2661,7 +2661,7 @@ void philAI::getTurnAIVars(int whichPlayer)
                 aiGetValueOfArtifact(artifact, whichPlayer);
         }
     }
-    // LEVER (owner decision): the embedded assignment pins the numerator's
+    // FLAGGED FOR CLEANUP (lever accepted for 100%, 2026-11-28): the embedded assignment pins the numerator's
     // reload ahead of the divisor's conversion, as in combatMonsterEvent,
     // resetBoltAngle and getFrenzyValue. It is not a developer spelling.
     double numerator;

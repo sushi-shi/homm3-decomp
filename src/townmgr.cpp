@@ -6884,6 +6884,9 @@ void townManager::moveHero(town* fromTown, town* toTown)
 // hero::getMoraleDescription, aiEnterTown, town::buildBuilding and
 // town::giveEventReward, which all need cb 62. The second is applied:
 // removing all 31 such calls in the image changes no other function's bytes.
+// FLAGGED FOR CLEANUP (lever accepted for 100%, 2026-11-28): Dreamcast's
+// del_Spr_from_Cache() call is omitted (99.97% with it); it reads as a
+// console-port addition but that is not proven.
 VA(0x005d86f0, 0x445A)
 DC_ADDRESS(0x17b48c, 0x3c68)
 MAC_ADDRESS(0x1d6668, 0xa4e0)

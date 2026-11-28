@@ -1763,6 +1763,8 @@ LODFile* ResourceManager::PointToBitmapResource(const char* name)
     return findBitmapResource(name);
 }
 
+// FLAGGED FOR CLEANUP (lever accepted for 100%, 2026-11-28): `--remaining`
+// is stepped and never read; natural forms measure 96.77%.
 // Dreamcast's direct method is one source statement with no recorded
 // locals; Complete walks the selected context's bitmap archive list.
 // Retail keeps a dead `lea` of the 24-byte context row after loading the

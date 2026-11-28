@@ -4178,7 +4178,7 @@ void TSingleSelectionWindow::applyHeaderToGame(
     m_descriptionWidget->setText(header->m_description);
 }
 
-// LEVER (owner decision): two free inline candidates after the second
+// FLAGGED FOR CLEANUP (lever accepted for 100%, 2026-11-28): two free inline candidates after the second
 // applyHeaderToGame are what the traced /Ob2 budgets need (see the note
 // above). Reading the two saved player tables through accessors supplies
 // them and makes updateGameVars exact; no native build shows which two

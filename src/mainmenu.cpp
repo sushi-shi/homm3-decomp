@@ -254,7 +254,7 @@ static int mainMenuHandler(message& msg)
         }
     } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         int hoverID = g_mainMenu->findWidget(msg.m_mouseX, msg.m_mouseY);
-        // LEVER (owner decision): binding a reference to this later local
+        // FLAGGED FOR CLEANUP (lever accepted for 100%, 2026-11-28): binding a reference to this later local
         // makes it a stack-memory symbol for C2, which is promoted again but
         // lets the two formatString temporaries above share [ebp-0x20]
         // (docs/vc6/regalloc.md). No native build shows which later local

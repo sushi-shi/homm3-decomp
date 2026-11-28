@@ -5096,6 +5096,9 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // the replay needs caller cb 515..518 for the first bitset<12>::_Xran's
 // out_of_range constructor to expand as retail does; this form measures 517
 // (531 with the component test nested and both guards braced separately).
+// FLAGGED FOR CLEANUP (lever accepted for 100%, 2026-11-28): the owner row
+// and human byte are read directly instead of through getPlayer()/isHuman();
+// keeping both helpers measures 95.49% (getPlayer only 96.13%).
 VA(0x004e3070, 0x339)
 DC_ADDRESS(0x0d3de4, 0x5c)
 MAC_ADDRESS(0x103da8, 0x2f0)
