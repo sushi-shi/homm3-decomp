@@ -123,7 +123,12 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
                 // chains differ the same way. Byte-flat in all three:
                 // hasBuilding with its AND operands swapped, with an implicit
                 // bool return, and the table under its original name
-                // (?bitNumber@@3PA_JA).
+                // (?bitNumber@@3PA_JA). DC 370..377 and Mac 0x6ccec..0x6cd6c
+                // spell this chain exactly like the mage-guild one below
+                // (unbraced arms in DC; byte-flat), which matches. The first
+                // optimized-function phase gives 83.38%. See "Which AND
+                // operand a hasBuilding chain overwrites" in
+                // docs/vc6/regalloc.md.
                 if (m_townToView->hasBuilding(HALL_VILLAGE_ID, false)) {
                     g_castleBuildOrder[i] = HALL_TOWN_ID;
                 } else if (m_townToView->hasBuilding(HALL_TOWN_ID, false)) {

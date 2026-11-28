@@ -136,6 +136,11 @@ static void updateBackpack(int slot);
 // creature declared in the dwelling loop; an unsigned m_extra constant.
 // Worse: lookup as an upgraded if/else (96.77 -> 96.38). `lookup +=
 // TOWN_DWELLING_COUNT` is +0.01 but Mac 0x134420 adds 7 to item.
+// In the dwelling loop retail stores both halves of the full mask to the
+// frame at the first test and reloads them for the upgrade test; this
+// compile keeps them in eax:ecx. The upgrade id spelled from DWELLING_0_ID
+// or from lookup is byte-flat; assigning lookup before the first test is
+// 96.58%. The hall and fort chains above already have retail's form.
 // E:\gamedcs\overview.cpp:220
 // DC records `iOffsetToSS` at sp+0x54 in the hero-row scope. Its
 // pixel offset is recovered below as item * 36 + 433 (DC 0x1061f2).
@@ -1227,6 +1232,13 @@ static long getLastBackpackIndex(long heroNumber)
 
 // Dreamcast proves these as two ordinary static source helpers, each with the
 // selected hero index, one backpack-bound query and one conditional refresh.
+// TOverviewWindow::windowHandler's residual is in these expansions: where
+// the backpack-bound query is expanded, retail zero-extends the start byte
+// into eax for the three decrement rows and ours into edx; where retail
+// keeps the query as a call (row 3) both use edx. The page arms' scratch
+// registers differ from row 2 on. Byte-flat in decrementBackpackStart: the
+// four orders of the three addends, an int bound, an int hero index, and an
+// explicit unsigned char cast on the stored remainder.
 // Complete emits no standalone copies: VC6 expands every call below, while
 // independently choosing whether to expand get_last_backpack_index within
 // each expansion.

@@ -367,6 +367,64 @@ Its 800 bytes including padding hash to
 `6455c63fd9654a29164f437b046f79695dbbfe16fac31218d43edc97f897499d`;
 the paired traces are in `storage-class-trace/{debug,late-counter-debug}/`.
 
+#### Which AND operand a hasBuilding chain overwrites (2026-11-28)
+
+An else-if chain of `town::hasBuilding(id, false)` tests keeps the 64-bit
+built mask in two registers and ANDs each test's `bitNumber[id]` with it.
+VC6 emits one of three forms per test:
+
+| form | code | destination |
+|---|---|---|
+| A | load both bit halves, `and` each with a mask register | the bit |
+| B | copy each mask half, `and` the copies with the bit | a copy of the mask |
+| D | `and` the mask registers with the bit in place | the mask (its last use) |
+
+Retail's hall chains are B, B, D in `TBottomViewTown::TBottomViewTown`
+(0x4521f0), B, D in `townManager::setupCastle` (0x461190, whose third test
+reads the other mask) and B, B, A in `townManager::main` (0x5d3240); the
+castle chains beside them are A (B, A, A in TBottomViewTown). Our compile gives A, A, A for those hall chains and
+B for the first one or two castle tests. `game::setupDynamicStuff`
+(0x51bd50) has the same two chains and both sides emit A throughout, so the
+form follows context, not the helper.
+
+Measured in TBottomViewTown by replacing only the three hall ids (the fort
+chain 7, 8, 9 and the silo test 15 follow later in the function); forms are
+hall chain | fort chain:
+
+| hall ids | forms | note |
+|---|---|---|
+| 11, 12, 13 (source) | AAA \| BBA | ours |
+| 7, 8, 9 | BBD \| BBD | retail's hall form; ids repeat in the fort chain |
+| x, 20, 21 for x = 0..6, 10..15 | AAA | |
+| x, 20, 21 for x = 7, 8, 9 | BAA | only the id the fort chain repeats |
+| 13, 12, 11 | ABD \| BBA | a test after a larger id takes the mask |
+| 12, 11, 13 | ABA \| BBA | |
+| 22, 20, 21 | ABD | |
+| 11, 15, 13 | AAD \| BBA | |
+| 15, 12, 13 and 16, 12, 13 | ABD \| BAA | retail's fort form |
+| 14, 12, 13 | ABD \| BBA | |
+
+So a test takes the mask as destination when its bit is tested again by a
+neighbouring chain, or when an earlier test of the chain used a larger id.
+A second chain over the hall ids 11, 12, 13 gives, by where it stands:
+
+| second chain | forms (second chain shown in brackets) |
+|---|---|
+| live, before the hall chain | [BBA] BBA \| BAA |
+| unused result (no code left), before the hall chain, after it, or after the name string | BBA \| BAA |
+| live, after the fort chain | AAA \| BBA [AAA] |
+
+The unused-result rows are the closest reproduction of retail's BBD | BAA
+so far (they also move the constructor's inline budget, so their scores
+are not comparable). A separate earlier `if` on bit 15 or 16 does not do it
+(hall AAD, fort AAA), nor do later separate tests of the hall bits, nor a
+function compiled earlier in the unit. Retail's hall form therefore looks
+like its hall tests being present twice in the function's IL before the
+fort chain, which no evidenced source supplies yet. Without effect: int `0` for the flag argument, unbraced arms
+(Dreamcast's form), the hasBuilding body variants listed beside the helper
+in `include/town.h`, and the first-function phase flag (83.38% for
+setupCastle).
+
 #### Destructive operands can constrain wide getter results (2026-10-05)
 
 The mage-guild handler (`0x005ce370`, 96.8650%) distinguishes operand

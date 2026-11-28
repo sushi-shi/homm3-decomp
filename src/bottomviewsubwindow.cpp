@@ -607,6 +607,13 @@ static int g_townArmyCoords[armyGroup::ARMY_GROUP_SLOT_COUNT][2] = {
 // display slot replaces its flattened int* walk and raises 94.0054 to 94.80%.
 // DC line 443 (get_army + GetNumArmies) has its own row before the line-447
 // `if` scope, so the army count is a separate numArmies local (byte-flat).
+// DC 369..374 and 382..389 leave every hall and fort arm unbraced
+// (byte-flat). Residual: retail's hall tests copy, copy and then overwrite
+// the cached mask and its fort tests copy once; this compile loads the bit
+// for all three hall tests and copies twice in the fort chain. With the
+// hall chain testing the fort ids instead it compiles to retail's hall
+// form exactly (99.75% with the wrong bits); see "Which AND operand a
+// hasBuilding chain overwrites" in docs/vc6/regalloc.md.
 VA(0x004521f0, 0x8D4)
 DC_ADDRESS(0x055df4, 0x5c4)
 MAC_ADDRESS(0x060788, 0xcac)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown
@@ -626,13 +633,12 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
     int hallLevel = 0;
-    if (which->hasBuilding(HALL_TOWN_ID, false)) {
+    if (which->hasBuilding(HALL_TOWN_ID, false))
         hallLevel = 1;
-    } else if (which->hasBuilding(HALL_CITY_ID, false)) {
+    else if (which->hasBuilding(HALL_CITY_ID, false))
         hallLevel = 2;
-    } else if (which->hasBuilding(HALL_CAPITOL_ID, false)) {
+    else if (which->hasBuilding(HALL_CAPITOL_ID, false))
         hallLevel = 3;
-    }
 
     std::string townSizeName = g_townSizeNames[hallLevel];
 
@@ -640,15 +646,14 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         hallLevel, 0, false, 0, 0x10));
 
     int fortLevel;
-    if (which->hasBuilding(CASTLE_FORT_ID, false)) {
+    if (which->hasBuilding(CASTLE_FORT_ID, false))
         fortLevel = 0;
-    } else if (which->hasBuilding(CASTLE_CITADEL_ID, false)) {
+    else if (which->hasBuilding(CASTLE_CITADEL_ID, false))
         fortLevel = 1;
-    } else if (which->hasBuilding(CASTLE_CASTLE_ID, false)) {
+    else if (which->hasBuilding(CASTLE_CASTLE_ID, false))
         fortLevel = 2;
-    } else {
+    else
         fortLevel = 3;
-    }
 
     m_widgets.push_back(new iconWidget(105, 31, 34, 34, 0x7d4, "itmcls.def",
         fortLevel, 0, false, 0, 0x10));

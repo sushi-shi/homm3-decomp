@@ -168,7 +168,10 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // homes and group shares the attack max temp's bin (97.48 -> 97.65).
     // The full DC order scores 97.20, alignment-first 97.48 (over 200 orders
     // measured). Residual: retail reloads side into EAX (1-side in ECX)
-    // where this compile swaps the two in that block.
+    // where this compile swaps the two in that block: retail stores the
+    // owner before it reloads side, ours reloads side first. ourTown after
+    // enemyHero is byte-flat, ourTown before the owner 97.58%, and a named
+    // `1 - side` 97.14%.
     // DC lines 98/107 append the returned strings, and retail retains the
     // append calls. Complete reloads ArmyType for each added creature arg.
     m_moraleHelp += group->getMoraleDescription(
