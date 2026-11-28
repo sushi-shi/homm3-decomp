@@ -6004,10 +6004,18 @@ void advManager::updateRadar(bool updateFlag, bool partialUpdate,
 // every retained call agree (zCell only on getCell's invalid branch, both
 // assign _Eos and the diggable append expand, the quest _Tidy expands) and
 // scores 94.58; the missing ~500 tuples (or ~11 fewer depth-1 sites after
-// getCell) are not recovered. Rejected: ARENA without testFlag (90.53),
-// getMine-free lighthouse vector indexing (flat). That window predates the
-// direct id reads; the spring through the accessor adds the one site that
-// lands in it (94.71) but narrows the spring's load, which retail does not.
+// getCell) are not recovered. Rejected: getMine-free lighthouse vector
+// indexing (flat). That window predates the direct id reads; the spring
+// through the accessor adds the one site that lands in it (94.71 then) but
+// narrows the spring's load, which retail does not.
+// DC7618 is one arena statement, visited = arenaFlags & (1 << id), with the
+// test at 7620; splitting it through testFlag measured 90.53 better under
+// the accessor model and 3.7 worse under direct reads (93.37 -> 97.07 once
+// joined). testFlag keeps only DC7563's dead zero store. The arena's two
+// sprintf blocks are what the other visit arms cross-jump into.
+// Still open at 97.07: getCell's zCell choice (root cb 7065, depth-2 budget
+// 118 against retail's 115..117) and the null register at entry (ours ECX,
+// retail EDI, which retail then pushes three times for zCell(0, 0, 0)).
 VA(0x004137c0, 0x25A0)
 DC_ADDRESS(0x015fdc, 0x2c50)
 MAC_ADDRESS(0x0145e8, 0x1fe0)  // linkorder
