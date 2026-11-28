@@ -49,7 +49,12 @@ public:
     virtual ~TCampaignSetWindow();
     virtual int handleMessage(message& msg);
     void doModal();
+
+    // doCampaignWindow's only instance occupies 0x50 bytes of its frame
+    // ([ebp-0x60..-0x11]); no retail instruction reads or writes the last
+    // four, and no other site sizes the class. Name and type are inferred.
+    int m_unused;
 };
-SIZE(TCampaignSetWindow, 0x4c);
+SIZE(TCampaignSetWindow, 0x50);
 
 #endif  // HOMM3_CAMPAIGN_H

@@ -622,6 +622,10 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
     if (yDifference == 0)
         slope = 100.0f;
     else {
+        // FLAGGED FOR CLEANUP: `volatile` is a codegen lever here; nothing
+        // shares the value. It pins the numerator's load between the two
+        // int->float conversions (100%). The natural float components
+        // `horizontal / vertical` are Mac-exact and score 98.5874%.
         volatile float horizontal = static_cast<float>(xDifference);
         slope = horizontal / yDifference;
     }

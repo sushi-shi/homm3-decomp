@@ -1887,6 +1887,10 @@ int game::setupPuzzlePieces(int whichPlayer, int countOnly)
 
     piecesRemoved = getNumObelisks(whichPlayer);
     extraPieces = g_obeliskCount - m_numObelisks;
+    // FLAGGED FOR CLEANUP: `volatile` is a codegen lever here; nothing
+    // shares the value. The natural form, static_cast<float>(
+    // getNumObelisks(whichPlayer)) / m_numObelisks, scores 98.9637%;
+    // Dreamcast names only the two float locals declared above.
     volatile float foundObelisks =
         static_cast<float>(getNumObelisks(whichPlayer));
     percentObelisksFound = foundObelisks / m_numObelisks;
@@ -4484,6 +4488,18 @@ void game::matchUndergroundGates()
 // 2734..2753 against this source's 2907, so retail's body is about 160
 // tuples lighter; DC's call roster (6 cell, 5 type_point, 4 mine [] calls)
 // agrees with this source and does not locate the difference.
+// 2026-11-28 solver (`predict-inline --tu game --root randomizeEvents
+// --solve`): the nearest single edit is +18..+20 tuples at each of the six
+// NewfullMap::cell(x, y, z) sites, which leaves one call different. Dreamcast
+// has one unrecorded line in both cell(int, int, int) overloads
+// (MapCell.h:890, 896) that cell(type_point) lacks (906/907). A release-
+// elided `x < m_size && y < m_size` there (cell cb 37 -> 57) makes retail's
+// setWagon(resource, amount) call and body return (100%) and lifts this
+// function to 98.13%, but it lowers 62 other functions' CUR tree-wide, 57 of
+// them from 100% (hero::canLand 46.92%, NewfullMap::placeObject 47.18%), so
+// the invariant is not in cell() and it is not kept. `x >= 0 && y >= 0 &&
+// z >= 0` (cb 54) is too light: setWagon(artifact) expands. The missing
+// spend belongs to this caller's own cell lookups.
 VA(0x004c0cc0, 0x1668)
 DC_ADDRESS(0x0ac910, 0x1278)
 MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order

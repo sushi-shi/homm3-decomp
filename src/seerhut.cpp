@@ -22,17 +22,6 @@
 #include "textresource.h"
 #include "winmgr.h"
 
-VA(0x00573580, 0x13)
-DC_ADDRESS(0x0f4b38, 0x2a)
-MAC_ADDRESS(0x169ac4, 0x48)
-TSeerHut::TSeerHut()
-{
-    m_quest = NULL;
-    m_visitedPlayers = 0;
-    m_nameIndex = 0;
-    m_completedByPlayer = 0;
-}
-
 // CRT 0x56c3d0 binds this reference to the text loader's vector.
 // The five other retail references only read the binding.
 DATA(0x0069fab8) std::vector<std::string>& g_seerHutNameList = g_seerHutNames;
@@ -604,6 +593,11 @@ std::string type_skill_quest::skillRequirementText(
 // the indexed row local) is restored here as its own inlined helper. Its
 // emitted row computation is identical; the two locals make the inlined
 // callee cost > 40, which is what starves the second assign in retail.
+// FLAGGED FOR CLEANUP: a duplicated helper. This is a second body of
+// type_quest::questTexts whose two locals steer setDefaultText's inline
+// budget (100%). Calling questTexts() scores 49.3134%; Mac 0x165390 names
+// no such helper, and the shared edit to questTexts cost four exact
+// functions (2026-10-10).
 static inline const TSeerHutQuestText& skillQuestTexts(type_quest& quest)
 {
     const TSeerHutTextColumn* column = quest.getTextColumn();
@@ -1965,6 +1959,23 @@ int TQuestGuard::save(TAbstractFile* outfile)
         unsigned char visited = m_visitedPlayers;
         return outfile->write(&visited, sizeof(visited));
     }
+}
+
+// Dreamcast defines this constructor in seerhut.h (line 108). Complete
+// defines it here: Windows links its body at 0x573580 and Mac at 0x169ac4,
+// each directly between TQuestGuard::save (0x573520, Mac 0x1699ec..0x169ac4)
+// and TSeerHut::getValue (0x5735a0, Mac 0x169b0c). Both retail references
+// are calls from mapcell.cpp's readers (0x4fde5d, 0x50315a).
+// E:\gamedcs\seerhut.h:108
+VA(0x00573580, 0x13)
+DC_ADDRESS(0x0f4b38, 0x2a)
+MAC_ADDRESS(0x169ac4, 0x48)
+TSeerHut::TSeerHut()
+{
+    m_quest = NULL;
+    m_visitedPlayers = 0;
+    m_nameIndex = 0;
+    m_completedByPlayer = 0;
 }
 
 VA(0x005735a0, 0xC3)

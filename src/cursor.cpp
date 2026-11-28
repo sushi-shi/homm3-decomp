@@ -438,7 +438,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
     yInc = g_normalDirTable[direction].m_y;
 
     triggerPoint.m_x = curr->m_x + xInc;
-    triggerPoint.m_y = curr->m_y + (short)yInc;
+    triggerPoint.m_y = curr->m_y + static_cast<short>(yInc);
     triggerPoint.m_z = curr->m_z;
 
     g_completeDrawEnabled = getMoveShowIt(curr, direction);

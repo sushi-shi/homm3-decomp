@@ -2,7 +2,7 @@
 # rolls them DOWN-only, `board --update` is the only bless.
 C-style casts	0
 reinterpret_casts	24
-volatile qualifiers	0
+volatile qualifiers	2
 inline-gate artifacts	0
 inline-depth pins	0
 end-position inserts	1

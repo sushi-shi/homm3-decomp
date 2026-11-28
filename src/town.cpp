@@ -997,6 +997,11 @@ void town::destroyExtraCapitol()
 // per-TU.
 void checkEndGame(int forceWin);
 
+// FLAGGED FOR CLEANUP: a duplicated helper. This repeats
+// town::updateFullBuildingMask with its first statement split in two, to
+// change buildBuilding's register allocation (100%). Calling the canonical
+// helper scores 99.5794%; Dreamcast shows one statement before the loop
+// (town.cpp:2087), so the split has no source support.
 struct BuildBuildingMaskAccess : town
 {
     static void updateFullBuildingMaskSnapshot(town* t)

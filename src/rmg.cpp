@@ -5558,42 +5558,19 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
 // vector::insert(it, x) sites expand and leave their insert(it, 1, x) calls
 // in both images, matching Mac's two word fill inserts. Count inserts in the
 // caller instead expand the cost insertion in the game.
-// The distance count and the queue/template/connection reads go through
-// ordinary accessors. Their first expanded site divides the caller budget
-// before the nested vector<short>::size() is considered, so that entry size
-// stays a call while the later top-level size sites still inline. Native
+// The distance count and the popped zone's template slot go through
+// TRmgZone's getZoneDistanceCount and getTemplateZone. The count accessor's
+// expanded site divides the caller budget before its nested
+// vector<short>::size() is considered, so that entry size stays retail's
+// call (0x54c3d0) while the later top-level size sites still inline; the
+// replay needs that accessor plus one more top-level candidate, which the
+// slot accessor supplies. Mac 0x23f218 keeps 21 calls and none at either
+// read, as in-class accessors expand there. The connection subscripts, the
+// generator's zone subscript and the queue size are direct: file-local
+// wrappers around them are byte-flat here and add four Mac calls retail does
+// not have. Native
 // editor 0x4a35ce keeps the pending end in EAX through back() at 0x4a35e5;
 // it does not reload that pointer.
-static int zoneDistanceCount(const TRmgZone* zone)
-{
-    return zone->m_zoneDistances.size();
-}
-
-static TRmgZone* generatedZone(const type_random_map_generator* self, int index)
-{
-    return self->m_zones[index];
-}
-
-static TRmgTemplateZone* templateZoneOf(const TRmgZone* zone)
-{
-    return zone->m_templateZone;
-}
-
-static TRmgZoneConnection& connectionAt(TRmgTemplateZone* slot, unsigned int index)
-{
-    return slot->m_connections[index];
-}
-
-static unsigned int connectionCount(const TRmgTemplateZone* slot)
-{
-    return slot->m_connections.size();
-}
-
-static int queuedCount(const std::vector<TRmgZone*>& pending)
-{
-    return pending.size();
-}
-
 VA(0x0053D8E0, 0x1EC)
 MAC_ADDRESS(0x23f218, 0x2f0) // anchor-callee 0x53dcd2/0x53e020; Complete-only, ret 4
 VA_AT(h3maped, 0x004a3554, 0x1bc)
@@ -5601,21 +5578,21 @@ void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
 {
     std::vector<TRmgZone*> pending;
     std::vector<int> costs;
-    int distanceCount = zoneDistanceCount(zone);
+    int distanceCount = zone->getZoneDistanceCount();
     for (int column = 0; column < distanceCount; ++column) {
         pending.push_back(zone);
         costs.push_back(0);
         while (pending.size() > 0) {
             TRmgZone* current = pending.back();
             pending.pop_back();
-            TRmgTemplateZone* slot = templateZoneOf(current);
+            TRmgTemplateZone* slot = current->getTemplateZone();
             costs.pop_back();
             int distance = current->getZoneDistance(column) + 1;
-            for (unsigned int connection = 0; connection < connectionCount(slot); ++connection) {
-                TRmgZone* next = generatedZone(this, connectionAt(slot, connection).m_destination->m_zoneIndex);
+            for (unsigned int connection = 0; connection < slot->m_connections.size(); ++connection) {
+                TRmgZone* next = m_zones[slot->m_connections[connection].m_destination->m_zoneIndex];
                 if (next->getZoneDistance(column) > distance) {
                     next->setZoneDistance(column, distance);
-                    int last = queuedCount(pending);
+                    int last = pending.size();
                     int first = 0;
                     int middle;
                     while (1) {
@@ -5721,15 +5698,15 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
              if (clipped.getX() < bounds.m_maximumX) {
               if (clipped.getY() >= 0) {
                if (clipped.getY() < bounds.m_maximumY) {
-                connection.m_destination = templateZoneOf(destination);
+                connection.m_destination = destination->getTemplateZone();
                 connection.m_connected = 1;
                 connection.m_value = 0;
                 connection.m_placeBorderObjects = 0;
                 connection.m_unguarded = 1;
-                templateZoneOf(zone)->m_connections.push_back(connection);
-                TRmgTemplateZone* zoneSlot = templateZoneOf(zone);
+                zone->getTemplateZone()->m_connections.push_back(connection);
+                TRmgTemplateZone* zoneSlot = zone->getTemplateZone();
                 connection.m_destination = zoneSlot;
-                templateZoneOf(destination)->m_connections.push_back(connection);
+                destination->getTemplateZone()->m_connections.push_back(connection);
                }
               }
              }
@@ -5771,15 +5748,15 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             if (column < originalZones)
                 continue;
             TRmgZoneConnection connection;
-            connection.m_destination = templateZoneOf(destination);
+            connection.m_destination = destination->getTemplateZone();
             connection.m_connected = 0;
             connection.m_value = 0;
             connection.m_placeBorderObjects = 0;
             connection.m_unguarded = 1;
-            templateZoneOf(zone)->m_connections.push_back(connection);
-            TRmgTemplateZone* zoneSlot = templateZoneOf(zone);
+            zone->getTemplateZone()->m_connections.push_back(connection);
+            TRmgTemplateZone* zoneSlot = zone->getTemplateZone();
             connection.m_destination = zoneSlot;
-            templateZoneOf(destination)->m_connections.push_back(connection);
+            destination->getTemplateZone()->m_connections.push_back(connection);
             propagateZoneDistances(destination);
         }
     }
@@ -11133,13 +11110,13 @@ void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
     while (pending.size() > 0) {
         TRmgZone* current = pending.back();
         pending.pop_back();
-        TRmgTemplateZone* slot = templateZoneOf(current);
+        TRmgTemplateZone* slot = current->getTemplateZone();
         int distance = current->getQuestPlacementScore() + 1;
-        for (index = 0; index < connectionCount(slot); ++index) {
-            TRmgZone* next = generatedZone(this, connectionAt(slot, index).m_destination->m_zoneIndex);
+        for (index = 0; index < slot->m_connections.size(); ++index) {
+            TRmgZone* next = m_zones[slot->m_connections[index].m_destination->m_zoneIndex];
             if (next->getQuestPlacementScore() > distance) {
                 next->setQuestPlacementScore(distance);
-                int last = queuedCount(pending);
+                int last = pending.size();
                 int first = 0;
                 int middle;
                 while (1) {
