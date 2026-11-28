@@ -232,7 +232,7 @@ bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
     if (image)
         m_image = ResourceManager::GetBitmap816(image);
     else
-        m_image = 0;
+        m_image = NULL;
 }
 
 VA_COMPGEN(0x00450360, 0x21, SCALAR_DELETING_DTOR, bitmapBorder)
@@ -306,7 +306,7 @@ DC_ADDRESS(0x0549c0, 0x2a)
 MAC_ADDRESS(0x05ea48, 0x74)
 void bitmapBorder::setImage(const char* bitmapName)
 {
-    if (m_image != 0) {
+    if (m_image != NULL) {
         if (strcmp(m_image->get_Name(), bitmapName) == 0)
             return;
         ResourceManager::Dispose(m_image);
@@ -360,7 +360,7 @@ bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
     if (image)
         m_image = ResourceManager::GetBitmap16(image);
     else
-        m_image = 0;
+        m_image = NULL;
 }
 
 VA_COMPGEN(0x00450720, 0x21, SCALAR_DELETING_DTOR, bitmapBorder16)
@@ -427,7 +427,7 @@ DC_ADDRESS(0x054c6c, 0x2c)
 MAC_ADDRESS(0x05ee3c, 0x74)
 void bitmapBorder16::setImage(const char* bitmapName)
 {
-    if (m_image != 0) {
+    if (m_image != NULL) {
         if (strcmp(m_image->get_Name(), bitmapName) == 0)
             return;
         ResourceManager::Dispose(m_image);

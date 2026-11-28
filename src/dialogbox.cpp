@@ -151,7 +151,7 @@ MAC_COMPGEN_ADDRESS(0x0a23a8, 0x60, IMPLICIT_DTOR, CTextDialog)
 // Original: CTextDialog::CTextDialog; dialogbox.cpp:139
 DC_ADDRESS(0x081d8c, 0x74)
 CTextDialog::CTextDialog(const char* text, font* currentFont, unsigned winType)
-    : TDialogBox(winType), m_textWidget(0)
+    : TDialogBox(winType), m_textWidget(NULL)
 {
     setup(text, currentFont);
 }
@@ -162,7 +162,7 @@ MAC_ADDRESS(0x0a20b4, 0x40)
 CTextDialog::CTextDialog(unsigned winType)
     : TDialogBox(winType)
 {
-    m_textWidget = 0;
+    m_textWidget = NULL;
 }
 
 VA(0x00490820, 0x26B)

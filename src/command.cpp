@@ -304,7 +304,7 @@ int combatManager::main(message& msg)
                                bool* wasCompressed);
         void receiveChat(char* chat, int fromWho);
 
-        CNetMsg* netMsg = GetRemoteData(1, 0);
+        CNetMsg* netMsg = GetRemoteData(1, NULL);
         if (netMsg) {
             CMessageKill killMsg(netMsg);
             switch (netMsg->m_subType) {
@@ -336,7 +336,7 @@ int combatManager::main(message& msg)
             case RS_PLAYER_DROPPED:
                 if (handleCombatPlayerDrop(
                         static_cast<CPlayerDropMsg*>(netMsg)->m_dpid, msg)) {
-                    killMsg.setMessage(0);
+                    killMsg.setMessage(NULL);
                     m_netMsgHandlerPause->setAbortPopupMsg(netMsg);
                     return MESSAGE_DISPATCH_FORWARD;
                 }
@@ -425,7 +425,7 @@ void combatManager::setCombatDirections(int hex)
         if (!validHex(firstHex))
             continue;
         firstIsValid = m_cells[firstHex].m_validMove
-                && currentArmy->canFit(firstHex, 0, 0)
+                && currentArmy->canFit(firstHex, 0, NULL)
                 && !g_searchArray->isMoat(firstHex);
         if (firstIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
@@ -443,7 +443,7 @@ void combatManager::setCombatDirections(int hex)
 
         secondHex = firstHex - currentArmy->offsetToFront(-1);
         secondIsValid = m_cells[secondHex].m_validMove
-                && currentArmy->canFit(secondHex, 0, 0)
+                && currentArmy->canFit(secondHex, 0, NULL)
                 && !g_searchArray->isMoat(secondHex);
         if (secondIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
@@ -711,7 +711,7 @@ bool combatManager::isComputerAction(const army* currentArmy)
             return 0;
         if (m_autoCombatOn && g_config.m_combatBallista)
             return 1;
-        if (owner == 0)
+        if (owner == NULL)
             return 1;
         if (owner->getSecondarySkill(eSecSkillBattlefieldBallistics) == 0)
             return 1;
@@ -888,7 +888,7 @@ int combatManager::processCombatMsg(message& msg)
                 break;
 
             case TCombatWindow::COMBAT_PLACEMENT_COMMAND_1_ID:
-                m_lastMovedArmy = 0;
+                m_lastMovedArmy = NULL;
                 if (g_remoteOn) {
                     transmitRemoteData(
                         &CEndPlacementPhaseMsg(),
@@ -1188,7 +1188,7 @@ void combatManager::resetRound()
         m_combatWindow->combatMessage(
             (*g_generalText)[GENERAL_TEXT_COMBAT_ROUND], 1, 0);
     }
-    m_lastMovedArmy = 0;
+    m_lastMovedArmy = NULL;
 }
 
 VA(0x00476200, 0xE1)
@@ -1404,7 +1404,7 @@ int combatManager::getCommand(int newIndex)
         currentArmy->groupToAttack = cell->m_armySide;
         currentArmy->indexToAttack = cell->m_armySlot;
 
-        if (currentArmy->canShoot(0)) {
+        if (currentArmy->canShoot(NULL)) {
             if (currentArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 return SELECT_SPECIAL_ATTACK;
             if (shotIsThroughWall(currentArmy, currentArmy->m_gridIndex,
@@ -1473,7 +1473,7 @@ int combatManager::rightClick(int newIndex)
             m_combatWindow->m_heroSubWindows[1]->update(*m_heroes[1], m_heroes[0],
                                                     m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
             m_combatWindow->m_heroSubWindows[1]->show();
-            g_windowManager->doQuickView(0);
+            g_windowManager->doQuickView(NULL);
             if (g_config.m_combatArmyInfoLevel)
                 return 0;
             m_combatWindow->m_heroSubWindows[1]->unShow();
@@ -1486,7 +1486,7 @@ int combatManager::rightClick(int newIndex)
             m_combatWindow->m_heroSubWindows[0]->update(*m_heroes[0], m_heroes[1],
                                                     m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
             m_combatWindow->m_heroSubWindows[0]->show();
-            g_windowManager->doQuickView(0);
+            g_windowManager->doQuickView(NULL);
             if (g_config.m_combatArmyInfoLevel)
                 return 0;
             m_combatWindow->m_heroSubWindows[0]->unShow();
@@ -1831,7 +1831,7 @@ void combatManager::doVictory(int winningGroup)
         {
             TCombatResultsWindow resultsWindow(
                 m_heroes[0], m_heroes[1], winningGroup, winningGroup,
-                m_defendingTown != 0, experience);
+                m_defendingTown != NULL, experience);
             g_soundManager->startMP3(
                 g_combatResultMusic[g_combatResult], 1, 1);
             resultsWindow.doModal();
@@ -1845,7 +1845,7 @@ void combatManager::doVictory(int winningGroup)
     } else if (!g_goSolo) {
         TCombatResultsWindow resultsWindow(
             m_heroes[0], m_heroes[1], lastAliveSideIndex, winningGroup,
-            m_defendingTown != 0, 0);
+            m_defendingTown != NULL, 0);
         g_soundManager->startMP3(
             g_combatResultMusic[g_combatResult], 1, 1);
         resultsWindow.doModal();
@@ -1932,7 +1932,7 @@ void combatManager::turnOffSelector(bool drawIt)
                                m_lastMovedArmy->index);
     }
 
-    m_lastMovedArmy = 0;
+    m_lastMovedArmy = NULL;
     if (drawIt)
         drawFrame(1, 1, 0, 0, 1, 0);
 }
@@ -1951,7 +1951,7 @@ void combatManager::checkChangeHighlighter(int currentIndex)
     if (validHex(currentIndex) && m_cells[currentIndex].hasArmy())
         currentArmy = m_cells[currentIndex].getArmy();
     else
-        currentArmy = 0;
+        currentArmy = NULL;
 
     if (currentArmy && currentArmy->m_gridIndex == m_highlighterIndex)
         return;
@@ -2400,7 +2400,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         if (!transmitRemoteData(&combatMsg,
                                 g_combatControlNetPos[1 - m_currentSide],
                                 false, true))
-            shutDown(0);
+            shutDown(NULL);
     }
 
     army* currentArmy = getCurrentArmy();
@@ -2718,7 +2718,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
         }
     } }
     if (slot == -1 || m_cells[gridIndex].hasArmy())
-        return 0;
+        return NULL;
 
     army* newArmy = &m_armies[side][slot];
     newArmy->init(monType, monQty, m_heroes[side], side, slot, gridIndex,

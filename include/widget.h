@@ -169,7 +169,7 @@ public:
 
     // DC Widget.h:225-226: static hover reset.
     DC_ADDRESS(0x12859c, 0xc)
-    static void clearHoverWidget() { s_lastHoverWidget = 0; }
+    static void clearHoverWidget() { s_lastHoverWidget = NULL; }
 
     // Dreamcast Widget.h:231; inlined in every caller.
     DC_ADDRESS(0x06a3e8, 0x4)

@@ -109,7 +109,7 @@ DC_ADDRESS(0x0ea578, 0x72)
 MAC_ADDRESS(0x11cbc4, 0xb4)
 TMainMenu::~TMainMenu()
 {
-    g_mainMenu = 0;
+    g_mainMenu = NULL;
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;

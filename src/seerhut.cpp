@@ -27,7 +27,7 @@ DC_ADDRESS(0x0f4b38, 0x2a)
 MAC_ADDRESS(0x169ac4, 0x48)
 TSeerHut::TSeerHut()
 {
-    m_quest = 0;
+    m_quest = NULL;
     m_visitedPlayers = 0;
     m_nameIndex = 0;
     m_completedByPlayer = 0;
@@ -1772,7 +1772,7 @@ VA(0x00572b50, 0xD)
 MAC_ADDRESS(0x1691b8, 0x10)
 TQuestGuard::TQuestGuard()
 {
-    m_quest = 0;
+    m_quest = NULL;
     m_visitedPlayers = 0;
 }
 
@@ -1816,7 +1816,7 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
 
     m_quest->takePayment(currentHero);
     g_advManager->eraseAndFizzle(eventCell, point, 1);
-    m_quest = 0;
+    m_quest = NULL;
 }
 
 // The quest log's line for this guard, and the ONE reader of the text
@@ -1909,7 +1909,7 @@ type_quest* createQuest(int questType, bool flags)
     case QUEST_BELONG_TO_PLAYER:
         return new type_belong_to_player_quest(flags);
     }
-    return 0;
+    return NULL;
 }
 
 VA(0x00573480, 0x52)
@@ -2033,7 +2033,7 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
 
         m_quest->takePayment(currentHero);
         m_reward.giveReward(currentHero, humanPlayer);
-        m_quest = 0;
+        m_quest = NULL;
         return;
     }
 }
@@ -2072,7 +2072,7 @@ void TSeerHut::doCompletionDialog(
         || g_windowManager->m_dialogReturn == DIALOG_RETURN_CHOICE_1) {
         m_quest->takePayment(currentHero);
         m_reward.giveReward(currentHero, humanPlayer);
-        m_quest = 0;
+        m_quest = NULL;
     }
 }
 
@@ -2460,7 +2460,7 @@ void TSeerHut::read(TAbstractFile* infile)
         // and kept for the artifact constructor.
         int artifact = readValue<signed char>(infile);
         if (artifact == -1) {
-            m_quest = 0;
+            m_quest = NULL;
         } else {
             m_quest = new type_artifact_quest(
                 static_cast<TArtifact>(artifact), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
@@ -2592,7 +2592,7 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
         int textRow = readValue<unsigned char>(infile);
         m_nameIndex = readValue<unsigned char>(infile);
         if (noQuest || intBuffer == -1)
-            m_quest = 0;
+            m_quest = NULL;
         else
             m_quest = new type_artifact_quest(
                 static_cast<TArtifact>(intBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */

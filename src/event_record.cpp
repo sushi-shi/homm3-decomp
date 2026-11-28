@@ -239,7 +239,7 @@ void type_record_teleport::replay(bool draw)
 {
     setPlayer(m_playerId);
 
-    g_advManager->teleportTo(m_currentHero, m_destination, 0, 0, draw, 1);
+    g_advManager->teleportTo(m_currentHero, m_destination, NULL, 0, draw, 1);
 }
 
 // E:\gamedcs\event_record.cpp:237
@@ -1301,9 +1301,9 @@ void game::playRecordedEvents()
     if (actingPlayer->m_currTownId >= 0)
         currTown = g_game->getTown(actingPlayer->m_currTownId);
     else
-        currTown = 0;
+        currTown = NULL;
 
-    if (currHero == 0 && currTown == 0) {
+    if (currHero == NULL && currTown == NULL) {
         if (actingPlayer->m_numHeroes > 0) {
             currHero = g_game->getHero(actingPlayer->m_heroes[0]);
         } else {
@@ -1349,9 +1349,9 @@ void game::playRecordedEvents()
     g_completeDrawEnabled = 1;
     setPlayer(savedPlayer);
 
-    if (currHero != 0)
+    if (currHero != NULL)
         g_advManager->setHeroContext(currHero->m_id, 0, 0, 1);
-    if (currTown != 0)
+    if (currTown != NULL)
         g_advManager->setTownContext(currTown->m_id, 0, 1);
 
     g_config.m_walkSpeed[0] = savedWalkSpeed;
@@ -1378,7 +1378,7 @@ unsigned char game::replayAvailable() const
 // dispatch is `call dword ptr [ecx*4 + 0x6776b0]` after a 1..11 range check.
 DATA(0x006776b0)
 type_event_record* (*g_recordCreators[12])() = {
-    0,
+    NULL,
     type_record_move_hero::create,
     type_record_teleport::create,
     type_record_claim_mine::create,

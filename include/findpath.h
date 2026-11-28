@@ -127,8 +127,8 @@ public:
     DC_ADDRESS(0x027fe8, 0x16)
     pathCell* getHex(long x) const
     {
-        if (m_cellData == 0)
-            return 0;
+        if (m_cellData == NULL)
+            return NULL;
         return &m_cellData[x];
     }
 

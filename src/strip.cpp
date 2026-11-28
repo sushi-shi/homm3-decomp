@@ -65,7 +65,7 @@ void strip::drawIcons(unsigned char update, TCreatureType divideCreature)
 
     drawOwner(m_iconFrame);
     for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-        if (m_group == 0) {
+        if (m_group == NULL) {
             drawMonster(i, 0);
         } else {
             int type = m_group->m_armies[i];

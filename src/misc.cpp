@@ -343,7 +343,7 @@ void setGameDefaults()
     strcat(g_regAppPath,
         DATA_COMPGEN(0x00677dac, prefsPathSeparator, "\\"));
 
-    HKEY key = 0;
+    HKEY key = NULL;
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, g_prefRegKey, 0,
             KEY_ALL_ACCESS, &key) == ERROR_SUCCESS) {
         RegSetValueExA(key, g_prefAppPath, 0, REG_SZ,
@@ -423,7 +423,7 @@ static void readPrefsFromRegistry()
         const char* showIntroName = g_prefShowIntro;
         HKEY showIntroKey = key;
         showIntroSize = 4;
-        if (RegQueryValueExA(showIntroKey, showIntroName, 0, 0,
+        if (RegQueryValueExA(showIntroKey, showIntroName, NULL, NULL,
                 static_cast<BYTE*>(static_cast<void*>(&showIntro)),
                 &showIntroSize) != ERROR_SUCCESS) {
             showIntro = 1;
@@ -434,7 +434,7 @@ static void readPrefsFromRegistry()
         g_showIntro = showIntro;
 
         cbData = 4;
-        if (RegQueryValueExA(key, g_prefMusicVolume, 0, &type,
+        if (RegQueryValueExA(key, g_prefMusicVolume, NULL, &type,
                 static_cast<BYTE*>(static_cast<void*>(
                     &g_config.m_musicVolume)), &cbData)
                 != ERROR_SUCCESS) {
@@ -445,124 +445,124 @@ static void readPrefsFromRegistry()
             return;
         }
 
-        RegQueryValueExA(key, g_prefMusicVolume, 0, &type,
+        RegQueryValueExA(key, g_prefMusicVolume, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_musicVolume)), &cbData);
-        RegQueryValueExA(key, g_prefSoundVolume, 0, &type,
+        RegQueryValueExA(key, g_prefSoundVolume, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_soundVolume)), &cbData);
-        RegQueryValueExA(key, g_prefLastMusicVolume, 0, &type,
+        RegQueryValueExA(key, g_prefLastMusicVolume, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_lastMusicVolume)), &cbData);
-        RegQueryValueExA(key, g_prefLastSoundVolume, 0, &type,
+        RegQueryValueExA(key, g_prefLastSoundVolume, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_lastSoundVolume)), &cbData);
-        RegQueryValueExA(key, g_prefWalkSpeed, 0, &type,
+        RegQueryValueExA(key, g_prefWalkSpeed, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_walkSpeed[1])), &cbData);
-        RegQueryValueExA(key, g_prefComputerWalkSpeed, 0, &type,
+        RegQueryValueExA(key, g_prefComputerWalkSpeed, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_walkSpeed[0])), &cbData);
-        RegQueryValueExA(key, g_prefShowRoute, 0, &type,
+        RegQueryValueExA(key, g_prefShowRoute, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_showRoute)), &cbData);
-        RegQueryValueExA(key, g_prefMoveReminder, 0, &type,
+        RegQueryValueExA(key, g_prefMoveReminder, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_moveReminder)), &cbData);
-        RegQueryValueExA(key, g_prefQuickCombat, 0, &type,
+        RegQueryValueExA(key, g_prefQuickCombat, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_quickCombat)), &cbData);
-        RegQueryValueExA(key, g_prefVideoSubtitles, 0, &type,
+        RegQueryValueExA(key, g_prefVideoSubtitles, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_videoSubtitles)), &cbData);
-        RegQueryValueExA(key, g_prefTownOutlines, 0, &type,
+        RegQueryValueExA(key, g_prefTownOutlines, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_townOutlines)), &cbData);
-        RegQueryValueExA(key, g_prefAnimateSpellBook, 0, &type,
+        RegQueryValueExA(key, g_prefAnimateSpellBook, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_animateSpellBook)), &cbData);
-        RegQueryValueExA(key, g_prefWindowScrollSpeed, 0, &type,
+        RegQueryValueExA(key, g_prefWindowScrollSpeed, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_windowScrollSpeed)), &cbData);
-        RegQueryValueExA(key, g_prefBlackoutComputer, 0, &type,
+        RegQueryValueExA(key, g_prefBlackoutComputer, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_blackoutComputer)), &cbData);
-        RegQueryValueExA(key, g_prefFirstTime, 0, &type,
+        RegQueryValueExA(key, g_prefFirstTime, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_firstTimeThrough)), &cbData);
-        RegQueryValueExA(key, g_prefTestDecomp, 0, &type,
+        RegQueryValueExA(key, g_prefTestDecomp, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_testDecomp)), &cbData);
-        RegQueryValueExA(key, g_prefTestRead, 0, &type,
+        RegQueryValueExA(key, g_prefTestRead, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_testRead)), &cbData);
-        RegQueryValueExA(key, g_prefTestBlit, 0, &type,
+        RegQueryValueExA(key, g_prefTestBlit, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_testBlit)), &cbData);
-        RegQueryValueExA(key, g_prefBinkVideo, 0, &type,
+        RegQueryValueExA(key, g_prefBinkVideo, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_binkVideo)), &cbData);
 
         cbData = 4;
-        RegQueryValueExA(key, g_prefUniqueSystemId, 0, &type,
+        RegQueryValueExA(key, g_prefUniqueSystemId, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 g_config.cUniqueSystemID)), &cbData);
         g_config.cUniqueSystemID[3] = 0;
         cbData = 31;
-        RegQueryValueExA(key, g_prefNetworkDefaultName, 0, &type,
+        RegQueryValueExA(key, g_prefNetworkDefaultName, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 g_config.m_networkDefaultName)), &cbData);
         cbData = 4;
-        RegQueryValueExA(key, g_prefAutosave, 0, &type,
+        RegQueryValueExA(key, g_prefAutosave, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_autosave)), &cbData);
-        RegQueryValueExA(key, g_prefShowCombatGrid, 0, &type,
+        RegQueryValueExA(key, g_prefShowCombatGrid, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_showCombatGrid)), &cbData);
-        RegQueryValueExA(key, g_prefShowCombatMouseHex, 0, &type,
+        RegQueryValueExA(key, g_prefShowCombatMouseHex, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_showCombatMouseHex)), &cbData);
-        RegQueryValueExA(key, g_prefCombatShadeLevel, 0, &type,
+        RegQueryValueExA(key, g_prefCombatShadeLevel, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_combatShadeLevel)), &cbData);
-        RegQueryValueExA(key, g_prefCombatArmyInfoLevel, 0, &type,
+        RegQueryValueExA(key, g_prefCombatArmyInfoLevel, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_combatArmyInfoLevel)), &cbData);
-        RegQueryValueExA(key, g_prefCombatAutoCreatures, 0, &type,
+        RegQueryValueExA(key, g_prefCombatAutoCreatures, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_combatAutoCreatures)), &cbData);
-        RegQueryValueExA(key, g_prefCombatAutoSpells, 0, &type,
+        RegQueryValueExA(key, g_prefCombatAutoSpells, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_combatAutoSpells)), &cbData);
-        RegQueryValueExA(key, g_prefCombatCatapult, 0, &type,
+        RegQueryValueExA(key, g_prefCombatCatapult, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_combatCatapult)), &cbData);
-        RegQueryValueExA(key, g_prefCombatBallista, 0, &type,
+        RegQueryValueExA(key, g_prefCombatBallista, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_combatBallista)), &cbData);
-        RegQueryValueExA(key, g_prefCombatFirstAidTent, 0, &type,
+        RegQueryValueExA(key, g_prefCombatFirstAidTent, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_combatFirstAidTent)), &cbData);
-        RegQueryValueExA(key, g_prefCombatSpeed, 0, &type,
+        RegQueryValueExA(key, g_prefCombatSpeed, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_combatSpeed)), &cbData);
-        RegQueryValueExA(key, g_prefMainGameShowMenu, 0, &type,
+        RegQueryValueExA(key, g_prefMainGameShowMenu, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_windowConfig.m_showMenu)), &cbData);
-        RegQueryValueExA(key, g_prefMainGameX, 0, &type,
+        RegQueryValueExA(key, g_prefMainGameX, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_windowConfig.m_x)), &cbData);
-        RegQueryValueExA(key, g_prefMainGameY, 0, &type,
+        RegQueryValueExA(key, g_prefMainGameY, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_windowConfig.m_y)), &cbData);
-        RegQueryValueExA(key, g_prefMainGameFullScreen, 0, &type,
+        RegQueryValueExA(key, g_prefMainGameFullScreen, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_windowConfig.m_fullScreen)), &cbData);
 
         cbData = 350;
         getcwd(appPath, sizeof(appPath));
         strcat(appPath, "\\");
-        if (RegQueryValueExA(key, g_prefAppPath, 0, &type,
+        if (RegQueryValueExA(key, g_prefAppPath, NULL, &type,
                 static_cast<BYTE*>(static_cast<void*>(g_regAppPath)),
                 &cbData)
                 != ERROR_SUCCESS ||
@@ -575,7 +575,7 @@ static void readPrefsFromRegistry()
         }
 
         cbData = 350;
-        RegQueryValueExA(key, g_prefCdDrive, 0, &type,
+        RegQueryValueExA(key, g_prefCdDrive, NULL, &type,
             static_cast<BYTE*>(static_cast<void*>(g_regCdRomPath)),
             &cbData);
         strcpy(g_regCdRomPath, g_regAppPath);
@@ -599,7 +599,7 @@ DC_ADDRESS(0x0fdc4c, 0x404)
 MAC_ADDRESS(0x1312c8, 0xb4)
 void writePrefsToRegistry()
 {
-    HKEY key = 0;
+    HKEY key = NULL;
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, g_prefRegKey, 0, KEY_ALL_ACCESS,
             &key) == ERROR_SUCCESS) {
         RegSetValueExA(key, g_prefMusicVolume, 0, REG_DWORD,
@@ -851,7 +851,7 @@ unsigned long getAvailableDiskSpace()
     unsigned long numberOfFreeClusters = 0;
     unsigned long totalNumberOfClusters = 0;
 
-    if (!GetDiskFreeSpaceA(0, &sectorsPerCluster, &bytesPerSector,
+    if (!GetDiskFreeSpaceA(NULL, &sectorsPerCluster, &bytesPerSector,
                            &numberOfFreeClusters, &totalNumberOfClusters))
         return 0;
     return numberOfFreeClusters * bytesPerSector * sectorsPerCluster;

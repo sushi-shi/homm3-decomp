@@ -91,13 +91,13 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
             font::WHITE, MANA_ID, 1, 0, 8));
 
         int morale = limit(
-            -3, thisHero->getMorale(0, 0, 1), 3);
+            -3, thisHero->getMorale(NULL, 0, 1), 3);
         widgets.push_back(new iconWidget(
             14, 86, 22, 12, MORALE_ID, "imrl22.def", morale + 3,
             0, 0, 0, 0x10));
 
         int luck = limit(
-            -3, thisHero->getLuck(0, 0, 1), 3);
+            -3, thisHero->getLuck(NULL, 0, 1), 3);
         widgets.push_back(new iconWidget(
             14, 103, 22, 12, LUCK_ID, "ilck22.def", luck + 3,
             0, 0, 0, 0x10));

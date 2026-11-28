@@ -26,25 +26,25 @@
 // gWinSetup, an external global of window.obj (`?gWinSetup@@3PAUSWinSetup@@A`).
 DATA(0x0068c710)
 SWinSetup g_winSetup[37] = {
-    { 0x06, 0x0067, 0 }, { 0x06, 0x0068, 0 },
-    { 0x06, 0x0069, 0 }, { 0x06, 0x006a, 0 },
-    { 0x06, 0x006b, 0 }, { 0x06, 0x006c, 0 },
-    { 0x06, 0x006d, 0 }, { 0x06, 0x006e, 0 },
-    { 0x06, 0x006f, 0 }, { 0x09, 0x0029, 0 },
-    { 0x0c, 0x0001, 0 }, { 0x0c, 0x0002, 0 },
-    { 0x0e, 0x0320, 0 }, { 0x0e, 0x0321, 0 },
-    { 0x0e, 0x0322, 0 }, { 0x0e, 0x0323, 0 },
-    { 0x0e, 0x0324, 0 }, { 0x0e, 0x0325, 0 },
-    { 0x0e, 0x0326, 0 }, { 0x0e, 0x0327, 0 },
-    { 0x0e, 0x025c, 0 }, { 0x0e, 0x025d, 0 },
-    { 0x0e, 0x025e, 0 }, { 0x0e, 0x025f, 0 },
-    { 0x0e, 0x0260, 0 }, { 0x0e, 0x0261, 0 },
-    { 0x0e, 0x0262, 0 }, { 0x0e, 0x0263, 0 },
-    { 0x0e, 0x0264, 0 }, { 0x0e, 0x026c, 0 },
-    { 0x0e, 0x026d, 0 }, { 0x0e, 0x026e, 0 },
-    { 0x16, 0x0001, 0 }, { 0x16, 0x0003, 0 },
-    { 0x18, 0x0001, 0 }, { 0x18, 0x0002, 0 },
-    { 0x19, 0x0002, 0 }
+    { 0x06, 0x0067, NULL }, { 0x06, 0x0068, NULL },
+    { 0x06, 0x0069, NULL }, { 0x06, 0x006a, NULL },
+    { 0x06, 0x006b, NULL }, { 0x06, 0x006c, NULL },
+    { 0x06, 0x006d, NULL }, { 0x06, 0x006e, NULL },
+    { 0x06, 0x006f, NULL }, { 0x09, 0x0029, NULL },
+    { 0x0c, 0x0001, NULL }, { 0x0c, 0x0002, NULL },
+    { 0x0e, 0x0320, NULL }, { 0x0e, 0x0321, NULL },
+    { 0x0e, 0x0322, NULL }, { 0x0e, 0x0323, NULL },
+    { 0x0e, 0x0324, NULL }, { 0x0e, 0x0325, NULL },
+    { 0x0e, 0x0326, NULL }, { 0x0e, 0x0327, NULL },
+    { 0x0e, 0x025c, NULL }, { 0x0e, 0x025d, NULL },
+    { 0x0e, 0x025e, NULL }, { 0x0e, 0x025f, NULL },
+    { 0x0e, 0x0260, NULL }, { 0x0e, 0x0261, NULL },
+    { 0x0e, 0x0262, NULL }, { 0x0e, 0x0263, NULL },
+    { 0x0e, 0x0264, NULL }, { 0x0e, 0x026c, NULL },
+    { 0x0e, 0x026d, NULL }, { 0x0e, 0x026e, NULL },
+    { 0x16, 0x0001, NULL }, { 0x16, 0x0003, NULL },
+    { 0x18, 0x0001, NULL }, { 0x18, 0x0002, NULL },
+    { 0x19, 0x0002, NULL }
 };
 
 VA(0x005fe9f0, 0x5E)
@@ -53,7 +53,7 @@ MAC_ADDRESS(0x20ae1c, 0xa0)
 heroWindow::heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType)
     : m_sleepCount(0)
 {
-    m_nextWindow = m_prevWindow = 0;
+    m_nextWindow = m_prevWindow = NULL;
     m_priority = -1;
     m_x = winX;
     m_y = winY;
@@ -61,8 +61,8 @@ heroWindow::heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned
     m_height = winHeight;
     m_type = winType;
     m_status = 0;
-    m_headWidget = m_tailWidget = 0;
-    m_background = 0;
+    m_headWidget = m_tailWidget = NULL;
+    m_background = NULL;
     m_focusId = -1;
 }
 
@@ -163,13 +163,13 @@ void heroWindow::addWidget(widget* newWidget, int newPriority)
         current = current->m_prevWidget;
     if (!current) {
         newWidget->m_nextWidget = m_headWidget;
-        newWidget->m_prevWidget = 0;
+        newWidget->m_prevWidget = NULL;
         m_headWidget = newWidget;
         if (!m_tailWidget)
             m_tailWidget = newWidget;
     } else if (!current->m_nextWidget) {
         newWidget->m_prevWidget = m_tailWidget;
-        newWidget->m_nextWidget = 0;
+        newWidget->m_nextWidget = NULL;
         m_tailWidget->m_nextWidget = newWidget;
         m_tailWidget = newWidget;
     } else {
@@ -192,20 +192,20 @@ void heroWindow::removeWidget(widget* killWidget)
         widget* next = killWidget->m_nextWidget;
         m_headWidget = next;
         if (!next)
-            m_tailWidget = 0;
+            m_tailWidget = NULL;
         else
-            next->m_prevWidget = 0;
+            next->m_prevWidget = NULL;
     } else if (killWidget == m_tailWidget) {
         widget* prev = killWidget->m_prevWidget;
         m_tailWidget = prev;
-        prev->m_nextWidget = 0;
+        prev->m_nextWidget = NULL;
     } else {
         killWidget->m_prevWidget->m_nextWidget = killWidget->m_nextWidget;
         killWidget->m_nextWidget->m_prevWidget = killWidget->m_prevWidget;
     }
     widget* prev = killWidget->m_prevWidget;
     if (!prev) {
-        m_headWidget = m_tailWidget = 0;
+        m_headWidget = m_tailWidget = NULL;
     } else {
         widget* next = killWidget->m_nextWidget;
         prev->m_nextWidget = next;
@@ -301,7 +301,7 @@ widget* heroWindow::getWidget(int id)
             return current;
         current = current->m_prevWidget;
     }
-    return 0;
+    return NULL;
 }
 
 VA(0x005ff020, 0xDE)
@@ -358,7 +358,7 @@ void heroWindow::restoreBackground(unsigned char update)
     if (update)
         g_windowManager->updateScreen(m_x, m_y, m_background->GetWidth(), m_background->GetHeight());
     delete m_background;
-    m_background = 0;
+    m_background = NULL;
 }
 
 // Original: heroWindow::MoveWindow; window.cpp:707
@@ -478,7 +478,7 @@ widget* heroWindow::findWidgetPtr(int mx, int my) const
             && !(found->m_status & widget::WIDGET_DIMMED_NODRAW))
             return found;
     }
-    return 0;
+    return NULL;
 }
 
 // Original: heroWindow::EnableAllWidgets; window.cpp:893
@@ -686,7 +686,7 @@ DC_ADDRESS(0x197f4c, 0x4)
 MAC_ADDRESS(0x20c1a0, 0x8)
 textWidget* CHeroWindowEx::getRolloverWidget()
 {
-    return 0;
+    return NULL;
 }
 
 VA(0x005ff8e0, 0x75)
@@ -768,7 +768,7 @@ void setWinText(heroWindow* win, int winId)
     msg.m_mouseX = 0;
     msg.m_mouseY = 0;
     msg.m_extra = 0;
-    msg.m_window = 0;
+    msg.m_window = NULL;
     for (unsigned i = 0; i < 37; ++i) {
         if (g_winSetup[i].m_windowId == winId) {
             msg.m_id = MESSAGE_WIDGET;

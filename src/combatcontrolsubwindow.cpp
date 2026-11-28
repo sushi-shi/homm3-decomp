@@ -42,7 +42,7 @@ type_combat_sub_window::type_combat_sub_window(
     heroWindow* parent, const char* backgroundSpriteName)
     : TSubWindow(0, 556, 800, 44, parent)
 {
-    m_rolloverWidget = 0;
+    m_rolloverWidget = NULL;
     m_widgets.reserve(10);
 
     bitmapBorder* background = new bitmapBorder(0, 0, 800, 44, 0x7d0,
@@ -310,7 +310,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
     m_backgroundWidget = new bitmapBorder(
         0, 0, 78, 202, 0x834, "CHrPop.pcx", 0x800);
     m_widgets.push_back(m_backgroundWidget);
-    m_portrait = new bitmapBorder(10, 6, 58, 64, 0x835, 0, 0x800);
+    m_portrait = new bitmapBorder(10, 6, 58, 64, 0x835, NULL, 0x800);
     m_widgets.push_back(m_portrait);
 
     sprintf(g_text, "%s:", (*g_generalText)[GENERAL_TEXT_ATTACK_ABBREVIATION]);
@@ -318,7 +318,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         9, 75, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x836, 0, 0, 8));
     m_attackText = new textWidget(
-        9, 75, 60, 12, 0, "tiny.fnt", font::WHITE,
+        9, 75, 60, 12, NULL, "tiny.fnt", font::WHITE,
         0x837, 2, 0, 8);
     m_widgets.push_back(m_attackText);
 
@@ -327,7 +327,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         9, 87, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x838, 0, 0, 8));
     m_defenseText = new textWidget(
-        9, 87, 60, 12, 0, "tiny.fnt", font::WHITE,
+        9, 87, 60, 12, NULL, "tiny.fnt", font::WHITE,
         0x839, 2, 0, 8);
     m_widgets.push_back(m_defenseText);
 
@@ -336,7 +336,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         9, 99, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x83a, 0, 0, 8));
     m_powerText = new textWidget(
-        9, 99, 60, 12, 0, "tiny.fnt", font::WHITE,
+        9, 99, 60, 12, NULL, "tiny.fnt", font::WHITE,
         0x83b, 2, 0, 8);
     m_widgets.push_back(m_powerText);
 
@@ -345,7 +345,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         9, 111, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x83c, 0, 0, 8));
     m_knowledgeText = new textWidget(
-        9, 111, 60, 12, 0, "tiny.fnt", font::WHITE,
+        9, 111, 60, 12, NULL, "tiny.fnt", font::WHITE,
         0x83d, 2, 0, 8);
     m_widgets.push_back(m_knowledgeText);
 
@@ -368,7 +368,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
     m_widgets.push_back(m_luckIcon);
 
     m_manaText = new textWidget(
-        7, 165, 64, 30, 0, "tiny.fnt", font::WHITE,
+        7, 165, 64, 30, NULL, "tiny.fnt", font::WHITE,
         0x842, 5, 0, 8);
     m_widgets.push_back(m_manaText);
 
@@ -507,7 +507,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             9, 75, 60, 12, g_text, "tiny.fnt", font::WHITE,
             0x89a, 0, 0, 8));
         m_attackText = new textWidget(
-            9, 75, 60, 12, 0, "tiny.fnt", font::WHITE,
+            9, 75, 60, 12, NULL, "tiny.fnt", font::WHITE,
             0x89b, 2, 0, 8);
         m_widgets.push_back(m_attackText);
 
@@ -517,7 +517,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             9, 87, 60, 12, g_text, "tiny.fnt", font::WHITE,
             0x89c, 0, 0, 8));
         m_defenseText = new textWidget(
-            9, 87, 60, 12, 0, "tiny.fnt", font::WHITE,
+            9, 87, 60, 12, NULL, "tiny.fnt", font::WHITE,
             0x89d, 2, 0, 8);
         m_widgets.push_back(m_defenseText);
 
@@ -527,7 +527,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             9, 99, 60, 12, g_text, "tiny.fnt", font::WHITE,
             0x89e, 0, 0, 8));
         m_damageText = new textWidget(
-            9, 99, 60, 12, 0, "tiny.fnt", font::WHITE,
+            9, 99, 60, 12, NULL, "tiny.fnt", font::WHITE,
             0x89f, 2, 0, 8);
         m_widgets.push_back(m_damageText);
 
@@ -537,7 +537,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             9, 111, 60, 12, g_text, "tiny.fnt", font::WHITE,
             0x8a0, 0, 0, 8));
         m_speedText = new textWidget(
-            9, 111, 60, 12, 0, "tiny.fnt", font::WHITE,
+            9, 111, 60, 12, NULL, "tiny.fnt", font::WHITE,
             0x8a1, 2, 0, 8);
         m_widgets.push_back(m_speedText);
 
@@ -562,7 +562,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
         m_widgets.push_back(m_luckIcon);
 
         m_countText = new textWidget(
-            10, 8, 58, 64, 0, "Verd10B.fnt", font::WHITE,
+            10, 8, 58, 64, NULL, "Verd10B.fnt", font::WHITE,
             0x8a6, 10, 0, 8);
         m_widgets.push_back(m_countText);
 
@@ -629,18 +629,18 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
     char buffer[64];
 
     m_backgroundWidget->setPlayerPaletteColors(
-        owner != 0 ? owner->m_owner : g_game->getLocalPlayerGamePos());
+        owner != NULL ? owner->m_owner : g_game->getLocalPlayerGamePos());
 
     if (m_viewLevel == 1) {
         m_creatureIcon->setIconFrame(info.m_creatureType + 2);
         const TCreatureTypeTraits& normalTraits =
             akCreatureTypeTraits[info.m_creatureType];
 
-        bool canShoot = info.canShoot(0);
-        long attack = info.getAdjustedAttack(0, canShoot);
-        int defense = info.getAdjustedDefense(0, 1);
+        bool canShoot = info.canShoot(NULL);
+        long attack = info.getAdjustedAttack(NULL, canShoot);
+        int defense = info.getAdjustedDefense(NULL, 1);
         if (canShoot)
-            attack = max(attack, info.getAdjustedAttack(0, 0));
+            attack = max(attack, info.getAdjustedAttack(NULL, 0));
 
         sprintf(buffer, "%d(%d)", normalTraits.attackSkill, attack);
         m_attackText->setText(buffer);

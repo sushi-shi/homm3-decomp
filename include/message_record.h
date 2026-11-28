@@ -48,7 +48,7 @@ public:
         m_mouseX = 0;
         m_mouseY = 0;
         m_extra = 0;
-        m_window = 0;
+        m_window = NULL;
     }
 };
 SIZE(message, 32);

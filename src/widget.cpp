@@ -21,14 +21,14 @@ widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeig
     m_width = widgetWidth;
     m_height = widgetHeight;
     m_id = widgetId;
-    m_parentWindow = 0;
-    m_prevWidget = 0;
-    m_nextWidget = 0;
+    m_parentWindow = NULL;
+    m_prevWidget = NULL;
+    m_nextWidget = NULL;
     m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
     m_priority = -1;
     m_style = widgetStyle;
-    m_rollOver = 0;
-    m_rightClick = 0;
+    m_rollOver = NULL;
+    m_rightClick = NULL;
     m_freeText = 0;
 }
 
@@ -40,8 +40,8 @@ MAC_ADDRESS(0x20a558, 0x28)
 widget::widget()
     : m_sleepCount(0)
 {
-    m_rollOver = 0;
-    m_rightClick = 0;
+    m_rollOver = NULL;
+    m_rightClick = NULL;
     m_freeText = 0;
     m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
 }
@@ -66,9 +66,9 @@ DC_ADDRESS(0x196c6c, 0x50)
 MAC_ADDRESS(0x20a618, 0x54)
 void widget::initialize(int x, int y, int w, int h, int id, int style)
 {
-    m_parentWindow = 0;
-    m_prevWidget = 0;
-    m_nextWidget = 0;
+    m_parentWindow = NULL;
+    m_prevWidget = NULL;
+    m_nextWidget = NULL;
     m_x = x;
     m_y = y;
     m_width = w;
@@ -217,12 +217,12 @@ void widget::setHelpText(const char* text, const char* rclick, bool copyText)
     if (m_rollOver) {
         if (m_freeText)
             delete[] m_rollOver;
-        m_rollOver = 0;
+        m_rollOver = NULL;
     }
     if (m_rightClick) {
         if (m_freeText)
             delete[] m_rightClick;
-        m_rightClick = 0;
+        m_rightClick = NULL;
     }
     if (copyText) {
         m_freeText = 1;

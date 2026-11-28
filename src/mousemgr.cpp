@@ -135,7 +135,7 @@ mouseManager::mouseManager()
     m_status = 0;
     strcpy(m_mgrName, DATA_COMPGEN(0x00681618, mouseManagerName, "mouseManager"));
     m_frame = -1;
-    m_sprite = 0;
+    m_sprite = NULL;
     m_disableCount = 0;
     m_hideCount = 1;
     InitializeCriticalSection(&m_sectionMouse);
@@ -184,7 +184,7 @@ void mouseManager::close()
     }
     if (m_sprite)
         ResourceManager::Dispose(m_sprite);
-    m_sprite = 0;
+    m_sprite = NULL;
 }
 
 VA(0x0050cc80, 0x1B)
@@ -550,7 +550,7 @@ void mouseManager::checkUpdate()
     if (GameTime::isPast(updateTime) && !isBusy()) {
         updateTime = GameTime::nextFrameTime(updateTime, 33);
         update(0);
-        if (GetWindowThreadProcessId(g_hwndApp, 0) == GetCurrentThreadId()) {
+        if (GetWindowThreadProcessId(g_hwndApp, NULL) == GetCurrentThreadId()) {
             if (m_currentX < 0 || m_currentX >= 800
                 || m_currentY < 0 || m_currentY >= 600) {
                 if (!m_systemPointerIsOn) {
@@ -587,21 +587,21 @@ void mouseManager::loadFrame(int newFrame)
     memset(&fx, 0, sizeof(fx));
     fx.dwSize = sizeof(fx);
     fx.dwFillColor = rgBto16(0, 255, 255);
-    g_ddsMouseSurface->Blt(0, 0, 0, DDBLT_COLORFILL, &fx);
+    g_ddsMouseSurface->Blt(NULL, NULL, NULL, DDBLT_COLORFILL, &fx);
 
     DDSURFACEDESC surfaceDesc;
     memset(&surfaceDesc, 0, sizeof(surfaceDesc));
     surfaceDesc.dwSize = sizeof(surfaceDesc);
-    if (g_ddsMouseSurface->Lock(0,
+    if (g_ddsMouseSurface->Lock(NULL,
             &surfaceDesc,
-            DDLOCK_WAIT, 0) == DD_OK) {
+            DDLOCK_WAIT, NULL) == DD_OK) {
         Bitmap16Bit bitmap(0, 0);
         bitmap.reference(surfaceDesc.dwWidth, surfaceDesc.dwHeight,
             surfaceDesc.lPitch,
             static_cast<unsigned short*>(surfaceDesc.lpSurface));
         CSprite* sprite = m_sprite;
         sprite->DrawPointer(newFrame, &bitmap, 0, 0, false);
-        g_ddsMouseSurface->Unlock(0);
+        g_ddsMouseSurface->Unlock(NULL);
         m_frame = newFrame;
     }
 }

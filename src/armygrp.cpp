@@ -130,11 +130,11 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
 
     m_sourceEntry = new textEntryWidget(
         20, 218, 101, 37, 10, "99999", "bigfont.fnt", font::WHITE, 5,
-        0, 0, 4, 0, 4, 0, 0);
+        NULL, 0, 4, 0, 4, 0, 0);
     m_widgets.push_back(m_sourceEntry);
     m_destinationEntry = new textEntryWidget(
         177, 218, 101, 37, 10, "99999", "bigfont.fnt", font::WHITE, 5,
-        0, 0, 5, 0, 4, 0, 0);
+        NULL, 0, 5, 0, 4, 0, 0);
     m_widgets.push_back(m_destinationEntry);
 
     m_splitSlider = new slider(
@@ -145,7 +145,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
     m_widgets.push_back(new bitmapBorder(
         8, 312, 282, 17, 7, "StatBar.pcx", 0x800));
     m_widgets.push_back(new textWidget(
-        8, 312, 282, 17, 0, "smalfont.fnt", font::PRIMARY,
+        8, 312, 282, 17, NULL, "smalfont.fnt", font::PRIMARY,
         8, 1, 0, 8));
 
     m_widgets.push_back(new button(
@@ -699,7 +699,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
 DC_ADDRESS(0x04ec98, 0x16)
 int armyGroup::getHomogeneityMoraleAdjust() const
 {
-    return 2 - getAlignments(0);
+    return 2 - getAlignments(NULL);
 }
 
 VA(0x0044ac50, 0x2E)
@@ -923,7 +923,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
         return 0;
     if (akCreatureTypeTraits[m_armies[index]].attributes & g_ctaNoMorale)
         return 0;
-    int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
+    int morale = getMorale(ownerHero, ownerTown, NULL, NULL, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = m_armies[index];
         int alignment = classifyTownAlignment(g_game->getAlignment(type));
@@ -985,7 +985,7 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
-    int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
+    int luck = getLuck(ownerHero, ownerTown, NULL, NULL, 0, 0);
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int creature = m_armies[index];
         if (classifyTownAlignment(g_game->getAlignment(creature))

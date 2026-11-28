@@ -21,7 +21,7 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
 {
     message* e;
 
-    if (g_inputManager == 0)
+    if (g_inputManager == NULL)
         return 1;
     if (g_inputManager->m_status != 1)
         return 1;
@@ -48,7 +48,7 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
         }
         g_inputManager->m_extendFlag = 0;
         if (g_windowManager->m_status == 1) {
-            if (g_advManager == 0 || g_advManager->m_advWindow == 0
+            if (g_advManager == NULL || g_advManager->m_advWindow == NULL
                 || g_advManager->m_advWindow->m_chatEdit->m_hasFocus == 0) {
                 if (e->m_id == MESSAGE_KEY_DOWN && e->m_codeX == KEYCODE_F1)
                     appCommand(g_hwndApp, WM_COMMAND, KBWIN_MENU_HELP, 0);
@@ -68,7 +68,7 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
     int x;
     int y;
 
-    if (g_inputManager == 0)
+    if (g_inputManager == NULL)
         return 1;
     if (g_inputManager->m_status != 1)
         return 1;

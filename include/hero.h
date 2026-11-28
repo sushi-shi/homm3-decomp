@@ -1056,7 +1056,7 @@ public:
     int getManaCost(int whichSpell) const
     {
         return getManaCost(
-            whichSpell, 0,
+            whichSpell, NULL,
             getSpecialTerrain());
     }
 

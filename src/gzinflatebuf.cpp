@@ -69,27 +69,27 @@ static inline Bytef* zlibBytes(char* window)
 // compiled out of the release game, like every assert in this build.
 TGzDeflateBuf::TGzDeflateBuf(std::streambuf* pDestBuf, int level, int strategy)
     : _m_pDestBuf(pDestBuf),
-      _m_pInBuf(0),
-      _m_pOutBuf(0),
-      m_crc(crc32(0, 0, 0))
+      _m_pInBuf(NULL),
+      _m_pOutBuf(NULL),
+      m_crc(crc32(0, NULL, 0))
 {
     assert(pDestBuf != 0);
 
     _m_pInBuf = new char[2 * GZ_WINDOW_SIZE];
-    if (_m_pInBuf == 0)
+    if (_m_pInBuf == NULL)
         throw TAllocationFailure();
     TAutoArrayPtr<char> ownedBuffer(_m_pInBuf);
     _m_pOutBuf = _m_pInBuf + GZ_WINDOW_SIZE;
 
-    setg(0, 0, 0);
+    setg(NULL, NULL, NULL);
     setp(_m_pInBuf, _m_pInBuf + GZ_WINDOW_SIZE);
 
     _m_zstream.next_in = zlibBytes(_m_pInBuf);
     _m_zstream.avail_in = 0;
     _m_zstream.next_out = zlibBytes(_m_pOutBuf);
     _m_zstream.avail_out = GZ_WINDOW_SIZE;
-    _m_zstream.zalloc = 0;
-    _m_zstream.zfree = 0;
+    _m_zstream.zalloc = NULL;
+    _m_zstream.zfree = NULL;
 
     int result = deflateInit2(&_m_zstream, level, Z_DEFLATED, -MAX_WBITS, 8, strategy);
     if (result == Z_MEM_ERROR)
@@ -279,29 +279,29 @@ VA(0x004d6050, 0x58A)
 MAC_ADDRESS(0x220ae4, 0x82c)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
     : _m_pSrcBuf(pSrcBuf),
-      _m_pInBuf(0),
-      _m_pOutBuf(0),
-      m_crc(crc32(0, 0, 0)),
+      _m_pInBuf(NULL),
+      _m_pOutBuf(NULL),
+      m_crc(crc32(0, NULL, 0)),
       m_ok(true),
       m_sourceEof(false),
       m_inflating(false)
 {
     assert(pSrcBuf != 0);
     _m_pInBuf = new char[2 * GZ_WINDOW_SIZE];
-    if (_m_pInBuf == 0)
+    if (_m_pInBuf == NULL)
         throw TAllocationFailure();
     TAutoArrayPtr<char> ownedBuffer(_m_pInBuf);
     _m_pOutBuf = _m_pInBuf + GZ_WINDOW_SIZE;
     setg(_m_pOutBuf,
          _m_pOutBuf,
          _m_pOutBuf);
-    setp(0, 0);
+    setp(NULL, NULL);
     _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
     _m_zstream.avail_in = 0;
     _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
     _m_zstream.avail_out = GZ_WINDOW_SIZE;
-    _m_zstream.zalloc = 0;
-    _m_zstream.zfree = 0;
+    _m_zstream.zalloc = NULL;
+    _m_zstream.zfree = NULL;
     try {
         int magic = _getC();
         if (magic == traits_type::eof())

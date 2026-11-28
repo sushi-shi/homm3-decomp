@@ -325,7 +325,7 @@ MAC_ADDRESS(0x092034, 0x40)
 void TCampaignSpellBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
-    if (target != 0)
+    if (target != NULL)
         target->addSpell(m_spell);
 }
 
@@ -336,7 +336,7 @@ VA(0x004840d0, 0x155)
 MAC_ADDRESS(0x091e3c, 0x158)
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
 {
-    hero* best = 0;
+    hero* best = NULL;
     playerData* player = &g_game->m_players[whichPlayer];
     switch (heroSelector) {
     case CAMPAIGN_BONUS_HERO_STRONGEST: {
@@ -350,15 +350,15 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
     }
     case CAMPAIGN_BONUS_HERO_FIRST:
         if (player->m_numHeroes == 0)
-            return 0;
+            return NULL;
         if (player->m_heroes[0] == -1)
-            return 0;
+            return NULL;
         return g_game->getHero(player->m_heroes[0]);
     case CAMPAIGN_BONUS_HERO_NONE:
-        return 0;
+        return NULL;
     }
     hero* chosen = g_game->getHero(heroSelector);
-    return chosen->m_owner == whichPlayer ? chosen : 0;
+    return chosen->m_owner == whichPlayer ? chosen : NULL;
 }
 
 // The two spell rows share the general-text pair 708/709: the campaign
@@ -383,7 +383,7 @@ MAC_ADDRESS(0x092154, 0x58)
 void TCampaignSpellScrollBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
-    if (target != 0) {
+    if (target != NULL) {
         // Complete stores this spell as an unsigned byte; the canonical scroll constructor takes DC SpellID.
         type_artifact scroll(static_cast<SpellID>(m_spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         target->giveArtifact(scroll, 0, 0);
@@ -410,7 +410,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
         }
     }
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
-    if (target == 0)
+    if (target == NULL)
         return;
     if (target->m_army.add(m_creature, m_count, -1) != 0)
         return;
@@ -522,14 +522,14 @@ void TCampaignBuildingBonus::apply(int whichPlayer) const
         }
         return;
     }
-    town* target = 0;
+    town* target = NULL;
     if (slot->m_hasMainTown) {
         int townId = g_game->getTownId(slot->m_castleLoc.m_x, slot->m_castleLoc.m_y,
                                        slot->m_castleLoc.m_z);
         if (townId >= 0)
             target = g_game->getTown(townId);
     }
-    if (target == 0)
+    if (target == NULL)
         target = g_game->getTown(player->m_townIds[0]);
     if (m_building >= g_buildingBonusFirstUpgrade)
         target->buildBuilding(m_building - g_buildingBonusUpgradeStride, 0, 0);
@@ -578,7 +578,7 @@ MAC_ADDRESS(0x0928ac, 0x58)
 void TCampaignArtifactBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
-    if (target != 0) {
+    if (target != NULL) {
         // Complete stores this bonus as a signed word; the canonical artifact constructor takes DC TArtifact.
         type_artifact granted(static_cast<TArtifact>(m_artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         target->giveArtifact(granted, 0, 0);
@@ -662,7 +662,7 @@ MAC_ADDRESS(0x092ba8, 0xf0)  // anchor-vtable (0x63da00+0x14), retail-only
 void TCampaignPrimarySkillBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
-    if (target != 0) {
+    if (target != NULL) {
         for (int stat = 0; stat < kNumPrimarySkills; ++stat) {
             int current = target->getPrimarySkill(stat);
             target->setPrimarySkill(stat, current + m_skills[stat]);
@@ -717,7 +717,7 @@ MAC_ADDRESS(0x092dbc, 0x6c)
 void TCampaignSecondarySkillBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
-    if (target != 0
+    if (target != NULL
         && target->getSecondarySkill(TSecondarySkill(m_skill)) <= m_level) {
         if (target->getSecondarySkill(TSecondarySkill(m_skill)) == 0)
             target->giveSS(m_skill, m_level);
@@ -774,7 +774,7 @@ VA(0x00484d90, 0x8E)
 MAC_ADDRESS(0x092f04, 0xd4)
 std::string TCampaignResourceBonus::getText() const
 {
-    const char* name = 0;
+    const char* name = NULL;
     switch (m_resource) {
     case WOOD:
     case MERCURY:
@@ -1068,7 +1068,7 @@ hero* TCampaignStartCrossoverOption::getFirstCrossoverHero(
 {
     std::vector<hero>& pool = campaign->getCrossoverHeroes(
         getCrossoverSlot(*campaign, which));
-    return pool.size() != 0 ? &pool[0] : 0;
+    return pool.size() != 0 ? &pool[0] : NULL;
 }
 
 VA(0x004854c0, 0x6E)
@@ -1077,7 +1077,7 @@ const char* TCampaignStartCrossoverOption::getIconResourceName(void* campaignRec
                                                           int which) const
 {
     hero* first = getFirstCrossoverHero(static_cast<SCampaign*>(campaignRecord), which);
-    if (first == 0)
+    if (first == NULL)
         return "hpl000kn.pcx";
     return akHeroTraits[first->m_portrait].m_large_portrait_name;
 }
@@ -1299,9 +1299,9 @@ VA(0x00485f50, 0x8B)
 MAC_ADDRESS(0x094030, 0xa8)
 TCampaignBrief::ScenarioStruct::ScenarioStruct()
 {
-    m_prologue = 0;
-    m_epilogue = 0;
-    m_options = 0;
+    m_prologue = NULL;
+    m_epilogue = NULL;
+    m_options = NULL;
     memset(m_heroesStatus, 0, sizeof(m_heroesStatus));
 }
 
@@ -1683,7 +1683,7 @@ hero* SCampaign::findCrossoverHero(int heroId)
                 return &pool[heroIndex];
         }
     }
-    return 0;
+    return NULL;
 }
 
 // Complete-only, and game::NewMap's second campaign callee (the first is
@@ -2021,14 +2021,14 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     m_regionDesc = readLengthPrefixedString(infile);
 
     if (!readValue<unsigned char>(infile)) {
-        m_prologue = 0;
+        m_prologue = NULL;
     } else {
         m_prologue = new MapTextStruct;
         m_prologue->read(infile);
     }
 
     if (!readValue<unsigned char>(infile)) {
-        m_epilogue = 0;
+        m_epilogue = NULL;
     } else {
         m_epilogue = new MapTextStruct;
         m_epilogue->read(infile);
@@ -2068,7 +2068,7 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
         m_options = new TCampaignStartHeroOption;
         break;
     default:
-        m_options = 0;
+        m_options = NULL;
         break;
     }
     if (m_options)
@@ -2119,8 +2119,8 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     const char* filename)
 {
     m_fileName = filename;
-    m_data = 0;
-    m_stream = 0;
+    m_data = NULL;
+    m_stream = NULL;
     m_fileError = CAMPAIGN_FILE_OK;
 }
 
@@ -2142,11 +2142,11 @@ void TCampaignBrief::CampaignHeaderStruct::freeData()
 {
     if (m_stream) {
         delete m_stream;
-        m_stream = 0;
+        m_stream = NULL;
     }
     if (m_data) {
         delete[] m_data;
-        m_data = 0;
+        m_data = NULL;
     }
 }
 
@@ -2411,19 +2411,19 @@ void TCampaignBrief::MapTextStruct::play()
                                             g_campaignSubtitleWidth)
                       * g_bigFont->fs.height;
 
-    Bitmap16Bit* strip = 0;
+    Bitmap16Bit* strip = NULL;
     int scrollY = 0;
     int scrollDelay = g_bigFont->fs.height;
     unsigned char videoDone = 0;
     unsigned char redraw = 1;
-    const char* music = 0;
-    const char* speechName = 0;
+    const char* music = NULL;
+    const char* speechName = NULL;
 
     if (g_game->m_campaign.m_currentCampaign
         != SCampaign::PRE36_CAMPAIGN_REMAP_TARGET) {
         speechName = g_campaignVideoSounds[m_video];
         if (!*speechName)
-            speechName = 0;
+            speechName = NULL;
     }
     if (m_audio != -1)
         music = g_campaignMusicTraits[m_audio].m_name;
@@ -2446,7 +2446,7 @@ void TCampaignBrief::MapTextStruct::play()
 
     sample* speech;
     if (!speechName)
-        speech = 0;
+        speech = NULL;
     else
         speech = ResourceManager::GetSample(speechName);
 

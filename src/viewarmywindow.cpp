@@ -124,11 +124,11 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // and the independently proven bool getAdjustedAttack formal, rather
     // than materializing an unsigned byte and normalizing it again at
     // the call. VC6 restores the retail call prefix (97.01 -> 97.20).
-    bool shooting = thisArmy->canShoot(0);
-    int attack = thisArmy->getAdjustedAttack(0, shooting);
-    int defense = thisArmy->getAdjustedDefense(0, 1);
+    bool shooting = thisArmy->canShoot(NULL);
+    int attack = thisArmy->getAdjustedAttack(NULL, shooting);
+    int defense = thisArmy->getAdjustedDefense(NULL, 1);
     if (shooting) {
-        attack = max(attack, thisArmy->getAdjustedAttack(0, 0));
+        attack = max(attack, thisArmy->getAdjustedAttack(NULL, 0));
     }
 
     m_widgets.reserve(NWIDGETS);
@@ -155,7 +155,7 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
 
     int side = thisArmy->getOwningSide();
     hero* thisHero = thisArmy->getOwner();
-    const town* ourTown = 0;
+    const town* ourTown = NULL;
     hero* enemyHero = g_combatManager->m_heroes[1 - side];
     armyGroup* group = g_combatManager->m_armyGroups[side];
     armyGroup* enemies = g_combatManager->m_armyGroups[1 - side];
@@ -292,12 +292,12 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
         iarmy, thisHero, thisTown, -1, groupAlignments, 0));
     m_moraleHelp = group->getMoraleDescription(
         m_armyType, m_morale, thisHero, thisTown,
-        0, 0, -1, groupAlignments);
+        NULL, NULL, -1, groupAlignments);
 
     createLuckWidget(group->getArmyLuck(iarmy, thisHero, thisTown, -1, 1));
     m_luckHelp = group->getLuckDescription(
         m_armyType, m_luck, thisHero, thisTown,
-        0, 0, -1);
+        NULL, NULL, -1);
 
     if (showOk)
         createOkWidget();
@@ -357,7 +357,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
 
     // No hero owns a bare creature type, so the plate takes the local
     // player's colours unconditionally.
-    createBackgroundWidget(0);
+    createBackgroundWidget(NULL);
     createNameWidget(traits->m_plural_name);
 
     int townType = g_game->getAlignment(armyType);
@@ -366,7 +366,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     createAttackWidget(traits->attackSkill, traits->attackSkill);
     createDefenseWidget(traits->defenseSkill, traits->defenseSkill);
     createShotsWidget(*traits, traits->numShots, traits->numShots);
-    createDamageWidget(*traits, 0);
+    createDamageWidget(*traits, NULL);
     createHitpointsWidget(traits->hitPoints, traits->hitPoints);
     createSpeedWidget(traits->speed, traits->speed);
 
@@ -691,7 +691,7 @@ void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
     // final call. In the battle constructor, the shared ternary-call probe
     // changes the following widget insert/GetName schedules. These original
     // arms recover their retail instructions under VC6.
-    if (thisHero != 0 && thisHero->m_owner >= 0) {
+    if (thisHero != NULL && thisHero->m_owner >= 0) {
         plate->setPlayerPaletteColors(thisHero->m_owner);
     } else {
         plate->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
@@ -805,7 +805,7 @@ void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
 
     int low = traits.damageLowBound;
     int high = traits.damageHighBound;
-    if (ourHero != 0 && m_armyType == CREATURE_BALLISTA) {
+    if (ourHero != NULL && m_armyType == CREATURE_BALLISTA) {
         low *= ourHero->getPrimarySkill(0) + 1;
         high *= ourHero->getPrimarySkill(0) + 1;
     }
@@ -1027,7 +1027,7 @@ MAC_ADDRESS(0x202cf8, 0xec)
 void TViewArmyWindow::createRolloverWidget()
 {
     m_rolloverWidget = new bitmapBackedTextWidget(
-        7, 285, 284, 19, 0, "smalfont.fnt",
+        7, 285, 284, 19, NULL, "smalfont.fnt",
         DATA_COMPGEN(0x0068c674, viewArmyRolloverBack, "VARBack.pcx"),
         font::PRIMARY, ROLLOVER_ID, 1, 8);
     m_widgets.push_back(m_rolloverWidget);

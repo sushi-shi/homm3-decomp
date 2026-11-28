@@ -37,7 +37,7 @@ void advManager::checkCastSpell()
 
     hero* currentHero = g_game->getCurrHero();
     {
-        TSpellbookWindow spellBookWindow(*currentHero, 0,
+        TSpellbookWindow spellBookWindow(*currentHero, NULL,
                                    TSpellbookWindow::eContextAdventure,
                                    currentHero->getSpecialTerrain());
         spellBookWindow.doModal(0);
@@ -78,7 +78,7 @@ MAC_ADDRESS(0x01d1a8, 0x1bc)  // linkorder + anchor-callee hero::Fly / get_spell
 void advManager::castSpell(SpellID whichSpell)
 {
     hero* who = g_game->getCurrHero();
-    if (who == 0)
+    if (who == NULL)
         return;
 
     TSkillMastery level = who->getSpellLevel(whichSpell);
@@ -147,7 +147,7 @@ void advManager::summonBoat(TSkillMastery level)
     const TSpellTraits& traits = akSpellTraits[SPELL_SUMMON_BOAT];
 
     hero* who = g_game->getCurrHero();
-    if (who == 0)
+    if (who == NULL)
         return;
 
     type_point point = who->getLocation();
@@ -188,7 +188,7 @@ void advManager::summonBoat(TSkillMastery level)
     }
     if (sRandom(1, 100) <= traits.m_mastery_bonus[level]) {
         boat* theBoat = who->findSummonableBoat();
-        if (theBoat != 0) {
+        if (theBoat != NULL) {
             theBoat->restoreCell();
             // Only fizzle the boat's OLD square while it is on the radar
             // window - 19 cells across and 17 down from radarOrigin.
@@ -482,7 +482,7 @@ void advManager::townGate(TSkillMastery level)
     }
 
     teleportTo(who, destination->getLocation(), traits.m_sample, 0, 1, 0);
-    destination->giveSpells(0);
+    destination->giveSpells(NULL);
     who->m_movePoints -= cost;
     who->m_movePoints = ::max(who->m_movePoints, 0);
     who->useSpell(who->getManaCost(SPELL_TOWN_PORTAL));
@@ -602,7 +602,7 @@ void advManager::teleportTo(hero* who, type_point destination,
     setHeroContext(who->m_id, 0, 0, drawChanges);
 
     SAMPLE2 teleportSample;
-    teleportSample.m_playSample = 0;
+    teleportSample.m_playSample = NULL;
     if (drawChanges || g_currentPlayer->isLocalHuman()) {
         teleportSample = loadPlaySample(sampleName);
         completeDraw(0);
@@ -648,7 +648,7 @@ void advManager::teleportTo(hero* who, type_point destination,
             g_windowManager->saveFizzleSourceX(8, 8, 0x250, 0x220);
             g_advManager->redrawAdvScreen(0, 0);
             g_windowManager->fizzleForwardX(8, 8, 0x250, 0x220, -1);
-            if (teleportSample.m_playSample != 0)
+            if (teleportSample.m_playSample != NULL)
                 waitEndSample(teleportSample, -1);
         }
     } else {

@@ -15,7 +15,7 @@ TFileVersionInfo::TFileVersionInfo(const char* filename)
         if (m_data)
             GetFileVersionInfoA(const_cast<char*>(filename), 0, size, m_data);
     } else {
-        m_data = 0;
+        m_data = NULL;
     }
 }
 

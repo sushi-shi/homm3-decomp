@@ -36,8 +36,8 @@ VA_COMPGEN(0x0044ed20, 0x21, SCALAR_DELETING_DTOR, Bitmap24Bit)
 // Original: Bitmap24Bit::Bitmap24Bit; bitmap24.cpp:55
 DC_ADDRESS(0x052618, 0x54)
 Bitmap24Bit::Bitmap24Bit()
-    : resource(0, RESOURCE_TYPE_NONE),
-      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_data(0)
+    : resource(NULL, RESOURCE_TYPE_NONE),
+      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_data(NULL)
 {
 }
 
@@ -59,7 +59,7 @@ VA(0x0044ee00, 0xC0)
 DC_ADDRESS(0x0526e8, 0x6c)
 Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
     : resource(name, RESOURCE_TYPE_BITMAP24),
-      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_data(0)
+      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_data(NULL)
 {
     char filename[261];
     strcpy(filename, path);
@@ -100,7 +100,7 @@ void Bitmap24Bit::clear()
     m_imageSize = 0;
     if (m_data) {
         delete[] m_data;
-        m_data = 0;
+        m_data = NULL;
     }
 }
 

@@ -53,15 +53,15 @@ textEntryWidget::textEntryWidget() : textWidget()
 {
     m_cursorIndex = 0;
     m_maxLength = 0;
-    m_textBack = 0;
+    m_textBack = NULL;
     m_displayStart = 0;
     m_style = 0x100;
     m_hasFocus = 0;
     m_autoDraw = 0;
     // DC lines 63 and 69 both initialize textBack; the intervening stores
     // set the editor's style/focus flags, and line 70 clears saveBack.
-    m_textBack = 0;
-    m_saveBack = 0;
+    m_textBack = NULL;
+    m_saveBack = NULL;
 }
 
 VA(0x005ba920, 0x1B5)
@@ -75,8 +75,8 @@ textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,
 {
     m_cursorIndex = 0;
     m_autoDraw = 0;
-    m_textBack = 0;
-    m_saveBack = 0;
+    m_textBack = NULL;
+    m_saveBack = NULL;
     if (backgroundIcon)
         m_textBack = ResourceManager::GetBitmap816(backgroundIcon);
     m_displayStart = 0;

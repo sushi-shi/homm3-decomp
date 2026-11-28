@@ -488,7 +488,7 @@ void videoDrawRects()
     if ((SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2) && !SmackManager::g_playingSmack.m_paused) {
         Smack* smk;
 
-        smk = 0;
+        smk = NULL;
         if (SmackManager::g_playingSmack.m_smack)
             smk = SmackManager::g_playingSmack.m_smack;
         else if (SmackManager::g_playingSmack.m_smack2)
@@ -574,9 +574,9 @@ void videoShutDown()
         CloseHandle(g_videoFile2);
     if (g_videoFile1)
         CloseHandle(g_videoFile1);
-    g_videoFile1 = 0;
-    g_videoFile2 = 0;
-    g_videoFile3 = 0;
+    g_videoFile1 = NULL;
+    g_videoFile2 = NULL;
+    g_videoFile3 = NULL;
 }
 
 // The base archive's path on the drive the misc.obj install scan selected.
@@ -650,41 +650,41 @@ unsigned char loadAnimHeaders()
     DWORD nread;
 
     g_videoFile3 = CreateFileA(getDriveArchivePath().c_str(), GENERIC_READ,
-        FILE_SHARE_READ, 0, OPEN_EXISTING,
-        FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+        FILE_SHARE_READ, NULL, OPEN_EXISTING,
+        FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, NULL);
     if (g_videoFile3 != INVALID_HANDLE_VALUE) {
-        ReadFile(g_videoFile3, &g_videoCount3, 4, &nread, 0);
+        ReadFile(g_videoFile3, &g_videoCount3, 4, &nread, NULL);
         g_videoHeader3 = new VideoHeaderStruct[g_videoCount3 + 2];
-        ReadFile(g_videoFile3, g_videoHeader3, 44 * g_videoCount3, &nread, 0);
+        ReadFile(g_videoFile3, g_videoHeader3, 44 * g_videoCount3, &nread, NULL);
     } else {
-        g_videoFile3 = 0;
+        g_videoFile3 = NULL;
     }
 
     if (g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
         || g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
         g_videoFile1 = CreateFileA("data\\h3ab_ahd.vid", GENERIC_READ,
-            FILE_SHARE_READ, 0, OPEN_EXISTING,
-            FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+            FILE_SHARE_READ, NULL, OPEN_EXISTING,
+            FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, NULL);
         if (g_videoFile1 == INVALID_HANDLE_VALUE) {
             MessageBoxA(g_hwndApp, g_generalText->GetText(GENERAL_TEXT_VIDEO_FILE_OPEN_ERROR),
                 g_generalText->GetText(GENERAL_TEXT_VIDEO_FILE_ERROR), 0);
             return 0;
         }
-        ReadFile(g_videoFile1, &g_videoCount1, 4, &nread, 0);
+        ReadFile(g_videoFile1, &g_videoCount1, 4, &nread, NULL);
         g_videoHeader1 = new VideoHeaderStruct[g_videoCount1 + 2];
-        ReadFile(g_videoFile1, g_videoHeader1, 44 * g_videoCount1, &nread, 0);
+        ReadFile(g_videoFile1, g_videoHeader1, 44 * g_videoCount1, &nread, NULL);
     }
 
     g_videoFile2 = CreateFileA("data\\Video.vid", GENERIC_READ, FILE_SHARE_READ,
-        0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+        NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, NULL);
     if (g_videoFile2 == INVALID_HANDLE_VALUE) {
         MessageBoxA(g_hwndApp, g_generalText->GetText(GENERAL_TEXT_VIDEO_FILE_OPEN_ERROR),
             g_generalText->GetText(GENERAL_TEXT_VIDEO_FILE_ERROR), 0);
         return 0;
     }
-    ReadFile(g_videoFile2, &g_videoCount2, 4, &nread, 0);
+    ReadFile(g_videoFile2, &g_videoCount2, 4, &nread, NULL);
     g_videoHeader2 = new VideoHeaderStruct[g_videoCount2 + 2];
-    ReadFile(g_videoFile2, g_videoHeader2, 44 * g_videoCount2, &nread, 0);
+    ReadFile(g_videoFile2, g_videoHeader2, 44 * g_videoCount2, &nread, NULL);
     return 1;
 }
 
@@ -695,15 +695,15 @@ void deleteAnimHeaders()
 {
     if (g_videoHeader3) {
         delete[] g_videoHeader3;
-        g_videoHeader3 = 0;
+        g_videoHeader3 = NULL;
     }
     if (g_videoHeader2) {
         delete[] g_videoHeader2;
-        g_videoHeader2 = 0;
+        g_videoHeader2 = NULL;
     }
     if (g_videoHeader1) {
         delete[] g_videoHeader1;
-        g_videoHeader1 = 0;
+        g_videoHeader1 = NULL;
     }
 }
 
@@ -716,41 +716,41 @@ unsigned char loadSoundHeaders()
     char path[52];
 
     g_soundFile = CreateFileA("data\\heroes3.snd", GENERIC_READ, FILE_SHARE_READ,
-        0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+        NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, NULL);
     if (g_soundFile == INVALID_HANDLE_VALUE) {
         MessageBoxA(g_hwndApp, g_generalText->GetText(GENERAL_TEXT_SOUND_ARCHIVE_OPEN_ERROR),
             g_generalText->GetText(GENERAL_TEXT_SOUND_FILE_ERROR), 0);
         return 0;
     }
-    ReadFile(g_soundFile, &g_soundCount, 4, &nread, 0);
+    ReadFile(g_soundFile, &g_soundCount, 4, &nread, NULL);
     g_soundHeader = new SoundHeaderStruct[g_soundCount + 2];
-    ReadFile(g_soundFile, g_soundHeader, 48 * g_soundCount, &nread, 0);
+    ReadFile(g_soundFile, g_soundHeader, 48 * g_soundCount, &nread, NULL);
 
     if (g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
         || g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
         g_soundFileCd = CreateFileA("data\\h3ab_ahd.snd", GENERIC_READ,
-            FILE_SHARE_READ, 0, OPEN_EXISTING,
-            FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+            FILE_SHARE_READ, NULL, OPEN_EXISTING,
+            FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, NULL);
         if (g_soundFileCd == INVALID_HANDLE_VALUE) {
             MessageBoxA(g_hwndApp, g_generalText->GetText(GENERAL_TEXT_SOUND_ARCHIVE_OPEN_ERROR),
                 g_generalText->GetText(GENERAL_TEXT_SOUND_FILE_ERROR), 0);
             return 0;
         }
-        ReadFile(g_soundFileCd, &g_soundCountCd, 4, &nread, 0);
+        ReadFile(g_soundFileCd, &g_soundCountCd, 4, &nread, NULL);
         g_soundHeaderCd = new SoundHeaderStruct[g_soundCountCd + 2];
-        ReadFile(g_soundFileCd, g_soundHeaderCd, 48 * g_soundCountCd, &nread, 0);
+        ReadFile(g_soundFileCd, g_soundHeaderCd, 48 * g_soundCountCd, &nread, NULL);
     }
 
     strcpy(path, getDriveArchivePath().c_str());
     strtok(path, ".");
     strcat(path, ".snd");
-    g_soundFileCampaign = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0,
-        OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
+    g_soundFileCampaign = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL,
+        OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, NULL);
     if (g_soundFileCampaign != INVALID_HANDLE_VALUE) {
-        ReadFile(g_soundFileCampaign, &g_soundCountCampaign, 4, &nread, 0);
+        ReadFile(g_soundFileCampaign, &g_soundCountCampaign, 4, &nread, NULL);
         g_soundHeaderCampaign = new SoundHeaderStruct[g_soundCountCampaign + 2];
         ReadFile(g_soundFileCampaign, g_soundHeaderCampaign,
-            48 * g_soundCountCampaign, &nread, 0);
+            48 * g_soundCountCampaign, &nread, NULL);
     }
     return 1;
 }
@@ -766,7 +766,7 @@ void deleteSoundHeaders()
     }
     if (g_soundHeader) {
         delete[] g_soundHeader;
-        g_soundHeader = 0;
+        g_soundHeader = NULL;
     }
     if (g_soundFileCd != INVALID_HANDLE_VALUE) {
         CloseHandle(g_soundFileCd);
@@ -774,7 +774,7 @@ void deleteSoundHeaders()
     }
     if (g_soundHeaderCd) {
         delete[] g_soundHeaderCd;
-        g_soundHeaderCd = 0;
+        g_soundHeaderCd = NULL;
     }
     if (g_soundFileCampaign != INVALID_HANDLE_VALUE) {
         CloseHandle(g_soundFileCampaign);
@@ -782,7 +782,7 @@ void deleteSoundHeaders()
     }
     if (g_soundHeaderCampaign) {
         delete[] g_soundHeaderCampaign;
-        g_soundHeaderCampaign = 0;
+        g_soundHeaderCampaign = NULL;
     }
 }
 
@@ -801,7 +801,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
         for (i = 0; i < g_videoCount1; i++) {
             if (strcmpi(g_videoHeader1[i].m_name, name) == 0) {
                 g_soundManager->serviceSounds();
-                SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
+                SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, NULL,
                     FILE_BEGIN);
                 return SmackOpen(static_cast<const char*>(g_videoFile1),
                     flags | extraFlags | SMACKFILEHANDLE | SMACKLOADEXTRA
@@ -813,7 +813,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
     for (i = 0; i < g_videoCount2; i++) {
         if (strcmpi(g_videoHeader2[i].m_name, name) == 0) {
             g_soundManager->serviceSounds();
-            SetFilePointer(g_videoFile2, g_videoHeader2[i].m_offset, 0, FILE_BEGIN);
+            SetFilePointer(g_videoFile2, g_videoHeader2[i].m_offset, NULL, FILE_BEGIN);
             return SmackOpen(static_cast<const char*>(g_videoFile2),
                 flags | extraFlags | SMACKFILEHANDLE | SMACKLOADEXTRA
                     | SMACKNEEDVOLUME, SMACKAUTOEXTRA);
@@ -824,7 +824,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
         for (i = 0; i < g_videoCount3; i++) {
             if (strcmpi(g_videoHeader3[i].m_name, name) == 0) {
                 g_soundManager->serviceSounds();
-                SetFilePointer(g_videoFile3, g_videoHeader3[i].m_offset, 0,
+                SetFilePointer(g_videoFile3, g_videoHeader3[i].m_offset, NULL,
                     FILE_BEGIN);
                 return SmackOpen(static_cast<const char*>(g_videoFile3),
                     flags | extraFlags | SMACKFILEHANDLE | SMACKLOADEXTRA
@@ -837,7 +837,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
         for (i = 0; i < g_videoCount1; i++) {
             if (strcmpi(g_videoHeader1[i].m_name, name) == 0) {
                 g_soundManager->serviceSounds();
-                SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
+                SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, NULL,
                     FILE_BEGIN);
                 return SmackOpen(static_cast<const char*>(g_videoFile1),
                     flags | extraFlags | SMACKFILEHANDLE | SMACKLOADEXTRA
@@ -845,7 +845,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
             }
         }
     }
-    return 0;
+    return NULL;
 }
 
 VA(0x00598a40, 0xA2)
@@ -895,7 +895,7 @@ MAC_ADDRESS(0x25f6e4, 0x264)
 void openSmackerVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
                bool advance)
 {
-    if (g_noSound == 0 && g_soundManager->m_ds != 0
+    if (g_noSound == 0 && g_soundManager->m_ds != NULL
         && g_config.m_soundVolume != 0)
         g_smackSound = 1;
     else
@@ -911,7 +911,7 @@ void openSmackerVideo(int id, int x, int y, int w, int h, int loop, bool autoDra
 
     SmackManager::g_playingSmack.m_id = id;
     SmackManager::g_playingSmack.m_paused = 0;
-    SmackManager::g_playingSmack.m_smack2 = 0;
+    SmackManager::g_playingSmack.m_smack2 = NULL;
     SmackManager::g_playingSmack.m_bufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
                             ? SMACKBUFFER565 : SMACKBUFFER555;
     SmackManager::g_playingSmack.m_advance = advance;
@@ -1000,7 +1000,7 @@ void nextSmackerFrame()
                 g_windowManager->fadeScreen(1, 4, 0);
             g_soundManager->serviceSounds();
             SmackClose(SmackManager::g_playingSmack.m_smack);
-            SmackManager::g_playingSmack.m_smack = 0;
+            SmackManager::g_playingSmack.m_smack = NULL;
             if (g_videoDescriptors[SmackManager::g_playingSmack.m_id].m_fadeInSecondTrack) {
                 SmackDoFrame(SmackManager::g_playingSmack.m_smack2);
                 g_windowManager->fadeScreen(0, 4, 0);
@@ -1029,8 +1029,8 @@ void closeSmacker()
         SmackClose(SmackManager::g_playingSmack.m_smack);
     if (SmackManager::g_playingSmack.m_smack2)
         SmackClose(SmackManager::g_playingSmack.m_smack2);
-    SmackManager::g_playingSmack.m_smack2 = 0;
-    SmackManager::g_playingSmack.m_smack = 0;
+    SmackManager::g_playingSmack.m_smack2 = NULL;
+    SmackManager::g_playingSmack.m_smack = NULL;
     SmackManager::g_playingSmack.m_paused = 0;
     SmackManager::g_playingSmacker = 0;
     SmackManager::g_needsUpdate = 0;
@@ -1089,7 +1089,7 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
         aborted = 0;
         g_inputManager->flush();
         while (1) {
-            if (SmackManager::g_playingSmack.m_smack == 0)
+            if (SmackManager::g_playingSmack.m_smack == NULL)
                 break;
             pollSound();
             process1WindowsMessage();

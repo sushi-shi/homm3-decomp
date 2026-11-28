@@ -89,7 +89,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
         0, 0, m_width, m_height, 0, background, 0x800));
 
     m_chatText = new textWidget(
-        0x145, 0xfa, 0x94, 0x132, 0, "smalfont.fnt",
+        0x145, 0xfa, 0x94, 0x132, NULL, "smalfont.fnt",
         font::CHAT, 0x12d, font::BOTTOM_JUSTIFIED, 0, 8);
     m_chatEdit = new CSwapManagerChatEdit(
         4, 0x242, 0x2d4, 0x12, 0x7f, "", "smalfont.fnt",
@@ -113,9 +113,9 @@ TSwapWindow::TSwapWindow(hero** heroes)
                 0x16e, 0xfa, 0x43, 0x10f, 0,
                 "trarrowr.pcx", 0x800));
         }
-        m_leftArrow = 0;
-        m_rightArrow = 0;
-        m_receiveButton = 0;
+        m_leftArrow = NULL;
+        m_rightArrow = NULL;
+        m_receiveButton = NULL;
     }
 
     m_widgets.push_back(m_chatText);
@@ -150,25 +150,25 @@ TSwapWindow::TSwapWindow(hero** heroes)
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
     m_widgets.push_back(new textWidget(
-        0x14a, 0x1b, 0x2e, 0x14, 0, "smalfont.fnt",
+        0x14a, 0x1b, 0x2e, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 3, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x14a, 0x3f, 0x2e, 0x14, 0, "smalfont.fnt",
+        0x14a, 0x3f, 0x2e, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x14a, 0x63, 0x2e, 0x14, 0, "smalfont.fnt",
+        0x14a, 0x63, 0x2e, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 5, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x14a, 0x87, 0x2e, 0x14, 0, "smalfont.fnt",
+        0x14a, 0x87, 0x2e, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 6, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x2c, 0x11, 0xc8, 0x14, 0, "smalfont.fnt",
+        0x2c, 0x11, 0xc8, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 0x57, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x67, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
+        0x67, 0x3f, 0x20, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 0x51, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x8b, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
+        0x8b, 0x3f, 0x20, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 0x53, font::CENTER_JUSTIFIED, 0, 8));
 
     m_widgets.push_back(new button(
@@ -201,25 +201,25 @@ TSwapWindow::TSwapWindow(hero** heroes)
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
     m_widgets.push_back(new textWidget(
-        0x1a8, 0x1a, 0x2e, 0x14, 0, "smalfont.fnt",
+        0x1a8, 0x1a, 0x2e, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 8, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x1a8, 0x3e, 0x2e, 0x14, 0, "smalfont.fnt",
+        0x1a8, 0x3e, 0x2e, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 9, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x1a8, 0x62, 0x2e, 0x14, 0, "smalfont.fnt",
+        0x1a8, 0x62, 0x2e, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 10, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x1a8, 0x86, 0x2e, 0x14, 0, "smalfont.fnt",
+        0x1a8, 0x86, 0x2e, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 11, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x22b, 0x11, 0xc8, 0x14, 0, "smalfont.fnt",
+        0x22b, 0x11, 0xc8, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 0x58, font::LEFT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x251, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
+        0x251, 0x3f, 0x20, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 0x52, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x275, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
+        0x275, 0x3f, 0x20, 0x14, NULL, "smalfont.fnt",
         font::PRIMARY, 0x54, font::CENTER_JUSTIFIED, 0, 8));
 
     m_widgets.push_back(new button(
@@ -236,9 +236,9 @@ TSwapWindow::TSwapWindow(hero** heroes)
         "hsbtns5.def", 0, 1, 0, 0, 2));
 
     m_widgets.push_back(new bitmapBorder(
-        0x101, 0x0d, 0x3a, 0x40, 1, 0, 0x800));
+        0x101, 0x0d, 0x3a, 0x40, 1, NULL, 0x800));
     m_widgets.push_back(new bitmapBorder(
-        0x1e5, 0x0d, 0x3a, 0x40, 2, 0, 0x800));
+        0x1e5, 0x0d, 0x3a, 0x40, 2, NULL, 0x800));
 
     m_widgets.push_back(new iconWidget(
         0x45, 0x83, 0x20, 0x20, 0x0d, "cprsmall.def",
@@ -263,25 +263,25 @@ TSwapWindow::TSwapWindow(hero** heroes)
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
     m_widgets.push_back(new textWidget(
-        0x46, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0x46, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x41, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x6a, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0x6a, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x42, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x8e, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0x8e, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x43, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0xb2, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0xb2, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x44, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0xd6, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0xd6, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x45, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0xfa, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0xfa, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x46, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x11e, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0x11e, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x47, font::RIGHT_JUSTIFIED, 0, 8));
 
     m_widgets.push_back(new iconWidget(
@@ -307,25 +307,25 @@ TSwapWindow::TSwapWindow(hero** heroes)
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
     m_widgets.push_back(new textWidget(
-        0x1e8, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0x1e8, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x48, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x20c, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0x20c, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x49, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x230, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0x230, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x4a, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x254, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0x254, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x4b, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x278, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0x278, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x4c, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x29c, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0x29c, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x4d, font::RIGHT_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        0x2c0, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
+        0x2c0, 0x99, 0x1d, 0x14, NULL, "tiny.fnt",
         font::PRIMARY, 0x4e, font::RIGHT_JUSTIFIED, 0, 8));
 
     m_widgets.push_back(new iconWidget(
@@ -651,7 +651,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new bitmapBorder(
         4, 0x242, 0x2d4, 0x12, 0x7a, "TStatBar.pcx", 0x800));
     m_widgets.push_back(new textWidget(
-        4, 0x242, 0x2d4, 0x12, 0, "smalfont.fnt",
+        4, 0x242, 0x2d4, 0x12, NULL, "smalfont.fnt",
         font::PRIMARY, 0x7b, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new button(
         0x2dc, 0x237, 0x40, 0x1e, 0x7800,
@@ -757,8 +757,8 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
 {
     m_heroes[0] = leftHero;
     m_heroes[1] = rightHero;
-    m_parent = 0;
-    m_border = 0;
+    m_parent = NULL;
+    m_border = NULL;
     m_sourceHeroIndex = -1;
     m_destinationHeroIndex = -1;
     m_armySelectionPending = -1;
@@ -778,7 +778,7 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
             m_givingToAlly = 0;
     }
     g_swapManager = this;
-    m_netMsgHandler = 0;
+    m_netMsgHandler = NULL;
 }
 
 VA(0x005ae5b0, 0x19B)
@@ -802,19 +802,19 @@ void swapManager::reset()
 
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 107;
-    msg.m_extra = limit(-3, m_heroes[0]->getMorale(0, 0, 1), 3) + 3;
+    msg.m_extra = limit(-3, m_heroes[0]->getMorale(NULL, 0, 1), 3) + 3;
     m_parent->broadcastMessage(msg);
 
     msg.m_codeY = 108;
-    msg.m_extra = limit(-3, m_heroes[1]->getMorale(0, 0, 1), 3) + 3;
+    msg.m_extra = limit(-3, m_heroes[1]->getMorale(NULL, 0, 1), 3) + 3;
     m_parent->broadcastMessage(msg);
 
     msg.m_codeY = 109;
-    msg.m_extra = limit(-3, m_heroes[0]->getLuck(0, 0, 1), 3) + 3;
+    msg.m_extra = limit(-3, m_heroes[0]->getLuck(NULL, 0, 1), 3) + 3;
     m_parent->broadcastMessage(msg);
 
     msg.m_codeY = 110;
-    msg.m_extra = limit(-3, m_heroes[1]->getLuck(0, 0, 1), 3) + 3;
+    msg.m_extra = limit(-3, m_heroes[1]->getLuck(NULL, 0, 1), 3) + 3;
     m_parent->broadcastMessage(msg);
 }
 
@@ -951,7 +951,7 @@ CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         if (m_inPopup)
         {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         int otherPlayer = g_swapManager->getOtherHero()->m_owner;
         if (g_game->getGamePosFromDPID(netMsg->m_dpidFrom)
@@ -969,7 +969,7 @@ CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         if (m_inPopup)
         {
             m_abortPopupMsg = netMsg;
-            return 0;
+            return NULL;
         }
         m_field0c = 1;
         break;
@@ -990,7 +990,7 @@ CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 
     if (netMsg)
         destroyMsg(netMsg);
-    return 0;
+    return NULL;
 }
 
 VA(0x005aed20, 0x9B)
@@ -1240,7 +1240,7 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, bool shif
     {
         if (m_heroes[hero]->m_army.m_armies[monster] != CREATURE_NONE)
             g_game->viewArmy(m_heroes[hero]->m_army, monster, m_heroes[hero],
-                             0, 0x77, 0x14, 0, 1);
+                             NULL, 0x77, 0x14, 0, 1);
         return;
     }
 
@@ -1537,7 +1537,7 @@ int swapManager::main(message& msg)
 
     if (g_remoteOn)
     {
-        m_netMsgHandler->checkHandleNet(0, 0);
+        m_netMsgHandler->checkHandleNet(0, NULL);
         if (static_cast<CSwapMgrNetMsgHandler*>(m_netMsgHandler)->m_field0c)
         {
             if (isLeftHero())
@@ -2056,18 +2056,18 @@ void swapManager::setRolloverText(int codeY)
         break;
 
     case kSwapRolloverMoraleLeft: case kSwapRolloverMoraleRight:
-        if (m_heroes[codeY - kSwapRolloverMoraleLeft]->getMorale(0, 0, 1) > 0)
+        if (m_heroes[codeY - kSwapRolloverMoraleLeft]->getMorale(NULL, 0, 1) > 0)
             strcpy(g_text, g_heroScreen[3]);
-        else if (m_heroes[codeY - kSwapRolloverMoraleLeft]->getMorale(0, 0, 1) == 0)
+        else if (m_heroes[codeY - kSwapRolloverMoraleLeft]->getMorale(NULL, 0, 1) == 0)
             strcpy(g_text, g_heroScreen[4]);
         else
             strcpy(g_text, g_heroScreen[5]);
         break;
 
     case kSwapRolloverLuckLeft: case kSwapRolloverLuckRight:
-        if (m_heroes[codeY - kSwapRolloverLuckLeft]->getLuck(0, 0, 1) > 0)
+        if (m_heroes[codeY - kSwapRolloverLuckLeft]->getLuck(NULL, 0, 1) > 0)
             strcpy(g_text, g_heroScreen[6]);
-        else if (m_heroes[codeY - kSwapRolloverLuckLeft]->getLuck(0, 0, 1) == 0)
+        else if (m_heroes[codeY - kSwapRolloverLuckLeft]->getLuck(NULL, 0, 1) == 0)
             strcpy(g_text, g_heroScreen[7]);
         else
             strcpy(g_text, g_heroScreen[8]);
@@ -2215,7 +2215,7 @@ MAC_ADDRESS(0x1a8cd4, 0xa0)
 void swapManager::viewMon()
 {
     g_game->viewArmy(m_heroes[m_sourceHeroIndex]->m_army, m_destinationArmySlot, m_heroes[m_sourceHeroIndex],
-                     0, 0x77, 0x14,
+                     NULL, 0x77, 0x14,
                      m_heroes[m_sourceHeroIndex]->m_army.getNumArmies() > 1, 0);
 }
 

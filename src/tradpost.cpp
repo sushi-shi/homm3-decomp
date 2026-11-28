@@ -65,10 +65,10 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
         DATA_COMPGEN(0x0068c53c, tradeResourcesBackground, "TPMrkReS.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(0, 15, m_width, 30, 0,
+    m_widgets.push_back(new textWidget(0, 15, m_width, 30, NULL,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
         font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(319, 47, 250, 77, 0,
+    m_widgets.push_back(new textWidget(319, 47, 250, 77, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 2,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -78,16 +78,16 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
     m_widgets.push_back(new iconWidget(429, 457, 32, 32, 11,
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(124, 497, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 497, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 497, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 497, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(28, 140, 257, 20, 0,
+    m_widgets.push_back(new textWidget(28, 140, 257, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+    m_widgets.push_back(new textWidget(317, 139, 257, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -129,25 +129,25 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(41, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(207, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(41, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(207, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 388, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -190,25 +190,25 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(328, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(494, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(328, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(494, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 388, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -235,7 +235,7 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
 
     m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
-    m_widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+    m_widgets.push_back(new textWidget(8, 568, 585, 18, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -286,10 +286,10 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
         DATA_COMPGEN(0x0068c56c, giveResourcesBackground, "TPMrkPtS.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(0, 15, m_width, 30, 0,
+    m_widgets.push_back(new textWidget(0, 15, m_width, 30, NULL,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
         font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(33, 47, 250, 77, 0,
+    m_widgets.push_back(new textWidget(33, 47, 250, 77, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 2,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -299,16 +299,16 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
     m_widgets.push_back(new iconWidget(416, 451, 58, 64, 13,
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(124, 497, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 497, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 517, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 517, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(28, 140, 257, 20, 0,
+    m_widgets.push_back(new textWidget(28, 140, 257, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(317, 48, 257, 20, 0,
+    m_widgets.push_back(new textWidget(317, 48, 257, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -347,25 +347,25 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(41, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(207, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(41, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(207, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 388, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -408,25 +408,25 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
         DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(328, 151, 66, 20, 0,
+    m_widgets.push_back(new textWidget(328, 151, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 151, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 151, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 151, 66, 20, 0,
+    m_widgets.push_back(new textWidget(494, 151, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(328, 269, 66, 20, 0,
+    m_widgets.push_back(new textWidget(328, 269, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 269, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 269, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 269, 66, 20, 0,
+    m_widgets.push_back(new textWidget(494, 269, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 387, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 387, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -458,7 +458,7 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
 
     m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
-    m_widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+    m_widgets.push_back(new textWidget(8, 568, 585, 18, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -509,10 +509,10 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
         DATA_COMPGEN(0x0068c58c, buyArtifactBackground, "TPMrkAbS.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(0, 15, m_width, 30, 0,
+    m_widgets.push_back(new textWidget(0, 15, m_width, 30, NULL,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
         font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(319, 50, 250, 77, 0,
+    m_widgets.push_back(new textWidget(319, 50, 250, 77, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 2,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -522,16 +522,16 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
     m_widgets.push_back(new iconWidget(424, 448, 44, 44, 8,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(124, 497, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 497, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 497, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 497, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(28, 140, 257, 20, 0,
+    m_widgets.push_back(new textWidget(28, 140, 257, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+    m_widgets.push_back(new textWidget(317, 139, 257, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -570,25 +570,25 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(41, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(207, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(41, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(207, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 388, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -631,25 +631,25 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(328, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(494, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(328, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(494, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 388, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -677,7 +677,7 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
 
     m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
-    m_widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+    m_widgets.push_back(new textWidget(8, 568, 585, 18, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -719,10 +719,10 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
         DATA_COMPGEN(0x0068c5ac, sellArtifactBackground, "TPMrkAsS.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(0, 15, m_width, 30, 0,
+    m_widgets.push_back(new textWidget(0, 15, m_width, 30, NULL,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
         font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(319, 50, 250, 77, 0,
+    m_widgets.push_back(new textWidget(319, 50, 250, 77, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 2,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -732,16 +732,16 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
     m_widgets.push_back(new iconWidget(135, 469, 44, 44, 9,
         DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(124, 519, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 519, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 520, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 520, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(28, 48, 257, 20, 0,
+    m_widgets.push_back(new textWidget(28, 48, 257, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+    m_widgets.push_back(new textWidget(317, 139, 257, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -780,25 +780,25 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(328, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(494, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(328, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(494, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 388, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -970,7 +970,7 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
 
     m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
-    m_widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+    m_widgets.push_back(new textWidget(8, 568, 585, 18, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -1012,10 +1012,10 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
         DATA_COMPGEN(0x0068c5cc, sellCreatureBackground, "TPMrkCrS.pcx"),
         0x800));
-    m_widgets.push_back(new textWidget(0, 15, m_width, 30, 0,
+    m_widgets.push_back(new textWidget(0, 15, m_width, 30, NULL,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
         font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(319, 47, 250, 77, 0,
+    m_widgets.push_back(new textWidget(319, 47, 250, 77, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 2,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -1026,16 +1026,16 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
         DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                      "twcrport.def"),
         0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(124, 518, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 518, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 497, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 497, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(28, 93, 257, 20, 0,
+    m_widgets.push_back(new textWidget(28, 93, 257, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+    m_widgets.push_back(new textWidget(317, 139, 257, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -1052,25 +1052,25 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
         DATA_COMPGEN(0x0068c4f0, marketButton6Sprite, "TPMrkBu6.def"),
         0, 1, 0, 0, 2));
 
-    m_widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(41, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(207, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(41, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(207, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+    m_widgets.push_back(new textWidget(124, 388, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -1096,25 +1096,25 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
         DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
         6, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(328, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+    m_widgets.push_back(new textWidget(494, 230, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(328, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+    m_widgets.push_back(new textWidget(494, 309, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+    m_widgets.push_back(new textWidget(411, 388, 66, 20, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -1198,7 +1198,7 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
 
     m_widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
         DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
-    m_widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+    m_widgets.push_back(new textWidget(8, 568, 585, 18, NULL,
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
 
@@ -1492,7 +1492,7 @@ static void doMarket()
         switch (g_marketWindow) {
         case MARKET_WINDOW_TRADE:
             g_tradeWindow = new TTradeResourceWindow(g_marketWindowX, g_marketWindowY);
-            if (g_tradeWindow == 0)
+            if (g_tradeWindow == NULL)
                 memError();
             msg.m_id = 0x200;
             msg.m_codeX = 13;
@@ -1512,7 +1512,7 @@ static void doMarket()
 
         case MARKET_WINDOW_GIVE: {
             g_giveWindow = new TGiveResourceWindow(g_marketWindowX, g_marketWindowY);
-            if (g_giveWindow == 0)
+            if (g_giveWindow == NULL)
                 memError();
             msg.m_id = 0x200;
             msg.m_codeX = 13;
@@ -1540,7 +1540,7 @@ static void doMarket()
 
         case MARKET_WINDOW_BUY:
             g_buyWindow = new TBuyArtifactWindow(g_marketWindowX, g_marketWindowY);
-            if (g_buyWindow == 0)
+            if (g_buyWindow == NULL)
                 memError();
             msg.m_id = 0x200;
             msg.m_codeX = 13;
@@ -1560,7 +1560,7 @@ static void doMarket()
 
         case MARKET_WINDOW_SELL_ARTIFACT:
             g_sellArtWindow = new TSellArtifactWindow(g_marketWindowX, g_marketWindowY);
-            if (g_sellArtWindow == 0)
+            if (g_sellArtWindow == NULL)
                 memError();
             msg.m_id = 0x200;
             msg.m_codeX = 13;
@@ -1580,7 +1580,7 @@ static void doMarket()
 
         case MARKET_WINDOW_SELL_CREATURE:
             g_sellCreatureWindow = new TSellCreatureWindow(g_marketWindowX, g_marketWindowY);
-            if (g_sellCreatureWindow == 0)
+            if (g_sellCreatureWindow == NULL)
                 memError();
             msg.m_id = 0x200;
             msg.m_codeX = 13;
@@ -1886,7 +1886,7 @@ void TTradeResourceWindow::update(bool update)
         setWidgetDisabled(6);
     }
 
-    if (g_marketSource == MARKET_SOURCE_TRADING_POST || g_marketHero == 0 ||
+    if (g_marketSource == MARKET_SOURCE_TRADING_POST || g_marketHero == NULL ||
         g_marketSource == MARKET_SOURCE_FREELANCER ||
         (g_townManager->m_townToView->m_type != TOWN_TOWER &&
          g_townManager->m_townToView->m_type != TOWN_DUNGEON) ||
@@ -1896,7 +1896,7 @@ void TTradeResourceWindow::update(bool update)
         setWidgetOn(MARKET_RIGHT_LABEL_ID);
     }
 
-    if (g_marketSource == MARKET_SOURCE_TRADING_POST || g_marketHero == 0 ||
+    if (g_marketSource == MARKET_SOURCE_TRADING_POST || g_marketHero == NULL ||
         g_marketSource == MARKET_SOURCE_FREELANCER ||
         g_townManager->m_townToView->m_type != TOWN_STRONGHOLD ||
         !g_townManager->m_townToView->hasBuilding(21, false)) {
@@ -3768,7 +3768,7 @@ int TSellCreatureWindow::windowHandler(message& msg)
                 g_game->viewArmy(
                     g_marketHero->m_army,
                     msg.m_codeY - MARKET_CREATURE_SLOT_0_ID,
-                    g_marketHero, 0, 0x77, 0x14, 0, 1);
+                    g_marketHero, NULL, 0x77, 0x14, 0, 1);
                 return MESSAGE_DISPATCH_CONSUME;
             }
             return MESSAGE_DISPATCH_CONSUME;

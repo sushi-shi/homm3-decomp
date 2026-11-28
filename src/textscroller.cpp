@@ -51,7 +51,7 @@ type_text_slider::type_text_slider(type_text_scroller* scroller,
                                    int x, int y, int w, int h, int id, int num,
                                    EGraphics graphics, int page,
                                    unsigned char hotKey)
-    : slider(x, y, w, h, id, num, 0, graphics, page, hotKey)
+    : slider(x, y, w, h, id, num, NULL, graphics, page, hotKey)
 {
     m_owner = scroller;
 }
@@ -77,7 +77,7 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
 {
     font* textFont = ResourceManager::GetFont(m_fontFilename);
     int lineY = this->m_y;
-    m_background = 0;
+    m_background = NULL;
     textFont->fillLinesVector(text, m_width - 24, m_textLines);
 
     int visibleLines = m_height / textFont->fs.height;

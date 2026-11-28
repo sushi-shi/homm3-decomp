@@ -292,7 +292,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
         exitClick, 0, 1);
     static_cast<type_func_button*>(newWidget)->setHotkey(28);
     newWidget->setHelpText(
-        g_sacrificeWindowHelp[SACRIFICE_HELP_EXIT_BUTTON].m_text, 0, 1);
+        g_sacrificeWindowHelp[SACRIFICE_HELP_EXIT_BUTTON].m_text, NULL, 1);
     m_widgets.push_back(newWidget);
 
     m_rolloverText = new textWidget(
@@ -425,7 +425,7 @@ void type_sacrifice_window::createArtifactWidgets(
         279, 440, 44, 44, widgetId++, "artifact.def",
         0, 0, 0, 0, 16);
     m_currentArtifactWidget->setHelpText(
-        g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_ARTIFACT].m_text, 0, 1);
+        g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_ARTIFACT].m_text, NULL, 1);
     m_widgets.push_back(m_currentArtifactWidget);
     m_artifactWidgets.push_back(m_currentArtifactWidget);
 
@@ -435,7 +435,7 @@ void type_sacrifice_window::createArtifactWidgets(
         146, 520, 64, 32, widgetId++, "AltEmBk.def",
         emptyBackpackHandler, 0, 1);
     m_emptyBackpackButton->setHelpText(
-        g_sacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].m_text, 0, 1);
+        g_sacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].m_text, NULL, 1);
     m_widgets.push_back(m_emptyBackpackButton);
     m_artifactWidgets.push_back(m_emptyBackpackButton);
 
@@ -443,7 +443,7 @@ void type_sacrifice_window::createArtifactWidgets(
         392, 520, 64, 32, widgetId++, "AltFill.def",
         allArtifacts, 0, 1);
     m_allArtifactsButton->setHelpText(
-        g_sacrificeWindowHelp[SACRIFICE_HELP_ALL_ARTIFACTS].m_text, 0, 1);
+        g_sacrificeWindowHelp[SACRIFICE_HELP_ALL_ARTIFACTS].m_text, NULL, 1);
     m_widgets.push_back(m_allArtifactsButton);
     m_artifactWidgets.push_back(m_allArtifactsButton);
 
@@ -452,7 +452,7 @@ void type_sacrifice_window::createArtifactWidgets(
         sacrificeCreatures, 0, 1);
     m_creaturesButton->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON].m_text,
-        0, 1);
+        NULL, 1);
     m_widgets.push_back(m_creaturesButton);
     m_artifactWidgets.push_back(m_creaturesButton);
 
@@ -564,7 +564,7 @@ void type_sacrifice_window::createCreatureWidgets(
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_currentCreature.m_creatureCountText->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_CREATURE_AMOUNT].m_text,
-        0, 1);
+        NULL, 1);
     m_widgets.push_back(m_currentCreature.m_creatureCountText);
     m_creatureWidgets.push_back(m_currentCreature.m_creatureCountText);
 
@@ -572,17 +572,17 @@ void type_sacrifice_window::createCreatureWidgets(
         149, 421, 58, 64, -1, widgetId++, "Twcrport.def", 1);
     m_currentCreature.m_iconWidget->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_SOURCE_CREATURE].m_text,
-        0, 1);
+        NULL, 1);
     m_widgets.push_back(m_currentCreature.m_iconWidget);
     m_creatureWidgets.push_back(m_currentCreature.m_iconWidget);
-    m_currentCreature.m_sourceSelectionFrame = 0;
+    m_currentCreature.m_sourceSelectionFrame = NULL;
 
     m_currentCreature.m_experienceText = new textWidget(
         391, 493, 66, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_currentCreature.m_experienceText->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_AMOUNT].m_text,
-        0, 1);
+        NULL, 1);
     m_widgets.push_back(m_currentCreature.m_experienceText);
     m_creatureWidgets.push_back(m_currentCreature.m_experienceText);
 
@@ -590,16 +590,16 @@ void type_sacrifice_window::createCreatureWidgets(
         395, 421, 58, 64, -2, widgetId++, "TwCrPort.def", 0);
     m_currentCreature.m_selectionWidget->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_CREATURE].m_text,
-        0, 1);
+        NULL, 1);
     m_widgets.push_back(m_currentCreature.m_selectionWidget);
     m_creatureWidgets.push_back(m_currentCreature.m_selectionWidget);
-    m_currentCreature.m_offeringSelectionFrame = 0;
+    m_currentCreature.m_offeringSelectionFrame = NULL;
 
     m_creatureSlider = new slider(
         230, 479, 138, 16, widgetId++, 1, creatureSliderChange,
         slider::BROWN, 0, 0);
     m_creatureSlider->setHelpText(
-        g_sacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLIDER].m_text, 0, 1);
+        g_sacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLIDER].m_text, NULL, 1);
     m_widgets.push_back(m_creatureSlider);
     m_creatureWidgets.push_back(m_creatureSlider);
 
@@ -607,7 +607,7 @@ void type_sacrifice_window::createCreatureWidgets(
         146, 520, 64, 32, widgetId++, "IrcBtns.def",
         maxCreatures, 0, 1);
     m_maxCreaturesButton->setHelpText(
-        g_sacrificeWindowHelp[SACRIFICE_HELP_MAX_CREATURES].m_text, 0, 1);
+        g_sacrificeWindowHelp[SACRIFICE_HELP_MAX_CREATURES].m_text, NULL, 1);
     m_widgets.push_back(m_maxCreaturesButton);
     m_creatureWidgets.push_back(m_maxCreaturesButton);
 
@@ -615,7 +615,7 @@ void type_sacrifice_window::createCreatureWidgets(
         392, 520, 64, 32, widgetId++, "AltArmy.def",
         allCreatures, 0, 1);
     m_allCreaturesButton->setHelpText(
-        g_sacrificeWindowHelp[SACRIFICE_HELP_ALL_CREATURES].m_text, 0, 1);
+        g_sacrificeWindowHelp[SACRIFICE_HELP_ALL_CREATURES].m_text, NULL, 1);
     m_widgets.push_back(m_allCreaturesButton);
     m_creatureWidgets.push_back(m_allCreaturesButton);
 
@@ -625,7 +625,7 @@ void type_sacrifice_window::createCreatureWidgets(
     m_artifactsButton->setHelpText(
         g_sacrificeWindowHelp[
             SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON].m_text,
-        0, 1);
+        NULL, 1);
     m_widgets.push_back(m_artifactsButton);
     m_creatureWidgets.push_back(m_artifactsButton);
 }
@@ -650,7 +650,7 @@ long type_sacrifice_window::createCreatureIcons(
                 "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
             textWidgets[count]->setHelpText(
                 g_sacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLOT].m_text,
-                0, 1);
+                NULL, 1);
             m_widgets.push_back(textWidgets[count]);
             m_creatureWidgets.push_back(textWidgets[count]);
 
@@ -736,12 +736,12 @@ static void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
 {
     if (artifact.m_artifactId == ARTIFACT_NONE) {
         slotWidget->setVisible(0);
-        slotWidget->setHelpText(0, 0, 1);
+        slotWidget->setHelpText(NULL, NULL, 1);
     } else {
         slotWidget->setIconFrame(artifact.m_artifactId);
         slotWidget->setVisible(1);
         slotWidget->setHelpText(
-            akArtifactTraits[artifact.m_artifactId].m_name, 0, 1);
+            akArtifactTraits[artifact.m_artifactId].m_name, NULL, 1);
     }
 }
 
@@ -762,7 +762,7 @@ void type_sacrifice_window::updateSlot(long slot)
         m_slotWidgets[slot]->setVisible(1);
         m_slotWidgets[slot]->setIconFrame(SACRIFICE_ARTIFACT_SLOT_DROP_FRAME);
         m_slotWidgets[slot]->setHelpText(
-            m_slotBackWidgets[slot]->getHelpText(), 0, 1);
+            m_slotBackWidgets[slot]->getHelpText(), NULL, 1);
     } else {
         m_slotBackWidgets[slot]->setVisible(0);
         updateArtifactWidget(m_slotWidgets[slot], artifact);
@@ -770,7 +770,7 @@ void type_sacrifice_window::updateSlot(long slot)
 
     if (artifact.m_artifactId == ARTIFACT_NONE) {
         m_slotWidgets[slot]->setHelpText(
-            akArtifactSlotTraits[slot].m_name, 0, 1);
+            akArtifactSlotTraits[slot].m_name, NULL, 1);
     }
 }
 
@@ -811,7 +811,7 @@ void type_sacrifice_window::setArtifactMode()
     m_sacrificeButton->enable(0);
     m_sacrificeButton->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_SACRIFICE_ARTIFACTS].m_text,
-        0, 1);
+        NULL, 1);
     m_allArtifactsButton->enable(
         m_currentHero->getNumberInBackpack(1) > 0
         || m_currentHero->getEquippedArtifacts(1) > 0);
@@ -833,15 +833,15 @@ static void updateOffering(iconWidget* artifactWidget,
     if (offering.m_artifactId == -1) {
         artifactWidget->setHelpText(
             g_sacrificeWindowHelp[SACRIFICE_HELP_EMPTY_ARTIFACT_OFFERING].m_text,
-            0, 1);
+            NULL, 1);
         valueWidget->setVisible(0);
-        valueWidget->setHelpText(0, 0, 1);
+        valueWidget->setHelpText(NULL, NULL, 1);
     } else {
         valueWidget->setText(convertWithCommas(offering.m_value).c_str());
         valueWidget->setVisible(1);
         valueWidget->setHelpText(
             g_sacrificeWindowHelp[SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE].m_text,
-            0, 1);
+            NULL, 1);
     }
 }
 
@@ -910,8 +910,8 @@ void type_sacrifice_window::updateCreatureOffering(
         return;
 
     if (creatureType == CREATURE_NONE) {
-        creature.m_sourceSelectionFrame->setHelpText(0, 0, 1);
-        creature.m_offeringSelectionFrame->setHelpText(0, 0, 1);
+        creature.m_sourceSelectionFrame->setHelpText(NULL, NULL, 1);
+        creature.m_offeringSelectionFrame->setHelpText(NULL, NULL, 1);
         return;
     }
 
@@ -919,8 +919,8 @@ void type_sacrifice_window::updateCreatureOffering(
     helpText = formatString(
         (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURE],
         getArmyName(creatureType, 0));
-    creature.m_sourceSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
-    creature.m_offeringSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
+    creature.m_sourceSelectionFrame->setHelpText(helpText.c_str(), NULL, 1);
+    creature.m_offeringSelectionFrame->setHelpText(helpText.c_str(), NULL, 1);
 }
 
 VA(0x00563150, 0x141)
@@ -950,7 +950,7 @@ void type_sacrifice_window::setCreatureMode()
     m_sacrificeButton->enable(0);
     m_sacrificeButton->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_SACRIFICE_CREATURES].m_text,
-        0, 1);
+        NULL, 1);
     m_creatureNameWidget->setVisible(0);
     m_allCreaturesButton->enable(
         m_currentHero->m_army.getCreatureTotal() > 1);
@@ -1019,7 +1019,7 @@ void type_sacrifice_window::artifactClick(
 
         if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
             TSpellbookWindow spellbook(
-                *m_currentHero, 0, TSpellbookWindow::eContextNeither,
+                *m_currentHero, NULL, TSpellbookWindow::eContextNeither,
                 m_currentHero->getSpecialTerrain());
             spellbook.doModal(0);
             return;
@@ -1832,7 +1832,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         allCreatures, 0, 1);
     m_allCreaturesButton->setHelpText(
         g_transformerWindowHelp[TRANSFORMER_HELP_ALL_CREATURES].m_text,
-        0, 1);
+        NULL, 1);
     m_widgets.push_back(m_allCreaturesButton);
 
     m_sacrificeButton = new type_func_button(
@@ -1840,7 +1840,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         sacrifice, 0, 1);
     m_sacrificeButton->setHelpText(
         g_transformerWindowHelp[TRANSFORMER_HELP_SACRIFICE].m_text,
-        0, 1);
+        NULL, 1);
     m_sacrificeButton->enable(0);
     m_widgets.push_back(m_sacrificeButton);
 
@@ -1848,7 +1848,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         392, 416, 64, 32, widgetId++, "iCancel.def",
         exitClick, 0, 1);
     exitButton->setHelpText(
-        g_transformerWindowHelp[TRANSFORMER_HELP_EXIT].m_text, 0, 1);
+        g_transformerWindowHelp[TRANSFORMER_HELP_EXIT].m_text, NULL, 1);
     m_widgets.push_back(exitButton);
 
     m_rolloverText = new textWidget(
@@ -1915,9 +1915,9 @@ void type_skeleton_window::update(long group, long index)
     if (type == CREATURE_NONE) {
         m_armyWidget[group][index]->setVisible(0);
         m_armyLabel[group][index]->setVisible(0);
-        m_selectBorder[group][index]->setHelpText(0, 0, 1);
-        m_armyWidget[group][index]->setHelpText(0, 0, 1);
-        m_armyLabel[group][index]->setHelpText(0, 0, 1);
+        m_selectBorder[group][index]->setHelpText(NULL, NULL, 1);
+        m_armyWidget[group][index]->setHelpText(NULL, NULL, 1);
+        m_armyLabel[group][index]->setHelpText(NULL, NULL, 1);
         return;
     }
 
@@ -1954,12 +1954,12 @@ void type_skeleton_window::update(long group, long index)
         }
     }
 
-    m_armyWidget[group][index]->setHelpText(result.c_str(), 0, 1);
-    m_selectBorder[group][index]->setHelpText(result.c_str(), 0, 1);
+    m_armyWidget[group][index]->setHelpText(result.c_str(), NULL, 1);
+    m_selectBorder[group][index]->setHelpText(result.c_str(), NULL, 1);
     result = formatString(
         DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
         m_armies[group]->m_numTroops[index], name);
-    m_armyLabel[group][index]->setHelpText(result.c_str(), 0, 1);
+    m_armyLabel[group][index]->setHelpText(result.c_str(), NULL, 1);
 }
 
 VA(0x00566490, 0x258)

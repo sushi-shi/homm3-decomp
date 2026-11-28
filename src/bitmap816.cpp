@@ -20,14 +20,14 @@ VA_COMPGEN(0x0044f7d0, 0x21, SCALAR_DELETING_DTOR, Bitmap816)
 // buffer directly, and the destructor releases it with delete[].
 DC_ADDRESS(0x053854, 0x10c)
 Bitmap816::Bitmap816(int w, int h)
-    : resource(0, RESOURCE_TYPE_NONE),
+    : resource(NULL, RESOURCE_TYPE_NONE),
       ImageSize(w * h), Width(w), Height(h), Pitch(w)
 {
     DataSize = ImageSize;
     if (w && h)
         map = new unsigned char[DataSize];
     else
-        map = 0;
+        map = NULL;
 }
 
 VA(0x0044f800, 0xCA)
@@ -49,7 +49,7 @@ DC_ADDRESS(0x053a68, 0xa4)
 Bitmap816::Bitmap816(const char* name, int rbits, int rshift,
                      int gbits, int gshift, int bbits, int bshift)
     : resource(name, RESOURCE_TYPE_BITMAP),
-      DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(0)
+      DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(NULL)
 {
     importPCXFile(name, rbits, rshift, gbits, gshift, bbits, bshift);
 }
@@ -60,7 +60,7 @@ Bitmap816::Bitmap816(const char* name, const char* path,
                      int rbits, int rshift, int gbits, int gshift,
                      int bbits, int bshift)
     : resource(name, RESOURCE_TYPE_BITMAP),
-      DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(0)
+      DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(NULL)
 {
     char filename[264];
 
@@ -122,7 +122,7 @@ void Bitmap816::clear()
     ImageSize = 0;
     if (map) {
         delete[] map;
-        map = 0;
+        map = NULL;
     }
 }
 

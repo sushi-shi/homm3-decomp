@@ -347,7 +347,7 @@ unsigned char initializeRandomTavernText()
 {
     g_randomTavernText = ResourceManager::GetText(
         DATA_COMPGEN(0x00677d20, randomTavernTextName, "randtvrn.txt"));
-    if (g_randomTavernText == 0)
+    if (g_randomTavernText == NULL)
         return 0;
     for (int i = 0; i < 256; i++)
         g_cannedRumours[i] = g_randomTavernText->GetText(i);
@@ -2347,7 +2347,7 @@ DC_ADDRESS(0x0a750c, 0xc2)
 MAC_ADDRESS(0x0ced3c, 0xf0)
 int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 {
-    HOMM3_RELEASE_VERIFY(outfile != 0);
+    HOMM3_RELEASE_VERIFY(outfile != NULL);
     short length = s.size();
     // Platform difference: Mac byte-swaps the length; Windows writes it
     // directly.
@@ -2448,8 +2448,8 @@ MAC_ADDRESS(0x0d02a8, 0x274)  // sole caller game::Load
 void game::setupShipyards()
 {
     type_point location;
-    hero* obscuringHero = 0;
-    boat* obscuringBoat = 0;
+    hero* obscuringHero = NULL;
+    boat* obscuringBoat = NULL;
     long i;
     for (i = 0; i < NUM_PLAYERS; ++i) {
         m_players[i].m_shipyards.clear();
@@ -2482,11 +2482,11 @@ void game::setupShipyards()
 
                 if (obscuringHero) {
                     obscuringHero->obscureCell();
-                    obscuringHero = 0;
+                    obscuringHero = NULL;
                 }
                 if (obscuringBoat) {
                     obscuringBoat->obscureCell();
-                    obscuringBoat = 0;
+                    obscuringBoat = NULL;
                 }
             }
         }
@@ -6659,7 +6659,7 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
     // Original DC locals: cell, this_hero, current_player, i.
     // DC 7462 acquires cell before 7464 initializes the hero pointer.
     NewmapCell* cell = m_worldMap.cell(location.m_x, location.m_y, location.m_z);
-    hero* thisHero = 0;
+    hero* thisHero = NULL;
     if (cell->m_type == HERO) {
         thisHero = g_game->getHero(cell->m_extraInfo);
         thisHero->restoreCell();
@@ -7495,7 +7495,7 @@ void game::perWeek()
                     continue;
 
                 if (mapCell->m_type != HERO) {
-                    obscuringHero = 0;
+                    obscuringHero = NULL;
                 } else {
                     // DC game.cpp:8476 names GetHero here.
                     obscuringHero = getHero(mapCell->m_extraInfo);
@@ -8697,11 +8697,11 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                 returnValue = compressedFile.write(diff, diffSize);
             } catch (const TGzFile::TOpenFailure&) {
                 fileError(diffFilename);
-                shutDown(0);
+                shutDown(NULL);
             }
             if (returnValue != static_cast<int>(diffSize)) {
                 fileError(diffFilename);
-                shutDown(0);
+                shutDown(NULL);
             }
             delete diff;
             strcpy(fileName, diffFilename);
@@ -8728,12 +8728,12 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     // DC 10269 initializes pConfirmMsg before msg; 10274 saves iReturn.
     // The later destroy-player sends (10418/10437) each construct their
     // message in the transmit call's full expression, after clearNetInfo.
-    CNetMsg* pConfirmMsg = 0;
+    CNetMsg* pConfirmMsg = NULL;
     CGameTransmitInitMsg msg(fileSize, fullGameCRC, thisPlayerDead,
                              isDiff, makeOrig);
     int iReturn = transmitRemoteData(&msg, toWho, false, true);
     if (!iReturn)
-        shutDown(0);
+        shutDown(NULL);
 
     int totalBlocks = fileSize / GAME_TRANSMIT_PAYLOAD_SIZE;
     int bytesLeft = fileSize;
@@ -8813,7 +8813,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     while (!done) {
         pollSound();
         checkDoMain(0, 1);
-        pConfirmMsg = GetRemoteData(1, 0);
+        pConfirmMsg = GetRemoteData(1, NULL);
         CMessageKill kill(pConfirmMsg);
 
         if (!pConfirmMsg && GameTime::elapsedSince(dataTimeOutStart)
@@ -8971,7 +8971,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     g_soundManager->m_playSounds = soundWasEnabled;
 
     unsigned char* data = new unsigned char[fileSize];
-    CNetMsg* netMsg = 0;
+    CNetMsg* netMsg = NULL;
     unsigned char done = 0;
     int totalBlocks = fileSize / GAME_TRANSMIT_PAYLOAD_SIZE;
     if (fileSize % GAME_TRANSMIT_PAYLOAD_SIZE)
@@ -9036,7 +9036,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                     remoteCleanup();
                     normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
                                  -1, 0, -1, 0, -1, 0, -1, 0);
-                    shutDown(0);
+                    shutDown(NULL);
                 } else {
                     unsigned long killDPID = m_players[fromWho].m_dpid;
                     g_dPlay->DestroyPlayer(m_players[fromWho].m_dpid);
@@ -9052,9 +9052,9 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
 
         if (netMsg) {
             destroyMsg(netMsg);
-            netMsg = 0;
+            netMsg = NULL;
         }
-        netMsg = GetRemoteData(1, 0);
+        netMsg = GetRemoteData(1, NULL);
 
         if (netMsg) {
             lastDataReceiveTime = GameTime::get();
@@ -9184,7 +9184,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             }
 
             destroyMsg(netMsg);
-            netMsg = 0;
+            netMsg = NULL;
         }
     }
 
@@ -9201,12 +9201,12 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
         // fileError call for each. Windows File::Open has one error path.
         if (!file.Open(diffFilename, modeWrite)) {
             fileError(diffFilename);
-            shutDown(0);
+            shutDown(NULL);
         }
         if (!file.write(data, fileSize)) {
             file.Close();
             fileError(diffFilename);
-            shutDown(0);
+            shutDown(NULL);
         }
         file.Close();
         delete[] data;
@@ -9220,30 +9220,30 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             bytesRead = gzfile.read(newSave, diffSize);
         } catch (const TGzFile::TOpenFailure&) {
             fileError(diffFilename);
-            shutDown(0);
+            shutDown(NULL);
         }
 
         if (bytesRead != diffSize) {
             fileError(diffFilename);
-            shutDown(0);
+            shutDown(NULL);
         }
 
         const char* origFilename = DATA_COMPGEN(
             0x00677fb0, xferOriginalFilename, "data\\orig.dat");
         if (!file.Open(origFilename, modeRead)) {
             fileError(origFilename);
-            shutDown(0);
+            shutDown(NULL);
         }
         unsigned long size = file.getLength();
         if (!size) {
             fileError(origFilename);
-            shutDown(0);
+            shutDown(NULL);
         }
         unsigned char* orig = new unsigned char[size];
         if (!file.read(orig, size)) {
             file.Close();
             fileError(origFilename);
-            shutDown(0);
+            shutDown(NULL);
         }
         file.Close();
 
@@ -10002,7 +10002,7 @@ boat* game::getHeroBoat(int id, bool occupied)
         if (i->m_allocated && i->m_occupyingHero == id && i->m_occupied == occupied)
             return i;
     }
-    return 0;
+    return NULL;
 }
 
 VA(0x004ce940, 0x27)
@@ -10124,7 +10124,7 @@ void game::resetGame(int difficulty, int campaignMap,
     g_gameOver = 0;
     g_buildAllBuildings = 0;
     setupOrigData();
-    initNewGame(difficulty, campaignMap, defaultMapHeader, 0);
+    initNewGame(difficulty, campaignMap, defaultMapHeader, NULL);
     g_turnDuration.clear();
     g_thisNetGotAdventureControl = 0;
     TSpellbookWindow::reset();

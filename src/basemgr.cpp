@@ -10,8 +10,8 @@ VA(0x0044d530, 0x45)
 DC_ADDRESS(0x050a28, 0x54)
 MAC_ADDRESS(0x05bc04, 0x5c)
 baseManager::baseManager()
-    : m_nextManager(0),
-      m_prevManager(0)
+    : m_nextManager(NULL),
+      m_prevManager(NULL)
 {
     m_priority = -1;
     m_id = -1;

@@ -656,7 +656,7 @@ void town::giveSpells(hero* forceHero) const
         return;
 
     int heroIndex = 0;
-    while (heroIndex < (2 - (forceHero != 0))) {
+    while (heroIndex < (2 - (forceHero != NULL))) {
         hero* currentHero;
         if (forceHero) {
             currentHero = forceHero;
@@ -1049,7 +1049,7 @@ type_building_id town::buildBuilding(int buildingId,
     if (m_type == TOWN_TOWER && buildingId == EXTRA_1_ID) {
         setSpellsAvailable();
     }
-    giveSpells(0);
+    giveSpells(NULL);
 
     if ((isCapitol() && !hadCapitol)
         || (isCastle() && !hadFort))
@@ -1252,8 +1252,8 @@ long town::getLegionBonus(long dwelling) const
 {
     game* currentGame = g_game;
     int tier = dwelling % TOWN_DWELLING_COUNT + 1;
-    hero* garrisonHero = 0;
-    hero* visitingHero = 0;
+    hero* garrisonHero = NULL;
+    hero* visitingHero = NULL;
     int bonus = 0;
 
     if (m_garrisonHeroId >= 0)
@@ -1840,7 +1840,7 @@ type_horde_effect* town::getHordeEffect(type_building_id building) const
             break;
     }
     if (slot >= TOWN_HORDE_SLOTS)
-        return 0;
+        return NULL;
     return &s_constHordeEffects[m_type][slot];
 }
 
@@ -1895,7 +1895,7 @@ void town::hire(hero* newHero, long playerId)
 
     player->m_resources[GOLD] -= g_heroGoldCost;
     placeInMap(heroId, playerId, 1);
-    giveSpells(0);
+    giveSpells(NULL);
     g_game->replaceRecruit(playerId, recruitSlot);
 }
 

@@ -192,7 +192,7 @@ TPuzzleWindow::~TPuzzleWindow()
 
     if (m_puzzleResourceBar) {
         delete m_puzzleResourceBar;
-        m_puzzleResourceBar = 0;
+        m_puzzleResourceBar = NULL;
     }
 }
 

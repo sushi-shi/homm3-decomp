@@ -59,16 +59,16 @@ public:
     {
         m_townSprite = town;
         m_townType = 0;
-        m_panel = 0;
-        m_flag = 0;
-        m_playerName = 0;
-        m_handicapText = 0;
-        m_playerTypeText = 0;
+        m_panel = NULL;
+        m_flag = NULL;
+        m_playerName = NULL;
+        m_handicapText = NULL;
+        m_playerTypeText = NULL;
         m_playerPosition = 0;
-        m_bonusSprite = 0;
-        m_heroPortrait = 0;
+        m_bonusSprite = NULL;
+        m_heroPortrait = NULL;
         m_startingBonus = 4;
-        m_startingHero = 0;
+        m_startingHero = NULL;
         m_id = widgetId;
     }
 
@@ -275,7 +275,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     }
 
     slider* durationSlider = new slider(
-        55, 551, 194, 16, 338, 11, 0, slider::BLUE, 0, 0);
+        55, 551, 194, 16, 338, 11, NULL, slider::BLUE, 0, 0);
     durationSlider->setState(g_game->m_setup.m_turnDuration);
     m_widgets.push_back(durationSlider);
 
@@ -313,7 +313,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         // Mac 0x15f96c initializes null before the outer -1 guard; 0x15f980
         // still contains getHero's inner check. CodeWarrior -O3 reproduces
         // that pair for this guarded call, unlike a plain call or ternary.
-        hero* startingHero = 0;
+        hero* startingHero = NULL;
         int startingHeroId = g_game->m_setup.m_startingHero[i];
         if (startingHeroId != -1)
             startingHero = g_game->getHero(startingHeroId);

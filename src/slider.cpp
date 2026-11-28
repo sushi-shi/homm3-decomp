@@ -27,8 +27,8 @@ DC_ADDRESS(0x1499f0, 0x58)
 slider::slider() : widget(0, 0, 0, 0, 0, 0)
 {
     m_numStates = 0;
-    m_sliderSprite = 0;
-    m_sliderFunction = 0;
+    m_sliderSprite = NULL;
+    m_sliderFunction = NULL;
     m_pageSize = 0;
     m_scrolling = 0;
     m_lastFocus = -1;

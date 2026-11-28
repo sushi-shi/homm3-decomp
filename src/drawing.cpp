@@ -169,9 +169,9 @@ static std::string getEstimatedDamage(const army* currentArmy,
     }
 
     low = currentArmy->adjustDamage(targetArmy, low, ranged, 1,
-                                     distance, 0);
+                                     distance, NULL);
     high = currentArmy->adjustDamage(targetArmy, high, ranged, 1,
-                                      distance, 0);
+                                      distance, NULL);
     if (low == high) {
         result = formatRounded(high, high);
     } else {
@@ -259,7 +259,7 @@ bool combatManager::showCreatureSpellError(
         switch (currentArmy->m_creatureType) {
         case CREATURE_OGRE_MAGE: {
             if (getSpellWorkChance(SPELL_BLOODLUST,
-                                      targetArmy->m_creatureType, 0, 0) > 0.0f) {
+                                      targetArmy->m_creatureType, NULL, NULL) > 0.0f) {
                 break;
             }
             sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_SPELL_IMMUNITY_FORMAT), targetArmy->getName(2),
@@ -323,7 +323,7 @@ void combatManager::combatMessage(int command)
         return;
 
     army* currentArmy = getCurrentArmy();
-    army* targetArmy = 0;
+    army* targetArmy = NULL;
     // TCombatWindow's native bool parameter receives this flag directly.
     bool priority = false;
     if (currentArmy->groupToAttack >= 0 && currentArmy->indexToAttack >= 0)
@@ -1257,7 +1257,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
 
                     drawArcher(
                         archer->m_sprite, archer->m_sequence, archer->m_frame,
-                        drawX, drawY, 0,
+                        drawX, drawY, NULL,
                         !archer->m_facing,
                         archer->m_sequence == COMBAT_ARCHER_ACTIVE_SEQUENCE
                             && m_actingSide == COMBAT_ARCHER_DEFENDING_SIDE
@@ -1702,7 +1702,7 @@ void combatManager::computeMaxExtent()
                     sprite, 0, m_obstacleAnimationFrame % sprite->GetNumFrames(0),
                     m_cells[obstacle->m_hex].m_hexUlx,
                     m_cells[obstacle->m_hex].m_hexUly - yOffset,
-                    0, 0, 1);
+                    NULL, 0, 1);
             }
         }
     }
@@ -1730,7 +1730,7 @@ void combatManager::computeMaxExtent()
                     drawX += 5;
             }
             drawArcher(archer.m_sprite, archer.m_sequence, archer.m_frame,
-                       drawX, archer.m_y - COMBAT_ARCHER_Y_BIAS, 0,
+                       drawX, archer.m_y - COMBAT_ARCHER_Y_BIAS, NULL,
                        !archer.m_facing, 0);
             m_computeExtentOnly = 0;
             m_saveBiggestExtent = 0;

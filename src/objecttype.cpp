@@ -257,10 +257,10 @@ TObjectType& TObjectType::setImageName(
 
         LODFile* maskFile =
             ResourceManager::PointToSpriteResource(maskName.c_str());
-        if (maskFile == 0) {
+        if (maskFile == NULL) {
             maskFile = ResourceManager::PointToSpriteResource("default.msk");
         }
-        if (maskFile != 0) {
+        if (maskFile != NULL) {
             char width;
             char height;
             unsigned char placedBits[6];
@@ -569,7 +569,7 @@ void TObjectTypeTable::load(char* filename)
 {
     assert(filename != 0);
     TTextResource* text = ResourceManager::GetText(filename);
-    if (text == 0)
+    if (text == NULL)
         throw TRuntimeError();
 
     try {

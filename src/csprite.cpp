@@ -23,8 +23,8 @@ VA_COMPGEN(0x0047b8f0, 0x21, SCALAR_DELETING_DTOR, CSprite)
 // remaining owned fields have the same null/zero initial state.
 DC_ADDRESS(0x07215c, 0x80)
 CSprite::CSprite()
-    : resource(0, RESOURCE_TYPE_NONE), s(0), p(0), p24(0),
-      numSequences(0), validSeqMask(0), Width(0), Height(0)
+    : resource(NULL, RESOURCE_TYPE_NONE), s(NULL), p(NULL), p24(NULL),
+      numSequences(0), validSeqMask(NULL), Width(0), Height(0)
 {
 }
 
@@ -33,14 +33,14 @@ DC_ADDRESS(0x0721dc, 0xa6)
 MAC_ADDRESS(0x08a37c, 0xd4)
 CSprite::CSprite(const char* name, int sprtype, int w, int h)
     : resource(name, (EResourceType)sprtype),
-      s(0), p(0), p24(0), numSequences(0), Width(w), Height(h)
+      s(NULL), p(NULL), p24(NULL), numSequences(0), Width(w), Height(h)
 {
     numSequences = GetNumSeqs(sprtype);
     if (numSequences) {
         s = new CSequence*[numSequences];
         validSeqMask = new int[numSequences];
         for (int i = 0; i < numSequences; ++i) {
-            s[i] = 0;
+            s[i] = NULL;
             validSeqMask[i] = 0;
         }
     }
@@ -75,19 +75,19 @@ void CSprite::clear()
         delete s[i];
     if (s) {
         delete[] s;
-        s = 0;
+        s = NULL;
     }
     if (p) {
         delete p;
-        p = 0;
+        p = NULL;
     }
     if (p24) {
         delete p24;
-        p24 = 0;
+        p24 = NULL;
     }
     if (validSeqMask) {
         delete[] validSeqMask;
-        validSeqMask = 0;
+        validSeqMask = NULL;
     }
 }
 
@@ -166,7 +166,7 @@ DC_ADDRESS(0x07258c, 0x2c)
 MAC_ADDRESS(0x08a72c, 0x1c)  // vtable-era TU order + p/data layout
 unsigned short* CSprite::GetPalette()
 {
-    return p ? p->Palette : 0;
+    return p ? p->Palette : NULL;
 }
 
 // Original: CSprite::GetPalette; csprite.cpp:232
@@ -175,7 +175,7 @@ unsigned short* CSprite::GetPalette()
 DC_ADDRESS(0x0725b8, 0x70)
 const unsigned short* CSprite::GetPalette() const
 {
-    return p ? p->Palette : 0;
+    return p ? p->Palette : NULL;
 }
 
 VA(0x0047bcd0, 0x1b)

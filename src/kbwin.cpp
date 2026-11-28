@@ -41,16 +41,16 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine
     DWORD lastError;
 
     g_instance = instance;
-    g_gameEvent = CreateEventA(0, 0, 0,
+    g_gameEvent = CreateEventA(NULL, 0, 0,
         DATA_COMPGEN(0x0067f9ac, winMainEventName, "Heroes III"));
     lastError = GetLastError();
-    if (g_gameEvent == 0 || lastError == ERROR_ALREADY_EXISTS) {
+    if (g_gameEvent == NULL || lastError == ERROR_ALREADY_EXISTS) {
         sprintf(g_text,
             DATA_COMPGEN(0x0067f958, winMainAlreadyRunning,
                 "Heroes of Might and Magic III is already running."),
             DATA_COMPGEN(0x0067f98c, winMainTitleArg,
                 "Heroes of Might and Magic III"));
-        MessageBoxA(0, g_text,
+        MessageBoxA(NULL, g_text,
             DATA_COMPGEN(0x0067f728, winMainStartupError, "Startup error"),
             MB_ICONHAND);
         return 0;
@@ -78,9 +78,9 @@ static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
     DWORD windowStyle;
     DWORD windowExStyle;
     if (!previousInstance) {
-        appClass.hCursor = 0;
+        appClass.hCursor = NULL;
         appClass.hIcon = LoadIconA(instance, MAKEINTRESOURCEA(0x73));
-        appClass.lpszMenuName = 0;
+        appClass.lpszMenuName = NULL;
         appClass.lpszClassName = g_appName;
         appClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
         appClass.hInstance = instance;
@@ -105,11 +105,11 @@ static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
     g_hwndApp = CreateWindowExA(windowExStyle, g_appName, g_title, windowStyle,
         g_config.m_windowConfig.m_x, g_config.m_windowConfig.m_y,
         windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
-        0, g_config.m_windowConfig.m_fullScreen ? 0 : g_dfltMenu, instance, 0);
+        NULL, g_config.m_windowConfig.m_fullScreen ? NULL : g_dfltMenu, instance, NULL);
     if (!g_hwndApp)
         return 0;
     initGraphics();
-    SetCursor(LoadCursorA(0, IDC_ARROW));
+    SetCursor(LoadCursorA(NULL, IDC_ARROW));
     initImmMouse(g_instance, g_hwndApp);
     return 1;
 }
@@ -149,7 +149,7 @@ static LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messagePara
             }
             return 0;
         case WM_PAINT:
-            appPaint(window, 0);
+            appPaint(window, NULL);
             return 0;
         case WM_KEYDOWN:
         case WM_KEYUP:
@@ -181,7 +181,7 @@ static LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messagePara
             PostQuitMessage(0);
         case WM_QUIT:
             if (!g_shutDownDone)
-                shutDown(0);
+                shutDown(NULL);
             return 0;
         case WM_ACTIVATEAPP: {
             if (window != g_hwndApp)
@@ -238,14 +238,14 @@ void process1WindowsMessage()
     MSG message;
     g_inMessageLoop = 1;
     while (1) {
-        if (PeekMessageA(&message, 0, 0, 0, PM_REMOVE)) {
+        if (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&message);
             DispatchMessageA(&message);
             continue;
         }
         if (IsIconic(g_hwndApp) && !g_remoteOn) {
             do {
-                if (GetMessageA(&message, 0, 0, 0)) {
+                if (GetMessageA(&message, NULL, 0, 0)) {
                     TranslateMessage(&message);
                     DispatchMessageA(&message);
                 }
@@ -336,7 +336,7 @@ void kbChangeMenu(HMENU newMenu)
             DrawMenuBar(g_hwndApp);
         }
     } else {
-        SetMenu(g_hwndApp, 0);
+        SetMenu(g_hwndApp, NULL);
         DrawMenuBar(g_hwndApp);
     }
 }

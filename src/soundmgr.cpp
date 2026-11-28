@@ -129,7 +129,7 @@ soundManager::soundManager()
     memset(g_ailDriverState, 0, sizeof(g_ailDriverState));
     memset(&m_samples, 0, sizeof(m_samples) + sizeof(m_sampleHandles) + sizeof(m_sampleNum));
     m_playSounds = 0;
-    m_ds = 0;
+    m_ds = NULL;
     m_changeSounds = 0;
     InitializeCriticalSection(&m_sectionSoundCall);
     InitializeCriticalSection(&m_sectionMp3Change);
@@ -195,13 +195,13 @@ int soundManager::open(int newPriority)
 
                 AIL_HWND();
                 int openResult = AIL_waveOutOpen(
-                    &driver, 0, -1, &g_soundWaveFormat.wf);
+                    &driver, NULL, -1, &g_soundWaveFormat.wf);
                 if (!openResult) {
                     char description[128];
                     strcpy(description, DATA_COMPGEN(
                         0x00684b28, soundDevicePrefix, "Device: "));
                     AIL_digital_configuration(
-                        driver, 0, 0, description + strlen(description));
+                        driver, NULL, NULL, description + strlen(description));
                     if (AIL_get_preference(15)) {
                         result = driver;
                         goto driverReady;
@@ -230,7 +230,7 @@ int soundManager::open(int newPriority)
             waveFallback:
                 AIL_set_preference(15, 1);
             }
-            result = 0;
+            result = NULL;
         driverReady:
             m_ds = result;
         }
@@ -282,7 +282,7 @@ void soundManager::close()
             if (g_mp3Stream) {
                 AIL_pause_stream(g_mp3Stream, 1);
                 AIL_close_stream(g_mp3Stream);
-                g_mp3Stream = 0;
+                g_mp3Stream = NULL;
             }
             for (int i = 0; i < m_sampleNum; ++i)
                 AIL_end_sample(m_sampleHandles[i]);
@@ -521,7 +521,7 @@ ds_memsample* soundManager::memorySample(sample* samplePointer)
         if (slot == range->m_last) {
             if (samplePointer->memSample.memCindex == SOUND_CHANNEL_COUNT) {
                 LeaveCriticalSection(&m_sectionSoundCall);
-                return 0;
+                return NULL;
             }
             slot = range->m_next++;
             if (range->m_next >= range->m_last) {
@@ -546,7 +546,7 @@ ds_memsample* soundManager::memorySample(sample* samplePointer)
         g_soundManager->serviceSounds();
         return handle;
     }
-    return 0;
+    return NULL;
 }
 
 VA(0x0059a3f0, 0x15)
@@ -717,7 +717,7 @@ void __cdecl processStopAndPlayMP3(void* arglist)
     EnterCriticalSection(&g_soundManager->m_sectionSoundCall);
     if (!g_shutDownDone && g_mp3Stream)
         AIL_close_stream(g_mp3Stream);
-    g_mp3Stream = 0;
+    g_mp3Stream = NULL;
     LeaveCriticalSection(&g_soundManager->m_sectionSoundCall);
 
     EnterCriticalSection(&g_soundManager->m_sectionMp3NameChange);
@@ -806,7 +806,7 @@ void soundManager::resumeStream()
     LeaveCriticalSection(&m_sectionSoundCall);
     if (g_shutDownDone)
         return;
-    _beginthread(processStopAndPlayMP3, 0, 0);
+    _beginthread(processStopAndPlayMP3, 0, NULL);
 }
 
 VA(0x0059acb0, 0x355)
@@ -847,7 +847,7 @@ void soundManager::startMP3(const char* filename, int loopCount, unsigned char s
             LeaveCriticalSection(&m_sectionSoundCall);
             if (g_shutDownDone)
                 return;
-            _beginthread(processStopAndPlayMP3, 0, 0);
+            _beginthread(processStopAndPlayMP3, 0, NULL);
         }
         return;
     }
@@ -865,7 +865,7 @@ void soundManager::stopMP3()
         AIL_serve();
         Sleep(5);
         if (!g_shutDownDone)
-            _beginthread(processMP3Stop, 0, 0);
+            _beginthread(processMP3Stop, 0, NULL);
     }
     LeaveCriticalSection(&m_sectionSoundCall);
     LeaveCriticalSection(&m_sectionMp3Change);

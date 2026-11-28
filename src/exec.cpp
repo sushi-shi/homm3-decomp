@@ -18,9 +18,9 @@ DC_ADDRESS(0x09e510, 0xe)
 MAC_ADDRESS(0x0c3910, 0x18)
 executive::executive()
 {
-    m_headManager = 0;
-    m_tailManager = 0;
-    m_currentManager = 0;
+    m_headManager = NULL;
+    m_tailManager = NULL;
+    m_currentManager = NULL;
     m_dialogReturn = 0;
 }
 
@@ -120,7 +120,7 @@ int executive::addManager(baseManager* newManager, int newPriority)
         current = current->m_prevManager;
     if (!current) {
         newManager->m_nextManager = m_headManager;
-        newManager->m_prevManager = 0;
+        newManager->m_prevManager = NULL;
         if (m_headManager)
             m_headManager->m_prevManager = newManager;
         m_headManager = newManager;
@@ -128,7 +128,7 @@ int executive::addManager(baseManager* newManager, int newPriority)
             m_tailManager = newManager;
     } else if (!current->m_nextManager) {
         newManager->m_prevManager = m_tailManager;
-        newManager->m_nextManager = 0;
+        newManager->m_nextManager = NULL;
         m_tailManager->m_nextManager = newManager;
         m_tailManager = newManager;
     } else {
@@ -151,14 +151,14 @@ void executive::removeManager(baseManager* killManager)
     baseManager* prev = killManager->m_prevManager;
     if (!prev) {
         if (m_headManager == m_tailManager) {
-            m_tailManager = 0;
-            m_headManager = 0;
+            m_tailManager = NULL;
+            m_headManager = NULL;
         } else {
             m_headManager = killManager->m_nextManager;
-            m_headManager->m_prevManager = 0;
+            m_headManager->m_prevManager = NULL;
         }
-        killManager->m_prevManager = 0;
-        killManager->m_nextManager = 0;
+        killManager->m_prevManager = NULL;
+        killManager->m_nextManager = NULL;
         return;
     }
     prev->m_nextManager = killManager->m_nextManager;
@@ -166,8 +166,8 @@ void executive::removeManager(baseManager* killManager)
         m_tailManager = prev;
     else
         prev->m_nextManager->m_prevManager = prev;
-    killManager->m_prevManager = 0;
-    killManager->m_nextManager = 0;
+    killManager->m_prevManager = NULL;
+    killManager->m_nextManager = NULL;
 }
 
 VA(0x004b0c70, 0x1D0)
@@ -265,7 +265,7 @@ void executive::mainLoop()
                                     break;
                                 case EXECUTIVE_COMMAND_REMOVE_MANAGER:
                                     removeManager(m_currentManager);
-                                    m_currentManager = 0;
+                                    m_currentManager = NULL;
                                     break;
                             }
                         }

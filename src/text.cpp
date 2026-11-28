@@ -384,7 +384,7 @@ unsigned char initializeGeneralText()
 {
     g_generalText = ResourceManager::GetText(
         DATA_COMPGEN(0x006885fc, generalTextName, "genrltxt.txt"));
-    return g_generalText != 0;
+    return g_generalText != NULL;
 }
 
 VA(0x005b9110, 0x3d)

@@ -535,14 +535,14 @@ void startMouseThread()
 
     if (!g_mouseThread) {
         g_mouseManager->setPointer(ADV_WAIT_POINTER, mouseManager::ADVENTURE_SET);
-        g_endMouseThreadEvent = CreateEvent(0, TRUE, FALSE, 0);
+        g_endMouseThreadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
         if (g_endMouseThreadEvent) {
             g_soundManager->serviceSounds();
             g_mouseThread = (HANDLE)_beginthreadex(
-                0, 0, processMouse, 0, 0, &threadId);
+                NULL, 0, processMouse, NULL, 0, &threadId);
             if (!g_mouseThread) {
                 CloseHandle(g_endMouseThreadEvent);
-                g_endMouseThreadEvent = 0;
+                g_endMouseThreadEvent = NULL;
             }
         }
     }
@@ -559,9 +559,9 @@ void stopMouseThread()
         SetEvent(g_endMouseThreadEvent);
         WaitForSingleObject(g_mouseThread, INFINITE);
         CloseHandle(g_mouseThread);
-        g_mouseThread = 0;
+        g_mouseThread = NULL;
         CloseHandle(g_endMouseThreadEvent);
-        g_endMouseThreadEvent = 0;
+        g_endMouseThreadEvent = NULL;
         g_mouseManager->setPointer(ADV_ARROW_POINTER, mouseManager::ADVENTURE_SET);
     }
 }
@@ -575,7 +575,7 @@ MAC_ADDRESS(0x16e388, 0x24)
 void getGameVersion(char* version)
 {
     char filename[351];
-    GetModuleFileNameA(0, filename, sizeof(filename));
+    GetModuleFileNameA(NULL, filename, sizeof(filename));
     TFileVersionInfo fileVersionInfo(filename);
     std::string productVersion;
     if (fileVersionInfo.getProductVersion(&productVersion))
@@ -688,7 +688,7 @@ public:
     DC_ADDRESS(0x14767c, 0x60)
     CHostWaitDlg()
     {
-        m_msg = 0;
+        m_msg = NULL;
         m_forWho = 0;
     }
     virtual int handleMessage(message& msg);  // slot 3
@@ -1245,7 +1245,7 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayerInPos(int pos)
     for (int i = 0; i < MAX_PLAYERS; ++i)
         if (m_humanPlayers[i].m_playerPos == pos)
             return &m_humanPlayers[i];
-    return 0;
+    return NULL;
 }
 
 // DC GetCompPlayerInPos; OnUpdatePlayerPosMsg calls it at DC source line
@@ -1327,7 +1327,7 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayer(unsigned long dpid)
     for (int i = 0; i < MAX_PLAYERS; ++i)
         if (m_humanPlayers[i].m_dpid == dpid)
             return &m_humanPlayers[i];
-    return 0;
+    return NULL;
 }
 
 // Original DC ?IsFaceTaken@CNetPlayerHandler@@QAA_NHH@Z proves bool.
@@ -1642,7 +1642,7 @@ void CNewPlayerUpdateMan::tick()
             m_procs[i]->tick();
             if (m_procs[i]->isFinished()) {
                 delete m_procs[i];
-                m_procs[i] = 0;
+                m_procs[i] = NULL;
             }
         }
     }
@@ -1665,7 +1665,7 @@ DC_ADDRESS(0x148960, 0x38)
 inline int CNewPlayerUpdateMan::getFirstAvailable()
 {
     for (int i = 0; i < NUM_PLAYERS; ++i)
-        if (m_procs[i] == 0)
+        if (m_procs[i] == NULL)
             return i;
     return -1;
 }
@@ -1679,7 +1679,7 @@ inline CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
     for (int i = 0; i < NUM_PLAYERS; ++i)
         if (m_procs[i] && m_procs[i]->m_dpid == dpid)
             return m_procs[i];
-    return 0;
+    return NULL;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1569
@@ -2000,19 +2000,19 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     g_notifyNoSaved = 0;
     m_receivedMaps = 0;
-    m_chatWidget = 0;
-    m_nameList1 = 0;
-    m_nameList2 = 0;
+    m_chatWidget = NULL;
+    m_nameList1 = NULL;
+    m_nameList2 = NULL;
     m_mapChanged = 1;
-    m_chatEdit = 0;
+    m_chatEdit = NULL;
     m_sortDirection = 0;
     m_sortWhich = 0;
     m_mapSizeFilter = 0;
-    m_newPlayerUpdateMan = 0;
+    m_newPlayerUpdateMan = NULL;
     m_chatShowing = 0;
     m_receivingMaps = 0;
-    m_saveGameEdit = 0;
-    m_durationSlider = 0;
+    m_saveGameEdit = NULL;
+    m_durationSlider = NULL;
     m_durationIndex = g_game->m_setup.m_turnDuration;
 
     m_flagBack = new CSaveScreen(310, 25);
@@ -2157,7 +2157,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     for (i = 0; i < g_scenarioListVisibleRows; ++i) {
         textWidget* tempText = new textWidget(
-            57, 122 + i * 25, 314, 25, 0,
+            57, 122 + i * 25, 314, 25, NULL,
             "smalfont.fnt", font::WHITE, 142 + i,
             font::CENTER_JUSTIFIED, 0, 8);
         tempText->hide();
@@ -2173,7 +2173,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             35, 542, 342, 21, 61,
             g_newGameFileName,
             "smalfont.fnt", font::WHITE, font::VERT_CENTER_JUSTIFIED,
-            0, 0, 160, 0x100, 0, 7, 5);
+            NULL, 0, 160, 0x100, 0, 7, 5);
         m_widgets.push_back(m_saveGameEdit);
     }
 
@@ -2283,7 +2283,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
                 CEnterNameEdit* edit = new CEnterNameEdit(
                     62, (133 + i * 50) - 3, 97, 17, 21, "",
                     "smalfont.fnt", font::PRIMARY, font::LEFT_JUSTIFIED,
-                    0, 0, 353 + i, 0x100, 0, 7, 5);
+                    NULL, 0, 353 + i, 0x100, 0, 7, 5);
                 edit->hide();
                 edit->setAutoDraw(1);
                 m_widgets.push_back(edit);
@@ -2314,7 +2314,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     if (g_remoteOn && !m_saveMode) {
         m_chatWidget = new CChatWidget(
-            416, 131, 315, 128, 0,
+            416, 131, 315, 128, NULL,
             "smalfont.fnt", font::CHAT, 179,
             font::BOTTOM_JUSTIFIED, 0, 8);
         m_chatSlider = new CChatSlider(
@@ -2334,11 +2334,11 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         bitmapBorder* chatBack = new bitmapBorder(
             412, 282, 340, 114, 181, "CHATPLUG.pcx", 0x800);
         m_nameList1 = new textWidget(
-            419, 287, 156, 103, 0,
+            419, 287, 156, 103, NULL,
             "smalfont.fnt", font::PRIMARY, 182,
             font::LEFT_JUSTIFIED, 0, 8);
         m_nameList2 = new textWidget(
-            584, 287, 156, 103, 0,
+            584, 287, 156, 103, NULL,
             "smalfont.fnt", font::PRIMARY, 182,
             font::LEFT_JUSTIFIED, 0, 8);
 
@@ -2997,11 +2997,11 @@ void TSingleSelectionWindow::setupLoadGameMode()
             transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
 
             CAutoArray<CDPlayPlayer> playerArray;
-            g_dPlay->EnumPlayers(&playerArray, 0, 0);
+            g_dPlay->EnumPlayers(&playerArray, NULL, 0);
             for (int i = 0; i < playerArray.getCount(); ++i) {
                 CDPlayPlayer* curr = playerArray.get(i);
                 std::auto_ptr<int> version(static_cast<int*>(
-                    g_dPlay->getPlayerData(curr->getId(), 0, 0)));
+                    g_dPlay->getPlayerData(curr->getId(), NULL, 0)));
                 if (!version.get())
                     continue;
                 CNetPlayerInfo player(curr->getName(), curr->getId());
@@ -3017,7 +3017,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
         strcpy(g_thisNetPlayerInfo.m_name, g_game->m_players[0].m_name);
         g_thisNetPlayerInfo.m_version = g_videoGameState;
         delete g_hotSeatMan;
-        g_hotSeatMan = 0;
+        g_hotSeatMan = NULL;
     } else {
         g_thisNetPlayerInfo.m_dpid = 1;
         strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
@@ -3059,11 +3059,11 @@ void TSingleSelectionWindow::setupNewGameMode()
             transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
 
             CAutoArray<CDPlayPlayer> playerArray;
-            g_dPlay->EnumPlayers(&playerArray, 0, 0);
+            g_dPlay->EnumPlayers(&playerArray, NULL, 0);
             for (int i = 0; i < playerArray.getCount(); ++i) {
                 CDPlayPlayer* curr = playerArray.get(i);
                 std::auto_ptr<int> version(static_cast<int*>(
-                    g_dPlay->getPlayerData(curr->getId(), 0, 0)));
+                    g_dPlay->getPlayerData(curr->getId(), NULL, 0)));
                 if (!version.get())
                     continue;
                 CNetPlayerInfo player(curr->getName(), curr->getId());
@@ -3079,7 +3079,7 @@ void TSingleSelectionWindow::setupNewGameMode()
         strcpy(g_thisNetPlayerInfo.m_name, g_game->m_players[0].m_name);
         g_thisNetPlayerInfo.m_version = g_videoGameState;
         delete g_hotSeatMan;
-        g_hotSeatMan = 0;
+        g_hotSeatMan = NULL;
     } else {
         g_thisNetPlayerInfo.m_dpid = 1;
         strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
@@ -3268,7 +3268,7 @@ void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
     strcpy(m_localHeader.m_description, (*g_generalText)[GENERAL_TEXT_RANDOM_MAP_SCENARIO_DESCRIPTION]);
     m_localHeader.m_header = header;
 
-    g_game->initNewGame(g_game->m_setup.m_difficulty, 0, &header, 0);
+    g_game->initNewGame(g_game->m_setup.m_difficulty, 0, &header, NULL);
     m_localHeader.m_setup = g_game->m_setup;
     m_currentHeader = &m_localHeader;
 
@@ -4046,13 +4046,13 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 
     const SGameSetupOptions* setup;
     if (!m_loadMode && !m_saveMode) {
-        g_game->initNewGame(1, 0, 0, 0);
+        g_game->initNewGame(1, 0, NULL, NULL);
         if (!g_game->m_setup.m_fileInitialized)
             return 1;
         header->m_header = g_game->m_mapHeader;
         setup = &g_game->m_setup;
     } else {
-        gameFileProblem = header->m_saved.load(0);
+        gameFileProblem = header->m_saved.load(NULL);
         if (gameFileProblem)
             return 1;
         header->m_header = header->m_saved.m_mapHeader;
@@ -4079,10 +4079,10 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
     }
 #else
     HANDLE fileHandle = CreateFileA(
-        filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
+        filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (fileHandle != INVALID_HANDLE_VALUE) {
-        GetFileTime(fileHandle, 0, 0, &header->m_fileTime);
+        GetFileTime(fileHandle, NULL, NULL, &header->m_fileTime);
         CloseHandle(fileHandle);
     }
 #endif
@@ -4950,7 +4950,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
     msg.m_mouseX = 0;
     msg.m_mouseY = 0;
     msg.m_extra = 0;
-    msg.m_window = 0;
+    msg.m_window = NULL;
     m_mapChanged = m_currentMap != map || m_saveMode;
     m_currentMap = map;
     if (map == -1 && !m_randomMapSelected) {
@@ -5137,7 +5137,7 @@ void TSingleSelectionWindow::setFilter(int size)
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
     msg.m_mouseY = 0;
-    msg.m_window = 0;
+    msg.m_window = NULL;
     msg.m_id = 0x200;
     msg.m_codeY = 189;
     msg.m_codeX = 4;
@@ -5178,7 +5178,7 @@ void TSingleSelectionWindow::setDifficultyHiLite()
     select.m_qualifier = 0;
     select.m_mouseX = 0;
     select.m_mouseY = 0;
-    select.m_window = 0;
+    select.m_window = NULL;
     select.m_id = 0x200;
     select.m_codeX = widget::WIDGET_CLEAR_STATUS;
     select.m_extra = widget::WIDGET_HIGHLIGHTED;
@@ -6014,7 +6014,7 @@ int TSingleSelectionWindow::exitDialog(message& msg)
 {
     if (!m_loadMode && !m_saveMode) {
         if (g_remoteOn)
-            g_dPlay->setNetMsgHandler(0);
+            g_dPlay->setNetMsgHandler(NULL);
     }
 
     if (g_remoteOn && !m_saveMode) {
@@ -6080,7 +6080,7 @@ int TSingleSelectionWindow::windowHandler(message& msg)
         if (m_newPlayerUpdateMan)
             m_newPlayerUpdateMan->tick();
 
-        CNetMsg* networkMsg = GetRemoteData(1, 0);
+        CNetMsg* networkMsg = GetRemoteData(1, NULL);
         bool cancel = false;
         if (networkMsg) {
             redraw = handleNetMsg(networkMsg, cancel);
@@ -6356,7 +6356,7 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
     case RS_SESSION_LOST:
         normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        shutDown(0);
+        shutDown(NULL);
         break;
     case RS_PLAYER_DROPPED:
         onPlayerDroppedMsg(netMsg);
@@ -6473,7 +6473,7 @@ MAC_ADDRESS(0x186528, 0x88)
 int CHostWaitDlg::handleMessage(message& msg)
 {
     int ret = CAnimatedDlg::handleMessage(msg);
-    m_msg = GetRemoteData(1, 0);
+    m_msg = GetRemoteData(1, NULL);
     if (m_msg && m_msg->m_dpidFrom == m_forWho)
         return exitDialog(msg);
     return ret;
@@ -6514,7 +6514,7 @@ void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
     for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (m_procs[i] && m_procs[i]->m_dpid == dpid) {
             delete m_procs[i];
-            m_procs[i] = 0;
+            m_procs[i] = NULL;
         }
     }
 }
@@ -8144,7 +8144,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
     getWidget(playerPos + 199)->draw();
     getWidget(playerPos + 207)->draw();
     CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(playerPos);
-    if (p == 0)
+    if (p == NULL)
         p = m_players.getCompPlayerInPos(playerPos);
     if (m_loadMode != 0) {
         int townType = g_game->m_setup.m_alignment[playerPos];
@@ -8446,7 +8446,7 @@ CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(unsigned char inPopup, un
 {
     CNetMsg* msg = GetRemoteData(0, &m_wasCompressed);
     if (!msg)
-        return 0;
+        return NULL;
     return handleNetMsg(msg);
 }
 
@@ -8459,44 +8459,44 @@ CNetMsg* CSingleSelectionNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     switch (netMsg->m_subType) {
     case RS_REQUEST_HERO_FACE:
         g_singleSelectionWindow->onRequestHeroFaceMsg(netMsg, 1);
-        msg = GetRemoteData(1, 0);
+        msg = GetRemoteData(1, NULL);
         destroyMsg(msg);
-        return 0;
+        return NULL;
     case RS_TOWN_UPDATE:
         g_singleSelectionWindow->onTownUpdateMsg(netMsg, 1);
-        msg = GetRemoteData(1, 0);
+        msg = GetRemoteData(1, NULL);
         destroyMsg(msg);
-        return 0;
+        return NULL;
     case RS_SETAGR:
         g_singleSelectionWindow->onSetAGRMsg(netMsg, 1);
-        msg = GetRemoteData(1, 0);
+        msg = GetRemoteData(1, NULL);
         destroyMsg(msg);
-        return 0;
+        return NULL;
     case RS_REQUEST_HERO_FACE_REPLY:
         g_singleSelectionWindow->onRequestHeroFaceReplyMsg(netMsg, 1);
-        msg = GetRemoteData(1, 0);
+        msg = GetRemoteData(1, NULL);
         destroyMsg(msg);
-        return 0;
+        return NULL;
     case RS_CHAT_MSG:
         g_singleSelectionWindow->receiveChat(
             netMsg->m_dpidFrom, static_cast<CChatMsg*>(netMsg)->m_text, 1);
-        msg = GetRemoteData(1, 0);
+        msg = GetRemoteData(1, NULL);
         destroyMsg(msg);
-        return 0;
+        return NULL;
     case RS_SETUP_PING:
         g_singleSelectionWindow->onPingMsg(netMsg);
-        msg = GetRemoteData(1, 0);
+        msg = GetRemoteData(1, NULL);
         destroyMsg(msg);
-        return 0;
+        return NULL;
     case RS_SETUP_PING_RESPONSE:
         g_singleSelectionWindow->onPingResponseMsg(netMsg, 1);
-        msg = GetRemoteData(1, 0);
+        msg = GetRemoteData(1, NULL);
         destroyMsg(msg);
-        return 0;
+        return NULL;
     default:
         if (m_wasCompressed)
             destroyMsg(netMsg);
-        return 0;
+        return NULL;
     }
 }
 
@@ -8510,7 +8510,7 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
     int i;
 
     if (!m_loadMode && !m_saveMode && g_remoteOn && g_dPlay)
-        g_dPlay->setNetMsgHandler(0);
+        g_dPlay->setNetMsgHandler(NULL);
 
     delete m_flagBack;
 
@@ -8536,10 +8536,10 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
 
     if (m_newPlayerUpdateMan) {
         delete m_newPlayerUpdateMan;
-        m_newPlayerUpdateMan = 0;
+        m_newPlayerUpdateMan = NULL;
     }
 
-    g_singleSelectionWindow = 0;
+    g_singleSelectionWindow = NULL;
     for (std::vector<widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
         if (*it)
@@ -8549,7 +8549,7 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
     if (m_saveMode) {
         backupGameHeaders(g_game, g_saveHeader);
         delete g_saveHeader;
-        g_saveHeader = 0;
+        g_saveHeader = NULL;
     }
 
     // Dreamcast line 4069 guards this cache cleanup; the Complete helper is empty.

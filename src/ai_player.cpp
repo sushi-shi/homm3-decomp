@@ -330,9 +330,9 @@ static unsigned char canTakeTown(const hero* attackingHero, const town* defendin
     armyGroup attackingArmy = attackingHero->m_army;
     armyGroup defendingArmy = defendingTown->getArmy();
     NewmapCell* cell = g_game->getCell(defendingTown->getLocation());
-    type_AI_combat_data attacker(attackingHero, &attackingArmy, 1.25, 0,
+    type_AI_combat_data attacker(attackingHero, &attackingArmy, 1.25, NULL,
                                  defendingTown, cell);
-    type_AI_combat_data defender(0, &defendingArmy, 0.75, attackingHero, 0,
+    type_AI_combat_data defender(NULL, &defendingArmy, 0.75, attackingHero, NULL,
                                  cell);
     attacker.simulateCombat(defender);
     // Dreamcast ai_player.cpp:82 calls the canonical combat-value accessor.
@@ -391,7 +391,7 @@ void type_garrison_purchaser::markTown(town* ourTown) const
     playerData* player = &g_game->m_players[m_currentPlayerId];
     unsigned char hasAngelicAlliance = player->hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.setSubtractMode(0);
-    purchaser.doPurchase(&ourTown->getArmy(), 3, 0, player->m_resources,
+    purchaser.doPurchase(&ourTown->getArmy(), 3, NULL, player->m_resources,
                           1, hasAngelicAlliance);
 }
 
@@ -1531,7 +1531,7 @@ bool type_AI_player::purchaseBuilding(
     long fullValue[MAX_BUILDING_TYPE];
     long basicValue[MAX_BUILDING_TYPE];
     long bestValue = 0;
-    town* bestTown = 0;
+    town* bestTown = NULL;
     int bestBuilding = MAX_BUILDING_TYPE;
     __int64 requirements;
     __int64 buildMask;
@@ -1800,7 +1800,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     playerData* player = &g_game->m_players[m_team];
     type_AI_creature_purchaser purchaser(currentHero->m_owner, currentTown);
 
-    hero* garrisonHero = 0;
+    hero* garrisonHero = NULL;
     if (currentTown->m_garrisonHeroId > -1)
         garrisonHero = g_game->getHero(currentTown->m_garrisonHeroId);
 
@@ -1811,7 +1811,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
 
     purchaser.setSubtractMode(0);
     purchaser.doPurchase(&currentHero->m_army,
-                          currentHero->getMorale(0, 0, 1),
+                          currentHero->getMorale(NULL, 0, 1),
                           &currentTown->getArmy(), player->m_resources,
                           1, alliance);
 
@@ -1860,7 +1860,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     long bestValue = 0;
     type_building_id bestBuilding;
     __int64 buildMask = currentTown->getBuildableMask();
-    short morale = currentHero->getMorale(0, 0, 1);
+    short morale = currentHero->getMorale(NULL, 0, 1);
     __int64* maskPtr = &buildMask;
     for (int building = DWELLING_0_ID;
          building <= DWELLING_6_ID; building++) {
@@ -1980,8 +1980,8 @@ DC_ADDRESS(0x0315bc, 0x1a)
 MAC_ADDRESS(0x02f974, 0x1c)
 type_AI_creature_swapper::type_AI_creature_swapper()
 {
-    m_army = 0;
-    m_adjacentArmy = 0;
+    m_army = NULL;
+    m_adjacentArmy = NULL;
     m_morale = 0;
     m_alignmentCount = 0;
     m_armyValueIncrease = 0;
@@ -2135,7 +2135,7 @@ void type_AI_creature_swapper::doSwap(hero* currentHero,
     m_hasAngelicAlliance = newHasAngelicAlliance;
     m_army = &currentHero->m_army;
     m_adjacentArmy = sourceArmy;
-    m_morale = currentHero->getMorale(0, 0, 1);
+    m_morale = currentHero->getMorale(NULL, 0, 1);
     m_improvement = calculateImprovement(currentHero, secondHero);
     aiConsolidateArmy(*m_army);
     dumpExtraCreature();
@@ -2163,7 +2163,7 @@ long type_AI_creature_swapper::getSwapValue(
     m_hasAngelicAlliance = newHasAngelicAlliance;
     m_army = &localArmy;
     m_adjacentArmy = &localSource;
-    m_morale = currentHero->getMorale(0, 0, 1);
+    m_morale = currentHero->getMorale(NULL, 0, 1);
     m_improvement = calculateImprovement(currentHero, secondHero);
 
     aiConsolidateArmy(localArmy);
@@ -2316,7 +2316,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
         else
             minimumMorale = 1;
 
-        if (m_army->getMorale(0, 0, 0, 0, 0,
+        if (m_army->getMorale(NULL, NULL, NULL, NULL, 0,
                            m_hasAngelicAlliance, 0)
                 + m_morale < minimumMorale) {
             int index;
@@ -2396,7 +2396,7 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
     long player, generator* currentGenerator)
 {
     m_playerId = player;
-    m_funds = 0;
+    m_funds = NULL;
     m_subtractCostMode = 1;
     for (short i = 0; i < 4; ++i) {
         TCreatureType type = currentGenerator->m_type[i];
@@ -2414,7 +2414,7 @@ MAC_ADDRESS(0x0307d0, 0x90)
 type_AI_creature_purchaser::type_AI_creature_purchaser(
     long player, town* currentTown)
 {
-    m_funds = 0;
+    m_funds = NULL;
     m_playerId = player;
     m_subtractCostMode = 1;
     set(currentTown);
@@ -2430,7 +2430,7 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
     long player, TCreatureType type, short* amount, bool isFree)
 {
     m_playerId = player;
-    m_funds = 0;
+    m_funds = NULL;
     m_subtractCostMode = 1;
     m_creatures.push_back(type_creature_source(type, amount, isFree));
 }
@@ -2555,8 +2555,8 @@ void type_AI_creature_purchaser::doPurchase(
     long* const newFunds, bool allowTrade,
     unsigned char newHasAngelicAlliance)
 {
-    HOMM3_RELEASE_VERIFY(newArmy != 0);
-    HOMM3_RELEASE_VERIFY(newFunds != 0);
+    HOMM3_RELEASE_VERIFY(newArmy != NULL);
+    HOMM3_RELEASE_VERIFY(newFunds != NULL);
     m_army = newArmy;
     m_adjacentArmy = newAdjacentArmy;
     m_morale = newMorale;
@@ -2600,7 +2600,7 @@ long type_AI_creature_purchaser::getPurchaseValue(
     m_hasAngelicAlliance = newHasAngelicAlliance;
 
     if (!newAdjacentArmy) {
-        m_adjacentArmy = 0;
+        m_adjacentArmy = NULL;
     } else {
         localAdjacentArmy = *newAdjacentArmy;
         m_adjacentArmy = &localAdjacentArmy;
@@ -2703,7 +2703,7 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
     int enemyShooterCount = 0;
     int enemyShooterValue = 0;
     float ratio;
-    if (enemyHero == 0)
+    if (enemyHero == NULL)
         ratio = 1.0f;
     else
         ratio = const_cast<hero*>(enemyHero)
@@ -2835,7 +2835,7 @@ static void markDangerZones(const hero* ourHero, hero* enemyHero,
                             long* dangerZones)
 {
     long value = aiValueOfCombat(
-        ourHero, enemyHero, enemyHero->m_army, 0, 0);
+        ourHero, enemyHero, enemyHero->m_army, NULL, NULL);
     if (value < 0) {
         int mobility = enemyHero->getMobility() + 300;
         checkDoMain(0, 0);
@@ -3721,7 +3721,7 @@ bool attemptStep(hero* currentHero, pathCell& currentPathCell,
     if (currentHero->m_owner != g_netLocalGamePos)
         return 0;
 
-    if (eventCell == 0) {
+    if (eventCell == NULL) {
         if (noMove != 0)
             currentHero->m_movePoints = 0;
     } else {
@@ -3734,7 +3734,7 @@ bool attemptStep(hero* currentHero, pathCell& currentPathCell,
         aiSetHeroBonuses(currentHero);
     }
 
-    return eventCell == 0 && noMove == 0 && foughtBattle == 0;
+    return eventCell == NULL && noMove == 0 && foughtBattle == 0;
 }
 
 DC_ADDRESS(0x0343c4, 0x142)
@@ -3928,7 +3928,7 @@ static unsigned char attemptTeleport(hero* current_hero,
     } while (pathIndex < destination_index);
 
     type_point destination = path[destination_index];
-    g_advManager->teleportTo(current_hero, destination, 0, 0, 1, 0);
+    g_advManager->teleportTo(current_hero, destination, NULL, 0, 1, 0);
     current_hero->useSpell(mana_cost);
     ++current_hero->m_dWalkSpellsCast;
     return 1;
@@ -4035,13 +4035,13 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
             checkGatePurchase(gatePoint);
             checkGatePurchase(path[step]);
             currentHero->m_movePoints = max(currentHero->m_movePoints - 100, 0);
-            g_advManager->teleportTo(currentHero, path[step], 0,
+            g_advManager->teleportTo(currentHero, path[step], NULL,
                                      0, 1, 0);
             return;
         }
 
         if (path[step].m_townPortal && step == 0) {
-            g_advManager->teleportTo(currentHero, path[step], 0,
+            g_advManager->teleportTo(currentHero, path[step], NULL,
                                      0, 1, 0);
             currentHero->useSpell(
                 currentHero->getManaCost(SPELL_TOWN_PORTAL));
@@ -4169,7 +4169,7 @@ static town* getShipyardTown(const playerData* player, long x, long y,
             && currentTown->m_mapZ == z)
             return currentTown;
     }
-    return 0;
+    return NULL;
 }
 
 // E:\gamedcs\ai_player.cpp:4583
@@ -4246,8 +4246,8 @@ MAC_ADDRESS(0x0361f4, 0x240)
 bool type_AI_player::hireHeroes()
 {
     playerData* player = &g_game->m_players[m_team];
-    hero* first = 0;
-    hero* second = 0;
+    hero* first = NULL;
+    hero* second = NULL;
     if (player->m_numHeroes >= playerData::HERO_SLOT_COUNT)
         return false;
     if (player->m_resources[GOLD] < g_heroGoldCost)
@@ -4322,7 +4322,7 @@ static bool considerHiring(long playerId, hero* candidate)
         }
     }
 
-    town* bestTown = 0;
+    town* bestTown = NULL;
     searchArray currentSearchArray;
     long bestValue = static_cast<long>(
         static_cast<double>(player.m_numHeroes)
@@ -4350,7 +4350,7 @@ static bool considerHiring(long playerId, hero* candidate)
             bestTown = currentTown;
         }
     }
-    if (bestTown == 0)
+    if (bestTown == NULL)
         return 0;
 
     if (!bestTown->hasBuilding(TAVERN_ID, true)) {
@@ -4416,8 +4416,8 @@ static long valueOfHiring(town* currentTown, hero* candidate,
     unsigned char hasAlliance =
         candidate->isWieldingArtifact(ARTIFACT_ANGELIC_ALLIANCE)
         || player->hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
-    purchaser.doSwap(candidate, &townArmy, 0, hasAlliance);
-    purchaser.doPurchase(&candidate->m_army, candidate->getMorale(0, 0, 1),
+    purchaser.doSwap(candidate, &townArmy, NULL, hasAlliance);
+    purchaser.doPurchase(&candidate->m_army, candidate->getMorale(NULL, 0, 1),
                           &townArmy, player->m_resources, 0, hasAlliance);
 
     std::vector<HeroDestination> destinations;
@@ -4666,7 +4666,7 @@ long type_morale_artifact::getValue(const hero* owner, unsigned char equipped, u
 {
     if (exact)
         return 0;
-    int morale = owner->getMorale(0, 0, 0);
+    int morale = owner->getMorale(NULL, 0, 0);
     if (equipped)
         morale -= m_bonus;
     return static_cast<long>(aiValueOfMorale(morale, m_bonus)
@@ -4680,7 +4680,7 @@ long type_luck_artifact::getValue(const hero* owner, unsigned char equipped, uns
 {
     if (exact)
         return 0;
-    int luck = owner->getLuck(0, 0, 0);
+    int luck = owner->getLuck(NULL, 0, 0);
     if (equipped)
         luck -= m_bonus;
     return static_cast<long>(aiValueOfLuck(luck, m_bonus)
@@ -4772,7 +4772,7 @@ long type_antimorale_artifact::getValue(const hero* owner, unsigned char, unsign
     long result = static_cast<long>(aiValueOfMorale(0, 2) * army);
     if (exact)
         return result;
-    int morale = owner->getMorale(0, 0, 1);
+    int morale = owner->getMorale(NULL, 0, 1);
     if (morale > 0)
         result = static_cast<long>(aiValueOfMorale(morale, -morale) * army + result);
     return result;
@@ -4787,7 +4787,7 @@ long type_antiluck_artifact::getValue(const hero* owner, unsigned char, unsigned
     long result = static_cast<long>(aiValueOfLuck(0, 2) * army);
     if (exact)
         return result;
-    int luck = owner->getLuck(0, 0, 1);
+    int luck = owner->getLuck(NULL, 0, 1);
     if (luck > 0)
         result = static_cast<long>(aiValueOfLuck(luck, -luck) * army + result);
     return result;
@@ -5213,7 +5213,7 @@ void aiEquipArtifacts(hero* ourHero)
     while (backpackSlot-- > 0) {
         artifact = ourHero->getBackpack(backpackSlot);
         if (artifact.m_artifactId != ARTIFACT_NONE
-            && addArtifact(ourHero, artifact, &baseValue, 0, 19, 0, 0)) {
+            && addArtifact(ourHero, artifact, &baseValue, NULL, 19, NULL, 0)) {
             ourHero->removeBackpackArtifact(backpackSlot);
         }
     }
@@ -5271,9 +5271,9 @@ static long getFullValue(const hero* ourHero)
                     ARTIFACT_ANGELIC_ALLIANCE);
 
             long morale = ourHero->m_army.getArmyMorale(
-                i, ourHero, 0, -1, hasAlliance, 1);
+                i, ourHero, NULL, -1, hasAlliance, 1);
             long luck = ourHero->m_army.getArmyLuck(
-                i, ourHero, 0, -1, 1);
+                i, ourHero, NULL, -1, 1);
             value = static_cast<long>(
                 (aiValueOfMorale(0, morale) + 1.0) *
                     (aiValueOfLuck(0, luck) + 1.0) *
@@ -5407,7 +5407,7 @@ void aiSwapArtifacts(hero* source, hero* dest)
     while (backpackSlot-- > 0) {
         artifact = source->getBackpack(backpackSlot);
         if (artifact.m_artifactId != ARTIFACT_NONE
-            && addArtifact(dest, artifact, &destValue, 0, 19, 0, 0)) {
+            && addArtifact(dest, artifact, &destValue, NULL, 19, NULL, 0)) {
             source->removeBackpackArtifact(backpackSlot);
         }
     }

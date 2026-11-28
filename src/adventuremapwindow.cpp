@@ -239,7 +239,7 @@ void TAdventureMapWindow::close(unsigned char update)
 {
     // Mac 0:0x28c has only the base close call, without immersion teardown.
     delete static_cast<TImmMouseEffect*>(m_immersion);
-    m_immersion = 0;
+    m_immersion = NULL;
     heroWindow::close(update);
 }
 
@@ -250,10 +250,10 @@ TAdventureMapWindow::TAdventureMapWindow()
     : heroWindow(0, 0, 800, 600, 1),
       m_topHero(0),
       m_topTown(0),
-      m_immersion(0)
+      m_immersion(NULL)
 {
     m_animateInBackground = 0;
-    m_chatTextWidget = 0;
+    m_chatTextWidget = NULL;
 
     m_widgets.reserve(39);
 
@@ -349,14 +349,14 @@ TAdventureMapWindow::TAdventureMapWindow()
     int y = 212;
     for (i = 0; i < NUM_HERO_BUTTONS; ++i) {
         m_heroPortraits[i] = new bitmapBorder(
-            617, y, 48, 32, HERO_0_ID + i, 0, 0x800);
+            617, y, 48, 32, HERO_0_ID + i, NULL, 0x800);
         m_widgets.push_back(m_heroPortraits[i]);
         y += 32;
     }
     y = 212;
     for (i = 0; i < NUM_HERO_BUTTONS; ++i) {
         m_heroLocators[i] = new bitmapBorder(
-            617, y, 48, 32, HERO_LOCATOR_0_ID + i, 0, 0x800);
+            617, y, 48, 32, HERO_LOCATOR_0_ID + i, NULL, 0x800);
         m_widgets.push_back(m_heroLocators[i]);
         y += 32;
     }
@@ -408,14 +408,14 @@ TAdventureMapWindow::TAdventureMapWindow()
     }
 
     m_rolloverTextWidget = new bitmapBackedTextWidget(
-        8, 556, 592, 18, 0,
+        8, 556, 592, 18, NULL,
         DATA_COMPGEN(0x0065F2F8, adventureSmallFont, "smalfont.fnt"),
         DATA_COMPGEN(0x0065F308, adventureRolloverBack, "AdRollvr.pcx"),
         font::PRIMARY, ROLLOVER_TEXT_ID, font::CENTER_JUSTIFIED, 8);
     m_widgets.push_back(m_rolloverTextWidget);
 
     m_chatTextWidget = new textWidget(
-        54, 100, 520, 440, 0,
+        54, 100, 520, 440, NULL,
         DATA_COMPGEN(0x0065F2EC, adventureMediumFont, "medfont.fnt"),
         font::CHAT, CHAT_TEXT_ID, font::BOTTOM_JUSTIFIED, 0, 8);
     // Dreamcast line 457 proves the canonical widget-vector append.
@@ -438,7 +438,7 @@ TAdventureMapWindow::TAdventureMapWindow()
             memError();
     }
 
-    m_bottomView = 0;
+    m_bottomView = NULL;
     m_resourceDisplay = new TResourceDisplay(this, 0);
 }
 
@@ -1349,7 +1349,7 @@ void TAdventureMapWindow::clearBottomView()
 {
     if (m_bottomView) {
         delete m_bottomView;
-        m_bottomView = 0;
+        m_bottomView = NULL;
     }
 }
 

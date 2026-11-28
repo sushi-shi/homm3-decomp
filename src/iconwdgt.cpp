@@ -19,7 +19,7 @@ int random(int min, int max);
 DC_ADDRESS(0x0d92fc, 0x54)
 iconWidget::iconWidget() : widget(0, 0, 0, 0, 0, 0)
 {
-    m_sprite = 0;
+    m_sprite = NULL;
     m_frame = 0;
     m_seqId = 0;
     m_backColor = 0;
@@ -41,7 +41,7 @@ iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
       m_backColor(static_cast<unsigned short>(backColor)),
       m_postPostWalkSequence(cs_wait)
 {
-    m_sprite = image ? ResourceManager::GetSprite(image) : 0;
+    m_sprite = image ? ResourceManager::GetSprite(image) : NULL;
 }
 
 // Original: iconWidget::initialize; iconwdgt.cpp:75

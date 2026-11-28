@@ -152,7 +152,7 @@ std::string TSpellbookWindow::getSpellDescription(
         int damage = const_cast<hero*>(currentHero)->modifySpellDamage(
             spell,
             traits->m_power_factor * power + traits->m_mastery_bonus[mastery],
-            0);
+            NULL);
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_SPELL_DAMAGE_DESCRIPTION_FORMAT], damage);
         result += g_text;
     }
@@ -200,7 +200,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
     for (row = 89; row < 377; row += 96) {
         for (column = 117; column < 289; column += 86) {
             m_widgets.push_back(new iconWidget(
-                column, row, 78, 65, id++, 0, 0, 0, 0, 0,
+                column, row, 78, 65, id++, NULL, 0, 0, 0, 0,
                 iconWidget::ICON_STYLE_PLAIN));
         }
     }
@@ -208,7 +208,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
     for (row = 89; row < 377; row += 96) {
         for (column = 333; column < 505; column += 86) {
             m_widgets.push_back(new iconWidget(
-                column, row, 78, 65, id++, 0, 0, 0, 0, 0,
+                column, row, 78, 65, id++, NULL, 0, 0, 0, 0,
                 iconWidget::ICON_STYLE_PLAIN));
         }
     }
@@ -238,7 +238,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
     for (row = 154; row < 442; row += 96) {
         for (column = 113; column < 285; column += 86) {
             m_widgets.push_back(new textWidget(
-                column, row, 86, 36, 0,
+                column, row, 86, 36, NULL,
                 DATA_COMPGEN(0x00660cb4, spellbookTinyFont, "tiny.fnt"),
                 font::PRIMARY, id++,
                 1, 0, 8));
@@ -248,7 +248,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
     for (row = 154; row < 442; row += 96) {
         for (column = 329; column < 501; column += 86) {
             m_widgets.push_back(new textWidget(
-                column, row, 86, 36, 0,
+                column, row, 86, 36, NULL,
                 DATA_COMPGEN(0x00660cb4, spellbookTinyFont, "tiny.fnt"),
                 font::PRIMARY, id++,
                 1, 0, 8));
@@ -306,7 +306,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
 
     m_rolloverWidget = new bitmapBackedTextWidget(
         8, 569, 605, 19,
-        0,
+        NULL,
         DATA_COMPGEN(0x0065f2f8, spellbookSmallFont, "smalfont.fnt"),
         DATA_COMPGEN(0x00684b84, spellbookRollover, "spelroll.pcx"),
         font::PRIMARY, ROLLOVER_ID, 1, 8);
@@ -368,7 +368,7 @@ DC_ADDRESS(0x14c864, 0x6e)
 MAC_ADDRESS(0x18c4d0, 0xb4)
 TSpellbookWindow::~TSpellbookWindow()
 {
-    g_spellbookWindow = 0;
+    g_spellbookWindow = NULL;
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;

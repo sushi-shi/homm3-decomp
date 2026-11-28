@@ -207,7 +207,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     }
 
     m_widgets.push_back(new textWidget(
-        83, 112, 65, 20, 0, "smalfont.fnt", font::WHITE,
+        83, 112, 65, 20, NULL, "smalfont.fnt", font::WHITE,
         ATTACKER_STATUS, 2, 0, 8));
 
     if (defender) {
@@ -250,7 +250,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     // rather than mirroring the attacker's (83, 112, 65, 20) - a retail
     // quirk, transcribed as the bytes have it.
     m_widgets.push_back(new textWidget(
-        266, 38, 115, 20, 0, "smalfont.fnt", font::WHITE,
+        266, 38, 115, 20, NULL, "smalfont.fnt", font::WHITE,
         DEFENDER_STATUS, 0, 0, 8));
 
     m_widgets.push_back(new textWidget(
@@ -413,7 +413,7 @@ DC_ADDRESS(0x069198, 0x68)
 MAC_ADDRESS(0x07fa6c, 0xb4)
 TCombatResultsWindow::~TCombatResultsWindow()
 {
-    g_combatResultsWindow = 0;
+    g_combatResultsWindow = NULL;
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;

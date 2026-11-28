@@ -25,26 +25,26 @@ DATA(0x0066cadc) const char* g_campaignFileNames[20] = {
     "gelu.h3c", "sandro.h3c", "final.h3c", "secret.h3c"
 };
 DATA(0x0066c498) SCampaignPreview g_campaignPreviews[20] = {
-    { 7, 90, 72, 58, 192, 270, "campgd1s.pcx", 108, { 0 } },
-    { 8, 42, 244, 8, 364, 270, "campgd2s.pcx", 109, { 0 } },
-    { 10, 313, 244, 276, 364, 270, "campneus.pcx", 110, { 0 } },
-    { 9, 33, 414, 0, 532, 270, "campgd3s.pcx", 111, { 0 } },
-    { 11, 539, 72, 504, 192, 270, "campev1s.pcx", 112, { 0 } },
-    { 12, 585, 244, 565, 364, 235, "campev2s.pcx", 113, { 0 } },
-    { 13, 404, 414, 368, 532, 270, "campscts.pcx", 114, { 0 } },
-    { 14, 90, 72, 58, 192, 270, "camp1ab7.pcx", 115, { 0 } },
-    { 15, 539, 72, 504, 192, 270, "Camp1DB2.pcx", 116, { 0 } },
-    { 16, 42, 244, 8, 364, 270, "camp1ds1.pcx", 117, { 0 } },
-    { 17, 313, 244, 276, 364, 270, "camp1fl3.pcx", 118, { 0 } },
-    { 18, 33, 414, 0, 532, 270, "camp1fw1.pcx", 119, { 0 } },
-    { 19, 585, 244, 565, 364, 235, "camp1pf2.pcx", 120, { 0 } },
-    { 20, 42, 244, 8, 364, 270, "camphs1.pcx", 121, { 0 } },
-    { 21, 585, 244, 565, 364, 235, "campbb1.pcx", 122, { 0 } },
-    { 22, 90, 72, 58, 192, 270, "campnb1.pcx", 123, { 0 } },
-    { 23, 539, 72, 504, 192, 270, "campel1.pcx", 124, { 0 } },
-    { 24, 313, 244, 276, 364, 270, "camprn1.pcx", 125, { 0 } },
-    { 25, 33, 414, 0, 532, 270, "campua1.pcx", 126, { 0 } },
-    { 26, 404, 414, 368, 532, 270, "campsp1.pcx", 127, { 0 } }
+    { 7, 90, 72, 58, 192, 270, "campgd1s.pcx", 108, { NULL } },
+    { 8, 42, 244, 8, 364, 270, "campgd2s.pcx", 109, { NULL } },
+    { 10, 313, 244, 276, 364, 270, "campneus.pcx", 110, { NULL } },
+    { 9, 33, 414, 0, 532, 270, "campgd3s.pcx", 111, { NULL } },
+    { 11, 539, 72, 504, 192, 270, "campev1s.pcx", 112, { NULL } },
+    { 12, 585, 244, 565, 364, 235, "campev2s.pcx", 113, { NULL } },
+    { 13, 404, 414, 368, 532, 270, "campscts.pcx", 114, { NULL } },
+    { 14, 90, 72, 58, 192, 270, "camp1ab7.pcx", 115, { NULL } },
+    { 15, 539, 72, 504, 192, 270, "Camp1DB2.pcx", 116, { NULL } },
+    { 16, 42, 244, 8, 364, 270, "camp1ds1.pcx", 117, { NULL } },
+    { 17, 313, 244, 276, 364, 270, "camp1fl3.pcx", 118, { NULL } },
+    { 18, 33, 414, 0, 532, 270, "camp1fw1.pcx", 119, { NULL } },
+    { 19, 585, 244, 565, 364, 235, "camp1pf2.pcx", 120, { NULL } },
+    { 20, 42, 244, 8, 364, 270, "camphs1.pcx", 121, { NULL } },
+    { 21, 585, 244, 565, 364, 235, "campbb1.pcx", 122, { NULL } },
+    { 22, 90, 72, 58, 192, 270, "campnb1.pcx", 123, { NULL } },
+    { 23, 539, 72, 504, 192, 270, "campel1.pcx", 124, { NULL } },
+    { 24, 313, 244, 276, 364, 270, "camprn1.pcx", 125, { NULL } },
+    { 25, 33, 414, 0, 532, 270, "campua1.pcx", 126, { NULL } },
+    { 26, 404, 414, 368, 532, 270, "campsp1.pcx", 127, { NULL } }
 };
 
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
@@ -89,7 +89,7 @@ void TCampaignWindow::openPreview(int campaignIndex)
     BinkPause(BinkManager::g_playingBink.m_bink, 0);
     memcpy(&preview->m_binkState, &BinkManager::g_playingBink,
         sizeof(BinkManager::g_playingBink));
-    BinkManager::g_playingBink.m_bink = 0;
+    BinkManager::g_playingBink.m_bink = NULL;
 
     m_widgets.push_back(new bitmapBorder16(preview->m_x, preview->m_y,
         PREVIEW_WIDTH, PREVIEW_HEIGHT, preview->m_widgetId, preview->m_image,
@@ -321,7 +321,7 @@ TCampaignWindow::~TCampaignWindow()
         }
     }
 
-    g_campaignWindow = 0;
+    g_campaignWindow = NULL;
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;

@@ -26,14 +26,14 @@ MAC_ADDRESS(0x11b5f4, 0x8c)
 void* LODFile::getDataPtr(const char* itemName)
 {
     if (!opened)
-        return 0;
+        return NULL;
     Find(0, numEntries, itemName);
     if (matchindex >= 0) {
         fseek(fileptr, subindex[matchindex].offset, SEEK_SET);
         dataItemIndex = matchindex;
         return fileptr;
     }
-    return 0;
+    return NULL;
 }
 
 VA(0x004fa610, 0x45)
@@ -42,11 +42,11 @@ MAC_ADDRESS(0x11b680, 0x70)
 LODEntry* LODFile::getItemIndex(const char* itemName)
 {
     if (!opened)
-        return 0;
+        return NULL;
     Find(0, numEntries, itemName);
     if (matchindex >= 0)
         return &subindex[matchindex];
-    return 0;
+    return NULL;
 }
 
 // Original: LODFile::exist; lodfile.cpp:112
@@ -149,10 +149,10 @@ DC_ADDRESS(0x0e9330, 0x42)
 MAC_ADDRESS(0x11b854, 0x7c)
 LODFile::LODFile()
 {
-    fileptr = 0;
+    fileptr = NULL;
     opened = 0;
     clear();
-    dataBuffer = 0;
+    dataBuffer = NULL;
 }
 
 VA(0x004fa800, 0x97)
@@ -227,7 +227,7 @@ bool LODFile::pointAt(const char* itemName)
         dataItemIndex = matchindex;
         dataPos = 0;
         delete[] dataBuffer;
-        dataBuffer = 0;
+        dataBuffer = NULL;
         dataBufferSize = 0;
         return true;
     }
@@ -246,7 +246,7 @@ int LODFile::read(void* dest, int numBytes)
     LODEntry entry = subindex[dataItemIndex];
     bool compressed = entry.csize != 0;
     if (compressed) {
-        if (dataBuffer == 0) {
+        if (dataBuffer == NULL) {
             dataBuffer = new unsigned char[entry.size];
             dataBufferSize = entry.size;
             dataPos = 0;

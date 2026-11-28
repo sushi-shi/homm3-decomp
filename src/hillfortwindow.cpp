@@ -84,7 +84,7 @@ THillFortWindow::THillFortWindow()
         0x1e, 0x3c, 0x3a, 0x40, HERO_PORTRAIT_ID,
         akHeroTraits[currentHero->m_portrait].m_large_portrait_name, 0x800));
     m_widgets.push_back(new bitmapBackedTextWidget(
-        7, 0x142, 0x27d, 0x13, 0,
+        7, 0x142, 0x27d, 0x13, NULL,
         DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
         DATA_COMPGEN(0x0067f1d0, hillFortRolloverBackground,
                      "APhlftrt.pcx"),
@@ -191,7 +191,7 @@ DC_ADDRESS(0x0d6b2c, 0x68)
 MAC_ADDRESS(0x10925c, 0xb4)
 THillFortWindow::~THillFortWindow()
 {
-    g_hillFortWindow = 0;
+    g_hillFortWindow = NULL;
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
@@ -251,7 +251,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
     msg.m_mouseX = 0;
     msg.m_mouseY = 0;
     msg.m_extra = 0;
-    msg.m_window = 0;
+    msg.m_window = NULL;
 
     hero* currHero = g_game->getCurrHero();
 
