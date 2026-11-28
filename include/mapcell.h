@@ -1633,10 +1633,14 @@ inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 // this call inside randomizeWagon. The current nested budget is 96 against
 // cost 87, so VC6 expands it and omits the body; the native field-domain
 // and implicit short-argument probes do not change that decision.
+// The Dreamcast line table owns this body in MapCell.h, so it stays inline:
+// without the keyword every including unit emits a strong definition and the
+// candidate link fails with LNK2005 (nineteen objects). Its retail body
+// returns once randomizeEvents' budget is recovered (see src/game.cpp).
 // E:\gamedcs\MapCell.h:1176
 VA(0x004c2360, 0x27)
 DC_ADDRESS(0x0bcac8, 0x74)
-void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
+inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
 {
     m_wagonInfo.m_resource = resource;
     m_wagonInfo.m_resourceAmount = amount;
