@@ -387,7 +387,12 @@ static int checkMem();
 // probe, the video and sound archives, the click sample and the process
 // variable reset.  Complete adds the object-type loader before
 // AI_initialize and expands both LoadGameData and InitVars in place.
-// Residual (99.5994%): two explicit head-tested while(1) scans remove
+// Residual (99.82%): one opcode byte. Retail's guard at 0x4ed9df reads
+// `test eax, eax; push edi; jmp +0x70` (eb 70) where this source compiles
+// `jne +0x70` (75 70), and both scans follow the jump unreached: an
+// unconditional jump after a live test over reachable-looking code is a
+// post-link patch of the shipped image, so no source closes it.
+// Two explicit head-tested while(1) scans remove
 // four control labels and improve the 95.3801% goto version. The older
 // claim that an unconditional retail back edge proved source goto was
 // too strong. Changing these headers to conventional for-tests, including
