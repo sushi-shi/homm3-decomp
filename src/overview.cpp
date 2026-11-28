@@ -1009,7 +1009,7 @@ void game::overview()
     msg.m_id = MESSAGE_WIDGET;
 
     g_advManager->trimLoopingSounds(4);
-    g_advManager->demobilizeCurrHero(false, true);
+    g_advManager->demobilizeCurrHero(0, 1);
     g_windowManager->fadeScreen(1, 4, 1);
 
     int titleSlot;
@@ -1026,14 +1026,14 @@ void game::overview()
     for (row = 0; row < 4; row++) {
         for (item = 0; item < 70; item++) {
             int slot = row * 70 + item;
-            g_textWidgetDynamic[slot] = NULL;
-            g_iconWidgetDynamic[slot] = NULL;
-            g_bitmapBorderDynamic[slot] = NULL;
+            g_textWidgetDynamic[slot] = 0;
+            g_iconWidgetDynamic[slot] = 0;
+            g_bitmapBorderDynamic[slot] = 0;
         }
         for (item = 0; item < 2; item++)
-            g_buttonDynamic[row * 2 + item] = NULL;
+            g_buttonDynamic[row * 2 + item] = 0;
         for (item = 0; item < 3; item++)
-            g_textButtonDynamic[row * 3 + item] = NULL;
+            g_textButtonDynamic[row * 3 + item] = 0;
     }
 
     g_lastDynamicType = -1;
@@ -1069,8 +1069,8 @@ void game::overview()
 
     setWinText(g_overWin, 9);
 
-    g_overviewBank = new TResourceDisplay(g_overWin, true);
-    g_overviewBank->update(true, false);
+    g_overviewBank = new TResourceDisplay(g_overWin, 1);
+    g_overviewBank->update(1, 0);
 
     signed char res[NUM_RESOURCES];
     memset(res, 0, sizeof(res));
@@ -1099,11 +1099,11 @@ void game::overview()
     msg.m_codeY = 27;
     msg.m_extraText = g_text;
     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-            computeDailyGold(g_game->getLocalPlayerGamePos(), true));
+            computeDailyGold(g_game->getLocalPlayerGamePos(), 1));
     g_overWin->broadcastMessage(msg);
 
-    setupNewOverviewType(g_overviewType, false);
-    g_overWin->doModal(true);
+    setupNewOverviewType(g_overviewType, 0);
+    g_overWin->doModal(1);
     g_windowManager->fadeScreen(1, 4, 1);
 
     for (row = 0; row < 4; row++) {
@@ -1122,27 +1122,27 @@ void game::overview()
     for (int title = 0; title < 3; title++) {
         if (g_textWidgetTitle[title]) {
             delete g_textWidgetTitle[title];
-            g_textWidgetTitle[title] = NULL;
+            g_textWidgetTitle[title] = 0;
         }
     }
 
     delete g_overWin;
-    g_overWin = NULL;
+    g_overWin = 0;
     if (g_overviewBank) {
         delete g_overviewBank;
-        g_overviewBank = NULL;
+        g_overviewBank = 0;
     }
 
     delete[] g_textWidgetDynamic;
-    g_textWidgetDynamic = NULL;
+    g_textWidgetDynamic = 0;
     delete[] g_iconWidgetDynamic;
-    g_iconWidgetDynamic = NULL;
+    g_iconWidgetDynamic = 0;
     delete[] g_bitmapBorderDynamic;
-    g_bitmapBorderDynamic = NULL;
+    g_bitmapBorderDynamic = 0;
     delete[] g_buttonDynamic;
-    g_buttonDynamic = NULL;
+    g_buttonDynamic = 0;
     delete[] g_textButtonDynamic;
-    g_textButtonDynamic = NULL;
+    g_textButtonDynamic = 0;
 }
 
 // Original: UpdateArtifacts; overview.cpp:1562

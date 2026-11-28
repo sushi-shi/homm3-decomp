@@ -3042,7 +3042,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
                                  bool humanPlayer)
 {
     if (cell->skeletonHasTreasure()) {
-        if (currentHero->getNumberInBackpack(true) < HERO_BACKPACK_CAPACITY) {
+        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
             type_artifact artifact(TArtifact(cell->getSkeletonArtifact()));
             if (humanPlayer) {
                 sprintf(g_text,
@@ -3065,7 +3065,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
             }
             currentHero->giveResource(GOLD, 1000);
         }
-        cell->setSkeleton(cell->getItemId(), false, -1);
+        cell->setSkeleton(cell->getItemId(), 0, -1);
     } else {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_SKELETON_EMPTY],
@@ -3490,7 +3490,7 @@ void advManager::doEventTreeOfKnowledge(hero* currentHero,
         break;
     }
 
-    currentHero->giveExperience(experience, 0, true);
+    currentHero->giveExperience(experience, 0, 1);
     currentHero->m_treeOfKnowledgeFlags |= visited;
     currentHero->checkLevel();
 }

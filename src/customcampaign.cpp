@@ -1495,7 +1495,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
     }
     if (currentHero->m_army.getCreatureTotal() == 0)
-        g_game->setRandomHeroArmies(currentHero->m_id, 0, false);
+        g_game->setRandomHeroArmies(currentHero->m_id, 0, 0);
 
     if (m_retainSpellbook) {
         currentHero->clearSpells();
@@ -1524,7 +1524,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->equipArtifact(artifact, slot);
         }
-        while (currentHero->getNumberInBackpack(true) > 0) {
+        while (currentHero->getNumberInBackpack(1) > 0) {
             currentHero->removeBackpackArtifact(
                 static_cast<short>(currentHero->getLastBackpackIndex()));
         }

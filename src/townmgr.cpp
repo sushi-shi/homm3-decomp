@@ -1603,14 +1603,14 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
 
             m_growthBonusIcon[count]->setIconFrame(creature + 2);
             m_growthBonusIcon[count]->setHelpText(helpText.c_str(),
-                                                    rightText.c_str(), true);
-            m_growthBonusIcon[count]->setVisible(true);
+                                                    rightText.c_str(), 1);
+            m_growthBonusIcon[count]->setVisible(1);
             sprintf(g_text, DATA_COMPGEN(0x006817c0, plusDecimalFormat, "+%d"),
                     currTown->getGrowthRate(slot));
             m_growthBonusText[count]->setText(g_text);
             m_growthBonusText[count]->setHelpText(helpText.c_str(),
-                                                    rightText.c_str(), true);
-            m_growthBonusText[count]->setVisible(true);
+                                                    rightText.c_str(), 1);
+            m_growthBonusText[count]->setVisible(1);
             m_bonusCreatures[count] = creature;
             count++;
         }
@@ -1629,25 +1629,25 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             m_growthBonusIcon[count]->setIconFrame(
                 currTown->m_summoningType + 2);
             m_growthBonusIcon[count]->setHelpText(helpText.c_str(),
-                                                    rightText.c_str(), true);
-            m_growthBonusIcon[count]->setVisible(true);
+                                                    rightText.c_str(), 1);
+            m_growthBonusIcon[count]->setVisible(1);
             m_growthBonusText[count]->setText(
                 DATA_COMPGEN(0x006817bc, plusZeroText, "+0"));
             m_growthBonusText[count]->setHelpText(helpText.c_str(),
-                                                    rightText.c_str(), true);
-            m_growthBonusText[count]->setVisible(true);
+                                                    rightText.c_str(), 1);
+            m_growthBonusText[count]->setVisible(1);
             m_bonusCreatures[count] = currTown->m_summoningType;
             count++;
         }
     }
 
     for (i = count; i < 8; i++) {
-        m_growthBonusIcon[i]->setVisible(false);
+        m_growthBonusIcon[i]->setVisible(0);
         m_growthBonusIcon[i]->setHelpText("",
-                                            "", true);
-        m_growthBonusText[i]->setVisible(false);
+                                            "", 1);
+        m_growthBonusText[i]->setVisible(0);
         m_growthBonusText[i]->setHelpText("",
-                                            "", true);
+                                            "", 1);
     }
 }
 
